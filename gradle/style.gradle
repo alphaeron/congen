@@ -1,0 +1,22 @@
+configurations {
+    ktlint
+}
+
+dependencies {
+    ktlint 'com.pinterest.ktlint:ktlint-cli:1.2.1'
+}
+
+task ktlint (type: JavaExec, group: 'verification') {
+    description = 'Check Kotlin Style.'
+    main = 'com.pinterest.ktlint.Main'
+    classpath = configurations.ktlint
+    args '--color', 'src/**/*.kt'
+}
+check.dependsOn(ktlint)
+
+task ktlintFormat(type: JavaExec, group: 'formatting') {
+    description = 'Fix Kotlin Style.'
+    main = 'com.pinterest.ktlint.Main'
+    classpath = configurations.ktlint
+    args '-F', '--color', 'src/**/*.kt'
+}

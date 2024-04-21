@@ -1,0 +1,40 @@
+test {
+    useJUnitPlatform()
+
+    testLogging {
+        exceptionFormat = 'full'
+        showStandardStreams = true
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: [
+            '**/resources/*'
+        ])
+    }))
+
+    reports {
+        xml.required = true
+        csv.required = true
+        html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+    }
+}
+
+jacocoTestCoverageVerification {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: [
+            '**/resources/*'
+        ])
+    }))
+
+    violationRules {
+        rule {
+            limit {
+                minimum = 1.0
+            }
+        }
+    }
+}

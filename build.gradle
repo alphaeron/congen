@@ -1,0 +1,88 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+plugins {
+	  id 'org.springframework.boot' version '3.2.5'
+	  id 'io.spring.dependency-management' version '1.1.4'
+	  id 'org.jetbrains.kotlin.jvm' version '1.9.23'
+	  id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
+
+    id 'com.google.cloud.tools.jib' version '3.4.2'
+    id 'com.palantir.git-version' version '3.0.0'
+
+    id 'jacoco'
+}
+
+apply from: './gradle/test.gradle'
+apply from: './gradle/style.gradle'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+kotlin {
+    jvmToolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+    compilerOptions {
+        freeCompilerArgs = [
+            '-Xjsr305=strict',
+        ]
+    }
+}
+
+repositories {
+	  mavenCentral()
+}
+
+group = 'com.atchannel'
+version = '0.0.1-SNAPSHOT'
+
+def versionInfo = versionDetails()
+def timestamp = new Date().getTime()
+def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${timestamp}"
+
+dependencies {
+	  implementation 'org.springframework.boot:spring-boot-starter-webflux:3.2.5'
+	  //implementation 'org.springframework.boot:spring-boot-starter-security:3.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:3.2.5'
+
+    implementation 'org.springdoc:springdoc-openapi-webflux-ui:1.8.0'
+    implementation 'org.springdoc:springdoc-openapi-kotlin:1.8.0'
+    implementation 'org.springdoc:springdoc-openapi-javadoc:1.8.0'
+
+	  implementation 'com.fasterxml.jackson.module:jackson-module-kotlin:2.17.0'
+
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.23'
+	  implementation 'org.jetbrains.kotlin:kotlin-reflect:1.9.23'
+
+	  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0'
+	  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.8.0'
+	  implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.8.0'
+
+	  implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.2'
+
+	  testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
+    //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
+	  testImplementation 'io.projectreactor:reactor-test:3.6.5'
+}
+
+jib {
+    from {
+        image = 'openjdk:8-jre-alpine'
+    }
+    to {
+        image = 'atchannel'
+        tags = [tag]
+    }
+    container {
+        appRoot = '/app'
+        jvmFlags = [
+            "-XX+UseG1GC", "-Xms2048m", "-Xmx2048m",
+            "-XX:MetaspaceSize=256M", "-XX:MaxMetaspaceSize=256M",
+            "-XX:ActiveProcessCount=2",
+            "-Djava.security.edg=file:/dev/./urandom",
+        ]
+    }
+}
