@@ -1,9 +1,8 @@
 package com.congen.controllers
 
-import com.congen.dto.ExerciseData
-import com.congen.service.ExerciseService
-import com.congen.service.ExerciseEquipmentService
+import com.congen.dto.MuscleData
 import com.congen.service.ExerciseMuscleService
+import com.congen.service.MuscleService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -13,44 +12,36 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/exercise")
-class ExerciseController(
-    private val exerciseService: ExerciseService,
-    private val exerciseEquipmentService: ExerciseEquipmentService,
+@RequestMapping("/muscle")
+class MuscleController(
+    private val muscleService: MuscleService,
     private val exerciseMuscleService: ExerciseMuscleService,
 ) {
     @PostMapping("/")
-    fun save(@RequestBody exerciseData: ExerciseData) : ResponseEntity<*>{
+    fun save(@RequestBody muscleData: MuscleData) : ResponseEntity<*>{
         return ResponseEntity.ok(
-            exerciseService.saveExercise(exerciseData)
+            muscleService.saveMuscle(muscleData)
         )
     }
 
     @GetMapping("/{name}")
     fun get(@PathVariable("name") name: String): ResponseEntity<*>{
         return ResponseEntity.ok(
-            exerciseService.getExercise(name)
+            muscleService.getMuscle(name)
         )
     }
 
-    @GetMapping("/{name}/muscle")
-    fun getMuscle(@PathVariable("name") name: String): ResponseEntity<*>{
+    @GetMapping("/{name}/exercise")
+    fun getExercise(@PathVariable("name") name: String): ResponseEntity<*>{
         return ResponseEntity.ok(
-            exerciseMuscleService.getByExerciseName(name)
-        )
-    }
-
-    @GetMapping("/{name}/equipment")
-    fun getEquipment(@PathVariable("name") name: String): ResponseEntity<*>{
-        return ResponseEntity.ok(
-            exerciseEquipmentService.getByExerciseName(name)
+            exerciseMuscleService.getByMuscleName(name)
         )
     }
 
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         return ResponseEntity.ok(
-            exerciseService.getAllExercises()
+            muscleService.getAllMuscles()
         )
     }
 }

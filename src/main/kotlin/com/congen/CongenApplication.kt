@@ -7,5 +7,7 @@ import org.springframework.boot.runApplication
 class CongenApplication
 
 fun main(args: Array<String>) {
-	runApplication<CongenApplication>(*args)
+	val context = runApplication<CongenApplication>(*args)
+	val environment = context.environment.getProperty("spring.profiles.active")
+	// logger.info("Running in environment %s", environment)
 }

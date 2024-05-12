@@ -13,10 +13,24 @@ class ExerciseServiceImpl(
     val exerciseRepo: ExerciseRepo
 ) : ExerciseService {
     override fun saveExercise(exerciseData: ExerciseData): Mono<ExerciseData> {
-        val exercise = Exercise(name=exerciseData.name, description=exerciseData.description)
+        val exercise = Exercise(
+            name=exerciseData.name,
+            description=exerciseData.description,
+            movementType=exerciseData.movementType,
+            isUnilateral=exerciseData.isUnilateral,
+            isUpper=exerciseData.isUpper,
+            isAccessory=exerciseData.isAccessory,
+        )
         return exerciseRepo.save(exercise)
             .map {
-                ExerciseData(it.name, it.description)
+                ExerciseData(
+                    name=it.name,
+                    description=it.description,
+                    movementType=it.movementType,
+                    isUnilateral=it.isUnilateral,
+                    isUpper=it.isUpper,
+                    isAccessory=it.isAccessory,
+                )
             }
     }
 
@@ -24,7 +38,12 @@ class ExerciseServiceImpl(
         return exerciseRepo.findByName(name)
             .map {
                 ExerciseData(
-                    it.name, it.description
+                    name=it.name,
+                    description=it.description,
+                    movementType=it.movementType,
+                    isUnilateral=it.isUnilateral,
+                    isUpper=it.isUpper,
+                    isAccessory=it.isAccessory,
                 )
             }
     }
@@ -33,7 +52,12 @@ class ExerciseServiceImpl(
         return exerciseRepo.findAll()
             .map {
                 ExerciseData(
-                    it.name, it.description
+                    name=it.name,
+                    description=it.description,
+                    movementType=it.movementType,
+                    isUnilateral=it.isUnilateral,
+                    isUpper=it.isUpper,
+                    isAccessory=it.isAccessory,
                 )
             }
     }
