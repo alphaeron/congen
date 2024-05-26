@@ -14,7 +14,7 @@ class ExerciseMuscleController(
     private val exerciseMuscleService: ExerciseMuscleService,
 ) {
     @PostMapping("/")
-    fun save(@RequestBody exerciseMuscleData: ExerciseMuscleData) : ResponseEntity<*>{
+    fun save(@RequestBody exerciseMuscleData: ExerciseMuscleData) : ResponseEntity<*> {
         return ResponseEntity.ok(
             exerciseMuscleService.saveExerciseMuscle(exerciseMuscleData)
         )

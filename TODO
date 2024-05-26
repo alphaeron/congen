@@ -2,3 +2,7 @@ set up database migrations
 global error handler
 logging
 unit tests
+double-check cors setup is OK
+handle errors when database writes fail
+join table 404 mapping 404 list empty
+production-ready cors handling (instead of the current cors filter component?)

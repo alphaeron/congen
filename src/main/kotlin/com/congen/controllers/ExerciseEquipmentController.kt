@@ -14,7 +14,7 @@ class ExerciseEquipmentController(
     private val exerciseEquipmentService: ExerciseEquipmentService,
 ) {
     @PostMapping("/")
-    fun save(@RequestBody exerciseEquipmentData: ExerciseEquipmentData) : ResponseEntity<*>{
+    fun save(@RequestBody exerciseEquipmentData: ExerciseEquipmentData) : ResponseEntity<*> {
         return ResponseEntity.ok(
             exerciseEquipmentService.saveExerciseEquipment(exerciseEquipmentData)
         )
