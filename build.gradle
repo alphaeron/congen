@@ -28,11 +28,13 @@ kotlin {
 compileKotlin {
     kotlinOptions {
         freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "17"
     }
 }
 compileTestKotlin {
     kotlinOptions {
         freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "17"
     }
 }
 
@@ -70,6 +72,10 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
     //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
     testImplementation 'io.projectreactor:reactor-test:3.6.5'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
+    testImplementation 'org.mockito:mockito-core:5.18.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
 }
 
 def versionInfo = versionDetails()

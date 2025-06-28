@@ -1,7 +1,7 @@
 package com.congen.controllers
 
-import com.congen.dto.ExerciseMuscleData
-import com.congen.service.ExerciseMuscleService
+import com.congen.model.ExerciseMuscle
+import com.congen.dal.ExerciseMuscleDAL
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -12,19 +12,19 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/exercise_muscle")
 class ExerciseMuscleController(
-    private val exerciseMuscleService: ExerciseMuscleService,
+    private val exerciseMuscleDAL: ExerciseMuscleDAL,
 ) {
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         return ResponseEntity.ok(
-            exerciseMuscleService.getAllExerciseMuscle()
+            exerciseMuscleDAL.selectAllExerciseMuscle()
         )
     }
 
     @PostMapping("/")
-    fun save(@RequestBody exerciseMuscleData: ExerciseMuscleData) : ResponseEntity<*> {
+    fun save(@RequestBody exerciseMuscle: ExerciseMuscle) : ResponseEntity<*> {
         return ResponseEntity.ok(
-            exerciseMuscleService.saveExerciseMuscle(exerciseMuscleData)
+            exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle)
         )
     }
 }

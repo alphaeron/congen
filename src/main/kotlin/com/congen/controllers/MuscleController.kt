@@ -1,9 +1,9 @@
 package com.congen.controllers
 
-import com.congen.dto.ExerciseMuscleData
-import com.congen.dto.MuscleData
-import com.congen.service.ExerciseMuscleService
-import com.congen.service.MuscleService
+import com.congen.model.ExerciseMuscle
+import com.congen.model.Muscle
+import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.MuscleDAL
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -16,29 +16,26 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/muscle")
 class MuscleController(
-    private val muscleService: MuscleService,
-    private val exerciseMuscleService: ExerciseMuscleService,
+    private val muscleDAL: MuscleDAL,
+    private val exerciseMuscleDAL: ExerciseMuscleDAL,
 ) {
     @PostMapping("/")
-    fun save(@RequestBody muscleData: MuscleData) : ResponseEntity<*> {
+    fun save(@RequestBody muscle: Muscle) : ResponseEntity<*> {
         return ResponseEntity.ok(
-            muscleService.saveMuscle(muscleData)
+            muscleDAL.insertMuscle(muscle)
         )
     }
 
     @GetMapping("/{name}")
-    fun get(@PathVariable("name") name: String): Mono<ResponseEntity<MuscleData>> {
-        return muscleService
-            .getMuscle(name)
+    fun get(@PathVariable("name") name: String): Mono<ResponseEntity<Muscle>> {
+        return muscleDAL.selectMuscleByName(name)
             .map { ResponseEntity.ok(it) }
             .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()))
     }
 
     @GetMapping("/{name}/exercise")
-    fun getExercise(@PathVariable("name") name: String): Mono<ResponseEntity<List<ExerciseMuscleData>>> {
-        return exerciseMuscleService
-            .getByMuscleName(name)
-            .collectList()
+    fun getExercise(@PathVariable("name") name: String): Mono<ResponseEntity<List<ExerciseMuscle>>> {
+        return exerciseMuscleDAL.selectExerciseMuscleByMuscle(name)
             .map { ResponseEntity.ok(it) }
             .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()))
     }
@@ -46,7 +43,7 @@ class MuscleController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         return ResponseEntity.ok(
-            muscleService.getAllMuscles()
+            muscleDAL.selectMuscles()
         )
     }
 }
