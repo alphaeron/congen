@@ -26,6 +26,17 @@ class ExerciseEquipmentServiceImpl(
             }
     }
 
+
+    override fun getAllExerciseEquipment(): Flux<ExerciseEquipmentData> {
+        return exerciseEquipmentRepo.findAll()
+            .map {
+                ExerciseEquipmentData(
+                    exerciseName=it.exerciseName,
+                    equipmentName=it.equipmentName,
+                )
+            }
+    }
+
     override fun getByEquipmentName(equipmentName: String): Flux<ExerciseEquipmentData> {
         return exerciseEquipmentRepo.findByEquipmentName(equipmentName)
             .map {

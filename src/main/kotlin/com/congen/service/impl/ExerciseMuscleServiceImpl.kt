@@ -26,6 +26,16 @@ class ExerciseMuscleServiceImpl(
             }
     }
 
+    override fun getAllExerciseMuscle(): Flux<ExerciseMuscleData> {
+        return exerciseMuscleRepo.findAll()
+            .map {
+                ExerciseMuscleData(
+                    exerciseName=it.exerciseName,
+                    muscleName=it.muscleName,
+                )
+            }
+    }
+
     override fun getByMuscleName(muscleName: String): Flux<ExerciseMuscleData> {
         return exerciseMuscleRepo.findByMuscleName(muscleName)
             .map {

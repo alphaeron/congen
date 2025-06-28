@@ -5,3 +5,52 @@ double-check cors setup is OK
 handle errors when database writes fail
 join table 404 mapping 404 list empty
 production-ready cors handling (instead of the current cors filter component?)
+
+
+need additional relationship for exercise to conjugate workout de or me (so you know which can be used for which type).  or maybe do a separate table with exerciseName and movementType so you can have multiple (e.g., bench can be de upper or me upper), and can also handle different exercise types like plyometrics
+
+program
+
+num days
+
+day
+goal (me upper, de lower, ...)
+structure x count
+
+structure
+title (needs to match movememntType for exercise)
+exercise constraints (primary movement, unilateral ...) note the movementType constraint from title above
+sets
+reps
+weight %
+
+defined program length for how often to cycle exercises at a minimum
+
+pre-code two day per week, three day per week, four day per week
+no custom workout program format
+
+
+algorithm to generate programmed workout
+
+1. fetch all exercises
+2. fetch all exercise muscle
+3. fetch all exercise equipment
+4. get the user's program over their program length
+5. foreach exercise in structure
+    a. filter to set of available exercises based on (muscle, equipment) constraints specified in program.
+    b. sort based on (num equipment options desc, targeted muscles desc, exercise name)
+        i. This gives consistent ordering for program rotation, to allow for even spacing between the time each exercise is done.
+    c. check program length window
+        i. if the number of available exercises is less than the program length window, continue
+        ii. else, remove all exercises from the available set that have already been completed over the program lookback window.
+    d. select the next avaiable exercise
+    e. select sets, reps, weight based on exercise movement type and how many weeks you are into program (for de workout weight %)
+
+
+then move hardcoded program templates into database models to add flexability.
+then support hardcoded exerciseName for exercise constraints for users to allow overrides.
+then support (in addition to program format and programmed workouts) recorded workouts for users to record what they did.
+
+then support adding custom movementType s so there is complete flexability with what type of workout you want to generate
+
+then support exerciseAttributes instead of isUnilateral, ... (like tags) for even more flexability.
