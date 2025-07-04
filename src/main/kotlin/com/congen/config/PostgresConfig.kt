@@ -10,6 +10,28 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+/**
+ * Configuration class for PostgreSQL database connections.
+ *
+ * This class manages the configuration and creation of PostgreSQL database connections
+ * for both read and write operations. It uses Vert.x PostgreSQL client for reactive
+ * database operations and supports connection pooling with separate configurations
+ * for reader and writer connections.
+ *
+ * The configuration supports SSL connections and includes connection pooling,
+ * prepared statement caching, and automatic reconnection capabilities.
+ *
+ * @property writerHost Hostname for the writer database connection
+ * @property readerHost Hostname for the reader database connection
+ * @property port Database port number
+ * @property usernameV Database username
+ * @property passwordV Database password
+ * @property dbName Database name
+ * @property sslMode Whether SSL is enabled for database connections
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Configuration
 class PostgresConfig(
     @Value("\${congen.postgres.writer.host}") private val writerHost: String,
@@ -21,11 +43,23 @@ class PostgresConfig(
     @Value("\${congen.postgres.ssl-mode}") private val sslMode: Boolean,
 ) {
     companion object {
+        /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(PostgresConfig::class.java)
+        /** Number of connections in the reader pool. */
         private val CONNECTION_POOL_COUNT_READER = 32
+        /** Number of connections in the writer pool. */
         private val CONNECTION_POOL_COUNT_WRITER = 10
     }
 
+    /**
+     * Creates and configures the PostgreSQL writer connection pool.
+     *
+     * This bean provides a SQL client configured for write operations with
+     * a smaller connection pool optimized for write-heavy workloads.
+     *
+     * @return Configured SqlClient for write operations
+     * @throws Exception if the connection cannot be established
+     */
     @Bean("postgresDBWriter")
     fun postgresDBWriter(): SqlClient {
         logger.info("Initializing PostgreSQL writer connection on port {}", port)
@@ -37,6 +71,15 @@ class PostgresConfig(
         }
     }
 
+    /**
+     * Creates and configures the PostgreSQL reader connection pool.
+     *
+     * This bean provides a SQL client configured for read operations with
+     * a larger connection pool optimized for read-heavy workloads.
+     *
+     * @return Configured SqlClient for read operations
+     * @throws Exception if the connection cannot be established
+     */
     @Bean("postgresDBReader")
     fun postgresDBReader(): SqlClient {
         logger.info("Initializing PostgreSQL reader connection on port {}", port)
@@ -48,6 +91,16 @@ class PostgresConfig(
         }
     }
 
+    /**
+     * Builds a SQL client with the specified configuration.
+     *
+     * This method creates a PostgreSQL client with connection pooling,
+     * prepared statement caching, and automatic reconnection capabilities.
+     *
+     * @param host Database hostname
+     * @param poolSize Number of connections in the pool
+     * @return Configured SqlClient instance
+     */
     private fun buildSqlClient(
         host: String,
         poolSize: Int,

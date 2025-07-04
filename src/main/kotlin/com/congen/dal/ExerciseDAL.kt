@@ -6,14 +6,59 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
+/**
+ * Data Access Layer for Exercise entity operations.
+ *
+ * This class provides database operations for the Exercise entity in the Congen application.
+ * Exercises represent physical movements or activities that can be performed during workouts,
+ * with various characteristics such as movement type, unilateral/bilateral nature, and body focus.
+ *
+ * ## Exercise Entity
+ *
+ * Exercise represents:
+ * - Physical movements or activities for workouts
+ * - Movement type (push, pull, squat, hinge, etc.)
+ * - Unilateral/bilateral classification
+ * - Upper/lower body focus
+ * - Accessory movement classification
+ *
+ * ## Database Operations
+ *
+ * - **Select by name**: Retrieve exercise by its unique name
+ * - **Select all**: Retrieve all exercise records
+ * - **Insert**: Create new exercise records
+ * - **Update**: Modify existing exercise properties
+ * - **Delete**: Remove exercise records
+ *
+ * ## Error Handling
+ *
+ * - **NoResultsFoundException**: When exercise with specified name doesn't exist
+ * - **DatabaseException**: When database operations fail
+ *
+ * @property postgresClient PostgreSQL client for database operations
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Component
 class ExerciseDAL(
     private val postgresClient: PostgresClient,
 ) {
     companion object {
+        /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(ExerciseDAL::class.java)
     }
 
+    /**
+     * Retrieves exercise by its unique name.
+     *
+     * This method queries the database to find exercise with the specified name.
+     * If no exercise exists with the given name, a NoResultsFoundException is thrown.
+     *
+     * @param exerciseName The unique name of the exercise to retrieve
+     * @return Mono containing the exercise if found
+     * @throws NoResultsFoundException when exercise with the specified name doesn't exist
+     */
     fun selectExerciseByName(exerciseName: String): Mono<Exercise> {
         logger.debug("Selecting exercise by name: {}", exerciseName)
         return postgresClient.selectIndividual(
@@ -22,11 +67,29 @@ class ExerciseDAL(
         )
     }
 
+    /**
+     * Retrieves all exercise records from the database.
+     *
+     * This method fetches all exercise records and returns them as a list.
+     * If no exercises exist, an empty list is returned.
+     *
+     * @return Mono containing a list of all exercises
+     */
     fun selectExercises(): Mono<List<Exercise>> {
         logger.debug("Selecting all exercises")
         return postgresClient.select("SELECT * FROM exercise")
     }
 
+    /**
+     * Creates a new exercise record in the database.
+     *
+     * This method inserts a new exercise record with the provided properties.
+     * The exercise name must be unique in the database.
+     *
+     * @param exercise The exercise object containing all properties
+     * @return Mono containing the created exercise
+     * @throws DatabaseException when the exercise name already exists or database operation fails
+     */
     fun insertExercise(exercise: Exercise): Mono<Exercise> {
         logger.debug("Inserting exercise: {}", exercise.name)
         return postgresClient.update(
@@ -45,6 +108,16 @@ class ExerciseDAL(
         )
     }
 
+    /**
+     * Updates an existing exercise record in the database.
+     *
+     * This method modifies the properties of exercise with the specified name.
+     * If no exercise exists with the given name, a NoResultsFoundException is thrown.
+     *
+     * @param exercise The exercise object containing name and updated properties
+     * @return Mono containing the updated exercise
+     * @throws NoResultsFoundException when exercise with the specified name doesn't exist
+     */
     fun updateExercise(exercise: Exercise): Mono<Exercise> {
         logger.debug("Updating exercise: {}", exercise.name)
         return postgresClient.update(
@@ -62,6 +135,16 @@ class ExerciseDAL(
         )
     }
 
+    /**
+     * Deletes an exercise record from the database.
+     *
+     * This method removes the exercise record with the specified name.
+     * If no exercise exists with the given name, a NoResultsFoundException is thrown.
+     *
+     * @param exerciseName The unique name of the exercise to delete
+     * @return Mono containing the deleted exercise
+     * @throws NoResultsFoundException when exercise with the specified name doesn't exist
+     */
     fun deleteExercise(exerciseName: String): Mono<Exercise> {
         logger.debug("Deleting exercise: {}", exerciseName)
         return postgresClient.update(

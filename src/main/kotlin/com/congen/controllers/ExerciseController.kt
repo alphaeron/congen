@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -22,8 +23,44 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
+/**
+ * REST controller for managing exercise operations.
+ *
+ * This controller provides endpoints for creating, reading, and querying exercise data.
+ * Exercises represent physical movements that can be performed as part of a workout.
+ * The controller also provides functionality to find related muscles and equipment
+ * for each exercise.
+ *
+ * ## Exercise Model
+ *
+ * Exercises contain:
+ * - **Name**: Unique identifier for the exercise
+ * - **Description**: Optional description of how to perform the exercise
+ * - **Category**: Classification of the exercise type
+ *
+ * ## Related Data
+ *
+ * Each exercise can have associated:
+ * - **Muscles**: Which muscle groups the exercise targets
+ * - **Equipment**: What equipment is required or used
+ * - **Workout Types**: Which types of workouts the exercise is suitable for
+ *
+ * ## Usage Examples
+ *
+ * - Get all exercises available in the system
+ * - Find exercises that target specific muscles
+ * - Get equipment requirements for an exercise
+ * - Create new exercises for the system
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/exercise")
+@Tag(
+    name = "Exercise Management",
+    description = "Operations for managing exercise data and relationships"
+)
 class ExerciseController(
     private val exerciseDAL: ExerciseDAL,
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
@@ -33,6 +70,17 @@ class ExerciseController(
         private val logger = LoggerFactory.getLogger(ExerciseController::class.java)
     }
 
+    /**
+     * Creates a new exercise entry.
+     *
+     * This endpoint creates a new exercise with the provided information.
+     * The exercise name must be unique within the system.
+     *
+     * @param exercise The exercise data to create
+     * @return The created exercise with assigned ID
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @PostMapping("/")
     @Operation(
         summary = "Create exercise",
@@ -57,6 +105,17 @@ class ExerciseController(
         )
     }
 
+    /**
+     * Retrieves an exercise by its name.
+     *
+     * This endpoint fetches a specific exercise's information by its name.
+     * If the exercise is not found, a 404 error will be returned.
+     *
+     * @param name The name of the exercise to retrieve
+     * @return The exercise if found, or 404 if not found
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/{name}")
     @Operation(
         summary = "Get exercise by name",
@@ -94,6 +153,18 @@ class ExerciseController(
             }
     }
 
+    /**
+     * Retrieves all muscles associated with a specific exercise.
+     *
+     * This endpoint finds all muscles that are targeted by the specified exercise.
+     * The response includes exercise-muscle relationship data showing how
+     * the exercise targets each muscle.
+     *
+     * @param name The name of the exercise to find muscles for
+     * @return List of exercise-muscle relationships, or 404 if exercise not found or no muscles
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/{name}/muscle")
     @Operation(
         summary = "Get muscles for exercise",
@@ -139,6 +210,18 @@ class ExerciseController(
             }
     }
 
+    /**
+     * Retrieves all equipment associated with a specific exercise.
+     *
+     * This endpoint finds all equipment that is required or used by the specified exercise.
+     * The response includes exercise-equipment relationship data showing what
+     * equipment is needed for the exercise.
+     *
+     * @param name The name of the exercise to find equipment for
+     * @return List of exercise-equipment relationships, or 404 if exercise not found or no equipment
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/{name}/equipment")
     @Operation(
         summary = "Get equipment for exercise",
@@ -184,6 +267,16 @@ class ExerciseController(
             }
     }
 
+    /**
+     * Retrieves all exercises in the system.
+     *
+     * This endpoint returns a list of all exercises available in the system.
+     * The response includes basic exercise information for each exercise.
+     *
+     * @return List of all exercises
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/")
     @Operation(
         summary = "Get all exercises",

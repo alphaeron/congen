@@ -1,6 +1,12 @@
-Schema annotations are missing for many of the classes in the model directory.  Ensure each model class in the model directory has comprehensive coverage
+add linting for unused imports and standard import sorting
+
+add kdoc linting
+
+remove all temporary IDs in the main controller package...
 
 user_exercise_rotation_history for users
+
+patch don't take program object as body, take optional query parameter for each parameter in the corresponding object.
 
 Have user enter current 1rm on account creation.
 

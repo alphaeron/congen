@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -17,8 +18,44 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
+/**
+ * REST controller for managing exercise-workout type relationships.
+ *
+ * This controller provides endpoints for creating and querying relationships between
+ * exercises and workout types. These relationships define which exercises are
+ * suitable for different types of workouts (strength, cardio, flexibility, etc.)
+ * and movement patterns (push, pull, squat, hinge, etc.).
+ *
+ * ## Exercise-Workout Type Relationships
+ *
+ * These relationships enable:
+ * - **Workout Generation**: Finding appropriate exercises for specific workout types
+ * - **Movement Pattern Organization**: Grouping exercises by movement patterns
+ * - **Workout Type Filtering**: Selecting exercises suitable for different training goals
+ * - **Program Customization**: Building workouts based on user preferences
+ *
+ * ## Relationship Structure
+ *
+ * Each relationship contains:
+ * - **Exercise Name**: The exercise being categorized
+ * - **Movement Type**: The movement pattern (push, pull, squat, hinge, etc.)
+ * - **Workout Type**: The type of workout (strength, cardio, flexibility, etc.)
+ *
+ * ## Usage Examples
+ *
+ * - Find all push exercises for strength workouts
+ * - Get all squat movements for power training
+ * - Retrieve cardio exercises for endurance sessions
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/exercise_workout_type")
+@Tag(
+    name = "Exercise-Workout Type Management",
+    description = "Operations for managing exercise-workout type relationships"
+)
 class ExerciseWorkoutTypeController(
     private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
 ) {
@@ -26,6 +63,17 @@ class ExerciseWorkoutTypeController(
         private val logger = LoggerFactory.getLogger(ExerciseWorkoutTypeController::class.java)
     }
 
+    /**
+     * Retrieves all exercise-workout type relationships.
+     *
+     * This endpoint returns a complete list of all exercise-workout type
+     * relationships in the system. This is useful for understanding the
+     * complete mapping of exercises to workout types and movement patterns.
+     *
+     * @return List of all exercise-workout type relationships
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/")
     @Operation(
         summary = "Get all exercise workout type relationships",
@@ -52,6 +100,18 @@ class ExerciseWorkoutTypeController(
         }
     }
 
+    /**
+     * Retrieves all workout types associated with a specific exercise.
+     *
+     * This endpoint finds all workout types and movement patterns that are
+     * associated with a given exercise. This helps understand how an exercise
+     * can be used in different training contexts.
+     *
+     * @param exerciseName The name of the exercise to find workout types for
+     * @return List of exercise-workout type relationships for the exercise
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/exercise/{exerciseName}")
     @Operation(
         summary = "Get workout types by exercise name",
@@ -80,6 +140,18 @@ class ExerciseWorkoutTypeController(
             }
     }
 
+    /**
+     * Retrieves all workout types associated with a specific movement pattern.
+     *
+     * This endpoint finds all exercises and workout types that are associated
+     * with a given movement pattern (push, pull, squat, hinge, etc.). This is
+     * useful for building workouts that focus on specific movement patterns.
+     *
+     * @param movementType The movement pattern to find exercises for
+     * @return List of exercise-workout type relationships for the movement pattern
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/movement_type/{movementType}")
     @Operation(
         summary = "Get workout types by movement type",
@@ -108,6 +180,18 @@ class ExerciseWorkoutTypeController(
             }
     }
 
+    /**
+     * Creates a new exercise-workout type relationship.
+     *
+     * This endpoint creates a new relationship between an exercise and a workout type.
+     * This relationship defines how the exercise can be used in different training
+     * contexts and movement patterns.
+     *
+     * @param exerciseWorkoutType The exercise-workout type relationship to create
+     * @return The created relationship with assigned ID
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @PostMapping("/")
     @Operation(
         summary = "Create exercise workout type relationship",

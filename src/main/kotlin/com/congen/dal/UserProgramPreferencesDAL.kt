@@ -7,14 +7,55 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
+/**
+ * Data Access Layer for UserProgramPreferences entity operations.
+ *
+ * This class provides database operations for the UserProgramPreferences entity in the Congen application.
+ * UserProgramPreferences represents a user's preferences for workout programs, such as days per week and session length.
+ *
+ * ## UserProgramPreferences Entity
+ *
+ * UserProgramPreferences represents:
+ * - User's preferences for workout program structure
+ * - Days per week and session time length
+ * - Used for generating personalized workout programs
+ *
+ * ## Database Operations
+ *
+ * - **Select by user**: Retrieve program preferences for a specific user
+ * - **Insert**: Create new user program preferences
+ * - **Update**: Modify existing user program preferences
+ * - **Delete**: Remove user program preferences
+ *
+ * ## Error Handling
+ *
+ * - **NoResultsFoundException**: When user program preferences don't exist
+ * - **DatabaseException**: When database operations fail
+ *
+ * @property postgresClient PostgreSQL client for database operations
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Component
 class UserProgramPreferencesDAL(
     private val postgresClient: PostgresClient,
 ) {
     companion object {
+        /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(UserProgramPreferencesDAL::class.java)
     }
 
+    /**
+     * Retrieves program preferences for a specific user.
+     *
+     * This method queries the database to find the program preferences for the specified user.
+     * If no preferences exist, a NoResultsFoundException is thrown.
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing the user program preferences if found
+     * @throws NoResultsFoundException when the preferences don't exist
+     */
     fun selectUserProgramPreferences(userId: Int): Mono<UserProgramPreferences> {
         logger.debug("Selecting program preferences for user: {}", userId)
         return postgresClient.selectIndividual(
@@ -23,6 +64,16 @@ class UserProgramPreferencesDAL(
         )
     }
 
+    /**
+     * Creates new user program preferences in the database.
+     *
+     * This method validates and inserts new program preferences for the specified user.
+     * The user ID must be unique in the user_program_preferences table.
+     *
+     * @param userProgramPreferences The user program preferences to create
+     * @return Mono containing the created user program preferences
+     * @throws DatabaseException when the preferences already exist or database operation fails
+     */
     fun insertUserProgramPreferences(userProgramPreferences: UserProgramPreferences): Mono<UserProgramPreferences> {
         logger.debug("Inserting user program preferences: {}", userProgramPreferences.userId)
 
@@ -43,6 +94,16 @@ class UserProgramPreferencesDAL(
         )
     }
 
+    /**
+     * Updates existing user program preferences in the database.
+     *
+     * This method validates and updates the program preferences for the specified user.
+     * If no preferences exist, a NoResultsFoundException is thrown.
+     *
+     * @param userProgramPreferences The user program preferences with updated data
+     * @return Mono containing the updated user program preferences
+     * @throws NoResultsFoundException when the preferences don't exist
+     */
     fun updateUserProgramPreferences(userProgramPreferences: UserProgramPreferences): Mono<UserProgramPreferences> {
         logger.debug("Updating user program preferences: {}", userProgramPreferences.userId)
 
@@ -62,6 +123,16 @@ class UserProgramPreferencesDAL(
         )
     }
 
+    /**
+     * Deletes user program preferences from the database.
+     *
+     * This method removes the program preferences for the specified user.
+     * If no preferences exist, a NoResultsFoundException is thrown.
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing the deleted user program preferences
+     * @throws NoResultsFoundException when the preferences don't exist
+     */
     fun deleteUserProgramPreferences(userId: Int): Mono<UserProgramPreferences> {
         logger.debug("Deleting user program preferences: {}", userId)
         return postgresClient.update(

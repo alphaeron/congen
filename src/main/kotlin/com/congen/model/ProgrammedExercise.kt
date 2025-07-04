@@ -7,8 +7,47 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 
+/**
+ * Represents an exercise assigned to a specific workout stage.
+ *
+ * A programmed exercise is an exercise that has been assigned to a particular workout stage
+ * within a workout. It includes the exercise to be performed and optional notes or instructions
+ * for the exercise execution.
+ *
+ * ## Usage
+ *
+ * Programmed exercises are used to:
+ * - Assign specific exercises to workout stages
+ * - Provide exercise-specific instructions or notes
+ * - Organize exercises within the workout structure
+ * - Enable detailed workout planning and execution
+ *
+ * ## Relationships
+ *
+ * - **WorkoutStage**: Each programmed exercise belongs to a specific workout stage
+ * - **Exercise**: References the exercise to be performed by name
+ * - **SetScheme**: Programmed exercises contain multiple set schemes
+ *
+ * ## Notes
+ *
+ * The notes field allows for exercise-specific instructions, modifications, or
+ * coaching cues that are relevant to this particular instance of the exercise
+ * within the workout.
+ *
+ * @property id Unique identifier for the programmed exercise
+ * @property workoutStageId ID of the workout stage this exercise belongs to
+ * @property exerciseName Name of the exercise to be performed
+ * @property notes Optional notes or instructions for the exercise
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(
+    description = "An exercise assigned to a specific workout stage",
+    example = "ProgrammedExercise(id=1, workoutStageId=5, exerciseName=\"Bench Press\", notes=\"Focus on controlled descent\")"
+)
 data class ProgrammedExercise(
     @Schema(
         description = "Unique identifier for the programmed exercise",
@@ -16,7 +55,24 @@ data class ProgrammedExercise(
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
+    
+    @Schema(
+        description = "ID of the workout stage this exercise belongs to",
+        example = "5",
+        required = true
+    )
     @param:JsonProperty("workout_stage_id") val workoutStageId: Long,
+    
+    @Schema(
+        description = "Name of the exercise to be performed",
+        example = "Bench Press",
+        required = true
+    )
     @param:JsonProperty("exercise_name") val exerciseName: String,
+    
+    @Schema(
+        description = "Optional notes or instructions for the exercise",
+        example = "Focus on controlled descent"
+    )
     @param:JsonProperty("notes") val notes: String?,
 )

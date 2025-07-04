@@ -16,15 +16,55 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
+/**
+ * REST controller for WorkoutStageType entity operations.
+ *
+ * This controller provides read operations for workout stage types in the Congen API.
+ * Workout stage types define the categories of stages within a workout, such as
+ * warm-up, main exercises, cool-down, and accessory work.
+ *
+ * ## WorkoutStageType Entity
+ *
+ * A workout stage type represents a category of workout stages:
+ * - Unique identifier and name
+ * - Description of the stage type
+ * - Associated workout stages
+ *
+ * ## Endpoints
+ *
+ * - `GET /workout-stage-type/{id}` - Retrieve a workout stage type by ID
+ * - `GET /workout-stage-type/name/{name}` - Retrieve a workout stage type by name
+ * - `GET /workout-stage-type/` - Retrieve all workout stage types
+ *
+ * ## Error Handling
+ *
+ * - **404 Not Found**: When a workout stage type with the specified ID or name doesn't exist
+ * - **500 Internal Server Error**: When database operations fail
+ *
+ * @property workoutStageTypeDAL Data access layer for workout stage type operations
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/workout-stage-type")
 class WorkoutStageTypeController(
     private val workoutStageTypeDAL: WorkoutStageTypeDAL,
 ) {
     companion object {
+        /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(WorkoutStageTypeController::class.java)
     }
 
+    /**
+     * Retrieves a workout stage type by its unique identifier.
+     *
+     * This endpoint fetches a workout stage type from the database using the provided ID.
+     * If no workout stage type exists with the given ID, a 404 Not Found response is returned.
+     *
+     * @param id The unique identifier of the workout stage type to retrieve
+     * @return Mono containing the workout stage type if found, or 404 if not found
+     */
     @GetMapping("/{id}")
     @Operation(
         summary = "Get workout stage type by ID",
@@ -62,6 +102,15 @@ class WorkoutStageTypeController(
             }
     }
 
+    /**
+     * Retrieves a workout stage type by its name.
+     *
+     * This endpoint fetches a workout stage type from the database using the provided name.
+     * If no workout stage type exists with the given name, a 404 Not Found response is returned.
+     *
+     * @param name The name of the workout stage type to retrieve
+     * @return Mono containing the workout stage type if found, or 404 if not found
+     */
     @GetMapping("/name/{name}")
     @Operation(
         summary = "Get workout stage type by name",
@@ -99,6 +148,14 @@ class WorkoutStageTypeController(
             }
     }
 
+    /**
+     * Retrieves all workout stage types from the database.
+     *
+     * This endpoint fetches all workout stage type records and returns them as a list.
+     * If no workout stage types exist, an empty list is returned.
+     *
+     * @return ResponseEntity containing a list of all workout stage types
+     */
     @GetMapping("/")
     @Operation(
         summary = "Get all workout stage types",

@@ -15,6 +15,50 @@ import reactor.core.publisher.Mono
 originPatterns = ["http://localhost:[*]"]
 allowCredentials = true,
  */
+/**
+ * Cross-Origin Resource Sharing (CORS) filter for the Congen API.
+ *
+ * This filter implements CORS functionality to allow controlled access to the API
+ * from web applications running on different origins. It provides configurable
+ * origin, method, and header restrictions with enhanced security for production
+ * environments.
+ *
+ * ## Features
+ *
+ * - **Configurable Origins**: Supports multiple allowed origins via configuration
+ * - **Method Restrictions**: Controls which HTTP methods are allowed
+ * - **Header Management**: Manages allowed and exposed headers
+ * - **Production Security**: Enforces HTTPS and validates configuration in production
+ * - **Preflight Support**: Handles OPTIONS preflight requests automatically
+ * - **Detailed Logging**: Comprehensive logging for debugging and monitoring
+ *
+ * ## Configuration
+ *
+ * The filter is configured via application properties:
+ * - `cors.allowed-origins`: Comma-separated list of allowed origins
+ * - `cors.allowed-methods`: Comma-separated list of allowed HTTP methods
+ * - `cors.allowed-headers`: Comma-separated list of allowed request headers
+ * - `cors.exposed-headers`: Comma-separated list of exposed response headers
+ * - `cors.max-age`: Maximum age for preflight responses
+ *
+ * ## Production Security
+ *
+ * In production environments, the filter enforces additional security measures:
+ * - Rejects HTTP origins (HTTPS only)
+ * - Prohibits wildcard origins
+ * - Requires at least one allowed origin
+ * - Validates configuration on startup
+ *
+ * @property allowedOriginsConfig Comma-separated allowed origins from configuration
+ * @property allowedMethodsConfig Comma-separated allowed methods from configuration
+ * @property allowedHeadersConfig Comma-separated allowed headers from configuration
+ * @property exposedHeadersConfig Comma-separated exposed headers from configuration
+ * @property maxAgeConfig Maximum age for preflight responses
+ * @property activeProfile Active Spring profile
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Component
 class CorsFilter(
     @Value("\${cors.allowed-origins}")
@@ -31,17 +75,24 @@ class CorsFilter(
     private val activeProfile: String,
 ) : WebFilter {
     companion object {
+        /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(CorsFilter::class.java)
     }
 
     // Parse configuration strings into sets
+    /** Set of allowed origins parsed from configuration. */
     private val allowedOrigins: Set<String> = allowedOriginsConfig.split(",").map { it.trim() }.toSet()
+    /** Set of allowed HTTP methods parsed from configuration. */
     private val allowedMethods: Set<String> = allowedMethodsConfig.split(",").map { it.trim() }.toSet()
+    /** Set of allowed request headers parsed from configuration. */
     private val allowedHeaders: Set<String> = allowedHeadersConfig.split(",").map { it.trim() }.toSet()
+    /** Set of exposed response headers parsed from configuration. */
     private val exposedHeaders: Set<String> = exposedHeadersConfig.split(",").map { it.trim() }.toSet()
+    /** Maximum age for preflight responses. */
     private val maxAge: String = maxAgeConfig
 
     // Production security checks
+    /** Whether the application is running in production mode. */
     private val isProduction = activeProfile.contains("prod") || activeProfile.contains("production")
 
     init {
@@ -55,6 +106,16 @@ class CorsFilter(
         }
     }
 
+    /**
+     * Validates CORS configuration for production environments.
+     *
+     * This method enforces security requirements for production deployments:
+     * - Warns about HTTP origins (should use HTTPS)
+     * - Prohibits wildcard origins for security
+     * - Ensures at least one allowed origin is configured
+     *
+     * @throws IllegalStateException if configuration violates production security requirements
+     */
     private fun validateProductionConfig() {
         val httpOrigins = allowedOrigins.filter { it.startsWith("http://") }
         if (httpOrigins.isNotEmpty()) {
@@ -72,6 +133,19 @@ class CorsFilter(
         }
     }
 
+    /**
+     * Filters incoming requests to apply CORS headers and handle preflight requests.
+     *
+     * This method processes each request to:
+     * - Validate the origin against allowed origins
+     * - Set appropriate CORS headers for allowed requests
+     * - Handle OPTIONS preflight requests
+     * - Log CORS violations and errors
+     *
+     * @param exchange The web exchange containing request and response
+     * @param chain The filter chain to continue processing
+     * @return Mono<Void> indicating completion of the filter
+     */
     override fun filter(
         exchange: ServerWebExchange,
         chain: WebFilterChain,
@@ -132,6 +206,15 @@ class CorsFilter(
         }
     }
 
+    /**
+     * Determines if an origin is allowed based on configuration and security rules.
+     *
+     * This method checks if the provided origin is in the allowed origins list
+     * and enforces additional security rules for production environments.
+     *
+     * @param origin The origin to validate
+     * @return true if the origin is allowed, false otherwise
+     */
     private fun isOriginAllowed(origin: String): Boolean {
         // In production, enforce HTTPS for all origins
         if (isProduction && origin.startsWith("http://")) {

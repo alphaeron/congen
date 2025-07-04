@@ -8,17 +8,62 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
+/**
+ * Security headers filter for the Congen API.
+ *
+ * This filter adds security-related HTTP headers to all responses to enhance
+ * the security posture of the application. It implements defense-in-depth
+ * by adding multiple layers of security headers that protect against various
+ * attack vectors.
+ *
+ * ## Security Headers Applied
+ *
+ * ### All Environments
+ * - **X-Content-Type-Options**: Prevents MIME type sniffing
+ * - **X-Frame-Options**: Prevents clickjacking attacks
+ * - **X-XSS-Protection**: Enables browser XSS protection
+ * - **Referrer-Policy**: Controls referrer information in requests
+ *
+ * ### Production Only
+ * - **Strict-Transport-Security**: Enforces HTTPS connections
+ * - **Content-Security-Policy**: Restricts resource loading
+ * - **Permissions-Policy**: Controls browser feature access
+ *
+ * ## Environment-Specific Behavior
+ *
+ * The filter applies different security policies based on the active profile:
+ * - **Production**: Strict security headers with comprehensive protection
+ * - **Development**: Relaxed headers to facilitate development and debugging
+ *
+ * @property activeProfile Active Spring profile for environment detection
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Component
 class SecurityHeadersFilter(
     @Value("\${spring.profiles.active:local}")
     private val activeProfile: String,
 ) : WebFilter {
     companion object {
+        /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(SecurityHeadersFilter::class.java)
     }
 
+    /** Whether the application is running in production mode. */
     private val isProduction = activeProfile.contains("prod") || activeProfile.contains("production")
 
+    /**
+     * Filters responses to add security headers.
+     *
+     * This method adds security headers to all HTTP responses based on the
+     * current environment. The headers provide protection against common
+     * web vulnerabilities and enforce security best practices.
+     *
+     * @param exchange The web exchange containing request and response
+     * @param chain The filter chain to continue processing
+     * @return Mono<Void> indicating completion of the filter
+     */
     override fun filter(
         exchange: ServerWebExchange,
         chain: WebFilterChain,

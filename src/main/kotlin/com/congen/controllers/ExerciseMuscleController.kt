@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,8 +19,44 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
+/**
+ * REST controller for managing exercise-muscle relationships.
+ *
+ * This controller provides endpoints for creating and querying relationships between
+ * exercises and muscles. These relationships define which muscles are targeted by
+ * each exercise, enabling muscle-specific workout generation and exercise selection.
+ *
+ * ## Exercise-Muscle Relationships
+ *
+ * These relationships enable:
+ * - **Muscle Targeting**: Understanding which muscles each exercise works
+ * - **Workout Planning**: Building workouts that target specific muscle groups
+ * - **Exercise Selection**: Finding exercises for specific muscle development goals
+ * - **Balanced Training**: Ensuring all muscle groups are adequately trained
+ *
+ * ## Relationship Structure
+ *
+ * Each relationship contains:
+ * - **Exercise Name**: The exercise being analyzed
+ * - **Muscle Name**: The muscle group targeted by the exercise
+ * - **Primary/Secondary Classification**: Whether the muscle is a primary or secondary target
+ *
+ * ## Usage Examples
+ *
+ * - Find all exercises that target the chest muscles
+ * - Get all muscles worked by the bench press
+ * - Build a workout focusing on back muscles
+ * - Ensure balanced training across all muscle groups
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/exercise_muscle")
+@Tag(
+    name = "Exercise-Muscle Management",
+    description = "Operations for managing exercise-muscle relationships"
+)
 class ExerciseMuscleController(
     private val exerciseMuscleDAL: ExerciseMuscleDAL,
 ) {
@@ -27,6 +64,17 @@ class ExerciseMuscleController(
         private val logger = LoggerFactory.getLogger(ExerciseMuscleController::class.java)
     }
 
+    /**
+     * Retrieves all exercise-muscle relationships.
+     *
+     * This endpoint returns a complete list of all exercise-muscle relationships
+     * in the system. This is useful for understanding the complete mapping of
+     * exercises to their target muscles.
+     *
+     * @return List of all exercise-muscle relationships
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/")
     @Operation(
         summary = "Get all exercise muscle relationships",
@@ -48,6 +96,18 @@ class ExerciseMuscleController(
         )
     }
 
+    /**
+     * Retrieves a specific exercise-muscle relationship.
+     *
+     * This endpoint finds the relationship between a specific exercise and muscle.
+     * This helps understand how a particular exercise targets a specific muscle group.
+     *
+     * @param exerciseName The name of the exercise
+     * @param muscleName The name of the muscle
+     * @return The exercise-muscle relationship if found, or 404 if not found
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @GetMapping("/exercise/{exerciseName}/muscle/{muscleName}")
     @Operation(
         summary = "Get exercise muscle relationship",
@@ -87,6 +147,17 @@ class ExerciseMuscleController(
             }
     }
 
+    /**
+     * Creates a new exercise-muscle relationship.
+     *
+     * This endpoint creates a new relationship between an exercise and a muscle.
+     * This relationship defines how the exercise targets the specific muscle group.
+     *
+     * @param exerciseMuscle The exercise-muscle relationship to create
+     * @return The created relationship with assigned ID
+     *
+     * @throws DatabaseException if database operation fails
+     */
     @PostMapping("/")
     @Operation(
         summary = "Create exercise muscle relationship",
