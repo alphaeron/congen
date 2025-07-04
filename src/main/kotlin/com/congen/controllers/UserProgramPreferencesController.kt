@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 @RestController
-@RequestMapping("/user_program_preferences")
+@RequestMapping("/user-program-preferences")
 class UserProgramPreferencesController(
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
 ) {
@@ -26,14 +26,9 @@ class UserProgramPreferencesController(
         @RequestBody userProgramPreferences: UserProgramPreferences,
     ): ResponseEntity<*> {
         logger.info("Saving user program preferences: {}", userProgramPreferences.userId)
-        return try {
-            ResponseEntity.ok(
-                userProgramPreferencesDAL.insertUserProgramPreferences(userProgramPreferences),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving user program preferences: {}", userProgramPreferences.userId, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userProgramPreferencesDAL.insertUserProgramPreferences(userProgramPreferences),
+        )
     }
 
     @GetMapping("/{userId}")
@@ -42,11 +37,11 @@ class UserProgramPreferencesController(
     ): Mono<ResponseEntity<UserProgramPreferences>> {
         return userProgramPreferencesDAL.selectUserProgramPreferences(userId)
             .map {
-                logger.debug("Found program preferences for user: {}", userId)
+                logger.debug("Found user program preferences: {}", userId)
                 ResponseEntity.ok(it)
             }
             .doOnError { e ->
-                logger.error("Error getting user program preferences for user: {}", userId, e)
+                logger.error("Error getting user program preferences: {}", userId, e)
             }
     }
 
@@ -55,14 +50,9 @@ class UserProgramPreferencesController(
         @RequestBody userProgramPreferences: UserProgramPreferences,
     ): ResponseEntity<*> {
         logger.info("Updating user program preferences: {}", userProgramPreferences.userId)
-        return try {
-            ResponseEntity.ok(
-                userProgramPreferencesDAL.updateUserProgramPreferences(userProgramPreferences),
-            )
-        } catch (e: Exception) {
-            logger.error("Error updating user program preferences: {}", userProgramPreferences.userId, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userProgramPreferencesDAL.updateUserProgramPreferences(userProgramPreferences),
+        )
     }
 
     @PostMapping("/delete/{userId}")
@@ -70,13 +60,8 @@ class UserProgramPreferencesController(
         @PathVariable("userId") userId: Int,
     ): ResponseEntity<*> {
         logger.info("Deleting user program preferences: {}", userId)
-        return try {
-            ResponseEntity.ok(
-                userProgramPreferencesDAL.deleteUserProgramPreferences(userId),
-            )
-        } catch (e: Exception) {
-            logger.error("Error deleting user program preferences: {}", userId, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userProgramPreferencesDAL.deleteUserProgramPreferences(userId),
+        )
     }
 }

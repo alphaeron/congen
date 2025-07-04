@@ -30,14 +30,9 @@ class MuscleController(
         @RequestBody muscle: Muscle,
     ): ResponseEntity<*> {
         logger.info("Saving muscle: {}", muscle.name)
-        return try {
-            ResponseEntity.ok(
-                muscleDAL.insertMuscle(muscle),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving muscle: {}", muscle.name, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            muscleDAL.insertMuscle(muscle),
+        )
     }
 
     @GetMapping("/{name}")
@@ -89,13 +84,8 @@ class MuscleController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all muscles")
-        return try {
-            ResponseEntity.ok(
-                muscleDAL.selectMuscles(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all muscles", e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            muscleDAL.selectMuscles(),
+        )
     }
 }

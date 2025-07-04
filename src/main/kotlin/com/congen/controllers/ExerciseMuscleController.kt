@@ -25,14 +25,9 @@ class ExerciseMuscleController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all exercise muscle relationships")
-        return try {
-            ResponseEntity.ok(
-                exerciseMuscleDAL.selectAllExerciseMuscle(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all exercise muscle relationships", e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            exerciseMuscleDAL.selectAllExerciseMuscle(),
+        )
     }
 
     @GetMapping("/exercise/{exerciseName}/muscle/{muscleName}")
@@ -59,13 +54,8 @@ class ExerciseMuscleController(
         @RequestBody exerciseMuscle: ExerciseMuscle,
     ): ResponseEntity<*> {
         logger.info("Saving exercise muscle relationship: {} - {}", exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
-        return try {
-            ResponseEntity.ok(
-                exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving exercise muscle relationship: {} - {}", exerciseMuscle.exerciseName, exerciseMuscle.muscleName, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle),
+        )
     }
 }

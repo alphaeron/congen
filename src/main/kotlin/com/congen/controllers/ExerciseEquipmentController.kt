@@ -22,14 +22,9 @@ class ExerciseEquipmentController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all exercise equipment relationships")
-        return try {
-            ResponseEntity.ok(
-                exerciseEquipmentDAL.selectAllExerciseEquipment(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all exercise equipment relationships", e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            exerciseEquipmentDAL.selectAllExerciseEquipment(),
+        )
     }
 
     @PostMapping("/")
@@ -37,18 +32,8 @@ class ExerciseEquipmentController(
         @RequestBody exerciseEquipment: ExerciseEquipment,
     ): ResponseEntity<*> {
         logger.info("Saving exercise equipment relationship: {} - {}", exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
-        return try {
-            ResponseEntity.ok(
-                exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment),
-            )
-        } catch (e: Exception) {
-            logger.error(
-                "Error saving exercise equipment relationship: {} - {}",
-                exerciseEquipment.exerciseName,
-                exerciseEquipment.equipmentName,
-                e,
-            )
-            throw e
-        }
+        return ResponseEntity.ok(
+            exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment),
+        )
     }
 }

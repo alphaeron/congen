@@ -110,11 +110,12 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
     
-    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
-    integrationTestImplementation 'io.projectreactor:reactor-test:3.6.5'
-    integrationTestImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
     integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.3'
     integrationTestImplementation 'org.testcontainers:postgresql:1.19.3'
+}
+
+configurations {
+    integrationTestImplementation.extendsFrom implementation, testImplementation
 }
 
 jib {

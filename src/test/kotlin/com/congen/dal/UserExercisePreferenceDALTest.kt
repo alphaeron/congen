@@ -65,7 +65,6 @@ class UserExercisePreferenceDALTest {
                     (user_id, exercise_name, should_avoid)
                 VALUES
                     ($1, $2, $3)
-                RETURNING user_id, exercise_name, should_avoid
                 """.trimIndent(),
                 pref.userId,
                 pref.exerciseName,
@@ -80,7 +79,6 @@ class UserExercisePreferenceDALTest {
                 (user_id, exercise_name, should_avoid)
             VALUES
                 ($1, $2, $3)
-            RETURNING user_id, exercise_name, should_avoid
             """.trimIndent(),
             pref.userId,
             pref.exerciseName,
@@ -97,7 +95,6 @@ class UserExercisePreferenceDALTest {
                 UPDATE user_exercise_preference
                 SET should_avoid=$3
                 WHERE user_id=$1 AND exercise_name=$2
-                RETURNING user_id, exercise_name, should_avoid
                 """.trimIndent(),
                 pref.userId,
                 pref.exerciseName,
@@ -111,7 +108,6 @@ class UserExercisePreferenceDALTest {
             UPDATE user_exercise_preference
             SET should_avoid=$3
             WHERE user_id=$1 AND exercise_name=$2
-            RETURNING user_id, exercise_name, should_avoid
             """.trimIndent(),
             pref.userId,
             pref.exerciseName,
@@ -124,7 +120,7 @@ class UserExercisePreferenceDALTest {
         val pref = UserExercisePreference(userId = 1, exerciseName = "Bench Press", shouldAvoid = true)
         whenever(
             postgresClient.update<UserExercisePreference>(
-                "DELETE FROM user_exercise_preference WHERE user_id=$1 AND exercise_name=$2 RETURNING user_id, exercise_name, should_avoid",
+                "DELETE FROM user_exercise_preference WHERE user_id=$1 AND exercise_name=$2",
                 1,
                 "Bench Press",
             ),
@@ -134,7 +130,7 @@ class UserExercisePreferenceDALTest {
         verify(
             postgresClient,
         ).update<UserExercisePreference>(
-            "DELETE FROM user_exercise_preference WHERE user_id=$1 AND exercise_name=$2 RETURNING user_id, exercise_name, should_avoid",
+            "DELETE FROM user_exercise_preference WHERE user_id=$1 AND exercise_name=$2",
             1,
             "Bench Press",
         )

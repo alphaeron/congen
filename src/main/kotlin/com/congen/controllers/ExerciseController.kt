@@ -33,14 +33,9 @@ class ExerciseController(
         @RequestBody exercise: Exercise,
     ): ResponseEntity<*> {
         logger.info("Saving exercise: {}", exercise.name)
-        return try {
-            ResponseEntity.ok(
-                exerciseDAL.insertExercise(exercise),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving exercise: {}", exercise.name, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            exerciseDAL.insertExercise(exercise),
+        )
     }
 
     @GetMapping("/{name}")
@@ -116,13 +111,8 @@ class ExerciseController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all exercises")
-        return try {
-            ResponseEntity.ok(
-                exerciseDAL.selectExercises(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all exercises", e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            exerciseDAL.selectExercises(),
+        )
     }
 }

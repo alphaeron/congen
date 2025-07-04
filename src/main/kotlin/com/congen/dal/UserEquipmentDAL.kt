@@ -42,7 +42,6 @@ class UserEquipmentDAL(
                 (user_id, equipment_name)
             VALUES
                 ($1, $2)
-            RETURNING user_id, equipment_name
             """.trimIndent(),
             userEquipment.userId,
             userEquipment.equipmentName,
@@ -55,7 +54,7 @@ class UserEquipmentDAL(
     ): Mono<UserEquipment> {
         logger.debug("Deleting user equipment: {} - {}", userId, equipmentName)
         return postgresClient.update(
-            "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2 RETURNING user_id, equipment_name",
+            "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
             userId,
             equipmentName,
         )

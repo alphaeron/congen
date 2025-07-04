@@ -1,22 +1,6 @@
-program
-
-num days
-
-day
-goal (me upper, de lower, ...)
-structure x count
-
-structure
-title (needs to match movememntType for exercise)
-exercise constraints (primary movement, unilateral ...) note the movementType constraint from title above
-sets
-reps
-weight %
+add documentation
 
 defined program length for how often to cycle exercises at a minimum
-
-pre-code two day per week, three day per week, four day per week
-no custom workout program format
 
 
 algorithm to generate programmed workout

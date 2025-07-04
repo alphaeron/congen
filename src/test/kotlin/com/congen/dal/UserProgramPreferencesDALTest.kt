@@ -41,7 +41,6 @@ class UserProgramPreferencesDALTest {
                     (user_id, program_days_per_week, session_time_length_in_minutes)
                 VALUES
                     ($1, $2, $3)
-                RETURNING user_id, program_days_per_week, session_time_length_in_minutes
                 """.trimIndent(),
                 prefs.userId,
                 prefs.programDaysPerWeek,
@@ -56,7 +55,6 @@ class UserProgramPreferencesDALTest {
                 (user_id, program_days_per_week, session_time_length_in_minutes)
             VALUES
                 ($1, $2, $3)
-            RETURNING user_id, program_days_per_week, session_time_length_in_minutes
             """.trimIndent(),
             prefs.userId,
             prefs.programDaysPerWeek,
@@ -66,14 +64,13 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `updateUserProgramPreferences should return updated preferences`() {
-        val prefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 5, sessionTimeLengthInMinutes = 75)
+        val prefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 3, sessionTimeLengthInMinutes = 75)
         whenever(
             postgresClient.update<UserProgramPreferences>(
                 """
                 UPDATE user_program_preferences
                 SET program_days_per_week=$2, session_time_length_in_minutes=$3
                 WHERE user_id=$1
-                RETURNING user_id, program_days_per_week, session_time_length_in_minutes
                 """.trimIndent(),
                 prefs.userId,
                 prefs.programDaysPerWeek,
@@ -87,7 +84,6 @@ class UserProgramPreferencesDALTest {
             UPDATE user_program_preferences
             SET program_days_per_week=$2, session_time_length_in_minutes=$3
             WHERE user_id=$1
-            RETURNING user_id, program_days_per_week, session_time_length_in_minutes
             """.trimIndent(),
             prefs.userId,
             prefs.programDaysPerWeek,
@@ -103,7 +99,6 @@ class UserProgramPreferencesDALTest {
                 """
                 DELETE FROM user_program_preferences
                 WHERE user_id=$1
-                RETURNING user_id, program_days_per_week, session_time_length_in_minutes
                 """.trimIndent(),
                 1,
             ),
@@ -116,7 +111,6 @@ class UserProgramPreferencesDALTest {
             """
             DELETE FROM user_program_preferences
             WHERE user_id=$1
-            RETURNING user_id, program_days_per_week, session_time_length_in_minutes
             """.trimIndent(),
             1,
         )

@@ -42,7 +42,6 @@ class UserExercisePreferenceDAL(
                 (user_id, exercise_name, should_avoid)
             VALUES
                 ($1, $2, $3)
-            RETURNING user_id, exercise_name, should_avoid
             """.trimIndent(),
             userExercisePreference.userId,
             userExercisePreference.exerciseName,
@@ -57,7 +56,6 @@ class UserExercisePreferenceDAL(
             UPDATE user_exercise_preference
             SET should_avoid=$3
             WHERE user_id=$1 AND exercise_name=$2
-            RETURNING user_id, exercise_name, should_avoid
             """.trimIndent(),
             userExercisePreference.userId,
             userExercisePreference.exerciseName,
@@ -71,7 +69,7 @@ class UserExercisePreferenceDAL(
     ): Mono<UserExercisePreference> {
         logger.debug("Deleting user exercise preference: {} - {}", userId, exerciseName)
         return postgresClient.update(
-            "DELETE FROM user_exercise_preference WHERE user_id=$1 AND exercise_name=$2 RETURNING user_id, exercise_name, should_avoid",
+            "DELETE FROM user_exercise_preference WHERE user_id=$1 AND exercise_name=$2",
             userId,
             exerciseName,
         )

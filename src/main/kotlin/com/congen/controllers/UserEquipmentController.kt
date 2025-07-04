@@ -26,14 +26,9 @@ class UserEquipmentController(
         @RequestBody userEquipment: UserEquipment,
     ): ResponseEntity<*> {
         logger.info("Saving user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName)
-        return try {
-            ResponseEntity.ok(
-                userEquipmentDAL.insertUserEquipment(userEquipment),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userEquipmentDAL.insertUserEquipment(userEquipment),
+        )
     }
 
     @GetMapping("/{userId}")
@@ -55,13 +50,8 @@ class UserEquipmentController(
         @RequestBody userEquipment: UserEquipment,
     ): ResponseEntity<*> {
         logger.info("Deleting user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName)
-        return try {
-            ResponseEntity.ok(
-                userEquipmentDAL.deleteUserEquipment(userEquipment.userId, userEquipment.equipmentName),
-            )
-        } catch (e: Exception) {
-            logger.error("Error deleting user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userEquipmentDAL.deleteUserEquipment(userEquipment.userId, userEquipment.equipmentName),
+        )
     }
 }

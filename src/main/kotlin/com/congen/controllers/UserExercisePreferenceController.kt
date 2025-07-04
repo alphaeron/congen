@@ -26,19 +26,9 @@ class UserExercisePreferenceController(
         @RequestBody userExercisePreference: UserExercisePreference,
     ): ResponseEntity<*> {
         logger.info("Saving user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
-        return try {
-            ResponseEntity.ok(
-                userExercisePreferenceDAL.insertUserExercisePreference(userExercisePreference),
-            )
-        } catch (e: Exception) {
-            logger.error(
-                "Error saving user exercise preference: {} - {}",
-                userExercisePreference.userId,
-                userExercisePreference.exerciseName,
-                e,
-            )
-            throw e
-        }
+        return ResponseEntity.ok(
+            userExercisePreferenceDAL.insertUserExercisePreference(userExercisePreference),
+        )
     }
 
     @GetMapping("/{userId}")
@@ -46,9 +36,9 @@ class UserExercisePreferenceController(
         @PathVariable("userId") userId: Int,
     ): Mono<ResponseEntity<List<UserExercisePreference>>> {
         return userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
-            .map {
+            .map { preferences ->
                 logger.debug("Found exercise preferences for user: {}", userId)
-                ResponseEntity.ok(it)
+                ResponseEntity.ok(preferences)
             }
             .doOnError { e ->
                 logger.error("Error getting user exercise preferences for user: {}", userId, e)
@@ -60,19 +50,9 @@ class UserExercisePreferenceController(
         @RequestBody userExercisePreference: UserExercisePreference,
     ): ResponseEntity<*> {
         logger.info("Updating user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
-        return try {
-            ResponseEntity.ok(
-                userExercisePreferenceDAL.updateUserExercisePreference(userExercisePreference),
-            )
-        } catch (e: Exception) {
-            logger.error(
-                "Error updating user exercise preference: {} - {}",
-                userExercisePreference.userId,
-                userExercisePreference.exerciseName,
-                e,
-            )
-            throw e
-        }
+        return ResponseEntity.ok(
+            userExercisePreferenceDAL.updateUserExercisePreference(userExercisePreference),
+        )
     }
 
     @PostMapping("/delete")
@@ -80,18 +60,8 @@ class UserExercisePreferenceController(
         @RequestBody userExercisePreference: UserExercisePreference,
     ): ResponseEntity<*> {
         logger.info("Deleting user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
-        return try {
-            ResponseEntity.ok(
-                userExercisePreferenceDAL.deleteUserExercisePreference(userExercisePreference.userId, userExercisePreference.exerciseName),
-            )
-        } catch (e: Exception) {
-            logger.error(
-                "Error deleting user exercise preference: {} - {}",
-                userExercisePreference.userId,
-                userExercisePreference.exerciseName,
-                e,
-            )
-            throw e
-        }
+        return ResponseEntity.ok(
+            userExercisePreferenceDAL.deleteUserExercisePreference(userExercisePreference.userId, userExercisePreference.exerciseName),
+        )
     }
 }

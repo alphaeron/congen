@@ -26,14 +26,9 @@ class UserController(
         @RequestBody user: User,
     ): ResponseEntity<*> {
         logger.info("Saving user: {}", user.name)
-        return try {
-            ResponseEntity.ok(
-                userDAL.insertUser(user),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving user: {}", user.name, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userDAL.insertUser(user),
+        )
     }
 
     @GetMapping("/{id}")
@@ -53,14 +48,9 @@ class UserController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all users")
-        return try {
-            ResponseEntity.ok(
-                userDAL.selectUsers(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all users", e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userDAL.selectUsers(),
+        )
     }
 
     @PostMapping("/update")
@@ -68,14 +58,9 @@ class UserController(
         @RequestBody user: User,
     ): ResponseEntity<*> {
         logger.info("Updating user: {}", user.id)
-        return try {
-            ResponseEntity.ok(
-                userDAL.updateUser(user),
-            )
-        } catch (e: Exception) {
-            logger.error("Error updating user: {}", user.id, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userDAL.updateUser(user),
+        )
     }
 
     @PostMapping("/delete/{id}")
@@ -83,13 +68,8 @@ class UserController(
         @PathVariable("id") id: Int,
     ): ResponseEntity<*> {
         logger.info("Deleting user: {}", id)
-        return try {
-            ResponseEntity.ok(
-                userDAL.deleteUser(id),
-            )
-        } catch (e: Exception) {
-            logger.error("Error deleting user: {}", id, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            userDAL.deleteUser(id),
+        )
     }
 }

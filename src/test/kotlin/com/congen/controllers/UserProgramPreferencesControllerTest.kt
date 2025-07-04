@@ -44,7 +44,7 @@ class UserProgramPreferencesControllerTest {
 
     @Test
     fun `update should return updated user program preferences`() {
-        val prefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 5, sessionTimeLengthInMinutes = 75)
+        val prefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 3, sessionTimeLengthInMinutes = 75)
         whenever(userProgramPreferencesDAL.updateUserProgramPreferences(prefs)).thenReturn(Mono.just(prefs))
         val result = userProgramPreferencesController.update(prefs)
         assert(result.statusCode == HttpStatus.OK)

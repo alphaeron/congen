@@ -58,7 +58,6 @@ class UserEquipmentDALTest {
                     (user_id, equipment_name)
                 VALUES
                     ($1, $2)
-                RETURNING user_id, equipment_name
                 """.trimIndent(),
                 userEquipment.userId,
                 userEquipment.equipmentName,
@@ -72,7 +71,6 @@ class UserEquipmentDALTest {
                 (user_id, equipment_name)
             VALUES
                 ($1, $2)
-            RETURNING user_id, equipment_name
             """.trimIndent(),
             userEquipment.userId,
             userEquipment.equipmentName,
@@ -84,7 +82,7 @@ class UserEquipmentDALTest {
         val userEquipment = UserEquipment(userId = 1, equipmentName = "Barbell")
         whenever(
             postgresClient.update<UserEquipment>(
-                "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2 RETURNING user_id, equipment_name",
+                "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
                 1,
                 "Barbell",
             ),
@@ -94,7 +92,7 @@ class UserEquipmentDALTest {
         verify(
             postgresClient,
         ).update<UserEquipment>(
-            "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2 RETURNING user_id, equipment_name",
+            "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
             1,
             "Barbell",
         )

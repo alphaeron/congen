@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.model.User
+import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -29,13 +30,18 @@ class UserDAL(
 
     fun insertUser(user: User): Mono<User> {
         logger.debug("Inserting user: {}", user.name)
+
+        // Validate all CHECK constraints
+        ValidationUtil.validateUserAge(user.age)
+        ValidationUtil.validateUserHeight(user.height)
+        ValidationUtil.validateUserWeight(user.weight)
+
         return postgresClient.update(
             """
             INSERT INTO "user"
                 (name, age, height, weight)
             VALUES
                 ($1, $2, $3, $4)
-            RETURNING id, name, age, height, weight
             """.trimIndent(),
             user.name,
             user.age,
@@ -46,12 +52,17 @@ class UserDAL(
 
     fun updateUser(user: User): Mono<User> {
         logger.debug("Updating user: {}", user.id)
+
+        // Validate all CHECK constraints
+        ValidationUtil.validateUserAge(user.age)
+        ValidationUtil.validateUserHeight(user.height)
+        ValidationUtil.validateUserWeight(user.weight)
+
         return postgresClient.update(
             """
             UPDATE "user"
             SET name=$2, age=$3, height=$4, weight=$5
             WHERE id=$1
-            RETURNING id, name, age, height, weight
             """.trimIndent(),
             user.id,
             user.name,
@@ -64,7 +75,7 @@ class UserDAL(
     fun deleteUser(userId: Int): Mono<User> {
         logger.debug("Deleting user: {}", userId)
         return postgresClient.update(
-            "DELETE FROM \"user\" WHERE id=$1 RETURNING id, name, age, height, weight",
+            "DELETE FROM \"user\" WHERE id=$1",
             userId,
         )
     }

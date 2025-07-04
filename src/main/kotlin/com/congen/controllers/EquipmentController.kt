@@ -30,14 +30,9 @@ class EquipmentController(
         @RequestBody equipment: Equipment,
     ): ResponseEntity<*> {
         logger.info("Saving equipment: {}", equipment.name)
-        return try {
-            ResponseEntity.ok(
-                equipmentDAL.insertEquipment(equipment),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving equipment: {}", equipment.name, e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            equipmentDAL.insertEquipment(equipment),
+        )
     }
 
     @GetMapping("/{name}")
@@ -89,13 +84,8 @@ class EquipmentController(
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all equipment")
-        return try {
-            ResponseEntity.ok(
-                equipmentDAL.selectEquipment(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all equipment", e)
-            throw e
-        }
+        return ResponseEntity.ok(
+            equipmentDAL.selectEquipment(),
+        )
     }
 }
