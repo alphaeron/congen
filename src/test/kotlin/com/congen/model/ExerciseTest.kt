@@ -8,20 +8,20 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ExerciseTest {
-
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
     fun `should create exercise with all properties`() {
         // Given & When
-        val exercise = Exercise(
-            name = "Bench Press",
-            description = "A compound exercise",
-            movementType = "push",
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
-        )
+        val exercise =
+            Exercise(
+                name = "Bench Press",
+                description = "A compound exercise",
+                movementType = "push",
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false,
+            )
 
         // Then
         assertEquals("Bench Press", exercise.name)
@@ -35,14 +35,15 @@ class ExerciseTest {
     @Test
     fun `should serialize to JSON with snake_case`() {
         // Given
-        val exercise = Exercise(
-            name = "Bench Press",
-            description = "A compound exercise",
-            movementType = "push",
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
-        )
+        val exercise =
+            Exercise(
+                name = "Bench Press",
+                description = "A compound exercise",
+                movementType = "push",
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false,
+            )
 
         // When
         val json = objectMapper.writeValueAsString(exercise)
@@ -59,7 +60,8 @@ class ExerciseTest {
     @Test
     fun `should deserialize from JSON with snake_case`() {
         // Given
-        val json = """
+        val json =
+            """
             {
                 "name": "Bench Press",
                 "description": "A compound exercise",
@@ -68,7 +70,7 @@ class ExerciseTest {
                 "is_upper": true,
                 "is_accessory": false
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val exercise = objectMapper.readValue(json, Exercise::class.java)
@@ -85,7 +87,8 @@ class ExerciseTest {
     @Test
     fun `should ignore unknown properties during deserialization`() {
         // Given
-        val json = """
+        val json =
+            """
             {
                 "name": "Bench Press",
                 "description": "A compound exercise",
@@ -95,7 +98,7 @@ class ExerciseTest {
                 "is_accessory": false,
                 "unknown_property": "should be ignored"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val exercise = objectMapper.readValue(json, Exercise::class.java)
@@ -112,30 +115,33 @@ class ExerciseTest {
     @Test
     fun `should have correct equals and hashCode`() {
         // Given
-        val exercise1 = Exercise(
-            name = "Bench Press",
-            description = "A compound exercise",
-            movementType = "push",
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
-        )
-        val exercise2 = Exercise(
-            name = "Bench Press",
-            description = "A compound exercise",
-            movementType = "push",
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
-        )
-        val exercise3 = Exercise(
-            name = "Squat",
-            description = "A compound exercise",
-            movementType = "push",
-            isUnilateral = false,
-            isUpper = false,
-            isAccessory = false
-        )
+        val exercise1 =
+            Exercise(
+                name = "Bench Press",
+                description = "A compound exercise",
+                movementType = "push",
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false,
+            )
+        val exercise2 =
+            Exercise(
+                name = "Bench Press",
+                description = "A compound exercise",
+                movementType = "push",
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false,
+            )
+        val exercise3 =
+            Exercise(
+                name = "Squat",
+                description = "A compound exercise",
+                movementType = "push",
+                isUnilateral = false,
+                isUpper = false,
+                isAccessory = false,
+            )
 
         // Then
         assertEquals(exercise1, exercise2)
@@ -143,4 +149,4 @@ class ExerciseTest {
         assertFalse(exercise1 == exercise3)
         assertFalse(exercise1.hashCode() == exercise3.hashCode())
     }
-} 
+}

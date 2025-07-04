@@ -8,7 +8,6 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
@@ -25,10 +24,11 @@ class ExerciseEquipmentControllerTest {
     @Test
     fun `save should return saved exercise equipment`() {
         // Given
-        val exerciseEquipment = ExerciseEquipment(
-            exerciseName = "Bench Press",
-            equipmentName = "Barbell"
-        )
+        val exerciseEquipment =
+            ExerciseEquipment(
+                exerciseName = "Bench Press",
+                equipmentName = "Barbell",
+            )
         whenever(exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment)).thenReturn(Mono.just(exerciseEquipment))
 
         // When
@@ -46,16 +46,17 @@ class ExerciseEquipmentControllerTest {
     @Test
     fun `getAll should return all exercise equipment`() {
         // Given
-        val exerciseEquipmentList = listOf(
-            ExerciseEquipment(
-                exerciseName = "Bench Press",
-                equipmentName = "Barbell"
-            ),
-            ExerciseEquipment(
-                exerciseName = "Squat",
-                equipmentName = "Barbell"
+        val exerciseEquipmentList =
+            listOf(
+                ExerciseEquipment(
+                    exerciseName = "Bench Press",
+                    equipmentName = "Barbell",
+                ),
+                ExerciseEquipment(
+                    exerciseName = "Squat",
+                    equipmentName = "Barbell",
+                ),
             )
-        )
         whenever(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(exerciseEquipmentList))
 
         // When
@@ -69,4 +70,4 @@ class ExerciseEquipmentControllerTest {
             .verifyComplete()
         verify(exerciseEquipmentDAL).selectAllExerciseEquipment()
     }
-} 
+}

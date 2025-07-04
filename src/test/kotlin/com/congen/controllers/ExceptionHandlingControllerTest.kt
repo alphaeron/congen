@@ -2,11 +2,8 @@ package com.congen.controllers
 
 import com.congen.exceptions.InvalidResultException
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
 
 class ExceptionHandlingControllerTest {
-
     private val exceptionHandlingController = ExceptionHandlingController()
 
     @Test
@@ -17,7 +14,7 @@ class ExceptionHandlingControllerTest {
         // When & Then
         // The method should not throw any exception
         exceptionHandlingController.conflict()
-        
+
         // This test verifies that the method exists and can be called
         // The actual exception handling is done by Spring's exception handling mechanism
         // which is tested through integration tests
@@ -29,4 +26,4 @@ class ExceptionHandlingControllerTest {
         // This test verifies that the method is public and accessible
         exceptionHandlingController.conflict()
     }
-} 
+}

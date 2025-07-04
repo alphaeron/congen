@@ -37,6 +37,12 @@ compileTestKotlin {
         jvmTarget = "17"
     }
 }
+compileIntegrationTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ["-Xjsr305=strict"]
+        jvmTarget = "17"
+    }
+}
 
 repositories {
 	  mavenCentral()
@@ -44,6 +50,30 @@ repositories {
 
 group = 'com.congen'
 version = '0.0.1-SNAPSHOT'
+
+def versionInfo = versionDetails()
+def timestamp = new Date().getTime()
+def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${timestamp}"
+
+// Task to generate version properties
+task generateVersionProperties {
+    doLast {
+        def versionProps = new Properties()
+        versionProps.setProperty('app.version', version)
+        versionProps.setProperty('app.releaseId', tag)
+        versionProps.setProperty('app.buildTime', new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+        versionProps.setProperty('app.gitHash', versionInfo.gitHash)
+        versionProps.setProperty('app.gitBranch', versionInfo.branchName)
+        versionProps.setProperty('app.gitDirty', versionInfo.isCleanTag ? 'false' : 'true')
+        
+        def versionFile = file("${sourceSets.main.resources.srcDirs.first()}/version.properties")
+        versionFile.parentFile.mkdirs()
+        versionFile.withOutputStream { versionProps.store(it, 'Generated version information') }
+    }
+}
+
+// Make processResources depend on generateVersionProperties
+processResources.dependsOn generateVersionProperties
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux:3.2.5'
@@ -69,6 +99,9 @@ dependencies {
 
     implementation 'io.projectreactor.kotlin:reactor-kotlin-extensions:1.2.2'
 
+    // Logging
+    implementation 'org.slf4j:slf4j-api:2.0.12'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
     //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
     testImplementation 'io.projectreactor:reactor-test:3.6.5'
@@ -76,11 +109,13 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.18.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
+    
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
+    integrationTestImplementation 'io.projectreactor:reactor-test:3.6.5'
+    integrationTestImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    integrationTestImplementation 'org.testcontainers:postgresql:1.19.3'
 }
-
-def versionInfo = versionDetails()
-def timestamp = new Date().getTime()
-def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${timestamp}"
 
 jib {
     from {

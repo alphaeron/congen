@@ -1,13 +1,11 @@
 package com.congen.client
 
-import com.congen.model.Exercise
 import io.vertx.sqlclient.SqlClient
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 
 class PostgresClientTest {
-
     private lateinit var postgresDBReader: SqlClient
     private lateinit var postgresDBWriter: SqlClient
     private lateinit var postgresClient: PostgresClient
@@ -45,4 +43,4 @@ class PostgresClientTest {
         // The actual implementation would require complex Vert.x mocking
         assert(postgresClient.javaClass.getMethod("update", String::class.java, Array<Any>::class.java) != null)
     }
-} 
+}

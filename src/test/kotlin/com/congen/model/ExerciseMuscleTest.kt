@@ -8,16 +8,16 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ExerciseMuscleTest {
-
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
     fun `should create exercise muscle with all properties`() {
         // Given & When
-        val exerciseMuscle = ExerciseMuscle(
-            exerciseName = "Bench Press",
-            muscleName = "Chest"
-        )
+        val exerciseMuscle =
+            ExerciseMuscle(
+                exerciseName = "Bench Press",
+                muscleName = "Chest",
+            )
 
         // Then
         assertEquals("Bench Press", exerciseMuscle.exerciseName)
@@ -27,10 +27,11 @@ class ExerciseMuscleTest {
     @Test
     fun `should serialize to JSON with snake_case`() {
         // Given
-        val exerciseMuscle = ExerciseMuscle(
-            exerciseName = "Bench Press",
-            muscleName = "Chest"
-        )
+        val exerciseMuscle =
+            ExerciseMuscle(
+                exerciseName = "Bench Press",
+                muscleName = "Chest",
+            )
 
         // When
         val json = objectMapper.writeValueAsString(exerciseMuscle)
@@ -43,12 +44,13 @@ class ExerciseMuscleTest {
     @Test
     fun `should deserialize from JSON with snake_case`() {
         // Given
-        val json = """
+        val json =
+            """
             {
                 "exercise_name": "Bench Press",
                 "muscle_name": "Chest"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val exerciseMuscle = objectMapper.readValue(json, ExerciseMuscle::class.java)
@@ -61,13 +63,14 @@ class ExerciseMuscleTest {
     @Test
     fun `should ignore unknown properties during deserialization`() {
         // Given
-        val json = """
+        val json =
+            """
             {
                 "exercise_name": "Bench Press",
                 "muscle_name": "Chest",
                 "unknown_property": "should be ignored"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         // When
         val exerciseMuscle = objectMapper.readValue(json, ExerciseMuscle::class.java)
@@ -80,18 +83,21 @@ class ExerciseMuscleTest {
     @Test
     fun `should have correct equals and hashCode`() {
         // Given
-        val exerciseMuscle1 = ExerciseMuscle(
-            exerciseName = "Bench Press",
-            muscleName = "Chest"
-        )
-        val exerciseMuscle2 = ExerciseMuscle(
-            exerciseName = "Bench Press",
-            muscleName = "Chest"
-        )
-        val exerciseMuscle3 = ExerciseMuscle(
-            exerciseName = "Squat",
-            muscleName = "Legs"
-        )
+        val exerciseMuscle1 =
+            ExerciseMuscle(
+                exerciseName = "Bench Press",
+                muscleName = "Chest",
+            )
+        val exerciseMuscle2 =
+            ExerciseMuscle(
+                exerciseName = "Bench Press",
+                muscleName = "Chest",
+            )
+        val exerciseMuscle3 =
+            ExerciseMuscle(
+                exerciseName = "Squat",
+                muscleName = "Legs",
+            )
 
         // Then
         assertEquals(exerciseMuscle1, exerciseMuscle2)
@@ -99,4 +105,4 @@ class ExerciseMuscleTest {
         assertFalse(exerciseMuscle1 == exerciseMuscle3)
         assertFalse(exerciseMuscle1.hashCode() == exerciseMuscle3.hashCode())
     }
-} 
+}

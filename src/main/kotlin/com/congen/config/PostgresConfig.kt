@@ -2,9 +2,10 @@ package com.congen.config
 
 import io.vertx.core.Vertx
 import io.vertx.pgclient.PgBuilder
-import io.vertx.sqlclient.SqlClient
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.PoolOptions
+import io.vertx.sqlclient.SqlClient
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -19,29 +20,60 @@ class PostgresConfig(
     @Value("\${congen.postgres.db-name}") private val dbName: String,
     @Value("\${congen.postgres.ssl-mode}") private val sslMode: Boolean,
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(PostgresConfig::class.java)
+        private val CONNECTION_POOL_COUNT_READER = 32
+        private val CONNECTION_POOL_COUNT_WRITER = 10
+    }
+
     @Bean("postgresDBWriter")
-    fun postgresDBWriter() = buildSqlClient(writerHost, CONNECTION_POOL_COUNT_WRITER)
+    fun postgresDBWriter(): SqlClient {
+        logger.info("Initializing PostgreSQL writer connection on port {}", port)
+        return try {
+            buildSqlClient(writerHost, CONNECTION_POOL_COUNT_WRITER)
+        } catch (e: Exception) {
+            logger.error("Failed to initialize PostgreSQL writer connection", e)
+            throw e
+        }
+    }
 
     @Bean("postgresDBReader")
-    fun postgresDBReader() = buildSqlClient(readerHost, CONNECTION_POOL_COUNT_READER)
+    fun postgresDBReader(): SqlClient {
+        logger.info("Initializing PostgreSQL reader connection on port {}", port)
+        return try {
+            buildSqlClient(readerHost, CONNECTION_POOL_COUNT_READER)
+        } catch (e: Exception) {
+            logger.error("Failed to initialize PostgreSQL reader connection", e)
+            throw e
+        }
+    }
 
-    private fun buildSqlClient(host: String, poolSize: Int): SqlClient {
-        val connectionOptions: PgConnectOptions = PgConnectOptions()
-            .setPort(port)
-            .setHost(host)
-            .setDatabase(dbName)
-            .setUser(usernameV)
-            .setPassword(passwordV)
-            .setCachePreparedStatements(true)
-            .setPipeliningLimit(256)
-            .setIdleTimeout(10000)
-            .setReconnectAttempts(2)
-            .setReconnectInterval(1000)
-            .setSsl(sslMode)  // TODO True?
+    private fun buildSqlClient(
+        host: String,
+        poolSize: Int,
+    ): SqlClient {
+        logger.debug("Building SQL client with pool size: {}", poolSize)
 
-        val poolOptions: PoolOptions = PoolOptions()
-            .setMaxSize(poolSize)
-            .setMaxLifetime(60000)
+        val connectionOptions: PgConnectOptions =
+            PgConnectOptions()
+                .setPort(port)
+                .setHost(host)
+                .setDatabase(dbName)
+                .setUser(usernameV)
+                .setPassword(passwordV)
+                .setCachePreparedStatements(true)
+                .setPipeliningLimit(256)
+                .setIdleTimeout(10000)
+                .setReconnectAttempts(2)
+                .setReconnectInterval(1000)
+                .setSsl(sslMode) // TODO True?
+
+        val poolOptions: PoolOptions =
+            PoolOptions()
+                .setMaxSize(poolSize)
+                .setMaxLifetime(60000)
+
+        logger.debug("PostgreSQL connection configured - SSL Mode: {}", sslMode)
 
         return PgBuilder
             .client()
@@ -49,10 +81,5 @@ class PostgresConfig(
             .with(poolOptions)
             .using(Vertx.vertx())
             .build()
-    }
-
-    companion object {
-        private val CONNECTION_POOL_COUNT_READER = 32
-        private val CONNECTION_POOL_COUNT_WRITER = 10
     }
 }

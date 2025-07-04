@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.model.ExerciseEquipment
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 
@@ -9,44 +10,66 @@ import reactor.core.publisher.Mono
 class ExerciseEquipmentDAL(
     private val postgresClient: PostgresClient,
 ) {
-    fun selectExerciseEquipment(exerciseName: String, equipmentName: String): Mono<ExerciseEquipment> =
-        postgresClient.selectIndividual(
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExerciseEquipmentDAL::class.java)
+    }
+
+    fun selectExerciseEquipment(
+        exerciseName: String,
+        equipmentName: String,
+    ): Mono<ExerciseEquipment> {
+        logger.debug("Selecting exercise equipment: {} - {}", exerciseName, equipmentName)
+        return postgresClient.selectIndividual(
             "SELECT * FROM exercise_equipment WHERE exercise_name=$1 AND equipment_name=$2",
             exerciseName,
-            equipmentName
+            equipmentName,
         )
+    }
 
-    fun selectExerciseEquipmentByExercise(exerciseName: String): Mono<List<ExerciseEquipment>> =
-        postgresClient.select(
+    fun selectExerciseEquipmentByExercise(exerciseName: String): Mono<List<ExerciseEquipment>> {
+        logger.debug("Selecting equipment for exercise: {}", exerciseName)
+        return postgresClient.select(
             "SELECT * FROM exercise_equipment WHERE exercise_name=$1",
-            exerciseName
+            exerciseName,
         )
+    }
 
-    fun selectExerciseEquipmentByEquipment(equipmentName: String): Mono<List<ExerciseEquipment>> =
-        postgresClient.select(
+    fun selectExerciseEquipmentByEquipment(equipmentName: String): Mono<List<ExerciseEquipment>> {
+        logger.debug("Selecting exercises for equipment: {}", equipmentName)
+        return postgresClient.select(
             "SELECT * FROM exercise_equipment WHERE equipment_name=$1",
-            equipmentName
+            equipmentName,
         )
+    }
 
-    fun selectAllExerciseEquipment(): Mono<List<ExerciseEquipment>> =
-        postgresClient.select("SELECT * FROM exercise_equipment")
+    fun selectAllExerciseEquipment(): Mono<List<ExerciseEquipment>> {
+        logger.debug("Selecting all exercise equipment relationships")
+        return postgresClient.select("SELECT * FROM exercise_equipment")
+    }
 
-    fun insertExerciseEquipment(exerciseEquipment: ExerciseEquipment): Mono<ExerciseEquipment> =
-        postgresClient.update(
+    fun insertExerciseEquipment(exerciseEquipment: ExerciseEquipment): Mono<ExerciseEquipment> {
+        logger.debug("Inserting exercise equipment: {} - {}", exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+        return postgresClient.update(
             """
-                INSERT INTO exercise_equipment
-                    (exercise_name, equipment_name)
-                VALUES
-                    ($1, $2)
+            INSERT INTO exercise_equipment
+                (exercise_name, equipment_name)
+            VALUES
+                ($1, $2)
             """.trimIndent(),
             exerciseEquipment.exerciseName,
-            exerciseEquipment.equipmentName
+            exerciseEquipment.equipmentName,
         )
+    }
 
-    fun deleteExerciseEquipment(exerciseName: String, equipmentName: String): Mono<ExerciseEquipment> =
-        postgresClient.update(
+    fun deleteExerciseEquipment(
+        exerciseName: String,
+        equipmentName: String,
+    ): Mono<ExerciseEquipment> {
+        logger.debug("Deleting exercise equipment: {} - {}", exerciseName, equipmentName)
+        return postgresClient.update(
             "DELETE FROM exercise_equipment WHERE exercise_name=$1 AND equipment_name=$2",
             exerciseName,
-            equipmentName
+            equipmentName,
         )
-} 
+    }
+}

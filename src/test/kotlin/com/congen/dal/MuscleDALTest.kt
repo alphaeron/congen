@@ -2,16 +2,15 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.model.Muscle
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
 class MuscleDALTest {
-
     private lateinit var postgresClient: PostgresClient
     private lateinit var muscleDAL: MuscleDAL
 
@@ -25,15 +24,18 @@ class MuscleDALTest {
     fun `selectMuscleByName should return muscle`() {
         // Given
         val muscleName = "Chest"
-        val muscle = Muscle(
-            name = muscleName,
-            description = "Chest muscles"
-        )
+        val muscle =
+            Muscle(
+                name = muscleName,
+                description = "Chest muscles",
+            )
 
-        whenever(postgresClient.selectIndividual<Muscle>(
-            "SELECT * FROM muscle WHERE name=$1",
-            muscleName
-        )).thenReturn(Mono.just(muscle))
+        whenever(
+            postgresClient.selectIndividual<Muscle>(
+                "SELECT * FROM muscle WHERE name=$1",
+                muscleName,
+            ),
+        ).thenReturn(Mono.just(muscle))
 
         // When
         val result = muscleDAL.selectMuscleByName(muscleName)
@@ -45,23 +47,24 @@ class MuscleDALTest {
 
         verify(postgresClient).selectIndividual<Muscle>(
             "SELECT * FROM muscle WHERE name=$1",
-            muscleName
+            muscleName,
         )
     }
 
     @Test
     fun `selectMuscles should return list of muscles`() {
         // Given
-        val muscles = listOf(
-            Muscle(
-                name = "Chest",
-                description = "Chest muscles"
-            ),
-            Muscle(
-                name = "Back",
-                description = "Back muscles"
+        val muscles =
+            listOf(
+                Muscle(
+                    name = "Chest",
+                    description = "Chest muscles",
+                ),
+                Muscle(
+                    name = "Back",
+                    description = "Back muscles",
+                ),
             )
-        )
 
         whenever(postgresClient.select<Muscle>("SELECT * FROM muscle")).thenReturn(Mono.just(muscles))
 
@@ -79,23 +82,27 @@ class MuscleDALTest {
     @Test
     fun `insertMuscle should return inserted muscle`() {
         // Given
-        val muscle = Muscle(
-            name = "Chest",
-            description = "Chest muscles"
-        )
+        val muscle =
+            Muscle(
+                name = "Chest",
+                description = "Chest muscles",
+            )
 
-        val expectedQuery = """
+        val expectedQuery =
+            """
             INSERT INTO muscle
                 (name, description)
             VALUES
                 ($1, $2)
-        """.trimIndent()
+            """.trimIndent()
 
-        whenever(postgresClient.update<Muscle>(
-            expectedQuery,
-            muscle.name,
-            muscle.description
-        )).thenReturn(Mono.just(muscle))
+        whenever(
+            postgresClient.update<Muscle>(
+                expectedQuery,
+                muscle.name,
+                muscle.description,
+            ),
+        ).thenReturn(Mono.just(muscle))
 
         // When
         val result = muscleDAL.insertMuscle(muscle)
@@ -108,29 +115,33 @@ class MuscleDALTest {
         verify(postgresClient).update<Muscle>(
             expectedQuery,
             muscle.name,
-            muscle.description
+            muscle.description,
         )
     }
 
     @Test
     fun `updateMuscle should return updated muscle`() {
         // Given
-        val muscle = Muscle(
-            name = "Chest",
-            description = "Updated chest muscles description"
-        )
+        val muscle =
+            Muscle(
+                name = "Chest",
+                description = "Updated chest muscles description",
+            )
 
-        val expectedQuery = """
+        val expectedQuery =
+            """
             UPDATE muscle
             SET description=$2
             WHERE name=$1
-        """.trimIndent()
+            """.trimIndent()
 
-        whenever(postgresClient.update<Muscle>(
-            expectedQuery,
-            muscle.name,
-            muscle.description
-        )).thenReturn(Mono.just(muscle))
+        whenever(
+            postgresClient.update<Muscle>(
+                expectedQuery,
+                muscle.name,
+                muscle.description,
+            ),
+        ).thenReturn(Mono.just(muscle))
 
         // When
         val result = muscleDAL.updateMuscle(muscle)
@@ -143,7 +154,7 @@ class MuscleDALTest {
         verify(postgresClient).update<Muscle>(
             expectedQuery,
             muscle.name,
-            muscle.description
+            muscle.description,
         )
     }
 
@@ -151,15 +162,18 @@ class MuscleDALTest {
     fun `deleteMuscle should return deleted muscle`() {
         // Given
         val muscleName = "Chest"
-        val deletedMuscle = Muscle(
-            name = muscleName,
-            description = "Chest muscles"
-        )
+        val deletedMuscle =
+            Muscle(
+                name = muscleName,
+                description = "Chest muscles",
+            )
 
-        whenever(postgresClient.update<Muscle>(
-            "DELETE FROM muscle WHERE name=$1",
-            muscleName
-        )).thenReturn(Mono.just(deletedMuscle))
+        whenever(
+            postgresClient.update<Muscle>(
+                "DELETE FROM muscle WHERE name=$1",
+                muscleName,
+            ),
+        ).thenReturn(Mono.just(deletedMuscle))
 
         // When
         val result = muscleDAL.deleteMuscle(muscleName)
@@ -171,7 +185,7 @@ class MuscleDALTest {
 
         verify(postgresClient).update<Muscle>(
             "DELETE FROM muscle WHERE name=$1",
-            muscleName
+            muscleName,
         )
     }
-} 
+}

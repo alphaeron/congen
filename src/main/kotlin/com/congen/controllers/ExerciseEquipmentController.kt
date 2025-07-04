@@ -1,7 +1,8 @@
 package com.congen.controllers
 
-import com.congen.model.ExerciseEquipment
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.model.ExerciseEquipment
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -14,17 +15,40 @@ import org.springframework.web.bind.annotation.RestController
 class ExerciseEquipmentController(
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExerciseEquipmentController::class.java)
+    }
+
     @GetMapping("/")
     fun getAll(): ResponseEntity<*> {
-        return ResponseEntity.ok(
-            exerciseEquipmentDAL.selectAllExerciseEquipment()
-        )
+        logger.debug("Getting all exercise equipment relationships")
+        return try {
+            ResponseEntity.ok(
+                exerciseEquipmentDAL.selectAllExerciseEquipment(),
+            )
+        } catch (e: Exception) {
+            logger.error("Error getting all exercise equipment relationships", e)
+            throw e
+        }
     }
 
     @PostMapping("/")
-    fun save(@RequestBody exerciseEquipment: ExerciseEquipment) : ResponseEntity<*> {
-        return ResponseEntity.ok(
-            exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment)
-        )
+    fun save(
+        @RequestBody exerciseEquipment: ExerciseEquipment,
+    ): ResponseEntity<*> {
+        logger.info("Saving exercise equipment relationship: {} - {}", exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+        return try {
+            ResponseEntity.ok(
+                exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment),
+            )
+        } catch (e: Exception) {
+            logger.error(
+                "Error saving exercise equipment relationship: {} - {}",
+                exerciseEquipment.exerciseName,
+                exerciseEquipment.equipmentName,
+                e,
+            )
+            throw e
+        }
     }
 }

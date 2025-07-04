@@ -21,8 +21,8 @@ class DatabaseConnectionException(
 
 class NoResultsFoundException(
     query: String,
-) : DatabaseQueryException("No results returned from query ${query}")
+) : DatabaseQueryException("No results returned from query $query")
 
 open class InvalidResultException(
     query: String,
-) : DatabaseQueryException("Unexpected number of results from query ${query}")
+) : DatabaseQueryException("Unexpected number of results from query $query")

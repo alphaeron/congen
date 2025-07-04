@@ -1,3 +1,18 @@
+// Define source sets for integration tests
+sourceSets {
+    integrationTest {
+        kotlin {
+            srcDir 'src/integrationTest/kotlin'
+        }
+        resources {
+            srcDir 'src/integrationTest/resources'
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+// Unit test task (excludes integration tests)
 test {
     useJUnitPlatform()
 
@@ -36,5 +51,51 @@ jacocoTestCoverageVerification {
                 minimum = 1.0
             }
         }
+    }
+}
+
+// Integration test task
+// To run integration tests, first start the required resources:
+// 1. Start PostgreSQL: docker-compose up -d postgres
+// 2. Wait for PostgreSQL to be ready (check with: docker-compose ps)
+// 3. Run: ./gradlew integrationTest -PrunIntegrationTests
+task integrationTest(type: Test) {
+    description = 'Runs integration tests'
+    group = 'verification'
+    
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    
+    useJUnitPlatform()
+    
+    testLogging {
+        exceptionFormat = 'full'
+        showStandardStreams = true
+    }
+    
+    // Enable Jacoco for integration tests
+    finalizedBy jacocoTestReport
+    
+    // Only run integration tests if explicitly requested
+    onlyIf {
+        project.hasProperty('runIntegrationTests')
+    }
+}
+
+// Integration test coverage report
+task jacocoIntegrationTestReport(type: JacocoReport) {
+    dependsOn integrationTest
+
+    sourceDirectories.setFrom(sourceSets.main.allSource.srcDirs)
+    classDirectories.setFrom(sourceSets.main.output.classesDirs)
+
+    executionData.setFrom(fileTree(dir: layout.buildDirectory, includes: [
+        'jacoco/integrationTest.exec'
+    ]))
+
+    reports {
+        xml.required = true
+        csv.required = true
+        html.outputLocation = layout.buildDirectory.dir("jacocoIntegrationTestHtml")
     }
 }
