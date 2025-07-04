@@ -1,0 +1,235 @@
+name: Generate API Documentation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'src/main/kotlin/**'
+      - 'src/main/resources/**'
+      - 'build.gradle'
+      - 'gradle/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'src/main/kotlin/**'
+      - 'src/main/resources/**'
+      - 'build.gradle'
+      - 'gradle/**'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: congen_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: wrapper
+        
+    - name: Cache Gradle packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
+    - name: Build application
+      run: ./gradlew build -x test -x integrationTest
+      
+    - name: Start application
+      run: |
+        ./gradlew bootRun > app.log 2>&1 &
+        echo $! > app.pid
+        sleep 30
+        
+        # Check if application started successfully
+        if ! curl -s http://localhost:8080/actuator/health > /dev/null; then
+          echo "Application failed to start. Logs:"
+          cat app.log
+          exit 1
+        fi
+        
+    - name: Generate OpenAPI JSON
+      run: |
+        mkdir -p docs
+        curl -s http://localhost:8080/api-docs > docs/openapi.json
+        
+    - name: Generate OpenAPI YAML
+      run: |
+        curl -s http://localhost:8080/api-docs.yaml > docs/openapi.yaml || echo "YAML endpoint not available"
+        
+    - name: Stop application
+      run: |
+        if [ -f app.pid ]; then
+          kill $(cat app.pid) || true
+          rm app.pid
+        fi
+        
+    - name: Validate OpenAPI specification
+      run: |
+        if command -v jq > /dev/null; then
+          echo "Validating OpenAPI JSON structure..."
+          jq empty docs/openapi.json
+          echo "OpenAPI JSON is valid"
+        else
+          echo "jq not available, skipping JSON validation"
+        fi
+        
+    - name: Create documentation index
+      run: |
+        cat > docs/README.md << 'EOF'
+        # Congen API Documentation
+        
+        This documentation is automatically generated from the Spring Boot application source code.
+        
+        ## Files
+        
+        - **[API Documentation](api-documentation.md)** - Comprehensive API reference
+        - **[OpenAPI JSON](openapi.json)** - OpenAPI specification in JSON format
+        - **[OpenAPI YAML](openapi.yaml)** - OpenAPI specification in YAML format
+        
+        ## Interactive Documentation
+        
+        When the application is running, you can access the interactive Swagger UI at:
+        - http://localhost:8080/swagger-ui.html
+        
+        ## Regenerating Documentation
+        
+        To regenerate this documentation, run:
+        
+        ```bash
+        ./scripts/generate-api-docs.sh
+        ```
+        
+        Or use the Gradle task:
+        
+        ```bash
+        ./gradlew generateApiDocs
+        ```
+        
+        ## Manual Generation
+        
+        If you prefer to generate documentation manually:
+        
+        1. Start the application: `./gradlew bootRun`
+        2. Access the OpenAPI JSON: http://localhost:8080/api-docs
+        3. Access the Swagger UI: http://localhost:8080/swagger-ui.html
+        
+        ---
+        
+        *Documentation generated on $(date)*
+        EOF
+        
+    - name: Commit documentation changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        
+        if git diff --quiet docs/; then
+          echo "No documentation changes to commit"
+        else
+          git add docs/
+          git commit -m "docs: Update API documentation [skip ci]"
+          git push
+        fi
+        
+    - name: Create documentation artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: api-documentation
+        path: docs/
+        retention-days: 30
+        
+  validate-docs:
+    runs-on: ubuntu-latest
+    needs: generate-docs
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download documentation artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: api-documentation
+        path: docs/
+        
+    - name: Validate OpenAPI specification
+      run: |
+        if command -v jq > /dev/null; then
+          echo "Validating OpenAPI JSON structure..."
+          jq empty docs/openapi.json
+          echo "OpenAPI JSON is valid"
+          
+          echo "Checking required fields..."
+          if jq -e '.info' docs/openapi.json > /dev/null; then
+            echo "✓ OpenAPI info section present"
+          else
+            echo "✗ OpenAPI info section missing"
+            exit 1
+          fi
+          
+          if jq -e '.paths' docs/openapi.json > /dev/null; then
+            echo "✓ OpenAPI paths section present"
+          else
+            echo "✗ OpenAPI paths section missing"
+            exit 1
+          fi
+          
+          if jq -e '.components.schemas' docs/openapi.json > /dev/null; then
+            echo "✓ OpenAPI schemas section present"
+          else
+            echo "✗ OpenAPI schemas section missing"
+            exit 1
+          fi
+        else
+          echo "jq not available, skipping validation"
+        fi
+        
+    - name: Check documentation completeness
+      run: |
+        echo "Checking documentation files..."
+        
+        if [ -f docs/openapi.json ]; then
+          echo "✓ OpenAPI JSON file exists"
+        else
+          echo "✗ OpenAPI JSON file missing"
+          exit 1
+        fi
+        
+        if [ -f docs/README.md ]; then
+          echo "✓ Documentation README exists"
+        else
+          echo "✗ Documentation README missing"
+          exit 1
+        fi
+        
+        echo "Documentation validation completed successfully" 

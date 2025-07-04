@@ -7,115 +7,42 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.reactive.server.WebTestClient
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@ActiveProfiles("test")
-class WorkoutStageIntegrationTest {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class WorkoutStageIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @BeforeEach
-    fun setUp() {
-        // Create a program first
-        val program =
-            Program(
-                id = 1,
-                name = "Test Program",
-                description = "Test program for integration tests",
-            )
+    override fun setUp() {
+        super.setUp()
+        // Database cleanup happens in BaseIntegrationTest.setUp()
+    }
 
-        webTestClient.post()
-            .uri("/program/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(program))
+    private fun createTestProgram(id: Long): Long {
+        val response = webTestClient.post()
+            .uri("/program/?name=Test Program $id&description=Test program for integration tests $id")
             .exchange()
             .expectStatus().isOk()
-
-        // Create programmed workouts that the tests will reference
-        val programmedWorkout1 =
-            ProgrammedWorkout(
-                id = 1,
-                programId = 1,
-                dayNumber = 1,
-                name = "Test Workout 1",
-            )
-
-        val programmedWorkout2 =
-            ProgrammedWorkout(
-                id = 2,
-                programId = 1,
-                dayNumber = 2,
-                name = "Test Workout 2",
-            )
-
-        val programmedWorkout3 =
-            ProgrammedWorkout(
-                id = 3,
-                programId = 1,
-                dayNumber = 3,
-                name = "Test Workout 3",
-            )
-
-        val programmedWorkout4 =
-            ProgrammedWorkout(
-                id = 4,
-                programId = 1,
-                dayNumber = 4,
-                name = "Test Workout 4",
-            )
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(programmedWorkout1))
-            .exchange()
-            .expectStatus().isOk()
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(programmedWorkout2))
-            .exchange()
-            .expectStatus().isOk()
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(programmedWorkout3))
-            .exchange()
-            .expectStatus().isOk()
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(programmedWorkout4))
-            .exchange()
-            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        
+        return response.id!!
     }
 
     @Test
     fun `should return 422 when position is 0`() {
-        val invalidStage =
-            WorkoutStage(
-                id = 1,
-                programmedWorkoutId = 1,
-                stageTypeId = 1,
-                position = 0, // Invalid value
-            )
-
+        val programId = createTestProgram(1)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=101&name=Test Workout for Position 0 Test")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidStage))
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=0")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -124,18 +51,17 @@ class WorkoutStageIntegrationTest {
 
     @Test
     fun `should return 422 when position is negative`() {
-        val invalidStage =
-            WorkoutStage(
-                id = 1,
-                programmedWorkoutId = 1,
-                stageTypeId = 1,
-                position = -1, // Invalid value
-            )
-
+        val programId = createTestProgram(2)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=102&name=Test Workout for Negative Position Test")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidStage))
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=-1")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -144,95 +70,88 @@ class WorkoutStageIntegrationTest {
 
     @Test
     fun `should accept valid workout stage data`() {
-        val validStage =
-            WorkoutStage(
-                id = 1,
-                programmedWorkoutId = 1,
-                stageTypeId = 1,
-                position = 1, // Valid value
-            )
-
+        val programId = createTestProgram(1)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=101&name=Test Workout for Valid Stage Test")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(validStage))
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=1")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.programmedWorkoutId").isEqualTo(1)
+            .jsonPath("$.programmedWorkoutId").isEqualTo(workoutResponse.id)
             .jsonPath("$.stageTypeId").isEqualTo(1)
             .jsonPath("$.position").isEqualTo(1)
     }
 
     @Test
     fun `should get workout stage by id`() {
-        // First create a workout stage
-        val stage =
-            WorkoutStage(
-                id = 2,
-                programmedWorkoutId = 1,
-                stageTypeId = 2,
-                position = 5,
-            )
-
-        webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(stage))
+        val programId = createTestProgram(4)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=104&name=Test Workout for Get Stage Test")
             .exchange()
             .expectStatus().isOk()
-
-        // Then get the stage by id
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
+        val stageResponse = webTestClient.post()
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=2&position=5")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(WorkoutStage::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.get()
-            .uri("/workout-stage/2")
+            .uri("/workout-stage/${stageResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(2)
-            .jsonPath("$.programmedWorkoutId").isEqualTo(1)
+            .jsonPath("$.id").isEqualTo(stageResponse.id)
+            .jsonPath("$.programmedWorkoutId").isEqualTo(workoutResponse.id)
             .jsonPath("$.stageTypeId").isEqualTo(2)
             .jsonPath("$.position").isEqualTo(5)
     }
 
     @Test
     fun `should get workout stages by programmed workout id`() {
-        // First create multiple stages for the same workout
-        val stage1 = WorkoutStage(id = 3, programmedWorkoutId = 2, stageTypeId = 1, position = 1)
-        val stage2 = WorkoutStage(id = 4, programmedWorkoutId = 2, stageTypeId = 2, position = 2)
-        val stage3 = WorkoutStage(id = 5, programmedWorkoutId = 2, stageTypeId = 3, position = 3)
-
-        webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(stage1))
+        val programId = createTestProgram(5)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=105&name=Test Workout for Multiple Stages Test")
             .exchange()
             .expectStatus().isOk()
-
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(stage2))
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=1")
             .exchange()
             .expectStatus().isOk()
-
         webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(stage3))
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=2&position=2")
             .exchange()
             .expectStatus().isOk()
-
-        // Then get all stages for the workout
+        webTestClient.post()
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=3&position=3")
+            .exchange()
+            .expectStatus().isOk()
         webTestClient.get()
-            .uri("/workout-stage/workout/2")
+            .uri("/workout-stage/workout/${workoutResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(3)
-            .jsonPath("$[0].programmedWorkoutId").isEqualTo(2)
-            .jsonPath("$[1].programmedWorkoutId").isEqualTo(2)
-            .jsonPath("$[2].programmedWorkoutId").isEqualTo(2)
+            .jsonPath("$[0].programmedWorkoutId").isEqualTo(workoutResponse.id)
+            .jsonPath("$[1].programmedWorkoutId").isEqualTo(workoutResponse.id)
+            .jsonPath("$[2].programmedWorkoutId").isEqualTo(workoutResponse.id)
     }
 
     @Test
@@ -247,68 +166,58 @@ class WorkoutStageIntegrationTest {
 
     @Test
     fun `should update workout stage`() {
-        // First create a workout stage
-        val stage =
-            WorkoutStage(
-                id = 6,
-                programmedWorkoutId = 3,
-                stageTypeId = 1,
-                position = 10,
-            )
-
-        webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(stage))
+        val programId = createTestProgram(6)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=106&name=Test Workout for Update Stage Test")
             .exchange()
             .expectStatus().isOk()
-
-        // Then update the stage
-        val updatedStage =
-            WorkoutStage(
-                id = 6,
-                programmedWorkoutId = 3,
-                stageTypeId = 2,
-                position = 15,
-            )
-
-        webTestClient.put()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(updatedStage))
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
+        val stageResponse = webTestClient.post()
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=10")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(WorkoutStage::class.java)
+            .returnResult()
+            .responseBody!!
+        
+        webTestClient.patch()
+            .uri("/workout-stage/?id=${stageResponse.id}&programmedWorkoutId=${workoutResponse.id}&stageTypeId=2&position=15")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(6)
+            .jsonPath("$.id").isEqualTo(stageResponse.id)
             .jsonPath("$.stageTypeId").isEqualTo(2)
             .jsonPath("$.position").isEqualTo(15)
     }
 
     @Test
     fun `should delete workout stage`() {
-        // First create a workout stage
-        val stage =
-            WorkoutStage(
-                id = 7,
-                programmedWorkoutId = 4,
-                stageTypeId = 1,
-                position = 20,
-            )
-
-        webTestClient.post()
-            .uri("/workout-stage/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(stage))
+        val programId = createTestProgram(7)
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=107&name=Test Workout for Delete Stage Test")
             .exchange()
             .expectStatus().isOk()
-
-        // Then delete the stage
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
+        
+        val stageResponse = webTestClient.post()
+            .uri("/workout-stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=20")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(WorkoutStage::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.delete()
-            .uri("/workout-stage/7")
+            .uri("/workout-stage/${stageResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(7)
+            .jsonPath("$.id").isEqualTo(stageResponse.id)
             .jsonPath("$.position").isEqualTo(20)
     }
 }

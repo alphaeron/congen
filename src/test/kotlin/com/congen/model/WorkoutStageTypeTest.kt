@@ -26,19 +26,6 @@ class WorkoutStageTypeTest {
     }
 
     @Test
-    fun `should create workout stage type without id`() {
-        // Given & When
-        val workoutStageType =
-            WorkoutStageType(
-                name = "Warmup",
-            )
-
-        // Then
-        assertNull(workoutStageType.id)
-        assertEquals("Warmup", workoutStageType.name)
-    }
-
-    @Test
     fun `should serialize to JSON with snake_case`() {
         // Given
         val workoutStageType =

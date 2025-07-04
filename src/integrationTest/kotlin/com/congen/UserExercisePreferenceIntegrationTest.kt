@@ -4,35 +4,15 @@ import com.congen.model.UserExercisePreference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.reactive.server.WebTestClient
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@ActiveProfiles("test")
-class UserExercisePreferenceIntegrationTest {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
     fun `should save user exercise preference`() {
-        val userExercisePreference =
-            UserExercisePreference(
-                userId = 1,
-                exerciseName = "Bench Press",
-                shouldAvoid = false,
-            )
-
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userExercisePreference))
+            .uri("/user-exercise-preferences/?userId=1&exerciseName=Bench Press&shouldAvoid=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -44,17 +24,8 @@ class UserExercisePreferenceIntegrationTest {
     @Test
     fun `should get user exercise preferences by user id`() {
         // First create user exercise preference
-        val userExercisePreference =
-            UserExercisePreference(
-                userId = 2,
-                exerciseName = "Squat",
-                shouldAvoid = true,
-            )
-
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userExercisePreference))
+            .uri("/user-exercise-preferences/?userId=2&exerciseName=Squat&shouldAvoid=true")
             .exchange()
             .expectStatus().isOk()
 
@@ -73,32 +44,14 @@ class UserExercisePreferenceIntegrationTest {
     @Test
     fun `should update user exercise preference`() {
         // First create user exercise preference
-        val userExercisePreference =
-            UserExercisePreference(
-                userId = 3,
-                exerciseName = "Deadlift",
-                shouldAvoid = false,
-            )
-
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userExercisePreference))
+            .uri("/user-exercise-preferences/?userId=3&exerciseName=Deadlift&shouldAvoid=false")
             .exchange()
             .expectStatus().isOk()
 
         // Then update the preference
-        val updatedPreference =
-            UserExercisePreference(
-                userId = 3,
-                exerciseName = "Deadlift",
-                shouldAvoid = true,
-            )
-
         webTestClient.post()
-            .uri("/user-exercise-preferences/update")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(updatedPreference))
+            .uri("/user-exercise-preferences/update?userId=3&exerciseName=Deadlift&shouldAvoid=true")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -110,17 +63,8 @@ class UserExercisePreferenceIntegrationTest {
     @Test
     fun `should delete user exercise preference`() {
         // First create user exercise preference
-        val userExercisePreference =
-            UserExercisePreference(
-                userId = 4,
-                exerciseName = "Overhead Press",
-                shouldAvoid = false,
-            )
-
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userExercisePreference))
+            .uri("/user-exercise-preferences/?userId=4&exerciseName=Overhead Press&shouldAvoid=false")
             .exchange()
             .expectStatus().isOk()
 
@@ -136,29 +80,19 @@ class UserExercisePreferenceIntegrationTest {
 
     @Test
     fun `should handle multiple exercise preferences for same user`() {
-        val preference1 = UserExercisePreference(userId = 5, exerciseName = "Bench Press", shouldAvoid = false)
-        val preference2 = UserExercisePreference(userId = 5, exerciseName = "Squat", shouldAvoid = true)
-        val preference3 = UserExercisePreference(userId = 5, exerciseName = "Deadlift", shouldAvoid = false)
-
         // Add multiple preferences for the same user
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(preference1))
+            .uri("/user-exercise-preferences/?userId=5&exerciseName=Bench Press&shouldAvoid=false")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(preference2))
+            .uri("/user-exercise-preferences/?userId=5&exerciseName=Squat&shouldAvoid=true")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/user-exercise-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(preference3))
+            .uri("/user-exercise-preferences/?userId=5&exerciseName=Deadlift&shouldAvoid=false")
             .exchange()
             .expectStatus().isOk()
 

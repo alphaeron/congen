@@ -4,12 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
+import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class SetScheme(
-    @param:JsonProperty("id") val id: Long? = null,
+    @Schema(
+        description = "Unique identifier for the set scheme",
+        example = "1",
+        readOnly = true,
+    )
+    @param:JsonProperty("id") val id: Long,
     @param:JsonProperty("programmed_exercise_id") val programmedExerciseId: Long,
     @param:JsonProperty("set_number") val setNumber: Int,
     @param:JsonProperty("was_set_performed") val wasSetPerformed: Boolean = true,

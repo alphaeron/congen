@@ -30,23 +30,6 @@ class ProgrammedWorkoutTest {
     }
 
     @Test
-    fun `should create programmed workout without id`() {
-        // Given & When
-        val programmedWorkout =
-            ProgrammedWorkout(
-                programId = 1L,
-                dayNumber = 1,
-                name = "Day 1 - Max Effort Upper",
-            )
-
-        // Then
-        assertNull(programmedWorkout.id)
-        assertEquals(1L, programmedWorkout.programId)
-        assertEquals(1, programmedWorkout.dayNumber)
-        assertEquals("Day 1 - Max Effort Upper", programmedWorkout.name)
-    }
-
-    @Test
     fun `should create programmed workout with null name`() {
         // Given & When
         val programmedWorkout =

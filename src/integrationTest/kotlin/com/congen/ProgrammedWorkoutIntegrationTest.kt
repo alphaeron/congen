@@ -6,54 +6,31 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.reactive.server.WebTestClient
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@ActiveProfiles("test")
-class ProgrammedWorkoutIntegrationTest {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
+    private var programId: Long = 0
+    private val programName = "Test Program"
+    private val programDescription = "Test program for integration tests"
 
     @BeforeEach
-    fun setUp() {
-        // Create a program first
-        val program =
-            Program(
-                id = 1,
-                name = "Test Program",
-                description = "Test program for integration tests",
-            )
-
-        webTestClient.post()
-            .uri("/program/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(program))
+    override fun setUp() {
+        super.setUp()
+        val response = webTestClient.post()
+            .uri("/program/?name=$programName&description=$programDescription")
             .exchange()
             .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        programId = response.id
     }
 
     @Test
     fun `should return 422 when day number is 0`() {
-        val invalidWorkout =
-            ProgrammedWorkout(
-                id = 1,
-                programId = 1,
-                dayNumber = 0, // Invalid value
-                name = "Test Workout",
-            )
-
         webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidWorkout))
+            .uri("/programmed-workout/?programId=$programId&dayNumber=0&name=Test%20Workout")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -62,18 +39,8 @@ class ProgrammedWorkoutIntegrationTest {
 
     @Test
     fun `should return 422 when day number is 366`() {
-        val invalidWorkout =
-            ProgrammedWorkout(
-                id = 1,
-                programId = 1,
-                dayNumber = 366, // Invalid value
-                name = "Test Workout",
-            )
-
         webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidWorkout))
+            .uri("/programmed-workout/?programId=$programId&dayNumber=366&name=Test%20Workout")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -82,22 +49,12 @@ class ProgrammedWorkoutIntegrationTest {
 
     @Test
     fun `should accept valid programmed workout data`() {
-        val validWorkout =
-            ProgrammedWorkout(
-                id = 1,
-                programId = 1,
-                dayNumber = 1, // Valid value
-                name = "Test Workout",
-            )
-
         webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(validWorkout))
+            .uri("/programmed-workout/?programId=$programId&dayNumber=1&name=Test%20Workout")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.programId").isEqualTo(1)
+            .jsonPath("$.programId").isEqualTo(programId)
             .jsonPath("$.dayNumber").isEqualTo(1)
             .jsonPath("$.name").isEqualTo("Test Workout")
     }
@@ -105,72 +62,65 @@ class ProgrammedWorkoutIntegrationTest {
     @Test
     fun `should get programmed workout by id`() {
         // First create a programmed workout
-        val workout =
-            ProgrammedWorkout(
-                id = 2,
-                programId = 1,
-                dayNumber = 5,
-                name = "Integration Test Workout",
-            )
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(workout))
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=5&name=Integration%20Test%20Workout")
             .exchange()
             .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
 
         // Then get the workout by id
         webTestClient.get()
-            .uri("/programmed-workout/2")
+            .uri("/programmed-workout/${workoutResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(2)
-            .jsonPath("$.programId").isEqualTo(1)
+            .jsonPath("$.id").isEqualTo(workoutResponse.id)
+            .jsonPath("$.programId").isEqualTo(programId)
             .jsonPath("$.dayNumber").isEqualTo(5)
             .jsonPath("$.name").isEqualTo("Integration Test Workout")
     }
 
     @Test
     fun `should get programmed workouts by program id`() {
+        // Create a second program for this test
+        val programName2 = "Test Program 2"
+        val programDescription2 = "Second test program for integration tests"
+        val response2 = webTestClient.post()
+            .uri("/program/?name=$programName2&description=$programDescription2")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        val programId2 = response2.id
+
         // First create multiple workouts for the same program
-        val workout1 = ProgrammedWorkout(id = 3, programId = 2, dayNumber = 1, name = "Workout 1")
-        val workout2 = ProgrammedWorkout(id = 4, programId = 2, dayNumber = 2, name = "Workout 2")
-        val workout3 = ProgrammedWorkout(id = 5, programId = 2, dayNumber = 3, name = "Workout 3")
-
         webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(workout1))
+            .uri("/programmed-workout/?programId=$programId2&dayNumber=1&name=Workout%201")
             .exchange()
             .expectStatus().isOk()
-
         webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(workout2))
+            .uri("/programmed-workout/?programId=$programId2&dayNumber=2&name=Workout%202")
             .exchange()
             .expectStatus().isOk()
-
         webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(workout3))
+            .uri("/programmed-workout/?programId=$programId2&dayNumber=3&name=Workout%203")
             .exchange()
             .expectStatus().isOk()
 
         // Then get all workouts for the program
         webTestClient.get()
-            .uri("/programmed-workout/program/2")
+            .uri("/programmed-workout/program/$programId2")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(3)
-            .jsonPath("$[0].programId").isEqualTo(2)
-            .jsonPath("$[1].programId").isEqualTo(2)
-            .jsonPath("$[2].programId").isEqualTo(2)
+            .jsonPath("$[0].programId").isEqualTo(programId2)
+            .jsonPath("$[1].programId").isEqualTo(programId2)
+            .jsonPath("$[2].programId").isEqualTo(programId2)
     }
 
     @Test
@@ -185,39 +135,33 @@ class ProgrammedWorkoutIntegrationTest {
 
     @Test
     fun `should update programmed workout`() {
-        // First create a programmed workout
-        val workout =
-            ProgrammedWorkout(
-                id = 6,
-                programId = 3,
-                dayNumber = 10,
-                name = "Original Workout",
-            )
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(workout))
+        // Create a third program for this test
+        val response3 = webTestClient.post()
+            .uri("/program/?name=Test Program 3&description=Third test program for integration tests")
             .exchange()
             .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
+            .responseBody!!
+        
+        val programId3 = response3.id!!
+
+        // First create a programmed workout
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId3&dayNumber=10&name=Original Workout")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
 
         // Then update the workout
-        val updatedWorkout =
-            ProgrammedWorkout(
-                id = 6,
-                programId = 3,
-                dayNumber = 15,
-                name = "Updated Workout",
-            )
-
         webTestClient.put()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(updatedWorkout))
+            .uri("/programmed-workout/?id=${workoutResponse.id}&programId=$programId3&dayNumber=15&name=Updated Workout")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(6)
+            .jsonPath("$.id").isEqualTo(workoutResponse.id)
             .jsonPath("$.dayNumber").isEqualTo(15)
             .jsonPath("$.name").isEqualTo("Updated Workout")
     }
@@ -225,28 +169,21 @@ class ProgrammedWorkoutIntegrationTest {
     @Test
     fun `should delete programmed workout`() {
         // First create a programmed workout
-        val workout =
-            ProgrammedWorkout(
-                id = 7,
-                programId = 4,
-                dayNumber = 20,
-                name = "Workout to Delete",
-            )
-
-        webTestClient.post()
-            .uri("/programmed-workout/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(workout))
+        val workoutResponse = webTestClient.post()
+            .uri("/programmed-workout/?programId=$programId&dayNumber=20&name=Workout to Delete")
             .exchange()
             .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
 
         // Then delete the workout
         webTestClient.delete()
-            .uri("/programmed-workout/7")
+            .uri("/programmed-workout/${workoutResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(7)
+            .jsonPath("$.id").isEqualTo(workoutResponse.id)
             .jsonPath("$.name").isEqualTo("Workout to Delete")
     }
 }

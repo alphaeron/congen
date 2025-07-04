@@ -68,6 +68,9 @@ task integrationTest(type: Test) {
     
     useJUnitPlatform()
     
+    // Run integration tests sequentially to avoid database conflicts
+    maxParallelForks = 1
+    
     testLogging {
         exceptionFormat = 'full'
         showStandardStreams = true

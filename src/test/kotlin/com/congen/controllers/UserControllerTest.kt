@@ -25,12 +25,15 @@ class UserControllerTest {
 
     @Test
     fun `save should return saved user`() {
-        val user = User(name = "John Doe", age = 30, height = BigDecimal("180.5"), weight = BigDecimal("75.0"))
-        whenever(userDAL.insertUser(user)).thenReturn(Mono.just(user))
-        val result = userController.save(user)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<User>).expectNext(user).verifyComplete()
+        val name = "John Doe"
+        val age = 30
+        val height = BigDecimal("180.5")
+        val weight = BigDecimal("75.0")
+        val user = User(id = 0, name = name, age = age, height = height, weight = weight)
+        val savedUser = user.copy(id = 1)
+        whenever(userDAL.insertUser(user)).thenReturn(Mono.just(savedUser))
+        val result = userController.save(name, age, height, weight)
+        StepVerifier.create(result).expectNext(ResponseEntity.ok(savedUser)).verifyComplete()
         verify(userDAL).insertUser(user)
     }
 
@@ -56,13 +59,18 @@ class UserControllerTest {
 
     @Test
     fun `update should return updated user`() {
-        val user = User(id = 1, name = "John Doe", age = 31, height = BigDecimal("180.5"), weight = BigDecimal("75.0"))
-        whenever(userDAL.updateUser(user)).thenReturn(Mono.just(user))
-        val result = userController.update(user)
+        val name = "John Doe"
+        val age = 31
+        val height = BigDecimal("180.5")
+        val weight = BigDecimal("75.0")
+        val user = User(id = 0, name = name, age = age, height = height, weight = weight)
+        val updatedUser = user.copy(id = 1)
+        whenever(userDAL.updateUser(updatedUser)).thenReturn(Mono.just(updatedUser))
+        val result = userController.update(1, name, age, height, weight)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<User>).expectNext(user).verifyComplete()
-        verify(userDAL).updateUser(user)
+        StepVerifier.create(body as Mono<User>).expectNext(updatedUser).verifyComplete()
+        verify(userDAL).updateUser(updatedUser)
     }
 
     @Test

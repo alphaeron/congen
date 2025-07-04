@@ -41,7 +41,7 @@ class UserDALTest {
 
     @Test
     fun `insertUser should return inserted user`() {
-        val user = User(name = "John Doe", age = 30, height = BigDecimal("180.5"), weight = BigDecimal("75.0"))
+        val user = User(id = 0, name = "John Doe", age = 30, height = BigDecimal("180.5"), weight = BigDecimal("75.0"))
         whenever(
             postgresClient.update<User>(
                 """

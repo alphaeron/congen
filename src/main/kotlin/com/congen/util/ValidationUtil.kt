@@ -4,10 +4,79 @@ import com.congen.exceptions.ValidationException
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
 
+/**
+ * Utility class for validating data across the Congen application.
+ *
+ * This object provides comprehensive validation methods for all data types
+ * used in the workout generation system. Each validation method follows
+ * a consistent pattern of checking constraints and throwing [ValidationException]
+ * with descriptive error messages when validation fails.
+ *
+ * ## Validation Categories
+ *
+ * ### User Validations
+ * - [validateUserAge] - Validates user age (1-150 years)
+ * - [validateUserHeight] - Validates user height (0.01-300 cm)
+ * - [validateUserWeight] - Validates user weight (0.01-1000 kg)
+ *
+ * ### Program Preferences Validations
+ * - [validateProgramDaysPerWeek] - Validates program days per week (2, 3, or 4)
+ * - [validateSessionTimeLength] - Validates session duration (15-300 minutes)
+ *
+ * ### Workout Validations
+ * - [validateDayNumber] - Validates day number in program (1-365)
+ * - [validatePosition] - Validates exercise position (> 0)
+ *
+ * ### Set Scheme Validations
+ * - [validateSetNumber] - Validates set number (> 0)
+ * - [validateTempo] - Validates tempo format (single digit 0-9)
+ * - [validateTargetWeight] - Validates target weight (> 0)
+ * - [validatePerformedWeight] - Validates performed weight (> 0)
+ * - [validateTargetRepCount] - Validates target reps (1-1000)
+ * - [validatePerformedRepCount] - Validates performed reps (1-1000)
+ * - [validateRestSeconds] - Validates rest time (0-3600 seconds)
+ *
+ * ## Usage
+ *
+ * ```kotlin
+ * // Validate user data
+ * ValidationUtil.validateUserAge(25)
+ * ValidationUtil.validateUserHeight(BigDecimal("175.5"))
+ * ValidationUtil.validateUserWeight(BigDecimal("80.0"))
+ *
+ * // Validate program preferences
+ * ValidationUtil.validateProgramDaysPerWeek(3)
+ * ValidationUtil.validateSessionTimeLength(60)
+ * ```
+ *
+ * ## Error Handling
+ *
+ * All validation methods throw [ValidationException] with descriptive
+ * error messages when validation fails. These exceptions are caught by
+ * the global exception handler and returned as HTTP 422 responses.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 object ValidationUtil {
     private val logger = LoggerFactory.getLogger(ValidationUtil::class.java)
 
-    // User validations
+    /**
+     * Validates user age to ensure it's within acceptable bounds.
+     *
+     * Age must be between 1 and 150 years. This range covers typical
+     * human lifespans while allowing for edge cases and data entry errors.
+     *
+     * @param age The age to validate in years
+     * @throws ValidationException if age is not within valid range (1-150)
+     *
+     * @example
+     * ```kotlin
+     * ValidationUtil.validateUserAge(25)  // Valid
+     * ValidationUtil.validateUserAge(0)   // Throws ValidationException
+     * ValidationUtil.validateUserAge(151) // Throws ValidationException
+     * ```
+     */
     fun validateUserAge(age: Int) {
         if (age <= 0 || age > 150) {
             val message = "User age must be between 1 and 150, got: $age"
@@ -16,6 +85,12 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates user height to ensure it matches DB constraints.
+     * Height must be > 0 and <= 300 (cm).
+     * @param height Height in centimeters
+     * @throws ValidationException if height is not in (0, 300]
+     */
     fun validateUserHeight(height: BigDecimal) {
         if (height <= BigDecimal.ZERO || height > BigDecimal("300")) {
             val message = "User height must be between 0.01 and 300 cm, got: $height"
@@ -24,6 +99,12 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates user weight to ensure it matches DB constraints.
+     * Weight must be > 0 and <= 1000 (kg).
+     * @param weight Weight in kilograms
+     * @throws ValidationException if weight is not in (0, 1000]
+     */
     fun validateUserWeight(weight: BigDecimal) {
         if (weight <= BigDecimal.ZERO || weight > BigDecimal("1000")) {
             val message = "User weight must be between 0.01 and 1000 kg, got: $weight"
@@ -32,7 +113,23 @@ object ValidationUtil {
         }
     }
 
-    // User Program Preferences validations
+    /**
+     * Validates program days per week to ensure it matches conjugate method requirements.
+     *
+     * The conjugate method is designed to work with specific training frequencies.
+     * Only 2, 3, or 4 days per week are supported as these provide optimal
+     * training stimulus while allowing adequate recovery.
+     *
+     * @param daysPerWeek The number of training days per week
+     * @throws ValidationException if days per week is not 2, 3, or 4
+     *
+     * @example
+     * ```kotlin
+     * ValidationUtil.validateProgramDaysPerWeek(3)  // Valid
+     * ValidationUtil.validateProgramDaysPerWeek(1)  // Throws ValidationException
+     * ValidationUtil.validateProgramDaysPerWeek(5)  // Throws ValidationException
+     * ```
+     */
     fun validateProgramDaysPerWeek(daysPerWeek: Int) {
         if (daysPerWeek !in listOf(2, 3, 4)) {
             val message = "Program days per week must be 2, 3, or 4 days. Only valid program lengths are 2, 3, or 4 days, got: $daysPerWeek"
@@ -41,6 +138,11 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates session time length in minutes (DB: 15-300).
+     * @param minutes Session length in minutes
+     * @throws ValidationException if not in [15, 300]
+     */
     fun validateSessionTimeLength(minutes: Int) {
         if (minutes < 15 || minutes > 300) {
             val message = "Session time length must be between 15 and 300 minutes, got: $minutes"
@@ -49,7 +151,11 @@ object ValidationUtil {
         }
     }
 
-    // Programmed Workout validations
+    /**
+     * Validates day number for programmed workouts (DB: 1-365).
+     * @param dayNumber Day number in program
+     * @throws ValidationException if not in [1, 365]
+     */
     fun validateDayNumber(dayNumber: Int) {
         if (dayNumber <= 0 || dayNumber > 365) {
             val message = "Day number must be between 1 and 365, got: $dayNumber"
@@ -58,7 +164,11 @@ object ValidationUtil {
         }
     }
 
-    // Workout Stage validations
+    /**
+     * Validates position for workout stages (DB: > 0).
+     * @param position Position in stage
+     * @throws ValidationException if not > 0
+     */
     fun validatePosition(position: Int) {
         if (position <= 0) {
             val message = "Position must be greater than 0, got: $position"
@@ -67,7 +177,11 @@ object ValidationUtil {
         }
     }
 
-    // Set Scheme validations
+    /**
+     * Validates set number for set schemes (DB: > 0).
+     * @param setNumber Set number
+     * @throws ValidationException if not > 0
+     */
     fun validateSetNumber(setNumber: Int) {
         if (setNumber <= 0) {
             val message = "Set number must be greater than 0, got: $setNumber"
@@ -76,6 +190,12 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates tempo value for set schemes (DB: single digit 0-9).
+     * @param tempo Tempo value as string
+     * @param fieldName Name of the tempo field
+     * @throws ValidationException if not a single digit 0-9
+     */
     fun validateTempo(
         tempo: String?,
         fieldName: String,
@@ -87,6 +207,11 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates target weight for set schemes (DB: > 0).
+     * @param weight Target weight
+     * @throws ValidationException if not > 0
+     */
     fun validateTargetWeight(weight: BigDecimal?) {
         if (weight != null && weight <= BigDecimal.ZERO) {
             val message = "Target weight must be greater than 0, got: $weight"
@@ -95,6 +220,11 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates performed weight for set schemes (DB: > 0).
+     * @param weight Performed weight
+     * @throws ValidationException if not > 0
+     */
     fun validatePerformedWeight(weight: BigDecimal?) {
         if (weight != null && weight <= BigDecimal.ZERO) {
             val message = "Performed weight must be greater than 0, got: $weight"
@@ -103,6 +233,11 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates target rep count for set schemes (DB: 1-1000).
+     * @param repCount Target rep count
+     * @throws ValidationException if not in [1, 1000]
+     */
     fun validateTargetRepCount(repCount: Int?) {
         if (repCount != null && (repCount <= 0 || repCount > 1000)) {
             val message = "Target rep count must be between 1 and 1000, got: $repCount"
@@ -111,6 +246,11 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates performed rep count for set schemes (DB: 1-1000).
+     * @param repCount Performed rep count
+     * @throws ValidationException if not in [1, 1000]
+     */
     fun validatePerformedRepCount(repCount: Int?) {
         if (repCount != null && (repCount <= 0 || repCount > 1000)) {
             val message = "Performed rep count must be between 1 and 1000, got: $repCount"
@@ -119,6 +259,11 @@ object ValidationUtil {
         }
     }
 
+    /**
+     * Validates rest seconds for set schemes (DB: 0-3600).
+     * @param restSeconds Rest seconds
+     * @throws ValidationException if not in [0, 3600]
+     */
     fun validateRestSeconds(restSeconds: Int?) {
         if (restSeconds != null && (restSeconds < 0 || restSeconds > 3600)) {
             val message = "Rest seconds must be between 0 and 3600, got: $restSeconds"

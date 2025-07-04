@@ -1,0 +1,82 @@
+package com.congen
+
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.beans.factory.annotation.Qualifier
+import io.vertx.sqlclient.SqlClient
+import io.vertx.sqlclient.SqlConnection
+import io.vertx.sqlclient.SqlResult
+import io.vertx.sqlclient.Row
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+
+@SpringBootTest
+@AutoConfigureWebTestClient
+@ActiveProfiles("test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+open class BaseIntegrationTest {
+    @Autowired
+    protected lateinit var webTestClient: WebTestClient
+
+    @Autowired
+    @Qualifier("postgresDBWriter")
+    protected lateinit var sqlClient: SqlClient
+
+    @BeforeEach
+    open fun setUp() {
+        // Clean up database before each test
+        cleanupDatabase()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        // Clean up database after each test
+        cleanupDatabase()
+    }
+
+    private fun cleanupDatabase() {
+        // Truncate all tables in dependency-safe order using CASCADE
+        val truncateSql = """
+            TRUNCATE TABLE 
+                set_scheme,
+                programmed_exercise,
+                workout_stage,
+                programmed_workout,
+                program,
+                user_exercise_preference,
+                user_program_preferences,
+                user_equipment,
+                "user",
+                exercise_workout_type,
+                exercise_equipment,
+                exercise_muscle,
+                exercise,
+                equipment,
+                muscle,
+                workout_stage_type
+            CASCADE;
+        """.trimIndent()
+
+        val latch = CountDownLatch(1)
+        var error: Throwable? = null
+        sqlClient.query(truncateSql).execute { ar ->
+            if (ar.failed()) {
+                error = ar.cause()
+            }
+            latch.countDown()
+        }
+        // Wait up to 10 seconds for the operation to complete
+        if (!latch.await(10, TimeUnit.SECONDS)) {
+            throw RuntimeException("Timed out waiting for database cleanup to complete")
+        }
+        if (error != null) {
+            throw RuntimeException("Database cleanup failed", error)
+        }
+    }
+} 

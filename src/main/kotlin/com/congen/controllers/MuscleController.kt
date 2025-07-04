@@ -5,6 +5,11 @@ import com.congen.dal.MuscleDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.ExerciseMuscle
 import com.congen.model.Muscle
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -26,7 +31,21 @@ class MuscleController(
     }
 
     @PostMapping("/")
+    @Operation(
+        summary = "Create muscle",
+        description = "Creates a new muscle entry.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Muscle created successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun save(
+        @Parameter(description = "Muscle to create", required = true)
         @RequestBody muscle: Muscle,
     ): ResponseEntity<*> {
         logger.info("Saving muscle: {}", muscle.name)
@@ -36,7 +55,26 @@ class MuscleController(
     }
 
     @GetMapping("/{name}")
+    @Operation(
+        summary = "Get muscle by name",
+        description = "Retrieves muscle details by name.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Muscle found",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Muscle not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun get(
+        @Parameter(description = "Name of the muscle", required = true)
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<Muscle>> {
         return muscleDAL.selectMuscleByName(name)
@@ -54,7 +92,26 @@ class MuscleController(
     }
 
     @GetMapping("/{name}/exercise")
+    @Operation(
+        summary = "Get exercises for muscle",
+        description = "Retrieves all exercises associated with a given muscle.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Exercises found",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "No exercises found or muscle not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getExercise(
+        @Parameter(description = "Name of the muscle", required = true)
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<List<ExerciseMuscle>>> {
         // First check if the muscle exists
@@ -82,6 +139,19 @@ class MuscleController(
     }
 
     @GetMapping("/")
+    @Operation(
+        summary = "Get all muscles",
+        description = "Retrieves a list of all muscles.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Muscle list retrieved successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all muscles")
         return ResponseEntity.ok(

@@ -87,6 +87,7 @@ class ProgramDALTest {
         // Given
         val program =
             Program(
+                id = 0, // Temporary ID for creation
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )

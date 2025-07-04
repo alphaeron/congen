@@ -3,16 +3,18 @@
 --changeset John Matty:4 labels:prod,test
 --comment: Add workout program tables for conjugate powerlifting programs with stages and exercises.
 
+CREATE SEQUENCE congen.program_id_seq;
 CREATE TABLE program (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL DEFAULT nextval('congen.program_id_seq') PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE SEQUENCE congen.programmed_workout_id_seq;
 CREATE TABLE programmed_workout (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL DEFAULT nextval('congen.programmed_workout_id_seq') PRIMARY KEY,
   program_id BIGINT NOT NULL,
   day_number SMALLINT NOT NULL CHECK (day_number > 0 AND day_number <= 365),  -- e.g., Day 1, Day 2...
   name VARCHAR(255),
@@ -21,14 +23,16 @@ CREATE TABLE programmed_workout (
   CONSTRAINT fk_programmed_workout_program FOREIGN KEY(program_id) REFERENCES program(id) ON DELETE CASCADE
 );
 
+CREATE SEQUENCE congen.workout_stage_type_id_seq;
 CREATE TABLE workout_stage_type (
-  id SERIAL PRIMARY KEY,
+  id SERIAL DEFAULT nextval('congen.workout_stage_type_id_seq') PRIMARY KEY,
   name VARCHAR(50) NOT NULL UNIQUE,  -- e.g., 'Warmup', 'Primary', 'Accessory', 'Cooldown'
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE SEQUENCE congen.workout_stage_id_seq;
 CREATE TABLE workout_stage (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL DEFAULT nextval('congen.workout_stage_id_seq') PRIMARY KEY,
   programmed_workout_id BIGINT NOT NULL,
   stage_type_id INTEGER NOT NULL,
   position SMALLINT NOT NULL CHECK (position > 0), -- ordering of stages in the workout
@@ -38,8 +42,9 @@ CREATE TABLE workout_stage (
   CONSTRAINT fk_workout_stage_stage_type FOREIGN KEY(stage_type_id) REFERENCES workout_stage_type(id) ON DELETE RESTRICT
 );
 
+CREATE SEQUENCE congen.programmed_exercise_id_seq;
 CREATE TABLE programmed_exercise (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL DEFAULT nextval('congen.programmed_exercise_id_seq') PRIMARY KEY,
   workout_stage_id BIGINT NOT NULL,
   exercise_name VARCHAR(255) NOT NULL,
   notes TEXT,
@@ -49,8 +54,9 @@ CREATE TABLE programmed_exercise (
   CONSTRAINT fk_programmed_exercise_workout_stage FOREIGN KEY(workout_stage_id) REFERENCES workout_stage(id) ON DELETE CASCADE
 );
 
+CREATE SEQUENCE congen.set_scheme_id_seq;
 CREATE TABLE set_scheme (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGSERIAL DEFAULT nextval('congen.set_scheme_id_seq') PRIMARY KEY,
   programmed_exercise_id BIGINT NOT NULL,
   set_number SMALLINT NOT NULL CHECK (set_number > 0),
   was_set_performed BOOLEAN DEFAULT TRUE,

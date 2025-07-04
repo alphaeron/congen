@@ -4,38 +4,16 @@ import com.congen.model.User
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@ActiveProfiles("test")
-class UserIntegrationTest {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class UserIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
     fun `should return 422 when user age is 0`() {
-        val invalidUser =
-            User(
-                id = 1,
-                name = "Test User",
-                age = 0, // Invalid value
-                height = BigDecimal("175.0"),
-                weight = BigDecimal("70.0"),
-            )
-
         webTestClient.post()
-            .uri("/users/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidUser))
+            .uri("/user/?name=Test%20User&age=0&height=175.0&weight=70.0")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -44,19 +22,8 @@ class UserIntegrationTest {
 
     @Test
     fun `should return 422 when user age is 151`() {
-        val invalidUser =
-            User(
-                id = 1,
-                name = "Test User",
-                age = 151, // Invalid value
-                height = BigDecimal("175.0"),
-                weight = BigDecimal("70.0"),
-            )
-
         webTestClient.post()
-            .uri("/users/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidUser))
+            .uri("/user/?name=Test%20User&age=151&height=175.0&weight=70.0")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -65,19 +32,8 @@ class UserIntegrationTest {
 
     @Test
     fun `should return 422 when user height is 0`() {
-        val invalidUser =
-            User(
-                id = 1,
-                name = "Test User",
-                age = 25,
-                height = BigDecimal.ZERO, // Invalid value
-                weight = BigDecimal("70.0"),
-            )
-
         webTestClient.post()
-            .uri("/users/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidUser))
+            .uri("/user/?name=Test%20User&age=25&height=0&weight=70.0")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -86,19 +42,8 @@ class UserIntegrationTest {
 
     @Test
     fun `should return 422 when user weight is 0`() {
-        val invalidUser =
-            User(
-                id = 1,
-                name = "Test User",
-                age = 25,
-                height = BigDecimal("175.0"),
-                weight = BigDecimal.ZERO, // Invalid value
-            )
-
         webTestClient.post()
-            .uri("/users/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidUser))
+            .uri("/user/?name=Test%20User&age=25&height=175.0&weight=0")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -107,19 +52,8 @@ class UserIntegrationTest {
 
     @Test
     fun `should accept valid user data`() {
-        val validUser =
-            User(
-                id = 1,
-                name = "Test User",
-                age = 25, // Valid value
-                height = BigDecimal("175.0"), // Valid value
-                weight = BigDecimal("70.0"), // Valid value
-            )
-
         webTestClient.post()
-            .uri("/users/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(validUser))
+            .uri("/user/?name=Test%20User&age=25&height=175.0&weight=70.0")
             .exchange()
             .expectStatus().isOk()
     }
@@ -127,29 +61,21 @@ class UserIntegrationTest {
     @Test
     fun `should get user by id`() {
         // First create a user
-        val user =
-            User(
-                id = 2,
-                name = "Integration Test User",
-                age = 30,
-                height = BigDecimal("180.0"),
-                weight = BigDecimal("75.0"),
-            )
-
-        webTestClient.post()
-            .uri("/users/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Integration%20Test%20User&age=30&height=180.0&weight=75.0")
             .exchange()
             .expectStatus().isOk()
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
 
         // Then get the user by id
         webTestClient.get()
-            .uri("/users/2")
+            .uri("/user/${userResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(2)
+            .jsonPath("$.id").isEqualTo(userResponse.id)
             .jsonPath("$.name").isEqualTo("Integration Test User")
             .jsonPath("$.age").isEqualTo(30)
     }
@@ -157,7 +83,7 @@ class UserIntegrationTest {
     @Test
     fun `should get all users`() {
         webTestClient.get()
-            .uri("/users/")
+            .uri("/user/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

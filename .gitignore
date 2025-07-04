@@ -18,3 +18,7 @@ bin/
 
 ### Kotlin ###
 .kotlin
+
+# Ignore generated documentation
+/docs/
+/build/dokka/

@@ -6,16 +6,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 @RestController
-@RequestMapping("/workout-stages")
+@RequestMapping("/workout-stage")
 class WorkoutStageController(
     private val workoutStageDAL: WorkoutStageDAL,
 ) {
@@ -26,21 +26,21 @@ class WorkoutStageController(
     @PostMapping("/")
     fun save(
         @RequestBody workoutStage: WorkoutStage,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<WorkoutStage>> {
         logger.info("Saving workout stage for workout: {}, position: {}", workoutStage.programmedWorkoutId, workoutStage.position)
-        return try {
-            ResponseEntity.ok(
-                workoutStageDAL.insertWorkoutStage(workoutStage),
-            )
-        } catch (e: Exception) {
-            logger.error(
-                "Error saving workout stage for workout: {}, position: {}",
-                workoutStage.programmedWorkoutId,
-                workoutStage.position,
-                e,
-            )
-            throw e
-        }
+        return workoutStageDAL.insertWorkoutStage(workoutStage)
+            .map { savedStage ->
+                logger.debug("Saved workout stage with id: {}", savedStage.id)
+                ResponseEntity.ok(savedStage)
+            }
+            .doOnError { e ->
+                logger.error(
+                    "Error saving workout stage for workout: {}, position: {}",
+                    workoutStage.programmedWorkoutId,
+                    workoutStage.position,
+                    e,
+                )
+            }
     }
 
     @GetMapping("/{id}")
@@ -85,7 +85,7 @@ class WorkoutStageController(
         }
     }
 
-    @PutMapping("/")
+    @PatchMapping("/")
     fun update(
         @RequestBody workoutStage: WorkoutStage,
     ): ResponseEntity<*> {

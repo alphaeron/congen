@@ -1,0 +1,147 @@
+// Documentation generation tasks for Congen API
+
+/**
+ * Gradle tasks for generating API documentation from the Spring Boot application.
+ * 
+ * This build file provides tasks to:
+ * - Generate OpenAPI specifications
+ * - Create markdown documentation
+ * - Set up documentation structure
+ * 
+ * Usage:
+ * - ./gradlew generateApiDocs - Generate all documentation
+ * - ./gradlew generateOpenApiJson - Generate only OpenAPI JSON
+ * - ./gradlew generateMarkdownDocs - Generate only markdown docs
+ */
+
+// Task to generate API documentation
+task generateApiDocs(type: Exec) {
+    group = 'Documentation'
+    description = 'Generate complete API documentation including OpenAPI specs and markdown'
+    
+    commandLine 'bash', 'scripts/generate-api-docs.sh'
+    
+    doFirst {
+        println "Generating API documentation..."
+    }
+    
+    doLast {
+        println "API documentation generation completed!"
+        println "Documentation files created in: docs/"
+        println "Interactive documentation available at: http://localhost:8080/swagger-ui.html"
+    }
+}
+
+// Task to generate only OpenAPI JSON
+task generateOpenApiJson(type: Exec) {
+    group = 'Documentation'
+    description = 'Generate OpenAPI JSON specification'
+    
+    commandLine 'curl', '-s', 'http://localhost:8080/api-docs', '-o', 'docs/openapi.json'
+    
+    doFirst {
+        println "Generating OpenAPI JSON specification..."
+        // Ensure docs directory exists
+        file('docs').mkdirs()
+    }
+    
+    doLast {
+        println "OpenAPI JSON generated: docs/openapi.json"
+    }
+}
+
+// Task to generate only OpenAPI YAML
+task generateOpenApiYaml(type: Exec) {
+    group = 'Documentation'
+    description = 'Generate OpenAPI YAML specification'
+    
+    commandLine 'curl', '-s', 'http://localhost:8080/api-docs.yaml', '-o', 'docs/openapi.yaml'
+    
+    doFirst {
+        println "Generating OpenAPI YAML specification..."
+        // Ensure docs directory exists
+        file('docs').mkdirs()
+    }
+    
+    doLast {
+        println "OpenAPI YAML generated: docs/openapi.yaml"
+    }
+}
+
+// Task to create documentation directory structure
+task createDocsStructure {
+    group = 'Documentation'
+    description = 'Create documentation directory structure'
+    
+    doLast {
+        println "Creating documentation directory structure..."
+        
+        def docsDir = file('docs')
+        def swaggerUiDir = file('docs/swagger-ui')
+        
+        docsDir.mkdirs()
+        swaggerUiDir.mkdirs()
+        
+        println "Documentation directory structure created:"
+        println "  - docs/"
+        println "  - docs/swagger-ui/"
+    }
+}
+
+// Task to validate OpenAPI specification
+task validateOpenApiSpec(type: Exec) {
+    group = 'Documentation'
+    description = 'Validate OpenAPI specification using swagger-cli (if available)'
+    
+    commandLine 'swagger-cli', 'validate', 'docs/openapi.json'
+    
+    doFirst {
+        println "Validating OpenAPI specification..."
+        
+        // Check if swagger-cli is available
+        try {
+            exec {
+                commandLine 'swagger-cli', '--version'
+            }
+        } catch (Exception e) {
+            println "Warning: swagger-cli not found. Skipping validation."
+            enabled = false
+        }
+    }
+    
+    doLast {
+        println "OpenAPI specification validation completed!"
+    }
+}
+
+// Task to serve documentation locally
+task serveDocs(type: Exec) {
+    group = 'Documentation'
+    description = 'Serve documentation locally using Python HTTP server'
+    
+    commandLine 'python3', '-m', 'http.server', '8000', '-d', 'docs'
+    
+    doFirst {
+        println "Starting documentation server..."
+        println "Documentation available at: http://localhost:8000"
+        println "Press Ctrl+C to stop the server"
+    }
+}
+
+// Task to clean documentation
+task cleanDocs(type: Delete) {
+    group = 'Documentation'
+    description = 'Clean generated documentation files'
+    
+    delete fileTree(dir: 'docs', include: ['*.json', '*.yaml', '*.md'])
+    
+    doLast {
+        println "Documentation files cleaned from docs/"
+    }
+}
+
+// Configure tasks to depend on each other
+generateApiDocs.dependsOn createDocsStructure
+generateOpenApiJson.dependsOn createDocsStructure
+generateOpenApiYaml.dependsOn createDocsStructure
+validateOpenApiSpec.dependsOn generateOpenApiJson 

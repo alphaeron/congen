@@ -7,6 +7,11 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -29,7 +34,21 @@ class ExerciseController(
     }
 
     @PostMapping("/")
+    @Operation(
+        summary = "Create exercise",
+        description = "Creates a new exercise entry.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Exercise created successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun save(
+        @Parameter(description = "Exercise to create", required = true)
         @RequestBody exercise: Exercise,
     ): ResponseEntity<*> {
         logger.info("Saving exercise: {}", exercise.name)
@@ -39,7 +58,26 @@ class ExerciseController(
     }
 
     @GetMapping("/{name}")
+    @Operation(
+        summary = "Get exercise by name",
+        description = "Retrieves exercise details by name.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Exercise found",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Exercise not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun get(
+        @Parameter(description = "Name of the exercise", required = true)
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<Exercise>> {
         return exerciseDAL.selectExerciseByName(name)
@@ -57,7 +95,26 @@ class ExerciseController(
     }
 
     @GetMapping("/{name}/muscle")
+    @Operation(
+        summary = "Get muscles for exercise",
+        description = "Retrieves all muscles associated with a given exercise.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Muscles found",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "No muscles found or exercise not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getMuscle(
+        @Parameter(description = "Name of the exercise", required = true)
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<List<ExerciseMuscle>>> {
         return exerciseDAL.selectExerciseByName(name)
@@ -83,7 +140,26 @@ class ExerciseController(
     }
 
     @GetMapping("/{name}/equipment")
+    @Operation(
+        summary = "Get equipment for exercise",
+        description = "Retrieves all equipment associated with a given exercise.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Equipment found",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "No equipment found or exercise not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getEquipment(
+        @Parameter(description = "Name of the exercise", required = true)
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<List<ExerciseEquipment>>> {
         return exerciseDAL.selectExerciseByName(name)
@@ -109,6 +185,19 @@ class ExerciseController(
     }
 
     @GetMapping("/")
+    @Operation(
+        summary = "Get all exercises",
+        description = "Retrieves a list of all exercises.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Exercise list retrieved successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getAll(): ResponseEntity<*> {
         logger.debug("Getting all exercises")
         return ResponseEntity.ok(

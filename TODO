@@ -1,6 +1,27 @@
-add documentation
+Schema annotations are missing for many of the classes in the model directory.  Ensure each model class in the model directory has comprehensive coverage
 
-defined program length for how often to cycle exercises at a minimum
+user_exercise_rotation_history for users
+
+Have user enter current 1rm on account creation.
+
+pull values from application.properties from k8s manifest.  This way, we only need 1 application.properties, and the k8s manifests will specify differences.
+
+
+update algorithm to only generate next week of workouts.  Handle the case when a user doesn't have any history too.  Also update to use prilepin's chart for selecting number of repititions, based on whether a movement is a primary movement or not.  Outside of exercise type, the other variables that can be modified when programming an exercise are number of sets/repititions/tempo, and these should also meet the guidelines in prilepin's chart.  Other rep schemes include amrap (as many reps as possible), emom (every minute on the minute), For all exercises, also output the following information:
+
+is_amrap BOOLEAN NOT NULL (is as many reps as possible)
+is_emom BOOLEAN NOT NULL,
+use_tempo BOOLEAN NOT NULL,
+eccentric_tempo CHAR(1) NOT NULL,
+isometric_tempo CHAR(1) NOT NULL,
+concentric_tempo CHAR(1) NOT NULL,
+target_weight REAL NOT NULL,
+target_rep_count SMALLINT NOT NULL,
+
+Obtain the target weight based on a user's exercise history, and if not specified their current 1rm (one rep maximum).
+Handle the case when a first week  of workouts is generated and a user doesn't have any exercise history as well.
+
+move to minikube, skaffold, kubernetes manifests for deployment, integrate deployment into gradle targets, document deployment process and how to run/test locally.
 
 
 algorithm to generate programmed workout

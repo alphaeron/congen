@@ -28,21 +28,6 @@ class ProgramTest {
     }
 
     @Test
-    fun `should create program without id`() {
-        // Given & When
-        val program =
-            Program(
-                name = "Conjugate Powerlifting Program",
-                description = "A comprehensive conjugate powerlifting program",
-            )
-
-        // Then
-        assertNull(program.id)
-        assertEquals("Conjugate Powerlifting Program", program.name)
-        assertEquals("A comprehensive conjugate powerlifting program", program.description)
-    }
-
-    @Test
     fun `should create program with null description`() {
         // Given & When
         val program =

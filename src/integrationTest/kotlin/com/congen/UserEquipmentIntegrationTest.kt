@@ -4,34 +4,15 @@ import com.congen.model.UserEquipment
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.reactive.server.WebTestClient
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@ActiveProfiles("test")
-class UserEquipmentIntegrationTest {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @Test
     fun `should save user equipment`() {
-        val userEquipment =
-            UserEquipment(
-                userId = 1,
-                equipmentName = "Barbell",
-            )
-
         webTestClient.post()
-            .uri("/user-equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userEquipment))
+            .uri("/user-equipment/?userId=1&equipmentName=Barbell")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -42,16 +23,8 @@ class UserEquipmentIntegrationTest {
     @Test
     fun `should get user equipment by user id`() {
         // First create user equipment
-        val userEquipment =
-            UserEquipment(
-                userId = 2,
-                equipmentName = "Dumbbells",
-            )
-
         webTestClient.post()
-            .uri("/user-equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userEquipment))
+            .uri("/user-equipment/?userId=2&equipmentName=Dumbbells")
             .exchange()
             .expectStatus().isOk()
 
@@ -69,16 +42,8 @@ class UserEquipmentIntegrationTest {
     @Test
     fun `should delete user equipment`() {
         // First create user equipment
-        val userEquipment =
-            UserEquipment(
-                userId = 3,
-                equipmentName = "Kettlebell",
-            )
-
         webTestClient.post()
-            .uri("/user-equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(userEquipment))
+            .uri("/user-equipment/?userId=3&equipmentName=Kettlebell")
             .exchange()
             .expectStatus().isOk()
 
@@ -94,29 +59,19 @@ class UserEquipmentIntegrationTest {
 
     @Test
     fun `should handle multiple equipment for same user`() {
-        val equipment1 = UserEquipment(userId = 4, equipmentName = "Barbell")
-        val equipment2 = UserEquipment(userId = 4, equipmentName = "Dumbbells")
-        val equipment3 = UserEquipment(userId = 4, equipmentName = "Bench")
-
         // Add multiple equipment for the same user
         webTestClient.post()
-            .uri("/user-equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(equipment1))
+            .uri("/user-equipment/?userId=4&equipmentName=Barbell")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/user-equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(equipment2))
+            .uri("/user-equipment/?userId=4&equipmentName=Dumbbells")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/user-equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(equipment3))
+            .uri("/user-equipment/?userId=4&equipmentName=Bench")
             .exchange()
             .expectStatus().isOk()
 

@@ -28,20 +28,21 @@ class ProgramControllerTest {
         // Given
         val program =
             Program(
+                id = 0, // Temporary ID for creation
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
+        
+        val savedProgram = program.copy(id = 1L)
 
-        whenever(programDAL.insertProgram(program)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(program)).thenReturn(Mono.just(savedProgram))
 
         // When
         val result = programController.save(program)
 
         // Then
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<Program>)
-            .expectNext(program)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(savedProgram))
             .verifyComplete()
 
         verify(programDAL).insertProgram(program)
@@ -129,6 +130,7 @@ class ProgramControllerTest {
         val programId = 1L
         val program =
             Program(
+                id = 0, // Temporary ID for creation
                 name = "Updated Conjugate Program",
                 description = "Updated description",
             )
@@ -153,6 +155,7 @@ class ProgramControllerTest {
         val programId = 999L
         val program =
             Program(
+                id = 0, // Temporary ID for creation
                 name = "Updated Conjugate Program",
                 description = "Updated description",
             )

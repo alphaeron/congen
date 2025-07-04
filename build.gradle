@@ -4,6 +4,11 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.9.23'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
 
+    // KDoc (Dokka) documentation generation
+    // Usage: ./gradlew dokkaHtml
+    // Output: build/dokka/
+    id 'org.jetbrains.dokka' version '1.9.20'
+
     id 'com.google.cloud.tools.jib' version '3.4.2'
     id 'com.palantir.git-version' version '3.0.0'
 
@@ -12,6 +17,7 @@ plugins {
 
 apply from: './gradle/test.gradle'
 apply from: './gradle/style.gradle'
+apply from: './gradle/docs.gradle'
 
 java {
     toolchain {
@@ -139,5 +145,12 @@ jib {
             '-classpath', '/app/resources:/app/classes:/app/libs/*',
             'com.congen.CongenApplicationKt'
         ]
+    }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = "17"
+        freeCompilerArgs += ["-Xjsr305=strict"]
     }
 }

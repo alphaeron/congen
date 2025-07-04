@@ -6,55 +6,30 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
 
-@SpringBootTest
-@AutoConfigureWebTestClient
-@ActiveProfiles("test")
-class UserProgramPreferencesValidationIntegrationTest {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
 
     @BeforeEach
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
         // No-op, user creation will be handled in each test
     }
 
     @Test
     fun `should return 422 when program_days_per_week is 1`() {
-        val userId = 101
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val invalidPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 1, // Invalid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -65,31 +40,16 @@ class UserProgramPreferencesValidationIntegrationTest {
 
     @Test
     fun `should return 422 when program_days_per_week is 5`() {
-        val userId = 102
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val invalidPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 5, // Invalid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -100,31 +60,16 @@ class UserProgramPreferencesValidationIntegrationTest {
 
     @Test
     fun `should return 422 when program_days_per_week is 0`() {
-        val userId = 103
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val invalidPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 0, // Invalid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -135,31 +80,16 @@ class UserProgramPreferencesValidationIntegrationTest {
 
     @Test
     fun `should return 422 when program_days_per_week is 8`() {
-        val userId = 104
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val invalidPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 8, // Invalid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(invalidPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -170,93 +100,48 @@ class UserProgramPreferencesValidationIntegrationTest {
 
     @Test
     fun `should accept valid program_days_per_week value 2`() {
-        val userId = 105
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val validPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 2, // Valid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(validPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=2&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should accept valid program_days_per_week value 3`() {
-        val userId = 106
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val validPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 3, // Valid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(validPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should accept valid program_days_per_week value 4`() {
-        val userId = 107
-        val user =
-            User(
-                id = userId,
-                name = "Test User",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-            )
-        webTestClient.post()
-            .uri("/user/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(user))
+        val userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
             .exchange()
             .expectStatus().isOk()
-        val validPrefs =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = 4, // Valid value
-                sessionTimeLengthInMinutes = 60,
-            )
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
+        
         webTestClient.post()
-            .uri("/user-program-preferences/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(objectMapper.writeValueAsString(validPrefs))
+            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }

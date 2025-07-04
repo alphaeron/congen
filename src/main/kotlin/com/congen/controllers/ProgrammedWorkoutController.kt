@@ -6,16 +6,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 @RestController
-@RequestMapping("/programmed-workouts")
+@RequestMapping("/programmed-workout")
 class ProgrammedWorkoutController(
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
 ) {
@@ -26,16 +26,16 @@ class ProgrammedWorkoutController(
     @PostMapping("/")
     fun save(
         @RequestBody programmedWorkout: ProgrammedWorkout,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<ProgrammedWorkout>> {
         logger.info("Saving programmed workout: {}", programmedWorkout.name)
-        return try {
-            ResponseEntity.ok(
-                programmedWorkoutDAL.insertProgrammedWorkout(programmedWorkout),
-            )
-        } catch (e: Exception) {
-            logger.error("Error saving programmed workout: {}", programmedWorkout.name, e)
-            throw e
-        }
+        return programmedWorkoutDAL.insertProgrammedWorkout(programmedWorkout)
+            .map { savedWorkout ->
+                logger.debug("Saved programmed workout with id: {}", savedWorkout.id)
+                ResponseEntity.ok(savedWorkout)
+            }
+            .doOnError { e ->
+                logger.error("Error saving programmed workout: {}", programmedWorkout.name, e)
+            }
     }
 
     @GetMapping("/{id}")
@@ -80,7 +80,7 @@ class ProgrammedWorkoutController(
         }
     }
 
-    @PutMapping("/")
+    @PatchMapping("/")
     fun update(
         @RequestBody programmedWorkout: ProgrammedWorkout,
     ): ResponseEntity<*> {
