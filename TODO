@@ -1,5 +1,3 @@
-need additional relationship for exercise to conjugate workout de or me (so you know which can be used for which type).  or maybe do a separate table with exerciseName and movementType so you can have multiple (e.g., bench can be de upper or me upper), and can also handle different exercise types like plyometrics
-
 program
 
 num days
