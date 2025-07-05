@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
 import com.congen.service.ConjugateWorkoutGeneratorService
 import io.swagger.v3.oas.annotations.Operation
@@ -76,7 +77,6 @@ class ConjugateWorkoutGeneratorController(
      *
      * @param userId The ID of the user
      * @param currentWeekNumber The current week number in the program (default: 1)
-     * @param numDaysPerWeek The number of training days per week (2, 3, or 4, default: 3)
      * @return Mono containing the generated program with workouts
      */
     @GetMapping("/{userId}/generate")
@@ -93,7 +93,7 @@ class ConjugateWorkoutGeneratorController(
             ),
             ApiResponse(
                 responseCode = "400",
-                description = "Invalid parameters (numDaysPerWeek must be 2, 3, or 4)"
+                description = "Invalid parameters"
             ),
             ApiResponse(
                 responseCode = "404",
@@ -113,24 +113,17 @@ class ConjugateWorkoutGeneratorController(
         @Parameter(description = "User ID", required = true)
         @PathVariable("userId") userId: Int,
         @Parameter(description = "Current week number in the program", required = false)
-        @RequestParam("currentWeekNumber", defaultValue = "1") currentWeekNumber: Int,
-        @Parameter(description = "Number of training days per week (2, 3, or 4)", required = false)
-        @RequestParam("numDaysPerWeek", defaultValue = "3") numDaysPerWeek: Int
+        @RequestParam("currentWeekNumber", defaultValue = "1") currentWeekNumber: Int
     ): Mono<ResponseEntity<Program>> {
-        logger.info("Generating conjugate workout program for user: {}, week: {}, days: {}", userId, currentWeekNumber, numDaysPerWeek)
+        logger.info("Generating conjugate workout program for user: {}, week: {}", userId, currentWeekNumber)
 
         // Validate parameters
-        if (numDaysPerWeek !in listOf(2, 3, 4)) {
-            logger.warn("Invalid numDaysPerWeek: {} for user: {}", numDaysPerWeek, userId)
-            return Mono.just(ResponseEntity.badRequest().build())
-        }
-
         if (currentWeekNumber < 1) {
             logger.warn("Invalid currentWeekNumber: {} for user: {}", currentWeekNumber, userId)
             return Mono.just(ResponseEntity.badRequest().build())
         }
 
-        return conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        return conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
             .map { program ->
                 logger.debug("Successfully generated program: {} for user: {}", program.id, userId)
                 ResponseEntity.ok(program)

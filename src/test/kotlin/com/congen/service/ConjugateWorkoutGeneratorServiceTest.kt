@@ -14,6 +14,7 @@ import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.ValidationException
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
@@ -39,8 +40,6 @@ import java.time.LocalDateTime
 
 class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var exerciseDAL: ExerciseDAL
-    private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
-    private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
     private lateinit var userEquipmentDAL: UserEquipmentDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
@@ -48,16 +47,15 @@ class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
     private lateinit var programDAL: ProgramDAL
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
-    private lateinit var workoutStageDAL: WorkoutStageDAL
-    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
-    private lateinit var setSchemeDAL: SetSchemeDAL
+    private lateinit var conjugateTemplates: com.congen.service.conjugate.ConjugateTemplates
+    private lateinit var exerciseSelectionService: com.congen.service.conjugate.ExerciseSelectionService
+    private lateinit var workoutStageGenerator: com.congen.service.conjugate.WorkoutStageGenerator
+    private lateinit var sessionTimeCalculator: com.congen.service.conjugate.SessionTimeCalculator
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
 
     @BeforeEach
     fun setUp() {
         exerciseDAL = mock()
-        exerciseMuscleDAL = mock()
-        exerciseEquipmentDAL = mock()
         userExercisePreferenceDAL = mock()
         userEquipmentDAL = mock()
         userOneRepMaxDAL = mock()
@@ -65,14 +63,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         exerciseRotationHistoryDAL = mock()
         programDAL = mock()
         programmedWorkoutDAL = mock()
-        workoutStageDAL = mock()
-        programmedExerciseDAL = mock()
-        setSchemeDAL = mock()
+        conjugateTemplates = mock()
+        exerciseSelectionService = mock()
+        workoutStageGenerator = mock()
+        sessionTimeCalculator = mock()
 
         conjugateWorkoutGeneratorService = ConjugateWorkoutGeneratorService(
             exerciseDAL = exerciseDAL,
-            exerciseMuscleDAL = exerciseMuscleDAL,
-            exerciseEquipmentDAL = exerciseEquipmentDAL,
             userExercisePreferenceDAL = userExercisePreferenceDAL,
             userEquipmentDAL = userEquipmentDAL,
             userOneRepMaxDAL = userOneRepMaxDAL,
@@ -80,9 +77,10 @@ class ConjugateWorkoutGeneratorServiceTest {
             exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
             programDAL = programDAL,
             programmedWorkoutDAL = programmedWorkoutDAL,
-            workoutStageDAL = workoutStageDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL
+            conjugateTemplates = conjugateTemplates,
+            exerciseSelectionService = exerciseSelectionService,
+            workoutStageGenerator = workoutStageGenerator,
+            sessionTimeCalculator = sessionTimeCalculator
         )
     }
 
@@ -91,7 +89,6 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
@@ -104,15 +101,15 @@ class ConjugateWorkoutGeneratorServiceTest {
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -122,28 +119,15 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
             .expectNext(createdProgram)
             .verifyComplete()
-
-        verify(programDAL).insertProgram(any())
-        verify(programmedWorkoutDAL).insertProgrammedWorkout(any())
-        verify(workoutStageDAL).insertWorkoutStage(any())
-        verify(programmedExerciseDAL).insertProgrammedExercise(any())
-        verify(setSchemeDAL).insertSetScheme(any())
     }
 
     @Test
@@ -171,8 +155,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -180,19 +164,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day")
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any())).thenReturn(Mono.just(createdWorkout))
 
-        // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
-
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -227,8 +200,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -236,19 +209,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day")
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any())).thenReturn(Mono.just(createdWorkout))
 
-        // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
-
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -288,8 +250,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -297,19 +259,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day")
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any())).thenReturn(Mono.just(createdWorkout))
 
-        // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation - should select a different exercise since Bench Press was already used
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Incline Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
-
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -322,28 +273,31 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 2
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
+        val programPreferences = UserProgramPreferences(
+            userId = 1,
+            programDaysPerWeek = 2,
+            sessionTimeLengthInMinutes = 60
+        )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         val createdProgram = Program(
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -353,17 +307,10 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -376,28 +323,31 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 4
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
+        val programPreferences = UserProgramPreferences(
+            userId = 1,
+            programDaysPerWeek = 4,
+            sessionTimeLengthInMinutes = 60
+        )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         val createdProgram = Program(
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -407,17 +357,10 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -426,24 +369,10 @@ class ConjugateWorkoutGeneratorServiceTest {
     }
 
     @Test
-    fun `generateNextWeek should throw exception for invalid numDaysPerWeek`() {
-        // Given
-        val userId = 1
-        val currentWeekNumber = 1
-        val numDaysPerWeek = 5 // Invalid
-
-        // When & Then
-        assertThrows<IllegalArgumentException> {
-            conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
-        }
-    }
-
-    @Test
     fun `generateNextWeek should handle database errors gracefully`() {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
@@ -456,13 +385,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.error(RuntimeException("Database error")))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -475,28 +404,27 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = emptyList<UserEquipment>() // No equipment
         val oneRepMaxes = emptyList<UserOneRepMax>() // No 1RM data
-        val programPreferences = emptyList<UserProgramPreferences>() // No preferences
+        val programPreferences = createSampleProgramPreferences() // program preferences are always required
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         val createdProgram = Program(
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -506,17 +434,10 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -529,34 +450,27 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = listOf(
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 45 // 45 minute session
-            )
-        )
+        val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         val createdProgram = Program(
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -564,29 +478,17 @@ class ConjugateWorkoutGeneratorServiceTest {
         val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day")
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any())).thenReturn(Mono.just(createdWorkout))
 
-        // Mock stage creation - should create more stages for accessories
+        // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
             .expectNext(createdProgram)
             .verifyComplete()
-
-        // Verify that more accessory stages are created for longer sessions
-        // 45 minutes - 10 (primary) - 8 (secondary) = 27 minutes remaining
-        // 27 / 5 = 5 accessory exercises
-        verify(workoutStageDAL, org.mockito.kotlin.times(7)).insertWorkoutStage(any()) // 1 primary + 1 secondary + 5 accessories
     }
 
     @Test
@@ -594,34 +496,27 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = listOf(
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 40 // 40 minute session
-            )
-        )
+        val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         val createdProgram = Program(
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -631,27 +526,15 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation - should create fewer stages for DE days due to conditioning
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Squat", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
             .expectNext(createdProgram)
             .verifyComplete()
-
-        // Verify that fewer accessory stages are created for DE days
-        // 40 minutes - 10 (primary) - 10 (conditioning) = 20 minutes remaining
-        // 20 / 5 = 4 accessory exercises
-        verify(workoutStageDAL, org.mockito.kotlin.times(6)).insertWorkoutStage(any()) // 1 primary + 1 conditioning + 4 accessories
     }
 
     @Test
@@ -659,7 +542,6 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
@@ -693,15 +575,15 @@ class ConjugateWorkoutGeneratorServiceTest {
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -711,17 +593,10 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation - should select a different exercise since Bench Press was used twice
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Overhead Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
@@ -733,7 +608,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     fun `generateNextWeek should apply undulating periodization correctly for different weeks`() {
         // Given
         val userId = 1
-        val numDaysPerWeek = 3
+        val currentWeekNumber = 1
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
@@ -746,15 +621,15 @@ class ConjugateWorkoutGeneratorServiceTest {
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week 1",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -764,27 +639,15 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
-        // Mock exercise creation
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
+        // When
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
-
-        // Test different weeks to verify periodization
-        val testWeeks = listOf(1, 2, 3, 4, 5, 6, 7, 8)
-
-        testWeeks.forEach { weekNumber ->
-            // When
-            val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, weekNumber, numDaysPerWeek)
-
-            // Then
-            StepVerifier.create(result)
-                .expectNext(createdProgram)
-                .verifyComplete()
-        }
+        // Then
+        StepVerifier.create(result)
+            .expectNext(createdProgram)
+            .verifyComplete()
     }
 
     @Test
@@ -792,7 +655,6 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Given
         val userId = 1
         val currentWeekNumber = 1
-        val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
         val preferences = emptyList<UserExercisePreference>()
@@ -805,15 +667,15 @@ class ConjugateWorkoutGeneratorServiceTest {
             id = 1L,
             userId = userId,
             name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
         )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxesByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferencesByUser(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         whenever(programDAL.insertProgram(any())).thenReturn(Mono.just(createdProgram))
 
@@ -823,26 +685,48 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // Mock stage creation
         val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, position = 1)
-        whenever(workoutStageDAL.insertWorkoutStage(any())).thenReturn(Mono.just(createdStage))
-
-        // Mock exercise creation - should select different exercises for primary and secondary
-        val createdExercise = ProgrammedExercise(id = 1L, workoutStageId = 1L, exerciseName = "Bench Press", notes = null)
-        whenever(programmedExerciseDAL.insertProgrammedExercise(any())).thenReturn(Mono.just(createdExercise))
-
-        // Mock set scheme creation
-        whenever(setSchemeDAL.insertSetScheme(any())).thenReturn(Mono.just(createSampleSetScheme()))
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber, numDaysPerWeek)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
 
         // Then
         StepVerifier.create(result)
             .expectNext(createdProgram)
             .verifyComplete()
+    }
 
-        // Verify that both primary and secondary stages are created for ME_Upper day
-        // Primary stage (ME exercise) + Secondary stage (additional primary exercise) + Accessory stages
-        verify(workoutStageDAL, org.mockito.kotlin.atLeast(3)).insertWorkoutStage(any())
+    @Test
+    fun `generateNextWeek should throw exception for invalid programDaysPerWeek`() {
+        // Given
+        val userId = 1
+        val currentWeekNumber = 1
+
+        val exercises = createSampleExercises()
+        val preferences = emptyList<UserExercisePreference>()
+        val userEquipment = createSampleUserEquipment()
+        val oneRepMaxes = createSampleOneRepMaxes()
+        val programPreferences = UserProgramPreferences(
+            userId = 1,
+            programDaysPerWeek = 5, // Invalid
+            sessionTimeLengthInMinutes = 60
+        )
+        val rotationHistory = emptyList<ExerciseRotationHistory>()
+
+        // Mock DAL responses
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(preferences))
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
+        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
+
+        // When & Then
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
+        
+        StepVerifier.create(result)
+            .expectError(ValidationException::class.java)
+            .verify()
     }
 
     // Helper methods to create sample data
@@ -932,13 +816,11 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
     }
 
-    private fun createSampleProgramPreferences(): List<UserProgramPreferences> {
-        return listOf(
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 60
-            )
+    private fun createSampleProgramPreferences(): UserProgramPreferences {
+        return UserProgramPreferences(
+            userId = 1,
+            programDaysPerWeek = 3,
+            sessionTimeLengthInMinutes = 60
         )
     }
 
@@ -951,12 +833,12 @@ class ConjugateWorkoutGeneratorServiceTest {
             isAmrap = false,
             isEmom = false,
             useTempo = false,
-            eccentricTempo = "0",
-            isometricTempo = "0",
-            concentricTempo = "0",
+            eccentricTempo = null,
+            isometricTempo = null,
+            concentricTempo = null,
             targetWeight = BigDecimal("85.0"),
             performedWeight = null,
-            targetRepCount = 3,
+            targetRepCount = 5,
             performedRepCount = null,
             restSeconds = 180
         )

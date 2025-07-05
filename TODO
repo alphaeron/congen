@@ -1,4 +1,22 @@
-weak muscle determination
+fix weight rounding issue / handle input units for weights (do all calculations in kg, but support outputting in lbs or kgs).
+
+Secondary movement selection should pick an exercise simlar to the primary movement.
+
+don't hardcode default weight of 50 lbs?
+
+function to estimate default weight if missing based on other user 1rms?
+
+band weight for de exercises.
+
+Only get the latest program for a user.
+
+Can you get currentWeekNumber from the database too, instead of taking it as a parameter?  For example, by looking at the number of workouts a user has had in the past in their current program.
+
+put generateWorkoutsForWeek in the template itself.
+
+2 or 3 week conjugate generation
+
+Add the ability for a user to enter their weak muscles, and have the accessories focus on those.
 
 use an enum for stage type.
 

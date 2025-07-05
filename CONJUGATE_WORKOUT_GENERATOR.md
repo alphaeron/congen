@@ -84,27 +84,29 @@ The service uses a sophisticated algorithm to select exercises:
 
 ## Session Time Management
 
-The service dynamically calculates the number of accessory exercises based on the user's desired session time:
+The service uses dynamic time calculation to determine the number of accessory exercises based on actual set schemes:
 
-### Time Allocation
-- **Primary Movement (ME/DE)**: 10 minutes (warm-up, work sets, rest periods)
-- **Secondary Movement**: 8 minutes (additional primary exercise, if applicable for upper body days)
+### Time Calculation Formula
+- **Exercise time**: `num_sets * (rest_seconds + reps_per_set * 6)`
+  - Where 6 seconds is the estimated time per repetition
+- **Primary movement**: Calculated from actual set schemes
+- **Secondary movement**: Calculated from actual set schemes  
+- **Each accessory exercise**: 5 minutes
 - **Conditioning**: 10 minutes (for DE days)
-- **Each Accessory Exercise**: 5 minutes
 
-### Calculation Logic
-The service determines accessory count using the formula:
-```
-Remaining Time = Session Time - Primary Time - Secondary Time - Conditioning Time
-Number of Accessories = Remaining Time ÷ 5 minutes
-```
+### Dynamic Allocation Logic
+1. Calculate actual time taken by primary and secondary movements
+2. Determine remaining time for accessories: `sessionTimeMinutes - (primaryTime + secondaryTime)/60`
+3. If conditioning is included, subtract 10 minutes from remaining time
+4. If no time left for accessories, skip conditioning and use that time for accessories instead
+5. Calculate number of accessories: `remainingTime / 5 minutes`
 
 ### Examples
-- **45-minute session, ME Upper**: 45 - 10 - 8 = 27 minutes → 5 accessories
-- **40-minute session, DE Lower**: 40 - 10 - 10 = 20 minutes → 4 accessories
-- **60-minute session, ME Lower**: 60 - 10 = 50 minutes → 10 accessories
+- **ME Upper with 3 sets of 5 reps, 180s rest**: 3 * (180 + 5*6) = 630s (10.5 min) for primary
+- **Secondary with 4 sets of 6 reps, 240s rest**: 4 * (240 + 6*6) = 1104s (18.4 min) for secondary
+- **60-minute session**: 60 - 10.5 - 18.4 - 10 = 21.1 minutes → 4 accessories
 
-This ensures workouts fit within the user's time constraints while maintaining proper exercise balance.
+This approach ensures more accurate time allocation based on the actual workout structure rather than fixed estimates.
 
 ### Exercise Rotation Logic
 
