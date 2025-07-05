@@ -271,4 +271,23 @@ class ValidationUtilTest {
         val exception2 = assertThrows<ValidationException> { ValidationUtil.validateRestSeconds(3601) }
         assertEquals("Rest seconds must be between 0 and 3600, got: 3601", exception2.message)
     }
+
+    @Test
+    fun `validateExerciseCategory should pass for valid categories`() {
+        assertDoesNotThrow { ValidationUtil.validateExerciseCategory("primary") }
+        assertDoesNotThrow { ValidationUtil.validateExerciseCategory("secondary") }
+        assertDoesNotThrow { ValidationUtil.validateExerciseCategory("accessory") }
+    }
+
+    @Test
+    fun `validateExerciseCategory should throw for invalid categories`() {
+        val exception1 = assertThrows<ValidationException> { ValidationUtil.validateExerciseCategory("invalid") }
+        assertEquals("Exercise category must be one of: primary, secondary, accessory, got: invalid", exception1.message)
+
+        val exception2 = assertThrows<ValidationException> { ValidationUtil.validateExerciseCategory("") }
+        assertEquals("Exercise category must be one of: primary, secondary, accessory, got: ", exception2.message)
+
+        val exception3 = assertThrows<ValidationException> { ValidationUtil.validateExerciseCategory("PRIMARY") }
+        assertEquals("Exercise category must be one of: primary, secondary, accessory, got: PRIMARY", exception3.message)
+    }
 }
