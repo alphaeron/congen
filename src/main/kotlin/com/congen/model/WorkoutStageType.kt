@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 /**
  * Represents a type or category of workout stage.
@@ -40,20 +39,21 @@ import java.time.LocalDateTime
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "A type or category of workout stage",
-    example = "WorkoutStageType(id=1, name=\"Warm-up\")"
+    example = "WorkoutStageType(id=1, name=\"Warm-up\")",
 )
 data class WorkoutStageType(
+    /** Unique identifier for the workout stage type. */
     @Schema(
         description = "Unique identifier for the workout stage type",
         example = "1",
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Int,
-    
+    /** Human-readable name of the workout stage type. */
     @Schema(
         description = "Human-readable name of the workout stage type",
         example = "Warm-up",
-        required = true
+        required = true,
     )
     @param:JsonProperty("name") val name: String,
 )

@@ -15,6 +15,7 @@ import reactor.core.publisher.Mono
 originPatterns = ["http://localhost:[*]"]
 allowCredentials = true,
  */
+
 /**
  * Cross-Origin Resource Sharing (CORS) filter for the Congen API.
  *
@@ -79,19 +80,21 @@ class CorsFilter(
         private val logger = LoggerFactory.getLogger(CorsFilter::class.java)
     }
 
-    // Parse configuration strings into sets
     /** Set of allowed origins parsed from configuration. */
     private val allowedOrigins: Set<String> = allowedOriginsConfig.split(",").map { it.trim() }.toSet()
+
     /** Set of allowed HTTP methods parsed from configuration. */
     private val allowedMethods: Set<String> = allowedMethodsConfig.split(",").map { it.trim() }.toSet()
+
     /** Set of allowed request headers parsed from configuration. */
     private val allowedHeaders: Set<String> = allowedHeadersConfig.split(",").map { it.trim() }.toSet()
+
     /** Set of exposed response headers parsed from configuration. */
     private val exposedHeaders: Set<String> = exposedHeadersConfig.split(",").map { it.trim() }.toSet()
+
     /** Maximum age for preflight responses. */
     private val maxAge: String = maxAgeConfig
 
-    // Production security checks
     /** Whether the application is running in production mode. */
     private val isProduction = activeProfile.contains("prod") || activeProfile.contains("production")
 

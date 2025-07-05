@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 /**
  * Represents a stage within a programmed workout.
@@ -41,35 +40,36 @@ import java.time.LocalDateTime
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "A stage within a programmed workout",
-    example = "WorkoutStage(id=1, programmedWorkoutId=5, stageTypeId=1, position=1)"
+    example = "WorkoutStage(id=1, programmedWorkoutId=5, stageTypeId=1, position=1)",
 )
 data class WorkoutStage(
+    /** Unique identifier for the workout stage. */
     @Schema(
         description = "Unique identifier for the workout stage",
         example = "1",
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
-    
+    /** ID of the programmed workout this stage belongs to. */
     @Schema(
         description = "ID of the programmed workout this stage belongs to",
         example = "5",
-        required = true
+        required = true,
     )
     @param:JsonProperty("programmed_workout_id") val programmedWorkoutId: Long,
-    
+    /** ID of the workout stage type (warm-up, main, cool-down, etc.). */
     @Schema(
         description = "ID of the workout stage type (warm-up, main, cool-down, etc.)",
         example = "1",
-        required = true
+        required = true,
     )
     @param:JsonProperty("stage_type_id") val stageTypeId: Int,
-    
+    /** Order of this stage within the workout (1-based). */
     @Schema(
         description = "Order of this stage within the workout (1-based)",
         example = "1",
         required = true,
-        minimum = 1
+        minimum = "1",
     )
     @param:JsonProperty("position") val position: Int,
 )

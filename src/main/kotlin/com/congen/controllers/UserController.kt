@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -135,13 +134,14 @@ class UserController(
         )
         @RequestParam weight: BigDecimal,
     ): Mono<ResponseEntity<User>> {
-        val user = User(
-            id = 0, // Temporary ID, will be replaced by database auto-generation
-            name = name,
-            age = age,
-            height = height,
-            weight = weight,
-        )
+        val user =
+            User(
+                id = 0, // Temporary ID, will be replaced by database auto-generation
+                name = name,
+                age = age,
+                height = height,
+                weight = weight,
+            )
         logger.info("Saving user: {}", user.name)
         return userDAL.insertUser(user)
             .map { savedUser ->
@@ -321,13 +321,14 @@ class UserController(
         )
         @RequestParam weight: BigDecimal,
     ): ResponseEntity<*> {
-        val user = User(
-            id = id,
-            name = name,
-            age = age,
-            height = height,
-            weight = weight,
-        )
+        val user =
+            User(
+                id = id,
+                name = name,
+                age = age,
+                height = height,
+                weight = weight,
+            )
         logger.info("Updating user: {}", id)
         return ResponseEntity.ok(
             userDAL.updateUser(user),

@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/exercise_muscle")
 @Tag(
     name = "Exercise-Muscle Management",
-    description = "Operations for managing exercise-muscle relationships"
+    description = "Operations for managing exercise-muscle relationships",
 )
 class ExerciseMuscleController(
     private val exerciseMuscleDAL: ExerciseMuscleDAL,

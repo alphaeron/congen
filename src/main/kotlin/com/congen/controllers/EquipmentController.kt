@@ -60,7 +60,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/equipment")
 @Tag(
     name = "Equipment Management",
-    description = "Operations for managing equipment data and exercise associations"
+    description = "Operations for managing equipment data and exercise associations",
 )
 class EquipmentController(
     private val equipmentDAL: EquipmentDAL,

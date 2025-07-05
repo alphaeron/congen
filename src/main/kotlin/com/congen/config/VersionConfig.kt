@@ -28,14 +28,19 @@ import java.util.Properties
 class VersionConfig {
     /** Application version number. */
     val version: String
+
     /** Release identifier. */
     val releaseId: String
+
     /** Build timestamp. */
     val buildTime: String
+
     /** Git commit hash. */
     val gitHash: String
+
     /** Git branch name. */
     val gitBranch: String
+
     /** Whether the Git working directory is dirty (has uncommitted changes). */
     val gitDirty: Boolean
 

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 /**
  * Represents a scheduled workout within a program.
@@ -48,33 +47,34 @@ import java.time.LocalDateTime
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "A scheduled workout within a training program",
-    example = "ProgrammedWorkout(id=1, programId=5, dayNumber=1, name=\"Upper Body Strength\")"
+    example = "ProgrammedWorkout(id=1, programId=5, dayNumber=1, name=\"Upper Body Strength\")",
 )
 data class ProgrammedWorkout(
+    /** Unique identifier for the programmed workout. */
     @Schema(
         description = "Unique identifier for the programmed workout",
         example = "1",
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
-    
+    /** ID of the training program this workout belongs to. */
     @Schema(
         description = "ID of the training program this workout belongs to",
         example = "5",
-        required = true
+        required = true,
     )
     @param:JsonProperty("program_id") val programId: Long,
-    
+    /** Day number within the program (1-365). */
     @Schema(
         description = "Day number within the program (1-365)",
         example = "1",
-        required = true
+        required = true,
     )
     @param:JsonProperty("day_number") val dayNumber: Int,
-    
+    /** Optional name for the workout. */
     @Schema(
         description = "Optional name for the workout",
-        example = "Upper Body Strength"
+        example = "Upper Body Strength",
     )
     @param:JsonProperty("name") val name: String?,
 )

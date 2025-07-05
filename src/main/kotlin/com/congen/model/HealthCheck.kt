@@ -60,8 +60,10 @@ data class HealthCheckResponse(
 enum class HealthStatus {
     /** Healthy. */
     PASS, // healthy
+
     /** Degraded. */
     WARN, // degraded
+
     /** Unhealthy. */
     FAIL, // unhealthy
 }

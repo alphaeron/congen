@@ -1,10 +1,8 @@
 package com.congen
 
-import com.congen.model.UserEquipment
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
 
 class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()

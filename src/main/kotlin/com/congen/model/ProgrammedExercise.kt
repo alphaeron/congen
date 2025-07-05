@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
 
 /**
  * Represents an exercise assigned to a specific workout stage.
@@ -46,33 +45,34 @@ import java.time.LocalDateTime
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "An exercise assigned to a specific workout stage",
-    example = "ProgrammedExercise(id=1, workoutStageId=5, exerciseName=\"Bench Press\", notes=\"Focus on controlled descent\")"
+    example = "ProgrammedExercise(id=1, workoutStageId=5, exerciseName=\"Bench Press\", notes=\"Focus on controlled descent\")",
 )
 data class ProgrammedExercise(
+    /** Unique identifier for the programmed exercise. */
     @Schema(
         description = "Unique identifier for the programmed exercise",
         example = "1",
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
-    
+    /** ID of the workout stage this exercise belongs to. */
     @Schema(
         description = "ID of the workout stage this exercise belongs to",
         example = "5",
-        required = true
+        required = true,
     )
     @param:JsonProperty("workout_stage_id") val workoutStageId: Long,
-    
+    /** Name of the exercise to be performed. */
     @Schema(
         description = "Name of the exercise to be performed",
         example = "Bench Press",
-        required = true
+        required = true,
     )
     @param:JsonProperty("exercise_name") val exerciseName: String,
-    
+    /** Optional notes or instructions for the exercise. */
     @Schema(
         description = "Optional notes or instructions for the exercise",
-        example = "Focus on controlled descent"
+        example = "Focus on controlled descent",
     )
     @param:JsonProperty("notes") val notes: String?,
 )

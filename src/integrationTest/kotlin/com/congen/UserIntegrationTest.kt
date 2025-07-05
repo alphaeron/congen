@@ -4,8 +4,6 @@ import com.congen.model.User
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
-import java.math.BigDecimal
 
 class UserIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
@@ -61,13 +59,14 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get user by id`() {
         // First create a user
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Integration%20Test%20User&age=30&height=180.0&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Integration%20Test%20User&age=30&height=180.0&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
 
         // Then get the user by id
         webTestClient.get()

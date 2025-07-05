@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/exercise_workout_type")
 @Tag(
     name = "Exercise-Workout Type Management",
-    description = "Operations for managing exercise-workout type relationships"
+    description = "Operations for managing exercise-workout type relationships",
 )
 class ExerciseWorkoutTypeController(
     private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,

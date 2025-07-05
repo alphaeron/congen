@@ -45,8 +45,10 @@ class PostgresConfig(
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(PostgresConfig::class.java)
+
         /** Number of connections in the reader pool. */
         private val CONNECTION_POOL_COUNT_READER = 32
+
         /** Number of connections in the writer pool. */
         private val CONNECTION_POOL_COUNT_WRITER = 10
     }

@@ -44,12 +44,14 @@ import java.time.LocalDateTime
     description = "User profile information for workout generation",
 )
 data class User(
+    /** Unique identifier for the user (auto-generated). */
     @Schema(
         description = "Unique identifier for the user",
         example = "1",
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Int,
+    /** User's full name. */
     @Schema(
         description = "User's full name",
         example = "John Doe",
@@ -57,27 +59,32 @@ data class User(
         maxLength = 255,
     )
     @param:JsonProperty("name") val name: String,
+    /** User's age in years. */
     @Schema(
         description = "User's age in years",
         example = "30",
     )
     @param:JsonProperty("age") val age: Int,
+    /** User's height in centimeters. */
     @Schema(
         description = "User's height in centimeters",
         example = "175.5",
     )
     @param:JsonProperty("height") val height: BigDecimal,
+    /** User's weight in kilograms. */
     @Schema(
         description = "User's weight in kilograms",
         example = "80.0",
     )
     @param:JsonProperty("weight") val weight: BigDecimal,
+    /** Timestamp when the user was created. */
     @Schema(
         description = "Timestamp when the user was created",
         example = "2024-01-01T00:00:00Z",
         readOnly = true,
     )
     @param:JsonProperty("created_at") val createdAt: LocalDateTime? = null,
+    /** Timestamp when the user was last updated. */
     @Schema(
         description = "Timestamp when the user was last updated",
         example = "2024-01-01T00:00:00Z",

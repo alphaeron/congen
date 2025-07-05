@@ -56,21 +56,23 @@ class CorsRateLimitFilter(
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(CorsRateLimitFilter::class.java)
+
         /** Maximum number of CORS violations allowed per IP address. */
         private const val MAX_VIOLATIONS_PER_IP = 10
+
         /** Time window in minutes for counting violations. */
         private const val VIOLATION_WINDOW_MINUTES = 5L
     }
 
-    // Track CORS violations by IP address
     /** Map tracking violation counts per IP address. */
     private val violationCounts = ConcurrentHashMap<String, AtomicInteger>()
+
     /** Map tracking violation timestamps per IP address. */
     private val violationTimestamps = ConcurrentHashMap<String, Long>()
 
-    // Parse configuration strings into sets
     /** Set of allowed origins parsed from configuration. */
     private val allowedOrigins: Set<String> = allowedOriginsConfig.split(",").map { it.trim() }.toSet()
+
     /** Whether the application is running in production mode. */
     private val isProduction = activeProfile.contains("prod") || activeProfile.contains("production")
 

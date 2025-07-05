@@ -32,7 +32,7 @@ class ProgramControllerTest {
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
-        
+
         val savedProgram = program.copy(id = 1L)
 
         whenever(programDAL.insertProgram(program)).thenReturn(Mono.just(savedProgram))

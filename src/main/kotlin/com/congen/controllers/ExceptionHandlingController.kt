@@ -47,8 +47,6 @@ public class ExceptionHandlingController {
         private val logger = LoggerFactory.getLogger(ExceptionHandlingController::class.java)
     }
 
-    // Exception handling methods
-
     /**
      * Handles InvalidResultException by returning HTTP 409 Conflict.
      *
@@ -58,7 +56,6 @@ public class ExceptionHandlingController {
      *
      * @throws InvalidResultException when data integrity is violated
      */
-    // Convert a predefined exception to an HTTP Status code
     @ResponseStatus(
         value = HttpStatus.CONFLICT,
         reason = "Data integrity violation",
@@ -78,7 +75,6 @@ public class ExceptionHandlingController {
      * @param exception The NoResultsFoundException that was thrown
      * @return ResponseEntity with HTTP 404 status and error message
      */
-    // Handle NoResultsFoundException globally to return 404
     @ExceptionHandler(NoResultsFoundException::class)
     fun handleNoResultsFound(exception: NoResultsFoundException): ResponseEntity<String> {
         logger.warn("No results found: {}", exception.message ?: "Unknown error")
@@ -95,7 +91,6 @@ public class ExceptionHandlingController {
      * @param exception The ValidationException that was thrown
      * @return ResponseEntity with HTTP 422 status and error details
      */
-    // Handle ValidationException globally to return 422
     @ExceptionHandler(ValidationException::class)
     fun handleValidationException(exception: ValidationException): ResponseEntity<Map<String, String>> {
         logger.error("Validation error occurred: {}", exception.message ?: "Unknown validation error")

@@ -59,7 +59,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/exercise")
 @Tag(
     name = "Exercise Management",
-    description = "Operations for managing exercise data and relationships"
+    description = "Operations for managing exercise data and relationships",
 )
 class ExerciseController(
     private val exerciseDAL: ExerciseDAL,

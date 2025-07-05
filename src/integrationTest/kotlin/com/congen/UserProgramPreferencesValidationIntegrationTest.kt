@@ -1,13 +1,10 @@
 package com.congen
 
 import com.congen.model.User
-import com.congen.model.UserProgramPreferences
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
-import java.math.BigDecimal
 
 class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
@@ -20,14 +17,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 1`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -40,14 +38,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 5`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -60,14 +59,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 0`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -80,14 +80,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 8`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -100,14 +101,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 2`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=2&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -116,14 +118,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 3`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -132,14 +135,15 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 4`() {
-        val userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+        val userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         webTestClient.post()
             .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()

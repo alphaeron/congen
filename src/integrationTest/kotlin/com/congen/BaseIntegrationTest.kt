@@ -1,18 +1,15 @@
 package com.congen
 
+import io.vertx.sqlclient.SqlClient
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.beans.factory.annotation.Qualifier
-import io.vertx.sqlclient.SqlClient
-import io.vertx.sqlclient.SqlConnection
-import io.vertx.sqlclient.SqlResult
-import io.vertx.sqlclient.Row
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -42,7 +39,8 @@ open class BaseIntegrationTest {
 
     private fun cleanupDatabase() {
         // Truncate all tables in dependency-safe order using CASCADE
-        val truncateSql = """
+        val truncateSql =
+            """
             TRUNCATE TABLE 
                 set_scheme,
                 programmed_exercise,
@@ -61,7 +59,7 @@ open class BaseIntegrationTest {
                 muscle,
                 workout_stage_type
             CASCADE;
-        """.trimIndent()
+            """.trimIndent()
 
         val latch = CountDownLatch(1)
         var error: Throwable? = null
@@ -79,4 +77,4 @@ open class BaseIntegrationTest {
             throw RuntimeException("Database cleanup failed", error)
         }
     }
-} 
+}

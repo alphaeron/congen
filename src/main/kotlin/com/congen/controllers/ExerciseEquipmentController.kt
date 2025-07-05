@@ -53,7 +53,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/exercise_equipment")
 @Tag(
     name = "Exercise-Equipment Management",
-    description = "Operations for managing exercise-equipment relationships"
+    description = "Operations for managing exercise-equipment relationships",
 )
 class ExerciseEquipmentController(
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
