@@ -31,7 +31,7 @@ class ExerciseDALTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         whenever(
@@ -66,7 +66,7 @@ class ExerciseDALTest {
                     movementType = "push",
                     isUnilateral = false,
                     isUpper = true,
-                    isAccessory = false,
+                    isAccessory = true,
                 ),
                 Exercise(
                     name = "Squat",
@@ -74,7 +74,7 @@ class ExerciseDALTest {
                     movementType = "push",
                     isUnilateral = false,
                     isUpper = false,
-                    isAccessory = false,
+                    isAccessory = true,
                 ),
             )
 
@@ -101,7 +101,7 @@ class ExerciseDALTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         val expectedQuery =
@@ -153,7 +153,7 @@ class ExerciseDALTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         val expectedQuery =
@@ -205,7 +205,7 @@ class ExerciseDALTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         whenever(postgresClient.update<Exercise>("DELETE FROM exercise WHERE name=$1", exerciseName)).thenReturn(Mono.just(deletedExercise))

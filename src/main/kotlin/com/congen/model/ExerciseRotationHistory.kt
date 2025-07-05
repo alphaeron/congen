@@ -11,14 +11,13 @@ import java.time.LocalDateTime
  * Represents the history of exercise rotations for users in the workout generation system.
  *
  * This entity tracks when users have used specific exercises in their workout programs,
- * categorized by exercise type (primary, secondary, accessory, etc.). This information
+ * categorized by exercise type (primary/secondary vs accessory). This information
  * is used to ensure exercise variety and prevent overuse of the same exercises.
  *
  * ## Validation Rules
  *
- * - **UserId**: Required, must reference an existing user
  * - **ExerciseName**: Required, must reference an existing exercise
- * - **Category**: Required, must be one of: 'primary', 'secondary', 'accessory', etc.
+ * - **IsAccessory**: Required, indicates if the exercise was used as an accessory movement
  *
  * ## Usage
  *
@@ -26,9 +25,8 @@ import java.time.LocalDateTime
  * and can be queried to determine exercise variety and usage patterns.
  *
  * @property id Unique identifier for the exercise rotation history record (auto-generated)
- * @property userId The ID of the user who used the exercise
  * @property exerciseName The name of the exercise that was used
- * @property category The category of the exercise (primary, secondary, accessory, etc.)
+ * @property isAccessory Whether the exercise was used as an accessory movement
  * @property usedAt Timestamp when the exercise was used
  *
  * @author Congen Development Team
@@ -47,12 +45,7 @@ data class ExerciseRotationHistory(
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
-    /** The ID of the user who used the exercise. */
-    @Schema(
-        description = "The ID of the user who used the exercise",
-        example = "1",
-    )
-    @param:JsonProperty("user_id") val userId: Long,
+
     /** The name of the exercise that was used. */
     @Schema(
         description = "The name of the exercise that was used",
@@ -61,15 +54,12 @@ data class ExerciseRotationHistory(
         maxLength = 255,
     )
     @param:JsonProperty("exercise_name") val exerciseName: String,
-    /** The category of the exercise (primary, secondary, accessory, etc.). */
+    /** Whether the exercise was used as an accessory movement. */
     @Schema(
-        description = "The category of the exercise",
-        example = "primary",
-        allowableValues = ["primary", "secondary", "accessory"],
-        minLength = 1,
-        maxLength = 50,
+        description = "Whether the exercise was used as an accessory movement",
+        example = "false",
     )
-    @param:JsonProperty("category") val category: String,
+    @param:JsonProperty("is_accessory") val isAccessory: Boolean,
     /** Timestamp when the exercise was used. */
     @Schema(
         description = "Timestamp when the exercise was used",

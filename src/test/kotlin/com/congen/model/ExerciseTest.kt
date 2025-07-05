@@ -20,7 +20,7 @@ class ExerciseTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         // Then
@@ -29,7 +29,7 @@ class ExerciseTest {
         assertEquals("push", exercise.movementType)
         assertFalse(exercise.isUnilateral)
         assertTrue(exercise.isUpper)
-        assertFalse(exercise.isAccessory)
+        assertTrue(exercise.isAccessory)
     }
 
     @Test
@@ -42,7 +42,7 @@ class ExerciseTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         // When
@@ -54,7 +54,7 @@ class ExerciseTest {
         assertTrue(json.contains("\"movement_type\":\"push\""))
         assertTrue(json.contains("\"is_unilateral\":false"))
         assertTrue(json.contains("\"is_upper\":true"))
-        assertTrue(json.contains("\"is_accessory\":false"))
+        assertTrue(json.contains("\"is_accessory\":true"))
     }
 
     @Test
@@ -68,7 +68,7 @@ class ExerciseTest {
                 "movement_type": "push",
                 "is_unilateral": false,
                 "is_upper": true,
-                "is_accessory": false
+                "is_accessory": true
             }
             """.trimIndent()
 
@@ -81,7 +81,7 @@ class ExerciseTest {
         assertEquals("push", exercise.movementType)
         assertFalse(exercise.isUnilateral)
         assertTrue(exercise.isUpper)
-        assertFalse(exercise.isAccessory)
+        assertTrue(exercise.isAccessory)
     }
 
     @Test
@@ -95,7 +95,7 @@ class ExerciseTest {
                 "movement_type": "push",
                 "is_unilateral": false,
                 "is_upper": true,
-                "is_accessory": false,
+                "is_accessory": true,
                 "unknown_property": "should be ignored"
             }
             """.trimIndent()
@@ -109,7 +109,7 @@ class ExerciseTest {
         assertEquals("push", exercise.movementType)
         assertFalse(exercise.isUnilateral)
         assertTrue(exercise.isUpper)
-        assertFalse(exercise.isAccessory)
+        assertTrue(exercise.isAccessory)
     }
 
     @Test
@@ -122,7 +122,7 @@ class ExerciseTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
         val exercise2 =
             Exercise(
@@ -131,7 +131,7 @@ class ExerciseTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
         val exercise3 =
             Exercise(
@@ -140,7 +140,7 @@ class ExerciseTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = false,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         // Then

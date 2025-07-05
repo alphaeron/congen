@@ -41,7 +41,7 @@ class ExerciseControllerTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         whenever(exerciseDAL.insertExercise(exercise)).thenReturn(Mono.just(exercise))
@@ -70,7 +70,7 @@ class ExerciseControllerTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
@@ -117,7 +117,7 @@ class ExerciseControllerTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
         val exerciseMuscles =
             listOf(
@@ -157,7 +157,7 @@ class ExerciseControllerTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
@@ -186,7 +186,7 @@ class ExerciseControllerTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
         val exerciseEquipment =
             listOf(
@@ -226,7 +226,7 @@ class ExerciseControllerTest {
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = false,
+                isAccessory = true,
             )
 
         whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
@@ -255,7 +255,7 @@ class ExerciseControllerTest {
                     movementType = "push",
                     isUnilateral = false,
                     isUpper = true,
-                    isAccessory = false,
+                    isAccessory = true,
                 ),
                 Exercise(
                     name = "Squat",
@@ -263,7 +263,7 @@ class ExerciseControllerTest {
                     movementType = "push",
                     isUnilateral = false,
                     isUpper = false,
-                    isAccessory = false,
+                    isAccessory = true,
                 ),
             )
 

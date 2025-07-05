@@ -26,9 +26,8 @@ class ExerciseRotationHistoryDALTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "primary"
+                isAccessory = false
             )
 
         whenever(
@@ -45,32 +44,30 @@ class ExerciseRotationHistoryDALTest {
     }
 
     @Test
-    fun `should select exercise rotation history by user id`() {
-        val userId = 123L
+    fun `should select exercise rotation history by isAccessory`() {
+        val isAccessory = false
         val expectedRecords =
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
-                    userId = userId,
                     exerciseName = "Bench Press",
-                    category = "primary"
+                    isAccessory = isAccessory
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
-                    userId = userId,
                     exerciseName = "Squat",
-                    category = "secondary"
+                    isAccessory = isAccessory
                 )
             )
 
         whenever(
             postgresClient.select<ExerciseRotationHistory>(
-                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY used_at DESC",
-                userId
+                "SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY used_at DESC",
+                isAccessory
             )
         ).thenReturn(Mono.just(expectedRecords))
 
-        val result = exerciseRotationHistoryDAL.selectByUserId(userId)
+        val result = exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)
 
         StepVerifier.create(result)
             .expectNext(expectedRecords)
@@ -78,44 +75,7 @@ class ExerciseRotationHistoryDALTest {
 
         verify(
             postgresClient
-        ).select<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY used_at DESC", userId)
-    }
-
-    @Test
-    fun `should select exercise rotation history by user id and category`() {
-        val userId = 123L
-        val category = "primary"
-        val expectedRecords =
-            listOf(
-                ExerciseRotationHistory(
-                    id = 1L,
-                    userId = userId,
-                    exerciseName = "Bench Press",
-                    category = category
-                )
-            )
-
-        whenever(
-            postgresClient.select<ExerciseRotationHistory>(
-                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND category=$2 ORDER BY used_at DESC",
-                userId,
-                category
-            )
-        ).thenReturn(Mono.just(expectedRecords))
-
-        val result = exerciseRotationHistoryDAL.selectByUserIdAndCategory(userId, category)
-
-        StepVerifier.create(result)
-            .expectNext(expectedRecords)
-            .verifyComplete()
-
-        verify(
-            postgresClient
-        ).select<ExerciseRotationHistory>(
-            "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND category=$2 ORDER BY used_at DESC",
-            userId,
-            category
-        )
+        ).select<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY used_at DESC", isAccessory)
     }
 
     @Test
@@ -124,15 +84,13 @@ class ExerciseRotationHistoryDALTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
-                    userId = 123L,
                     exerciseName = "Bench Press",
-                    category = "primary"
+                    isAccessory = false
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
-                    userId = 456L,
                     exerciseName = "Squat",
-                    category = "secondary"
+                    isAccessory = true
                 )
             )
 
@@ -154,9 +112,8 @@ class ExerciseRotationHistoryDALTest {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 0L,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "primary"
+                isAccessory = false
             )
         val expectedRecord = exerciseRotationHistory.copy(id = 1L)
 
@@ -164,13 +121,12 @@ class ExerciseRotationHistoryDALTest {
             postgresClient.update<ExerciseRotationHistory>(
                 """
                 INSERT INTO exercise_rotation_history
-                    (user_id, exercise_name, category)
+                    (exercise_name, is_accessory)
                 VALUES
-                    ($1, $2, $3)
+                    ($1, $2)
                 """.trimIndent(),
-                123L,
                 "Bench Press",
-                "primary"
+                false
             )
         ).thenReturn(Mono.just(expectedRecord))
 
@@ -183,13 +139,12 @@ class ExerciseRotationHistoryDALTest {
         verify(postgresClient).update<ExerciseRotationHistory>(
             """
             INSERT INTO exercise_rotation_history
-                (user_id, exercise_name, category)
+                (exercise_name, is_accessory)
             VALUES
-                ($1, $2, $3)
+                ($1, $2)
             """.trimIndent(),
-            123L,
             "Bench Press",
-            "primary"
+            false
         )
     }
 
@@ -198,22 +153,20 @@ class ExerciseRotationHistoryDALTest {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "secondary"
+                isAccessory = true
             )
 
         whenever(
             postgresClient.update<ExerciseRotationHistory>(
                 """
                 UPDATE exercise_rotation_history
-                SET user_id=$2, exercise_name=$3, category=$4
+                SET exercise_name=$2, is_accessory=$3
                 WHERE id=$1
                 """.trimIndent(),
                 1L,
-                123L,
                 "Bench Press",
-                "secondary"
+                true
             )
         ).thenReturn(Mono.just(exerciseRotationHistory))
 
@@ -226,13 +179,12 @@ class ExerciseRotationHistoryDALTest {
         verify(postgresClient).update<ExerciseRotationHistory>(
             """
             UPDATE exercise_rotation_history
-            SET user_id=$2, exercise_name=$3, category=$4
+            SET exercise_name=$2, is_accessory=$3
             WHERE id=$1
             """.trimIndent(),
             1L,
-            123L,
             "Bench Press",
-            "secondary"
+            true
         )
     }
 
@@ -242,9 +194,8 @@ class ExerciseRotationHistoryDALTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "primary"
+                isAccessory = false
             )
 
         whenever(
@@ -258,23 +209,5 @@ class ExerciseRotationHistoryDALTest {
             .verifyComplete()
 
         verify(postgresClient).update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", id)
-    }
-
-    @Test
-    fun `should delete exercise rotation history by user id`() {
-        val userId = 123L
-        val deletedCount = 2
-
-        whenever(
-            postgresClient.update<Int>("DELETE FROM exercise_rotation_history WHERE user_id=$1", userId)
-        ).thenReturn(Mono.just(deletedCount))
-
-        val result = exerciseRotationHistoryDAL.deleteByUserId(userId)
-
-        StepVerifier.create(result)
-            .expectNext(deletedCount)
-            .verifyComplete()
-
-        verify(postgresClient).update<Int>("DELETE FROM exercise_rotation_history WHERE user_id=$1", userId)
     }
 }

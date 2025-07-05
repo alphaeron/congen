@@ -11,16 +11,14 @@ class ExerciseRotationHistoryTest {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "primary",
+                isAccessory = false,
                 usedAt = usedAt
             )
 
         assertEquals(1L, exerciseRotationHistory.id)
-        assertEquals(123L, exerciseRotationHistory.userId)
         assertEquals("Bench Press", exerciseRotationHistory.exerciseName)
-        assertEquals("primary", exerciseRotationHistory.category)
+        assertEquals(false, exerciseRotationHistory.isAccessory)
         assertEquals(usedAt, exerciseRotationHistory.usedAt)
     }
 
@@ -29,15 +27,13 @@ class ExerciseRotationHistoryTest {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
-                userId = 123L,
                 exerciseName = "Squat",
-                category = "secondary"
+                isAccessory = false
             )
 
         assertEquals(1L, exerciseRotationHistory.id)
-        assertEquals(123L, exerciseRotationHistory.userId)
         assertEquals("Squat", exerciseRotationHistory.exerciseName)
-        assertEquals("secondary", exerciseRotationHistory.category)
+        assertEquals(false, exerciseRotationHistory.isAccessory)
         assertEquals(null, exerciseRotationHistory.usedAt)
     }
 
@@ -46,14 +42,12 @@ class ExerciseRotationHistoryTest {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 2L,
-                userId = 456L,
                 exerciseName = "Bicep Curl",
-                category = "accessory"
+                isAccessory = true
             )
 
         assertEquals(2L, exerciseRotationHistory.id)
-        assertEquals(456L, exerciseRotationHistory.userId)
         assertEquals("Bicep Curl", exerciseRotationHistory.exerciseName)
-        assertEquals("accessory", exerciseRotationHistory.category)
+        assertEquals(true, exerciseRotationHistory.isAccessory)
     }
 }

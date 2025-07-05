@@ -62,53 +62,10 @@ class ExerciseRotationHistoryDAL(
     }
 
     /**
-     * Retrieves all exercise rotation history records for a specific user.
+     * Retrieves all exercise rotation history records.
      *
-     * This method queries the database for all exercise rotation history records
-     * associated with the specified user ID. If no records exist, an empty list is returned.
-     *
-     * @param userId The ID of the user whose exercise rotation history to retrieve
-     * @return Mono containing a list of all exercise rotation history records for the user
-     */
-    fun selectByUserId(userId: Long): Mono<List<ExerciseRotationHistory>> {
-        logger.debug("Selecting exercise rotation history by user id: {}", userId)
-        return postgresClient.select(
-            "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY used_at DESC",
-            userId,
-        )
-    }
-
-    /**
-     * Retrieves exercise rotation history records for a specific user and category.
-     *
-     * This method queries the database for exercise rotation history records
-     * associated with the specified user ID and category. If no records exist, an empty list is returned.
-     *
-     * @param userId The ID of the user whose exercise rotation history to retrieve
-     * @param category The category of exercises to filter by
-     * @return Mono containing a list of exercise rotation history records for the user and category
-     */
-    fun selectByUserIdAndCategory(
-        userId: Long,
-        category: String,
-    ): Mono<List<ExerciseRotationHistory>> {
-        logger.debug(
-            "Selecting exercise rotation history by user id: {} and category: {}",
-            userId,
-            category,
-        )
-        return postgresClient.select(
-            "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND category=$2 ORDER BY used_at DESC",
-            userId,
-            category,
-        )
-    }
-
-    /**
-     * Retrieves all exercise rotation history records from the database.
-     *
-     * This method queries the database for all exercise rotation history records and returns
-     * them as a list. If no records exist, an empty list is returned.
+     * This method queries the database for all exercise rotation history records.
+     * If no records exist, an empty list is returned.
      *
      * @return Mono containing a list of all exercise rotation history records
      */
@@ -116,6 +73,25 @@ class ExerciseRotationHistoryDAL(
         logger.debug("Selecting all exercise rotation history records")
         return postgresClient.select("SELECT * FROM exercise_rotation_history ORDER BY used_at DESC")
     }
+
+    /**
+     * Retrieves exercise rotation history records for a specific accessory type.
+     *
+     * This method queries the database for exercise rotation history records
+     * associated with the specified accessory type. If no records exist, an empty list is returned.
+     *
+     * @param isAccessory Whether to filter by accessory exercises
+     * @return Mono containing a list of exercise rotation history records for the accessory type
+     */
+    fun selectByIsAccessory(isAccessory: Boolean): Mono<List<ExerciseRotationHistory>> {
+        logger.debug("Selecting exercise rotation history by isAccessory: {}", isAccessory)
+        return postgresClient.select(
+            "SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY used_at DESC",
+            isAccessory,
+        )
+    }
+
+
 
     /**
      * Inserts a new exercise rotation history record into the database.
@@ -129,25 +105,20 @@ class ExerciseRotationHistoryDAL(
      */
     fun insert(exerciseRotationHistory: ExerciseRotationHistory): Mono<ExerciseRotationHistory> {
         logger.debug(
-            "Inserting exercise rotation history: user_id={}, exercise_name={}, category={}",
-            exerciseRotationHistory.userId,
+            "Inserting exercise rotation history: exercise_name={}, isAccessory={}",
             exerciseRotationHistory.exerciseName,
-            exerciseRotationHistory.category,
+            exerciseRotationHistory.isAccessory,
         )
-
-        // Validate category
-        ValidationUtil.validateExerciseCategory(exerciseRotationHistory.category)
 
         return postgresClient.update(
             """
             INSERT INTO exercise_rotation_history
-                (user_id, exercise_name, category)
+                (exercise_name, is_accessory)
             VALUES
-                ($1, $2, $3)
+                ($1, $2)
             """.trimIndent(),
-            exerciseRotationHistory.userId,
             exerciseRotationHistory.exerciseName,
-            exerciseRotationHistory.category,
+            exerciseRotationHistory.isAccessory,
         )
     }
 
@@ -165,19 +136,15 @@ class ExerciseRotationHistoryDAL(
     fun update(exerciseRotationHistory: ExerciseRotationHistory): Mono<ExerciseRotationHistory> {
         logger.debug("Updating exercise rotation history: {}", exerciseRotationHistory.id)
 
-        // Validate category
-        ValidationUtil.validateExerciseCategory(exerciseRotationHistory.category)
-
         return postgresClient.update(
             """
             UPDATE exercise_rotation_history
-            SET user_id=$2, exercise_name=$3, category=$4
+            SET exercise_name=$2, is_accessory=$3
             WHERE id=$1
             """.trimIndent(),
             exerciseRotationHistory.id,
-            exerciseRotationHistory.userId,
             exerciseRotationHistory.exerciseName,
-            exerciseRotationHistory.category,
+            exerciseRotationHistory.isAccessory,
         )
     }
 

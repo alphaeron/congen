@@ -30,16 +30,14 @@ import reactor.core.publisher.Mono
  * ## Exercise Rotation History Model
  *
  * Exercise rotation history contains:
- * - User ID reference
  * - Exercise name reference
- * - Category classification (primary, secondary, accessory, etc.)
+ * - IsAccessory classification (true for accessory exercises, false for primary/secondary)
  * - Usage timestamp
  *
  * ## Validation Rules
  *
- * - **UserId**: Required, must reference an existing user
  * - **ExerciseName**: Required, must reference an existing exercise
- * - **Category**: Required, must be one of: 'primary', 'secondary', 'accessory', etc.
+ * - **IsAccessory**: Required, indicates if the exercise was used as an accessory movement
  *
  * ## Error Handling
  *
@@ -70,9 +68,8 @@ class ExerciseRotationHistoryController(
      * This endpoint creates a new exercise rotation history record with the provided information.
      * The record will be assigned a unique ID and timestamp automatically.
      *
-     * @param userId The ID of the user who used the exercise
      * @param exerciseName The name of the exercise that was used
-     * @param category The category of the exercise (primary, secondary, accessory, etc.)
+     * @param isAccessory Whether the exercise was used as an accessory movement
      * @return The created exercise rotation history record with assigned ID and timestamp
      *
      * @throws ValidationException if data fails validation
@@ -109,36 +106,28 @@ class ExerciseRotationHistoryController(
     )
     fun save(
         @Parameter(
-            description = "The ID of the user who used the exercise",
-            required = true,
-            example = "1",
-        )
-        @RequestParam userId: Long,
-        @Parameter(
             description = "The name of the exercise that was used",
             required = true,
             example = "Bench Press",
         )
         @RequestParam exerciseName: String,
         @Parameter(
-            description = "The category of the exercise",
+            description = "Whether the exercise was used as an accessory movement",
             required = true,
-            example = "primary",
+            example = "false",
         )
-        @RequestParam category: String,
+        @RequestParam isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 0, // Temporary ID, will be replaced by database auto-generation
-                userId = userId,
                 exerciseName = exerciseName,
-                category = category,
+                isAccessory = isAccessory,
             )
         logger.info(
-            "Saving exercise rotation history: user_id={}, exercise_name={}, category={}",
-            userId,
+            "Saving exercise rotation history: exercise_name={}, isAccessory={}",
             exerciseName,
-            category,
+            isAccessory,
         )
         return exerciseRotationHistoryDAL.insert(exerciseRotationHistory)
             .map { savedRecord ->
@@ -147,10 +136,9 @@ class ExerciseRotationHistoryController(
             }
             .doOnError { e ->
                 logger.error(
-                    "Error saving exercise rotation history: user_id={}, exercise_name={}, category={}",
-                    userId,
+                    "Error saving exercise rotation history: exercise_name={}, isAccessory={}",
                     exerciseName,
-                    category,
+                    isAccessory,
                     e,
                 )
             }
@@ -214,20 +202,20 @@ class ExerciseRotationHistoryController(
     }
 
     /**
-     * Retrieves all exercise rotation history records for a specific user.
+     * Retrieves exercise rotation history records for a specific accessory type.
      *
-     * This endpoint fetches all exercise rotation history records associated with a user.
-     * If no records exist for the user, an empty list is returned.
+     * This endpoint fetches exercise rotation history records filtered by accessory type.
+     * If no records exist for the accessory type, an empty list is returned.
      *
-     * @param userId The ID of the user whose exercise rotation history to retrieve
-     * @return List of exercise rotation history records for the user
+     * @param isAccessory Whether to filter by accessory exercises
+     * @return List of exercise rotation history records for the accessory type
      *
      * @throws DatabaseException if database operation fails
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/isAccessory/{isAccessory}")
     @Operation(
-        summary = "Get exercise rotation history by user ID",
-        description = "Retrieves all exercise rotation history records for a specific user.",
+        summary = "Get exercise rotation history by accessory type",
+        description = "Retrieves exercise rotation history records for a specific accessory type.",
     )
     @ApiResponses(
         value = [
@@ -242,91 +230,22 @@ class ExerciseRotationHistoryController(
             ),
         ],
     )
-    fun getByUserId(
+    fun getByIsAccessory(
         @Parameter(
-            description = "ID of the user whose exercise rotation history to retrieve",
+            description = "Whether to filter by accessory exercises",
             required = true,
-            example = "1",
+            example = "false",
         )
-        @PathVariable("userId") userId: Long,
+        @PathVariable("isAccessory") isAccessory: Boolean,
     ): Mono<ResponseEntity<List<ExerciseRotationHistory>>> {
-        logger.info("Getting exercise rotation history by user id: {}", userId)
-        return exerciseRotationHistoryDAL.selectByUserId(userId)
+        logger.info("Getting exercise rotation history by isAccessory: {}", isAccessory)
+        return exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)
             .map { records ->
-                logger.debug("Found {} exercise rotation history records for user: {}", records.size, userId)
+                logger.debug("Found {} exercise rotation history records for isAccessory: {}", records.size, isAccessory)
                 ResponseEntity.ok(records)
             }
             .doOnError { e ->
-                logger.error("Error getting exercise rotation history by user id: {}", userId, e)
-            }
-    }
-
-    /**
-     * Retrieves exercise rotation history records for a specific user and category.
-     *
-     * This endpoint fetches exercise rotation history records for a user filtered by category.
-     * If no records exist for the user and category, an empty list is returned.
-     *
-     * @param userId The ID of the user whose exercise rotation history to retrieve
-     * @param category The category of exercises to filter by
-     * @return List of exercise rotation history records for the user and category
-     *
-     * @throws DatabaseException if database operation fails
-     */
-    @GetMapping("/user/{userId}/category/{category}")
-    @Operation(
-        summary = "Get exercise rotation history by user ID and category",
-        description = "Retrieves exercise rotation history records for a specific user and category.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Exercise rotation history records found successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-        ],
-    )
-    fun getByUserIdAndCategory(
-        @Parameter(
-            description = "ID of the user whose exercise rotation history to retrieve",
-            required = true,
-            example = "1",
-        )
-        @PathVariable("userId") userId: Long,
-        @Parameter(
-            description = "Category of exercises to filter by",
-            required = true,
-            example = "primary",
-        )
-        @PathVariable("category") category: String,
-    ): Mono<ResponseEntity<List<ExerciseRotationHistory>>> {
-        logger.info(
-            "Getting exercise rotation history by user id: {} and category: {}",
-            userId,
-            category,
-        )
-        return exerciseRotationHistoryDAL.selectByUserIdAndCategory(userId, category)
-            .map { records ->
-                logger.debug(
-                    "Found {} exercise rotation history records for user: {} and category: {}",
-                    records.size,
-                    userId,
-                    category,
-                )
-                ResponseEntity.ok(records)
-            }
-            .doOnError { e ->
-                logger.error(
-                    "Error getting exercise rotation history by user id: {} and category: {}",
-                    userId,
-                    category,
-                    e,
-                )
+                logger.error("Error getting exercise rotation history by isAccessory: {}", isAccessory, e)
             }
     }
 
@@ -377,9 +296,8 @@ class ExerciseRotationHistoryController(
      * If the record is not found, a 404 error will be returned.
      *
      * @param id The unique identifier of the exercise rotation history record to update
-     * @param userId The ID of the user who used the exercise
      * @param exerciseName The name of the exercise that was used
-     * @param category The category of the exercise (primary, secondary, accessory, etc.)
+     * @param isAccessory Whether the exercise was used as an accessory movement
      * @return The updated exercise rotation history record
      *
      * @throws ValidationException if data fails validation
@@ -429,37 +347,29 @@ class ExerciseRotationHistoryController(
         )
         @PathVariable("id") id: Long,
         @Parameter(
-            description = "The ID of the user who used the exercise",
-            required = true,
-            example = "1",
-        )
-        @RequestParam userId: Long,
-        @Parameter(
             description = "The name of the exercise that was used",
             required = true,
             example = "Bench Press",
         )
         @RequestParam exerciseName: String,
         @Parameter(
-            description = "The category of the exercise",
+            description = "Whether the exercise was used as an accessory movement",
             required = true,
-            example = "secondary",
+            example = "true",
         )
-        @RequestParam category: String,
+        @RequestParam isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = id,
-                userId = userId,
                 exerciseName = exerciseName,
-                category = category,
+                isAccessory = isAccessory,
             )
         logger.info(
-            "Updating exercise rotation history: id={}, user_id={}, exercise_name={}, category={}",
+            "Updating exercise rotation history: id={}, exercise_name={}, isAccessory={}",
             id,
-            userId,
             exerciseName,
-            category,
+            isAccessory,
         )
         return exerciseRotationHistoryDAL.update(exerciseRotationHistory)
             .map { updatedRecord ->
@@ -468,11 +378,10 @@ class ExerciseRotationHistoryController(
             }
             .doOnError { e ->
                 logger.error(
-                    "Error updating exercise rotation history: id={}, user_id={}, exercise_name={}, category={}",
+                    "Error updating exercise rotation history: id={}, exercise_name={}, isAccessory={}",
                     id,
-                    userId,
                     exerciseName,
-                    category,
+                    isAccessory,
                     e,
                 )
             }
@@ -532,63 +441,6 @@ class ExerciseRotationHistoryController(
             }
             .doOnError { e ->
                 logger.error("Error deleting exercise rotation history: {}", id, e)
-            }
-    }
-
-    /**
-     * Deletes all exercise rotation history records for a specific user.
-     *
-     * This endpoint removes all exercise rotation history records associated with a user.
-     * If no records exist for the user, a 404 error will be returned.
-     *
-     * @param userId The ID of the user whose exercise rotation history records to delete
-     * @return The number of deleted records
-     *
-     * @throws DatabaseException if database operation fails
-     */
-    @DeleteMapping("/user/{userId}")
-    @Operation(
-        summary = "Delete all exercise rotation history records for a user",
-        description = "Deletes all exercise rotation history records associated with a specific user.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Exercise rotation history records deleted successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "No exercise rotation history records found for user",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-        ],
-    )
-    fun deleteByUserId(
-        @Parameter(
-            description = "ID of the user whose exercise rotation history records to delete",
-            required = true,
-            example = "1",
-        )
-        @PathVariable("userId") userId: Long,
-    ): Mono<ResponseEntity<Int>> {
-        logger.info("Deleting exercise rotation history for user: {}", userId)
-        return exerciseRotationHistoryDAL.deleteByUserId(userId)
-            .map { deletedCount ->
-                logger.debug("Deleted {} exercise rotation history records for user: {}", deletedCount, userId)
-                ResponseEntity.ok(deletedCount)
-            }
-            .doOnError { e ->
-                logger.error("Error deleting exercise rotation history for user: {}", userId, e)
             }
     }
 }

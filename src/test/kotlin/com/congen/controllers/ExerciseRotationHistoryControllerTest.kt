@@ -23,20 +23,18 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should save exercise rotation history`() {
-        val userId = 123L
         val exerciseName = "Bench Press"
-        val category = "primary"
+        val isAccessory = false
         val expectedRecord =
             ExerciseRotationHistory(
                 id = 1L,
-                userId = userId,
                 exerciseName = exerciseName,
-                category = category
+                isAccessory = isAccessory
             )
 
         whenever(exerciseRotationHistoryDAL.insert(any())).thenReturn(Mono.just(expectedRecord))
 
-        val result = exerciseRotationHistoryController.save(userId, exerciseName, category)
+        val result = exerciseRotationHistoryController.save(exerciseName, isAccessory)
 
         StepVerifier.create(result)
             .expectNextMatches { response ->
@@ -51,9 +49,8 @@ class ExerciseRotationHistoryControllerTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "primary"
+                isAccessory = false
             )
 
         whenever(exerciseRotationHistoryDAL.selectById(id)).thenReturn(Mono.just(expectedRecord))
@@ -68,52 +65,25 @@ class ExerciseRotationHistoryControllerTest {
     }
 
     @Test
-    fun `should get exercise rotation history by user id`() {
-        val userId = 123L
+    fun `should get exercise rotation history by isAccessory`() {
+        val isAccessory = false
         val expectedRecords =
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
-                    userId = userId,
                     exerciseName = "Bench Press",
-                    category = "primary"
+                    isAccessory = isAccessory
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
-                    userId = userId,
                     exerciseName = "Squat",
-                    category = "secondary"
+                    isAccessory = isAccessory
                 )
             )
 
-        whenever(exerciseRotationHistoryDAL.selectByUserId(userId)).thenReturn(Mono.just(expectedRecords))
+        whenever(exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)).thenReturn(Mono.just(expectedRecords))
 
-        val result = exerciseRotationHistoryController.getByUserId(userId)
-
-        StepVerifier.create(result)
-            .expectNextMatches { response ->
-                response.statusCode == HttpStatus.OK && response.body == expectedRecords
-            }
-            .verifyComplete()
-    }
-
-    @Test
-    fun `should get exercise rotation history by user id and category`() {
-        val userId = 123L
-        val category = "primary"
-        val expectedRecords =
-            listOf(
-                ExerciseRotationHistory(
-                    id = 1L,
-                    userId = userId,
-                    exerciseName = "Bench Press",
-                    category = category
-                )
-            )
-
-        whenever(exerciseRotationHistoryDAL.selectByUserIdAndCategory(userId, category)).thenReturn(Mono.just(expectedRecords))
-
-        val result = exerciseRotationHistoryController.getByUserIdAndCategory(userId, category)
+        val result = exerciseRotationHistoryController.getByIsAccessory(isAccessory)
 
         StepVerifier.create(result)
             .expectNextMatches { response ->
@@ -128,15 +98,13 @@ class ExerciseRotationHistoryControllerTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
-                    userId = 123L,
                     exerciseName = "Bench Press",
-                    category = "primary"
+                    isAccessory = false
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
-                    userId = 456L,
                     exerciseName = "Squat",
-                    category = "secondary"
+                    isAccessory = true
                 )
             )
 
@@ -154,20 +122,18 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should update exercise rotation history`() {
         val id = 1L
-        val userId = 123L
         val exerciseName = "Bench Press"
-        val category = "secondary"
+        val isAccessory = true
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
-                userId = userId,
                 exerciseName = exerciseName,
-                category = category
+                isAccessory = isAccessory
             )
 
         whenever(exerciseRotationHistoryDAL.update(any())).thenReturn(Mono.just(expectedRecord))
 
-        val result = exerciseRotationHistoryController.update(id, userId, exerciseName, category)
+        val result = exerciseRotationHistoryController.update(id, exerciseName, isAccessory)
 
         StepVerifier.create(result)
             .expectNextMatches { response ->
@@ -182,9 +148,8 @@ class ExerciseRotationHistoryControllerTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
-                userId = 123L,
                 exerciseName = "Bench Press",
-                category = "primary"
+                isAccessory = false
             )
 
         whenever(exerciseRotationHistoryDAL.deleteById(id)).thenReturn(Mono.just(expectedRecord))
@@ -194,22 +159,6 @@ class ExerciseRotationHistoryControllerTest {
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 response.statusCode == HttpStatus.OK && response.body == expectedRecord
-            }
-            .verifyComplete()
-    }
-
-    @Test
-    fun `should delete exercise rotation history by user id`() {
-        val userId = 123L
-        val deletedCount = 2
-
-        whenever(exerciseRotationHistoryDAL.deleteByUserId(userId)).thenReturn(Mono.just(deletedCount))
-
-        val result = exerciseRotationHistoryController.deleteByUserId(userId)
-
-        StepVerifier.create(result)
-            .expectNextMatches { response ->
-                response.statusCode == HttpStatus.OK && response.body == deletedCount
             }
             .verifyComplete()
     }
