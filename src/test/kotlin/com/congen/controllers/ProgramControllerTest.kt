@@ -29,6 +29,7 @@ class ProgramControllerTest {
         val program =
             Program(
                 id = 0, // Temporary ID for creation
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
@@ -55,6 +56,7 @@ class ProgramControllerTest {
         val program =
             Program(
                 id = programId,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
@@ -99,11 +101,13 @@ class ProgramControllerTest {
             listOf(
                 Program(
                     id = 1L,
+                    userId = 1,
                     name = "Conjugate Powerlifting Program",
                     description = "A comprehensive conjugate powerlifting program",
                 ),
                 Program(
                     id = 2L,
+                    userId = 1,
                     name = "5/3/1 Program",
                     description = "A strength building program",
                 ),
@@ -131,6 +135,7 @@ class ProgramControllerTest {
         val program =
             Program(
                 id = 0, // Temporary ID for creation
+                userId = 1,
                 name = "Updated Conjugate Program",
                 description = "Updated description",
             )
@@ -156,6 +161,7 @@ class ProgramControllerTest {
         val program =
             Program(
                 id = 0, // Temporary ID for creation
+                userId = 1,
                 name = "Updated Conjugate Program",
                 description = "Updated description",
             )
@@ -181,6 +187,7 @@ class ProgramControllerTest {
         val program =
             Program(
                 id = programId,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )

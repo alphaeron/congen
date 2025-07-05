@@ -164,4 +164,29 @@ class ProgrammedExerciseDAL(
             id,
         )
     }
+
+    /**
+     * Gets the user ID for a programmed exercise by tracing the relationship chain.
+     *
+     * This method follows the relationship chain:
+     * ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
+     *
+     * @param programmedExerciseId The ID of the programmed exercise
+     * @return Mono containing the user ID
+     * @throws NoResultsFoundException when the relationship chain cannot be traced
+     */
+    fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<Int> {
+        logger.debug("Getting user ID for programmed exercise: {}", programmedExerciseId)
+        return postgresClient.selectIndividual(
+            """
+            SELECT p.user_id
+            FROM programmed_exercise pe
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE pe.id = $1
+            """.trimIndent(),
+            programmedExerciseId,
+        )
+    }
 }

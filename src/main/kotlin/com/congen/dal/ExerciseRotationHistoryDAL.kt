@@ -216,4 +216,4 @@ class ExerciseRotationHistoryDAL(
             userId,
         )
     }
-} 
+}

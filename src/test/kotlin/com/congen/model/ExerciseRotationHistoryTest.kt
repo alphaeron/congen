@@ -56,4 +56,4 @@ class ExerciseRotationHistoryTest {
         assertEquals("Bicep Curl", exerciseRotationHistory.exerciseName)
         assertEquals("accessory", exerciseRotationHistory.category)
     }
-} 
+}

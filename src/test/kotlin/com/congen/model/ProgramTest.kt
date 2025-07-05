@@ -17,6 +17,7 @@ class ProgramTest {
         val program =
             Program(
                 id = 1L,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
@@ -33,6 +34,7 @@ class ProgramTest {
         val program =
             Program(
                 id = 1L,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = null,
             )
@@ -49,6 +51,7 @@ class ProgramTest {
         val program =
             Program(
                 id = 1L,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
@@ -111,18 +114,21 @@ class ProgramTest {
         val program1 =
             Program(
                 id = 1L,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
         val program2 =
             Program(
                 id = 1L,
+                userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
             )
         val program3 =
             Program(
                 id = 2L,
+                userId = 1,
                 name = "Different Program",
                 description = "A different program",
             )

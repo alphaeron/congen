@@ -1,7 +1,7 @@
 package com.congen.controllers
 
-import com.congen.dal.SetSchemeDAL
 import com.congen.model.SetScheme
+import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -44,7 +44,7 @@ import reactor.core.publisher.Mono
  * - **422 Unprocessable Entity**: When validation fails
  * - **500 Internal Server Error**: When database operations fail
  *
- * @property setSchemeDAL Data access layer for set scheme operations
+ * @property setSchemeService Service layer for set scheme operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -52,7 +52,7 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/set-schemes")
 class SetSchemeController(
-    private val setSchemeDAL: SetSchemeDAL,
+    private val setSchemeService: SetSchemeService,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -74,7 +74,7 @@ class SetSchemeController(
         @RequestBody setScheme: SetScheme,
     ): Mono<ResponseEntity<SetScheme>> {
         logger.info("Saving set scheme for exercise: {}, set: {}", setScheme.programmedExerciseId, setScheme.setNumber)
-        return setSchemeDAL.insertSetScheme(setScheme)
+        return setSchemeService.insertSetScheme(setScheme)
             .map { savedScheme ->
                 logger.debug("Saved set scheme with id: {}", savedScheme.id)
                 ResponseEntity.ok(savedScheme)
@@ -97,10 +97,10 @@ class SetSchemeController(
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {
-        return setSchemeDAL.selectSetSchemeById(id)
-            .map {
+        return setSchemeService.selectSetSchemeById(id)
+            .map { setScheme ->
                 logger.debug("Found set scheme: {}", id)
-                ResponseEntity.ok(it)
+                ResponseEntity.ok(setScheme)
             }
             .doOnError { e ->
                 logger.error("Error getting set scheme: {}", id, e)
@@ -120,7 +120,7 @@ class SetSchemeController(
         logger.debug("Getting all set schemes")
         return try {
             ResponseEntity.ok(
-                setSchemeDAL.selectSetSchemes(),
+                setSchemeService.selectSetSchemes(),
             )
         } catch (e: Exception) {
             logger.error("Error getting all set schemes", e)
@@ -144,7 +144,7 @@ class SetSchemeController(
         logger.debug("Getting set schemes for programmed exercise: {}", programmedExerciseId)
         return try {
             ResponseEntity.ok(
-                setSchemeDAL.selectSetSchemesByProgrammedExerciseId(programmedExerciseId),
+                setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId),
             )
         } catch (e: Exception) {
             logger.error("Error getting set schemes for programmed exercise: {}", programmedExerciseId, e)
@@ -169,7 +169,7 @@ class SetSchemeController(
         logger.info("Updating set scheme: {}", setScheme.id)
         return try {
             ResponseEntity.ok(
-                setSchemeDAL.updateSetScheme(setScheme),
+                setSchemeService.updateSetScheme(setScheme),
             )
         } catch (e: Exception) {
             logger.error("Error updating set scheme: {}", setScheme.id, e)
@@ -193,7 +193,7 @@ class SetSchemeController(
         logger.info("Deleting set scheme: {}", id)
         return try {
             ResponseEntity.ok(
-                setSchemeDAL.deleteSetScheme(id),
+                setSchemeService.deleteSetScheme(id),
             )
         } catch (e: Exception) {
             logger.error("Error deleting set scheme: {}", id, e)

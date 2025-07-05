@@ -290,4 +290,24 @@ class ValidationUtilTest {
         val exception3 = assertThrows<ValidationException> { ValidationUtil.validateExerciseCategory("PRIMARY") }
         assertEquals("Exercise category must be one of: primary, secondary, accessory, got: PRIMARY", exception3.message)
     }
+
+    @Test
+    fun `validateOneRepMax should pass for valid one rep max values`() {
+        assertDoesNotThrow { ValidationUtil.validateOneRepMax(BigDecimal("0.01")) }
+        assertDoesNotThrow { ValidationUtil.validateOneRepMax(BigDecimal("100.5")) }
+        assertDoesNotThrow { ValidationUtil.validateOneRepMax(BigDecimal("500.0")) }
+        assertDoesNotThrow { ValidationUtil.validateOneRepMax(BigDecimal("1000")) }
+    }
+
+    @Test
+    fun `validateOneRepMax should throw for invalid one rep max values`() {
+        val exception1 = assertThrows<ValidationException> { ValidationUtil.validateOneRepMax(BigDecimal.ZERO) }
+        assertEquals("One rep max must be between 0.01 and 1000 kg, got: 0", exception1.message)
+
+        val exception2 = assertThrows<ValidationException> { ValidationUtil.validateOneRepMax(BigDecimal("1000.01")) }
+        assertEquals("One rep max must be between 0.01 and 1000 kg, got: 1000.01", exception2.message)
+
+        val exception3 = assertThrows<ValidationException> { ValidationUtil.validateOneRepMax(BigDecimal("-1")) }
+        assertEquals("One rep max must be between 0.01 and 1000 kg, got: -1", exception3.message)
+    }
 }

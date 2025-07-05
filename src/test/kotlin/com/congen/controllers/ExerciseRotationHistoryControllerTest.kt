@@ -213,4 +213,4 @@ class ExerciseRotationHistoryControllerTest {
             }
             .verifyComplete()
     }
-} 
+}

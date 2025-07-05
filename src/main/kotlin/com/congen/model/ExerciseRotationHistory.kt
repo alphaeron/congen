@@ -77,4 +77,4 @@ data class ExerciseRotationHistory(
         readOnly = true,
     )
     @param:JsonProperty("used_at") val usedAt: LocalDateTime? = null,
-) 
+)

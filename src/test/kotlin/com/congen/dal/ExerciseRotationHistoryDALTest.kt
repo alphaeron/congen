@@ -277,4 +277,4 @@ class ExerciseRotationHistoryDALTest {
 
         verify(postgresClient).update<Int>("DELETE FROM exercise_rotation_history WHERE user_id=$1", userId)
     }
-} 
+}

@@ -53,4 +53,19 @@ CREATE INDEX idx_user_exercise_preference_exercise_name ON user_exercise_prefere
 CREATE INDEX idx_user_exercise_preference_should_avoid ON user_exercise_preference(should_avoid);
 
 -- Add composite indexes for common query patterns
-CREATE INDEX idx_user_exercise_preference_user_avoid ON user_exercise_preference(user_id, should_avoid); 
+CREATE INDEX idx_user_exercise_preference_user_avoid ON user_exercise_preference(user_id, should_avoid);
+
+CREATE TABLE user_one_rep_max (
+  user_id INTEGER NOT NULL,
+  exercise_name VARCHAR(255) NOT NULL,
+  one_rep_max NUMERIC(6,2) NOT NULL CHECK (one_rep_max > 0 AND one_rep_max <= 1000), -- in kg
+  last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, exercise_name),
+  CONSTRAINT fk_user_one_rep_max_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+  CONSTRAINT fk_user_one_rep_max_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+);
+
+-- Add indexes for better performance
+CREATE INDEX idx_user_one_rep_max_user_id ON user_one_rep_max(user_id);
+CREATE INDEX idx_user_one_rep_max_exercise_name ON user_one_rep_max(exercise_name);
+CREATE INDEX idx_user_one_rep_max_last_updated ON user_one_rep_max(last_updated); 

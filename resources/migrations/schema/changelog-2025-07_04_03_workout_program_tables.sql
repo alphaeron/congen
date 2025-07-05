@@ -6,10 +6,12 @@
 CREATE SEQUENCE congen.program_id_seq;
 CREATE TABLE program (
   id BIGSERIAL DEFAULT nextval('congen.program_id_seq') PRIMARY KEY,
+  user_id INTEGER NOT NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_program_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE SEQUENCE congen.programmed_workout_id_seq;
@@ -78,6 +80,7 @@ CREATE TABLE set_scheme (
 
 -- Add indexes for better performance
 CREATE INDEX idx_program_name ON program(name);
+CREATE INDEX idx_program_user_id ON program(user_id);
 CREATE INDEX idx_program_created_at ON program(created_at);
 CREATE INDEX idx_programmed_workout_program_id ON programmed_workout(program_id);
 CREATE INDEX idx_programmed_workout_day_number ON programmed_workout(day_number);

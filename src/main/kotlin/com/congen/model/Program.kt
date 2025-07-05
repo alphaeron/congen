@@ -37,6 +37,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  * - **4-day programs**: Four workouts per week
  *
  * @property id Unique identifier for the program
+ * @property userId ID of the user who owns this program
  * @property name Human-readable name of the program
  * @property description Optional description of the program
  *
@@ -47,7 +48,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "A training program containing multiple workouts",
-    example = "Program(id=1, name=\"Beginner Strength Program\", description=\"A 3-day strength program for beginners\")",
+    example = "Program(id=1, userId=1, name=\"Beginner Strength Program\", description=\"A 3-day strength program for beginners\")",
 )
 data class Program(
     /** Unique identifier for the program. */
@@ -57,6 +58,13 @@ data class Program(
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
+    /** ID of the user who owns this program. */
+    @Schema(
+        description = "ID of the user who owns this program",
+        example = "1",
+        required = true,
+    )
+    @param:JsonProperty("user_id") val userId: Int,
     /** Human-readable name of the program. */
     @Schema(
         description = "Human-readable name of the program",

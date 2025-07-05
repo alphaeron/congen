@@ -198,4 +198,4 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isEqualTo(404)
     }
-} 
+}

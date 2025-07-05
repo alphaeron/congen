@@ -591,4 +591,4 @@ class ExerciseRotationHistoryController(
                 logger.error("Error deleting exercise rotation history for user: {}", userId, e)
             }
     }
-} 
+}

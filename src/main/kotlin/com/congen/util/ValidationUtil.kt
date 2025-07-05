@@ -114,6 +114,19 @@ object ValidationUtil {
     }
 
     /**
+     * Validates one rep max value for user_one_rep_max (DB: > 0 and <= 1000 kg).
+     * @param oneRepMax One rep max value in kilograms
+     * @throws ValidationException if not in (0, 1000]
+     */
+    fun validateOneRepMax(oneRepMax: BigDecimal) {
+        if (oneRepMax <= BigDecimal.ZERO || oneRepMax > BigDecimal("1000")) {
+            val message = "One rep max must be between 0.01 and 1000 kg, got: $oneRepMax"
+            logger.error(message)
+            throw ValidationException(message)
+        }
+    }
+
+    /**
      * Validates program days per week to ensure it matches conjugate method requirements.
      *
      * The conjugate method is designed to work with specific training frequencies.
