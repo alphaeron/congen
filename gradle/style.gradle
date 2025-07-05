@@ -1,9 +1,14 @@
 configurations {
     ktlint
+    detekt
 }
 
 dependencies {
     ktlint 'com.pinterest.ktlint:ktlint-cli:1.2.1'
+    ktlint 'com.pinterest.ktlint:ktlint-ruleset-standard:1.2.1'
+    
+    detekt 'io.gitlab.arturbosch.detekt:detekt-cli:1.23.5'
+    detekt 'io.gitlab.arturbosch.detekt:detekt-rules-documentation:1.23.5'
 }
 
 task ktlint (type: JavaExec, group: 'verification') {
@@ -20,3 +25,11 @@ task ktlintFormat(type: JavaExec, group: 'formatting') {
     classpath = configurations.ktlint
     args '-F', '--color', 'src/**/*.kt'
 }
+
+task detekt(type: JavaExec, group: 'verification') {
+    description = 'Run Detekt static analysis.'
+    main = 'io.gitlab.arturbosch.detekt.cli.Main'
+    classpath = configurations.detekt
+    args '--input', 'src', '--config', 'detekt.yml', '--excludes', 'src/test/**,src/integrationTest/**', '--report', 'txt:build/reports/detekt/detekt.txt', '--report', 'xml:build/reports/detekt/detekt.xml'
+}
+check.dependsOn(detekt)

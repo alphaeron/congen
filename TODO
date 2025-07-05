@@ -1,9 +1,3 @@
-add linting for unused imports and standard import sorting
-
-add kdoc linting
-
-remove all temporary IDs in the main controller package...
-
 user_exercise_rotation_history for users
 
 patch don't take program object as body, take optional query parameter for each parameter in the corresponding object.

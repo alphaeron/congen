@@ -1,0 +1,42 @@
+build:
+  maxIssues: 0
+  weights:
+    complexity: 2
+    LongParameterList: 1
+    style: 1
+
+processors:
+  active: true
+
+console-reports:
+  active: true
+
+output-reports:
+  active: true
+
+style:
+  active: true
+
+comments:
+  active: true
+  UndocumentedPublicClass:
+    active: true
+    severity: error
+  UndocumentedPublicFunction:
+    active: true
+    severity: error
+  UndocumentedPublicProperty:
+    active: true
+    severity: error
+
+naming:
+  active: true
+
+performance:
+  active: true
+
+potential-bugs:
+  active: true
+
+complexity:
+  active: true 
