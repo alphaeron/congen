@@ -32,12 +32,12 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /programmed-exercise/` - Create a new programmed exercise
- * - `GET /programmed-exercise/{id}` - Retrieve a programmed exercise by ID
- * - `GET /programmed-exercise/stage/{workoutStageId}` - Get exercises for a specific stage
- * - `GET /programmed-exercise/` - Retrieve all programmed exercises
- * - `PATCH /programmed-exercise/{id}` - Update an existing programmed exercise
- * - `DELETE /programmed-exercise/{id}` - Delete a programmed exercise
+ * - `POST /programmed_exercise/` - Create a new programmed exercise
+ * - `GET /programmed_exercise/{id}` - Retrieve a programmed exercise by ID
+ * - `GET /programmed_exercise/stage/{workoutStageId}` - Get exercises for a specific stage
+ * - `GET /programmed_exercise/` - Retrieve all programmed exercises
+ * - `PATCH /programmed_exercise/{id}` - Update an existing programmed exercise
+ * - `DELETE /programmed_exercise/{id}` - Delete a programmed exercise
  *
  * ## Error Handling
  *

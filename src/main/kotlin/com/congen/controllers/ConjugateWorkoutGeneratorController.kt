@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `GET /conjugate-workout-generator/{userId}/generate` - Generate next week of workouts
+ * - `GET /conjugate_workout_generator/{userId}/generate` - Generate next week of workouts
  *
  * ## Error Handling
  *

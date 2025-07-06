@@ -35,10 +35,10 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /user-program-preferences/` - Create new user program preferences
- * - `GET /user-program-preferences/{userId}` - Retrieve user program preferences
- * - `PATCH /user-program-preferences/` - Update user program preferences
- * - `DELETE /user-program-preferences/{userId}` - Delete user program preferences
+ * - `POST /user_program_preferences/` - Create new user program preferences
+ * - `GET /user_program_preferences/{userId}` - Retrieve user program preferences
+ * - `PATCH /user_program_preferences/` - Update user program preferences
+ * - `DELETE /user_program_preferences/{userId}` - Delete user program preferences
  *
  * ## Error Handling
  *

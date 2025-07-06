@@ -38,11 +38,11 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /user-one-rep-max/` - Create a new user one rep max
- * - `GET /user-one-rep-max/{userId}` - Retrieve all one rep max values for a user
- * - `GET /user-one-rep-max/{userId}/{exerciseName}` - Retrieve a specific one rep max
- * - `PATCH /user-one-rep-max/` - Update an existing user one rep max
- * - `DELETE /user-one-rep-max/{userId}/{exerciseName}` - Delete a user one rep max
+ * - `POST /user_one_rep_max/` - Create a new user one rep max
+ * - `GET /user_one_rep_max/{userId}` - Retrieve all one rep max values for a user
+ * - `GET /user_one_rep_max/{userId}/{exerciseName}` - Retrieve a specific one rep max
+ * - `PATCH /user_one_rep_max/` - Update an existing user one rep max
+ * - `DELETE /user_one_rep_max/{userId}/{exerciseName}` - Delete a user one rep max
  *
  * ## Error Handling
  *

@@ -32,12 +32,12 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /workout-stage/` - Create a new workout stage
- * - `GET /workout-stage/{id}` - Retrieve a workout stage by ID
- * - `GET /workout-stage/` - Retrieve all workout stages
- * - `GET /workout-stage/workout/{programmedWorkoutId}` - Get stages for a specific workout
- * - `PATCH /workout-stage/` - Update an existing workout stage
- * - `DELETE /workout-stage/{id}` - Delete a workout stage
+ * - `POST /workout_stage/` - Create a new workout stage
+ * - `GET /workout_stage/{id}` - Retrieve a workout stage by ID
+ * - `GET /workout_stage/` - Retrieve all workout stages
+ * - `GET /workout_stage/workout/{programmedWorkoutId}` - Get stages for a specific workout
+ * - `PATCH /workout_stage/` - Update an existing workout stage
+ * - `DELETE /workout_stage/{id}` - Delete a workout stage
  *
  * ## Error Handling
  *

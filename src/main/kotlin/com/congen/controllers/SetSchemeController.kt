@@ -31,12 +31,12 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /set-schemes/` - Create a new set scheme
- * - `GET /set-schemes/{id}` - Retrieve a set scheme by ID
- * - `GET /set-schemes/` - Retrieve all set schemes
- * - `GET /set-schemes/exercise/{programmedExerciseId}` - Get schemes for a specific exercise
- * - `PATCH /set-schemes/` - Update an existing set scheme
- * - `DELETE /set-schemes/{id}` - Delete a set scheme
+ * - `POST /set_scheme/` - Create a new set scheme
+ * - `GET /set_scheme/{id}` - Retrieve a set scheme by ID
+ * - `GET /set_scheme/` - Retrieve all set schemes
+ * - `GET /set_scheme/exercise/{programmedExerciseId}` - Get schemes for a specific exercise
+ * - `PATCH /set_scheme/{id}` - Update an existing set scheme
+ * - `DELETE /set_scheme/{id}` - Delete a set scheme
  *
  * ## Error Handling
  *

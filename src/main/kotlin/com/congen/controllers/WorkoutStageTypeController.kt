@@ -32,9 +32,9 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `GET /workout-stage-type/{id}` - Retrieve a workout stage type by ID
- * - `GET /workout-stage-type/name/{name}` - Retrieve a workout stage type by name
- * - `GET /workout-stage-type/` - Retrieve all workout stage types
+ * - `GET /workout_stage_type/{id}` - Retrieve a workout stage type by ID
+ * - `GET /workout_stage_type/name/{name}` - Retrieve a workout stage type by name
+ * - `GET /workout_stage_type/` - Retrieve all workout stage types
  *
  * ## Error Handling
  *
