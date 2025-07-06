@@ -51,7 +51,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/programmed-exercise")
+@RequestMapping("/programmed_exercise")
 class ProgrammedExerciseController(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
 ) {

@@ -51,7 +51,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/workout-stage")
+@RequestMapping("/workout_stage")
 class WorkoutStageController(
     private val workoutStageDAL: WorkoutStageDAL,
 ) {
@@ -81,7 +81,7 @@ class WorkoutStageController(
         @Parameter(description = "Position within the workout", required = true)
         @RequestParam position: Int,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        logger.info("Saving workout stage for workout: {}, position: {}", programmedWorkoutId, position)
+        logger.info("Saving workout stage for workout {}", programmedWorkoutId)
         return workoutStageDAL.insertWorkoutStage(programmedWorkoutId, stageTypeId, position)
             .map { savedStage ->
                 logger.debug("Saved workout stage with id: {}", savedStage.id)
@@ -114,6 +114,10 @@ class WorkoutStageController(
             .map {
                 logger.debug("Found workout stage: {}", id)
                 ResponseEntity.ok(it)
+            }
+            .onErrorResume { e ->
+                logger.warn("Workout stage not found: {}", id)
+                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error getting workout stage: {}", id, e)
@@ -187,16 +191,19 @@ class WorkoutStageController(
         @RequestParam stageTypeId: Long,
         @Parameter(description = "Position within the workout", required = true)
         @RequestParam position: Int,
-    ): ResponseEntity<*> {
-        logger.info("Updating workout stage: {}", id)
-        return try {
-            ResponseEntity.ok(
-                workoutStageDAL.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position),
-            )
-        } catch (e: Exception) {
-            logger.error("Error updating workout stage: {}", id, e)
-            throw e
-        }
+    ): Mono<ResponseEntity<WorkoutStage>> {
+        return workoutStageDAL.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position)
+            .map {
+                logger.debug("Updated workout stage: {}", id)
+                ResponseEntity.ok(it)
+            }
+            .onErrorResume { e ->
+                logger.warn("Workout stage not found for update: {}", id)
+                Mono.just(ResponseEntity.notFound().build())
+            }
+            .doOnError { e ->
+                logger.error("Error updating workout stage: {}", id, e)
+            }
     }
 
     /**
@@ -211,15 +218,18 @@ class WorkoutStageController(
     @DeleteMapping("/{id}")
     fun delete(
         @PathVariable("id") id: Long,
-    ): ResponseEntity<*> {
-        logger.info("Deleting workout stage: {}", id)
-        return try {
-            ResponseEntity.ok(
-                workoutStageDAL.deleteWorkoutStage(id),
-            )
-        } catch (e: Exception) {
-            logger.error("Error deleting workout stage: {}", id, e)
-            throw e
-        }
+    ): Mono<ResponseEntity<WorkoutStage>> {
+        return workoutStageDAL.deleteWorkoutStage(id)
+            .map {
+                logger.debug("Deleted workout stage: {}", id)
+                ResponseEntity.ok(it)
+            }
+            .onErrorResume { e ->
+                logger.warn("Workout stage not found for deletion: {}", id)
+                Mono.just(ResponseEntity.notFound().build())
+            }
+            .doOnError { e ->
+                logger.error("Error deleting workout stage: {}", id, e)
+            }
     }
 }

@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/set-schemes")
+@RequestMapping("/set_scheme")
 class SetSchemeController(
     private val setSchemeService: SetSchemeService,
 ) {

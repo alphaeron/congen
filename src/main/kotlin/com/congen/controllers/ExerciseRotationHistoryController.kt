@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/exercise-rotation-history")
+@RequestMapping("/exercise_rotation_history")
 @Tag(
     name = "Exercise Rotation History Management",
     description = "Operations for managing exercise rotation history records",

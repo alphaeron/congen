@@ -57,7 +57,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/conjugate-workout-generator")
+@RequestMapping("/conjugate_workout_generator")
 @Tag(name = "Conjugate Workout Generator", description = "Endpoints for generating conjugate powerlifting workout programs")
 class ConjugateWorkoutGeneratorController(
     private val conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService,

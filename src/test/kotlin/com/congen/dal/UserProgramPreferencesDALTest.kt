@@ -160,6 +160,10 @@ class UserProgramPreferencesDALTest {
     fun `updateUserProgramPreferences should throw ValidationException when changing program days per week with existing workouts`() {
         val currentPrefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 3, sessionTimeLengthInMinutes = 60)
         val newProgramDaysPerWeek = 4
+        val expectedMessage =
+            "Cannot change program days per week from 3 to 4 for user 1 because they have existing workouts. " +
+                "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
+                "and maintain program consistency. To change program frequency, the user must start a new program."
 
         // Mock that user has existing workouts
         whenever(programmedWorkoutDAL.hasUserExistingWorkouts(1)).thenReturn(Mono.just(true))
@@ -174,7 +178,9 @@ class UserProgramPreferencesDALTest {
             )
 
         StepVerifier.create(result)
-            .expectError(ValidationException::class.java)
+            .expectErrorMatches { ex ->
+                ex is ValidationException && ex.message == expectedMessage
+            }
             .verify()
 
         verify(programmedWorkoutDAL).hasUserExistingWorkouts(1)

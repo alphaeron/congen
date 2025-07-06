@@ -20,6 +20,9 @@ test {
         exceptionFormat = 'full'
         showStandardStreams = true
     }
+    
+    // Explicitly exclude integration tests from unit test run
+    exclude '**/integrationTest/**'
 }
 
 jacocoTestReport {
@@ -76,13 +79,13 @@ task integrationTest(type: Test) {
         showStandardStreams = true
     }
     
-    // Enable Jacoco for integration tests
-    finalizedBy jacocoTestReport
-    
     // Only run integration tests if explicitly requested
     onlyIf {
         project.hasProperty('runIntegrationTests')
     }
+    
+    // Don't depend on unit tests
+    dependsOn = []
 }
 
 // Integration test coverage report

@@ -56,7 +56,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/user-one-rep-max")
+@RequestMapping("/user_one_rep_max")
 @Tag(
     name = "User One Rep Max Management",
     description = "Operations for managing user one rep max values",

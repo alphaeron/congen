@@ -1,16 +1,24 @@
-check all dals have unit tests
+add missing unit tests
 
-just put endpoint for user 1rm
+Only get the latest program for a user.
+
+remove tempo, target_sets, target_reps, target_weight, target_rpe, rest_resonds from programmed_exercise, tempo should be stored in set_scheme.
+
+do I need description fields?
+
+use an enum for stage type.
 
 double-check schema up to date with models
 types consistent with those specified in the schema
+
+check missing integration tests
+
+just put endpoint for user 1rm
 
 only update current_week_number in program, don't create a whole new program each time we make a new week of workouts.
 Can you get currentWeekNumber from the database too, instead of taking it as a parameter?  For example, by looking at the number of workouts a user has had in the past in their current program.
 
 fix weight rounding issue / handle input units for weights (do all calculations in kg, but support outputting in lbs or kgs).
-
-update endpoints to use underscores instead of dashes.
 
 Secondary movement selection should pick an exercise simlar to the primary movement.
 
@@ -20,15 +28,11 @@ function to estimate default weight if missing based on other user 1rms?
 
 band weight for de exercises.
 
-Only get the latest program for a user.
-
 put generateWorkoutsForWeek in the template itself.
 
 2 or 3 week conjugate generation
 
 Add the ability for a user to enter their weak muscles, and have the accessories focus on those.
-
-use an enum for stage type.
 
 move to minikube, skaffold, kubernetes manifests for deployment, integrate deployment into gradle targets, document deployment process and how to run/test locally.
 

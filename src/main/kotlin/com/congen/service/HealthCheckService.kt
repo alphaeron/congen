@@ -62,8 +62,30 @@ class HealthCheckService(
         logger.debug("Performing health check")
 
         return Mono.zip(
-            checkDatabaseHealth(),
-            checkApplicationHealth(),
+            checkDatabaseHealth().onErrorResume { error ->
+                logger.error("Database health check failed in performHealthCheck", error)
+                Mono.just(
+                    HealthCheck(
+                        componentId = "postgres",
+                        componentType = "database",
+                        status = HealthStatus.FAIL,
+                        output = "Database connection failed: ${error.message}",
+                        links = mapOf("self" to "/health"),
+                    )
+                )
+            },
+            checkApplicationHealth().onErrorResume { error ->
+                logger.error("Application health check failed in performHealthCheck", error)
+                Mono.just(
+                    HealthCheck(
+                        componentId = "congen-api",
+                        componentType = "service",
+                        status = HealthStatus.FAIL,
+                        output = "Application health check failed: ${error.message}",
+                        links = mapOf("self" to "/health"),
+                    )
+                )
+            }
         ).map { tuple ->
             val dbHealth = tuple.t1
             val appHealth = tuple.t2
@@ -79,15 +101,7 @@ class HealthCheckService(
                         "application" to listOf(appHealth),
                     ),
             )
-        }.onErrorReturn(
-            HealthCheckResponse(
-                status = HealthStatus.FAIL,
-                version = versionConfig.version,
-                releaseId = versionConfig.releaseId,
-                output = "Health check failed with error",
-                checks = emptyMap(),
-            ),
-        )
+        }
     }
 
     /**

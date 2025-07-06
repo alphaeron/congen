@@ -12,15 +12,15 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$.status").isEqualTo("pass")
             .jsonPath("$.version").exists()
-            .jsonPath("$.releaseId").exists()
+            .jsonPath("$.release_id").exists()
             .jsonPath("$.serviceId").isEqualTo("congen")
             .jsonPath("$.description").isEqualTo("Congen Exercise API Health Check")
             .jsonPath("$.checks.database").exists()
             .jsonPath("$.checks.application").exists()
-            .jsonPath("$.checks.database[0].componentId").isEqualTo("postgres")
-            .jsonPath("$.checks.database[0].componentType").isEqualTo("database")
-            .jsonPath("$.checks.application[0].componentId").isEqualTo("congen-api")
-            .jsonPath("$.checks.application[0].componentType").isEqualTo("service")
+            .jsonPath("$.checks.database[0].component_id").isEqualTo("postgres")
+            .jsonPath("$.checks.database[0].component_type").isEqualTo("database")
+            .jsonPath("$.checks.application[0].component_id").isEqualTo("congen-api")
+            .jsonPath("$.checks.application[0].component_type").isEqualTo("service")
     }
 
     @Test

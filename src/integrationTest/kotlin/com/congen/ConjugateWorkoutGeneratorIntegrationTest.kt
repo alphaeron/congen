@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.model.Program
 import com.congen.model.User
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -45,13 +44,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)
@@ -61,7 +63,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Verify workouts were created
         webTestClient.get()
-            .uri("/programmed-workout/program/${programResponse.id}")
+            .uri("/programmed_workout/program/${programResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -101,13 +103,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)
@@ -117,7 +122,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Verify workouts were created
         webTestClient.get()
-            .uri("/programmed-workout/program/${programResponse.id}")
+            .uri("/programmed_workout/program/${programResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -157,13 +162,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)
@@ -173,7 +181,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Verify workouts were created
         webTestClient.get()
-            .uri("/programmed-workout/program/${programResponse.id}")
+            .uri("/programmed_workout/program/${programResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -212,8 +220,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         // When & Then - Try to generate with invalid days per week
-        webTestClient.get()
-            .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+        webTestClient.post()
+            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
             .exchange()
             .expectStatus().isBadRequest()
     }
@@ -249,8 +257,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         // When & Then - Try to generate with invalid week number
-        webTestClient.get()
-            .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=0")
+        webTestClient.post()
+            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=0")
             .exchange()
             .expectStatus().isBadRequest()
     }
@@ -258,8 +266,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle non-existent user`() {
         // When & Then - Try to generate for non-existent user
-        webTestClient.get()
-            .uri("/conjugate-workout-generator/99999/generate?currentWeekNumber=1")
+        webTestClient.post()
+            .uri("/conjugate_workout_generator/99999/generate?currentWeekNumber=1")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -326,13 +334,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)
@@ -382,13 +393,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)
@@ -458,13 +472,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)
@@ -502,13 +519,16 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // When - Generate workout program
         val programResponse =
-            webTestClient.get()
-                .uri("/conjugate-workout-generator/$userId/generate?currentWeekNumber=1")
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(Program::class.java)
+                .expectBody()
+                .jsonPath("$.id").exists()
+                .jsonPath("$.name").isEqualTo("Conjugate Program")
+                .jsonPath("$.description").isEqualTo("Generated conjugate powerlifting program")
                 .returnResult()
-                .responseBody!!
+                .responseBody
 
         // Then - Verify program was created
         assert(programResponse.id != null)

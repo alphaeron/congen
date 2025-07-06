@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/programmed-workout")
+@RequestMapping("/programmed_workout")
 class ProgrammedWorkoutController(
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
 ) {
@@ -77,14 +77,14 @@ class ProgrammedWorkoutController(
         @RequestParam dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        logger.info("Saving programmed workout: {}", name)
+        logger.info("Saving programmed workout: {} for program {}", name, programId)
         return programmedWorkoutDAL.insertProgrammedWorkout(programId, dayNumber, name)
             .map { savedWorkout ->
                 logger.debug("Saved programmed workout with id: {}", savedWorkout.id)
                 ResponseEntity.ok(savedWorkout)
             }
             .doOnError { e ->
-                logger.error("Error saving programmed workout: {}", name, e)
+                logger.error("Error saving programmed workout: {} for program {}", name, programId, e)
             }
     }
 
@@ -105,6 +105,10 @@ class ProgrammedWorkoutController(
             .map {
                 logger.debug("Found programmed workout: {}", id)
                 ResponseEntity.ok(it)
+            }
+            .onErrorResume { e ->
+                logger.warn("Programmed workout not found: {}", id)
+                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error getting programmed workout: {}", id, e)
@@ -175,16 +179,19 @@ class ProgrammedWorkoutController(
         @RequestParam programId: Long,
         @RequestParam dayNumber: Int,
         @RequestParam name: String,
-    ): ResponseEntity<*> {
-        logger.info("Updating programmed workout: {}", id)
-        return try {
-            ResponseEntity.ok(
-                programmedWorkoutDAL.updateProgrammedWorkout(id, programId, dayNumber, name),
-            )
-        } catch (e: Exception) {
-            logger.error("Error updating programmed workout: {}", id, e)
-            throw e
-        }
+    ): Mono<ResponseEntity<ProgrammedWorkout>> {
+        return programmedWorkoutDAL.updateProgrammedWorkout(id, programId, dayNumber, name)
+            .map {
+                logger.debug("Updated programmed workout: {}", id)
+                ResponseEntity.ok(it)
+            }
+            .onErrorResume { e ->
+                logger.warn("Programmed workout not found for update: {}", id)
+                Mono.just(ResponseEntity.notFound().build())
+            }
+            .doOnError { e ->
+                logger.error("Error updating programmed workout: {}", id, e)
+            }
     }
 
     /**
@@ -199,15 +206,18 @@ class ProgrammedWorkoutController(
     @DeleteMapping("/{id}")
     fun delete(
         @PathVariable("id") id: Long,
-    ): ResponseEntity<*> {
-        logger.info("Deleting programmed workout: {}", id)
-        return try {
-            ResponseEntity.ok(
-                programmedWorkoutDAL.deleteProgrammedWorkout(id),
-            )
-        } catch (e: Exception) {
-            logger.error("Error deleting programmed workout: {}", id, e)
-            throw e
-        }
+    ): Mono<ResponseEntity<ProgrammedWorkout>> {
+        return programmedWorkoutDAL.deleteProgrammedWorkout(id)
+            .map {
+                logger.debug("Deleted programmed workout: {}", id)
+                ResponseEntity.ok(it)
+            }
+            .onErrorResume { e ->
+                logger.warn("Programmed workout not found for deletion: {}", id)
+                Mono.just(ResponseEntity.notFound().build())
+            }
+            .doOnError { e ->
+                logger.error("Error deleting programmed workout: {}", id, e)
+            }
     }
 }

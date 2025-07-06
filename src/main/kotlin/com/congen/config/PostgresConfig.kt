@@ -5,6 +5,7 @@ import io.vertx.pgclient.PgBuilder
 import io.vertx.pgclient.PgConnectOptions
 import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.SqlClient
+import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -52,6 +53,9 @@ class PostgresConfig(
         /** Number of connections in the writer pool. */
         private val CONNECTION_POOL_COUNT_WRITER = 10
     }
+
+    /** Shared Vert.x instance for all database connections. */
+    private val vertx: Vertx = Vertx.vertx()
 
     /**
      * Creates and configures the PostgreSQL writer connection pool.
@@ -134,7 +138,16 @@ class PostgresConfig(
             .client()
             .connectingTo(connectionOptions)
             .with(poolOptions)
-            .using(Vertx.vertx())
+            .using(vertx)
             .build()
+    }
+
+    /**
+     * Cleanup method to properly close the Vert.x instance when the application shuts down.
+     */
+    @PreDestroy
+    fun cleanup() {
+        logger.info("Shutting down Vert.x instance")
+        vertx.close()
     }
 }

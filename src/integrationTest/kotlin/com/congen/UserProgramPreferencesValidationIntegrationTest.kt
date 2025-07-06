@@ -27,7 +27,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -48,7 +48,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -69,7 +69,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -90,7 +90,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -111,7 +111,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=2&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=2&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
@@ -128,7 +128,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
@@ -145,7 +145,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
@@ -164,19 +164,19 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Create program preferences
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate-workout-generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
             .exchange()
             .expectStatus().isOk()
 
         // Should allow changing session time
         webTestClient.patch()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=90")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=90")
             .exchange()
             .expectStatus().isOk()
     }
@@ -195,24 +195,24 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Create program preferences with 3 days per week
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate-workout-generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
             .exchange()
             .expectStatus().isOk()
 
         // Should prevent changing program days per week from 3 to 4
         webTestClient.patch()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
             .jsonPath(
-                "$.error",
+                "$.error"
             ).isEqualTo(
                 "Cannot change program days per week from 3 to 4 for user ${userResponse.id} because they have existing workouts. Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts and maintain program consistency. To change program frequency, the user must start a new program."
             )
@@ -232,31 +232,31 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Create program preferences with 4 days per week
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate-workout-generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
             .exchange()
             .expectStatus().isOk()
 
         // Should prevent changing program days per week from 4 to 3
         webTestClient.patch()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
             .jsonPath(
-                "$.error",
+                "$.error"
             ).isEqualTo(
                 "Cannot change program days per week from 4 to 3 for user ${userResponse.id} because they have existing workouts. Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts and maintain program consistency. To change program frequency, the user must start a new program."
             )
     }
 
     @Test
-    fun `should allow changing program days per week when user has no existing workouts`() {
+    fun `should allow changing program days per week when no workouts exist`() {
         // Create user
         val userResponse =
             webTestClient.post()
@@ -269,19 +269,19 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Create program preferences with 3 days per week
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
 
         // Should allow changing program days per week when no workouts exist
         webTestClient.patch()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
-    fun `should allow changing program days per week after deleting all workouts`() {
+    fun `should allow changing program days per week after workouts are deleted`() {
         // Create user
         val userResponse =
             webTestClient.post()
@@ -294,32 +294,32 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Create program preferences with 3 days per week
         webTestClient.post()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate-workout-generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
             .exchange()
             .expectStatus().isOk()
 
-        // Delete the program (which cascades to delete workouts)
+        // Delete the program to remove existing workouts
         webTestClient.get()
-            .uri("/program/user/${userResponse.id}")
+            .uri("/user_program_preferences/user/${userResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$[0].id").value { programId: Long ->
+            .jsonPath("$.program_id").value { programId: Long ->
                 webTestClient.delete()
-                    .uri("/program/$programId")
+                    .uri("/user_program_preferences/$programId")
                     .exchange()
                     .expectStatus().isOk()
             }
 
         // Should now allow changing program days per week after workouts are deleted
         webTestClient.patch()
-            .uri("/user-program-preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }

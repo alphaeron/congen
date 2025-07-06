@@ -47,7 +47,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/workout-stage-type")
+@RequestMapping("/workout_stage_type")
 class WorkoutStageTypeController(
     private val workoutStageTypeDAL: WorkoutStageTypeDAL,
 ) {
@@ -97,8 +97,9 @@ class WorkoutStageTypeController(
                 logger.warn("Workout stage type not found: {}", id)
                 Mono.just(ResponseEntity.notFound().build())
             }
-            .doOnError { e ->
+            .onErrorResume { e ->
                 logger.error("Error getting workout stage type: {}", id, e)
+                Mono.error(e)
             }
     }
 
@@ -120,12 +121,12 @@ class WorkoutStageTypeController(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Workout stage type found by name",
+                description = "Workout stage type found",
                 content = [Content(mediaType = "application/json")],
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "Workout stage type not found by name",
+                description = "Workout stage type not found",
                 content = [Content(mediaType = "application/json")],
             ),
         ],
@@ -136,15 +137,16 @@ class WorkoutStageTypeController(
     ): Mono<ResponseEntity<WorkoutStageType>> {
         return workoutStageTypeDAL.selectWorkoutStageTypeByName(name)
             .map {
-                logger.debug("Found workout stage type by name: {}", name)
+                logger.debug("Found workout stage type: {}", name)
                 ResponseEntity.ok(it)
             }
             .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Workout stage type not found by name: {}", name)
+                logger.warn("Workout stage type not found: {}", name)
                 Mono.just(ResponseEntity.notFound().build())
             }
-            .doOnError { e ->
-                logger.error("Error getting workout stage type by name: {}", name, e)
+            .onErrorResume { e ->
+                logger.error("Error getting workout stage type: {}", name, e)
+                Mono.error(e)
             }
     }
 
@@ -170,15 +172,14 @@ class WorkoutStageTypeController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<WorkoutStageType>>> {
         logger.debug("Getting all workout stage types")
-        return try {
-            ResponseEntity.ok(
-                workoutStageTypeDAL.selectWorkoutStageTypes(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all workout stage types", e)
-            throw e
-        }
+        return workoutStageTypeDAL.selectWorkoutStageTypes()
+            .map { workoutStageTypes ->
+                ResponseEntity.ok(workoutStageTypes)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all workout stage types", e)
+            }
     }
 }
