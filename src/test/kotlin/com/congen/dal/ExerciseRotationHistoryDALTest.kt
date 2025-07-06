@@ -26,6 +26,7 @@ class ExerciseRotationHistoryDALTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
+                userId = 1,
                 exerciseName = "Bench Press",
                 isAccessory = false
             )
@@ -50,11 +51,13 @@ class ExerciseRotationHistoryDALTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
+                    userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = isAccessory
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
+                    userId = 2,
                     exerciseName = "Squat",
                     isAccessory = isAccessory
                 )
@@ -87,11 +90,13 @@ class ExerciseRotationHistoryDALTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
+                    userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = false
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
+                    userId = 2,
                     exerciseName = "Squat",
                     isAccessory = true
                 )
@@ -112,9 +117,11 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `should insert exercise rotation history`() {
+        val userId = 1
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 0L,
+                userId = userId,
                 exerciseName = "Bench Press",
                 isAccessory = false
             )
@@ -124,16 +131,17 @@ class ExerciseRotationHistoryDALTest {
             postgresClient.update<ExerciseRotationHistory>(
                 """
                 INSERT INTO exercise_rotation_history
-                    (exercise_name, is_accessory)
+                    (user_id, exercise_name, is_accessory)
                 VALUES
-                    ($1, $2)
+                    ($1, $2, $3)
                 """.trimIndent(),
+                userId,
                 "Bench Press",
                 false
             )
         ).thenReturn(Mono.just(expectedRecord))
 
-        val result = exerciseRotationHistoryDAL.insert(exerciseRotationHistory.exerciseName, exerciseRotationHistory.isAccessory)
+        val result = exerciseRotationHistoryDAL.insert(userId, exerciseRotationHistory.exerciseName, exerciseRotationHistory.isAccessory)
 
         StepVerifier.create(result)
             .expectNext(expectedRecord)
@@ -142,10 +150,11 @@ class ExerciseRotationHistoryDALTest {
         verify(postgresClient).update<ExerciseRotationHistory>(
             """
             INSERT INTO exercise_rotation_history
-                (exercise_name, is_accessory)
+                (user_id, exercise_name, is_accessory)
             VALUES
-                ($1, $2)
+                ($1, $2, $3)
             """.trimIndent(),
+            userId,
             "Bench Press",
             false
         )
@@ -156,6 +165,7 @@ class ExerciseRotationHistoryDALTest {
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
+                userId = 1,
                 exerciseName = "Bench Press",
                 isAccessory = true
             )
@@ -164,10 +174,11 @@ class ExerciseRotationHistoryDALTest {
             postgresClient.update<ExerciseRotationHistory>(
                 """
                 UPDATE exercise_rotation_history
-                SET exercise_name=$2, is_accessory=$3
+                SET user_id=$2, exercise_name=$3, is_accessory=$4
                 WHERE id=$1
                 """.trimIndent(),
                 1L,
+                1,
                 "Bench Press",
                 true
             )
@@ -176,6 +187,7 @@ class ExerciseRotationHistoryDALTest {
         val result =
             exerciseRotationHistoryDAL.update(
                 exerciseRotationHistory.id,
+                exerciseRotationHistory.userId,
                 exerciseRotationHistory.exerciseName,
                 exerciseRotationHistory.isAccessory
             )
@@ -187,10 +199,11 @@ class ExerciseRotationHistoryDALTest {
         verify(postgresClient).update<ExerciseRotationHistory>(
             """
             UPDATE exercise_rotation_history
-            SET exercise_name=$2, is_accessory=$3
+            SET user_id=$2, exercise_name=$3, is_accessory=$4
             WHERE id=$1
             """.trimIndent(),
             1L,
+            1,
             "Bench Press",
             true
         )
@@ -202,6 +215,7 @@ class ExerciseRotationHistoryDALTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
+                userId = 1,
                 exerciseName = "Bench Press",
                 isAccessory = false
             )

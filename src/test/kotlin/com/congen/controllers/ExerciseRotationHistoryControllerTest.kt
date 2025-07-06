@@ -22,18 +22,20 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should save exercise rotation history`() {
+        val userId = 1
         val exerciseName = "Bench Press"
         val isAccessory = false
         val expectedRecord =
             ExerciseRotationHistory(
                 id = 1L,
+                userId = userId,
                 exerciseName = exerciseName,
                 isAccessory = isAccessory
             )
 
-        whenever(exerciseRotationHistoryDAL.insert(exerciseName, isAccessory)).thenReturn(Mono.just(expectedRecord))
+        whenever(exerciseRotationHistoryDAL.insert(userId, exerciseName, isAccessory)).thenReturn(Mono.just(expectedRecord))
 
-        val result = exerciseRotationHistoryController.save(exerciseName, isAccessory)
+        val result = exerciseRotationHistoryController.save(userId, exerciseName, isAccessory)
 
         StepVerifier.create(result)
             .expectNextMatches { response ->
@@ -48,6 +50,7 @@ class ExerciseRotationHistoryControllerTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
+                userId = 1,
                 exerciseName = "Bench Press",
                 isAccessory = false
             )
@@ -70,11 +73,13 @@ class ExerciseRotationHistoryControllerTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
+                    userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = isAccessory
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
+                    userId = 2,
                     exerciseName = "Squat",
                     isAccessory = isAccessory
                 )
@@ -97,11 +102,13 @@ class ExerciseRotationHistoryControllerTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
+                    userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = false
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
+                    userId = 2,
                     exerciseName = "Squat",
                     isAccessory = true
                 )
@@ -121,18 +128,20 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should update exercise rotation history`() {
         val id = 1L
+        val userId = 1
         val exerciseName = "Bench Press"
         val isAccessory = true
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
+                userId = userId,
                 exerciseName = exerciseName,
                 isAccessory = isAccessory
             )
 
-        whenever(exerciseRotationHistoryDAL.update(id, exerciseName, isAccessory)).thenReturn(Mono.just(expectedRecord))
+        whenever(exerciseRotationHistoryDAL.update(id, userId, exerciseName, isAccessory)).thenReturn(Mono.just(expectedRecord))
 
-        val result = exerciseRotationHistoryController.update(id, exerciseName, isAccessory)
+        val result = exerciseRotationHistoryController.update(id, userId, exerciseName, isAccessory)
 
         StepVerifier.create(result)
             .expectNextMatches { response ->
@@ -147,6 +156,7 @@ class ExerciseRotationHistoryControllerTest {
         val expectedRecord =
             ExerciseRotationHistory(
                 id = id,
+                userId = 1,
                 exerciseName = "Bench Press",
                 isAccessory = false
             )

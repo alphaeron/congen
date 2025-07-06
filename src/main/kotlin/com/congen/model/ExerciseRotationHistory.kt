@@ -45,6 +45,9 @@ data class ExerciseRotationHistory(
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
+    /** ID of the user. */
+    @Schema(description = "ID of the user", example = "1")
+    @param:JsonProperty("user_id") val userId: Int,
     /** The name of the exercise that was used. */
     @Schema(
         description = "The name of the exercise that was used",

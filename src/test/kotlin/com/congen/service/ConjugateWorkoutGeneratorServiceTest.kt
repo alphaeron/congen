@@ -231,6 +231,7 @@ class ConjugateWorkoutGeneratorServiceTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
+                    userId = userId,
                     exerciseName = "Bench Press",
                     isAccessory = false,
                     usedAt = LocalDateTime.now()
@@ -560,18 +561,21 @@ class ConjugateWorkoutGeneratorServiceTest {
             listOf(
                 ExerciseRotationHistory(
                     id = 1L,
+                    userId = userId,
                     exerciseName = "Bench Press",
                     isAccessory = false,
                     usedAt = LocalDateTime.now().minusDays(7)
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
+                    userId = userId,
                     exerciseName = "Bench Press",
                     isAccessory = false,
                     usedAt = LocalDateTime.now().minusDays(14)
                 ),
                 ExerciseRotationHistory(
                     id = 3L,
+                    userId = userId,
                     exerciseName = "Incline Bench Press",
                     isAccessory = false,
                     usedAt = LocalDateTime.now().minusDays(21)

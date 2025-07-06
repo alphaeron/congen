@@ -68,6 +68,7 @@ class ExerciseRotationHistoryController(
      * This endpoint creates a new exercise rotation history record with the provided information.
      * The record will be assigned a unique ID and timestamp automatically.
      *
+     * @param userId The ID of the user
      * @param exerciseName The name of the exercise that was used
      * @param isAccessory Whether the exercise was used as an accessory movement
      * @return The created exercise rotation history record with assigned ID and timestamp
@@ -106,6 +107,12 @@ class ExerciseRotationHistoryController(
     )
     fun save(
         @Parameter(
+            description = "The ID of the user",
+            required = true,
+            example = "1",
+        )
+        @RequestParam userId: Int,
+        @Parameter(
             description = "The name of the exercise that was used",
             required = true,
             example = "Bench Press",
@@ -119,18 +126,20 @@ class ExerciseRotationHistoryController(
         @RequestParam isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         logger.info(
-            "Saving exercise rotation history: exercise_name={}, isAccessory={}",
+            "Saving exercise rotation history: userId={}, exercise_name={}, isAccessory={}",
+            userId,
             exerciseName,
             isAccessory,
         )
-        return exerciseRotationHistoryDAL.insert(exerciseName, isAccessory)
+        return exerciseRotationHistoryDAL.insert(userId, exerciseName, isAccessory)
             .map { savedRecord ->
                 logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
                 ResponseEntity.ok(savedRecord)
             }
             .doOnError { e ->
                 logger.error(
-                    "Error saving exercise rotation history: exercise_name={}, isAccessory={}",
+                    "Error saving exercise rotation history: userId={}, exercise_name={}, isAccessory={}",
+                    userId,
                     exerciseName,
                     isAccessory,
                     e,
@@ -290,6 +299,7 @@ class ExerciseRotationHistoryController(
      * If the record is not found, a 404 error will be returned.
      *
      * @param id The unique identifier of the exercise rotation history record to update
+     * @param userId The ID of the user
      * @param exerciseName The name of the exercise that was used
      * @param isAccessory Whether the exercise was used as an accessory movement
      * @return The updated exercise rotation history record
@@ -341,6 +351,12 @@ class ExerciseRotationHistoryController(
         )
         @PathVariable("id") id: Long,
         @Parameter(
+            description = "The ID of the user",
+            required = true,
+            example = "1",
+        )
+        @RequestParam userId: Int,
+        @Parameter(
             description = "The name of the exercise that was used",
             required = true,
             example = "Bench Press",
@@ -354,20 +370,22 @@ class ExerciseRotationHistoryController(
         @RequestParam isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         logger.info(
-            "Updating exercise rotation history: id={}, exercise_name={}, isAccessory={}",
+            "Updating exercise rotation history: id={}, userId={}, exercise_name={}, isAccessory={}",
             id,
+            userId,
             exerciseName,
             isAccessory,
         )
-        return exerciseRotationHistoryDAL.update(id, exerciseName, isAccessory)
+        return exerciseRotationHistoryDAL.update(id, userId, exerciseName, isAccessory)
             .map { updatedRecord ->
                 logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
                 ResponseEntity.ok(updatedRecord)
             }
             .doOnError { e ->
                 logger.error(
-                    "Error updating exercise rotation history: id={}, exercise_name={}, isAccessory={}",
+                    "Error updating exercise rotation history: id={}, userId={}, exercise_name={}, isAccessory={}",
                     id,
+                    userId,
                     exerciseName,
                     isAccessory,
                     e,
