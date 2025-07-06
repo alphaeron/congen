@@ -75,7 +75,10 @@ class ExerciseRotationHistoryDALTest {
 
         verify(
             postgresClient
-        ).select<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY used_at DESC", isAccessory)
+        ).select<ExerciseRotationHistory>(
+            "SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY used_at DESC",
+            isAccessory
+        )
     }
 
     @Test

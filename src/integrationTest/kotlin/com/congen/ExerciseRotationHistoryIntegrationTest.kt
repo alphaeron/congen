@@ -35,7 +35,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // First create a record
         val response =
             webTestClient.post()
-                .uri("/exercise-rotation-history/?userId=1&exerciseName=Squat&category=secondary")
+                .uri("/exercise-rotation-history/?userId=1&exerciseName=Safety Bar Squat&category=secondary")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -50,7 +50,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$.id").isEqualTo(response.id)
             .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Squat")
+            .jsonPath("$.exercise_name").isEqualTo("Safety Bar Squat")
             .jsonPath("$.category").isEqualTo("secondary")
     }
 
@@ -63,7 +63,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/exercise-rotation-history/?userId=2&exerciseName=Squat&category=secondary")
+            .uri("/exercise-rotation-history/?userId=2&exerciseName=Safety Bar Squat&category=secondary")
             .exchange()
             .expectStatus().isOk()
 
@@ -86,7 +86,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/exercise-rotation-history/?userId=3&exerciseName=Squat&category=secondary")
+            .uri("/exercise-rotation-history/?userId=3&exerciseName=Safety Bar Squat&category=secondary")
             .exchange()
             .expectStatus().isOk()
 
@@ -169,7 +169,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/exercise-rotation-history/?userId=6&exerciseName=Squat&category=secondary")
+            .uri("/exercise-rotation-history/?userId=6&exerciseName=Safety Bar Squat&category=secondary")
             .exchange()
             .expectStatus().isOk()
 

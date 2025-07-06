@@ -1,12 +1,10 @@
 --liquibase formatted sql
 
 --changeset John Matty:4 labels:prod,test
---comment: Add exercise_rotation_history table to track exercise usage history for users.
-
-CREATE SEQUENCE congen.exercise_rotation_history_id_seq;
+--comment: Add exercise_rotation_history table for tracking exercise usage in workout programs.
 
 CREATE TABLE exercise_rotation_history (
-  id BIGSERIAL DEFAULT nextval('congen.exercise_rotation_history_id_seq') PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY NOT NULL,
   user_id BIGINT NOT NULL,
   exercise_name VARCHAR(255) NOT NULL,
   category VARCHAR(50) NOT NULL, -- 'primary', 'secondary', 'accessory', etc.

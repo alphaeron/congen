@@ -91,8 +91,6 @@ class ExerciseRotationHistoryDAL(
         )
     }
 
-
-
     /**
      * Inserts a new exercise rotation history record into the database.
      *

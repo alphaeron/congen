@@ -1,4 +1,12 @@
+remove id = 0 temporary ids
+
+double-check schema up to date with models
+
+only update current_week_number in program, don't create a whole new program each time we make a new week of workouts.
+
 fix weight rounding issue / handle input units for weights (do all calculations in kg, but support outputting in lbs or kgs).
+
+update endpoints to use underscores instead of dashes.
 
 Secondary movement selection should pick an exercise simlar to the primary movement.
 

@@ -1,8 +1,6 @@
 package com.congen.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
@@ -55,17 +53,28 @@ data class HealthCheckResponse(
 /**
  * Possible health status values for a health check.
  */
-@JsonNaming(PropertyNamingStrategies.LowerCaseStrategy::class)
 @Schema(description = "Possible health status values.")
-enum class HealthStatus {
+enum class HealthStatus(
+    /** The string value representing this health status. */
+    val value: String
+) {
     /** Healthy. */
-    PASS, // healthy
+    PASS("pass"), // healthy
 
     /** Degraded. */
-    WARN, // degraded
+    WARN("warn"), // degraded
 
     /** Unhealthy. */
-    FAIL, // unhealthy
+    FAIL("fail"), // unhealthy
+    ;
+
+    /**
+     * Returns the string value of this health status.
+     * 
+     * @return The string representation of this health status.
+     */
+    @com.fasterxml.jackson.annotation.JsonValue
+    fun toValue(): String = value
 }
 
 /**

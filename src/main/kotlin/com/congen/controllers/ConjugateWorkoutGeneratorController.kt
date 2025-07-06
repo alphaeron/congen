@@ -82,7 +82,7 @@ class ConjugateWorkoutGeneratorController(
     @GetMapping("/{userId}/generate")
     @Operation(
         summary = "Generate conjugate workout program",
-        description = "Generates the next week of workouts for a user's conjugate powerlifting program based on the Westside Barbell methodology."
+        description = " Generates the next week of workouts for a user's conjugate powerlifting program."
     )
     @ApiResponses(
         value = [
@@ -137,4 +137,4 @@ class ConjugateWorkoutGeneratorController(
                 }
             }
     }
-} 
+}

@@ -87,8 +87,8 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.programmedWorkoutId").isEqualTo(workoutResponse.id)
-            .jsonPath("$.stageTypeId").isEqualTo(1)
+            .jsonPath("$.programmed_workout_id").isEqualTo(workoutResponse.id)
+            .jsonPath("$.stage_type_id").isEqualTo(1)
             .jsonPath("$.position").isEqualTo(1)
     }
 
@@ -119,8 +119,8 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(stageResponse.id)
-            .jsonPath("$.programmedWorkoutId").isEqualTo(workoutResponse.id)
-            .jsonPath("$.stageTypeId").isEqualTo(2)
+            .jsonPath("$.programmed_workout_id").isEqualTo(workoutResponse.id)
+            .jsonPath("$.stage_type_id").isEqualTo(2)
             .jsonPath("$.position").isEqualTo(5)
     }
 
@@ -155,9 +155,9 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(3)
-            .jsonPath("$[0].programmedWorkoutId").isEqualTo(workoutResponse.id)
-            .jsonPath("$[1].programmedWorkoutId").isEqualTo(workoutResponse.id)
-            .jsonPath("$[2].programmedWorkoutId").isEqualTo(workoutResponse.id)
+            .jsonPath("$[0].programmed_workout_id").isEqualTo(workoutResponse.id)
+            .jsonPath("$[1].programmed_workout_id").isEqualTo(workoutResponse.id)
+            .jsonPath("$[2].programmed_workout_id").isEqualTo(workoutResponse.id)
     }
 
     @Test
@@ -197,7 +197,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(stageResponse.id)
-            .jsonPath("$.stageTypeId").isEqualTo(2)
+            .jsonPath("$.stage_type_id").isEqualTo(2)
             .jsonPath("$.position").isEqualTo(15)
     }
 

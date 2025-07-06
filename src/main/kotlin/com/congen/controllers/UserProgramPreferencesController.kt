@@ -51,7 +51,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/user-program-preferences")
+@RequestMapping("/user_program_preferences")
 class UserProgramPreferencesController(
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
 ) {

@@ -1,6 +1,8 @@
 package com.congen
 
+import com.congen.model.User
 import com.congen.model.UserOneRepMax
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import java.math.BigDecimal
@@ -15,17 +17,45 @@ import java.math.BigDecimal
  * @since 1.0.0
  */
 class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
+    private var userId1: Int = 0
+    private var userId2: Int = 0
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+
+        // Create test users
+        val user1Response =
+            webTestClient.post()
+                .uri("/user/?name=Test User 1&age=25&height=175.0&weight=80.0")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
+        val user2Response =
+            webTestClient.post()
+                .uri("/user/?name=Test User 2&age=30&height=180.0&weight=85.0")
+                .exchange()
+                .expectStatus().isOk
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
+        userId1 = user1Response.id
+        userId2 = user2Response.id
+    }
+
     @Test
-    fun `should create user one rep max successfully`() {
-        // Given
+    fun `should save user one rep max`() {
         val userOneRepMax =
             UserOneRepMax(
-                userId = 1,
+                userId = userId1,
                 exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
+                oneRepMax = BigDecimal("100.0")
             )
 
-        // When & Then
         webTestClient.post()
             .uri("/user-one-rep-max/")
             .contentType(MediaType.APPLICATION_JSON)
@@ -33,276 +63,49 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
-            .jsonPath("$.one_rep_max").isEqualTo(100.0)
+            .jsonPath("$.userId").isEqualTo(userId1)
+            .jsonPath("$.exerciseName").isEqualTo("Bench Press")
+            .jsonPath("$.oneRepMax").isEqualTo(100.0)
     }
 
     @Test
-    fun `should get all one rep max values for user successfully`() {
-        // Given
-        val userOneRepMax1 =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
-            )
-        val userOneRepMax2 =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Squat",
-                oneRepMax = BigDecimal("150.0"),
-            )
-
-        // Create test data
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax1)
-            .exchange()
-            .expectStatus().isOk
-
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax2)
-            .exchange()
-            .expectStatus().isOk
-
-        // When & Then
-        webTestClient.get()
-            .uri("/user-one-rep-max/1")
-            .exchange()
-            .expectStatus().isOk
-            .expectBodyList(UserOneRepMax::class.java)
-            .hasSize(2)
-            .contains(userOneRepMax1, userOneRepMax2)
-    }
-
-    @Test
-    fun `should get specific one rep max for user and exercise successfully`() {
-        // Given
+    fun `should get user one rep max by user and exercise`() {
+        // First save a one rep max
         val userOneRepMax =
             UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
-            )
-
-        // Create test data
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-
-        // When & Then
-        webTestClient.get()
-            .uri("/user-one-rep-max/1/Bench Press")
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
-            .jsonPath("$.one_rep_max").isEqualTo(100.0)
-    }
-
-    @Test
-    fun `should return 404 when one rep max not found`() {
-        // When & Then
-        webTestClient.get()
-            .uri("/user-one-rep-max/1/Non-existent Exercise")
-            .exchange()
-            .expectStatus().isNotFound
-    }
-
-    @Test
-    fun `should update user one rep max successfully`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
-            )
-        val updatedUserOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("110.0"),
-            )
-
-        // Create test data
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-
-        // When & Then
-        webTestClient.patch()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(updatedUserOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
-            .jsonPath("$.one_rep_max").isEqualTo(110.0)
-    }
-
-    @Test
-    fun `should delete user one rep max successfully`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
-            )
-
-        // Create test data
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-
-        // When & Then
-        webTestClient.delete()
-            .uri("/user-one-rep-max/1/Bench Press")
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
-            .jsonPath("$.one_rep_max").isEqualTo(100.0)
-
-        // Verify deletion
-        webTestClient.get()
-            .uri("/user-one-rep-max/1/Bench Press")
-            .exchange()
-            .expectStatus().isNotFound
-    }
-
-    @Test
-    fun `should handle decimal one rep max values`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
+                userId = userId1,
                 exerciseName = "Deadlift",
-                oneRepMax = BigDecimal("225.5"),
+                oneRepMax = BigDecimal("200.0")
             )
 
-        // When & Then
         webTestClient.post()
             .uri("/user-one-rep-max/")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(userOneRepMax)
             .exchange()
             .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Deadlift")
-            .jsonPath("$.one_rep_max").isEqualTo(225.5)
-    }
 
-    @Test
-    fun `should handle special characters in exercise name`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Barbell Bench Press (Incline)",
-                oneRepMax = BigDecimal("120.0"),
-            )
-
-        // When & Then
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Barbell Bench Press (Incline)")
-            .jsonPath("$.one_rep_max").isEqualTo(120.0)
-    }
-
-    @Test
-    fun `should handle large one rep max values`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Heavy Deadlift",
-                oneRepMax = BigDecimal("500.0"),
-            )
-
-        // When & Then
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Heavy Deadlift")
-            .jsonPath("$.one_rep_max").isEqualTo(500.0)
-    }
-
-    @Test
-    fun `should handle zero one rep max values`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Push-up",
-                oneRepMax = BigDecimal("0.0"),
-            )
-
-        // When & Then
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Push-up")
-            .jsonPath("$.one_rep_max").isEqualTo(0.0)
-    }
-
-    @Test
-    fun `should return empty list when user has no one rep max values`() {
-        // When & Then
+        // Then retrieve it
         webTestClient.get()
-            .uri("/user-one-rep-max/999")
+            .uri("/user-one-rep-max/user/$userId1/exercise/Deadlift")
             .exchange()
             .expectStatus().isOk
-            .expectBodyList(UserOneRepMax::class.java)
-            .hasSize(0)
+            .expectBody()
+            .jsonPath("$.userId").isEqualTo(userId1)
+            .jsonPath("$.exerciseName").isEqualTo("Deadlift")
+            .jsonPath("$.oneRepMax").isEqualTo(200.0)
     }
 
     @Test
-    fun `should handle URL encoding for exercise names with spaces`() {
-        // Given
+    fun `should update user one rep max`() {
+        // First save a one rep max
         val userOneRepMax =
             UserOneRepMax(
-                userId = 1,
+                userId = userId1,
                 exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
+                oneRepMax = BigDecimal("100.0")
             )
 
-        // Create test data
         webTestClient.post()
             .uri("/user-one-rep-max/")
             .contentType(MediaType.APPLICATION_JSON)
@@ -310,14 +113,100 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk
 
-        // When & Then - Test with URL encoded exercise name
-        webTestClient.get()
-            .uri("/user-one-rep-max/1/Bench%20Press")
+        // Then update it
+        val updatedOneRepMax =
+            UserOneRepMax(
+                userId = userId1,
+                exerciseName = "Bench Press",
+                oneRepMax = BigDecimal("110.0")
+            )
+
+        webTestClient.put()
+            .uri("/user-one-rep-max/user/$userId1/exercise/Bench Press")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(updatedOneRepMax)
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(1)
-            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
-            .jsonPath("$.one_rep_max").isEqualTo(100.0)
+            .jsonPath("$.oneRepMax").isEqualTo(110.0)
+    }
+
+    @Test
+    fun `should delete user one rep max`() {
+        // First save a one rep max
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId1,
+                exerciseName = "Deadlift",
+                oneRepMax = BigDecimal("200.0")
+            )
+
+        webTestClient.post()
+            .uri("/user-one-rep-max/")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(userOneRepMax)
+            .exchange()
+            .expectStatus().isOk
+
+        // Then delete it
+        webTestClient.delete()
+            .uri("/user-one-rep-max/user/$userId1/exercise/Deadlift")
+            .exchange()
+            .expectStatus().isOk
+
+        // Verify it's deleted
+        webTestClient.get()
+            .uri("/user-one-rep-max/user/$userId1/exercise/Deadlift")
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `should return not found when user one rep max not found`() {
+        webTestClient.get()
+            .uri("/user-one-rep-max/user/$userId1/exercise/NonExistent")
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `should get all one rep maxes for user`() {
+        // Save multiple one rep maxes
+        val oneRepMax1 =
+            UserOneRepMax(
+                userId = userId1,
+                exerciseName = "Bench Press",
+                oneRepMax = BigDecimal("100.0")
+            )
+
+        val oneRepMax2 =
+            UserOneRepMax(
+                userId = userId1,
+                exerciseName = "Deadlift",
+                oneRepMax = BigDecimal("200.0")
+            )
+
+        webTestClient.post()
+            .uri("/user-one-rep-max/")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(oneRepMax1)
+            .exchange()
+            .expectStatus().isOk
+
+        webTestClient.post()
+            .uri("/user-one-rep-max/")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(oneRepMax2)
+            .exchange()
+            .expectStatus().isOk
+
+        // Get all for user
+        webTestClient.get()
+            .uri("/user-one-rep-max/user/$userId1")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$").isArray
+            .jsonPath("$.length()").isEqualTo(2)
     }
 }

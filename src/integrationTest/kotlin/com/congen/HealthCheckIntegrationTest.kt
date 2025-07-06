@@ -30,7 +30,7 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk
             .expectBody()
-            .jsonPath("$.checks.database[0].observedValue").exists()
-            .jsonPath("$.checks.database[0].observedUnit").isEqualTo("ms")
+            .jsonPath("$.checks.database[0].observed_value").exists()
+            .jsonPath("$.checks.database[0].observed_unit").isEqualTo("ms")
     }
 }

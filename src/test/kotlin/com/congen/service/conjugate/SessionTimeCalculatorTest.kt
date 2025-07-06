@@ -1,37 +1,86 @@
 package com.congen.service.conjugate
 
 import com.congen.model.SetScheme
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest
 class SessionTimeCalculatorTest {
-
     @Autowired
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
 
     @Test
     fun `calculateNumAccessoryExercisesDynamic with primary exercise only`() {
         // Given: Primary exercise with 3 sets of 5 reps, 180s rest
-        val primarySetSchemes = listOf(
-            SetScheme(id = 1, programmedExerciseId = 1, setNumber = 1, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180),
-            SetScheme(id = 2, programmedExerciseId = 1, setNumber = 2, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180),
-            SetScheme(id = 3, programmedExerciseId = 1, setNumber = 3, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180)
-        )
-        
+        val primarySetSchemes =
+            listOf(
+                SetScheme(
+                    id = 1,
+                    programmedExerciseId = 1,
+                    setNumber = 1,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                ),
+                SetScheme(
+                    id = 2,
+                    programmedExerciseId = 1,
+                    setNumber = 2,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                ),
+                SetScheme(
+                    id = 3,
+                    programmedExerciseId = 1,
+                    setNumber = 3,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                )
+            )
+
         val sessionTimeMinutes = ConjugateConstants.DEFAULT_SESSION_TIME_MINUTES
         val dayType = "ME_Lower" // No secondary movement, no conditioning
-        
+
         // When: Calculate accessory count
-        val numAccessories = sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
-            sessionTimeMinutes = sessionTimeMinutes,
-            primarySetSchemes = primarySetSchemes,
-            secondarySetSchemes = emptyList(),
-            dayType = dayType
-        )
-        
+        val numAccessories =
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                sessionTimeMinutes = sessionTimeMinutes,
+                primarySetSchemes = primarySetSchemes,
+                secondarySetSchemes = emptyList(),
+                dayType = dayType
+            )
+
         // Then: Should have time for accessories
         // Primary time: 3 * (180 + 5*6) = 3 * 210 = 630 seconds = 10.5 minutes
         // Remaining: 60 - 10.5 = 49.5 minutes
@@ -42,31 +91,146 @@ class SessionTimeCalculatorTest {
     @Test
     fun `calculateNumAccessoryExercisesDynamic with primary and secondary exercises`() {
         // Given: Primary exercise with 3 sets of 5 reps, 180s rest
-        val primarySetSchemes = listOf(
-            SetScheme(id = 1, programmedExerciseId = 1, setNumber = 1, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180),
-            SetScheme(id = 2, programmedExerciseId = 1, setNumber = 2, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180),
-            SetScheme(id = 3, programmedExerciseId = 1, setNumber = 3, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180)
-        )
-        
+        val primarySetSchemes =
+            listOf(
+                SetScheme(
+                    id = 1,
+                    programmedExerciseId = 1,
+                    setNumber = 1,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                ),
+                SetScheme(
+                    id = 2,
+                    programmedExerciseId = 1,
+                    setNumber = 2,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                ),
+                SetScheme(
+                    id = 3,
+                    programmedExerciseId = 1,
+                    setNumber = 3,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                )
+            )
+
         // Secondary exercise with 4 sets of 6 reps, 240s rest
-        val secondarySetSchemes = listOf(
-            SetScheme(id = 4, programmedExerciseId = 2, setNumber = 1, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 6, performedRepCount = null, restSeconds = 240),
-            SetScheme(id = 5, programmedExerciseId = 2, setNumber = 2, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 6, performedRepCount = null, restSeconds = 240),
-            SetScheme(id = 6, programmedExerciseId = 2, setNumber = 3, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 6, performedRepCount = null, restSeconds = 240),
-            SetScheme(id = 7, programmedExerciseId = 2, setNumber = 4, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 6, performedRepCount = null, restSeconds = 240)
-        )
-        
+        val secondarySetSchemes =
+            listOf(
+                SetScheme(
+                    id = 4,
+                    programmedExerciseId = 2,
+                    setNumber = 1,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 6,
+                    performedRepCount = null,
+                    restSeconds = 240
+                ),
+                SetScheme(
+                    id = 5,
+                    programmedExerciseId = 2,
+                    setNumber = 2,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 6,
+                    performedRepCount = null,
+                    restSeconds = 240
+                ),
+                SetScheme(
+                    id = 6,
+                    programmedExerciseId = 2,
+                    setNumber = 3,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 6,
+                    performedRepCount = null,
+                    restSeconds = 240
+                ),
+                SetScheme(
+                    id = 7,
+                    programmedExerciseId = 2,
+                    setNumber = 4,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 6,
+                    performedRepCount = null,
+                    restSeconds = 240
+                )
+            )
+
         val sessionTimeMinutes = ConjugateConstants.DEFAULT_SESSION_TIME_MINUTES
         val dayType = "ME_Upper" // Has secondary movement, no conditioning
-        
+
         // When: Calculate accessory count
-        val numAccessories = sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
-            sessionTimeMinutes = sessionTimeMinutes,
-            primarySetSchemes = primarySetSchemes,
-            secondarySetSchemes = secondarySetSchemes,
-            dayType = dayType
-        )
-        
+        val numAccessories =
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                sessionTimeMinutes = sessionTimeMinutes,
+                primarySetSchemes = primarySetSchemes,
+                secondarySetSchemes = secondarySetSchemes,
+                dayType = dayType
+            )
+
         // Then: Should have fewer accessories due to secondary exercise
         // Primary time: 3 * (180 + 5*6) = 3 * 210 = 630 seconds = 10.5 minutes
         // Secondary time: 4 * (240 + 6*6) = 4 * 276 = 1104 seconds = 18.4 minutes
@@ -79,23 +243,73 @@ class SessionTimeCalculatorTest {
     @Test
     fun `calculateNumAccessoryExercisesDynamic with conditioning - prioritize accessories over conditioning`() {
         // Given: Primary exercise with 3 sets of 5 reps, 180s rest
-        val primarySetSchemes = listOf(
-            SetScheme(id = 1, programmedExerciseId = 1, setNumber = 1, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180),
-            SetScheme(id = 2, programmedExerciseId = 1, setNumber = 2, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180),
-            SetScheme(id = 3, programmedExerciseId = 1, setNumber = 3, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 180)
-        )
-        
+        val primarySetSchemes =
+            listOf(
+                SetScheme(
+                    id = 1,
+                    programmedExerciseId = 1,
+                    setNumber = 1,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                ),
+                SetScheme(
+                    id = 2,
+                    programmedExerciseId = 1,
+                    setNumber = 2,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                ),
+                SetScheme(
+                    id = 3,
+                    programmedExerciseId = 1,
+                    setNumber = 3,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180
+                )
+            )
+
         val sessionTimeMinutes = 15 // Very short session
         val dayType = "DE_Lower" // Has conditioning
-        
+
         // When: Calculate accessory count
-        val numAccessories = sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
-            sessionTimeMinutes = sessionTimeMinutes,
-            primarySetSchemes = primarySetSchemes,
-            secondarySetSchemes = emptyList(),
-            dayType = dayType
-        )
-        
+        val numAccessories =
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                sessionTimeMinutes = sessionTimeMinutes,
+                primarySetSchemes = primarySetSchemes,
+                secondarySetSchemes = emptyList(),
+                dayType = dayType
+            )
+
         // Then: Should prioritize accessories over conditioning
         // Primary time: 3 * (180 + 5*6) = 3 * 210 = 630 seconds = 10.5 minutes
         // Remaining after primary: 15 - 10.5 = 4.5 minutes
@@ -109,7 +323,7 @@ class SessionTimeCalculatorTest {
     fun `calculateExerciseTime with empty set schemes returns zero`() {
         // When: Calculate exercise time with empty schemes
         val exerciseTime = sessionTimeCalculator.calculateExerciseTime(emptyList())
-        
+
         // Then: Should return zero
         assertEquals(0, exerciseTime)
     }
@@ -117,14 +331,31 @@ class SessionTimeCalculatorTest {
     @Test
     fun `calculateExerciseTime with single set scheme`() {
         // Given: Single set with 5 reps and 120s rest
-        val setSchemes = listOf(
-            SetScheme(id = 1, programmedExerciseId = 1, setNumber = 1, wasSetPerformed = false, isAmrap = false, isEmom = false, useTempo = false, eccentricTempo = "0", isometricTempo = "0", concentricTempo = "0", targetWeight = null, performedWeight = null, targetRepCount = 5, performedRepCount = null, restSeconds = 120)
-        )
-        
+        val setSchemes =
+            listOf(
+                SetScheme(
+                    id = 1,
+                    programmedExerciseId = 1,
+                    setNumber = 1,
+                    wasSetPerformed = false,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = "0",
+                    isometricTempo = "0",
+                    concentricTempo = "0",
+                    targetWeight = null,
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 120
+                )
+            )
+
         // When: Calculate exercise time
         val exerciseTime = sessionTimeCalculator.calculateExerciseTime(setSchemes)
-        
+
         // Then: Should be rest + reps * 6 = 120 + 5*6 = 150 seconds
         assertEquals(150, exerciseTime)
     }
-} 
+}

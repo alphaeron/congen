@@ -3,14 +3,12 @@
 --changeset John Matty:3 labels:prod,test
 --comment: Add user, user_equipment, user_program_preferences, and user_exercise_preference tables for user-specific workout generation.
 
-CREATE SEQUENCE congen.user_id_seq;
-
 CREATE TABLE "user" (
-  id SERIAL DEFAULT nextval('congen.user_id_seq') PRIMARY KEY,
+  id SERIAL PRIMARY KEY NOT NULL,
   name VARCHAR(255) NOT NULL,
-  age INTEGER NOT NULL CHECK (age > 0 AND age <= 150),
-  height NUMERIC(5,2) NOT NULL CHECK (height > 0 AND height <= 300), -- in cm
-  weight NUMERIC(6,2) NOT NULL CHECK (weight > 0 AND weight <= 1000), -- in kg
+  age INTEGER NOT NULL CHECK (age >= 0 AND age <= 150),
+  height NUMERIC(5,2) NOT NULL, -- in cm
+  weight NUMERIC(6,2) NOT NULL, -- in kg
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

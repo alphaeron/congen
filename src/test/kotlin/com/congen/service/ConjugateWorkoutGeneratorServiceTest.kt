@@ -1,24 +1,17 @@
 package com.congen.service
 
 import com.congen.dal.ExerciseDAL
-import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.ProgramDAL
-import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
-import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
 import com.congen.model.UserEquipment
@@ -28,7 +21,6 @@ import com.congen.model.UserProgramPreferences
 import com.congen.model.WorkoutStage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -68,20 +60,21 @@ class ConjugateWorkoutGeneratorServiceTest {
         workoutStageGenerator = mock()
         sessionTimeCalculator = mock()
 
-        conjugateWorkoutGeneratorService = ConjugateWorkoutGeneratorService(
-            exerciseDAL = exerciseDAL,
-            userExercisePreferenceDAL = userExercisePreferenceDAL,
-            userEquipmentDAL = userEquipmentDAL,
-            userOneRepMaxDAL = userOneRepMaxDAL,
-            userProgramPreferencesDAL = userProgramPreferencesDAL,
-            exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
-            programDAL = programDAL,
-            programmedWorkoutDAL = programmedWorkoutDAL,
-            conjugateTemplates = conjugateTemplates,
-            exerciseSelectionService = exerciseSelectionService,
-            workoutStageGenerator = workoutStageGenerator,
-            sessionTimeCalculator = sessionTimeCalculator
-        )
+        conjugateWorkoutGeneratorService =
+            ConjugateWorkoutGeneratorService(
+                exerciseDAL = exerciseDAL,
+                userExercisePreferenceDAL = userExercisePreferenceDAL,
+                userEquipmentDAL = userEquipmentDAL,
+                userOneRepMaxDAL = userOneRepMaxDAL,
+                userProgramPreferencesDAL = userProgramPreferencesDAL,
+                exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
+                programDAL = programDAL,
+                programmedWorkoutDAL = programmedWorkoutDAL,
+                conjugateTemplates = conjugateTemplates,
+                exerciseSelectionService = exerciseSelectionService,
+                workoutStageGenerator = workoutStageGenerator,
+                sessionTimeCalculator = sessionTimeCalculator
+            )
     }
 
     @Test
@@ -97,12 +90,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -144,12 +138,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -181,20 +176,22 @@ class ConjugateWorkoutGeneratorServiceTest {
         val numDaysPerWeek = 3
 
         val exercises = createSampleExercises()
-        val preferences = listOf(
-            UserExercisePreference(userId = userId, exerciseName = "Squat", shouldAvoid = true)
-        )
+        val preferences =
+            listOf(
+                UserExercisePreference(userId = userId, exerciseName = "Squat", shouldAvoid = true)
+            )
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -230,21 +227,23 @@ class ConjugateWorkoutGeneratorServiceTest {
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = listOf(
-            ExerciseRotationHistory(
-                id = 1L,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                usedAt = LocalDateTime.now()
+        val rotationHistory =
+            listOf(
+                ExerciseRotationHistory(
+                    id = 1L,
+                    exerciseName = "Bench Press",
+                    isAccessory = false,
+                    usedAt = LocalDateTime.now()
+                )
             )
-        )
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -278,19 +277,21 @@ class ConjugateWorkoutGeneratorServiceTest {
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = UserProgramPreferences(
-            userId = 1,
-            programDaysPerWeek = 2,
-            sessionTimeLengthInMinutes = 60
-        )
+        val programPreferences =
+            UserProgramPreferences(
+                userId = 1,
+                programDaysPerWeek = 2,
+                sessionTimeLengthInMinutes = 60
+            )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -328,19 +329,21 @@ class ConjugateWorkoutGeneratorServiceTest {
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = UserProgramPreferences(
-            userId = 1,
-            programDaysPerWeek = 4,
-            sessionTimeLengthInMinutes = 60
-        )
+        val programPreferences =
+            UserProgramPreferences(
+                userId = 1,
+                programDaysPerWeek = 4,
+                sessionTimeLengthInMinutes = 60
+            )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -412,12 +415,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences() // program preferences are always required
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -458,12 +462,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -504,12 +509,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -548,35 +554,37 @@ class ConjugateWorkoutGeneratorServiceTest {
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
-        
-        // Create rotation history with multiple exercises used in primary category
-        val rotationHistory = listOf(
-            ExerciseRotationHistory(
-                id = 1L,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                usedAt = LocalDateTime.now().minusDays(7)
-            ),
-            ExerciseRotationHistory(
-                id = 2L,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                usedAt = LocalDateTime.now().minusDays(14)
-            ),
-            ExerciseRotationHistory(
-                id = 3L,
-                exerciseName = "Incline Bench Press",
-                isAccessory = false,
-                usedAt = LocalDateTime.now().minusDays(21)
-            )
-        )
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        // Create rotation history with multiple exercises used in primary category
+        val rotationHistory =
+            listOf(
+                ExerciseRotationHistory(
+                    id = 1L,
+                    exerciseName = "Bench Press",
+                    isAccessory = false,
+                    usedAt = LocalDateTime.now().minusDays(7)
+                ),
+                ExerciseRotationHistory(
+                    id = 2L,
+                    exerciseName = "Bench Press",
+                    isAccessory = false,
+                    usedAt = LocalDateTime.now().minusDays(14)
+                ),
+                ExerciseRotationHistory(
+                    id = 3L,
+                    exerciseName = "Incline Bench Press",
+                    isAccessory = false,
+                    usedAt = LocalDateTime.now().minusDays(21)
+                )
+            )
+
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -617,12 +625,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week 1",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week 1",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -663,12 +672,13 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val createdProgram = Program(
-            id = 1L,
-            userId = userId,
-            name = "Conjugate Powerlifting - Week $currentWeekNumber",
-            description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
-        )
+        val createdProgram =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Conjugate Powerlifting - Week $currentWeekNumber",
+                description = "Conjugate powerlifting program with ${programPreferences.programDaysPerWeek} days per week"
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -706,11 +716,12 @@ class ConjugateWorkoutGeneratorServiceTest {
         val preferences = emptyList<UserExercisePreference>()
         val userEquipment = createSampleUserEquipment()
         val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = UserProgramPreferences(
-            userId = 1,
-            programDaysPerWeek = 5, // Invalid
-            sessionTimeLengthInMinutes = 60
-        )
+        val programPreferences =
+            UserProgramPreferences(
+                userId = 1,
+                programDaysPerWeek = 5, // Invalid
+                sessionTimeLengthInMinutes = 60
+            )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         // Mock DAL responses
@@ -723,7 +734,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         // When & Then
         val result = conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
-        
+
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
             .verify()
@@ -843,4 +854,4 @@ class ConjugateWorkoutGeneratorServiceTest {
             restSeconds = 180
         )
     }
-} 
+}

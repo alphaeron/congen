@@ -13,14 +13,13 @@ import org.springframework.stereotype.Service
  */
 @Service
 class ExerciseSelectionService {
-
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseSelectionService::class.java)
     }
 
     /**
      * Determines weak muscles based on user's 1RM data and exercise history.
-     * 
+     *
      * @param oneRepMaxes List of user's one rep max values
      * @param rotationHistory List of exercise rotation history
      * @return List of weak muscle groups to target
@@ -37,7 +36,7 @@ class ExerciseSelectionService {
 
     /**
      * Selects a rotating exercise based on various criteria.
-     * 
+     *
      * @param userId The user ID
      * @param targetMuscles List of target muscles to focus on
      * @param userEquipment List of user's available equipment
@@ -57,9 +56,10 @@ class ExerciseSelectionService {
         rotationHistory: List<ExerciseRotationHistory>
     ): Exercise? {
         // Filter exercises based on preferences (exercises are already filtered by is_accessory)
-        val availableExercises = exercises.filter { exercise ->
-            !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
-        }
+        val availableExercises =
+            exercises.filter { exercise ->
+                !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
+            }
 
         if (availableExercises.isEmpty()) {
             logger.warn("No available exercises found for isAccessory: {}", isAccessory)
@@ -67,13 +67,14 @@ class ExerciseSelectionService {
         }
 
         // Filter by equipment availability
-        val equipmentFilteredExercises = availableExercises.filter { exercise ->
-            // Check if user has any equipment for this exercise
-            userEquipment.any { userEq ->
-                // This would need to be implemented with actual equipment checking
-                true // For now, assume all equipment is available
+        val equipmentFilteredExercises =
+            availableExercises.filter { exercise ->
+                // Check if user has any equipment for this exercise
+                userEquipment.any { userEq ->
+                    // This would need to be implemented with actual equipment checking
+                    true // For now, assume all equipment is available
+                }
             }
-        }
 
         if (equipmentFilteredExercises.isEmpty()) {
             logger.warn("No exercises available with user's equipment for isAccessory: {}", isAccessory)
@@ -82,65 +83,75 @@ class ExerciseSelectionService {
 
         // Get exercise rotation history for this category
         val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
-        
+
         // Get all exercises that have been used in this category
         val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
-        
+
         // Get exercises that haven't been used yet in this category
-        val unusedExercises = equipmentFilteredExercises.filter { exercise ->
-            !usedExercises.contains(exercise.name)
-        }
+        val unusedExercises =
+            equipmentFilteredExercises.filter { exercise ->
+                !usedExercises.contains(exercise.name)
+            }
 
         // If we have unused exercises, use them first
-        val exercisesToChooseFrom = if (unusedExercises.isNotEmpty()) {
-            unusedExercises
-        } else {
-            // If all exercises have been used, find the least recently used one
-            val exerciseUsageCount = equipmentFilteredExercises.associateWith { exercise ->
-                categoryHistory.count { it.exerciseName == exercise.name }
+        val exercisesToChooseFrom =
+            if (unusedExercises.isNotEmpty()) {
+                unusedExercises
+            } else {
+                // If all exercises have been used, find the least recently used one
+                val exerciseUsageCount =
+                    equipmentFilteredExercises.associateWith { exercise ->
+                        categoryHistory.count { it.exerciseName == exercise.name }
+                    }
+
+                val minUsageCount = exerciseUsageCount.values.minOrNull() ?: 0
+                equipmentFilteredExercises.filter { exercise ->
+                    exerciseUsageCount[exercise] == minUsageCount
+                }
             }
-            
-            val minUsageCount = exerciseUsageCount.values.minOrNull() ?: 0
-            equipmentFilteredExercises.filter { exercise ->
-                exerciseUsageCount[exercise] == minUsageCount
-            }
-        }
 
         // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
-        val sortedExercises = exercisesToChooseFrom.sortedWith(
-            compareByDescending<Exercise> { exercise ->
-                // Count equipment options (would need actual implementation)
-                1
-            }.thenByDescending { exercise ->
-                // Count targeted muscles (would need actual implementation)
-                targetMuscles.size
-            }.thenBy { exercise ->
-                exercise.name
-            }
-        )
+        val sortedExercises =
+            exercisesToChooseFrom.sortedWith(
+                compareByDescending<Exercise> { exercise ->
+                    // Count equipment options (would need actual implementation)
+                    1
+                }.thenByDescending { exercise ->
+                    // Count targeted muscles (would need actual implementation)
+                    targetMuscles.size
+                }.thenBy { exercise ->
+                    exercise.name
+                }
+            )
 
         return sortedExercises.firstOrNull()
     }
 
     /**
      * Filters exercises by accessory status.
-     * 
+     *
      * @param exercises List of all exercises
      * @param isAccessory Whether to filter for accessory exercises
      * @return Filtered list of exercises
      */
-    fun filterExercisesByAccessoryStatus(exercises: List<Exercise>, isAccessory: Boolean): List<Exercise> {
+    fun filterExercisesByAccessoryStatus(
+        exercises: List<Exercise>,
+        isAccessory: Boolean
+    ): List<Exercise> {
         return exercises.filter { it.isAccessory == isAccessory }
     }
 
     /**
      * Filters exercises to exclude a specific exercise name.
-     * 
+     *
      * @param exercises List of exercises
      * @param excludeExerciseName Name of exercise to exclude
      * @return Filtered list of exercises
      */
-    fun filterExercisesExcluding(exercises: List<Exercise>, excludeExerciseName: String): List<Exercise> {
+    fun filterExercisesExcluding(
+        exercises: List<Exercise>,
+        excludeExerciseName: String
+    ): List<Exercise> {
         return exercises.filter { it.name != excludeExerciseName }
     }
-} 
+}

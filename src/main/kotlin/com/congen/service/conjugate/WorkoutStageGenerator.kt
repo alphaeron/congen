@@ -16,7 +16,7 @@ import kotlin.random.Random
 
 /**
  * Service for generating individual workout stages and their components.
- * 
+ *
  * Handles the creation of workout stages, programmed exercises, and set schemes
  * with appropriate parameters based on exercise type and user data.
  */
@@ -27,63 +27,76 @@ class WorkoutStageGenerator(
     private val setSchemeDAL: SetSchemeDAL,
     private val prilepinGuidelinesService: PrilepinGuidelinesService
 ) {
-
     /**
      * Creates a workout stage.
-     * 
+     *
      * @param workoutId The ID of the workout
      * @param stageType The type of stage (primary, secondary, accessory, conditioning)
      * @param position The position of the stage in the workout
      * @return Mono containing the created workout stage
      */
-    fun createWorkoutStage(workoutId: Long, stageType: String, position: Int): Mono<WorkoutStage> {
-        val stageTypeId = when (stageType) {
-            "primary" -> 1
-            "secondary" -> 2
-            "accessory" -> 3
-            "conditioning" -> 4
-            else -> 1
-        }
+    fun createWorkoutStage(
+        workoutId: Long,
+        stageType: String,
+        position: Int
+    ): Mono<WorkoutStage> {
+        val stageTypeId =
+            when (stageType) {
+                "primary" -> 1
+                "secondary" -> 2
+                "accessory" -> 3
+                "conditioning" -> 4
+                else -> 1
+            }
 
-        val stage = WorkoutStage(
-            id = 0,
-            programmedWorkoutId = workoutId,
-            stageTypeId = stageTypeId,
-            position = position
-        )
+        val stage =
+            WorkoutStage(
+                id = 0,
+                programmedWorkoutId = workoutId,
+                stageTypeId = stageTypeId,
+                position = position
+            )
 
         return workoutStageDAL.insertWorkoutStage(stage)
     }
 
     /**
      * Creates a programmed exercise.
-     * 
+     *
      * @param workoutStageId The ID of the workout stage
      * @param exerciseName The name of the exercise
      * @return Mono containing the created programmed exercise
      */
-    fun createProgrammedExercise(workoutStageId: Long, exerciseName: String): Mono<ProgrammedExercise> {
-        val programmedExercise = ProgrammedExercise(
-            id = 0,
-            workoutStageId = workoutStageId,
-            exerciseName = exerciseName,
-            notes = null
-        )
+    fun createProgrammedExercise(
+        workoutStageId: Long,
+        exerciseName: String
+    ): Mono<ProgrammedExercise> {
+        val programmedExercise =
+            ProgrammedExercise(
+                id = 0,
+                workoutStageId = workoutStageId,
+                exerciseName = exerciseName,
+                notes = null
+            )
 
         return programmedExerciseDAL.insertProgrammedExercise(programmedExercise)
     }
 
     /**
      * Creates set schemes for a programmed exercise.
-     * 
+     *
      * @param programmedExerciseId The ID of the programmed exercise
      * @param setSchemes List of set schemes to create
      * @return Mono that completes when all set schemes are created
      */
-    fun createSetSchemes(programmedExerciseId: Long, setSchemes: List<SetScheme>): Mono<Void> {
-        val setSchemesWithId = setSchemes.map { setScheme ->
-            setScheme.copy(programmedExerciseId = programmedExerciseId)
-        }
+    fun createSetSchemes(
+        programmedExerciseId: Long,
+        setSchemes: List<SetScheme>
+    ): Mono<Void> {
+        val setSchemesWithId =
+            setSchemes.map { setScheme ->
+                setScheme.copy(programmedExerciseId = programmedExerciseId)
+            }
 
         return setSchemesWithId.fold(Mono.empty<Void>()) { mono, setScheme ->
             mono.flatMap { setSchemeDAL.insertSetScheme(setScheme).then() }
@@ -92,7 +105,7 @@ class WorkoutStageGenerator(
 
     /**
      * Generates a Prilepin-based set scheme for an exercise with undulating periodization.
-     * 
+     *
      * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param movementRole The role of the movement (primary, secondary, accessory)
@@ -109,12 +122,13 @@ class WorkoutStageGenerator(
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int
     ): List<SetScheme> {
-        val (guidelines, intensity) = prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-            dayType = dayType,
-            movementRole = movementRole,
-            currentWeekNumber = currentWeekNumber,
-            exercise = exercise.name
-        )
+        val (guidelines, intensity) =
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                movementRole = movementRole,
+                currentWeekNumber = currentWeekNumber,
+                exercise = exercise.name
+            )
 
         val repsPerSet = guidelines.repsPerSetRange.random()
         val numSets = (guidelines.totalReps / repsPerSet).toInt()
@@ -127,7 +141,16 @@ class WorkoutStageGenerator(
         val useTempo = movementRole != "primary" && Random.nextBoolean()
         val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
         val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
-        val concentric = if (useTempo) if (Random.nextBoolean()) "1" else "X" else "0"
+        val concentric =
+            if (useTempo) {
+                if (Random.nextBoolean()) {
+                    "1"
+                } else {
+                    "X"
+                }
+            } else {
+                "0"
+            }
 
         return (1..numSets).map { setNumber ->
             SetScheme(
@@ -152,13 +175,13 @@ class WorkoutStageGenerator(
 
     /**
      * Generates a set scheme for secondary exercises with specific guidelines.
-     * 
+     *
      * Secondary exercises use:
      * - 80-90% intensity (0.8-0.9)
      * - 3-4 sets
      * - 5-8 reps per set
      * - 180-300 second rest periods
-     * 
+     *
      * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
@@ -182,7 +205,16 @@ class WorkoutStageGenerator(
         val useTempo = Random.nextBoolean()
         val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
         val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
-        val concentric = if (useTempo) if (Random.nextBoolean()) "1" else "X" else "0"
+        val concentric =
+            if (useTempo) {
+                if (Random.nextBoolean()) {
+                    "1"
+                } else {
+                    "X"
+                }
+            } else {
+                "0"
+            }
 
         return (1..numSets).map { setNumber ->
             SetScheme(
@@ -207,7 +239,7 @@ class WorkoutStageGenerator(
 
     /**
      * Generates an AMRAP or EMOM set scheme for conditioning exercises.
-     * 
+     *
      * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
@@ -220,11 +252,20 @@ class WorkoutStageGenerator(
     ): List<SetScheme> {
         val isAmrap = Random.nextBoolean()
         val targetWeight = getTargetWeight(userId, exercise.name, 0.5, oneRepMaxes)
-        
+
         val useTempo = Random.nextBoolean()
         val eccentric = if (useTempo) Random.nextInt(2, 4).toString() else "0"
         val isometric = if (useTempo) Random.nextInt(1, 3).toString() else "0"
-        val concentric = if (useTempo) if (Random.nextBoolean()) "1" else "X" else "0"
+        val concentric =
+            if (useTempo) {
+                if (Random.nextBoolean()) {
+                    "1"
+                } else {
+                    "X"
+                }
+            } else {
+                "0"
+            }
 
         return listOf(
             SetScheme(
@@ -249,7 +290,7 @@ class WorkoutStageGenerator(
 
     /**
      * Gets the target weight for an exercise based on user's 1RM.
-     * 
+     *
      * @param userId The user ID
      * @param exerciseName The name of the exercise
      * @param intensity The intensity as a percentage of 1RM
@@ -270,4 +311,4 @@ class WorkoutStageGenerator(
             BigDecimal(ConjugateConstants.DEFAULT_WEIGHT)
         }
     }
-} 
+}
