@@ -116,7 +116,11 @@ class ExerciseWorkoutTypeDAL(
      * @return Mono containing the created exercise-workout type relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertExerciseWorkoutType(exerciseName: String, movementType: String, workoutType: String): Mono<ExerciseWorkoutType> {
+    fun insertExerciseWorkoutType(
+        exerciseName: String,
+        movementType: String,
+        workoutType: String
+    ): Mono<ExerciseWorkoutType> {
         logger.debug(
             "Inserting exercise workout type: {} - {} - {}",
             exerciseName,

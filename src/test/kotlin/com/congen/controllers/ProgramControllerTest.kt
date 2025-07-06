@@ -167,7 +167,9 @@ class ProgramControllerTest {
             )
         val updatedProgram = program.copy(id = programId)
 
-        whenever(programDAL.updateProgram(programId, program.name, program.description)).thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
+        whenever(
+            programDAL.updateProgram(programId, program.name, program.description)
+        ).thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
 
         // When
         val result = programController.update(programId, program.name, program.description)

@@ -1,7 +1,5 @@
 package com.congen.service.conjugate
 
-import com.congen.model.SetScheme
-import com.congen.service.conjugate.SetSchemeParams
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

@@ -89,7 +89,10 @@ class MuscleDAL(
      * @return Mono containing the created muscle
      * @throws DatabaseException when the muscle name already exists or database operation fails
      */
-    fun insertMuscle(name: String, description: String): Mono<Muscle> {
+    fun insertMuscle(
+        name: String,
+        description: String
+    ): Mono<Muscle> {
         logger.debug("Inserting muscle: {}", name)
         return postgresClient.update(
             """
@@ -114,7 +117,10 @@ class MuscleDAL(
      * @return Mono containing the updated muscle
      * @throws NoResultsFoundException when muscle with the specified name doesn't exist
      */
-    fun updateMuscle(name: String, description: String): Mono<Muscle> {
+    fun updateMuscle(
+        name: String,
+        description: String
+    ): Mono<Muscle> {
         logger.debug("Updating muscle: {}", name)
         return postgresClient.update(
             """

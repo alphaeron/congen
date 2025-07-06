@@ -125,7 +125,15 @@ class ExerciseDALTest {
         ).thenReturn(Mono.just(exercise))
 
         // When
-        val result = exerciseDAL.insertExercise(exercise.name, exercise.description, exercise.movementType, exercise.isUnilateral, exercise.isUpper, exercise.isAccessory)
+        val result =
+            exerciseDAL.insertExercise(
+                exercise.name,
+                exercise.description,
+                exercise.movementType,
+                exercise.isUnilateral,
+                exercise.isUpper,
+                exercise.isAccessory
+            )
 
         // Then
         StepVerifier.create(result)
@@ -176,7 +184,15 @@ class ExerciseDALTest {
         ).thenReturn(Mono.just(exercise))
 
         // When
-        val result = exerciseDAL.updateExercise(exercise.name, exercise.description, exercise.movementType, exercise.isUnilateral, exercise.isUpper, exercise.isAccessory)
+        val result =
+            exerciseDAL.updateExercise(
+                exercise.name,
+                exercise.description,
+                exercise.movementType,
+                exercise.isUnilateral,
+                exercise.isUpper,
+                exercise.isAccessory
+            )
 
         // Then
         StepVerifier.create(result)

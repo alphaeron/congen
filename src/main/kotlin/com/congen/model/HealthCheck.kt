@@ -70,7 +70,7 @@ enum class HealthStatus(
 
     /**
      * Returns the string value of this health status.
-     * 
+     *
      * @return The string representation of this health status.
      */
     @com.fasterxml.jackson.annotation.JsonValue

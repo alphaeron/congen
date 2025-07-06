@@ -129,7 +129,10 @@ class ExerciseEquipmentDAL(
      * @return Mono containing the created exercise-equipment relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertExerciseEquipment(exerciseName: String, equipmentName: String): Mono<ExerciseEquipment> {
+    fun insertExerciseEquipment(
+        exerciseName: String,
+        equipmentName: String
+    ): Mono<ExerciseEquipment> {
         logger.debug("Inserting exercise equipment: {} - {}", exerciseName, equipmentName)
         return postgresClient.update(
             """

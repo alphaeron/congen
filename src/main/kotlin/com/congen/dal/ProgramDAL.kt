@@ -92,7 +92,11 @@ class ProgramDAL(
      * @param description The description of the program
      * @return Mono containing the inserted program with generated ID
      */
-    fun insertProgram(userId: Int, name: String, description: String?): Mono<Program> {
+    fun insertProgram(
+        userId: Int,
+        name: String,
+        description: String?
+    ): Mono<Program> {
         logger.debug("Inserting program: {} for user {}", name, userId)
         return postgresClient.update(
             """
@@ -120,7 +124,11 @@ class ProgramDAL(
      * @return Mono containing the updated program
      * @throws NoResultsFoundException if no program exists with the given ID
      */
-    fun updateProgram(id: Long, name: String, description: String?): Mono<Program> {
+    fun updateProgram(
+        id: Long,
+        name: String,
+        description: String?
+    ): Mono<Program> {
         logger.debug("Updating program: {}", id)
         return postgresClient.update(
             """

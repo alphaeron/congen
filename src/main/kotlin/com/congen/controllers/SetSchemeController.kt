@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -101,15 +100,26 @@ class SetSchemeController(
         @RequestParam restSeconds: Int?,
     ): Mono<ResponseEntity<SetScheme>> {
         logger.info("Saving set scheme for exercise: {}, set: {}", programmedExerciseId, setNumber)
-        
+
         // Convert String weights to BigDecimal
         val targetWeightBD = targetWeight?.toBigDecimalOrNull()
         val performedWeightBD = performedWeight?.toBigDecimalOrNull()
-        
+
         return setSchemeService.insertSetScheme(
-            programmedExerciseId, setNumber, wasSetPerformed, isAmrap, isEmom, useTempo,
-            eccentricTempo, isometricTempo, concentricTempo, targetWeightBD, performedWeightBD,
-            targetRepCount, performedRepCount, restSeconds
+            programmedExerciseId,
+            setNumber,
+            wasSetPerformed,
+            isAmrap,
+            isEmom,
+            useTempo,
+            eccentricTempo,
+            isometricTempo,
+            concentricTempo,
+            targetWeightBD,
+            performedWeightBD,
+            targetRepCount,
+            performedRepCount,
+            restSeconds
         )
             .map { savedScheme ->
                 logger.debug("Saved set scheme with id: {}", savedScheme.id)
@@ -231,17 +241,29 @@ class SetSchemeController(
         @RequestParam restSeconds: Int?,
     ): ResponseEntity<*> {
         logger.info("Updating set scheme: {}", id)
-        
+
         // Convert String weights to BigDecimal
         val targetWeightBD = targetWeight?.toBigDecimalOrNull()
         val performedWeightBD = performedWeight?.toBigDecimalOrNull()
-        
+
         return try {
             ResponseEntity.ok(
                 setSchemeService.updateSetScheme(
-                    id, programmedExerciseId, setNumber, wasSetPerformed, isAmrap, isEmom, useTempo,
-                    eccentricTempo, isometricTempo, concentricTempo, targetWeightBD, performedWeightBD,
-                    targetRepCount, performedRepCount, restSeconds
+                    id,
+                    programmedExerciseId,
+                    setNumber,
+                    wasSetPerformed,
+                    isAmrap,
+                    isEmom,
+                    useTempo,
+                    eccentricTempo,
+                    isometricTempo,
+                    concentricTempo,
+                    targetWeightBD,
+                    performedWeightBD,
+                    targetRepCount,
+                    performedRepCount,
+                    restSeconds
                 ),
             )
         } catch (e: Exception) {

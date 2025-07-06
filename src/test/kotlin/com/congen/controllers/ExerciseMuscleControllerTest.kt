@@ -75,7 +75,9 @@ class ExerciseMuscleControllerTest {
                 exerciseName = "Bench Press",
                 muscleName = "Chest",
             )
-        whenever(exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)).thenReturn(Mono.just(exerciseMuscle))
+        whenever(
+            exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
+        ).thenReturn(Mono.just(exerciseMuscle))
 
         // When
         val result = exerciseMuscleController.save(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)

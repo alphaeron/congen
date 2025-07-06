@@ -29,7 +29,9 @@ class ExerciseEquipmentControllerTest {
                 exerciseName = "Bench Press",
                 equipmentName = "Barbell",
             )
-        whenever(exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)).thenReturn(Mono.just(exerciseEquipment))
+        whenever(
+            exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+        ).thenReturn(Mono.just(exerciseEquipment))
 
         // When
         val result = exerciseEquipmentController.save(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)

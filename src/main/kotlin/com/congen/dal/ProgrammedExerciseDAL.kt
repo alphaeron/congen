@@ -109,7 +109,11 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the created programmed exercise with generated ID
      * @throws DatabaseException when database operation fails
      */
-    fun insertProgrammedExercise(workoutStageId: Long, exerciseName: String, notes: String?): Mono<ProgrammedExercise> {
+    fun insertProgrammedExercise(
+        workoutStageId: Long,
+        exerciseName: String,
+        notes: String?
+    ): Mono<ProgrammedExercise> {
         logger.debug("Inserting programmed exercise: {} for stage: {}", exerciseName, workoutStageId)
         return postgresClient.update(
             """
@@ -137,7 +141,12 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the updated programmed exercise
      * @throws NoResultsFoundException when programmed exercise with the specified ID doesn't exist
      */
-    fun updateProgrammedExercise(id: Long, workoutStageId: Long, exerciseName: String, notes: String?): Mono<ProgrammedExercise> {
+    fun updateProgrammedExercise(
+        id: Long,
+        workoutStageId: Long,
+        exerciseName: String,
+        notes: String?
+    ): Mono<ProgrammedExercise> {
         logger.debug("Updating programmed exercise: {}", id)
         return postgresClient.update(
             """

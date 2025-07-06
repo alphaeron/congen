@@ -89,7 +89,10 @@ class EquipmentDAL(
      * @return Mono containing the created equipment
      * @throws DatabaseException when the equipment name already exists or database operation fails
      */
-    fun insertEquipment(name: String, description: String): Mono<Equipment> {
+    fun insertEquipment(
+        name: String,
+        description: String
+    ): Mono<Equipment> {
         logger.debug("Inserting equipment: {}", name)
         return postgresClient.update(
             """

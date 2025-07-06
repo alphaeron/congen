@@ -89,7 +89,12 @@ class UserDAL(
      * @return Mono containing the inserted user with generated ID
      * @throws ValidationException if user data fails validation
      */
-    fun insertUser(name: String, age: Int, height: BigDecimal, weight: BigDecimal): Mono<User> {
+    fun insertUser(
+        name: String,
+        age: Int,
+        height: BigDecimal,
+        weight: BigDecimal
+    ): Mono<User> {
         logger.debug("Inserting user: {}", name)
 
         // Validate all CHECK constraints
@@ -127,7 +132,13 @@ class UserDAL(
      * @throws ValidationException if user data fails validation
      * @throws NoResultsFoundException if no user exists with the given ID
      */
-    fun updateUser(id: Int, name: String, age: Int, height: BigDecimal, weight: BigDecimal): Mono<User> {
+    fun updateUser(
+        id: Int,
+        name: String,
+        age: Int,
+        height: BigDecimal,
+        weight: BigDecimal
+    ): Mono<User> {
         logger.debug("Updating user: {}", id)
 
         // Validate all CHECK constraints

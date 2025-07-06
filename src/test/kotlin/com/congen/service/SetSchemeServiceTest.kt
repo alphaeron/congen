@@ -80,21 +80,41 @@ class SetSchemeServiceTest {
                 oneRepMax = BigDecimal("100.0"),
             )
 
-        whenever(setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
+        ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(1L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Bench Press")).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxDAL.updateUserOneRepMax(any(), any(), any())).thenReturn(Mono.just(currentOneRepMax))
 
         // When
-        val result = setSchemeService.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
+        val result =
+            setSchemeService.insertSetScheme(
+                1L,
+                1,
+                true,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                BigDecimal("110.0"),
+                null,
+                null,
+                null
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(setScheme)
             .verifyComplete()
 
-        verify(setSchemeDAL).insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
+        verify(
+            setSchemeDAL
+        ).insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
         verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(1L)
         verify(programmedExerciseDAL).selectProgrammedExerciseById(1L)
         verify(userOneRepMaxDAL).selectUserOneRepMax(1, "Bench Press")
@@ -130,21 +150,43 @@ class SetSchemeServiceTest {
                 notes = null,
             )
 
-        whenever(setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("100.0"), null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("100.0"), null, null, null)
+        ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(1L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Squat")).thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(1, "Squat", BigDecimal("100.0"))).thenReturn(Mono.just(UserOneRepMax(1, "Squat", BigDecimal("100.0"))))
+        whenever(
+            userOneRepMaxDAL.insertUserOneRepMax(1, "Squat", BigDecimal("100.0"))
+        ).thenReturn(Mono.just(UserOneRepMax(1, "Squat", BigDecimal("100.0"))))
 
         // When
-        val result = setSchemeService.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("100.0"), null, null, null)
+        val result =
+            setSchemeService.insertSetScheme(
+                1L,
+                1,
+                true,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                BigDecimal("100.0"),
+                null,
+                null,
+                null
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(setScheme)
             .verifyComplete()
 
-        verify(setSchemeDAL).insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("100.0"), null, null, null)
+        verify(
+            setSchemeDAL
+        ).insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("100.0"), null, null, null)
         verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(1L)
         verify(programmedExerciseDAL).selectProgrammedExerciseById(1L)
         verify(userOneRepMaxDAL).selectUserOneRepMax(1, "Squat")
@@ -186,13 +228,31 @@ class SetSchemeServiceTest {
                 oneRepMax = BigDecimal("100.0"),
             )
 
-        whenever(setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("90.0"), null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("90.0"), null, null, null)
+        ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(1L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Bench Press")).thenReturn(Mono.just(currentOneRepMax))
 
         // When
-        val result = setSchemeService.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("90.0"), null, null, null)
+        val result =
+            setSchemeService.insertSetScheme(
+                1L,
+                1,
+                true,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                BigDecimal("90.0"),
+                null,
+                null,
+                null
+            )
 
         // Then
         StepVerifier.create(result)
@@ -230,17 +290,37 @@ class SetSchemeServiceTest {
                 restSeconds = null,
             )
 
-        whenever(setSchemeDAL.insertSetScheme(1L, 1, false, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.insertSetScheme(1L, 1, false, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
+        ).thenReturn(Mono.just(setScheme))
 
         // When
-        val result = setSchemeService.insertSetScheme(1L, 1, false, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
+        val result =
+            setSchemeService.insertSetScheme(
+                1L,
+                1,
+                false,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                BigDecimal("110.0"),
+                null,
+                null,
+                null
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(setScheme)
             .verifyComplete()
 
-        verify(setSchemeDAL).insertSetScheme(1L, 1, false, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
+        verify(
+            setSchemeDAL
+        ).insertSetScheme(1L, 1, false, false, false, false, null, null, null, null, BigDecimal("110.0"), null, null, null)
 
         verify(programmedExerciseDAL, never()).getUserIdFromProgrammedExercise(any())
         verify(programmedExerciseDAL, never()).selectProgrammedExerciseById(any())
@@ -271,7 +351,9 @@ class SetSchemeServiceTest {
                 restSeconds = null,
             )
 
-        whenever(setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, null, null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, null, null, null, null)
+        ).thenReturn(Mono.just(setScheme))
 
         // When
         val result = setSchemeService.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, null, null, null, null)
@@ -325,21 +407,42 @@ class SetSchemeServiceTest {
                 oneRepMax = BigDecimal("110.0"),
             )
 
-        whenever(setSchemeDAL.updateSetScheme(1L, 1, 1, true, false, false, false, null, null, null, null, BigDecimal("120.0"), null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.updateSetScheme(1L, 1, 1, true, false, false, false, null, null, null, null, BigDecimal("120.0"), null, null, null)
+        ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(1L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Deadlift")).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxDAL.updateUserOneRepMax(1, "Deadlift", BigDecimal("120.0"))).thenReturn(Mono.just(currentOneRepMax))
 
         // When
-        val result = setSchemeService.updateSetScheme(1L, 1, 1, true, false, false, false, null, null, null, null, BigDecimal("120.0"), null, null, null)
+        val result =
+            setSchemeService.updateSetScheme(
+                1L,
+                1,
+                1,
+                true,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                BigDecimal("120.0"),
+                null,
+                null,
+                null
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(setScheme)
             .verifyComplete()
 
-        verify(setSchemeDAL).updateSetScheme(1L, 1, 1, true, false, false, false, null, null, null, null, BigDecimal("120.0"), null, null, null)
+        verify(
+            setSchemeDAL
+        ).updateSetScheme(1L, 1, 1, true, false, false, false, null, null, null, null, BigDecimal("120.0"), null, null, null)
         verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(1L)
         verify(programmedExerciseDAL).selectProgrammedExerciseById(1L)
         verify(userOneRepMaxDAL).selectUserOneRepMax(1, "Deadlift")
@@ -437,14 +540,32 @@ class SetSchemeServiceTest {
                 oneRepMax = BigDecimal("225.0"),
             )
 
-        whenever(setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("225.5"), null, null, null)).thenReturn(Mono.just(setScheme))
+        whenever(
+            setSchemeDAL.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("225.5"), null, null, null)
+        ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(1L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Deadlift")).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxDAL.updateUserOneRepMax(1, "Deadlift", BigDecimal("225.5"))).thenReturn(Mono.just(currentOneRepMax))
 
         // When
-        val result = setSchemeService.insertSetScheme(1L, 1, true, false, false, false, null, null, null, null, BigDecimal("225.5"), null, null, null)
+        val result =
+            setSchemeService.insertSetScheme(
+                1L,
+                1,
+                true,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                null,
+                BigDecimal("225.5"),
+                null,
+                null,
+                null
+            )
 
         // Then
         StepVerifier.create(result)

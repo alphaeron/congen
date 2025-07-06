@@ -110,7 +110,11 @@ class ProgrammedWorkoutDAL(
      * @return Mono containing the created programmed workout with generated ID
      * @throws DatabaseException when database operation fails
      */
-    fun insertProgrammedWorkout(programId: Long, dayNumber: Int, name: String): Mono<ProgrammedWorkout> {
+    fun insertProgrammedWorkout(
+        programId: Long,
+        dayNumber: Int,
+        name: String
+    ): Mono<ProgrammedWorkout> {
         logger.debug("Inserting programmed workout: {}", name)
 
         // Validate all CHECK constraints
@@ -143,7 +147,12 @@ class ProgrammedWorkoutDAL(
      * @return Mono containing the updated programmed workout
      * @throws NoResultsFoundException when programmed workout with the specified ID doesn't exist
      */
-    fun updateProgrammedWorkout(id: Long, programId: Long, dayNumber: Int, name: String): Mono<ProgrammedWorkout> {
+    fun updateProgrammedWorkout(
+        id: Long,
+        programId: Long,
+        dayNumber: Int,
+        name: String
+    ): Mono<ProgrammedWorkout> {
         logger.debug("Updating programmed workout: {}", id)
 
         // Validate all CHECK constraints

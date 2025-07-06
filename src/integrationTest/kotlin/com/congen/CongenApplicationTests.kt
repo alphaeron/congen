@@ -11,20 +11,13 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.MuscleDAL
-import com.congen.model.Equipment
-import com.congen.model.Exercise
-import com.congen.model.ExerciseEquipment
-import com.congen.model.ExerciseMuscle
-import com.congen.model.Muscle
 import com.congen.service.HealthCheckService
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import reactor.core.publisher.Mono
 
 @WebFluxTest(
     controllers = [

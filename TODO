@@ -1,12 +1,9 @@
-types consistent with those specified in the schema
-
 end program, num days per week unmutable
 
 just put endpoint for user 1rm
 
-update conjugateworkoutgenerator endpoint to be a postmapping
-
 double-check schema up to date with models
+types consistent with those specified in the schema
 
 only update current_week_number in program, don't create a whole new program each time we make a new week of workouts.
 Can you get currentWeekNumber from the database too, instead of taking it as a parameter?  For example, by looking at the number of workouts a user has had in the past in their current program.

@@ -26,18 +26,31 @@ data class PrilepinGuidelines(
  * Data class to hold set scheme parameters without requiring temporary IDs.
  */
 data class SetSchemeParams(
+    /** The set number within the workout. */
     val setNumber: Int,
+    /** Whether the set was actually performed. */
     val wasSetPerformed: Boolean,
+    /** Whether this is an "as many reps as possible" set. */
     val isAmrap: Boolean,
+    /** Whether this is an "every minute on the minute" set. */
     val isEmom: Boolean,
+    /** Whether tempo training should be used for this set. */
     val useTempo: Boolean,
+    /** The eccentric tempo (lowering phase) in seconds. */
     val eccentricTempo: String?,
+    /** The isometric tempo (pause phase) in seconds. */
     val isometricTempo: String?,
+    /** The concentric tempo (lifting phase) in seconds. */
     val concentricTempo: String?,
+    /** The target weight for this set in kilograms. */
     val targetWeight: java.math.BigDecimal?,
+    /** The actual weight performed for this set in kilograms. */
     val performedWeight: java.math.BigDecimal?,
+    /** The target number of repetitions for this set. */
     val targetRepCount: Int?,
+    /** The actual number of repetitions performed for this set. */
     val performedRepCount: Int?,
+    /** The rest time in seconds before the next set. */
     val restSeconds: Int?
 )
 
@@ -55,10 +68,13 @@ object ConjugateConstants {
     object TimeAllocation {
         /** Time allocated for primary movement exercises in minutes. */
         const val PRIMARY_MOVEMENT_TIME_IN_MINUTES = 10
+
         /** Time allocated for secondary movement exercises in minutes. */
         const val SECONDARY_MOVEMENT_TIME_IN_MINUTES = 8
+
         /** Time allocated for conditioning exercises in minutes. */
         const val CONDITIONING_TIME_IN_MINUTES = 10
+
         /** Time allocated for a single accessory exercise in minutes. */
         const val SINGLE_ACCESSORY_EXERCISE_TIME_IN_MINUTES = 5
     }

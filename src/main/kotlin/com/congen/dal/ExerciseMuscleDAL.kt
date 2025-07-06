@@ -129,7 +129,10 @@ class ExerciseMuscleDAL(
      * @return Mono containing the created exercise-muscle relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertExerciseMuscle(exerciseName: String, muscleName: String): Mono<ExerciseMuscle> {
+    fun insertExerciseMuscle(
+        exerciseName: String,
+        muscleName: String
+    ): Mono<ExerciseMuscle> {
         logger.debug("Inserting exercise muscle: {} - {}", exerciseName, muscleName)
         return postgresClient.update(
             """

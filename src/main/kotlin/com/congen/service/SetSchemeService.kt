@@ -6,7 +6,6 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.SetScheme
-import com.congen.model.UserOneRepMax
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -94,9 +93,20 @@ class SetSchemeService(
         logger.debug("Inserting set scheme for exercise: {}", programmedExerciseId)
 
         return setSchemeDAL.insertSetScheme(
-            programmedExerciseId, setNumber, wasSetPerformed, isAmrap, isEmom, useTempo,
-            eccentricTempo, isometricTempo, concentricTempo, targetWeight, performedWeight,
-            targetRepCount, performedRepCount, restSeconds
+            programmedExerciseId,
+            setNumber,
+            wasSetPerformed,
+            isAmrap,
+            isEmom,
+            useTempo,
+            eccentricTempo,
+            isometricTempo,
+            concentricTempo,
+            targetWeight,
+            performedWeight,
+            targetRepCount,
+            performedRepCount,
+            restSeconds
         )
             .flatMap { insertedSetScheme ->
                 // Check for 1RM update if the set was performed and has a performed weight
@@ -152,9 +162,21 @@ class SetSchemeService(
         logger.debug("Updating set scheme: {} for exercise: {}", id, programmedExerciseId)
 
         return setSchemeDAL.updateSetScheme(
-            id, programmedExerciseId, setNumber, wasSetPerformed, isAmrap, isEmom, useTempo,
-            eccentricTempo, isometricTempo, concentricTempo, targetWeight, performedWeight,
-            targetRepCount, performedRepCount, restSeconds
+            id,
+            programmedExerciseId,
+            setNumber,
+            wasSetPerformed,
+            isAmrap,
+            isEmom,
+            useTempo,
+            eccentricTempo,
+            isometricTempo,
+            concentricTempo,
+            targetWeight,
+            performedWeight,
+            targetRepCount,
+            performedRepCount,
+            restSeconds
         )
             .flatMap { updatedSetScheme ->
                 // Check for 1RM update if the set was performed and has a performed weight
