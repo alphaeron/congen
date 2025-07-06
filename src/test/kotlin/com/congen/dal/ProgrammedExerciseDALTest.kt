@@ -376,4 +376,4 @@ class ProgrammedExerciseDALTest {
             1L
         )
     }
-} 
+}

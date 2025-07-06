@@ -104,4 +104,4 @@ class WorkoutStageTypeDALTest {
 
         verify(postgresClient).select<WorkoutStageType>("SELECT * FROM workout_stage_type ORDER BY name")
     }
-} 
+}
