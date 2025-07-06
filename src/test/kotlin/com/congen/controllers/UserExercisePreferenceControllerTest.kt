@@ -43,17 +43,6 @@ class UserExercisePreferenceControllerTest {
     }
 
     @Test
-    fun `update should return updated user exercise preference`() {
-        val pref = UserExercisePreference(userId = 1, exerciseName = "Bench Press", shouldAvoid = false)
-        whenever(userExercisePreferenceDAL.updateUserExercisePreference(1, "Bench Press", false)).thenReturn(Mono.just(pref))
-        val result = userExercisePreferenceController.update(1, "Bench Press", false)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserExercisePreference>).expectNext(pref).verifyComplete()
-        verify(userExercisePreferenceDAL).updateUserExercisePreference(1, "Bench Press", false)
-    }
-
-    @Test
     fun `delete should return deleted user exercise preference`() {
         val pref = UserExercisePreference(userId = 1, exerciseName = "Bench Press", shouldAvoid = true)
         whenever(userExercisePreferenceDAL.deleteUserExercisePreference(1, "Bench Press")).thenReturn(Mono.just(pref))

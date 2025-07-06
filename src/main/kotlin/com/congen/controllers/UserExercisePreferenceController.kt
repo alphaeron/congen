@@ -138,45 +138,6 @@ class UserExercisePreferenceController(
     }
 
     /**
-     * Updates an existing user exercise preference.
-     *
-     * This endpoint modifies an existing preference relationship between a user and an exercise,
-     * allowing the user to change their preference rating.
-     *
-     * @param userId The unique identifier of the user
-     * @param exerciseName The name of the exercise
-     * @param shouldAvoid Whether the user should avoid this exercise
-     * @return ResponseEntity containing the updated user exercise preference
-     */
-    @PatchMapping("/")
-    @Operation(
-        summary = "Update user exercise preference",
-        description = "Updates an existing user exercise preference relationship.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "User exercise preference updated successfully",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun update(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam userId: Int,
-        @Parameter(description = "Exercise name", required = true)
-        @RequestParam exerciseName: String,
-        @Parameter(description = "Whether the user should avoid this exercise", required = true)
-        @RequestParam shouldAvoid: Boolean,
-    ): ResponseEntity<*> {
-        logger.info("Updating user exercise preference: {} - {}", userId, exerciseName)
-        return ResponseEntity.ok(
-            userExercisePreferenceDAL.updateUserExercisePreference(userId, exerciseName, shouldAvoid),
-        )
-    }
-
-    /**
      * Deletes a user exercise preference.
      *
      * This endpoint removes the preference relationship between a user and an exercise,
