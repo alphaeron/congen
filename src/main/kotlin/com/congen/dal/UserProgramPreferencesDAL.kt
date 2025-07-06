@@ -33,6 +33,7 @@ import reactor.core.publisher.Mono
  * - **DatabaseException**: When database operations fail
  *
  * @property postgresClient PostgreSQL client for database operations
+ * @property programmedWorkoutDAL Data access layer for programmed workout operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -40,6 +41,7 @@ import reactor.core.publisher.Mono
 @Component
 class UserProgramPreferencesDAL(
     private val postgresClient: PostgresClient,
+    private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -105,12 +107,15 @@ class UserProgramPreferencesDAL(
      *
      * This method validates and updates the program preferences for the specified user.
      * If no preferences exist, a NoResultsFoundException is thrown.
+     * Program days per week cannot be changed if the user has existing workouts to prevent
+     * day numbering conflicts and maintain program consistency.
      *
      * @param userId The unique identifier of the user
      * @param programDaysPerWeek The number of days per week for the program
      * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return Mono containing the updated user program preferences
      * @throws NoResultsFoundException when the preferences don't exist
+     * @throws ValidationException when program days per week cannot be changed due to existing workouts
      */
     fun updateUserProgramPreferences(
         userId: Int,
@@ -123,16 +128,44 @@ class UserProgramPreferencesDAL(
         ValidationUtil.validateProgramDaysPerWeek(programDaysPerWeek)
         ValidationUtil.validateSessionTimeLength(sessionTimeLengthInMinutes)
 
-        return postgresClient.update(
-            """
-            UPDATE user_program_preferences
-            SET program_days_per_week=$2, session_time_length_in_minutes=$3
-            WHERE user_id=$1
-            """.trimIndent(),
-            userId,
-            programDaysPerWeek,
-            sessionTimeLengthInMinutes,
-        )
+        // Check if user has existing workouts and validate program days per week change
+        return programmedWorkoutDAL.hasUserExistingWorkouts(userId)
+            .flatMap { hasExistingWorkouts ->
+                if (hasExistingWorkouts) {
+                    // Get current preferences to check if program days per week is being changed
+                    selectUserProgramPreferences(userId)
+                        .flatMap { currentPreferences ->
+                            ValidationUtil.validateProgramDaysPerWeekChange(
+                                userId = userId,
+                                newProgramDaysPerWeek = programDaysPerWeek,
+                                currentProgramDaysPerWeek = currentPreferences.programDaysPerWeek
+                            )
+                            // If validation passes, proceed with update
+                            postgresClient.update(
+                                """
+                                UPDATE user_program_preferences
+                                SET program_days_per_week=$2, session_time_length_in_minutes=$3
+                                WHERE user_id=$1
+                                """.trimIndent(),
+                                userId,
+                                programDaysPerWeek,
+                                sessionTimeLengthInMinutes,
+                            )
+                        }
+                } else {
+                    // No existing workouts, safe to update
+                    postgresClient.update(
+                        """
+                        UPDATE user_program_preferences
+                        SET program_days_per_week=$2, session_time_length_in_minutes=$3
+                        WHERE user_id=$1
+                        """.trimIndent(),
+                        userId,
+                        programDaysPerWeek,
+                        sessionTimeLengthInMinutes,
+                    )
+                }
+            }
     }
 
     /**

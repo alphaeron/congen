@@ -286,6 +286,36 @@ object ValidationUtil {
     }
 
     /**
+     * Validates that program days per week can be changed for a user.
+     *
+     * This method checks if a user is trying to change program days per week
+     * and prevents it, as this would cause day numbering conflicts and disrupt
+     * the conjugate program structure.
+     *
+     * @param userId The ID of the user
+     * @param newProgramDaysPerWeek The new number of days per week being set
+     * @param currentProgramDaysPerWeek The current number of days per week
+     * @throws ValidationException if the user is trying to change program days per week
+     */
+    fun validateProgramDaysPerWeekChange(
+        userId: Int,
+        newProgramDaysPerWeek: Int,
+        currentProgramDaysPerWeek: Int
+    ) {
+        // If user is trying to change program days per week
+        if (newProgramDaysPerWeek != currentProgramDaysPerWeek) {
+            val message =
+                "Cannot change program days per week from $currentProgramDaysPerWeek to $newProgramDaysPerWeek for user $userId " +
+                    "because they have existing workouts. " +
+                    "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
+                    "and maintain program consistency. " +
+                    "To change program frequency, the user must start a new program."
+            logger.error(message)
+            throw ValidationException(message)
+        }
+    }
+
+    /**
      * Validates exercise category for exercise rotation history.
      *
      * Exercise categories must be one of the predefined valid categories

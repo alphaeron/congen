@@ -141,11 +141,16 @@ class UserProgramPreferencesController(
      *
      * This endpoint modifies the program preferences for a user, allowing them to
      * update their workout frequency, duration, and other program-related settings.
+     * Note: Program days per week cannot be changed if the user has existing workouts
+     * to prevent day numbering conflicts and maintain program consistency.
      *
      * @param userId The unique identifier of the user
      * @param programDaysPerWeek The number of days per week for the program
      * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return ResponseEntity containing the updated user program preferences
+     *
+     * @throws ValidationException if program days per week cannot be changed due to existing workouts
+     * @throws DatabaseException if database operation fails
      */
     @PatchMapping("/")
     @Operation(

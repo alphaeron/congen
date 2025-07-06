@@ -8,7 +8,7 @@ trim_trailing_whitespace = true
 
 [*.{kt,kts}]
 # ktlint rules
-ktlint_code_style = official
+ktlint_code_style = ktlint_official
 ktlint_ignore_back_ticked_identifier = false
 ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_filename = disabled
@@ -51,4 +51,4 @@ ktlint_standard_wrapping = enabled
 
 # Import ordering configuration
 ktlint_standard_import-ordering = enabled
-ktlint_standard_import-ordering-pattern = android_studio 
+ktlint_standard_import-ordering-pattern = android_studio

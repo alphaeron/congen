@@ -172,6 +172,30 @@ class ProgrammedWorkoutDAL(
     }
 
     /**
+     * Checks if a user has any existing programmed workouts.
+     *
+     * This method queries the database to determine if the specified user has any
+     * programmed workouts by joining with the program table.
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing true if the user has workouts, false otherwise
+     */
+    fun hasUserExistingWorkouts(userId: Int): Mono<Boolean> {
+        logger.debug("Checking if user has existing workouts: {}", userId)
+        return postgresClient.selectIndividual(
+            """
+            SELECT EXISTS(
+                SELECT 1 
+                FROM programmed_workout pw
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+            )
+            """.trimIndent(),
+            userId,
+        )
+    }
+
+    /**
      * Deletes a programmed workout record from the database.
      *
      * This method removes the programmed workout record with the specified ID.
