@@ -310,4 +310,53 @@ class ValidationUtilTest {
         val exception3 = assertThrows<ValidationException> { ValidationUtil.validateOneRepMax(BigDecimal("-1")) }
         assertEquals("One rep max must be between 0.01 and 1000 kg, got: -1", exception3.message)
     }
+
+    @Test
+    fun `validateProgramDaysPerWeekChange should pass when days per week is not changing`() {
+        assertDoesNotThrow { ValidationUtil.validateProgramDaysPerWeekChange(1, 3, 3) }
+        assertDoesNotThrow { ValidationUtil.validateProgramDaysPerWeekChange(1, 2, 2) }
+        assertDoesNotThrow { ValidationUtil.validateProgramDaysPerWeekChange(1, 4, 4) }
+    }
+
+    @Test
+    fun `validateProgramDaysPerWeekChange should throw when trying to change days per week`() {
+        val exception1 =
+            assertThrows<ValidationException> {
+                ValidationUtil.validateProgramDaysPerWeekChange(1, 3, 2)
+            }
+        assertEquals(
+            "Cannot change program days per week from 2 to 3 for user 1 " +
+                "because they have existing workouts. " +
+                "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
+                "and maintain program consistency. " +
+                "To change program frequency, the user must start a new program.",
+            exception1.message
+        )
+
+        val exception2 =
+            assertThrows<ValidationException> {
+                ValidationUtil.validateProgramDaysPerWeekChange(5, 4, 3)
+            }
+        assertEquals(
+            "Cannot change program days per week from 3 to 4 for user 5 " +
+                "because they have existing workouts. " +
+                "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
+                "and maintain program consistency. " +
+                "To change program frequency, the user must start a new program.",
+            exception2.message
+        )
+
+        val exception3 =
+            assertThrows<ValidationException> {
+                ValidationUtil.validateProgramDaysPerWeekChange(10, 2, 4)
+            }
+        assertEquals(
+            "Cannot change program days per week from 4 to 2 for user 10 " +
+                "because they have existing workouts. " +
+                "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
+                "and maintain program consistency. " +
+                "To change program frequency, the user must start a new program.",
+            exception3.message
+        )
+    }
 }

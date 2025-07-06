@@ -1,16 +1,14 @@
-add missing unit tests
-
 do I need description fields?
 double-check schema up to date with models
 types consistent with those specified in the schema
 
-check missing integration tests
-
-Only get the latest program for a user.
-
 remove tempo, target_sets, target_reps, target_weight, target_rpe, rest_resonds from programmed_exercise, tempo should be stored in set_scheme.
 
 use an enum for stage type.
+
+check missing integration tests
+
+Only get the latest program for a user.
 
 just put endpoint for user 1rm
 

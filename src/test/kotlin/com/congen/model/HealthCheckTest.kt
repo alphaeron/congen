@@ -245,4 +245,4 @@ class HealthCheckTest {
         assertEquals(BigDecimal("123.45"), dbHealthCheck.details["decimal"])
         assertEquals(true, dbHealthCheck.details["boolean"])
     }
-} 
+}

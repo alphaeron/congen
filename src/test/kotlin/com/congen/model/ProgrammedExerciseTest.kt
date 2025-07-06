@@ -353,4 +353,4 @@ class ProgrammedExerciseTest {
 
         assertEquals("5x5 Bench Press", exercise.exerciseName)
     }
-} 
+}

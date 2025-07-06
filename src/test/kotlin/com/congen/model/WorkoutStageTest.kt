@@ -271,4 +271,4 @@ class WorkoutStageTest {
         assertEquals(1, stageTypeId)
         assertEquals(1, position)
     }
-} 
+}

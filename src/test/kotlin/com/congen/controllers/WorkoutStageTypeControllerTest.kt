@@ -79,6 +79,7 @@ class WorkoutStageTypeControllerTest {
 
         // Then
         StepVerifier.create(result)
+            .expectNextCount(0)
             .expectError(RuntimeException::class.java)
             .verify()
     }
@@ -128,6 +129,7 @@ class WorkoutStageTypeControllerTest {
 
         // Then
         StepVerifier.create(result)
+            .expectNextCount(0)
             .expectError(RuntimeException::class.java)
             .verify()
     }
@@ -167,6 +169,7 @@ class WorkoutStageTypeControllerTest {
 
         // Then
         StepVerifier.create(result)
+            .expectNextCount(0)
             .expectError(RuntimeException::class.java)
             .verify()
 

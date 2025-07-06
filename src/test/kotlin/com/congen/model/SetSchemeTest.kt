@@ -550,4 +550,4 @@ class SetSchemeTest {
         assertNull(setScheme.performedRepCount)
         assertNull(setScheme.restSeconds)
     }
-} 
+}

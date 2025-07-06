@@ -8,6 +8,7 @@ import com.congen.model.ProgrammedExercise
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStage
 import org.springframework.stereotype.Component
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -101,8 +102,8 @@ class WorkoutStageGenerator(
         programmedExerciseId: Long,
         setSchemeParams: List<SetSchemeParams>
     ): Mono<Void> {
-        return setSchemeParams.fold(Mono.empty<Void>()) { mono, params ->
-            mono.flatMap {
+        return Flux.fromIterable(setSchemeParams)
+            .concatMap { params ->
                 setSchemeDAL.insertSetScheme(
                     programmedExerciseId,
                     params.setNumber,
@@ -120,7 +121,7 @@ class WorkoutStageGenerator(
                     params.restSeconds
                 ).then()
             }
-        }
+            .then()
     }
 
     /**
