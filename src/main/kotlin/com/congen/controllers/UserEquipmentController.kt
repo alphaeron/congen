@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -64,7 +65,8 @@ class UserEquipmentController(
      * This endpoint creates an association between a user and a piece of equipment,
      * indicating that the user has access to that equipment for their workouts.
      *
-     * @param userEquipment The user-equipment relationship to create
+     * @param userId The unique identifier of the user
+     * @param equipmentName The name of the equipment
      * @return ResponseEntity containing the created user-equipment relationship
      */
     @PostMapping("/")
@@ -82,12 +84,14 @@ class UserEquipmentController(
         ],
     )
     fun save(
-        @Parameter(description = "User-equipment relationship to create", required = true)
-        @RequestBody userEquipment: UserEquipment,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Equipment name", required = true)
+        @RequestParam equipmentName: String,
     ): ResponseEntity<*> {
-        logger.info("Saving user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName)
+        logger.info("Saving user equipment: {} - {}", userId, equipmentName)
         return ResponseEntity.ok(
-            userEquipmentDAL.insertUserEquipment(userEquipment),
+            userEquipmentDAL.insertUserEquipment(userId, equipmentName),
         )
     }
 

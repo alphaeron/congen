@@ -84,12 +84,13 @@ class EquipmentDAL(
      * This method inserts a new equipment record with the provided name and description.
      * The equipment name must be unique in the database.
      *
-     * @param equipment The equipment object containing name and description
+     * @param name The name of the equipment
+     * @param description The description of the equipment
      * @return Mono containing the created equipment
      * @throws DatabaseException when the equipment name already exists or database operation fails
      */
-    fun insertEquipment(equipment: Equipment): Mono<Equipment> {
-        logger.debug("Inserting equipment: {}", equipment.name)
+    fun insertEquipment(name: String, description: String): Mono<Equipment> {
+        logger.debug("Inserting equipment: {}", name)
         return postgresClient.update(
             """
             INSERT INTO equipment
@@ -97,8 +98,8 @@ class EquipmentDAL(
             VALUES
                 ($1, $2)
             """.trimIndent(),
-            equipment.name,
-            equipment.description,
+            name,
+            description,
         )
     }
 

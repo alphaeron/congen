@@ -134,22 +134,14 @@ class UserController(
         )
         @RequestParam weight: BigDecimal,
     ): Mono<ResponseEntity<User>> {
-        val user =
-            User(
-                id = 0, // Temporary ID, will be replaced by database auto-generation
-                name = name,
-                age = age,
-                height = height,
-                weight = weight,
-            )
-        logger.info("Saving user: {}", user.name)
-        return userDAL.insertUser(user)
+        logger.info("Saving user: {}", name)
+        return userDAL.insertUser(name, age, height, weight)
             .map { savedUser ->
                 logger.debug("Saved user with id: {}", savedUser.id)
                 ResponseEntity.ok(savedUser)
             }
             .doOnError { e ->
-                logger.error("Error saving user: {}", user.name, e)
+                logger.error("Error saving user: {}", name, e)
             }
     }
 
@@ -321,17 +313,9 @@ class UserController(
         )
         @RequestParam weight: BigDecimal,
     ): ResponseEntity<*> {
-        val user =
-            User(
-                id = id,
-                name = name,
-                age = age,
-                height = height,
-                weight = weight,
-            )
         logger.info("Updating user: {}", id)
         return ResponseEntity.ok(
-            userDAL.updateUser(user),
+            userDAL.updateUser(id, name, age, height, weight),
         )
     }
 

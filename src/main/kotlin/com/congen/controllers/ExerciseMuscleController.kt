@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -173,12 +174,14 @@ class ExerciseMuscleController(
         ],
     )
     fun save(
-        @Parameter(description = "Exercise-muscle relationship to create", required = true)
-        @RequestBody exerciseMuscle: ExerciseMuscle,
+        @Parameter(description = "Name of the exercise", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "Name of the muscle", required = true)
+        @RequestParam muscleName: String,
     ): ResponseEntity<*> {
-        logger.info("Saving exercise muscle relationship: {} - {}", exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
+        logger.info("Saving exercise muscle relationship: {} - {}", exerciseName, muscleName)
         return ResponseEntity.ok(
-            exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle),
+            exerciseMuscleDAL.insertExerciseMuscle(exerciseName, muscleName),
         )
     }
 }

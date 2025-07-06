@@ -31,10 +31,10 @@ class UserControllerTest {
         val weight = BigDecimal("75.0")
         val user = User(id = 0, name = name, age = age, height = height, weight = weight)
         val savedUser = user.copy(id = 1)
-        whenever(userDAL.insertUser(user)).thenReturn(Mono.just(savedUser))
+        whenever(userDAL.insertUser(name, age, height, weight)).thenReturn(Mono.just(savedUser))
         val result = userController.save(name, age, height, weight)
         StepVerifier.create(result).expectNext(ResponseEntity.ok(savedUser)).verifyComplete()
-        verify(userDAL).insertUser(user)
+        verify(userDAL).insertUser(name, age, height, weight)
     }
 
     @Test
@@ -65,12 +65,12 @@ class UserControllerTest {
         val weight = BigDecimal("75.0")
         val user = User(id = 0, name = name, age = age, height = height, weight = weight)
         val updatedUser = user.copy(id = 1)
-        whenever(userDAL.updateUser(updatedUser)).thenReturn(Mono.just(updatedUser))
+        whenever(userDAL.updateUser(1, name, age, height, weight)).thenReturn(Mono.just(updatedUser))
         val result = userController.update(1, name, age, height, weight)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<User>).expectNext(updatedUser).verifyComplete()
-        verify(userDAL).updateUser(updatedUser)
+        verify(userDAL).updateUser(1, name, age, height, weight)
     }
 
     @Test

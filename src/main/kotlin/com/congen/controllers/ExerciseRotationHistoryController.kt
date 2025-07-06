@@ -12,9 +12,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -118,18 +118,12 @@ class ExerciseRotationHistoryController(
         )
         @RequestParam isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
-        val exerciseRotationHistory =
-            ExerciseRotationHistory(
-                id = 0, // Temporary ID, will be replaced by database auto-generation
-                exerciseName = exerciseName,
-                isAccessory = isAccessory,
-            )
         logger.info(
             "Saving exercise rotation history: exercise_name={}, isAccessory={}",
             exerciseName,
             isAccessory,
         )
-        return exerciseRotationHistoryDAL.insert(exerciseRotationHistory)
+        return exerciseRotationHistoryDAL.insert(exerciseName, isAccessory)
             .map { savedRecord ->
                 logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
                 ResponseEntity.ok(savedRecord)
@@ -303,7 +297,7 @@ class ExerciseRotationHistoryController(
      * @throws ValidationException if data fails validation
      * @throws DatabaseException if database operation fails
      */
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(
         summary = "Update an exercise rotation history record",
         description = "Updates an existing exercise rotation history record with the provided information.",
@@ -359,19 +353,13 @@ class ExerciseRotationHistoryController(
         )
         @RequestParam isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
-        val exerciseRotationHistory =
-            ExerciseRotationHistory(
-                id = id,
-                exerciseName = exerciseName,
-                isAccessory = isAccessory,
-            )
         logger.info(
             "Updating exercise rotation history: id={}, exercise_name={}, isAccessory={}",
             id,
             exerciseName,
             isAccessory,
         )
-        return exerciseRotationHistoryDAL.update(exerciseRotationHistory)
+        return exerciseRotationHistoryDAL.update(id, exerciseName, isAccessory)
             .map { updatedRecord ->
                 logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
                 ResponseEntity.ok(updatedRecord)

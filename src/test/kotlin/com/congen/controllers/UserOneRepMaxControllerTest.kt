@@ -43,10 +43,10 @@ class UserOneRepMaxControllerTest {
                 oneRepMax = BigDecimal("100.0"),
             )
 
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax)).thenReturn(Mono.just(userOneRepMax))
+        whenever(userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("100.0"))).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxController.save(userOneRepMax)
+        val result = userOneRepMaxController.save(1, "Bench Press", BigDecimal("100.0"))
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -55,7 +55,7 @@ class UserOneRepMaxControllerTest {
             .expectNext(userOneRepMax)
             .verifyComplete()
 
-        verify(userOneRepMaxDAL).insertUserOneRepMax(userOneRepMax)
+        verify(userOneRepMaxDAL).insertUserOneRepMax(1, "Bench Press", BigDecimal("100.0"))
     }
 
     @Test
@@ -143,10 +143,10 @@ class UserOneRepMaxControllerTest {
                 oneRepMax = BigDecimal("110.0"),
             )
 
-        whenever(userOneRepMaxDAL.updateUserOneRepMax(userOneRepMax)).thenReturn(Mono.just(userOneRepMax))
+        whenever(userOneRepMaxDAL.updateUserOneRepMax(1, "Bench Press", BigDecimal("110.0"))).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxController.update(userOneRepMax)
+        val result = userOneRepMaxController.update(1, "Bench Press", BigDecimal("110.0"))
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -155,7 +155,7 @@ class UserOneRepMaxControllerTest {
             .expectNext(userOneRepMax)
             .verifyComplete()
 
-        verify(userOneRepMaxDAL).updateUserOneRepMax(userOneRepMax)
+        verify(userOneRepMaxDAL).updateUserOneRepMax(1, "Bench Press", BigDecimal("110.0"))
     }
 
     @Test

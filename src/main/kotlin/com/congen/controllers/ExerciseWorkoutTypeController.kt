@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -207,25 +208,29 @@ class ExerciseWorkoutTypeController(
         ],
     )
     fun save(
-        @Parameter(description = "Exercise-workout type relationship to create", required = true)
-        @RequestBody exerciseWorkoutType: ExerciseWorkoutType,
+        @Parameter(description = "Name of the exercise", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "Movement type (push, pull, squat, hinge, etc.)", required = true)
+        @RequestParam movementType: String,
+        @Parameter(description = "Workout type (strength, hypertrophy, endurance, etc.)", required = true)
+        @RequestParam workoutType: String,
     ): ResponseEntity<*> {
         logger.info(
             "Saving exercise workout type relationship: {} - {} - {}",
-            exerciseWorkoutType.exerciseName,
-            exerciseWorkoutType.movementType,
-            exerciseWorkoutType.workoutType,
+            exerciseName,
+            movementType,
+            workoutType,
         )
         return try {
             ResponseEntity.ok(
-                exerciseWorkoutTypeDAL.insertExerciseWorkoutType(exerciseWorkoutType),
+                exerciseWorkoutTypeDAL.insertExerciseWorkoutType(exerciseName, movementType, workoutType),
             )
         } catch (e: Exception) {
             logger.error(
                 "Error saving exercise workout type relationship: {} - {} - {}",
-                exerciseWorkoutType.exerciseName,
-                exerciseWorkoutType.movementType,
-                exerciseWorkoutType.workoutType,
+                exerciseName,
+                movementType,
+                workoutType,
                 e,
             )
             throw e

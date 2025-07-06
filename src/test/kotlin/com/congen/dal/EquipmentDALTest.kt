@@ -82,11 +82,9 @@ class EquipmentDALTest {
     @Test
     fun `insertEquipment should return inserted equipment`() {
         // Given
-        val equipment =
-            Equipment(
-                name = "Barbell",
-                description = "A barbell for weightlifting",
-            )
+        val name = "Barbell"
+        val description = "A barbell for weightlifting"
+        val equipment = Equipment(name = name, description = description)
 
         val expectedQuery =
             """
@@ -99,13 +97,13 @@ class EquipmentDALTest {
         whenever(
             postgresClient.update<Equipment>(
                 expectedQuery,
-                equipment.name,
-                equipment.description,
+                name,
+                description,
             ),
         ).thenReturn(Mono.just(equipment))
 
         // When
-        val result = equipmentDAL.insertEquipment(equipment)
+        val result = equipmentDAL.insertEquipment(name, description)
 
         // Then
         StepVerifier.create(result)
@@ -114,8 +112,8 @@ class EquipmentDALTest {
 
         verify(postgresClient).update<Equipment>(
             expectedQuery,
-            equipment.name,
-            equipment.description,
+            name,
+            description,
         )
     }
 

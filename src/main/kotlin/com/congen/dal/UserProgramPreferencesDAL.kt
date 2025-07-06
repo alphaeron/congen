@@ -70,16 +70,22 @@ class UserProgramPreferencesDAL(
      * This method validates and inserts new program preferences for the specified user.
      * The user ID must be unique in the user_program_preferences table.
      *
-     * @param userProgramPreferences The user program preferences to create
+     * @param userId The unique identifier of the user
+     * @param programDaysPerWeek The number of days per week for the program
+     * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return Mono containing the created user program preferences
      * @throws DatabaseException when the preferences already exist or database operation fails
      */
-    fun insertUserProgramPreferences(userProgramPreferences: UserProgramPreferences): Mono<UserProgramPreferences> {
-        logger.debug("Inserting user program preferences: {}", userProgramPreferences.userId)
+    fun insertUserProgramPreferences(
+        userId: Int,
+        programDaysPerWeek: Int,
+        sessionTimeLengthInMinutes: Int,
+    ): Mono<UserProgramPreferences> {
+        logger.debug("Inserting user program preferences: {}", userId)
 
         // Validate all CHECK constraints
-        ValidationUtil.validateProgramDaysPerWeek(userProgramPreferences.programDaysPerWeek)
-        ValidationUtil.validateSessionTimeLength(userProgramPreferences.sessionTimeLengthInMinutes)
+        ValidationUtil.validateProgramDaysPerWeek(programDaysPerWeek)
+        ValidationUtil.validateSessionTimeLength(sessionTimeLengthInMinutes)
 
         return postgresClient.update(
             """
@@ -88,9 +94,9 @@ class UserProgramPreferencesDAL(
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            userProgramPreferences.userId,
-            userProgramPreferences.programDaysPerWeek,
-            userProgramPreferences.sessionTimeLengthInMinutes,
+            userId,
+            programDaysPerWeek,
+            sessionTimeLengthInMinutes,
         )
     }
 
@@ -100,16 +106,22 @@ class UserProgramPreferencesDAL(
      * This method validates and updates the program preferences for the specified user.
      * If no preferences exist, a NoResultsFoundException is thrown.
      *
-     * @param userProgramPreferences The user program preferences with updated data
+     * @param userId The unique identifier of the user
+     * @param programDaysPerWeek The number of days per week for the program
+     * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return Mono containing the updated user program preferences
      * @throws NoResultsFoundException when the preferences don't exist
      */
-    fun updateUserProgramPreferences(userProgramPreferences: UserProgramPreferences): Mono<UserProgramPreferences> {
-        logger.debug("Updating user program preferences: {}", userProgramPreferences.userId)
+    fun updateUserProgramPreferences(
+        userId: Int,
+        programDaysPerWeek: Int,
+        sessionTimeLengthInMinutes: Int,
+    ): Mono<UserProgramPreferences> {
+        logger.debug("Updating user program preferences: {}", userId)
 
         // Validate all CHECK constraints
-        ValidationUtil.validateProgramDaysPerWeek(userProgramPreferences.programDaysPerWeek)
-        ValidationUtil.validateSessionTimeLength(userProgramPreferences.sessionTimeLengthInMinutes)
+        ValidationUtil.validateProgramDaysPerWeek(programDaysPerWeek)
+        ValidationUtil.validateSessionTimeLength(sessionTimeLengthInMinutes)
 
         return postgresClient.update(
             """
@@ -117,9 +129,9 @@ class UserProgramPreferencesDAL(
             SET program_days_per_week=$2, session_time_length_in_minutes=$3
             WHERE user_id=$1
             """.trimIndent(),
-            userProgramPreferences.userId,
-            userProgramPreferences.programDaysPerWeek,
-            userProgramPreferences.sessionTimeLengthInMinutes,
+            userId,
+            programDaysPerWeek,
+            sessionTimeLengthInMinutes,
         )
     }
 

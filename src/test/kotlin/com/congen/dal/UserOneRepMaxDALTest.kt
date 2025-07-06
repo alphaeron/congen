@@ -56,7 +56,7 @@ class UserOneRepMaxDALTest {
         ).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax)
+        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
 
         // Then
         StepVerifier.create(result)
@@ -203,7 +203,7 @@ class UserOneRepMaxDALTest {
         ).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxDAL.updateUserOneRepMax(userOneRepMax)
+        val result = userOneRepMaxDAL.updateUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
 
         // Then
         StepVerifier.create(result)
@@ -246,7 +246,7 @@ class UserOneRepMaxDALTest {
         ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
 
         // When
-        val result = userOneRepMaxDAL.updateUserOneRepMax(userOneRepMax)
+        val result = userOneRepMaxDAL.updateUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
 
         // Then
         StepVerifier.create(result)
@@ -354,7 +354,7 @@ class UserOneRepMaxDALTest {
         ).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax)
+        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
 
         // Then
         StepVerifier.create(result)
@@ -399,7 +399,7 @@ class UserOneRepMaxDALTest {
         ).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax)
+        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
 
         // Then
         StepVerifier.create(result)
@@ -444,7 +444,7 @@ class UserOneRepMaxDALTest {
         ).thenReturn(Mono.just(userOneRepMax))
 
         // When
-        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax)
+        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
 
         // Then
         StepVerifier.create(result)

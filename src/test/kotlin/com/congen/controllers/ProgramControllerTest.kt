@@ -28,7 +28,7 @@ class ProgramControllerTest {
         // Given
         val program =
             Program(
-                id = 0, // Temporary ID for creation
+                id = 1,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
@@ -36,17 +36,17 @@ class ProgramControllerTest {
 
         val savedProgram = program.copy(id = 1L)
 
-        whenever(programDAL.insertProgram(program)).thenReturn(Mono.just(savedProgram))
+        whenever(programDAL.insertProgram(program.userId, program.name, program.description)).thenReturn(Mono.just(savedProgram))
 
         // When
-        val result = programController.save(program)
+        val result = programController.save(program.userId, program.name, program.description)
 
         // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgram))
             .verifyComplete()
 
-        verify(programDAL).insertProgram(program)
+        verify(programDAL).insertProgram(program.userId, program.name, program.description)
     }
 
     @Test
@@ -131,27 +131,27 @@ class ProgramControllerTest {
     @Test
     fun `update should return updated program when found`() {
         // Given
-        val programId = 1L
+        val programId = 2L
         val program =
             Program(
-                id = 0, // Temporary ID for creation
+                id = 1,
                 userId = 1,
                 name = "Updated Conjugate Program",
                 description = "Updated description",
             )
         val updatedProgram = program.copy(id = programId)
 
-        whenever(programDAL.updateProgram(updatedProgram)).thenReturn(Mono.just(updatedProgram))
+        whenever(programDAL.updateProgram(programId, program.name, program.description)).thenReturn(Mono.just(updatedProgram))
 
         // When
-        val result = programController.update(programId, program)
+        val result = programController.update(programId, program.name, program.description)
 
         // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedProgram))
             .verifyComplete()
 
-        verify(programDAL).updateProgram(updatedProgram)
+        verify(programDAL).updateProgram(programId, program.name, program.description)
     }
 
     @Test
@@ -160,24 +160,24 @@ class ProgramControllerTest {
         val programId = 999L
         val program =
             Program(
-                id = 0, // Temporary ID for creation
+                id = 1,
                 userId = 1,
                 name = "Updated Conjugate Program",
                 description = "Updated description",
             )
         val updatedProgram = program.copy(id = programId)
 
-        whenever(programDAL.updateProgram(updatedProgram)).thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
+        whenever(programDAL.updateProgram(programId, program.name, program.description)).thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
 
         // When
-        val result = programController.update(programId, program)
+        val result = programController.update(programId, program.name, program.description)
 
         // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(programDAL).updateProgram(updatedProgram)
+        verify(programDAL).updateProgram(programId, program.name, program.description)
     }
 
     @Test

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -66,7 +67,9 @@ class UserExercisePreferenceController(
      * This endpoint creates a preference relationship between a user and an exercise,
      * allowing the user to specify whether they like or dislike the exercise.
      *
-     * @param userExercisePreference The user exercise preference to create
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param shouldAvoid Whether the user should avoid this exercise
      * @return ResponseEntity containing the created user exercise preference
      */
     @PostMapping("/")
@@ -84,12 +87,16 @@ class UserExercisePreferenceController(
         ],
     )
     fun save(
-        @Parameter(description = "User exercise preference to create", required = true)
-        @RequestBody userExercisePreference: UserExercisePreference,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Exercise name", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "Whether the user should avoid this exercise", required = true)
+        @RequestParam shouldAvoid: Boolean,
     ): ResponseEntity<*> {
-        logger.info("Saving user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
+        logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
         return ResponseEntity.ok(
-            userExercisePreferenceDAL.insertUserExercisePreference(userExercisePreference),
+            userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid),
         )
     }
 
@@ -136,7 +143,9 @@ class UserExercisePreferenceController(
      * This endpoint modifies an existing preference relationship between a user and an exercise,
      * allowing the user to change their preference rating.
      *
-     * @param userExercisePreference The user exercise preference to update
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param shouldAvoid Whether the user should avoid this exercise
      * @return ResponseEntity containing the updated user exercise preference
      */
     @PatchMapping("/")
@@ -154,12 +163,16 @@ class UserExercisePreferenceController(
         ],
     )
     fun update(
-        @Parameter(description = "User exercise preference to update", required = true)
-        @RequestBody userExercisePreference: UserExercisePreference,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Exercise name", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "Whether the user should avoid this exercise", required = true)
+        @RequestParam shouldAvoid: Boolean,
     ): ResponseEntity<*> {
-        logger.info("Updating user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
+        logger.info("Updating user exercise preference: {} - {}", userId, exerciseName)
         return ResponseEntity.ok(
-            userExercisePreferenceDAL.updateUserExercisePreference(userExercisePreference),
+            userExercisePreferenceDAL.updateUserExercisePreference(userId, exerciseName, shouldAvoid),
         )
     }
 

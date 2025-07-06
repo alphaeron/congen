@@ -94,14 +94,20 @@ class UserOneRepMaxDAL(
      * This method inserts a new 1RM between the specified user and exercise.
      * The combination of user ID and exercise name must be unique.
      *
-     * @param userOneRepMax The user-exercise 1RM to create
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value
      * @return Mono containing the created user-exercise 1RM
      * @throws DatabaseException when the 1RM already exists or database operation fails
      */
-    fun insertUserOneRepMax(userOneRepMax: UserOneRepMax): Mono<UserOneRepMax> {
-        logger.debug("Inserting user one rep max: {} - {} - {}", userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
+    fun insertUserOneRepMax(
+        userId: Int,
+        exerciseName: String,
+        oneRepMax: java.math.BigDecimal,
+    ): Mono<UserOneRepMax> {
+        logger.debug("Inserting user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         // Validate all CHECK constraints
-        ValidationUtil.validateOneRepMax(userOneRepMax.oneRepMax)
+        ValidationUtil.validateOneRepMax(oneRepMax)
         return postgresClient.update(
             """
             INSERT INTO user_one_rep_max
@@ -109,9 +115,9 @@ class UserOneRepMaxDAL(
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            userOneRepMax.userId,
-            userOneRepMax.exerciseName,
-            userOneRepMax.oneRepMax,
+            userId,
+            exerciseName,
+            oneRepMax,
         )
     }
 
@@ -121,23 +127,29 @@ class UserOneRepMaxDAL(
      * This method modifies the 1RM for the specified user and exercise.
      * If no 1RM exists, a NoResultsFoundException is thrown.
      *
-     * @param userOneRepMax The user-exercise 1RM with updated data
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value
      * @return Mono containing the updated user-exercise 1RM
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
-    fun updateUserOneRepMax(userOneRepMax: UserOneRepMax): Mono<UserOneRepMax> {
-        logger.debug("Updating user one rep max: {} - {} - {}", userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
+    fun updateUserOneRepMax(
+        userId: Int,
+        exerciseName: String,
+        oneRepMax: java.math.BigDecimal,
+    ): Mono<UserOneRepMax> {
+        logger.debug("Updating user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         // Validate all CHECK constraints
-        ValidationUtil.validateOneRepMax(userOneRepMax.oneRepMax)
+        ValidationUtil.validateOneRepMax(oneRepMax)
         return postgresClient.update(
             """
             UPDATE user_one_rep_max
             SET one_rep_max=$3, last_updated=CURRENT_TIMESTAMP
             WHERE user_id=$1 AND exercise_name=$2
             """.trimIndent(),
-            userOneRepMax.userId,
-            userOneRepMax.exerciseName,
-            userOneRepMax.oneRepMax,
+            userId,
+            exerciseName,
+            oneRepMax,
         )
     }
 

@@ -5,27 +5,52 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.model.Exercise
 import com.congen.model.ProgrammedExercise
-import com.congen.model.SetScheme
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStage
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.random.Random
 
 /**
- * Service for generating individual workout stages and their components.
+ * Service for generating workout stages, programmed exercises, and set schemes
+ * for conjugate powerlifting workouts.
  *
- * Handles the creation of workout stages, programmed exercises, and set schemes
- * with appropriate parameters based on exercise type and user data.
+ * This service handles the creation of workout components including:
+ * - Workout stages (primary, secondary, accessory, conditioning)
+ * - Programmed exercises within each stage
+ * - Set schemes with Prilepin-based guidelines and undulating periodization
+ *
+ * ## Workout Structure
+ *
+ * Each workout consists of:
+ * - **Primary movement**: Max Effort (ME) or Dynamic Effort (DE) exercise
+ * - **Secondary movement**: Additional compound movement (if applicable)
+ * - **Accessory movements**: Targeted muscle development exercises
+ * - **Conditioning**: AMRAP or EMOM exercises (for DE days)
+ *
+ * ## Set Scheme Generation
+ *
+ * Set schemes are generated using:
+ * - **Prilepin's Table**: Optimal volume and intensity guidelines
+ * - **Undulating Periodization**: Varying intensity across weeks
+ * - **Exercise-Specific Guidelines**: Different parameters for different movement types
+ *
+ * @property workoutStageDAL Data access layer for workout stage operations
+ * @property programmedExerciseDAL Data access layer for programmed exercise operations
+ * @property setSchemeDAL Data access layer for set scheme operations
+ * @property prilepinGuidelinesService Service for Prilepin-based guidelines
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
  */
-@Service
+@Component
 class WorkoutStageGenerator(
     private val workoutStageDAL: WorkoutStageDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
-    private val prilepinGuidelinesService: PrilepinGuidelinesService
+    private val prilepinGuidelinesService: PrilepinGuidelinesService,
 ) {
     /**
      * Creates a workout stage.
@@ -48,16 +73,7 @@ class WorkoutStageGenerator(
                 "conditioning" -> 4
                 else -> 1
             }
-
-        val stage =
-            WorkoutStage(
-                id = 0,
-                programmedWorkoutId = workoutId,
-                stageTypeId = stageTypeId,
-                position = position
-            )
-
-        return workoutStageDAL.insertWorkoutStage(stage)
+        return workoutStageDAL.insertWorkoutStage(workoutId, stageTypeId.toLong(), position)
     }
 
     /**
@@ -71,35 +87,39 @@ class WorkoutStageGenerator(
         workoutStageId: Long,
         exerciseName: String
     ): Mono<ProgrammedExercise> {
-        val programmedExercise =
-            ProgrammedExercise(
-                id = 0,
-                workoutStageId = workoutStageId,
-                exerciseName = exerciseName,
-                notes = null
-            )
-
-        return programmedExerciseDAL.insertProgrammedExercise(programmedExercise)
+        return programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, null)
     }
 
     /**
      * Creates set schemes for a programmed exercise.
      *
      * @param programmedExerciseId The ID of the programmed exercise
-     * @param setSchemes List of set schemes to create
+     * @param setSchemeParams List of set scheme parameters to create
      * @return Mono that completes when all set schemes are created
      */
     fun createSetSchemes(
         programmedExerciseId: Long,
-        setSchemes: List<SetScheme>
+        setSchemeParams: List<SetSchemeParams>
     ): Mono<Void> {
-        val setSchemesWithId =
-            setSchemes.map { setScheme ->
-                setScheme.copy(programmedExerciseId = programmedExerciseId)
+        return setSchemeParams.fold(Mono.empty<Void>()) { mono, params ->
+            mono.flatMap {
+                setSchemeDAL.insertSetScheme(
+                    programmedExerciseId,
+                    params.setNumber,
+                    params.wasSetPerformed,
+                    params.isAmrap,
+                    params.isEmom,
+                    params.useTempo,
+                    params.eccentricTempo,
+                    params.isometricTempo,
+                    params.concentricTempo,
+                    params.targetWeight,
+                    params.performedWeight,
+                    params.targetRepCount,
+                    params.performedRepCount,
+                    params.restSeconds
+                ).then()
             }
-
-        return setSchemesWithId.fold(Mono.empty<Void>()) { mono, setScheme ->
-            mono.flatMap { setSchemeDAL.insertSetScheme(setScheme).then() }
         }
     }
 
@@ -112,7 +132,7 @@ class WorkoutStageGenerator(
      * @param dayType The type of workout day (ME_Upper, DE_Lower, etc.)
      * @param oneRepMaxes List of user's one rep max values
      * @param currentWeekNumber The current week number in the program
-     * @return List of set schemes
+     * @return List of set scheme parameters
      */
     fun generatePrilepinBasedScheme(
         userId: Int,
@@ -121,7 +141,7 @@ class WorkoutStageGenerator(
         dayType: String,
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int
-    ): List<SetScheme> {
+    ): List<SetSchemeParams> {
         val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
@@ -153,9 +173,7 @@ class WorkoutStageGenerator(
             }
 
         return (1..numSets).map { setNumber ->
-            SetScheme(
-                id = 0,
-                programmedExerciseId = 0, // Will be set when creating the set schemes
+            SetSchemeParams(
                 setNumber = setNumber,
                 wasSetPerformed = false,
                 isAmrap = false,
@@ -185,13 +203,13 @@ class WorkoutStageGenerator(
      * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
-     * @return List of set schemes
+     * @return List of set scheme parameters
      */
     fun generateSecondaryExerciseScheme(
         userId: Int,
         exercise: Exercise,
         oneRepMaxes: List<UserOneRepMax>
-    ): List<SetScheme> {
+    ): List<SetSchemeParams> {
         // Secondary exercise guidelines: 80-90% intensity, 3-4 sets of 5-8 reps
         val intensity = Random.nextDouble(0.8, 0.9)
         val repsPerSet = (5..8).random()
@@ -217,9 +235,7 @@ class WorkoutStageGenerator(
             }
 
         return (1..numSets).map { setNumber ->
-            SetScheme(
-                id = 0,
-                programmedExerciseId = 0, // Will be set when creating the set schemes
+            SetSchemeParams(
                 setNumber = setNumber,
                 wasSetPerformed = false,
                 isAmrap = false,
@@ -243,13 +259,13 @@ class WorkoutStageGenerator(
      * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
-     * @return List of set schemes
+     * @return List of set scheme parameters
      */
     fun generateAmrapOrEmomScheme(
         userId: Int,
         exercise: Exercise,
         oneRepMaxes: List<UserOneRepMax>
-    ): List<SetScheme> {
+    ): List<SetSchemeParams> {
         val isAmrap = Random.nextBoolean()
         val targetWeight = getTargetWeight(userId, exercise.name, 0.5, oneRepMaxes)
 
@@ -268,9 +284,7 @@ class WorkoutStageGenerator(
             }
 
         return listOf(
-            SetScheme(
-                id = 0,
-                programmedExerciseId = 0, // Will be set when creating the set schemes
+            SetSchemeParams(
                 setNumber = 1,
                 wasSetPerformed = false,
                 isAmrap = isAmrap,

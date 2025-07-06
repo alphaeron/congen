@@ -182,7 +182,7 @@ class ExerciseEquipmentDALTest {
         ).thenReturn(Mono.just(exerciseEquipment))
 
         // When
-        val result = exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment)
+        val result = exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
 
         // Then
         StepVerifier.create(result)

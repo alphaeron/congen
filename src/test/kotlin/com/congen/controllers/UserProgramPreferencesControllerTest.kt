@@ -25,12 +25,12 @@ class UserProgramPreferencesControllerTest {
     @Test
     fun `save should return saved user program preferences`() {
         val prefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 4, sessionTimeLengthInMinutes = 60)
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(prefs)).thenReturn(Mono.just(prefs))
-        val result = userProgramPreferencesController.save(prefs)
+        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(1, 4, 60)).thenReturn(Mono.just(prefs))
+        val result = userProgramPreferencesController.save(1, 4, 60)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<UserProgramPreferences>).expectNext(prefs).verifyComplete()
-        verify(userProgramPreferencesDAL).insertUserProgramPreferences(prefs)
+        verify(userProgramPreferencesDAL).insertUserProgramPreferences(1, 4, 60)
     }
 
     @Test
@@ -45,12 +45,12 @@ class UserProgramPreferencesControllerTest {
     @Test
     fun `update should return updated user program preferences`() {
         val prefs = UserProgramPreferences(userId = 1, programDaysPerWeek = 3, sessionTimeLengthInMinutes = 75)
-        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(prefs)).thenReturn(Mono.just(prefs))
-        val result = userProgramPreferencesController.update(prefs)
+        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(1, 3, 75)).thenReturn(Mono.just(prefs))
+        val result = userProgramPreferencesController.update(1, 3, 75)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<UserProgramPreferences>).expectNext(prefs).verifyComplete()
-        verify(userProgramPreferencesDAL).updateUserProgramPreferences(prefs)
+        verify(userProgramPreferencesDAL).updateUserProgramPreferences(1, 3, 75)
     }
 
     @Test

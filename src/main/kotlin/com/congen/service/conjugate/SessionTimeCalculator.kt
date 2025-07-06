@@ -1,6 +1,5 @@
 package com.congen.service.conjugate
 
-import com.congen.model.SetScheme
 import org.springframework.stereotype.Component
 
 /**
@@ -60,15 +59,15 @@ class SessionTimeCalculator {
      * then determines how many accessory exercises can fit in the remaining time.
      *
      * @param sessionTimeMinutes The total session time in minutes
-     * @param primarySetSchemes List of set schemes for the primary movement (can be empty)
-     * @param secondarySetSchemes List of set schemes for the secondary movement (can be empty)
+     * @param primarySetSchemes List of set scheme parameters for the primary movement (can be empty)
+     * @param secondarySetSchemes List of set scheme parameters for the secondary movement (can be empty)
      * @param dayType The type of workout day (ME_Upper, DE_Lower, etc.)
      * @return The number of accessory exercises to include
      */
     fun calculateNumAccessoryExercisesDynamic(
         sessionTimeMinutes: Int,
-        primarySetSchemes: List<SetScheme>,
-        secondarySetSchemes: List<SetScheme>,
+        primarySetSchemes: List<SetSchemeParams>,
+        secondarySetSchemes: List<SetSchemeParams>,
         dayType: String
     ): Int {
         // Calculate time taken by primary movement
@@ -108,10 +107,10 @@ class SessionTimeCalculator {
      *
      * Formula: num_sets * (rest_seconds + reps_per_set * SECONDS_PER_REP)
      *
-     * @param setSchemes List of set schemes for the exercise
+     * @param setSchemes List of set scheme parameters for the exercise
      * @return Estimated time in seconds
      */
-    fun calculateExerciseTime(setSchemes: List<SetScheme>): Int {
+    fun calculateExerciseTime(setSchemes: List<SetSchemeParams>): Int {
         if (setSchemes.isEmpty()) {
             return 0
         }

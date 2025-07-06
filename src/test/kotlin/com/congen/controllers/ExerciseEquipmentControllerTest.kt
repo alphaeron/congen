@@ -29,10 +29,10 @@ class ExerciseEquipmentControllerTest {
                 exerciseName = "Bench Press",
                 equipmentName = "Barbell",
             )
-        whenever(exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment)).thenReturn(Mono.just(exerciseEquipment))
+        whenever(exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)).thenReturn(Mono.just(exerciseEquipment))
 
         // When
-        val result = exerciseEquipmentController.save(exerciseEquipment)
+        val result = exerciseEquipmentController.save(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -40,7 +40,7 @@ class ExerciseEquipmentControllerTest {
         StepVerifier.create(body as Mono<ExerciseEquipment>)
             .expectNext(exerciseEquipment)
             .verifyComplete()
-        verify(exerciseEquipmentDAL).insertExerciseEquipment(exerciseEquipment)
+        verify(exerciseEquipmentDAL).insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
     }
 
     @Test

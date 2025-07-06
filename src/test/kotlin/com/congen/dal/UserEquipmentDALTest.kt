@@ -63,7 +63,7 @@ class UserEquipmentDALTest {
                 userEquipment.equipmentName,
             ),
         ).thenReturn(Mono.just(userEquipment))
-        val result = userEquipmentDAL.insertUserEquipment(userEquipment)
+        val result = userEquipmentDAL.insertUserEquipment(userEquipment.userId, userEquipment.equipmentName)
         StepVerifier.create(result).expectNext(userEquipment).verifyComplete()
         verify(postgresClient).update<UserEquipment>(
             """

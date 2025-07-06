@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -96,12 +97,14 @@ class EquipmentController(
         ],
     )
     fun save(
-        @Parameter(description = "Equipment to create", required = true)
-        @RequestBody equipment: Equipment,
+        @Parameter(description = "Name of the equipment", required = true)
+        @RequestParam name: String,
+        @Parameter(description = "Description of the equipment", required = true)
+        @RequestParam description: String,
     ): ResponseEntity<*> {
-        logger.info("Saving equipment: {}", equipment.name)
+        logger.info("Saving equipment: {}", name)
         return ResponseEntity.ok(
-            equipmentDAL.insertEquipment(equipment),
+            equipmentDAL.insertEquipment(name, description),
         )
     }
 

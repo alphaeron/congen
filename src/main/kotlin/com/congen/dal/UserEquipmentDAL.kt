@@ -90,12 +90,16 @@ class UserEquipmentDAL(
      * This method inserts a new relationship between the specified user and equipment.
      * The combination of user ID and equipment name must be unique.
      *
-     * @param userEquipment The user-equipment relationship to create
+     * @param userId The unique identifier of the user
+     * @param equipmentName The name of the equipment
      * @return Mono containing the created user-equipment relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertUserEquipment(userEquipment: UserEquipment): Mono<UserEquipment> {
-        logger.debug("Inserting user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName)
+    fun insertUserEquipment(
+        userId: Int,
+        equipmentName: String,
+    ): Mono<UserEquipment> {
+        logger.debug("Inserting user equipment: {} - {}", userId, equipmentName)
         return postgresClient.update(
             """
             INSERT INTO user_equipment
@@ -103,8 +107,8 @@ class UserEquipmentDAL(
             VALUES
                 ($1, $2)
             """.trimIndent(),
-            userEquipment.userId,
-            userEquipment.equipmentName,
+            userId,
+            equipmentName,
         )
     }
 

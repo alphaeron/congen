@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -75,7 +76,9 @@ class UserOneRepMaxController(
      * This endpoint creates a one rep max relationship between a user and an exercise,
      * allowing the user to specify their maximum weight for the exercise.
      *
-     * @param userOneRepMax The user one rep max to create
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value
      * @return ResponseEntity containing the created user one rep max
      */
     @PostMapping("/")
@@ -93,12 +96,16 @@ class UserOneRepMaxController(
         ],
     )
     fun save(
-        @Parameter(description = "User one rep max to create", required = true)
-        @RequestBody userOneRepMax: UserOneRepMax,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Exercise name", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "One rep max weight value", required = true)
+        @RequestParam oneRepMax: java.math.BigDecimal,
     ): ResponseEntity<*> {
-        logger.info("Saving user one rep max: {} - {} - {}", userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
+        logger.info("Saving user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         return ResponseEntity.ok(
-            userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax),
+            userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax),
         )
     }
 
@@ -194,7 +201,9 @@ class UserOneRepMaxController(
      * This endpoint updates the one rep max value for the specified user and exercise.
      * If no 1RM exists, a 404 error will be returned.
      *
-     * @param userOneRepMax The user one rep max with updated data
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value
      * @return ResponseEntity containing the updated user one rep max
      */
     @PatchMapping("/")
@@ -217,12 +226,16 @@ class UserOneRepMaxController(
         ],
     )
     fun update(
-        @Parameter(description = "User one rep max to update", required = true)
-        @RequestBody userOneRepMax: UserOneRepMax,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Exercise name", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "One rep max weight value", required = true)
+        @RequestParam oneRepMax: java.math.BigDecimal,
     ): ResponseEntity<*> {
-        logger.info("Updating user one rep max: {} - {} - {}", userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
+        logger.info("Updating user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         return ResponseEntity.ok(
-            userOneRepMaxDAL.updateUserOneRepMax(userOneRepMax),
+            userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax),
         )
     }
 

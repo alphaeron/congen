@@ -105,7 +105,7 @@ class MuscleDALTest {
         ).thenReturn(Mono.just(muscle))
 
         // When
-        val result = muscleDAL.insertMuscle(muscle)
+        val result = muscleDAL.insertMuscle(muscle.name, muscle.description)
 
         // Then
         StepVerifier.create(result)
@@ -144,7 +144,7 @@ class MuscleDALTest {
         ).thenReturn(Mono.just(muscle))
 
         // When
-        val result = muscleDAL.updateMuscle(muscle)
+        val result = muscleDAL.updateMuscle(muscle.name, muscle.description)
 
         // Then
         StepVerifier.create(result)

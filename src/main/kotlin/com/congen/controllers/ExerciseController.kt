@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -76,7 +77,12 @@ class ExerciseController(
      * This endpoint creates a new exercise with the provided information.
      * The exercise name must be unique within the system.
      *
-     * @param exercise The exercise data to create
+     * @param name The name of the exercise
+     * @param description The description of the exercise
+     * @param movementType The type of movement
+     * @param isUnilateral Whether the exercise is unilateral
+     * @param isUpper Whether the exercise targets upper body
+     * @param isAccessory Whether the exercise is an accessory movement
      * @return The created exercise with assigned ID
      *
      * @throws DatabaseException if database operation fails
@@ -96,12 +102,22 @@ class ExerciseController(
         ],
     )
     fun save(
-        @Parameter(description = "Exercise to create", required = true)
-        @RequestBody exercise: Exercise,
+        @Parameter(description = "Name of the exercise", required = true)
+        @RequestParam name: String,
+        @Parameter(description = "Description of the exercise", required = true)
+        @RequestParam description: String,
+        @Parameter(description = "Type of movement", required = true)
+        @RequestParam movementType: String,
+        @Parameter(description = "Whether the exercise is unilateral", required = true)
+        @RequestParam isUnilateral: Boolean,
+        @Parameter(description = "Whether the exercise targets upper body", required = true)
+        @RequestParam isUpper: Boolean,
+        @Parameter(description = "Whether the exercise is an accessory movement", required = true)
+        @RequestParam isAccessory: Boolean,
     ): ResponseEntity<*> {
-        logger.info("Saving exercise: {}", exercise.name)
+        logger.info("Saving exercise: {}", name)
         return ResponseEntity.ok(
-            exerciseDAL.insertExercise(exercise),
+            exerciseDAL.insertExercise(name, description, movementType, isUnilateral, isUpper, isAccessory),
         )
     }
 

@@ -71,7 +71,7 @@ class ExerciseWorkoutTypeDALTest {
     fun `insertExerciseWorkoutType should insert and return the relationship`() {
         val input = ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort")
         whenever(postgresClient.update(any(), eq(ExerciseWorkoutType::class), any(), any(), any())).thenReturn(Mono.just(input))
-        val result = dal.insertExerciseWorkoutType(input)
+        val result = dal.insertExerciseWorkoutType(input.exerciseName, input.movementType, input.workoutType)
         StepVerifier.create(result)
             .expectNext(input)
             .verifyComplete()

@@ -10,6 +10,7 @@ import com.congen.model.UserOneRepMax
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
 
 /**
  * Service for managing set scheme operations with automatic 1RM updates.
@@ -62,13 +63,41 @@ class SetSchemeService(
      * This method creates a new set scheme and automatically updates the user's
      * one rep max if the performed weight exceeds the current 1RM for the exercise.
      *
-     * @param setScheme The set scheme to insert
+     * @param programmedExerciseId The ID of the programmed exercise this set belongs to
+     * @param setNumber The set number within the exercise
+     * @param targetWeight The target weight for this set
+     * @param targetReps The target number of reps for this set
+     * @param targetTempo The target tempo for this set
+     * @param restSeconds The rest period in seconds after this set
+     * @param performedWeight The actual weight performed (optional)
+     * @param performedReps The actual reps performed (optional)
+     * @param performedTempo The actual tempo performed (optional)
+     * @param wasSetPerformed Whether the set was actually performed
      * @return Mono containing the inserted set scheme
      */
-    fun insertSetScheme(setScheme: SetScheme): Mono<SetScheme> {
-        logger.debug("Inserting set scheme: {} for exercise: {}", setScheme.id, setScheme.programmedExerciseId)
+    fun insertSetScheme(
+        programmedExerciseId: Long,
+        setNumber: Int,
+        wasSetPerformed: Boolean,
+        isAmrap: Boolean,
+        isEmom: Boolean,
+        useTempo: Boolean,
+        eccentricTempo: String?,
+        isometricTempo: String?,
+        concentricTempo: String?,
+        targetWeight: BigDecimal?,
+        performedWeight: BigDecimal?,
+        targetRepCount: Int?,
+        performedRepCount: Int?,
+        restSeconds: Int?,
+    ): Mono<SetScheme> {
+        logger.debug("Inserting set scheme for exercise: {}", programmedExerciseId)
 
-        return setSchemeDAL.insertSetScheme(setScheme)
+        return setSchemeDAL.insertSetScheme(
+            programmedExerciseId, setNumber, wasSetPerformed, isAmrap, isEmom, useTempo,
+            eccentricTempo, isometricTempo, concentricTempo, targetWeight, performedWeight,
+            targetRepCount, performedRepCount, restSeconds
+        )
             .flatMap { insertedSetScheme ->
                 // Check for 1RM update if the set was performed and has a performed weight
                 if (insertedSetScheme.wasSetPerformed && insertedSetScheme.performedWeight != null) {
@@ -86,13 +115,47 @@ class SetSchemeService(
      * This method updates an existing set scheme and automatically updates the user's
      * one rep max if the performed weight exceeds the current 1RM for the exercise.
      *
-     * @param setScheme The set scheme to update
+     * @param id The unique identifier of the set scheme to update
+     * @param programmedExerciseId ID of the programmed exercise this set belongs to
+     * @param setNumber Order of this set within the exercise (1-based)
+     * @param wasSetPerformed Whether the set was completed
+     * @param isAmrap As Many Reps As Possible flag
+     * @param isEmom Every Minute On the Minute flag
+     * @param useTempo Whether to use tempo timing
+     * @param eccentricTempo Eccentric phase tempo (0-9 seconds)
+     * @param isometricTempo Isometric phase tempo (0-9 seconds)
+     * @param concentricTempo Concentric phase tempo (0-9 seconds)
+     * @param targetWeight Target weight for the set in kg
+     * @param performedWeight Actual weight used in kg
+     * @param targetRepCount Target number of repetitions
+     * @param performedRepCount Actual number of repetitions completed
+     * @param restSeconds Rest period after the set in seconds
      * @return Mono containing the updated set scheme
      */
-    fun updateSetScheme(setScheme: SetScheme): Mono<SetScheme> {
-        logger.debug("Updating set scheme: {} for exercise: {}", setScheme.id, setScheme.programmedExerciseId)
+    fun updateSetScheme(
+        id: Long,
+        programmedExerciseId: Long,
+        setNumber: Int,
+        wasSetPerformed: Boolean,
+        isAmrap: Boolean,
+        isEmom: Boolean,
+        useTempo: Boolean,
+        eccentricTempo: String?,
+        isometricTempo: String?,
+        concentricTempo: String?,
+        targetWeight: BigDecimal?,
+        performedWeight: BigDecimal?,
+        targetRepCount: Int?,
+        performedRepCount: Int?,
+        restSeconds: Int?,
+    ): Mono<SetScheme> {
+        logger.debug("Updating set scheme: {} for exercise: {}", id, programmedExerciseId)
 
-        return setSchemeDAL.updateSetScheme(setScheme)
+        return setSchemeDAL.updateSetScheme(
+            id, programmedExerciseId, setNumber, wasSetPerformed, isAmrap, isEmom, useTempo,
+            eccentricTempo, isometricTempo, concentricTempo, targetWeight, performedWeight,
+            targetRepCount, performedRepCount, restSeconds
+        )
             .flatMap { updatedSetScheme ->
                 // Check for 1RM update if the set was performed and has a performed weight
                 if (updatedSetScheme.wasSetPerformed && updatedSetScheme.performedWeight != null) {
@@ -174,13 +237,7 @@ class SetSchemeService(
                             .flatMap { currentOneRepMax ->
                                 // Update 1RM if performed weight is greater
                                 if (performedWeight > currentOneRepMax.oneRepMax) {
-                                    val updatedOneRepMax =
-                                        UserOneRepMax(
-                                            userId = userId,
-                                            exerciseName = exerciseName,
-                                            oneRepMax = performedWeight,
-                                        )
-                                    userOneRepMaxDAL.updateUserOneRepMax(updatedOneRepMax)
+                                    userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, performedWeight)
                                         .doOnSuccess {
                                             logger.info(
                                                 "Updated 1RM for user {} exercise {} from {} to {}",
@@ -197,13 +254,7 @@ class SetSchemeService(
                             }
                             .onErrorResume(NoResultsFoundException::class.java) {
                                 // No existing 1RM, create new one
-                                val newOneRepMax =
-                                    UserOneRepMax(
-                                        userId = userId,
-                                        exerciseName = exerciseName,
-                                        oneRepMax = performedWeight,
-                                    )
-                                userOneRepMaxDAL.insertUserOneRepMax(newOneRepMax)
+                                userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, performedWeight)
                                     .doOnSuccess {
                                         logger.info(
                                             "Created new 1RM for user {} exercise {}: {}",

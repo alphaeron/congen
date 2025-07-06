@@ -23,6 +23,25 @@ data class PrilepinGuidelines(
 )
 
 /**
+ * Data class to hold set scheme parameters without requiring temporary IDs.
+ */
+data class SetSchemeParams(
+    val setNumber: Int,
+    val wasSetPerformed: Boolean,
+    val isAmrap: Boolean,
+    val isEmom: Boolean,
+    val useTempo: Boolean,
+    val eccentricTempo: String?,
+    val isometricTempo: String?,
+    val concentricTempo: String?,
+    val targetWeight: java.math.BigDecimal?,
+    val performedWeight: java.math.BigDecimal?,
+    val targetRepCount: Int?,
+    val performedRepCount: Int?,
+    val restSeconds: Int?
+)
+
+/**
  * Constants for conjugate workout generation.
  */
 object ConjugateConstants {

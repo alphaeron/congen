@@ -133,7 +133,7 @@ class ExerciseRotationHistoryDALTest {
             )
         ).thenReturn(Mono.just(expectedRecord))
 
-        val result = exerciseRotationHistoryDAL.insert(exerciseRotationHistory)
+        val result = exerciseRotationHistoryDAL.insert(exerciseRotationHistory.exerciseName, exerciseRotationHistory.isAccessory)
 
         StepVerifier.create(result)
             .expectNext(expectedRecord)
@@ -173,7 +173,7 @@ class ExerciseRotationHistoryDALTest {
             )
         ).thenReturn(Mono.just(exerciseRotationHistory))
 
-        val result = exerciseRotationHistoryDAL.update(exerciseRotationHistory)
+        val result = exerciseRotationHistoryDAL.update(exerciseRotationHistory.id, exerciseRotationHistory.exerciseName, exerciseRotationHistory.isAccessory)
 
         StepVerifier.create(result)
             .expectNext(exerciseRotationHistory)

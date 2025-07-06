@@ -36,10 +36,10 @@ class MuscleControllerTest {
                 description = "Chest muscles",
             )
 
-        whenever(muscleDAL.insertMuscle(muscle)).thenReturn(Mono.just(muscle))
+        whenever(muscleDAL.insertMuscle(muscle.name, muscle.description)).thenReturn(Mono.just(muscle))
 
         // When
-        val result = muscleController.save(muscle)
+        val result = muscleController.save(muscle.name, muscle.description)
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -48,7 +48,7 @@ class MuscleControllerTest {
             .expectNext(muscle)
             .verifyComplete()
 
-        verify(muscleDAL).insertMuscle(muscle)
+        verify(muscleDAL).insertMuscle(muscle.name, muscle.description)
     }
 
     @Test

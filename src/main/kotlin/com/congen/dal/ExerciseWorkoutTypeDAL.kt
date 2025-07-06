@@ -110,16 +110,18 @@ class ExerciseWorkoutTypeDAL(
      * This method inserts a new relationship between the specified exercise, movement type, and workout type.
      * The combination of exercise name, movement type, and workout type must be unique.
      *
-     * @param exerciseWorkoutType The exercise-workout type relationship to create
+     * @param exerciseName The name of the exercise
+     * @param movementType The movement type (push, pull, squat, hinge, etc.)
+     * @param workoutType The workout type (strength, hypertrophy, endurance, etc.)
      * @return Mono containing the created exercise-workout type relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertExerciseWorkoutType(exerciseWorkoutType: ExerciseWorkoutType): Mono<ExerciseWorkoutType> {
+    fun insertExerciseWorkoutType(exerciseName: String, movementType: String, workoutType: String): Mono<ExerciseWorkoutType> {
         logger.debug(
             "Inserting exercise workout type: {} - {} - {}",
-            exerciseWorkoutType.exerciseName,
-            exerciseWorkoutType.movementType,
-            exerciseWorkoutType.workoutType,
+            exerciseName,
+            movementType,
+            workoutType,
         )
         return postgresClient.update(
             """
@@ -128,9 +130,9 @@ class ExerciseWorkoutTypeDAL(
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            exerciseWorkoutType.exerciseName,
-            exerciseWorkoutType.movementType,
-            exerciseWorkoutType.workoutType,
+            exerciseName,
+            movementType,
+            workoutType,
         )
     }
 

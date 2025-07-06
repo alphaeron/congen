@@ -124,12 +124,13 @@ class ExerciseEquipmentDAL(
      * This method inserts a new relationship between the specified exercise and equipment.
      * The combination of exercise name and equipment name must be unique.
      *
-     * @param exerciseEquipment The exercise-equipment relationship to create
+     * @param exerciseName The name of the exercise
+     * @param equipmentName The name of the equipment
      * @return Mono containing the created exercise-equipment relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertExerciseEquipment(exerciseEquipment: ExerciseEquipment): Mono<ExerciseEquipment> {
-        logger.debug("Inserting exercise equipment: {} - {}", exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+    fun insertExerciseEquipment(exerciseName: String, equipmentName: String): Mono<ExerciseEquipment> {
+        logger.debug("Inserting exercise equipment: {} - {}", exerciseName, equipmentName)
         return postgresClient.update(
             """
             INSERT INTO exercise_equipment
@@ -137,8 +138,8 @@ class ExerciseEquipmentDAL(
             VALUES
                 ($1, $2)
             """.trimIndent(),
-            exerciseEquipment.exerciseName,
-            exerciseEquipment.equipmentName,
+            exerciseName,
+            equipmentName,
         )
     }
 

@@ -56,7 +56,7 @@ class UserDALTest {
                 user.weight,
             ),
         ).thenReturn(Mono.just(user))
-        val result = userDAL.insertUser(user)
+        val result = userDAL.insertUser(user.name, user.age, user.height, user.weight)
         StepVerifier.create(result).expectNext(user).verifyComplete()
         verify(postgresClient).update<User>(
             """
@@ -89,7 +89,7 @@ class UserDALTest {
                 user.weight,
             ),
         ).thenReturn(Mono.just(user))
-        val result = userDAL.updateUser(user)
+        val result = userDAL.updateUser(user.id, user.name, user.age, user.height, user.weight)
         StepVerifier.create(result).expectNext(user).verifyComplete()
         verify(postgresClient).update<User>(
             """

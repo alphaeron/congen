@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -66,7 +67,9 @@ class UserProgramPreferencesController(
      * This endpoint creates program preferences for a user, allowing them to specify
      * their workout frequency, duration, and other program-related settings.
      *
-     * @param userProgramPreferences The user program preferences to create
+     * @param userId The unique identifier of the user
+     * @param programDaysPerWeek The number of days per week for the program
+     * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return ResponseEntity containing the created user program preferences
      */
     @PostMapping("/")
@@ -84,12 +87,16 @@ class UserProgramPreferencesController(
         ],
     )
     fun save(
-        @Parameter(description = "User program preferences to create", required = true)
-        @RequestBody userProgramPreferences: UserProgramPreferences,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Number of days per week for the program", required = true)
+        @RequestParam programDaysPerWeek: Int,
+        @Parameter(description = "Session time length in minutes", required = true)
+        @RequestParam sessionTimeLengthInMinutes: Int,
     ): ResponseEntity<*> {
-        logger.info("Saving user program preferences: {}", userProgramPreferences.userId)
+        logger.info("Saving user program preferences: {}", userId)
         return ResponseEntity.ok(
-            userProgramPreferencesDAL.insertUserProgramPreferences(userProgramPreferences),
+            userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes),
         )
     }
 
@@ -136,7 +143,9 @@ class UserProgramPreferencesController(
      * This endpoint modifies the program preferences for a user, allowing them to
      * update their workout frequency, duration, and other program-related settings.
      *
-     * @param userProgramPreferences The user program preferences to update
+     * @param userId The unique identifier of the user
+     * @param programDaysPerWeek The number of days per week for the program
+     * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return ResponseEntity containing the updated user program preferences
      */
     @PatchMapping("/")
@@ -154,12 +163,16 @@ class UserProgramPreferencesController(
         ],
     )
     fun update(
-        @Parameter(description = "User program preferences to update", required = true)
-        @RequestBody userProgramPreferences: UserProgramPreferences,
+        @Parameter(description = "User ID", required = true)
+        @RequestParam userId: Int,
+        @Parameter(description = "Number of days per week for the program", required = true)
+        @RequestParam programDaysPerWeek: Int,
+        @Parameter(description = "Session time length in minutes", required = true)
+        @RequestParam sessionTimeLengthInMinutes: Int,
     ): ResponseEntity<*> {
-        logger.info("Updating user program preferences: {}", userProgramPreferences.userId)
+        logger.info("Updating user program preferences: {}", userId)
         return ResponseEntity.ok(
-            userProgramPreferencesDAL.updateUserProgramPreferences(userProgramPreferences),
+            userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes),
         )
     }
 

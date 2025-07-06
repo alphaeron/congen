@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 /**
@@ -121,12 +122,14 @@ class ExerciseEquipmentController(
         ],
     )
     fun save(
-        @Parameter(description = "Exercise-equipment relationship to create", required = true)
-        @RequestBody exerciseEquipment: ExerciseEquipment,
+        @Parameter(description = "Name of the exercise", required = true)
+        @RequestParam exerciseName: String,
+        @Parameter(description = "Name of the equipment", required = true)
+        @RequestParam equipmentName: String,
     ): ResponseEntity<*> {
-        logger.info("Saving exercise equipment relationship: {} - {}", exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+        logger.info("Saving exercise equipment relationship: {} - {}", exerciseName, equipmentName)
         return ResponseEntity.ok(
-            exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment),
+            exerciseEquipmentDAL.insertExerciseEquipment(exerciseName, equipmentName),
         )
     }
 }

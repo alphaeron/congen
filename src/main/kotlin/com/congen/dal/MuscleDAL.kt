@@ -84,12 +84,13 @@ class MuscleDAL(
      * This method inserts a new muscle record with the provided name and description.
      * The muscle name must be unique in the database.
      *
-     * @param muscle The muscle object containing name and description
+     * @param name The name of the muscle to create
+     * @param description The description of the muscle
      * @return Mono containing the created muscle
      * @throws DatabaseException when the muscle name already exists or database operation fails
      */
-    fun insertMuscle(muscle: Muscle): Mono<Muscle> {
-        logger.debug("Inserting muscle: {}", muscle.name)
+    fun insertMuscle(name: String, description: String): Mono<Muscle> {
+        logger.debug("Inserting muscle: {}", name)
         return postgresClient.update(
             """
             INSERT INTO muscle
@@ -97,8 +98,8 @@ class MuscleDAL(
             VALUES
                 ($1, $2)
             """.trimIndent(),
-            muscle.name,
-            muscle.description,
+            name,
+            description,
         )
     }
 
@@ -108,20 +109,21 @@ class MuscleDAL(
      * This method modifies the description of muscle with the specified name.
      * If no muscle exists with the given name, a NoResultsFoundException is thrown.
      *
-     * @param muscle The muscle object containing name and updated description
+     * @param name The name of the muscle to update
+     * @param description The updated description of the muscle
      * @return Mono containing the updated muscle
      * @throws NoResultsFoundException when muscle with the specified name doesn't exist
      */
-    fun updateMuscle(muscle: Muscle): Mono<Muscle> {
-        logger.debug("Updating muscle: {}", muscle.name)
+    fun updateMuscle(name: String, description: String): Mono<Muscle> {
+        logger.debug("Updating muscle: {}", name)
         return postgresClient.update(
             """
             UPDATE muscle
             SET description=$2
             WHERE name=$1
             """.trimIndent(),
-            muscle.name,
-            muscle.description,
+            name,
+            description,
         )
     }
 

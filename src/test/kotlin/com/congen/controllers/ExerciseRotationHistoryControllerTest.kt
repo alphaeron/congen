@@ -32,7 +32,7 @@ class ExerciseRotationHistoryControllerTest {
                 isAccessory = isAccessory
             )
 
-        whenever(exerciseRotationHistoryDAL.insert(any())).thenReturn(Mono.just(expectedRecord))
+        whenever(exerciseRotationHistoryDAL.insert(exerciseName, isAccessory)).thenReturn(Mono.just(expectedRecord))
 
         val result = exerciseRotationHistoryController.save(exerciseName, isAccessory)
 
@@ -131,7 +131,7 @@ class ExerciseRotationHistoryControllerTest {
                 isAccessory = isAccessory
             )
 
-        whenever(exerciseRotationHistoryDAL.update(any())).thenReturn(Mono.just(expectedRecord))
+        whenever(exerciseRotationHistoryDAL.update(id, exerciseName, isAccessory)).thenReturn(Mono.just(expectedRecord))
 
         val result = exerciseRotationHistoryController.update(id, exerciseName, isAccessory)
 

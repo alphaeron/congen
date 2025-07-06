@@ -71,7 +71,7 @@ class UserExercisePreferenceDALTest {
                 pref.shouldAvoid,
             ),
         ).thenReturn(Mono.just(pref))
-        val result = userExercisePreferenceDAL.insertUserExercisePreference(pref)
+        val result = userExercisePreferenceDAL.insertUserExercisePreference(pref.userId, pref.exerciseName, pref.shouldAvoid)
         StepVerifier.create(result).expectNext(pref).verifyComplete()
         verify(postgresClient).update<UserExercisePreference>(
             """
@@ -101,7 +101,7 @@ class UserExercisePreferenceDALTest {
                 pref.shouldAvoid,
             ),
         ).thenReturn(Mono.just(pref))
-        val result = userExercisePreferenceDAL.updateUserExercisePreference(pref)
+        val result = userExercisePreferenceDAL.updateUserExercisePreference(pref.userId, pref.exerciseName, pref.shouldAvoid)
         StepVerifier.create(result).expectNext(pref).verifyComplete()
         verify(postgresClient).update<UserExercisePreference>(
             """

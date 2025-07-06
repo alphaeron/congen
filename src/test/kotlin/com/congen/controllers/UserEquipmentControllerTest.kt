@@ -25,12 +25,12 @@ class UserEquipmentControllerTest {
     @Test
     fun `save should return saved user equipment`() {
         val userEquipment = UserEquipment(userId = 1, equipmentName = "Barbell")
-        whenever(userEquipmentDAL.insertUserEquipment(userEquipment)).thenReturn(Mono.just(userEquipment))
-        val result = userEquipmentController.save(userEquipment)
+        whenever(userEquipmentDAL.insertUserEquipment(userEquipment.userId, userEquipment.equipmentName)).thenReturn(Mono.just(userEquipment))
+        val result = userEquipmentController.save(userEquipment.userId, userEquipment.equipmentName)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<UserEquipment>).expectNext(userEquipment).verifyComplete()
-        verify(userEquipmentDAL).insertUserEquipment(userEquipment)
+        verify(userEquipmentDAL).insertUserEquipment(userEquipment.userId, userEquipment.equipmentName)
     }
 
     @Test

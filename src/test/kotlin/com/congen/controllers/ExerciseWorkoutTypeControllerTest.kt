@@ -76,8 +76,8 @@ class ExerciseWorkoutTypeControllerTest {
     @Test
     fun `save should insert and return the relationship`() {
         val input = ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort")
-        whenever(dal.insertExerciseWorkoutType(input)).thenReturn(Mono.just(input))
-        val response = controller.save(input)
+        whenever(dal.insertExerciseWorkoutType(input.exerciseName, input.movementType, input.workoutType)).thenReturn(Mono.just(input))
+        val response = controller.save(input.exerciseName, input.movementType, input.workoutType)
 
         @Suppress("UNCHECKED_CAST")
         val body = (response.body as Mono<ExerciseWorkoutType>)

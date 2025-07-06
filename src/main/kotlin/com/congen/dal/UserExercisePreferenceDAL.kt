@@ -92,12 +92,18 @@ class UserExercisePreferenceDAL(
      * This method inserts a new preference between the specified user and exercise.
      * The combination of user ID and exercise name must be unique.
      *
-     * @param userExercisePreference The user-exercise preference to create
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param shouldAvoid Whether the user should avoid this exercise
      * @return Mono containing the created user-exercise preference
      * @throws DatabaseException when the preference already exists or database operation fails
      */
-    fun insertUserExercisePreference(userExercisePreference: UserExercisePreference): Mono<UserExercisePreference> {
-        logger.debug("Inserting user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
+    fun insertUserExercisePreference(
+        userId: Int,
+        exerciseName: String,
+        shouldAvoid: Boolean,
+    ): Mono<UserExercisePreference> {
+        logger.debug("Inserting user exercise preference: {} - {}", userId, exerciseName)
         return postgresClient.update(
             """
             INSERT INTO user_exercise_preference
@@ -105,9 +111,9 @@ class UserExercisePreferenceDAL(
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            userExercisePreference.userId,
-            userExercisePreference.exerciseName,
-            userExercisePreference.shouldAvoid,
+            userId,
+            exerciseName,
+            shouldAvoid,
         )
     }
 
@@ -117,21 +123,27 @@ class UserExercisePreferenceDAL(
      * This method modifies the preference for the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userExercisePreference The user-exercise preference with updated data
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param shouldAvoid Whether the user should avoid this exercise
      * @return Mono containing the updated user-exercise preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
-    fun updateUserExercisePreference(userExercisePreference: UserExercisePreference): Mono<UserExercisePreference> {
-        logger.debug("Updating user exercise preference: {} - {}", userExercisePreference.userId, userExercisePreference.exerciseName)
+    fun updateUserExercisePreference(
+        userId: Int,
+        exerciseName: String,
+        shouldAvoid: Boolean,
+    ): Mono<UserExercisePreference> {
+        logger.debug("Updating user exercise preference: {} - {}", userId, exerciseName)
         return postgresClient.update(
             """
             UPDATE user_exercise_preference
             SET should_avoid=$3
             WHERE user_id=$1 AND exercise_name=$2
             """.trimIndent(),
-            userExercisePreference.userId,
-            userExercisePreference.exerciseName,
-            userExercisePreference.shouldAvoid,
+            userId,
+            exerciseName,
+            shouldAvoid,
         )
     }
 

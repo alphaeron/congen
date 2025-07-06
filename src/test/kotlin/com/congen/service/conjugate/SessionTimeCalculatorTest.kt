@@ -1,6 +1,7 @@
 package com.congen.service.conjugate
 
 import com.congen.model.SetScheme
+import com.congen.service.conjugate.SetSchemeParams
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,9 +17,7 @@ class SessionTimeCalculatorTest {
         // Given: Primary exercise with 3 sets of 5 reps, 180s rest
         val primarySetSchemes =
             listOf(
-                SetScheme(
-                    id = 1,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 1,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -33,9 +32,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetScheme(
-                    id = 2,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 2,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -50,9 +47,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetScheme(
-                    id = 3,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 3,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -93,9 +88,7 @@ class SessionTimeCalculatorTest {
         // Given: Primary exercise with 3 sets of 5 reps, 180s rest
         val primarySetSchemes =
             listOf(
-                SetScheme(
-                    id = 1,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 1,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -110,9 +103,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetScheme(
-                    id = 2,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 2,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -127,9 +118,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetScheme(
-                    id = 3,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 3,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -149,9 +138,7 @@ class SessionTimeCalculatorTest {
         // Secondary exercise with 4 sets of 6 reps, 240s rest
         val secondarySetSchemes =
             listOf(
-                SetScheme(
-                    id = 4,
-                    programmedExerciseId = 2,
+                SetSchemeParams(
                     setNumber = 1,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -166,9 +153,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 240
                 ),
-                SetScheme(
-                    id = 5,
-                    programmedExerciseId = 2,
+                SetSchemeParams(
                     setNumber = 2,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -183,9 +168,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 240
                 ),
-                SetScheme(
-                    id = 6,
-                    programmedExerciseId = 2,
+                SetSchemeParams(
                     setNumber = 3,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -200,9 +183,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 240
                 ),
-                SetScheme(
-                    id = 7,
-                    programmedExerciseId = 2,
+                SetSchemeParams(
                     setNumber = 4,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -245,9 +226,7 @@ class SessionTimeCalculatorTest {
         // Given: Primary exercise with 3 sets of 5 reps, 180s rest
         val primarySetSchemes =
             listOf(
-                SetScheme(
-                    id = 1,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 1,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -262,9 +241,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetScheme(
-                    id = 2,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 2,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -279,9 +256,7 @@ class SessionTimeCalculatorTest {
                     performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetScheme(
-                    id = 3,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 3,
                     wasSetPerformed = false,
                     isAmrap = false,
@@ -333,9 +308,7 @@ class SessionTimeCalculatorTest {
         // Given: Single set with 5 reps and 120s rest
         val setSchemes =
             listOf(
-                SetScheme(
-                    id = 1,
-                    programmedExerciseId = 1,
+                SetSchemeParams(
                     setNumber = 1,
                     wasSetPerformed = false,
                     isAmrap = false,

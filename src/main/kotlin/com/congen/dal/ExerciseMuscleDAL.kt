@@ -124,12 +124,13 @@ class ExerciseMuscleDAL(
      * This method inserts a new relationship between the specified exercise and muscle.
      * The combination of exercise name and muscle name must be unique.
      *
-     * @param exerciseMuscle The exercise-muscle relationship to create
+     * @param exerciseName The name of the exercise
+     * @param muscleName The name of the muscle
      * @return Mono containing the created exercise-muscle relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
-    fun insertExerciseMuscle(exerciseMuscle: ExerciseMuscle): Mono<ExerciseMuscle> {
-        logger.debug("Inserting exercise muscle: {} - {}", exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
+    fun insertExerciseMuscle(exerciseName: String, muscleName: String): Mono<ExerciseMuscle> {
+        logger.debug("Inserting exercise muscle: {} - {}", exerciseName, muscleName)
         return postgresClient.update(
             """
             INSERT INTO exercise_muscle
@@ -137,8 +138,8 @@ class ExerciseMuscleDAL(
             VALUES
                 ($1, $2)
             """.trimIndent(),
-            exerciseMuscle.exerciseName,
-            exerciseMuscle.muscleName,
+            exerciseName,
+            muscleName,
         )
     }
 

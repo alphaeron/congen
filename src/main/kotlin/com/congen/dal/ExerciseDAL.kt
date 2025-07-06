@@ -86,12 +86,24 @@ class ExerciseDAL(
      * This method inserts a new exercise record with the provided properties.
      * The exercise name must be unique in the database.
      *
-     * @param exercise The exercise object containing all properties
+     * @param name The name of the exercise
+     * @param description The description of the exercise
+     * @param movementType The movement type of the exercise
+     * @param isUnilateral Whether the exercise is unilateral
+     * @param isUpper Whether the exercise is upper body
+     * @param isAccessory Whether the exercise is accessory
      * @return Mono containing the created exercise
      * @throws DatabaseException when the exercise name already exists or database operation fails
      */
-    fun insertExercise(exercise: Exercise): Mono<Exercise> {
-        logger.debug("Inserting exercise: {}", exercise.name)
+    fun insertExercise(
+        name: String,
+        description: String,
+        movementType: String,
+        isUnilateral: Boolean,
+        isUpper: Boolean,
+        isAccessory: Boolean,
+    ): Mono<Exercise> {
+        logger.debug("Inserting exercise: {}", name)
         return postgresClient.update(
             """
             INSERT INTO exercise
@@ -99,12 +111,12 @@ class ExerciseDAL(
             VALUES
                 ($1, $2, $3, $4, $5, $6)
             """.trimIndent(),
-            exercise.name,
-            exercise.description,
-            exercise.movementType,
-            exercise.isUnilateral,
-            exercise.isUpper,
-            exercise.isAccessory,
+            name,
+            description,
+            movementType,
+            isUnilateral,
+            isUpper,
+            isAccessory,
         )
     }
 
@@ -114,24 +126,36 @@ class ExerciseDAL(
      * This method modifies the properties of exercise with the specified name.
      * If no exercise exists with the given name, a NoResultsFoundException is thrown.
      *
-     * @param exercise The exercise object containing name and updated properties
+     * @param name The name of the exercise
+     * @param description The updated description of the exercise
+     * @param movementType The updated movement type of the exercise
+     * @param isUnilateral Whether the exercise is unilateral
+     * @param isUpper Whether the exercise is upper body
+     * @param isAccessory Whether the exercise is accessory
      * @return Mono containing the updated exercise
      * @throws NoResultsFoundException when exercise with the specified name doesn't exist
      */
-    fun updateExercise(exercise: Exercise): Mono<Exercise> {
-        logger.debug("Updating exercise: {}", exercise.name)
+    fun updateExercise(
+        name: String,
+        description: String,
+        movementType: String,
+        isUnilateral: Boolean,
+        isUpper: Boolean,
+        isAccessory: Boolean,
+    ): Mono<Exercise> {
+        logger.debug("Updating exercise: {}", name)
         return postgresClient.update(
             """
             UPDATE exercise
             SET description=$2, movement_type=$3, is_unilateral=$4, is_upper=$5, is_accessory=$6
             WHERE name=$1
             """.trimIndent(),
-            exercise.name,
-            exercise.description,
-            exercise.movementType,
-            exercise.isUnilateral,
-            exercise.isUpper,
-            exercise.isAccessory,
+            name,
+            description,
+            movementType,
+            isUnilateral,
+            isUpper,
+            isAccessory,
         )
     }
 

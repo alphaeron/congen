@@ -75,10 +75,10 @@ class ExerciseMuscleControllerTest {
                 exerciseName = "Bench Press",
                 muscleName = "Chest",
             )
-        whenever(exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle)).thenReturn(Mono.just(exerciseMuscle))
+        whenever(exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)).thenReturn(Mono.just(exerciseMuscle))
 
         // When
-        val result = exerciseMuscleController.save(exerciseMuscle)
+        val result = exerciseMuscleController.save(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -86,7 +86,7 @@ class ExerciseMuscleControllerTest {
         StepVerifier.create(body as Mono<ExerciseMuscle>)
             .expectNext(exerciseMuscle)
             .verifyComplete()
-        verify(exerciseMuscleDAL).insertExerciseMuscle(exerciseMuscle)
+        verify(exerciseMuscleDAL).insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
     }
 
     @Test

@@ -90,7 +90,7 @@ class ProgramDALTest {
         // Given
         val program =
             Program(
-                id = 0, // Temporary ID for creation
+                id = 1,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
                 description = "A comprehensive conjugate powerlifting program",
@@ -99,21 +99,22 @@ class ProgramDALTest {
         val expectedQuery =
             """
             INSERT INTO program
-                (name, description)
+                (user_id, name, description)
             VALUES
-                ($1, $2)
+                ($1, $2, $3)
             """.trimIndent()
 
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
+                program.userId,
                 program.name,
                 program.description,
             ),
         ).thenReturn(Mono.just(program))
 
         // When
-        val result = programDAL.insertProgram(program)
+        val result = programDAL.insertProgram(program.userId, program.name, program.description)
 
         // Then
         StepVerifier.create(result)
@@ -122,6 +123,7 @@ class ProgramDALTest {
 
         verify(postgresClient).update<Program>(
             expectedQuery,
+            program.userId,
             program.name,
             program.description,
         )
@@ -155,7 +157,7 @@ class ProgramDALTest {
         ).thenReturn(Mono.just(program))
 
         // When
-        val result = programDAL.updateProgram(program)
+        val result = programDAL.updateProgram(program.id, program.name, program.description)
 
         // Then
         StepVerifier.create(result)

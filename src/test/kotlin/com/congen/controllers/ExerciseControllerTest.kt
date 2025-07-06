@@ -44,10 +44,10 @@ class ExerciseControllerTest {
                 isAccessory = true,
             )
 
-        whenever(exerciseDAL.insertExercise(exercise)).thenReturn(Mono.just(exercise))
+        whenever(exerciseDAL.insertExercise(exercise.name, exercise.description, exercise.movementType, exercise.isUnilateral, exercise.isUpper, exercise.isAccessory)).thenReturn(Mono.just(exercise))
 
         // When
-        val result = exerciseController.save(exercise)
+        val result = exerciseController.save(exercise.name, exercise.description, exercise.movementType, exercise.isUnilateral, exercise.isUpper, exercise.isAccessory)
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -56,7 +56,7 @@ class ExerciseControllerTest {
             .expectNext(exercise)
             .verifyComplete()
 
-        verify(exerciseDAL).insertExercise(exercise)
+        verify(exerciseDAL).insertExercise(exercise.name, exercise.description, exercise.movementType, exercise.isUnilateral, exercise.isUpper, exercise.isAccessory)
     }
 
     @Test

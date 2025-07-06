@@ -47,7 +47,7 @@ class UserProgramPreferencesDALTest {
                 prefs.sessionTimeLengthInMinutes,
             ),
         ).thenReturn(Mono.just(prefs))
-        val result = userProgramPreferencesDAL.insertUserProgramPreferences(prefs)
+        val result = userProgramPreferencesDAL.insertUserProgramPreferences(prefs.userId, prefs.programDaysPerWeek, prefs.sessionTimeLengthInMinutes)
         StepVerifier.create(result).expectNext(prefs).verifyComplete()
         verify(postgresClient).update<UserProgramPreferences>(
             """
@@ -77,7 +77,7 @@ class UserProgramPreferencesDALTest {
                 prefs.sessionTimeLengthInMinutes,
             ),
         ).thenReturn(Mono.just(prefs))
-        val result = userProgramPreferencesDAL.updateUserProgramPreferences(prefs)
+        val result = userProgramPreferencesDAL.updateUserProgramPreferences(prefs.userId, prefs.programDaysPerWeek, prefs.sessionTimeLengthInMinutes)
         StepVerifier.create(result).expectNext(prefs).verifyComplete()
         verify(postgresClient).update<UserProgramPreferences>(
             """

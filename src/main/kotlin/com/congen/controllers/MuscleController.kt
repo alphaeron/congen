@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -91,12 +92,14 @@ class MuscleController(
         ],
     )
     fun save(
-        @Parameter(description = "Muscle to create", required = true)
-        @RequestBody muscle: Muscle,
+        @Parameter(description = "Name of the muscle", required = true)
+        @RequestParam name: String,
+        @Parameter(description = "Description of the muscle", required = true)
+        @RequestParam description: String,
     ): ResponseEntity<*> {
-        logger.info("Saving muscle: {}", muscle.name)
+        logger.info("Saving muscle: {}", name)
         return ResponseEntity.ok(
-            muscleDAL.insertMuscle(muscle),
+            muscleDAL.insertMuscle(name, description),
         )
     }
 

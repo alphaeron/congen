@@ -30,16 +30,14 @@ class EquipmentControllerTest {
     @Test
     fun `save should return saved equipment`() {
         // Given
-        val equipment =
-            Equipment(
-                name = "Barbell",
-                description = "A barbell for weightlifting",
-            )
+        val name = "Barbell"
+        val description = "A barbell for weightlifting"
+        val equipment = Equipment(name = name, description = description)
 
-        whenever(equipmentDAL.insertEquipment(equipment)).thenReturn(Mono.just(equipment))
+        whenever(equipmentDAL.insertEquipment(name, description)).thenReturn(Mono.just(equipment))
 
         // When
-        val result = equipmentController.save(equipment)
+        val result = equipmentController.save(name, description)
 
         // Then
         assert(result.statusCode == HttpStatus.OK)
@@ -48,7 +46,7 @@ class EquipmentControllerTest {
             .expectNext(equipment)
             .verifyComplete()
 
-        verify(equipmentDAL).insertEquipment(equipment)
+        verify(equipmentDAL).insertEquipment(name, description)
     }
 
     @Test
