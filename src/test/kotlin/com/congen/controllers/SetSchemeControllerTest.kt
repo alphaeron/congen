@@ -72,9 +72,12 @@ class SetSchemeControllerTest {
         whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.just(setSchemes))
 
         val result = setSchemeController.getAll()
-
-        assert(result.statusCodeValue == 200)
-        assert(result.body == setSchemes)
+        StepVerifier.create(result)
+            .assertNext { resp ->
+                assert(resp.statusCodeValue == 200)
+                assert(resp.body == setSchemes)
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -269,7 +272,9 @@ class SetSchemeControllerTest {
             )
 
         assert(result.statusCodeValue == 200)
-        assert(result.body == setScheme)
+        StepVerifier.create(result.body as Mono<SetScheme>)
+            .expectNext(setScheme)
+            .verifyComplete()
     }
 
     @Test
@@ -299,7 +304,9 @@ class SetSchemeControllerTest {
         val result = setSchemeController.delete(1L)
 
         assert(result.statusCodeValue == 200)
-        assert(result.body == setScheme)
+        StepVerifier.create(result.body as Mono<SetScheme>)
+            .expectNext(setScheme)
+            .verifyComplete()
     }
 
     @Test
@@ -351,7 +358,9 @@ class SetSchemeControllerTest {
         val result = setSchemeController.getByProgrammedExerciseId(programmedExerciseId)
 
         assert(result.statusCode == HttpStatus.OK)
-        assert(result.body == setSchemes)
+        StepVerifier.create(result.body as Mono<List<SetScheme>>)
+            .expectNext(setSchemes)
+            .verifyComplete()
     }
 
     @Test
@@ -360,6 +369,8 @@ class SetSchemeControllerTest {
 
         val result = setSchemeController.getAll()
 
-        assert(result.statusCode == HttpStatus.INTERNAL_SERVER_ERROR)
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
     }
 }

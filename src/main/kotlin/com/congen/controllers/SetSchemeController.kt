@@ -159,15 +159,13 @@ class SetSchemeController(
      * @return ResponseEntity containing a list of all set schemes
      */
     @GetMapping("/")
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<SetScheme>>> {
         logger.debug("Getting all set schemes")
-        return try {
-            ResponseEntity.ok(
-                setSchemeService.selectSetSchemes(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all set schemes", e)
-            throw e
+        return Mono.defer {
+            setSchemeService.selectSetSchemes()
+                .map { setSchemes ->
+                    ResponseEntity.ok(setSchemes)
+                }
         }
     }
 

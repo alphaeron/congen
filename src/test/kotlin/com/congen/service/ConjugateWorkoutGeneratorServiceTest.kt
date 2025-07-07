@@ -112,6 +112,86 @@ class ConjugateWorkoutGeneratorServiceTest {
                 workoutStageGenerator,
                 sessionTimeCalculator
             )
+        // Add default mocks for conjugateTemplates
+        whenever(conjugateTemplates.selectTemplate(any())).thenReturn(listOf(
+            com.congen.service.conjugate.DayTemplate("ME_Upper"),
+            com.congen.service.conjugate.DayTemplate("DE_Lower"),
+            com.congen.service.conjugate.DayTemplate("ME_Lower"),
+            com.congen.service.conjugate.DayTemplate("DE_Upper")
+        ))
+        whenever(conjugateTemplates.hasSecondaryMovement(any())).thenReturn(true)
+        whenever(conjugateTemplates.hasConditioning(any())).thenReturn(true)
+        // Add default mocks for exerciseSelectionService
+        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any(), any())).thenReturn(
+            com.congen.model.Exercise(
+                name = "Bench Press",
+                description = "A compound upper body exercise",
+                movementType = "horizontal_push",
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
+        )
+        whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any())).thenReturn(
+            listOf(
+                com.congen.model.Exercise(
+                    name = "Bench Press",
+                    description = "A compound upper body exercise",
+                    movementType = "horizontal_push",
+                    isUnilateral = false,
+                    isUpper = true,
+                    isAccessory = false
+                )
+            )
+        )
+        whenever(exerciseSelectionService.filterExercisesExcluding(any(), any())).thenReturn(
+            listOf(
+                com.congen.model.Exercise(
+                    name = "Incline Bench Press",
+                    description = "An incline compound upper body exercise",
+                    movementType = "horizontal_push",
+                    isUnilateral = false,
+                    isUpper = true,
+                    isAccessory = false
+                )
+            )
+        )
+        // Add default mocks for workoutStageGenerator
+        whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
+            listOf(com.congen.service.conjugate.SetSchemeParams(1, false, false, false, null, null, null, BigDecimal("100.0"), null, 5, null, 180))
+        )
+        whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any(), any())).thenReturn(
+            listOf(com.congen.service.conjugate.SetSchemeParams(1, false, false, false, null, null, null, BigDecimal("80.0"), null, 8, null, 120))
+        )
+        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(
+            Mono.just(
+                com.congen.model.WorkoutStage(
+                    id = 1L,
+                    programmedWorkoutId = 1L,
+                    stageTypeId = 1,
+                    name = "Test Stage",
+                    position = 1,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            )
+        )
+        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(
+            Mono.just(
+                com.congen.model.ProgrammedExercise(
+                    id = 1L,
+                    workoutStageId = 1L,
+                    exerciseName = "Bench Press",
+                    position = 1,
+                    notes = null,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            )
+        )
+        whenever(workoutStageGenerator.createSetSchemes(any(), any())).thenReturn(Mono.empty())
+        // Add default mocks for sessionTimeCalculator
+        whenever(sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(any(), any(), any(), any())).thenReturn(2)
     }
 
     @Test
@@ -144,7 +224,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
         val createdWorkout =
@@ -211,7 +291,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
         val createdWorkout =
@@ -273,7 +353,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
         val createdWorkout =
@@ -336,7 +416,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
         val createdWorkout =
@@ -396,7 +476,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
         val createdWorkout =
@@ -469,7 +549,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
+        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
         val createdWorkout =

@@ -105,7 +105,11 @@ class UserControllerTest {
         val updatedUser = user.copy(id = 1)
         whenever(userDAL.updateUser(1, name, age, height, weight)).thenReturn(Mono.just(updatedUser))
         val result = userController.update(1, name, age, height, weight)
-        assertEquals(ResponseEntity.ok(Mono.just(updatedUser)), result)
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<User>)
+            .expectNext(updatedUser)
+            .verifyComplete()
         verify(userDAL).updateUser(1, name, age, height, weight)
     }
 
@@ -124,7 +128,11 @@ class UserControllerTest {
             )
         whenever(userDAL.deleteUser(1)).thenReturn(Mono.just(user))
         val result = userController.delete(1)
-        assertEquals(ResponseEntity.ok(Mono.just(user)), result)
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<User>)
+            .expectNext(user)
+            .verifyComplete()
         verify(userDAL).deleteUser(1)
     }
 
