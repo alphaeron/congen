@@ -1,7 +1,5 @@
 check missing integration tests
 
-Remove update from /workout_stage/{id}/update since it is redundant, make sure it's a patch request too
-
 Only get the latest program for a user.
 
 just put endpoint for user 1rm
