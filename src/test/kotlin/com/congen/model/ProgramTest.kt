@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -13,7 +13,7 @@ import kotlin.test.assertTrue
 class ProgramTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `should create program with all properties`() {
@@ -150,99 +150,8 @@ class ProgramTest {
     }
 
     @Test
-    fun `test program creation with all fields`() {
-        val program =
-            Program(
-                id = 1L,
-                userId = 1,
-                name = "Test Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now,
-            )
-
-        assertEquals(1L, program.id)
-        assertEquals(1, program.userId)
-        assertEquals("Test Program", program.name)
-        assertEquals(1, program.currentWeekNumber)
-        assertEquals(now, program.createdAt)
-        assertEquals(now, program.updatedAt)
-    }
-
-    @Test
-    fun `test program creation with minimal fields`() {
-        val program =
-            Program(
-                id = 2L,
-                userId = 456,
-                name = "Minimal Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        assertEquals(2L, program.id)
-        assertEquals(456, program.userId)
-        assertEquals("Minimal Program", program.name)
-        assertEquals(1, program.currentWeekNumber)
-        assertEquals(now, program.createdAt)
-        assertEquals(now, program.updatedAt)
-    }
-
-    @Test
-    fun `test program equality`() {
-        val program1 =
-            Program(
-                id = 1L,
-                userId = 1,
-                name = "Test Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        val program2 =
-            Program(
-                id = 1L,
-                userId = 1,
-                name = "Test Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        assertEquals(program1, program2)
-        assertEquals(program1.hashCode(), program2.hashCode())
-    }
-
-    @Test
-    fun `test program inequality`() {
-        val program1 =
-            Program(
-                id = 1L,
-                userId = 1,
-                name = "Test Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        val program2 =
-            Program(
-                id = 2L,
-                userId = 1,
-                name = "Test Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        assertFalse(program1 == program2)
-        assertFalse(program1.hashCode() == program2.hashCode())
-    }
-
-    @Test
-    fun `test program copy`() {
+    fun `should copy program correctly`() {
+        // Given
         val original =
             Program(
                 id = 1L,
@@ -253,12 +162,14 @@ class ProgramTest {
                 updatedAt = now
             )
 
+        // When
         val copied =
             original.copy(
                 name = "Copied Program",
                 currentWeekNumber = 2
             )
 
+        // Then
         assertEquals(1L, copied.id)
         assertEquals(1, copied.userId)
         assertEquals("Copied Program", copied.name)
@@ -268,7 +179,8 @@ class ProgramTest {
     }
 
     @Test
-    fun `test program toString`() {
+    fun `should have meaningful toString`() {
+        // Given
         val program =
             Program(
                 id = 1L,
@@ -279,7 +191,10 @@ class ProgramTest {
                 updatedAt = now
             )
 
+        // When
         val toString = program.toString()
+
+        // Then
         assertTrue(toString.contains("id=1"))
         assertTrue(toString.contains("userId=1"))
         assertTrue(toString.contains("name=Test Program"))

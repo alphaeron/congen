@@ -12,7 +12,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for WorkoutStageTypeController.
@@ -35,7 +35,7 @@ class WorkoutStageTypeControllerTest {
 
     @Test
     fun `get should return workout stage type when found`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val workoutStageType =
             WorkoutStageType(
                 id = 1,
@@ -68,7 +68,7 @@ class WorkoutStageTypeControllerTest {
 
     @Test
     fun `getByName should return workout stage type when found`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val workoutStageType =
             WorkoutStageType(
                 id = 1,
@@ -103,7 +103,7 @@ class WorkoutStageTypeControllerTest {
 
     @Test
     fun `getAll should return all workout stage types`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val workoutStageTypes =
             listOf(
                 WorkoutStageType(

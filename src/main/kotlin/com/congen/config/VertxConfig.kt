@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Configuration
  *
  * This configuration sets up Vertx's JSON handling with proper modules for:
  * - Kotlin data class support
- * - Java 8 date/time types (LocalDateTime, etc.)
+ * - Java 8 date/time types.
  * - Proper date formatting
  * - Property naming strategy support for @JsonNaming annotations
  *

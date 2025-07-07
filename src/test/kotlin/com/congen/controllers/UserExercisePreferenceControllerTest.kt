@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for UserExercisePreferenceController.
@@ -37,7 +37,7 @@ class UserExercisePreferenceControllerTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val shouldAvoid = false
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userExercisePreference =
             UserExercisePreference(
                 userId = userId,
@@ -63,7 +63,7 @@ class UserExercisePreferenceControllerTest {
     @Test
     fun `getByUser should return user exercise preferences when found`() {
         val userId = 1
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userExercisePreferences =
             listOf(
                 UserExercisePreference(
@@ -96,7 +96,7 @@ class UserExercisePreferenceControllerTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val shouldAvoid = false
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userExercisePreference =
             UserExercisePreference(
                 userId = userId,
@@ -156,7 +156,7 @@ class UserExercisePreferenceControllerTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val shouldAvoid = false
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userExercisePreference =
             UserExercisePreference(
                 userId = userId,

@@ -2,10 +2,10 @@ package com.congen.model
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.Instant
 
 class UserProgramPreferencesTest {
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `should create user program preferences with correct properties`() {

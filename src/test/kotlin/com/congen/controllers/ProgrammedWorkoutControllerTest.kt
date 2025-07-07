@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for ProgrammedWorkoutController.
@@ -34,7 +34,7 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should get all programmed workouts`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programmedWorkouts =
             listOf(
                 ProgrammedWorkout(
@@ -70,7 +70,7 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should get programmed workout by id`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programmedWorkout =
             ProgrammedWorkout(
                 id = 1L,
@@ -107,7 +107,7 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should create programmed workout`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programId = 1L
         val dayNumber = 1
         val name = "New Workout"
@@ -134,7 +134,7 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should update programmed workout`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val id = 1L
         val programId = 1L
         val dayNumber = 2
@@ -174,7 +174,7 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should delete programmed workout`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programmedWorkout =
             ProgrammedWorkout(
                 id = 1L,
@@ -210,7 +210,7 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should get programmed workouts by program`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programId = 1L
         val programmedWorkouts =
             listOf(

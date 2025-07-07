@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents the relationship between a user and a piece of equipment they have access to.
@@ -31,5 +31,5 @@ data class UserEquipment(
     @param:JsonProperty("equipment_name") val equipmentName: String,
     /** Timestamp when the user equipment relationship was created. */
     @Schema(description = "Timestamp when the user equipment relationship was created", example = "2024-07-06T12:00:00Z", required = true)
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @param:JsonProperty("created_at") val createdAt: Instant,
 )

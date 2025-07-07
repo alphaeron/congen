@@ -2,7 +2,7 @@ package com.congen.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Top-level health check response object following RFC specification.
@@ -112,7 +112,7 @@ data class HealthCheck(
     val affectedEndpoints: List<String> = emptyList(),
     /** Timestamp of the check. */
     @Schema(description = "Timestamp of the check.")
-    val time: LocalDateTime = LocalDateTime.now(),
+    val time: Instant = Instant.now(),
     /** Output message. */
     @Schema(description = "Output message.")
     val output: String? = null,

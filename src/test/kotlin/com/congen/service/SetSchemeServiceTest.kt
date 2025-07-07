@@ -19,7 +19,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for SetSchemeService.
@@ -36,7 +36,7 @@ class SetSchemeServiceTest {
     private lateinit var programDAL: ProgramDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var setSchemeService: SetSchemeService
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @BeforeEach
     fun setUp() {

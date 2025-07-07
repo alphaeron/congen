@@ -8,7 +8,7 @@ CREATE TABLE exercise_rotation_history (
   user_id BIGINT NOT NULL,
   exercise_name VARCHAR(255) NOT NULL,
   is_accessory BOOLEAN NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_exercise_rotation_history_user FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
   CONSTRAINT fk_exercise_rotation_history_exercise FOREIGN KEY (exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
 );

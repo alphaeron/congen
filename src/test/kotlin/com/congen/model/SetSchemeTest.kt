@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class SetSchemeTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `test set scheme creation with all fields`() {

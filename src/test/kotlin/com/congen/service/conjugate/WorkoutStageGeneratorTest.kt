@@ -22,7 +22,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -63,7 +63,7 @@ class WorkoutStageGeneratorTest {
             WorkoutStageType(
                 id = 1,
                 name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
         val expectedStage =
             WorkoutStage(
@@ -72,8 +72,8 @@ class WorkoutStageGeneratorTest {
                 stageTypeId = 1,
                 position = position,
                 name = "Primary",
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
@@ -103,7 +103,7 @@ class WorkoutStageGeneratorTest {
             WorkoutStageType(
                 id = 2,
                 name = WorkoutStageTypeEnum.SECONDARY,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
         val expectedStage =
             WorkoutStage(
@@ -112,8 +112,8 @@ class WorkoutStageGeneratorTest {
                 stageTypeId = 2,
                 position = position,
                 name = "Secondary",
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
@@ -143,7 +143,7 @@ class WorkoutStageGeneratorTest {
             WorkoutStageType(
                 id = 3,
                 name = WorkoutStageTypeEnum.ACCESSORY,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
         val expectedStage =
             WorkoutStage(
@@ -152,8 +152,8 @@ class WorkoutStageGeneratorTest {
                 stageTypeId = 3,
                 position = position,
                 name = "Accessory",
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
@@ -183,7 +183,7 @@ class WorkoutStageGeneratorTest {
             WorkoutStageType(
                 id = 4,
                 name = WorkoutStageTypeEnum.CONDITIONING,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
         val expectedStage =
             WorkoutStage(
@@ -192,8 +192,8 @@ class WorkoutStageGeneratorTest {
                 stageTypeId = 4,
                 position = position,
                 name = "Conditioning",
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
@@ -223,7 +223,7 @@ class WorkoutStageGeneratorTest {
             WorkoutStageType(
                 id = 1,
                 name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
         val expectedStage =
             WorkoutStage(
@@ -232,8 +232,8 @@ class WorkoutStageGeneratorTest {
                 stageTypeId = 1,
                 position = position,
                 name = "Primary",
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
@@ -265,8 +265,8 @@ class WorkoutStageGeneratorTest {
                 exerciseName = exerciseName,
                 position = 1,
                 notes = null,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, 1, null))
@@ -332,8 +332,8 @@ class WorkoutStageGeneratorTest {
                 targetRepCount = 5,
                 performedRepCount = null,
                 restSeconds = 180,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(
             setSchemeDAL.insertSetScheme(
@@ -410,7 +410,7 @@ class WorkoutStageGeneratorTest {
                     userId = userId,
                     exerciseName = "Bench Press",
                     oneRepMax = BigDecimal("100.0"),
-                    updatedAt = LocalDateTime.now()
+                    updatedAt = Instant.now()
                 )
             )
         val currentWeekNumber = 1
@@ -473,7 +473,7 @@ class WorkoutStageGeneratorTest {
                     userId = userId,
                     exerciseName = "Squat",
                     oneRepMax = BigDecimal("200.0"),
-                    updatedAt = LocalDateTime.now()
+                    updatedAt = Instant.now()
                 )
             )
 
@@ -509,7 +509,7 @@ class WorkoutStageGeneratorTest {
                     userId = userId,
                     exerciseName = "Burpees",
                     oneRepMax = BigDecimal("50.0"),
-                    updatedAt = LocalDateTime.now(),
+                    updatedAt = Instant.now(),
                 )
             )
 

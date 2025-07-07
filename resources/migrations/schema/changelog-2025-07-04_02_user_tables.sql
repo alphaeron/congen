@@ -9,14 +9,14 @@ CREATE TABLE "user" (
   age INTEGER NOT NULL CHECK (age >= 0 AND age <= 150),
   height NUMERIC(5,2) NOT NULL, -- in cm
   weight NUMERIC(6,2) NOT NULL, -- in kg
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_equipment (
   user_id INTEGER NOT NULL,
   equipment_name VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, equipment_name),
   CONSTRAINT fk_user_equipment_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
   CONSTRAINT fk_user_equipment_equipment FOREIGN KEY(equipment_name) REFERENCES equipment(name) ON DELETE CASCADE
@@ -26,8 +26,8 @@ CREATE TABLE user_program_preferences (
   user_id INTEGER PRIMARY KEY,
   program_days_per_week INTEGER NOT NULL CHECK (program_days_per_week >= 1 AND program_days_per_week <= 7),
   session_time_length_in_minutes INTEGER NOT NULL CHECK (session_time_length_in_minutes >= 15 AND session_time_length_in_minutes <= 300),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_user_program_preferences_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
@@ -35,7 +35,7 @@ CREATE TABLE user_exercise_preference (
   user_id INTEGER NOT NULL,
   exercise_name VARCHAR(255) NOT NULL,
   should_avoid BOOLEAN NOT NULL DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, exercise_name),
   CONSTRAINT fk_user_exercise_preference_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
   CONSTRAINT fk_user_exercise_preference_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
@@ -56,7 +56,7 @@ CREATE TABLE user_one_rep_max (
   user_id INTEGER NOT NULL,
   exercise_name VARCHAR(255) NOT NULL,
   one_rep_max NUMERIC(6,2) NOT NULL CHECK (one_rep_max > 0 AND one_rep_max <= 1000), -- in kg
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, exercise_name),
   CONSTRAINT fk_user_one_rep_max_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
   CONSTRAINT fk_user_one_rep_max_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE

@@ -38,7 +38,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 class ConjugateWorkoutGeneratorServiceTest {
     @Mock
@@ -203,8 +203,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                     stageTypeId = 1,
                     name = "Test Stage",
                     position = 1,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
                 )
             )
         )
@@ -216,8 +216,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                     exerciseName = "Bench Press",
                     position = 1,
                     notes = null,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
                 )
             )
         )
@@ -245,8 +245,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -265,8 +265,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -278,8 +278,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -312,8 +312,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -332,8 +332,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -360,7 +360,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                     userId = userId,
                     exerciseName = "Squat",
                     shouldAvoid = true,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
         val userEquipment = createSampleUserEquipment()
@@ -374,8 +374,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -394,8 +394,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -427,7 +427,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                     userId = userId,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 
@@ -437,8 +437,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -457,8 +457,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -486,8 +486,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = 1,
                 programDaysPerWeek = 2,
                 sessionTimeLengthInMinutes = 60,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
@@ -497,8 +497,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -517,8 +517,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -530,8 +530,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -559,8 +559,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = 1,
                 programDaysPerWeek = 4,
                 sessionTimeLengthInMinutes = 60,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
@@ -570,8 +570,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -590,8 +590,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -603,8 +603,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -667,8 +667,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -687,8 +687,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -700,8 +700,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -733,8 +733,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -753,8 +753,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -766,8 +766,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -799,8 +799,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -819,8 +819,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "DE_Lower Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -832,8 +832,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -866,21 +866,21 @@ class ConjugateWorkoutGeneratorServiceTest {
                     userId = userId,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
                     userId = userId,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 ),
                 ExerciseRotationHistory(
                     id = 3L,
                     userId = userId,
                     exerciseName = "Incline Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 
@@ -890,8 +890,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -910,8 +910,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -923,8 +923,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -956,8 +956,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -976,8 +976,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -989,8 +989,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -1022,8 +1022,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = userId,
                 name = "Test Program",
                 currentWeekNumber = currentWeekNumber,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         // Mock DAL responses
@@ -1042,8 +1042,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programId = 1L,
                 dayNumber = 1,
                 name = "ME_Upper Day",
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
@@ -1055,8 +1055,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 stageTypeId = 1,
                 name = "Test Stage",
                 position = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
@@ -1084,8 +1084,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = 1,
                 programDaysPerWeek = 5, // Invalid
                 sessionTimeLengthInMinutes = 60,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
@@ -1177,18 +1177,18 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     private fun createSampleUserEquipment(): List<UserEquipment> {
         return listOf(
-            UserEquipment(userId = 1, equipmentName = "Barbell", createdAt = LocalDateTime.now()),
-            UserEquipment(userId = 1, equipmentName = "Dumbbells", createdAt = LocalDateTime.now()),
-            UserEquipment(userId = 1, equipmentName = "Bench", createdAt = LocalDateTime.now()),
-            UserEquipment(userId = 1, equipmentName = "Pull-up Bar", createdAt = LocalDateTime.now()),
+            UserEquipment(userId = 1, equipmentName = "Barbell", createdAt = Instant.now()),
+            UserEquipment(userId = 1, equipmentName = "Dumbbells", createdAt = Instant.now()),
+            UserEquipment(userId = 1, equipmentName = "Bench", createdAt = Instant.now()),
+            UserEquipment(userId = 1, equipmentName = "Pull-up Bar", createdAt = Instant.now()),
         )
     }
 
     private fun createSampleOneRepMaxes(): List<UserOneRepMax> {
         return listOf(
-            UserOneRepMax(userId = 1, exerciseName = "Bench Press", oneRepMax = BigDecimal("100.0"), updatedAt = LocalDateTime.now()),
-            UserOneRepMax(userId = 1, exerciseName = "Squat", oneRepMax = BigDecimal("150.0"), updatedAt = LocalDateTime.now()),
-            UserOneRepMax(userId = 1, exerciseName = "Deadlift", oneRepMax = BigDecimal("200.0"), updatedAt = LocalDateTime.now())
+            UserOneRepMax(userId = 1, exerciseName = "Bench Press", oneRepMax = BigDecimal("100.0"), updatedAt = Instant.now()),
+            UserOneRepMax(userId = 1, exerciseName = "Squat", oneRepMax = BigDecimal("150.0"), updatedAt = Instant.now()),
+            UserOneRepMax(userId = 1, exerciseName = "Deadlift", oneRepMax = BigDecimal("200.0"), updatedAt = Instant.now())
         )
     }
 
@@ -1197,8 +1197,8 @@ class ConjugateWorkoutGeneratorServiceTest {
             userId = 1,
             programDaysPerWeek = 3,
             sessionTimeLengthInMinutes = 60,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
@@ -1218,8 +1218,8 @@ class ConjugateWorkoutGeneratorServiceTest {
             targetRepCount = 5,
             performedRepCount = null,
             restSeconds = 180,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 }

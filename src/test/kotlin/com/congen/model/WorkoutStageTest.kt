@@ -1,11 +1,11 @@
 package com.congen.model
 
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 
 class WorkoutStageTest {
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `should create workout stage with valid parameters`() {
@@ -117,8 +117,8 @@ class WorkoutStageTest {
 
     @Test
     fun `should handle different timestamps`() {
-        val createdAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
-        val updatedAt = LocalDateTime.of(2024, 1, 2, 15, 30, 0)
+        val createdAt = Instant.parse("2024-01-01T10:00:00Z")
+        val updatedAt = Instant.parse("2024-01-02T15:30:00Z")
 
         val workoutStage =
             WorkoutStage(

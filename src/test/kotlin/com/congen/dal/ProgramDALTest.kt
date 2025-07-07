@@ -9,7 +9,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 class ProgramDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -31,8 +31,8 @@ class ProgramDALTest {
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(
@@ -66,16 +66,16 @@ class ProgramDALTest {
                     userId = 1,
                     name = "Conjugate Powerlifting Program",
                     currentWeekNumber = 1,
-                    createdAt = java.time.LocalDateTime.now(),
-                    updatedAt = java.time.LocalDateTime.now()
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
                 ),
                 Program(
                     id = 2L,
                     userId = 1,
                     name = "5/3/1 Program",
                     currentWeekNumber = 1,
-                    createdAt = java.time.LocalDateTime.now(),
-                    updatedAt = java.time.LocalDateTime.now()
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
                 ),
             )
 
@@ -101,8 +101,8 @@ class ProgramDALTest {
                 userId = 1,
                 name = "Test Program",
                 currentWeekNumber = 1,
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         val expectedQuery =
@@ -147,8 +147,8 @@ class ProgramDALTest {
                 userId = 1,
                 name = "Updated Conjugate Program",
                 currentWeekNumber = 2,
-                createdAt = java.time.LocalDateTime.now(),
-                updatedAt = java.time.LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         val newName = "Test Program"
@@ -187,7 +187,7 @@ class ProgramDALTest {
     fun `deleteProgram should return deleted program`() {
         // Given
         val programId = 1L
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val program =
             Program(
                 id = programId,

@@ -2,7 +2,7 @@ package com.congen.model
 
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
@@ -16,7 +16,7 @@ import kotlin.test.assertNotNull
  * @since 1.0.0
  */
 class UserOneRepMaxTest {
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `should create user one rep max with valid parameters`() {
@@ -63,7 +63,7 @@ class UserOneRepMaxTest {
 
     @Test
     fun `should handle different timestamps`() {
-        val updatedAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
+        val updatedAt = Instant.parse("2024-01-01T10:00:00Z")
 
         val userOneRepMax =
             UserOneRepMax(

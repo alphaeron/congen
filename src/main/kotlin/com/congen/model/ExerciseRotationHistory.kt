@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents the history of exercise rotations for users.
@@ -61,5 +61,5 @@ data class ExerciseRotationHistory(
         example = "2024-01-01T00:00:00Z",
         required = true,
     )
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @param:JsonProperty("created_at") val createdAt: Instant,
 )

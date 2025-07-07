@@ -8,8 +8,8 @@ CREATE TABLE program (
   user_id INTEGER NOT NULL,
   name VARCHAR(255) NOT NULL,
   current_week_number INTEGER NOT NULL DEFAULT 1,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_program_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
@@ -18,15 +18,15 @@ CREATE TABLE programmed_workout (
   program_id BIGINT NOT NULL,
   day_number INTEGER NOT NULL CHECK (day_number > 0 AND day_number <= 365),  -- e.g., Day 1, Day 2...,
   name VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_programmed_workout_program FOREIGN KEY(program_id) REFERENCES program(id) ON DELETE CASCADE
 );
 
 CREATE TABLE workout_stage_type (
   id SERIAL PRIMARY KEY NOT NULL,
   name VARCHAR(255) NOT NULL UNIQUE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE workout_stage (
@@ -35,8 +35,8 @@ CREATE TABLE workout_stage (
   stage_type_id INTEGER NOT NULL,
   position SMALLINT NOT NULL CHECK (position > 0), -- ordering of stages in the workout
   name VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_workout_stage_programmed_workout FOREIGN KEY(programmed_workout_id) REFERENCES programmed_workout(id) ON DELETE CASCADE,
   CONSTRAINT fk_workout_stage_stage_type FOREIGN KEY(stage_type_id) REFERENCES workout_stage_type(id) ON DELETE CASCADE
 );
@@ -47,8 +47,8 @@ CREATE TABLE programmed_exercise (
   exercise_name VARCHAR(255) NOT NULL,
   position INTEGER NOT NULL,
   notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_programmed_exercise_workout_stage FOREIGN KEY(workout_stage_id) REFERENCES workout_stage(id) ON DELETE CASCADE,
   CONSTRAINT fk_programmed_exercise_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
 );
@@ -68,8 +68,8 @@ CREATE TABLE set_scheme (
   target_rep_count SMALLINT CHECK (target_rep_count > 0 AND target_rep_count <= 1000),
   performed_rep_count SMALLINT CHECK (performed_rep_count > 0 AND performed_rep_count <= 1000),
   rest_seconds SMALLINT CHECK (rest_seconds >= 0 AND rest_seconds <= 3600),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_set_scheme_programmed_exercise FOREIGN KEY(programmed_exercise_id) REFERENCES programmed_exercise(id) ON DELETE CASCADE
 );
 

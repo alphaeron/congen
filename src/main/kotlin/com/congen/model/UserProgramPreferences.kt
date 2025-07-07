@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents a user's program preferences.
@@ -38,12 +38,12 @@ data class UserProgramPreferences(
     @param:JsonProperty("session_time_length_in_minutes") val sessionTimeLengthInMinutes: Int,
     /** Timestamp when the user program preferences were created. */
     @Schema(description = "Timestamp when the user program preferences were created", example = "2024-07-06T12:00:00Z", required = true)
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @param:JsonProperty("created_at") val createdAt: Instant,
     /** Timestamp when the user program preferences were last updated. */
     @Schema(
         description = "Timestamp when the user program preferences were last updated",
         example = "2024-07-06T12:00:00Z",
         required = true
     )
-    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
+    @param:JsonProperty("updated_at") val updatedAt: Instant,
 )

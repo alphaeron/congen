@@ -2,7 +2,7 @@ package com.congen.model
 
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -45,7 +45,7 @@ class HealthCheckTest {
 
     @Test
     fun `HealthCheck should be created with all fields`() {
-        val time = LocalDateTime.of(2024, 1, 1, 0, 0, 0)
+        val time = Instant.parse("2024-01-01T00:00:00Z")
         val healthCheck =
             HealthCheck(
                 componentId = "database",

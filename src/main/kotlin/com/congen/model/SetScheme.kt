@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents a set scheme for a programmed exercise.
@@ -152,12 +152,12 @@ data class SetScheme(
         example = "2024-07-06T12:00:00Z",
         required = true,
     )
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @param:JsonProperty("created_at") val createdAt: Instant,
     /** Timestamp when the set scheme was last updated. */
     @Schema(
         description = "Timestamp when the set scheme was last updated",
         example = "2024-07-06T12:00:00Z",
         required = true,
     )
-    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
+    @param:JsonProperty("updated_at") val updatedAt: Instant,
 )

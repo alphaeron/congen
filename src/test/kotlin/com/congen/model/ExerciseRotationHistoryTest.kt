@@ -2,10 +2,10 @@ package com.congen.model
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import java.time.Instant
 
 class ExerciseRotationHistoryTest {
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `constructor sets all fields correctly`() {
@@ -26,7 +26,7 @@ class ExerciseRotationHistoryTest {
 
     @Test
     fun `should create exercise rotation history with correct properties`() {
-        val createdAt = LocalDateTime.now()
+        val createdAt = Instant.now()
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
@@ -45,7 +45,7 @@ class ExerciseRotationHistoryTest {
 
     @Test
     fun `should create exercise rotation history with accessory category`() {
-        val createdAt = LocalDateTime.now()
+        val createdAt = Instant.now()
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 2L,

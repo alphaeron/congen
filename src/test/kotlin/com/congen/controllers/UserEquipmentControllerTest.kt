@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for UserEquipmentController.
@@ -36,7 +36,7 @@ class UserEquipmentControllerTest {
     fun `save should return created user equipment`() {
         val userId = 1
         val equipmentName = "Barbell"
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userEquipment =
             UserEquipment(
                 userId = userId,
@@ -60,7 +60,7 @@ class UserEquipmentControllerTest {
     @Test
     fun `getByUser should return user equipment when found`() {
         val userId = 1
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userEquipment =
             listOf(
                 UserEquipment(
@@ -90,7 +90,7 @@ class UserEquipmentControllerTest {
     fun `delete should return deleted user equipment`() {
         val userId = 1
         val equipmentName = "Barbell"
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userEquipment =
             UserEquipment(
                 userId = userId,
@@ -144,7 +144,7 @@ class UserEquipmentControllerTest {
     fun `should handle DAL error gracefully for delete`() {
         val userId = 1
         val equipmentName = "Barbell"
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userEquipment =
             UserEquipment(
                 userId = userId,

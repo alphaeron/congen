@@ -16,7 +16,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for ProgrammedExerciseController.
@@ -34,7 +34,7 @@ class ProgrammedExerciseControllerTest {
 
     private lateinit var programmedExerciseController: ProgrammedExerciseController
 
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
     private val objectMapper = ObjectMapper()
 
     private lateinit var testProgrammedExercise: ProgrammedExercise

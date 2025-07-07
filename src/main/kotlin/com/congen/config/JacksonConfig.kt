@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Primary
  *
  * This configuration sets up Jackson with proper modules for:
  * - Kotlin data class support
- * - Java 8 date/time types (LocalDateTime, etc.)
+ * - Java 8 date/time types.
  * - Proper date formatting
  * - Property naming strategy support for @JsonNaming annotations
  *
@@ -28,7 +28,7 @@ class JacksonConfig {
      *
      * This bean provides a properly configured ObjectMapper that can handle:
      * - Kotlin data classes with proper null handling
-     * - Java 8 date/time types (LocalDateTime, LocalDate, etc.)
+     * - Java 8 date/time types.
      * - Snake case property naming strategy
      * - ISO date formatting
      * - Proper handling of @JsonNaming annotations on enums and classes

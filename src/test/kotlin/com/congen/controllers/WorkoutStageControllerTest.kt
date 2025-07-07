@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 
 class WorkoutStageControllerTest {
@@ -21,7 +21,7 @@ class WorkoutStageControllerTest {
 
     private lateinit var workoutStageController: WorkoutStageController
 
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @BeforeEach
     fun setUp() {

@@ -12,12 +12,12 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 class SetSchemeDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var setSchemeDAL: SetSchemeDAL
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @BeforeEach
     fun setUp() {

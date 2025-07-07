@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for UserProgramPreferencesController.
@@ -37,7 +37,7 @@ class UserProgramPreferencesControllerTest {
         val userId = 1
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
                 userId = userId,
@@ -66,7 +66,7 @@ class UserProgramPreferencesControllerTest {
         val userId = 1
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
                 userId = userId,
@@ -91,7 +91,7 @@ class UserProgramPreferencesControllerTest {
         val userId = 1
         val programDaysPerWeek = 5
         val sessionTimeLengthInMinutes = 75
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
                 userId = userId,
@@ -120,7 +120,7 @@ class UserProgramPreferencesControllerTest {
         val userId = 1
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
                 userId = userId,

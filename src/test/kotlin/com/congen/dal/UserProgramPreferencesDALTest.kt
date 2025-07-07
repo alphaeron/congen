@@ -10,13 +10,13 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 class UserProgramPreferencesDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @BeforeEach
     fun setUp() {

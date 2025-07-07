@@ -7,7 +7,7 @@ import com.congen.model.UserOneRepMax
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -30,7 +30,7 @@ class ExerciseSelectionServiceTest {
                     userId = 1,
                     exerciseName = "Bench Press",
                     oneRepMax = BigDecimal("100.0"),
-                    updatedAt = LocalDateTime.now()
+                    updatedAt = Instant.now()
                 )
             )
         val rotationHistory =
@@ -40,7 +40,7 @@ class ExerciseSelectionServiceTest {
                     userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 
@@ -104,7 +104,7 @@ class ExerciseSelectionServiceTest {
                     userId = 1,
                     exerciseName = "Bench Press",
                     shouldAvoid = true,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 
@@ -151,7 +151,7 @@ class ExerciseSelectionServiceTest {
                     userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 
@@ -198,21 +198,21 @@ class ExerciseSelectionServiceTest {
                     userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
                     userId = 1,
                     exerciseName = "Bench Press",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 ),
                 ExerciseRotationHistory(
                     id = 3L,
                     userId = 1,
                     exerciseName = "Squat",
                     isAccessory = false,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 
@@ -457,7 +457,7 @@ class ExerciseSelectionServiceTest {
                     userId = 1,
                     exerciseName = "bench press", // Different case
                     shouldAvoid = true,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 

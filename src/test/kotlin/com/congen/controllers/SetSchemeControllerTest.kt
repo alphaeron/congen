@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 class SetSchemeControllerTest {
     @Mock
@@ -28,7 +28,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should get all set schemes`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val setSchemes =
             listOf(
                 SetScheme(
@@ -82,7 +82,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should get set scheme by id`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val setScheme =
             SetScheme(
                 id = 1L,
@@ -125,7 +125,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should create set scheme`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programmedExerciseId = 1L
         val setNumber = 1
         val isAmrap = false
@@ -200,7 +200,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should update set scheme`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val id = 1L
         val programmedExerciseId = 1L
         val setNumber = 2
@@ -279,7 +279,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should delete set scheme`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val setScheme =
             SetScheme(
                 id = 1L,
@@ -311,7 +311,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should get set schemes by programmed exercise`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val programmedExerciseId = 1L
         val setSchemes =
             listOf(

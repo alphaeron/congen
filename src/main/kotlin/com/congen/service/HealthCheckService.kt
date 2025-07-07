@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.time.Duration
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Service for performing health checks on the application and its dependencies.
@@ -71,7 +71,7 @@ class HealthCheckService(
                         status = HealthStatus.FAIL,
                         output = "Database connection failed: ${error.message}",
                         links = mapOf("self" to "/health"),
-                        time = LocalDateTime.now()
+                        time = Instant.now()
                     )
                 )
             },
@@ -84,7 +84,7 @@ class HealthCheckService(
                         status = HealthStatus.FAIL,
                         output = "Application health check failed: ${error.message}",
                         links = mapOf("self" to "/health"),
-                        time = LocalDateTime.now()
+                        time = Instant.now()
                     )
                 )
             }
@@ -116,11 +116,11 @@ class HealthCheckService(
      * @return Mono containing the database health check result
      */
     private fun checkDatabaseHealth(): Mono<HealthCheck> {
-        val startTime = LocalDateTime.now()
+        val startTime = Instant.now()
 
         return postgresClient.select<Map<String, Any>>("SELECT 1 as health_check")
             .map { result ->
-                val responseTime = Duration.between(startTime, LocalDateTime.now()).toMillis()
+                val responseTime = Duration.between(startTime, Instant.now()).toMillis()
                 logger.debug("Database health check passed in {}ms", responseTime)
 
                 HealthCheck(
@@ -134,7 +134,7 @@ class HealthCheckService(
                         mapOf(
                             "self" to "/health",
                         ),
-                    time = LocalDateTime.now()
+                    time = Instant.now()
                 )
             }
             .onErrorResume { error ->
@@ -149,7 +149,7 @@ class HealthCheckService(
                             mapOf(
                                 "self" to "/health",
                             ),
-                        time = LocalDateTime.now()
+                        time = Instant.now()
                     ),
                 )
             }
@@ -175,7 +175,7 @@ class HealthCheckService(
                     mapOf(
                         "self" to "/health",
                     ),
-                time = LocalDateTime.now()
+                time = Instant.now()
             ),
         )
     }

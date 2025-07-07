@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for UserOneRepMaxController.
@@ -39,7 +39,7 @@ class UserOneRepMaxControllerTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("225.5")
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userOneRepMax =
             UserOneRepMax(
                 userId = userId,
@@ -70,7 +70,7 @@ class UserOneRepMaxControllerTest {
                 userId = userId,
                 exerciseName = exerciseName,
                 oneRepMax = BigDecimal("225.5"),
-                updatedAt = LocalDateTime.now()
+                updatedAt = Instant.now()
             )
 
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(userOneRepMax))
@@ -109,13 +109,13 @@ class UserOneRepMaxControllerTest {
                     userId = userId,
                     exerciseName = "Bench Press",
                     oneRepMax = BigDecimal("225.5"),
-                    updatedAt = LocalDateTime.now()
+                    updatedAt = Instant.now()
                 ),
                 UserOneRepMax(
                     userId = userId,
                     exerciseName = "Squat",
                     oneRepMax = BigDecimal("315.0"),
-                    updatedAt = LocalDateTime.now()
+                    updatedAt = Instant.now()
                 )
             )
 
@@ -140,7 +140,7 @@ class UserOneRepMaxControllerTest {
                 userId = userId,
                 exerciseName = exerciseName,
                 oneRepMax = oneRepMax,
-                updatedAt = LocalDateTime.now()
+                updatedAt = Instant.now()
             )
 
         whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.just(userOneRepMax))
@@ -165,7 +165,7 @@ class UserOneRepMaxControllerTest {
                 userId = userId,
                 exerciseName = exerciseName,
                 oneRepMax = BigDecimal("225.5"),
-                updatedAt = LocalDateTime.now()
+                updatedAt = Instant.now()
             )
 
         whenever(userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(userOneRepMax))

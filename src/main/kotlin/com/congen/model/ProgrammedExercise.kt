@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents an exercise assigned to a specific workout stage.
@@ -92,12 +92,12 @@ data class ProgrammedExercise(
         example = "2024-07-06T12:00:00Z",
         required = true,
     )
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @param:JsonProperty("created_at") val createdAt: Instant,
     /** Updated at timestamp. */
     @Schema(
         description = "Updated at timestamp",
         example = "2024-07-06T12:00:00Z",
         required = true,
     )
-    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
+    @param:JsonProperty("updated_at") val updatedAt: Instant,
 )

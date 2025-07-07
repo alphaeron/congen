@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for UserController.
@@ -38,7 +38,7 @@ class UserControllerTest {
 
     @Test
     fun `save should return created user`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val name = "John Doe"
         val age = 30
         val height = BigDecimal("180.5")
@@ -53,7 +53,7 @@ class UserControllerTest {
 
     @Test
     fun `get should return user when found`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val user =
             User(
                 id = 1,
@@ -72,7 +72,7 @@ class UserControllerTest {
 
     @Test
     fun `getAll should return all users`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val users =
             listOf(
                 User(
@@ -95,7 +95,7 @@ class UserControllerTest {
 
     @Test
     fun `update should return updated user`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val name = "John Doe"
         val age = 31
         val height = BigDecimal("180.5")
@@ -114,7 +114,7 @@ class UserControllerTest {
 
     @Test
     fun `delete should return deleted user`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val user =
             User(
                 id = 1,
@@ -137,7 +137,7 @@ class UserControllerTest {
 
     @Test
     fun `should get all users`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val users =
             listOf(
                 User(
@@ -171,7 +171,7 @@ class UserControllerTest {
 
     @Test
     fun `should get user by id`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val user =
             User(
                 id = 1,
@@ -205,7 +205,7 @@ class UserControllerTest {
 
     @Test
     fun `should create user`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val name = "John Doe"
         val age = 30
         val height = BigDecimal("180.5")
@@ -232,7 +232,7 @@ class UserControllerTest {
 
     @Test
     fun `should update user`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val id = 1
         val name = "John Doe"
         val age = 30
@@ -276,7 +276,7 @@ class UserControllerTest {
 
     @Test
     fun `should delete user`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val user =
             User(
                 id = 1,

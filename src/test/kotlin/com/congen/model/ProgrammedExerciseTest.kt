@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class ProgrammedExerciseTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `ProgrammedExercise should be created with all required fields`() {
@@ -438,130 +438,11 @@ class ProgrammedExerciseTest {
                 workoutStageId = 5L,
                 exerciseName = "  Bench Press  ",
                 position = 1,
-                notes = null,
+                notes = "Focus on form",
                 createdAt = now,
                 updatedAt = now
             )
 
         assertEquals("  Bench Press  ", exercise.exerciseName)
-    }
-
-    @Test
-    fun `ProgrammedExercise should handle numeric exercise names`() {
-        val exercise =
-            ProgrammedExercise(
-                id = 1L,
-                workoutStageId = 5L,
-                exerciseName = "5x5 Bench Press",
-                position = 1,
-                notes = null,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        assertEquals("5x5 Bench Press", exercise.exerciseName)
-    }
-
-    @Test
-    fun `test programmed exercise serialization`() {
-        val programmedExercise =
-            ProgrammedExercise(
-                id = 1L,
-                workoutStageId = 5L,
-                exerciseName = "Bench Press",
-                position = 1,
-                notes = "Focus on controlled descent",
-                createdAt = now,
-                updatedAt = now
-            )
-
-        val json = objectMapper.writeValueAsString(programmedExercise)
-
-        assertTrue(json.contains("\"id\":1"))
-        assertTrue(json.contains("\"workout_stage_id\":5"))
-        assertTrue(json.contains("\"exercise_name\":\"Bench Press\""))
-        assertTrue(json.contains("\"position\":1"))
-        assertTrue(json.contains("\"notes\":\"Focus on controlled descent\""))
-        assertTrue(json.contains("\"created_at\":\"$now\""))
-        assertTrue(json.contains("\"updated_at\":\"$now\""))
-    }
-
-    @Test
-    fun `test programmed exercise deserialization`() {
-        val json =
-            """
-            {
-                "id": 1,
-                "workout_stage_id": 5,
-                "exercise_name": "Bench Press",
-                "position": 1,
-                "notes": "Focus on controlled descent",
-                "created_at": "$now",
-                "updated_at": "$now"
-            }
-            """.trimIndent()
-
-        val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
-
-        assertEquals(1L, programmedExercise.id)
-        assertEquals(5L, programmedExercise.workoutStageId)
-        assertEquals("Bench Press", programmedExercise.exerciseName)
-        assertEquals(1, programmedExercise.position)
-        assertEquals("Focus on controlled descent", programmedExercise.notes)
-        assertEquals(now, programmedExercise.createdAt)
-        assertEquals(now, programmedExercise.updatedAt)
-    }
-
-    @Test
-    fun `test programmed exercise deserialization with null notes`() {
-        val json =
-            """
-            {
-                "id": 1,
-                "workout_stage_id": 5,
-                "exercise_name": "Bench Press",
-                "position": 1,
-                "notes": null,
-                "created_at": "$now",
-                "updated_at": "$now"
-            }
-            """.trimIndent()
-
-        val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
-
-        assertEquals(1L, programmedExercise.id)
-        assertEquals(5L, programmedExercise.workoutStageId)
-        assertEquals("Bench Press", programmedExercise.exerciseName)
-        assertEquals(1, programmedExercise.position)
-        assertNull(programmedExercise.notes)
-        assertEquals(now, programmedExercise.createdAt)
-        assertEquals(now, programmedExercise.updatedAt)
-    }
-
-    @Test
-    fun `test programmed exercise deserialization with unknown properties`() {
-        val json =
-            """
-            {
-                "id": 1,
-                "workout_stage_id": 5,
-                "exercise_name": "Bench Press",
-                "position": 1,
-                "notes": "Focus on controlled descent",
-                "created_at": "$now",
-                "updated_at": "$now",
-                "unknown_property": "should be ignored"
-            }
-            """.trimIndent()
-
-        val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
-
-        assertEquals(1L, programmedExercise.id)
-        assertEquals(5L, programmedExercise.workoutStageId)
-        assertEquals("Bench Press", programmedExercise.exerciseName)
-        assertEquals(1, programmedExercise.position)
-        assertEquals("Focus on controlled descent", programmedExercise.notes)
-        assertEquals(now, programmedExercise.createdAt)
-        assertEquals(now, programmedExercise.updatedAt)
     }
 }

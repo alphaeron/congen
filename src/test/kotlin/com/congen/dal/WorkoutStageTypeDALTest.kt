@@ -12,7 +12,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class WorkoutStageTypeDALTest {
@@ -33,7 +33,7 @@ class WorkoutStageTypeDALTest {
             WorkoutStageType(
                 id = 1,
                 name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
 
         whenever(postgresClient.selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE id=$1", 1))
@@ -57,7 +57,7 @@ class WorkoutStageTypeDALTest {
             WorkoutStageType(
                 id = 1,
                 name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
 
         whenever(
@@ -89,12 +89,12 @@ class WorkoutStageTypeDALTest {
                 WorkoutStageType(
                     id = 1,
                     name = WorkoutStageTypeEnum.PRIMARY,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 ),
                 WorkoutStageType(
                     id = 2,
                     name = WorkoutStageTypeEnum.SECONDARY,
-                    createdAt = LocalDateTime.now()
+                    createdAt = Instant.now()
                 )
             )
 

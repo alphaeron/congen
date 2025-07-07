@@ -13,7 +13,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for ProgramController.
@@ -45,8 +45,8 @@ class ProgramControllerTest {
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         val savedProgram = program.copy(id = 2L)
 
@@ -73,8 +73,8 @@ class ProgramControllerTest {
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(programDAL.selectProgramById(programId)).thenReturn(Mono.just(program))
@@ -120,16 +120,16 @@ class ProgramControllerTest {
                     userId = 1,
                     name = "Conjugate Powerlifting Program",
                     currentWeekNumber = 1,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
                 ),
                 Program(
                     id = 2L,
                     userId = 1,
                     name = "5/3/1 Program",
                     currentWeekNumber = 1,
-                    createdAt = LocalDateTime.now(),
-                    updatedAt = LocalDateTime.now()
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
                 ),
             )
 
@@ -158,8 +158,8 @@ class ProgramControllerTest {
                 userId = 1,
                 name = "Updated Conjugate Program",
                 currentWeekNumber = 2,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         val updatedProgram = program.copy(id = programId)
 
@@ -186,8 +186,8 @@ class ProgramControllerTest {
                 userId = 1,
                 name = "Updated Conjugate Program",
                 currentWeekNumber = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
         val updatedProgram = program.copy(id = programId)
 
@@ -216,8 +216,8 @@ class ProgramControllerTest {
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
-                createdAt = LocalDateTime.now(),
-                updatedAt = LocalDateTime.now()
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
             )
 
         whenever(programDAL.deleteProgram(programId)).thenReturn(Mono.just(program))

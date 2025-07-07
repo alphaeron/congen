@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -14,7 +13,7 @@ import kotlin.test.assertTrue
 class ProgrammedWorkoutTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = LocalDateTime.of(2024, 1, 15, 10, 30, 0)
+    private val now = Instant.parse("2024-01-15T10:30:00Z")
 
     @Test
     fun `test programmed workout creation with all fields`() {
@@ -69,7 +68,7 @@ class ProgrammedWorkoutTest {
             )
 
         val json = objectMapper.writeValueAsString(programmedWorkout)
-        val nowString = now.format(DateTimeFormatter.ISO_DATE_TIME)
+        val nowString = now.toString()
 
         assertTrue(json.contains("\"id\":1"))
         assertTrue(json.contains("\"program_id\":123"))

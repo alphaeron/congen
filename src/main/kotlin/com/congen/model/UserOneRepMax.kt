@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents a user's one rep max (1RM) for a specific exercise.
@@ -36,6 +36,6 @@ data class UserOneRepMax(
     @Schema(description = "The one rep max weight in kilograms", example = "100.0", required = true)
     @param:JsonProperty("one_rep_max") val oneRepMax: BigDecimal,
     /** Timestamp when the 1RM was last updated. */
-    @Schema(description = "Timestamp when the 1RM was last updated", example = "2024-01-01T00:00:00", required = true)
-    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
+    @Schema(description = "Timestamp when the 1RM was last updated", example = "2024-01-01T00:00:00Z", required = true)
+    @param:JsonProperty("updated_at") val updatedAt: Instant,
 )

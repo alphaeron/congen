@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import java.time.LocalDateTime
+import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -14,7 +14,7 @@ import kotlin.test.assertTrue
 class WorkoutStageTypeTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = LocalDateTime.now()
+    private val now = Instant.now()
 
     @Test
     fun `should create workout stage type with valid parameters`() {
@@ -71,7 +71,7 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should handle different timestamps`() {
-        val createdAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
+        val createdAt = Instant.parse("2024-01-01T10:00:00Z")
 
         val workoutStageType =
             WorkoutStageType(
@@ -187,7 +187,7 @@ class WorkoutStageTypeTest {
             WorkoutStageType(
                 id = 1,
                 name = WorkoutStageTypeEnum.WARMUP,
-                createdAt = LocalDateTime.now()
+                createdAt = Instant.now()
             )
 
         // When
@@ -206,7 +206,7 @@ class WorkoutStageTypeTest {
             {
                 "id": 1,
                 "name": "WARMUP",
-                "created_at": "2024-07-06T12:00:00"
+                "created_at": "2024-07-06T12:00:00Z"
             }
             """.trimIndent()
 
@@ -216,6 +216,7 @@ class WorkoutStageTypeTest {
         // Then
         assertEquals(1, workoutStageType.id)
         assertEquals(WorkoutStageTypeEnum.WARMUP, workoutStageType.name)
+        assertEquals(Instant.parse("2024-07-06T12:00:00Z"), workoutStageType.createdAt)
     }
 
     @Test
@@ -226,7 +227,7 @@ class WorkoutStageTypeTest {
             {
                 "id": 1,
                 "name": "WARMUP",
-                "created_at": "2024-07-06T12:00:00",
+                "created_at": "2024-07-06T12:00:00Z",
                 "unknown_property": "should be ignored"
             }
             """.trimIndent()
@@ -237,12 +238,13 @@ class WorkoutStageTypeTest {
         // Then
         assertEquals(1, workoutStageType.id)
         assertEquals(WorkoutStageTypeEnum.WARMUP, workoutStageType.name)
+        assertEquals(Instant.parse("2024-07-06T12:00:00Z"), workoutStageType.createdAt)
     }
 
     @Test
     fun `should have correct equals and hashCode`() {
         // Given
-        val fixedTimestamp = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
+        val fixedTimestamp = Instant.parse("2024-01-01T10:00:00Z")
         val workoutStageType1 =
             WorkoutStageType(
                 id = 1,

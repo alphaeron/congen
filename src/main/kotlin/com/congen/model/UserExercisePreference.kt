@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Represents a user's preference for a specific exercise.
@@ -35,5 +35,5 @@ data class UserExercisePreference(
     @param:JsonProperty("should_avoid") val shouldAvoid: Boolean,
     /** Timestamp when the preference was created */
     @Schema(description = "Timestamp when the preference was created", example = "2024-07-06T12:00:00Z", required = true)
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @param:JsonProperty("created_at") val createdAt: Instant,
 )

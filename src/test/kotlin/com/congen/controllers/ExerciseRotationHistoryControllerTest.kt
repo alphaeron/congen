@@ -9,7 +9,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.LocalDateTime
+import java.time.Instant
 
 /**
  * Unit tests for ExerciseRotationHistoryController.
@@ -32,7 +32,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should get all exercise rotation histories`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val exerciseRotationHistories =
             listOf(
                 ExerciseRotationHistory(
@@ -62,7 +62,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should get exercise rotation history by id`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
@@ -94,7 +94,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should create exercise rotation history`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val userId = 1
         val exerciseName = "Bench Press"
         val isAccessory = false
@@ -119,7 +119,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should update exercise rotation history`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val id = 1L
         val userId = 1
         val exerciseName = "Barbell Bench Press"
@@ -157,7 +157,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should delete exercise rotation history`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val exerciseRotationHistory =
             ExerciseRotationHistory(
                 id = 1L,
@@ -189,7 +189,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should get exercise rotation histories by accessory type`() {
-        val now = LocalDateTime.now()
+        val now = Instant.now()
         val isAccessory = false
         val exerciseRotationHistories =
             listOf(
