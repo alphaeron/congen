@@ -73,10 +73,22 @@ data class Program(
         required = true,
     )
     @param:JsonProperty("name") val name: String,
+    /**
+     * The current week number of the program.
+     * Used to track progression through the program schedule.
+     */
     @Schema(description = "Current week number", example = "1", required = true)
     @param:JsonProperty("current_week_number") val currentWeekNumber: Int,
+    /**
+     * The timestamp when the program was created.
+     * Used for auditing and display purposes.
+     */
     @Schema(description = "Created at timestamp", example = "2024-07-06T12:00:00Z", required = true)
     @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    /**
+     * The timestamp when the program was last updated.
+     * Used for auditing and display purposes.
+     */
     @Schema(description = "Updated at timestamp", example = "2024-07-06T12:00:00Z", required = true)
     @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )
