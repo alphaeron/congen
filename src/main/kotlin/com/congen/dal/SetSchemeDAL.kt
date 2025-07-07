@@ -59,6 +59,7 @@ import java.math.BigDecimal
  * - `target_rep_count`: Target number of reps
  * - `performed_rep_count`: Actual number of reps completed
  * - `rest_seconds`: Rest period after the set
+ * - `updated_at`: Timestamp of the last update
  *
  * @property postgresClient Client for database operations
  *
@@ -132,7 +133,6 @@ class SetSchemeDAL(
      *
      * @param programmedExerciseId ID of the programmed exercise this set belongs to
      * @param setNumber Order of this set within the exercise (1-based)
-     * @param wasSetPerformed Whether the set was completed
      * @param isAmrap As Many Reps As Possible flag
      * @param isEmom Every Minute On the Minute flag
      * @param useTempo Whether to use tempo timing
@@ -150,7 +150,6 @@ class SetSchemeDAL(
     fun insertSetScheme(
         programmedExerciseId: Long,
         setNumber: Int,
-        wasSetPerformed: Boolean,
         isAmrap: Boolean,
         isEmom: Boolean,
         useTempo: Boolean,
@@ -179,15 +178,14 @@ class SetSchemeDAL(
         return postgresClient.update(
             """
             INSERT INTO set_scheme
-                (programmed_exercise_id, set_number, was_set_performed, is_amrap, is_emom, use_tempo,
+                (programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
                  eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
                  target_rep_count, performed_rep_count, rest_seconds)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             """.trimIndent(),
             programmedExerciseId,
             setNumber,
-            wasSetPerformed,
             isAmrap,
             isEmom,
             useTempo,
@@ -212,7 +210,6 @@ class SetSchemeDAL(
      * @param id The unique identifier of the set scheme to update
      * @param programmedExerciseId ID of the programmed exercise this set belongs to
      * @param setNumber Order of this set within the exercise (1-based)
-     * @param wasSetPerformed Whether the set was completed
      * @param isAmrap As Many Reps As Possible flag
      * @param isEmom Every Minute On the Minute flag
      * @param useTempo Whether to use tempo timing
@@ -232,7 +229,6 @@ class SetSchemeDAL(
         id: Long,
         programmedExerciseId: Long,
         setNumber: Int,
-        wasSetPerformed: Boolean,
         isAmrap: Boolean,
         isEmom: Boolean,
         useTempo: Boolean,
@@ -261,15 +257,14 @@ class SetSchemeDAL(
         return postgresClient.update(
             """
             UPDATE set_scheme
-            SET programmed_exercise_id=$2, set_number=$3, was_set_performed=$4, is_amrap=$5, is_emom=$6, use_tempo=$7,
-                eccentric_tempo=$8, isometric_tempo=$9, concentric_tempo=$10, target_weight=$11, performed_weight=$12,
-                target_rep_count=$13, performed_rep_count=$14, rest_seconds=$15
+            SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
+                eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
+                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, updated_at=NOW()
             WHERE id=$1
             """.trimIndent(),
             id,
             programmedExerciseId,
             setNumber,
-            wasSetPerformed,
             isAmrap,
             isEmom,
             useTempo,

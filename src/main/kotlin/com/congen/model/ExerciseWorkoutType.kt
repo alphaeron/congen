@@ -20,12 +20,12 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(description = "Represents the relationship between an exercise, its movement type, and workout type.")
 data class ExerciseWorkoutType(
     /** Name of the exercise (e.g., "Bench Press"). */
-    @Schema(description = "Name of the exercise", example = "Bench Press")
+    @Schema(description = "Name of the exercise", example = "Bench Press", required = true)
     @param:JsonProperty("exercise_name") val exerciseName: String,
     /** Type of movement (e.g., "horizontal push"). */
-    @Schema(description = "Type of movement", example = "horizontal push")
+    @Schema(description = "Type of movement", example = "horizontal push", required = true)
     @param:JsonProperty("movement_type") val movementType: String,
     /** Type of workout (e.g., "dynamic_effort"). */
-    @Schema(description = "Type of workout", example = "dynamic_effort")
+    @Schema(description = "Type of workout", example = "dynamic_effort", required = true)
     @param:JsonProperty("workout_type") val workoutType: String,
 )

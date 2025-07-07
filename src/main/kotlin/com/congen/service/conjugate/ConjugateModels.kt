@@ -28,8 +28,6 @@ data class PrilepinGuidelines(
 data class SetSchemeParams(
     /** The set number within the workout. */
     val setNumber: Int,
-    /** Whether the set was actually performed. */
-    val wasSetPerformed: Boolean,
     /** Whether this is an "as many reps as possible" set. */
     val isAmrap: Boolean,
     /** Whether this is an "every minute on the minute" set. */

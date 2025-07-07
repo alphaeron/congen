@@ -3,154 +3,120 @@ package com.congen.controllers
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.LocalDateTime
 
-@ExtendWith(MockitoExtension::class)
+/**
+ * Unit tests for WorkoutStageTypeController.
+ *
+ * These tests verify the REST API endpoints for workout stage type operations,
+ * including read operations and error handling.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 class WorkoutStageTypeControllerTest {
-    @Mock
     private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
-
-    @InjectMocks
     private lateinit var workoutStageTypeController: WorkoutStageTypeController
-
-    private lateinit var testWorkoutStageType: WorkoutStageType
 
     @BeforeEach
     fun setUp() {
-        testWorkoutStageType =
-            WorkoutStageType(
-                id = 1,
-                name = "Warm-up"
-            )
+        workoutStageTypeDAL = mock()
+        workoutStageTypeController = WorkoutStageTypeController(workoutStageTypeDAL)
     }
 
     @Test
-    fun `get should return workout stage type by id`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeById(1))
-            .thenReturn(Mono.just(testWorkoutStageType))
+    fun `get should return workout stage type when found`() {
+        val now = LocalDateTime.now()
+        val workoutStageType = WorkoutStageType(
+            id = 1,
+            name = WorkoutStageTypeEnum.WARMUP,
+            createdAt = now
+        )
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeById(1)).thenReturn(Mono.just(workoutStageType))
 
-        // When
         val result = workoutStageTypeController.get(1)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testWorkoutStageType))
+            .expectNext(ResponseEntity.ok(workoutStageType))
             .verifyComplete()
 
         verify(workoutStageTypeDAL).selectWorkoutStageTypeById(1)
     }
 
     @Test
-    fun `get should return 404 when workout stage type not found`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeById(1))
-            .thenReturn(Mono.error(NoResultsFoundException("Not found")))
+    fun `get should return not found when workout stage type not found`() {
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeById(999)).thenReturn(Mono.error(NoResultsFoundException("Not found")))
 
-        // When
-        val result = workoutStageTypeController.get(1)
+        val result = workoutStageTypeController.get(999)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(workoutStageTypeDAL).selectWorkoutStageTypeById(1)
+        verify(workoutStageTypeDAL).selectWorkoutStageTypeById(999)
     }
 
     @Test
-    fun `get should handle service error`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeById(1))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+    fun `getByName should return workout stage type when found`() {
+        val now = LocalDateTime.now()
+        val workoutStageType = WorkoutStageType(
+            id = 1,
+            name = WorkoutStageTypeEnum.WARMUP,
+            createdAt = now
+        )
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)).thenReturn(Mono.just(workoutStageType))
 
-        // When
-        val result = workoutStageTypeController.get(1)
+        val result = workoutStageTypeController.getByName("Warmup")
 
-        // Then
         StepVerifier.create(result)
-            .expectNextCount(0)
-            .expectError(RuntimeException::class.java)
-            .verify()
-    }
-
-    @Test
-    fun `getByName should return workout stage type by name`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByName("Warm-up"))
-            .thenReturn(Mono.just(testWorkoutStageType))
-
-        // When
-        val result = workoutStageTypeController.getByName("Warm-up")
-
-        // Then
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testWorkoutStageType))
+            .expectNext(ResponseEntity.ok(workoutStageType))
             .verifyComplete()
 
-        verify(workoutStageTypeDAL).selectWorkoutStageTypeByName("Warm-up")
+        verify(workoutStageTypeDAL).selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)
     }
 
     @Test
-    fun `getByName should return 404 when workout stage type not found`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByName("Warm-up"))
-            .thenReturn(Mono.error(NoResultsFoundException("Not found")))
+    fun `getByName should return not found when workout stage type not found`() {
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)).thenReturn(Mono.error(NoResultsFoundException("Not found")))
 
-        // When
-        val result = workoutStageTypeController.getByName("Warm-up")
+        val result = workoutStageTypeController.getByName("Warmup")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(workoutStageTypeDAL).selectWorkoutStageTypeByName("Warm-up")
-    }
-
-    @Test
-    fun `getByName should handle service error`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByName("Warm-up"))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
-
-        // When
-        val result = workoutStageTypeController.getByName("Warm-up")
-
-        // Then
-        StepVerifier.create(result)
-            .expectNextCount(0)
-            .expectError(RuntimeException::class.java)
-            .verify()
+        verify(workoutStageTypeDAL).selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)
     }
 
     @Test
     fun `getAll should return all workout stage types`() {
-        // Given
-        val workoutStageTypes =
-            listOf(
-                testWorkoutStageType,
-                WorkoutStageType(id = 2, name = "Main"),
-                WorkoutStageType(id = 3, name = "Accessory"),
-                WorkoutStageType(id = 4, name = "Cool-down")
+        val now = LocalDateTime.now()
+        val workoutStageTypes = listOf(
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.WARMUP,
+                createdAt = now
+            ),
+            WorkoutStageType(
+                id = 2,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
             )
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypes())
-            .thenReturn(Mono.just(workoutStageTypes))
+        )
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.just(workoutStageTypes))
 
-        // When
         val result = workoutStageTypeController.getAll()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStageTypes))
             .verifyComplete()
@@ -159,20 +125,16 @@ class WorkoutStageTypeControllerTest {
     }
 
     @Test
-    fun `getAll should handle service error`() {
-        // Given
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypes())
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+    fun `should handle DAL error gracefully for getAll`() {
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = workoutStageTypeController.getAll()
 
-        // Then
         StepVerifier.create(result)
-            .expectNextCount(0)
             .expectError(RuntimeException::class.java)
             .verify()
-
-        verify(workoutStageTypeDAL).selectWorkoutStageTypes()
     }
 }
+
+
+

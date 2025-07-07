@@ -68,17 +68,17 @@ class ProgramController(
      *
      * @param userId The user ID for the program
      * @param name The name of the program
-     * @param description The description of the program
+     * @param currentWeekNumber The current week number
      * @return Mono containing the created program with generated ID
      */
     @PostMapping("/")
     fun save(
         @RequestParam userId: Int,
         @RequestParam name: String,
-        @RequestParam description: String?,
+        @RequestParam currentWeekNumber: Int,
     ): Mono<ResponseEntity<Program>> {
-        logger.info("Saving program: {} for user {}", name, userId)
-        return programDAL.insertProgram(userId, name, description)
+        logger.info("Saving program: {} for user {} with week number {}", name, userId, currentWeekNumber)
+        return programDAL.insertProgram(userId, name, currentWeekNumber)
             .map { savedProgram ->
                 logger.debug("Saved program with id: {}", savedProgram.id)
                 ResponseEntity.ok(savedProgram)
@@ -146,16 +146,16 @@ class ProgramController(
      *
      * @param id The unique identifier of the program to update
      * @param name The updated name of the program
-     * @param description The updated description of the program
+     * @param currentWeekNumber The updated current week number
      * @return Mono containing the updated program, or 404 if not found
      */
     @PatchMapping("/{id}")
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam name: String,
-        @RequestParam description: String?,
+        @RequestParam currentWeekNumber: Int,
     ): Mono<ResponseEntity<Program>> {
-        return programDAL.updateProgram(id, name, description)
+        return programDAL.updateProgram(id, name, currentWeekNumber)
             .map {
                 logger.debug("Updated program: {}", id)
                 ResponseEntity.ok(it)

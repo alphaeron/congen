@@ -116,15 +116,17 @@ class WorkoutStageDAL(
      * @param programmedWorkoutId The ID of the programmed workout this stage belongs to
      * @param stageTypeId The ID of the stage type (warm-up, main, cool-down, etc.)
      * @param position The position of this stage within the workout
+     * @param name The name of the workout stage
      * @return Mono containing the inserted workout stage with generated ID
      * @throws ValidationException if workout stage data fails validation
      */
     fun insertWorkoutStage(
         programmedWorkoutId: Long,
-        stageTypeId: Long,
+        stageTypeId: Int,
         position: Int,
+        name: String,
     ): Mono<WorkoutStage> {
-        logger.debug("Inserting workout stage for workout: {}, position: {}", programmedWorkoutId, position)
+        logger.debug("Inserting workout stage for workout: {}, position: {}, name: {}", programmedWorkoutId, position, name)
 
         // Validate all CHECK constraints
         ValidationUtil.validatePosition(position)
@@ -132,13 +134,14 @@ class WorkoutStageDAL(
         return postgresClient.update(
             """
             INSERT INTO workout_stage
-                (programmed_workout_id, stage_type_id, position)
+                (programmed_workout_id, stage_type_id, position, name)
             VALUES
-                ($1, $2, $3)
+                ($1, $2, $3, $4)
             """.trimIndent(),
             programmedWorkoutId,
             stageTypeId,
             position,
+            name,
         )
     }
 
@@ -153,6 +156,7 @@ class WorkoutStageDAL(
      * @param programmedWorkoutId The ID of the programmed workout this stage belongs to
      * @param stageTypeId The ID of the stage type (warm-up, main, cool-down, etc.)
      * @param position The position of this stage within the workout
+     * @param name The name of the workout stage
      * @return Mono containing the updated workout stage
      * @throws ValidationException if workout stage data fails validation
      * @throws NoResultsFoundException if no workout stage exists with the given ID
@@ -160,8 +164,9 @@ class WorkoutStageDAL(
     fun updateWorkoutStage(
         id: Long,
         programmedWorkoutId: Long,
-        stageTypeId: Long,
+        stageTypeId: Int,
         position: Int,
+        name: String,
     ): Mono<WorkoutStage> {
         logger.debug("Updating workout stage: {}", id)
 
@@ -171,13 +176,14 @@ class WorkoutStageDAL(
         return postgresClient.update(
             """
             UPDATE workout_stage
-            SET programmed_workout_id=$2, stage_type_id=$3, position=$4
+            SET programmed_workout_id=$2, stage_type_id=$3, position=$4, name=$5, updated_at=NOW()
             WHERE id=$1
             """.trimIndent(),
             id,
             programmedWorkoutId,
             stageTypeId,
             position,
+            name,
         )
     }
 

@@ -3,10 +3,12 @@ package com.congen.service.conjugate
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.ProgrammedExercise
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageTypeEnum
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -39,6 +41,7 @@ import kotlin.random.Random
  * - **Exercise-Specific Guidelines**: Different parameters for different movement types
  *
  * @property workoutStageDAL Data access layer for workout stage operations
+ * @property workoutStageTypeDAL Data access layer for workout stage type operations
  * @property programmedExerciseDAL Data access layer for programmed exercise operations
  * @property setSchemeDAL Data access layer for set scheme operations
  * @property prilepinGuidelinesService Service for Prilepin-based guidelines
@@ -49,6 +52,7 @@ import kotlin.random.Random
 @Component
 class WorkoutStageGenerator(
     private val workoutStageDAL: WorkoutStageDAL,
+    private val workoutStageTypeDAL: WorkoutStageTypeDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
     private val prilepinGuidelinesService: PrilepinGuidelinesService,
@@ -57,24 +61,19 @@ class WorkoutStageGenerator(
      * Creates a workout stage.
      *
      * @param workoutId The ID of the workout
-     * @param stageType The type of stage (primary, secondary, accessory, conditioning)
+     * @param stageType The type of stage
      * @param position The position of the stage in the workout
      * @return Mono containing the created workout stage
      */
     fun createWorkoutStage(
         workoutId: Long,
-        stageType: String,
+        stageType: WorkoutStageTypeEnum,
         position: Int
     ): Mono<WorkoutStage> {
-        val stageTypeId =
-            when (stageType) {
-                "primary" -> 1
-                "secondary" -> 2
-                "accessory" -> 3
-                "conditioning" -> 4
-                else -> 1
+        return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageType)
+            .flatMap { workoutStageType ->
+                workoutStageDAL.insertWorkoutStage(workoutId, workoutStageType.id, position, stageType.displayName)
             }
-        return workoutStageDAL.insertWorkoutStage(workoutId, stageTypeId.toLong(), position)
     }
 
     /**
@@ -88,7 +87,7 @@ class WorkoutStageGenerator(
         workoutStageId: Long,
         exerciseName: String
     ): Mono<ProgrammedExercise> {
-        return programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, null)
+        return programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, 1, null)
     }
 
     /**
@@ -107,7 +106,6 @@ class WorkoutStageGenerator(
                 setSchemeDAL.insertSetScheme(
                     programmedExerciseId,
                     params.setNumber,
-                    params.wasSetPerformed,
                     params.isAmrap,
                     params.isEmom,
                     params.useTempo,
@@ -176,7 +174,6 @@ class WorkoutStageGenerator(
         return (1..numSets).map { setNumber ->
             SetSchemeParams(
                 setNumber = setNumber,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = useTempo,
@@ -238,7 +235,6 @@ class WorkoutStageGenerator(
         return (1..numSets).map { setNumber ->
             SetSchemeParams(
                 setNumber = setNumber,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = useTempo,
@@ -287,7 +283,6 @@ class WorkoutStageGenerator(
         return listOf(
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = isAmrap,
                 isEmom = !isAmrap,
                 useTempo = useTempo,

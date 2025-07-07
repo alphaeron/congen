@@ -70,6 +70,7 @@ class WorkoutStageController(
      * @param programmedWorkoutId The ID of the programmed workout this stage belongs to
      * @param stageTypeId The ID of the stage type (warm-up, main, cool-down, etc.)
      * @param position The position of this stage within the workout
+     * @param name The name of the workout stage
      * @return Mono containing the created workout stage with generated ID
      */
     @PostMapping("/")
@@ -77,21 +78,24 @@ class WorkoutStageController(
         @Parameter(description = "Programmed workout ID", required = true)
         @RequestParam programmedWorkoutId: Long,
         @Parameter(description = "Stage type ID", required = true)
-        @RequestParam stageTypeId: Long,
+        @RequestParam stageTypeId: Int,
         @Parameter(description = "Position within the workout", required = true)
         @RequestParam position: Int,
+        @Parameter(description = "Name of the workout stage", required = true)
+        @RequestParam name: String,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        logger.info("Saving workout stage for workout {}", programmedWorkoutId)
-        return workoutStageDAL.insertWorkoutStage(programmedWorkoutId, stageTypeId, position)
+        logger.info("Saving workout stage for workout {} with name {}", programmedWorkoutId, name)
+        return workoutStageDAL.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
             .map { savedStage ->
                 logger.debug("Saved workout stage with id: {}", savedStage.id)
                 ResponseEntity.ok(savedStage)
             }
             .doOnError { e ->
                 logger.error(
-                    "Error saving workout stage for workout: {}, position: {}",
+                    "Error saving workout stage for workout: {}, position: {}, name: {}",
                     programmedWorkoutId,
                     position,
+                    name,
                     e,
                 )
             }
@@ -179,6 +183,7 @@ class WorkoutStageController(
      * @param programmedWorkoutId The ID of the programmed workout this stage belongs to
      * @param stageTypeId The ID of the stage type (warm-up, main, cool-down, etc.)
      * @param position The position of this stage within the workout
+     * @param name The name of the workout stage
      * @return ResponseEntity containing the updated workout stage
      */
     @PatchMapping("/")
@@ -188,11 +193,13 @@ class WorkoutStageController(
         @Parameter(description = "Programmed workout ID", required = true)
         @RequestParam programmedWorkoutId: Long,
         @Parameter(description = "Stage type ID", required = true)
-        @RequestParam stageTypeId: Long,
+        @RequestParam stageTypeId: Int,
         @Parameter(description = "Position within the workout", required = true)
         @RequestParam position: Int,
+        @Parameter(description = "Name of the workout stage", required = true)
+        @RequestParam name: String,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageDAL.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position)
+        return workoutStageDAL.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
             .map {
                 logger.debug("Updated workout stage: {}", id)
                 ResponseEntity.ok(it)

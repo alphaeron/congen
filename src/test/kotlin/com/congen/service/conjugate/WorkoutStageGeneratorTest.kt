@@ -3,11 +3,14 @@ package com.congen.service.conjugate
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.ProgrammedExercise
 import com.congen.model.SetScheme
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -19,6 +22,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -28,6 +32,7 @@ import kotlin.test.assertTrue
 class WorkoutStageGeneratorTest {
     private lateinit var workoutStageGenerator: WorkoutStageGenerator
     private lateinit var workoutStageDAL: WorkoutStageDAL
+    private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var setSchemeDAL: SetSchemeDAL
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
@@ -35,32 +40,47 @@ class WorkoutStageGeneratorTest {
     @BeforeEach
     fun setUp() {
         workoutStageDAL = mock()
+        workoutStageTypeDAL = mock()
         programmedExerciseDAL = mock()
         setSchemeDAL = mock()
         prilepinGuidelinesService = mock()
-        workoutStageGenerator =
-            WorkoutStageGenerator(
-                workoutStageDAL,
-                programmedExerciseDAL,
-                setSchemeDAL,
-                prilepinGuidelinesService
-            )
+        workoutStageGenerator = WorkoutStageGenerator(
+            workoutStageDAL = workoutStageDAL,
+            workoutStageTypeDAL = workoutStageTypeDAL,
+            programmedExerciseDAL = programmedExerciseDAL,
+            setSchemeDAL = setSchemeDAL,
+            prilepinGuidelinesService = prilepinGuidelinesService
+        )
     }
 
     @Test
     fun `createWorkoutStage should create primary stage`() {
         val workoutId = 1L
-        val stageType = "primary"
+        val stageType = WorkoutStageTypeEnum.PRIMARY
         val position = 1
+        val workoutStageType = WorkoutStageType(
+            id = 1,
+            name = WorkoutStageTypeEnum.PRIMARY,
+            createdAt = LocalDateTime.now()
+        )
         val expectedStage =
             WorkoutStage(
                 id = 1L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 1,
-                position = position
+                position = position,
+                name = "Primary",
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
-        whenever(workoutStageDAL.insertWorkoutStage(workoutId, 1L, position))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(1), eq(position), eq("Primary")))
+            .thenReturn(Mono.just(expectedStage))
+        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -69,23 +89,37 @@ class WorkoutStageGeneratorTest {
             .expectNext(expectedStage)
             .verifyComplete()
 
-        verify(workoutStageDAL).insertWorkoutStage(workoutId, 1L, position)
+        verify(workoutStageDAL).insertWorkoutStage(workoutId, 1, position, "Primary")
     }
 
     @Test
     fun `createWorkoutStage should create secondary stage`() {
         val workoutId = 1L
-        val stageType = "secondary"
+        val stageType = WorkoutStageTypeEnum.SECONDARY
         val position = 2
+        val workoutStageType = WorkoutStageType(
+            id = 2,
+            name = WorkoutStageTypeEnum.SECONDARY,
+            createdAt = LocalDateTime.now()
+        )
         val expectedStage =
             WorkoutStage(
                 id = 2L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 2,
-                position = position
+                position = position,
+                name = "Secondary",
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
-        whenever(workoutStageDAL.insertWorkoutStage(workoutId, 2L, position))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(2), eq(position), eq("Secondary")))
+            .thenReturn(Mono.just(expectedStage))
+        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -94,23 +128,37 @@ class WorkoutStageGeneratorTest {
             .expectNext(expectedStage)
             .verifyComplete()
 
-        verify(workoutStageDAL).insertWorkoutStage(workoutId, 2L, position)
+        verify(workoutStageDAL).insertWorkoutStage(workoutId, 2, position, "Secondary")
     }
 
     @Test
     fun `createWorkoutStage should create accessory stage`() {
         val workoutId = 1L
-        val stageType = "accessory"
+        val stageType = WorkoutStageTypeEnum.ACCESSORY
         val position = 3
+        val workoutStageType = WorkoutStageType(
+            id = 3,
+            name = WorkoutStageTypeEnum.ACCESSORY,
+            createdAt = LocalDateTime.now()
+        )
         val expectedStage =
             WorkoutStage(
                 id = 3L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 3,
-                position = position
+                position = position,
+                name = "Accessory",
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
-        whenever(workoutStageDAL.insertWorkoutStage(workoutId, 3L, position))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(3), eq(position), eq("Accessory")))
+            .thenReturn(Mono.just(expectedStage))
+        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -119,23 +167,37 @@ class WorkoutStageGeneratorTest {
             .expectNext(expectedStage)
             .verifyComplete()
 
-        verify(workoutStageDAL).insertWorkoutStage(workoutId, 3L, position)
+        verify(workoutStageDAL).insertWorkoutStage(workoutId, 3, position, "Accessory")
     }
 
     @Test
     fun `createWorkoutStage should create conditioning stage`() {
         val workoutId = 1L
-        val stageType = "conditioning"
+        val stageType = WorkoutStageTypeEnum.CONDITIONING
         val position = 4
+        val workoutStageType = WorkoutStageType(
+            id = 4,
+            name = WorkoutStageTypeEnum.CONDITIONING,
+            createdAt = LocalDateTime.now()
+        )
         val expectedStage =
             WorkoutStage(
                 id = 4L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 4,
-                position = position
+                position = position,
+                name = "Conditioning",
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
-        whenever(workoutStageDAL.insertWorkoutStage(workoutId, 4L, position))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(4), eq(position), eq("Conditioning")))
+            .thenReturn(Mono.just(expectedStage))
+        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -144,23 +206,37 @@ class WorkoutStageGeneratorTest {
             .expectNext(expectedStage)
             .verifyComplete()
 
-        verify(workoutStageDAL).insertWorkoutStage(workoutId, 4L, position)
+        verify(workoutStageDAL).insertWorkoutStage(workoutId, 4, position, "Conditioning")
     }
 
     @Test
     fun `createWorkoutStage should default to primary for unknown stage type`() {
         val workoutId = 1L
-        val stageType = "unknown"
+        val stageType = WorkoutStageTypeEnum.PRIMARY
         val position = 1
+        val workoutStageType = WorkoutStageType(
+            id = 1,
+            name = WorkoutStageTypeEnum.PRIMARY,
+            createdAt = LocalDateTime.now()
+        )
         val expectedStage =
             WorkoutStage(
                 id = 1L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 1,
-                position = position
+                position = position,
+                name = "Primary",
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
-        whenever(workoutStageDAL.insertWorkoutStage(workoutId, 1L, position))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
+            .thenReturn(Mono.just(workoutStageType))
+        whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(1), eq(position), eq("Primary")))
+            .thenReturn(Mono.just(expectedStage))
+        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -169,7 +245,7 @@ class WorkoutStageGeneratorTest {
             .expectNext(expectedStage)
             .verifyComplete()
 
-        verify(workoutStageDAL).insertWorkoutStage(workoutId, 1L, position)
+        verify(workoutStageDAL).insertWorkoutStage(workoutId, 1, position, "Primary")
     }
 
     @Test
@@ -181,10 +257,13 @@ class WorkoutStageGeneratorTest {
                 id = 1L,
                 workoutStageId = workoutStageId,
                 exerciseName = exerciseName,
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
             )
 
-        whenever(programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, null))
+        whenever(programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, 1, null))
             .thenReturn(Mono.just(expectedExercise))
 
         val result = workoutStageGenerator.createProgrammedExercise(workoutStageId, exerciseName)
@@ -193,7 +272,7 @@ class WorkoutStageGeneratorTest {
             .expectNext(expectedExercise)
             .verifyComplete()
 
-        verify(programmedExerciseDAL).insertProgrammedExercise(workoutStageId, exerciseName, null)
+        verify(programmedExerciseDAL).insertProgrammedExercise(workoutStageId, exerciseName, 1, null)
     }
 
     @Test
@@ -203,7 +282,6 @@ class WorkoutStageGeneratorTest {
             listOf(
                 SetSchemeParams(
                     setNumber = 1,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -218,7 +296,6 @@ class WorkoutStageGeneratorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 2,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -238,7 +315,6 @@ class WorkoutStageGeneratorTest {
                 id = 1L,
                 programmedExerciseId = 1L,
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -249,13 +325,14 @@ class WorkoutStageGeneratorTest {
                 performedWeight = null,
                 targetRepCount = 5,
                 performedRepCount = null,
-                restSeconds = 180
+                restSeconds = 180,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
             )
         whenever(
             setSchemeDAL.insertSetScheme(
                 eq(1L),
                 any(),
-                eq(false),
                 eq(false),
                 eq(false),
                 eq(false),
@@ -281,7 +358,6 @@ class WorkoutStageGeneratorTest {
             false,
             false,
             false,
-            false,
             null,
             null,
             null,
@@ -294,7 +370,6 @@ class WorkoutStageGeneratorTest {
         verify(setSchemeDAL).insertSetScheme(
             programmedExerciseId,
             2,
-            false,
             false,
             false,
             false,
@@ -328,7 +403,8 @@ class WorkoutStageGeneratorTest {
                 UserOneRepMax(
                     userId = userId,
                     exerciseName = "Bench Press",
-                    oneRepMax = BigDecimal("100.0")
+                    oneRepMax = BigDecimal("100.0"),
+                    updatedAt = LocalDateTime.now()
                 )
             )
         val currentWeekNumber = 1
@@ -366,7 +442,6 @@ class WorkoutStageGeneratorTest {
 
         val firstSet = result[0]
         assertEquals(1, firstSet.setNumber)
-        assertFalse(firstSet.wasSetPerformed)
         assertFalse(firstSet.isAmrap)
         assertFalse(firstSet.isEmom)
         assertEquals(BigDecimal("85.00"), firstSet.targetWeight) // 100 * 0.85
@@ -391,7 +466,8 @@ class WorkoutStageGeneratorTest {
                 UserOneRepMax(
                     userId = userId,
                     exerciseName = "Squat",
-                    oneRepMax = BigDecimal("200.0")
+                    oneRepMax = BigDecimal("200.0"),
+                    updatedAt = LocalDateTime.now()
                 )
             )
 
@@ -402,7 +478,6 @@ class WorkoutStageGeneratorTest {
 
         val firstSet = result[0]
         assertEquals(1, firstSet.setNumber)
-        assertFalse(firstSet.wasSetPerformed)
         assertFalse(firstSet.isAmrap)
         assertFalse(firstSet.isEmom)
         assertTrue(firstSet.targetWeight!! in BigDecimal("160.0")..BigDecimal("180.0")) // 200 * 0.8-0.9
@@ -427,7 +502,8 @@ class WorkoutStageGeneratorTest {
                 UserOneRepMax(
                     userId = userId,
                     exerciseName = "Burpees",
-                    oneRepMax = BigDecimal("50.0")
+                    oneRepMax = BigDecimal("50.0"),
+                    updatedAt = LocalDateTime.now(),
                 )
             )
 
@@ -438,9 +514,7 @@ class WorkoutStageGeneratorTest {
 
         val set = result[0]
         assertEquals(1, set.setNumber)
-        assertFalse(set.wasSetPerformed)
-        assertTrue(set.isAmrap || set.isEmom)
-        assertFalse(set.isAmrap && set.isEmom) // Should be one or the other
+        assertTrue(set.isAmrap.xor(set.isEmom)) // Exactly one is true
         assertEquals(BigDecimal("25.00"), set.targetWeight) // 50.0 * 0.5 intensity
         assertNull(set.targetRepCount) // Varies per person for AMRAP/EMOM
         assertTrue(set.restSeconds == 0 || set.restSeconds == 60) // 0 for AMRAP, 60 for EMOM

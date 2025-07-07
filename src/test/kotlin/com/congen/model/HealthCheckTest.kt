@@ -2,6 +2,7 @@ package com.congen.model
 
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -44,6 +45,7 @@ class HealthCheckTest {
 
     @Test
     fun `HealthCheck should be created with all fields`() {
+        val time = LocalDateTime.of(2024, 1, 1, 0, 0, 0)
         val healthCheck =
             HealthCheck(
                 componentId = "database",
@@ -52,7 +54,7 @@ class HealthCheckTest {
                 observedUnit = "ms",
                 status = HealthStatus.PASS,
                 affectedEndpoints = listOf("/health", "/api/v1/users"),
-                time = "2024-01-01T00:00:00Z",
+                time = time,
                 output = "Database connection successful",
                 links = mapOf("self" to "/health/database")
             )
@@ -65,7 +67,7 @@ class HealthCheckTest {
         assertEquals(2, healthCheck.affectedEndpoints.size)
         assertEquals("/health", healthCheck.affectedEndpoints[0])
         assertEquals("/api/v1/users", healthCheck.affectedEndpoints[1])
-        assertEquals("2024-01-01T00:00:00Z", healthCheck.time)
+        assertEquals(time, healthCheck.time)
         assertEquals("Database connection successful", healthCheck.output)
         assertEquals(1, healthCheck.links.size)
         assertEquals("/health/database", healthCheck.links["self"])
@@ -198,29 +200,15 @@ class HealthCheckTest {
 
     @Test
     fun `HealthCheck should handle different observed value types`() {
-        val stringValue =
-            HealthCheck(
-                componentId = "string-component",
-                observedValue = "test-value",
-                status = HealthStatus.PASS
-            )
-        assertEquals("test-value", stringValue.observedValue)
+        val healthCheckLong = HealthCheck(status = HealthStatus.PASS, observedValue = 123L)
+        val healthCheckDouble = HealthCheck(status = HealthStatus.PASS, observedValue = 123.45)
+        val healthCheckString = HealthCheck(status = HealthStatus.PASS, observedValue = "OK")
+        val healthCheckNull = HealthCheck(status = HealthStatus.PASS)
 
-        val numberValue =
-            HealthCheck(
-                componentId = "number-component",
-                observedValue = 42,
-                status = HealthStatus.PASS
-            )
-        assertEquals(42, numberValue.observedValue)
-
-        val decimalValue =
-            HealthCheck(
-                componentId = "decimal-component",
-                observedValue = BigDecimal("123.45"),
-                status = HealthStatus.PASS
-            )
-        assertEquals(BigDecimal("123.45"), decimalValue.observedValue)
+        assertEquals(123L, healthCheckLong.observedValue)
+        assertEquals(123.45, healthCheckDouble.observedValue)
+        assertEquals("OK", healthCheckString.observedValue)
+        assertNull(healthCheckNull.observedValue)
     }
 
     @Test

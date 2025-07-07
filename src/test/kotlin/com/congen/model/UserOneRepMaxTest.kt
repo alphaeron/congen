@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 
 /**
  * Unit tests for UserOneRepMax model.
@@ -15,239 +16,158 @@ import kotlin.test.assertEquals
  * @since 1.0.0
  */
 class UserOneRepMaxTest {
+    private val now = LocalDateTime.now()
+
     @Test
-    fun `should create UserOneRepMax with all properties`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val oneRepMax = BigDecimal("100.0")
-        val lastUpdated = LocalDateTime.now()
+    fun `should create user one rep max with valid parameters`() {
+        val userOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-                lastUpdated = lastUpdated,
-            )
-
-        // Then
-        assertEquals(userId, userOneRepMax.userId)
-        assertEquals(exerciseName, userOneRepMax.exerciseName)
-        assertEquals(oneRepMax, userOneRepMax.oneRepMax)
-        assertEquals(lastUpdated, userOneRepMax.lastUpdated)
+        assertEquals(1, userOneRepMax.userId)
+        assertEquals("Bench Press", userOneRepMax.exerciseName)
+        assertEquals(BigDecimal("225.0"), userOneRepMax.oneRepMax)
+        assertEquals(now, userOneRepMax.updatedAt)
     }
 
     @Test
-    fun `should create UserOneRepMax with null lastUpdated`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Squat"
-        val oneRepMax = BigDecimal("150.0")
+    fun `should create user one rep max with different exercise`() {
+        val userOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Squat",
+            oneRepMax = BigDecimal("315.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals(userId, userOneRepMax.userId)
-        assertEquals(exerciseName, userOneRepMax.exerciseName)
-        assertEquals(oneRepMax, userOneRepMax.oneRepMax)
-        assertEquals(null, userOneRepMax.lastUpdated)
+        assertEquals("Squat", userOneRepMax.exerciseName)
+        assertEquals(BigDecimal("315.0"), userOneRepMax.oneRepMax)
     }
 
     @Test
-    fun `should handle decimal one rep max values`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Deadlift"
-        val oneRepMax = BigDecimal("225.5")
+    fun `should create user one rep max with decimal weight`() {
+        val userOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Deadlift",
+            oneRepMax = BigDecimal("405.5"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals(BigDecimal("225.5"), userOneRepMax.oneRepMax)
+        assertEquals(BigDecimal("405.5"), userOneRepMax.oneRepMax)
     }
 
     @Test
-    fun `should handle zero one rep max values`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Push-up"
-        val oneRepMax = BigDecimal("0.0")
+    fun `should handle different timestamps`() {
+        val updatedAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
+        
+        val userOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = updatedAt
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals(BigDecimal("0.0"), userOneRepMax.oneRepMax)
+        assertEquals(updatedAt, userOneRepMax.updatedAt)
     }
 
     @Test
-    fun `should handle large one rep max values`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Heavy Deadlift"
-        val oneRepMax = BigDecimal("500.0")
+    fun `should support data class copy`() {
+        val originalOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
+        val updatedOneRepMax = originalOneRepMax.copy(
+            oneRepMax = BigDecimal("250.0")
+        )
 
-        // Then
-        assertEquals(BigDecimal("500.0"), userOneRepMax.oneRepMax)
+        assertEquals(1, updatedOneRepMax.userId)
+        assertEquals("Bench Press", updatedOneRepMax.exerciseName)
+        assertEquals(BigDecimal("250.0"), updatedOneRepMax.oneRepMax)
+        assertEquals(now, updatedOneRepMax.updatedAt)
     }
 
     @Test
-    fun `should handle special characters in exercise name`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Barbell Bench Press (Incline)"
-        val oneRepMax = BigDecimal("120.0")
+    fun `should support data class equality`() {
+        val oneRepMax1 = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
+        val oneRepMax2 = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // Then
-        assertEquals(exerciseName, userOneRepMax.exerciseName)
+        val oneRepMax3 = UserOneRepMax(
+            userId = 2,
+            exerciseName = "Squat",
+            oneRepMax = BigDecimal("315.0"),
+            updatedAt = now
+        )
+
+        assertEquals(oneRepMax1, oneRepMax2)
+        assertNotNull(oneRepMax1 != oneRepMax3)
     }
 
     @Test
-    fun `should handle empty exercise name`() {
-        // Given
-        val userId = 1
-        val exerciseName = ""
-        val oneRepMax = BigDecimal("100.0")
+    fun `should support data class toString`() {
+        val userOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals("", userOneRepMax.exerciseName)
+        val toString = userOneRepMax.toString()
+        assertNotNull(toString)
+        assert(toString.contains("UserOneRepMax"))
+        assert(toString.contains("userId=1"))
+        assert(toString.contains("exerciseName=Bench Press"))
+        assert(toString.contains("oneRepMax=225.0"))
     }
 
     @Test
-    fun `should handle negative user ID`() {
-        // Given
-        val userId = -1
-        val exerciseName = "Bench Press"
-        val oneRepMax = BigDecimal("100.0")
+    fun `should support data class hashCode`() {
+        val oneRepMax1 = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
+        val oneRepMax2 = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // Then
-        assertEquals(-1, userOneRepMax.userId)
+        assertEquals(oneRepMax1.hashCode(), oneRepMax2.hashCode())
     }
 
     @Test
-    fun `should handle zero user ID`() {
-        // Given
-        val userId = 0
-        val exerciseName = "Squat"
-        val oneRepMax = BigDecimal("150.0")
+    fun `should support data class component functions`() {
+        val userOneRepMax = UserOneRepMax(
+            userId = 1,
+            exerciseName = "Bench Press",
+            oneRepMax = BigDecimal("225.0"),
+            updatedAt = now
+        )
 
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
+        val (userId, exerciseName, oneRepMax, updatedAt) = userOneRepMax
 
-        // Then
-        assertEquals(0, userOneRepMax.userId)
-    }
-
-    @Test
-    fun `should handle very large user ID`() {
-        // Given
-        val userId = Int.MAX_VALUE
-        val exerciseName = "Deadlift"
-        val oneRepMax = BigDecimal("300.0")
-
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals(Int.MAX_VALUE, userOneRepMax.userId)
-    }
-
-    @Test
-    fun `should handle very large one rep max values`() {
-        // Given
-        val userId = 1
-        val exerciseName = "World Record Lift"
-        val oneRepMax = BigDecimal("999.99")
-
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals(BigDecimal("999.99"), userOneRepMax.oneRepMax)
-    }
-
-    @Test
-    fun `should handle very small one rep max values`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Light Exercise"
-        val oneRepMax = BigDecimal("0.01")
-
-        // When
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-            )
-
-        // Then
-        assertEquals(BigDecimal("0.01"), userOneRepMax.oneRepMax)
+        assertEquals(1, userId)
+        assertEquals("Bench Press", exerciseName)
+        assertEquals(BigDecimal("225.0"), oneRepMax)
+        assertEquals(now, updatedAt)
     }
 }

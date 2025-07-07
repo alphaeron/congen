@@ -13,12 +13,13 @@ import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 /**
  * Unit tests for UserOneRepMaxController.
  *
- * These tests verify the HTTP request handling for UserOneRepMax operations,
- * including CRUD endpoints and error handling.
+ * These tests verify the REST API endpoints for user one rep max operations,
+ * including CRUD operations and error handling.
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -34,48 +35,46 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `save should return saved user one rep max`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0"),
-            )
+    fun `save should return created user one rep max`() {
+        val userId = 1
+        val exerciseName = "Bench Press"
+        val oneRepMax = BigDecimal("225.5")
+        val now = LocalDateTime.now()
+        val userOneRepMax = UserOneRepMax(
+            userId = userId,
+            exerciseName = exerciseName,
+            oneRepMax = oneRepMax,
+            updatedAt = now
+        )
+        val savedUserOneRepMax = userOneRepMax.copy(userId = userId)
+        whenever(userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.just(savedUserOneRepMax))
 
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("100.0"))).thenReturn(Mono.just(userOneRepMax))
+        val result = userOneRepMaxController.save(userId, exerciseName, oneRepMax)
 
-        // When
-        val result = userOneRepMaxController.save(1, "Bench Press", BigDecimal("100.0"))
-
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<UserOneRepMax>)
-            .expectNext(userOneRepMax)
+            .expectNext(savedUserOneRepMax)
             .verifyComplete()
 
-        verify(userOneRepMaxDAL).insertUserOneRepMax(1, "Bench Press", BigDecimal("100.0"))
+        verify(userOneRepMaxDAL).insertUserOneRepMax(userId, exerciseName, oneRepMax)
     }
 
     @Test
     fun `getByUserAndExercise should return user one rep max when found`() {
-        // Given
         val userId = 1
         val exerciseName = "Bench Press"
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = BigDecimal("100.0"),
-            )
+        val userOneRepMax = UserOneRepMax(
+            userId = userId,
+            exerciseName = exerciseName,
+            oneRepMax = BigDecimal("225.5"),
+            updatedAt = LocalDateTime.now()
+        )
 
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(userOneRepMax))
 
-        // When
         val result = userOneRepMaxController.getByUserAndExercise(userId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(userOneRepMax))
             .verifyComplete()
@@ -85,16 +84,13 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getByUserAndExercise should return not found when user one rep max not found`() {
-        // Given
         val userId = 1
-        val exerciseName = "Bench Press"
+        val exerciseName = "Non-existent Exercise"
 
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.error(NoResultsFoundException("Not found")))
 
-        // When
         val result = userOneRepMaxController.getByUserAndExercise(userId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
@@ -103,29 +99,27 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `getAllByUser should return all user one rep maxes for user`() {
-        // Given
+    fun `getAllByUser should return all user one rep maxes`() {
         val userId = 1
-        val userOneRepMaxes =
-            listOf(
-                UserOneRepMax(
-                    userId = userId,
-                    exerciseName = "Bench Press",
-                    oneRepMax = BigDecimal("100.0"),
-                ),
-                UserOneRepMax(
-                    userId = userId,
-                    exerciseName = "Squat",
-                    oneRepMax = BigDecimal("150.0"),
-                ),
+        val userOneRepMaxes = listOf(
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = "Bench Press",
+                oneRepMax = BigDecimal("225.5"),
+                updatedAt = LocalDateTime.now()
+            ),
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = "Squat",
+                oneRepMax = BigDecimal("315.0"),
+                updatedAt = LocalDateTime.now()
             )
+        )
 
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(userOneRepMaxes))
 
-        // When
         val result = userOneRepMaxController.getAllByUser(userId)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(userOneRepMaxes))
             .verifyComplete()
@@ -134,48 +128,45 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `update should return updated user one rep max when found`() {
-        // Given
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = 1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("110.0"),
-            )
+    fun `update should return updated user one rep max`() {
+        val userId = 1
+        val exerciseName = "Bench Press"
+        val oneRepMax = BigDecimal("250.0")
+        val userOneRepMax = UserOneRepMax(
+            userId = userId,
+            exerciseName = exerciseName,
+            oneRepMax = oneRepMax,
+            updatedAt = LocalDateTime.now()
+        )
 
-        whenever(userOneRepMaxDAL.updateUserOneRepMax(1, "Bench Press", BigDecimal("110.0"))).thenReturn(Mono.just(userOneRepMax))
+        whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.just(userOneRepMax))
 
-        // When
-        val result = userOneRepMaxController.update(1, "Bench Press", BigDecimal("110.0"))
+        val result = userOneRepMaxController.update(userId, exerciseName, oneRepMax)
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<UserOneRepMax>)
             .expectNext(userOneRepMax)
             .verifyComplete()
 
-        verify(userOneRepMaxDAL).updateUserOneRepMax(1, "Bench Press", BigDecimal("110.0"))
+        verify(userOneRepMaxDAL).updateUserOneRepMax(userId, exerciseName, oneRepMax)
     }
 
     @Test
-    fun `delete should return deleted user one rep max when found`() {
-        // Given
+    fun `delete should return deleted user one rep max`() {
         val userId = 1
         val exerciseName = "Bench Press"
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = BigDecimal("100.0"),
-            )
+        val userOneRepMax = UserOneRepMax(
+            userId = userId,
+            exerciseName = exerciseName,
+            oneRepMax = BigDecimal("225.5"),
+            updatedAt = LocalDateTime.now()
+        )
 
         whenever(userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(userOneRepMax))
 
-        // When
         val result = userOneRepMaxController.delete(userId, exerciseName)
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<UserOneRepMax>)
@@ -183,5 +174,82 @@ class UserOneRepMaxControllerTest {
             .verifyComplete()
 
         verify(userOneRepMaxDAL).deleteUserOneRepMax(userId, exerciseName)
+    }
+
+    @Test
+    fun `should handle DAL error gracefully`() {
+        val userId = 1
+        val exerciseName = "Bench Press"
+
+        whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.error(RuntimeException("Database error")))
+
+        val result = userOneRepMaxController.getByUserAndExercise(userId, exerciseName)
+
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `should handle DAL error gracefully for getAllByUser`() {
+        val userId = 1
+
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.error(RuntimeException("Database error")))
+
+        val result = userOneRepMaxController.getAllByUser(userId)
+
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `should handle DAL error gracefully for save`() {
+        val userId = 1
+        val exerciseName = "Bench Press"
+        val oneRepMax = BigDecimal("225.5")
+
+        whenever(userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.error(RuntimeException("Database error")))
+
+        val result = userOneRepMaxController.save(userId, exerciseName, oneRepMax)
+
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<UserOneRepMax>)
+            .expectError(RuntimeException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `should handle DAL error gracefully for update`() {
+        val userId = 1
+        val exerciseName = "Bench Press"
+        val oneRepMax = BigDecimal("225.5")
+
+        whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.error(RuntimeException("Database error")))
+
+        val result = userOneRepMaxController.update(userId, exerciseName, oneRepMax)
+
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<UserOneRepMax>)
+            .expectError(RuntimeException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `should handle DAL error gracefully for delete`() {
+        val userId = 1
+        val exerciseName = "Bench Press"
+
+        whenever(userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)).thenReturn(Mono.error(RuntimeException("Database error")))
+
+        val result = userOneRepMaxController.delete(userId, exerciseName)
+
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<UserOneRepMax>)
+            .expectError(RuntimeException::class.java)
+            .verify()
     }
 }

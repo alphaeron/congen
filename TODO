@@ -1,12 +1,13 @@
-do I need description fields?
-double-check schema up to date with models
-types consistent with those specified in the schema
-
-remove tempo, target_sets, target_reps, target_weight, target_rpe, rest_resonds from programmed_exercise, tempo should be stored in set_scheme.
-
-use an enum for stage type.
+deprecation
+warnings
 
 check missing integration tests
+
+use HttpStatus enum in test assertions
+
+Remove update from /workout_stage/{id}/update since it is redundant, make sure it's a patch request too
+
+make sure all dates are in utc
 
 Only get the latest program for a user.
 
@@ -40,3 +41,9 @@ then move hardcoded program templates into database models to add flexability.
 then support adding custom movementType s so there is complete flexability with what type of workout you want to generate
 
 then support exerciseAttributes instead of isUnilateral, ... (like tags) for even more flexability.
+
+remove unneeded endpoints
+
+default current week number 1 1 in program controller?
+
+use same workout stages across all programs

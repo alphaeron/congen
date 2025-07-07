@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 /**
  * Represents a stage within a programmed workout.
@@ -32,6 +33,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @property programmedWorkoutId ID of the programmed workout this stage belongs to
  * @property stageTypeId ID of the workout stage type (warm-up, main, cool-down, etc.)
  * @property position Order of this stage within the workout (1-based)
+ * @property name Name of the workout stage
+ * @property createdAt Created at timestamp
+ * @property updatedAt Updated at timestamp
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -72,4 +76,10 @@ data class WorkoutStage(
         minimum = "1",
     )
     @param:JsonProperty("position") val position: Int,
+    @Schema(description = "Name of the workout stage", example = "Warm-up", required = true)
+    @param:JsonProperty("name") val name: String,
+    @Schema(description = "Created at timestamp", example = "2024-07-06T12:00:00Z", required = true)
+    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @Schema(description = "Updated at timestamp", example = "2024-07-06T12:00:00Z", required = true)
+    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )

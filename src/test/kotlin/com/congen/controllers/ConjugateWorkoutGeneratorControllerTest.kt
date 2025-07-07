@@ -16,6 +16,7 @@ import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class ConjugateWorkoutGeneratorControllerTest {
@@ -34,7 +35,9 @@ class ConjugateWorkoutGeneratorControllerTest {
                 id = 1L,
                 userId = 123,
                 name = "Conjugate Powerlifting - Week 1",
-                description = "Conjugate powerlifting program with 3 days per week"
+                currentWeekNumber = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
             )
     }
 

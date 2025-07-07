@@ -19,9 +19,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 @Schema(description = "Represents the relationship between an exercise and a muscle group.")
 data class ExerciseMuscle(
     /** Name of the exercise (e.g., "Bench Press"). */
-    @Schema(description = "Name of the exercise", example = "Bench Press")
+    @Schema(description = "Name of the exercise", example = "Bench Press", required = true)
     @param:JsonProperty("exercise_name") val exerciseName: String,
     /** Name of the muscle group (e.g., "Chest"). */
-    @Schema(description = "Name of the muscle group", example = "Chest")
+    @Schema(description = "Name of the muscle group", example = "Chest", required = true)
     @param:JsonProperty("muscle_name") val muscleName: String,
 )

@@ -17,7 +17,6 @@ class SessionTimeCalculatorTest {
             listOf(
                 SetSchemeParams(
                     setNumber = 1,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -32,7 +31,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 2,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -47,7 +45,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 3,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -88,7 +85,6 @@ class SessionTimeCalculatorTest {
             listOf(
                 SetSchemeParams(
                     setNumber = 1,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -103,7 +99,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 2,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -118,7 +113,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 3,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -138,7 +132,6 @@ class SessionTimeCalculatorTest {
             listOf(
                 SetSchemeParams(
                     setNumber = 1,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -153,7 +146,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 2,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -168,7 +160,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 3,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -183,7 +174,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 4,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -226,7 +216,6 @@ class SessionTimeCalculatorTest {
             listOf(
                 SetSchemeParams(
                     setNumber = 1,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -241,7 +230,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 2,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -256,7 +244,6 @@ class SessionTimeCalculatorTest {
                 ),
                 SetSchemeParams(
                     setNumber = 3,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -308,7 +295,6 @@ class SessionTimeCalculatorTest {
             listOf(
                 SetSchemeParams(
                     setNumber = 1,
-                    wasSetPerformed = false,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,

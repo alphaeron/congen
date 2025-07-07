@@ -1,11 +1,22 @@
 package com.congen.model
 
-import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import java.time.LocalDateTime
 
+@SpringBootTest
 class ProgrammedExerciseTest {
+
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
+    private val now = LocalDateTime.now()
+
     @Test
     fun `ProgrammedExercise should be created with all required fields`() {
         val programmedExercise =
@@ -13,13 +24,19 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(1L, programmedExercise.id)
         assertEquals(5L, programmedExercise.workoutStageId)
         assertEquals("Bench Press", programmedExercise.exerciseName)
+        assertEquals(1, programmedExercise.position)
         assertNull(programmedExercise.notes)
+        assertEquals(now, programmedExercise.createdAt)
+        assertEquals(now, programmedExercise.updatedAt)
     }
 
     @Test
@@ -29,13 +46,19 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on controlled descent"
+                position = 1,
+                notes = "Focus on controlled descent",
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(1L, programmedExercise.id)
         assertEquals(5L, programmedExercise.workoutStageId)
         assertEquals("Bench Press", programmedExercise.exerciseName)
+        assertEquals(1, programmedExercise.position)
         assertEquals("Focus on controlled descent", programmedExercise.notes)
+        assertEquals(now, programmedExercise.createdAt)
+        assertEquals(now, programmedExercise.updatedAt)
     }
 
     @Test
@@ -45,7 +68,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         val squat =
@@ -53,7 +79,10 @@ class ProgrammedExerciseTest {
                 id = 2L,
                 workoutStageId = 5L,
                 exerciseName = "Back Squat",
-                notes = null
+                position = 2,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         val deadlift =
@@ -61,7 +90,10 @@ class ProgrammedExerciseTest {
                 id = 3L,
                 workoutStageId = 5L,
                 exerciseName = "Deadlift",
-                notes = null
+                position = 3,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals("Bench Press", benchPress.exerciseName)
@@ -76,7 +108,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 1L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         val exercise2 =
@@ -84,7 +119,10 @@ class ProgrammedExerciseTest {
                 id = 2L,
                 workoutStageId = 100L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(1L, exercise1.workoutStageId)
@@ -98,7 +136,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         val exercise2 =
@@ -106,7 +147,10 @@ class ProgrammedExerciseTest {
                 id = 999L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(1L, exercise1.id)
@@ -120,7 +164,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on controlled descent and proper form"
+                position = 1,
+                notes = "Focus on controlled descent and proper form",
+                createdAt = now,
+                updatedAt = now
             )
 
         val exerciseWithoutNotes =
@@ -128,7 +175,10 @@ class ProgrammedExerciseTest {
                 id = 2L,
                 workoutStageId = 5L,
                 exerciseName = "Squat",
-                notes = null
+                position = 2,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals("Focus on controlled descent and proper form", exerciseWithNotes.notes)
@@ -142,7 +192,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = ""
+                position = 1,
+                notes = "",
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals("", exercise.notes)
@@ -156,7 +209,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = longName,
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(longName, exercise.exerciseName)
@@ -169,7 +225,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press (Barbell)",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals("Bench Press (Barbell)", exercise.exerciseName)
@@ -182,12 +241,16 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 1L,
                 exerciseName = "A",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(1L, exercise.id)
         assertEquals(1L, exercise.workoutStageId)
         assertEquals("A", exercise.exerciseName)
+        assertEquals(1, exercise.position)
     }
 
     @Test
@@ -197,12 +260,16 @@ class ProgrammedExerciseTest {
                 id = Long.MAX_VALUE,
                 workoutStageId = Long.MAX_VALUE,
                 exerciseName = "Exercise with maximum ID values",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(Long.MAX_VALUE, exercise.id)
         assertEquals(Long.MAX_VALUE, exercise.workoutStageId)
         assertEquals("Exercise with maximum ID values", exercise.exerciseName)
+        assertEquals(1, exercise.position)
     }
 
     @Test
@@ -212,19 +279,26 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Original notes"
+                position = 1,
+                notes = "Original notes",
+                createdAt = now,
+                updatedAt = now
             )
 
         val updatedExercise =
             originalExercise.copy(
                 exerciseName = "Squat",
+                position = 2,
                 notes = "Updated notes"
             )
 
         assertEquals(1L, updatedExercise.id)
         assertEquals(5L, updatedExercise.workoutStageId)
         assertEquals("Squat", updatedExercise.exerciseName)
+        assertEquals(2, updatedExercise.position)
         assertEquals("Updated notes", updatedExercise.notes)
+        assertEquals(now, updatedExercise.createdAt)
+        assertEquals(now, updatedExercise.updatedAt)
     }
 
     @Test
@@ -234,7 +308,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
         val exercise2 =
@@ -242,7 +319,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
         val exercise3 =
@@ -250,11 +330,16 @@ class ProgrammedExerciseTest {
                 id = 2L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(exercise1, exercise2)
-        assertNotNull(exercise1 != exercise3)
+        assertEquals(exercise1.hashCode(), exercise2.hashCode())
+        assertFalse(exercise1 == exercise3)
+        assertFalse(exercise1.hashCode() == exercise3.hashCode())
     }
 
     @Test
@@ -264,16 +349,19 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
         val toString = exercise.toString()
-        assertNotNull(toString)
-        assert(toString.contains("ProgrammedExercise"))
-        assert(toString.contains("id=1"))
-        assert(toString.contains("workoutStageId=5"))
-        assert(toString.contains("exerciseName=Bench Press"))
-        assert(toString.contains("notes=Focus on form"))
+        assertTrue(toString.contains("ProgrammedExercise"))
+        assertTrue(toString.contains("id=1"))
+        assertTrue(toString.contains("workoutStageId=5"))
+        assertTrue(toString.contains("exerciseName=Bench Press"))
+        assertTrue(toString.contains("position=1"))
+        assertTrue(toString.contains("notes=Focus on form"))
     }
 
     @Test
@@ -283,7 +371,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
         val exercise2 =
@@ -291,7 +382,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals(exercise1.hashCode(), exercise2.hashCode())
@@ -304,15 +398,21 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = "Focus on form"
+                position = 1,
+                notes = "Focus on form",
+                createdAt = now,
+                updatedAt = now
             )
 
-        val (id, workoutStageId, exerciseName, notes) = exercise
+        val (id, workoutStageId, exerciseName, position, notes, createdAt, updatedAt) = exercise
 
         assertEquals(1L, id)
         assertEquals(5L, workoutStageId)
         assertEquals("Bench Press", exerciseName)
+        assertEquals(1, position)
         assertEquals("Focus on form", notes)
+        assertEquals(now, createdAt)
+        assertEquals(now, updatedAt)
     }
 
     @Test
@@ -322,7 +422,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertNull(exercise.notes)
@@ -335,7 +438,10 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "  Bench Press  ",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals("  Bench Press  ", exercise.exerciseName)
@@ -348,9 +454,111 @@ class ProgrammedExerciseTest {
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "5x5 Bench Press",
-                notes = null
+                position = 1,
+                notes = null,
+                createdAt = now,
+                updatedAt = now
             )
 
         assertEquals("5x5 Bench Press", exercise.exerciseName)
+    }
+
+    @Test
+    fun `test programmed exercise serialization`() {
+        val programmedExercise = ProgrammedExercise(
+            id = 1L,
+            workoutStageId = 5L,
+            exerciseName = "Bench Press",
+            position = 1,
+            notes = "Focus on controlled descent",
+            createdAt = now,
+            updatedAt = now
+        )
+
+        val json = objectMapper.writeValueAsString(programmedExercise)
+
+        assertTrue(json.contains("\"id\":1"))
+        assertTrue(json.contains("\"workout_stage_id\":5"))
+        assertTrue(json.contains("\"exercise_name\":\"Bench Press\""))
+        assertTrue(json.contains("\"position\":1"))
+        assertTrue(json.contains("\"notes\":\"Focus on controlled descent\""))
+        assertTrue(json.contains("\"created_at\":\"${now.toString()}\""))
+        assertTrue(json.contains("\"updated_at\":\"${now.toString()}\""))
+    }
+
+    @Test
+    fun `test programmed exercise deserialization`() {
+        val json = """
+            {
+                "id": 1,
+                "workout_stage_id": 5,
+                "exercise_name": "Bench Press",
+                "position": 1,
+                "notes": "Focus on controlled descent",
+                "created_at": "${now.toString()}",
+                "updated_at": "${now.toString()}"
+            }
+        """.trimIndent()
+
+        val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
+
+        assertEquals(1L, programmedExercise.id)
+        assertEquals(5L, programmedExercise.workoutStageId)
+        assertEquals("Bench Press", programmedExercise.exerciseName)
+        assertEquals(1, programmedExercise.position)
+        assertEquals("Focus on controlled descent", programmedExercise.notes)
+        assertEquals(now, programmedExercise.createdAt)
+        assertEquals(now, programmedExercise.updatedAt)
+    }
+
+    @Test
+    fun `test programmed exercise deserialization with null notes`() {
+        val json = """
+            {
+                "id": 1,
+                "workout_stage_id": 5,
+                "exercise_name": "Bench Press",
+                "position": 1,
+                "notes": null,
+                "created_at": "${now.toString()}",
+                "updated_at": "${now.toString()}"
+            }
+        """.trimIndent()
+
+        val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
+
+        assertEquals(1L, programmedExercise.id)
+        assertEquals(5L, programmedExercise.workoutStageId)
+        assertEquals("Bench Press", programmedExercise.exerciseName)
+        assertEquals(1, programmedExercise.position)
+        assertNull(programmedExercise.notes)
+        assertEquals(now, programmedExercise.createdAt)
+        assertEquals(now, programmedExercise.updatedAt)
+    }
+
+    @Test
+    fun `test programmed exercise deserialization with unknown properties`() {
+        val json = """
+            {
+                "id": 1,
+                "workout_stage_id": 5,
+                "exercise_name": "Bench Press",
+                "position": 1,
+                "notes": "Focus on controlled descent",
+                "created_at": "${now.toString()}",
+                "updated_at": "${now.toString()}",
+                "unknown_property": "should be ignored"
+            }
+        """.trimIndent()
+
+        val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
+
+        assertEquals(1L, programmedExercise.id)
+        assertEquals(5L, programmedExercise.workoutStageId)
+        assertEquals("Bench Press", programmedExercise.exerciseName)
+        assertEquals(1, programmedExercise.position)
+        assertEquals("Focus on controlled descent", programmedExercise.notes)
+        assertEquals(now, programmedExercise.createdAt)
+        assertEquals(now, programmedExercise.updatedAt)
     }
 }

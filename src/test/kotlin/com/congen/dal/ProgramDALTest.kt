@@ -9,6 +9,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.LocalDateTime
+import org.mockito.kotlin.eq
 
 class ProgramDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -29,7 +31,9 @@ class ProgramDALTest {
                 id = programId,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
-                description = "A comprehensive conjugate powerlifting program",
+                currentWeekNumber = 1,
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
         whenever(
@@ -62,13 +66,17 @@ class ProgramDALTest {
                     id = 1L,
                     userId = 1,
                     name = "Conjugate Powerlifting Program",
-                    description = "A comprehensive conjugate powerlifting program",
+                    currentWeekNumber = 1,
+                    createdAt = java.time.LocalDateTime.now(),
+                    updatedAt = java.time.LocalDateTime.now()
                 ),
                 Program(
                     id = 2L,
                     userId = 1,
                     name = "5/3/1 Program",
-                    description = "A strength building program",
+                    currentWeekNumber = 1,
+                    createdAt = java.time.LocalDateTime.now(),
+                    updatedAt = java.time.LocalDateTime.now()
                 ),
             )
 
@@ -93,28 +101,29 @@ class ProgramDALTest {
                 id = 1,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
-                description = "A comprehensive conjugate powerlifting program",
+                currentWeekNumber = 1,
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
-        val expectedQuery =
-            """
+        val expectedQuery = """
             INSERT INTO program
-                (user_id, name, description)
+                (user_id, name, current_week_number)
             VALUES
                 ($1, $2, $3)
-            """.trimIndent()
+        """.trimIndent()
 
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
                 program.userId,
                 program.name,
-                program.description,
+                program.currentWeekNumber,
             ),
         ).thenReturn(Mono.just(program))
 
         // When
-        val result = programDAL.insertProgram(program.userId, program.name, program.description)
+        val result = programDAL.insertProgram(1, "Test Program", 1)
 
         // Then
         StepVerifier.create(result)
@@ -125,7 +134,7 @@ class ProgramDALTest {
             expectedQuery,
             program.userId,
             program.name,
-            program.description,
+            program.currentWeekNumber,
         )
     }
 
@@ -137,27 +146,29 @@ class ProgramDALTest {
                 id = 1L,
                 userId = 1,
                 name = "Updated Conjugate Program",
-                description = "Updated description",
+                currentWeekNumber = 2,
+                createdAt = java.time.LocalDateTime.now(),
+                updatedAt = java.time.LocalDateTime.now()
             )
 
+        val newName = "Test Program"
         val expectedQuery =
             """
             UPDATE program
-            SET name=$2, description=$3
+            SET name=$2, current_week_number=$3, updated_at=NOW()
             WHERE id=$1
             """.trimIndent()
-
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
                 program.id,
-                program.name,
-                program.description,
+                newName,
+                program.currentWeekNumber,
             ),
         ).thenReturn(Mono.just(program))
 
         // When
-        val result = programDAL.updateProgram(program.id, program.name, program.description)
+        val result = programDAL.updateProgram(1L, newName, 2)
 
         // Then
         StepVerifier.create(result)
@@ -167,8 +178,8 @@ class ProgramDALTest {
         verify(postgresClient).update<Program>(
             expectedQuery,
             program.id,
-            program.name,
-            program.description,
+            newName,
+            program.currentWeekNumber,
         )
     }
 
@@ -176,12 +187,15 @@ class ProgramDALTest {
     fun `deleteProgram should return deleted program`() {
         // Given
         val programId = 1L
+        val now = LocalDateTime.now()
         val program =
             Program(
                 id = programId,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
-                description = "A comprehensive conjugate powerlifting program",
+                currentWeekNumber = 1,
+                createdAt = now,
+                updatedAt = now,
             )
 
         whenever(

@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -62,20 +63,20 @@ class WorkoutStageTypeDAL(
     }
 
     /**
-     * Retrieves a workout stage type by its name.
+     * Retrieves a workout stage type by its enum type.
      *
-     * This method queries the database to find a workout stage type with the specified name.
-     * If no workout stage type exists with the given name, a NoResultsFoundException is thrown.
+     * This method queries the database to find a workout stage type with the specified enum type.
+     * If no workout stage type exists with the given type, a NoResultsFoundException is thrown.
      *
-     * @param name The name of the workout stage type to retrieve
+     * @param stageType The enum type of the workout stage type to retrieve
      * @return Mono containing the workout stage type if found
      * @throws NoResultsFoundException when the workout stage type doesn't exist
      */
-    fun selectWorkoutStageTypeByName(name: String): Mono<WorkoutStageType> {
-        logger.debug("Selecting workout stage type by name: {}", name)
+    fun selectWorkoutStageTypeByEnum(stageType: WorkoutStageTypeEnum): Mono<WorkoutStageType> {
+        logger.debug("Selecting workout stage type by enum: {}", stageType)
         return postgresClient.selectIndividual(
             "SELECT * FROM workout_stage_type WHERE name=$1",
-            name,
+            stageType.displayName,
         )
     }
 

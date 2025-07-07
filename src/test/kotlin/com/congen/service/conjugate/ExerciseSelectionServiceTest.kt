@@ -11,6 +11,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import java.math.BigDecimal
+import java.time.LocalDateTime
 
 class ExerciseSelectionServiceTest {
     private lateinit var exerciseSelectionService: ExerciseSelectionService
@@ -27,7 +29,8 @@ class ExerciseSelectionServiceTest {
                 UserOneRepMax(
                     userId = 1,
                     exerciseName = "Bench Press",
-                    oneRepMax = java.math.BigDecimal("100.0")
+                    oneRepMax = BigDecimal("100.0"),
+                    updatedAt = LocalDateTime.now()
                 )
             )
         val rotationHistory =
@@ -36,7 +39,8 @@ class ExerciseSelectionServiceTest {
                     id = 1L,
                     userId = 1,
                     exerciseName = "Bench Press",
-                    isAccessory = false
+                    isAccessory = false,
+                    createdAt = LocalDateTime.now()
                 )
             )
 
@@ -99,7 +103,8 @@ class ExerciseSelectionServiceTest {
                 UserExercisePreference(
                     userId = 1,
                     exerciseName = "Bench Press",
-                    shouldAvoid = true
+                    shouldAvoid = true,
+                    createdAt = LocalDateTime.now()
                 )
             )
 
@@ -145,7 +150,8 @@ class ExerciseSelectionServiceTest {
                     id = 1L,
                     userId = 1,
                     exerciseName = "Bench Press",
-                    isAccessory = false
+                    isAccessory = false,
+                    createdAt = LocalDateTime.now()
                 )
             )
 
@@ -191,19 +197,22 @@ class ExerciseSelectionServiceTest {
                     id = 1L,
                     userId = 1,
                     exerciseName = "Bench Press",
-                    isAccessory = false
+                    isAccessory = false,
+                    createdAt = LocalDateTime.now()
                 ),
                 ExerciseRotationHistory(
                     id = 2L,
                     userId = 1,
                     exerciseName = "Bench Press",
-                    isAccessory = false
+                    isAccessory = false,
+                    createdAt = LocalDateTime.now()
                 ),
                 ExerciseRotationHistory(
                     id = 3L,
                     userId = 1,
                     exerciseName = "Squat",
-                    isAccessory = false
+                    isAccessory = false,
+                    createdAt = LocalDateTime.now()
                 )
             )
 
@@ -447,7 +456,8 @@ class ExerciseSelectionServiceTest {
                 UserExercisePreference(
                     userId = 1,
                     exerciseName = "bench press", // Different case
-                    shouldAvoid = true
+                    shouldAvoid = true,
+                    createdAt = LocalDateTime.now()
                 )
             )
 

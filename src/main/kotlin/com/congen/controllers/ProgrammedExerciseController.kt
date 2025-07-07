@@ -69,6 +69,7 @@ class ProgrammedExerciseController(
      *
      * @param workoutStageId The ID of the workout stage this exercise belongs to
      * @param exerciseName The name of the exercise to be performed
+     * @param position The position of this exercise within the stage
      * @param notes Optional notes or instructions for the exercise
      * @return Mono containing the created programmed exercise with generated ID
      */
@@ -76,19 +77,21 @@ class ProgrammedExerciseController(
     fun save(
         @RequestParam workoutStageId: Long,
         @RequestParam exerciseName: String,
+        @RequestParam position: Int,
         @RequestParam notes: String?,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
-        logger.info("Saving programmed exercise: {} for stage: {}", exerciseName, workoutStageId)
-        return programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, notes)
+        logger.info("Saving programmed exercise: {} for stage: {} at position: {}", exerciseName, workoutStageId, position)
+        return programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, position, notes)
             .map { savedExercise ->
                 logger.debug("Saved programmed exercise with id: {}", savedExercise.id)
                 ResponseEntity.ok(savedExercise)
             }
             .doOnError { e ->
                 logger.error(
-                    "Error saving programmed exercise: {} for stage: {}",
+                    "Error saving programmed exercise: {} for stage: {} at position: {}",
                     exerciseName,
                     workoutStageId,
+                    position,
                     e,
                 )
             }
@@ -177,6 +180,7 @@ class ProgrammedExerciseController(
      * @param id The unique identifier of the programmed exercise to update
      * @param workoutStageId The updated workout stage ID
      * @param exerciseName The updated exercise name
+     * @param position The updated position of this exercise within the stage
      * @param notes The updated notes or instructions
      * @return Mono containing the updated programmed exercise, or 404 if not found
      */
@@ -185,9 +189,10 @@ class ProgrammedExerciseController(
         @PathVariable("id") id: Long,
         @RequestParam workoutStageId: Long,
         @RequestParam exerciseName: String,
+        @RequestParam position: Int,
         @RequestParam notes: String?,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
-        return programmedExerciseDAL.updateProgrammedExercise(id, workoutStageId, exerciseName, notes)
+        return programmedExerciseDAL.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
             .map {
                 logger.debug("Updated programmed exercise: {}", id)
                 ResponseEntity.ok(it)

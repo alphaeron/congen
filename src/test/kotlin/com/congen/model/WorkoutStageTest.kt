@@ -1,274 +1,149 @@
 package com.congen.model
 
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class WorkoutStageTest {
+    private val now = LocalDateTime.now()
+
     @Test
-    fun `WorkoutStage should be created with all required fields`() {
-        val workoutStage =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
+    fun `should create workout stage with valid parameters`() {
+        val workoutStage = WorkoutStage(
+            id = 1L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 1,
+            position = 1,
+            name = "Main Lift",
+            createdAt = now,
+            updatedAt = now
+        )
 
         assertEquals(1L, workoutStage.id)
         assertEquals(5L, workoutStage.programmedWorkoutId)
         assertEquals(1, workoutStage.stageTypeId)
         assertEquals(1, workoutStage.position)
+        assertEquals("Main Lift", workoutStage.name)
+        assertEquals(now, workoutStage.createdAt)
+        assertEquals(now, workoutStage.updatedAt)
     }
 
     @Test
-    fun `WorkoutStage should handle different stage types`() {
-        val warmupStage =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1, // warm-up
-                position = 1
-            )
+    fun `should create workout stage with accessory type`() {
+        val workoutStage = WorkoutStage(
+            id = 2L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 2,
+            position = 2,
+            name = "Accessory",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        val mainStage =
-            WorkoutStage(
-                id = 2L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 2, // main
-                position = 2
-            )
-
-        val cooldownStage =
-            WorkoutStage(
-                id = 3L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 3, // cool-down
-                position = 3
-            )
-
-        assertEquals(1, warmupStage.stageTypeId)
-        assertEquals(2, mainStage.stageTypeId)
-        assertEquals(3, cooldownStage.stageTypeId)
-        assertEquals(1, warmupStage.position)
-        assertEquals(2, mainStage.position)
-        assertEquals(3, cooldownStage.position)
+        assertEquals(2, workoutStage.stageTypeId)
+        assertEquals(2, workoutStage.position)
+        assertEquals("Accessory", workoutStage.name)
     }
 
     @Test
-    fun `WorkoutStage should handle different positions`() {
-        val stage1 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
+    fun `should create workout stage with warmup type`() {
+        val workoutStage = WorkoutStage(
+            id = 3L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 3,
+            position = 0,
+            name = "Warmup",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        val stage2 =
-            WorkoutStage(
-                id = 2L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 2,
-                position = 2
-            )
-
-        val stage3 =
-            WorkoutStage(
-                id = 3L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 3,
-                position = 3
-            )
-
-        assertEquals(1, stage1.position)
-        assertEquals(2, stage2.position)
-        assertEquals(3, stage3.position)
+        assertEquals(3, workoutStage.stageTypeId)
+        assertEquals(0, workoutStage.position)
+        assertEquals("Warmup", workoutStage.name)
     }
 
     @Test
-    fun `WorkoutStage should handle different workout IDs`() {
-        val stage1 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 1L,
-                stageTypeId = 1,
-                position = 1
-            )
+    fun `should create workout stage with cooldown type`() {
+        val workoutStage = WorkoutStage(
+            id = 4L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 4,
+            position = 3,
+            name = "Cooldown",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        val stage2 =
-            WorkoutStage(
-                id = 2L,
-                programmedWorkoutId = 100L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        assertEquals(1L, stage1.programmedWorkoutId)
-        assertEquals(100L, stage2.programmedWorkoutId)
+        assertEquals(4, workoutStage.stageTypeId)
+        assertEquals(3, workoutStage.position)
+        assertEquals("Cooldown", workoutStage.name)
     }
 
     @Test
-    fun `WorkoutStage should handle different IDs`() {
-        val stage1 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
+    fun `should handle zero position`() {
+        val workoutStage = WorkoutStage(
+            id = 1L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 3,
+            position = 0,
+            name = "Warmup",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        val stage2 =
-            WorkoutStage(
-                id = 999L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        assertEquals(1L, stage1.id)
-        assertEquals(999L, stage2.id)
+        assertEquals(0, workoutStage.position)
     }
 
     @Test
-    fun `WorkoutStage should be created with minimum valid values`() {
-        val workoutStage =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 1L,
-                stageTypeId = 1,
-                position = 1
-            )
+    fun `should handle high position values`() {
+        val workoutStage = WorkoutStage(
+            id = 1L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 2,
+            position = 10,
+            name = "Accessory",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        assertEquals(1L, workoutStage.id)
-        assertEquals(1L, workoutStage.programmedWorkoutId)
-        assertEquals(1, workoutStage.stageTypeId)
-        assertEquals(1, workoutStage.position)
+        assertEquals(10, workoutStage.position)
     }
 
     @Test
-    fun `WorkoutStage should be created with maximum reasonable values`() {
-        val workoutStage =
-            WorkoutStage(
-                id = Long.MAX_VALUE,
-                programmedWorkoutId = Long.MAX_VALUE,
-                stageTypeId = Int.MAX_VALUE,
-                position = Int.MAX_VALUE
-            )
+    fun `should handle different timestamps`() {
+        val createdAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
+        val updatedAt = LocalDateTime.of(2024, 1, 2, 15, 30, 0)
+        
+        val workoutStage = WorkoutStage(
+            id = 1L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 1,
+            position = 1,
+            name = "Main Lift",
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
 
-        assertEquals(Long.MAX_VALUE, workoutStage.id)
-        assertEquals(Long.MAX_VALUE, workoutStage.programmedWorkoutId)
-        assertEquals(Int.MAX_VALUE, workoutStage.stageTypeId)
-        assertEquals(Int.MAX_VALUE, workoutStage.position)
+        assertEquals(createdAt, workoutStage.createdAt)
+        assertEquals(updatedAt, workoutStage.updatedAt)
     }
 
     @Test
-    fun `WorkoutStage should support data class copy`() {
-        val originalStage =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
+    fun `should handle same timestamps`() {
+        val workoutStage = WorkoutStage(
+            id = 1L,
+            programmedWorkoutId = 5L,
+            stageTypeId = 1,
+            position = 1,
+            name = "Main Lift",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        val updatedStage =
-            originalStage.copy(
-                position = 2,
-                stageTypeId = 2
-            )
-
-        assertEquals(1L, updatedStage.id)
-        assertEquals(5L, updatedStage.programmedWorkoutId)
-        assertEquals(2, updatedStage.stageTypeId)
-        assertEquals(2, updatedStage.position)
-    }
-
-    @Test
-    fun `WorkoutStage should support data class equality`() {
-        val stage1 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        val stage2 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        val stage3 =
-            WorkoutStage(
-                id = 2L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        assertEquals(stage1, stage2)
-        assertNotNull(stage1 != stage3)
-    }
-
-    @Test
-    fun `WorkoutStage should support data class toString`() {
-        val workoutStage =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        val toString = workoutStage.toString()
-        assertNotNull(toString)
-        assert(toString.contains("WorkoutStage"))
-        assert(toString.contains("id=1"))
-        assert(toString.contains("programmedWorkoutId=5"))
-        assert(toString.contains("stageTypeId=1"))
-        assert(toString.contains("position=1"))
-    }
-
-    @Test
-    fun `WorkoutStage should support data class hashCode`() {
-        val stage1 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        val stage2 =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        assertEquals(stage1.hashCode(), stage2.hashCode())
-    }
-
-    @Test
-    fun `WorkoutStage should support data class component functions`() {
-        val workoutStage =
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1
-            )
-
-        val (id, programmedWorkoutId, stageTypeId, position) = workoutStage
-
-        assertEquals(1L, id)
-        assertEquals(5L, programmedWorkoutId)
-        assertEquals(1, stageTypeId)
-        assertEquals(1, position)
+        assertEquals(now, workoutStage.createdAt)
+        assertEquals(now, workoutStage.updatedAt)
     }
 }

@@ -161,7 +161,7 @@ class ProgrammedWorkoutDAL(
         return postgresClient.update(
             """
             UPDATE programmed_workout
-            SET program_id=$2, day_number=$3, name=$4
+            SET program_id=$2, day_number=$3, name=$4, updated_at=NOW()
             WHERE id=$1
             """.trimIndent(),
             id,

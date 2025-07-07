@@ -7,7 +7,6 @@ CREATE TABLE program (
   id BIGSERIAL PRIMARY KEY NOT NULL,
   user_id INTEGER NOT NULL,
   name VARCHAR(255) NOT NULL,
-  description VARCHAR,
   current_week_number INTEGER NOT NULL DEFAULT 1,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -19,7 +18,6 @@ CREATE TABLE programmed_workout (
   program_id BIGINT NOT NULL,
   day_number INTEGER NOT NULL CHECK (day_number > 0 AND day_number <= 365),  -- e.g., Day 1, Day 2...,
   name VARCHAR(255) NOT NULL,
-  description VARCHAR,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_programmed_workout_program FOREIGN KEY(program_id) REFERENCES program(id) ON DELETE CASCADE
@@ -28,7 +26,6 @@ CREATE TABLE programmed_workout (
 CREATE TABLE workout_stage_type (
   id SERIAL PRIMARY KEY NOT NULL,
   name VARCHAR(255) NOT NULL UNIQUE,
-  description VARCHAR,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -38,7 +35,6 @@ CREATE TABLE workout_stage (
   stage_type_id INTEGER NOT NULL,
   position SMALLINT NOT NULL CHECK (position > 0), -- ordering of stages in the workout
   name VARCHAR(255) NOT NULL,
-  description VARCHAR,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_workout_stage_programmed_workout FOREIGN KEY(programmed_workout_id) REFERENCES programmed_workout(id) ON DELETE CASCADE,
@@ -50,12 +46,6 @@ CREATE TABLE programmed_exercise (
   workout_stage_id BIGINT NOT NULL,
   exercise_name VARCHAR(255) NOT NULL,
   position INTEGER NOT NULL,
-  target_sets INTEGER NOT NULL,
-  target_reps INTEGER NOT NULL,
-  target_weight NUMERIC(6,2),
-  target_rpe INTEGER,
-  tempo VARCHAR(10),
-  rest_seconds INTEGER,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -67,13 +57,12 @@ CREATE TABLE set_scheme (
   id BIGSERIAL PRIMARY KEY NOT NULL,
   programmed_exercise_id BIGINT NOT NULL,
   set_number SMALLINT NOT NULL CHECK (set_number > 0),
-  was_set_performed BOOLEAN DEFAULT TRUE,
   is_amrap BOOLEAN DEFAULT FALSE,
   is_emom BOOLEAN DEFAULT FALSE,
   use_tempo BOOLEAN DEFAULT FALSE,
-  eccentric_tempo CHAR(1) CHECK (eccentric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')),
-  isometric_tempo CHAR(1) CHECK (isometric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')),
-  concentric_tempo CHAR(1) CHECK (concentric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')),
+  eccentric_tempo CHAR(1) CHECK (eccentric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', 'X')),
+  isometric_tempo CHAR(1) CHECK (isometric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', 'X')),
+  concentric_tempo CHAR(1) CHECK (concentric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', 'X')),
   target_weight NUMERIC(6,2) CHECK (target_weight > 0),
   performed_weight NUMERIC(6,2) CHECK (performed_weight > 0),
   target_rep_count SMALLINT CHECK (target_rep_count > 0 AND target_rep_count <= 1000),
@@ -87,15 +76,12 @@ CREATE TABLE set_scheme (
 -- Add indexes for better performance
 CREATE INDEX idx_program_user_id ON program(user_id);
 CREATE INDEX idx_programmed_workout_program_id ON programmed_workout(program_id);
-CREATE INDEX idx_programmed_workout_day_number ON programmed_workout(day_number);
 CREATE INDEX idx_workout_stage_programmed_workout_id ON workout_stage(programmed_workout_id);
-CREATE INDEX idx_workout_stage_position ON workout_stage(position);
 CREATE INDEX idx_programmed_exercise_workout_stage_id ON programmed_exercise(workout_stage_id);
 CREATE INDEX idx_programmed_exercise_exercise_name ON programmed_exercise(exercise_name);
 CREATE INDEX idx_set_scheme_programmed_exercise_id ON set_scheme(programmed_exercise_id);
 CREATE INDEX idx_set_scheme_set_number ON set_scheme(set_number);
 CREATE INDEX idx_set_scheme_exercise_set ON set_scheme(programmed_exercise_id, set_number);
-CREATE INDEX idx_set_scheme_performed ON set_scheme(was_set_performed);
 CREATE INDEX idx_set_scheme_amrap ON set_scheme(is_amrap);
 CREATE INDEX idx_set_scheme_emom ON set_scheme(is_emom);
 

@@ -229,11 +229,11 @@ class UserController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<*>> {
         logger.debug("Getting all users")
-        return ResponseEntity.ok(
-            userDAL.selectUsers(),
-        )
+        return userDAL.selectUsers().map {
+            ResponseEntity.ok(it)
+        }
     }
 
     /**

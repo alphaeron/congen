@@ -79,7 +79,7 @@ class ProgrammedExerciseDAL(
     fun selectProgrammedExercisesByWorkoutStageId(workoutStageId: Long): Mono<List<ProgrammedExercise>> {
         logger.debug("Selecting programmed exercises by workout stage id: {}", workoutStageId)
         return postgresClient.select(
-            "SELECT * FROM programmed_exercise WHERE workout_stage_id=$1",
+            "SELECT * FROM programmed_exercise WHERE workout_stage_id=$1 ORDER BY position",
             workoutStageId,
         )
     }
@@ -94,7 +94,7 @@ class ProgrammedExerciseDAL(
      */
     fun selectProgrammedExercises(): Mono<List<ProgrammedExercise>> {
         logger.debug("Selecting all programmed exercises")
-        return postgresClient.select("SELECT * FROM programmed_exercise")
+        return postgresClient.select("SELECT * FROM programmed_exercise ORDER BY position")
     }
 
     /**
@@ -105,6 +105,7 @@ class ProgrammedExerciseDAL(
      *
      * @param workoutStageId The ID of the workout stage this exercise belongs to
      * @param exerciseName The name of the exercise to be performed
+     * @param position The position of the exercise within the stage
      * @param notes Optional notes or instructions for the exercise
      * @return Mono containing the created programmed exercise with generated ID
      * @throws DatabaseException when database operation fails
@@ -112,18 +113,20 @@ class ProgrammedExerciseDAL(
     fun insertProgrammedExercise(
         workoutStageId: Long,
         exerciseName: String,
+        position: Int,
         notes: String?
     ): Mono<ProgrammedExercise> {
-        logger.debug("Inserting programmed exercise: {} for stage: {}", exerciseName, workoutStageId)
+        logger.debug("Inserting programmed exercise: {} for stage: {} at position: {}", exerciseName, workoutStageId, position)
         return postgresClient.update(
             """
             INSERT INTO programmed_exercise
-                (workout_stage_id, exercise_name, notes)
+                (workout_stage_id, exercise_name, position, notes)
             VALUES
-                ($1, $2, $3)
+                ($1, $2, $3, $4)
             """.trimIndent(),
             workoutStageId,
             exerciseName,
+            position,
             notes,
         )
     }
@@ -137,6 +140,7 @@ class ProgrammedExerciseDAL(
      * @param id The unique identifier of the programmed exercise to update
      * @param workoutStageId The updated workout stage ID
      * @param exerciseName The updated exercise name
+     * @param position The updated position of the exercise within the stage
      * @param notes The updated notes or instructions
      * @return Mono containing the updated programmed exercise
      * @throws NoResultsFoundException when programmed exercise with the specified ID doesn't exist
@@ -145,18 +149,20 @@ class ProgrammedExerciseDAL(
         id: Long,
         workoutStageId: Long,
         exerciseName: String,
+        position: Int,
         notes: String?
     ): Mono<ProgrammedExercise> {
         logger.debug("Updating programmed exercise: {}", id)
         return postgresClient.update(
             """
             UPDATE programmed_exercise
-            SET workout_stage_id=$2, exercise_name=$3, notes=$4
+            SET workout_stage_id=$2, exercise_name=$3, position=$4, notes=$5, updated_at=NOW()
             WHERE id=$1
             """.trimIndent(),
             id,
             workoutStageId,
             exerciseName,
+            position,
             notes,
         )
     }

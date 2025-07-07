@@ -27,7 +27,7 @@ import java.math.BigDecimal
  *    - ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
  * 3. Check if the user has a 1RM for the exercise
  * 4. If performed weight > current 1RM, update the 1RM
- * 5. Only update if the set was actually performed (wasSetPerformed = true)
+ * 5. Only update if the set has a targeted weight
  *
  * ## Operations
  *
@@ -71,13 +71,11 @@ class SetSchemeService(
      * @param performedWeight The actual weight performed (optional)
      * @param performedReps The actual reps performed (optional)
      * @param performedTempo The actual tempo performed (optional)
-     * @param wasSetPerformed Whether the set was actually performed
      * @return Mono containing the inserted set scheme
      */
     fun insertSetScheme(
         programmedExerciseId: Long,
         setNumber: Int,
-        wasSetPerformed: Boolean,
         isAmrap: Boolean,
         isEmom: Boolean,
         useTempo: Boolean,
@@ -95,7 +93,6 @@ class SetSchemeService(
         return setSchemeDAL.insertSetScheme(
             programmedExerciseId,
             setNumber,
-            wasSetPerformed,
             isAmrap,
             isEmom,
             useTempo,
@@ -109,8 +106,8 @@ class SetSchemeService(
             restSeconds
         )
             .flatMap { insertedSetScheme ->
-                // Check for 1RM update if the set was performed and has a performed weight
-                if (insertedSetScheme.wasSetPerformed && insertedSetScheme.performedWeight != null) {
+                // Check for 1RM update if the set has a target weight
+                if (insertedSetScheme.targetWeight != null) {
                     checkAndUpdateOneRepMax(insertedSetScheme)
                         .thenReturn(insertedSetScheme)
                 } else {
@@ -128,7 +125,6 @@ class SetSchemeService(
      * @param id The unique identifier of the set scheme to update
      * @param programmedExerciseId ID of the programmed exercise this set belongs to
      * @param setNumber Order of this set within the exercise (1-based)
-     * @param wasSetPerformed Whether the set was completed
      * @param isAmrap As Many Reps As Possible flag
      * @param isEmom Every Minute On the Minute flag
      * @param useTempo Whether to use tempo timing
@@ -146,7 +142,6 @@ class SetSchemeService(
         id: Long,
         programmedExerciseId: Long,
         setNumber: Int,
-        wasSetPerformed: Boolean,
         isAmrap: Boolean,
         isEmom: Boolean,
         useTempo: Boolean,
@@ -165,7 +160,6 @@ class SetSchemeService(
             id,
             programmedExerciseId,
             setNumber,
-            wasSetPerformed,
             isAmrap,
             isEmom,
             useTempo,
@@ -179,8 +173,8 @@ class SetSchemeService(
             restSeconds
         )
             .flatMap { updatedSetScheme ->
-                // Check for 1RM update if the set was performed and has a performed weight
-                if (updatedSetScheme.wasSetPerformed && updatedSetScheme.performedWeight != null) {
+                // Check for 1RM update if the set has a performed weight
+                if (updatedSetScheme.performedWeight != null) {
                     checkAndUpdateOneRepMax(updatedSetScheme)
                         .thenReturn(updatedSetScheme)
                 } else {

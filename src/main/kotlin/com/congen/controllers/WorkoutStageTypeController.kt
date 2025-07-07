@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -135,18 +136,24 @@ class WorkoutStageTypeController(
         @Parameter(description = "Name of the workout stage type", required = true)
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<WorkoutStageType>> {
-        return workoutStageTypeDAL.selectWorkoutStageTypeByName(name)
-            .map {
+        // Find the enum by display name for backward compatibility
+        val stageType = WorkoutStageTypeEnum.fromDisplayName(name)
+        if (stageType == null) {
+            return Mono.just(ResponseEntity.notFound().build())
+        }
+        
+        return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageType)
+            .map { workoutStageType ->
                 logger.debug("Found workout stage type: {}", name)
-                ResponseEntity.ok(it)
+                ResponseEntity.ok(workoutStageType)
             }
-            .onErrorResume(NoResultsFoundException::class.java) {
+            .onErrorResume(NoResultsFoundException::class.java) { exception ->
                 logger.warn("Workout stage type not found: {}", name)
                 Mono.just(ResponseEntity.notFound().build())
             }
-            .onErrorResume { e ->
-                logger.error("Error getting workout stage type: {}", name, e)
-                Mono.error(e)
+            .onErrorResume { exception ->
+                logger.error("Error getting workout stage type: {}", name, exception)
+                Mono.error(exception)
             }
     }
 

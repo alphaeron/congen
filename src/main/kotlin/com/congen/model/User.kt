@@ -81,14 +81,14 @@ data class User(
     @Schema(
         description = "Timestamp when the user was created",
         example = "2024-01-01T00:00:00Z",
-        readOnly = true,
+        required = true,
     )
-    @param:JsonProperty("created_at") val createdAt: LocalDateTime? = null,
+    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
     /** Timestamp when the user was last updated. */
     @Schema(
         description = "Timestamp when the user was last updated",
         example = "2024-01-01T00:00:00Z",
-        readOnly = true,
+        required = true,
     )
-    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime? = null,
+    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )

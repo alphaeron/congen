@@ -71,7 +71,7 @@ class ExerciseRotationHistoryDAL(
      */
     fun selectAll(): Mono<List<ExerciseRotationHistory>> {
         logger.debug("Selecting all exercise rotation history records")
-        return postgresClient.select("SELECT * FROM exercise_rotation_history ORDER BY used_at DESC")
+        return postgresClient.select("SELECT * FROM exercise_rotation_history ORDER BY created_at DESC")
     }
 
     /**
@@ -86,7 +86,7 @@ class ExerciseRotationHistoryDAL(
     fun selectByIsAccessory(isAccessory: Boolean): Mono<List<ExerciseRotationHistory>> {
         logger.debug("Selecting exercise rotation history by isAccessory: {}", isAccessory)
         return postgresClient.select(
-            "SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY used_at DESC",
+            "SELECT * FROM exercise_rotation_history WHERE is_accessory=$1 ORDER BY created_at DESC",
             isAccessory,
         )
     }

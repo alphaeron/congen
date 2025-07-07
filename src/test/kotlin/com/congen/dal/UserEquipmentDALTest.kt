@@ -9,10 +9,12 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.LocalDateTime
 
 class UserEquipmentDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var userEquipmentDAL: UserEquipmentDAL
+    private val now = LocalDateTime.now()
 
     @BeforeEach
     fun setUp() {
@@ -22,7 +24,11 @@ class UserEquipmentDALTest {
 
     @Test
     fun `selectUserEquipment should return user equipment`() {
-        val userEquipment = UserEquipment(userId = 1, equipmentName = "Barbell")
+        val userEquipment = UserEquipment(
+            userId = 1, 
+            equipmentName = "Barbell",
+            createdAt = now
+        )
         whenever(
             postgresClient.selectIndividual<UserEquipment>(
                 "SELECT * FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
@@ -39,7 +45,11 @@ class UserEquipmentDALTest {
 
     @Test
     fun `selectUserEquipmentByUser should return list of user equipment`() {
-        val userEquipmentList = listOf(UserEquipment(userId = 1, equipmentName = "Barbell"))
+        val userEquipmentList = listOf(UserEquipment(
+            userId = 1, 
+            equipmentName = "Barbell",
+            createdAt = now
+        ))
         whenever(
             postgresClient.select<UserEquipment>("SELECT * FROM user_equipment WHERE user_id=$1", 1),
         ).thenReturn(Mono.just(userEquipmentList))
@@ -50,7 +60,11 @@ class UserEquipmentDALTest {
 
     @Test
     fun `insertUserEquipment should return inserted user equipment`() {
-        val userEquipment = UserEquipment(userId = 1, equipmentName = "Barbell")
+        val userEquipment = UserEquipment(
+            userId = 1, 
+            equipmentName = "Barbell",
+            createdAt = now
+        )
         whenever(
             postgresClient.update<UserEquipment>(
                 """
@@ -79,7 +93,11 @@ class UserEquipmentDALTest {
 
     @Test
     fun `deleteUserEquipment should return deleted user equipment`() {
-        val userEquipment = UserEquipment(userId = 1, equipmentName = "Barbell")
+        val userEquipment = UserEquipment(
+            userId = 1, 
+            equipmentName = "Barbell",
+            createdAt = now
+        )
         whenever(
             postgresClient.update<UserEquipment>(
                 "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",

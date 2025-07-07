@@ -12,10 +12,12 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 class SetSchemeDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var setSchemeDAL: SetSchemeDAL
+    private val now = LocalDateTime.now()
 
     @BeforeEach
     fun setUp() {
@@ -30,7 +32,6 @@ class SetSchemeDALTest {
                 id = 1L,
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -41,7 +42,9 @@ class SetSchemeDALTest {
                 performedWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
                 performedRepCount = 5,
-                restSeconds = 180
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
             )
 
         whenever(
@@ -71,7 +74,6 @@ class SetSchemeDALTest {
                     id = 1L,
                     programmedExerciseId = 5L,
                     setNumber = 1,
-                    wasSetPerformed = true,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -82,13 +84,14 @@ class SetSchemeDALTest {
                     performedWeight = BigDecimal("100.0"),
                     targetRepCount = 5,
                     performedRepCount = 5,
-                    restSeconds = 180
+                    restSeconds = 180,
+                    createdAt = now,
+                    updatedAt = now
                 ),
                 SetScheme(
                     id = 2L,
                     programmedExerciseId = 5L,
                     setNumber = 2,
-                    wasSetPerformed = true,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -99,7 +102,9 @@ class SetSchemeDALTest {
                     performedWeight = BigDecimal("100.0"),
                     targetRepCount = 5,
                     performedRepCount = 5,
-                    restSeconds = 180
+                    restSeconds = 180,
+                    createdAt = now,
+                    updatedAt = now
                 )
             )
 
@@ -130,7 +135,6 @@ class SetSchemeDALTest {
                     id = 1L,
                     programmedExerciseId = 5L,
                     setNumber = 1,
-                    wasSetPerformed = true,
                     isAmrap = false,
                     isEmom = false,
                     useTempo = false,
@@ -141,7 +145,9 @@ class SetSchemeDALTest {
                     performedWeight = BigDecimal("100.0"),
                     targetRepCount = 5,
                     performedRepCount = 5,
-                    restSeconds = 180
+                    restSeconds = 180,
+                    createdAt = now,
+                    updatedAt = now
                 )
             )
 
@@ -165,7 +171,6 @@ class SetSchemeDALTest {
                 id = 1L,
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -176,23 +181,24 @@ class SetSchemeDALTest {
                 performedWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
                 performedRepCount = 5,
-                restSeconds = 180
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
             )
 
         whenever(
             postgresClient.update<SetScheme>(
                 """
                 INSERT INTO set_scheme
-                    (programmed_exercise_id, set_number, was_set_performed, is_amrap, is_emom, use_tempo,
+                    (programmed_exercise_id, set_number,, is_amrap, is_emom, use_tempo,
                      eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
                      target_rep_count, performed_rep_count, rest_seconds)
                 VALUES
-                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                    ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
                 """.trimIndent(),
                 5L,
                 1,
                 true,
-                false,
                 false,
                 true,
                 "3",
@@ -210,7 +216,6 @@ class SetSchemeDALTest {
             setSchemeDAL.insertSetScheme(
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -231,16 +236,15 @@ class SetSchemeDALTest {
         verify(postgresClient).update<SetScheme>(
             """
             INSERT INTO set_scheme
-                (programmed_exercise_id, set_number, was_set_performed, is_amrap, is_emom, use_tempo,
+                (programmed_exercise_id, set_number,, is_amrap, is_emom, use_tempo,
                  eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
                  target_rep_count, performed_rep_count, rest_seconds)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
             """.trimIndent(),
             5L,
             1,
             true,
-            false,
             false,
             true,
             "3",
@@ -260,7 +264,6 @@ class SetSchemeDALTest {
             setSchemeDAL.insertSetScheme(
                 programmedExerciseId = 5L,
                 setNumber = 0,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -282,7 +285,6 @@ class SetSchemeDALTest {
             setSchemeDAL.insertSetScheme(
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -304,7 +306,6 @@ class SetSchemeDALTest {
             setSchemeDAL.insertSetScheme(
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -327,7 +328,6 @@ class SetSchemeDALTest {
                 id = 1L,
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = true,
                 isEmom = false,
                 useTempo = false,
@@ -338,14 +338,16 @@ class SetSchemeDALTest {
                 performedWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
                 performedRepCount = 5,
-                restSeconds = 180
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
             )
 
         whenever(
             postgresClient.update<SetScheme>(
                 """
                 UPDATE set_scheme
-                SET programmed_exercise_id=$2, set_number=$3, was_set_performed=$4, is_amrap=$5, is_emom=$6, use_tempo=$7,
+                SET programmed_exercise_id=$2, set_number=$3, is_amrap=$5, is_emom=$6, use_tempo=$7,
                     eccentric_tempo=$8, isometric_tempo=$9, concentric_tempo=$10, target_weight=$11, performed_weight=$12,
                     target_rep_count=$13, performed_rep_count=$14, rest_seconds=$15
                 WHERE id=$1
@@ -353,7 +355,6 @@ class SetSchemeDALTest {
                 1L,
                 5L,
                 1,
-                true,
                 true,
                 false,
                 false,
@@ -373,7 +374,6 @@ class SetSchemeDALTest {
                 id = 1L,
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = true,
                 isEmom = false,
                 useTempo = false,
@@ -394,7 +394,7 @@ class SetSchemeDALTest {
         verify(postgresClient).update<SetScheme>(
             """
             UPDATE set_scheme
-            SET programmed_exercise_id=$2, set_number=$3, was_set_performed=$4, is_amrap=$5, is_emom=$6, use_tempo=$7,
+            SET programmed_exercise_id=$2, set_number=$3, is_amrap=$5, is_emom=$6, use_tempo=$7,
                 eccentric_tempo=$8, isometric_tempo=$9, concentric_tempo=$10, target_weight=$11, performed_weight=$12,
                 target_rep_count=$13, performed_rep_count=$14, rest_seconds=$15
             WHERE id=$1
@@ -402,7 +402,6 @@ class SetSchemeDALTest {
             1L,
             5L,
             1,
-            true,
             true,
             false,
             false,
@@ -424,7 +423,6 @@ class SetSchemeDALTest {
                 id = 1L,
                 programmedExerciseId = 5L,
                 setNumber = 0,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -447,7 +445,6 @@ class SetSchemeDALTest {
                 id = 1L,
                 programmedExerciseId = 5L,
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -458,7 +455,9 @@ class SetSchemeDALTest {
                 performedWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
                 performedRepCount = 5,
-                restSeconds = 180
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
             )
 
         whenever(

@@ -14,25 +14,28 @@ import java.time.LocalDateTime
  * This model allows users to track their maximum weight for different exercises,
  * which is used for workout generation and progression calculations.
  *
- * @property userId ID of the user.
- * @property exerciseName Name of the exercise (e.g., "Bench Press").
- * @property oneRepMax The one rep max weight in kilograms.
- * @property lastUpdated Timestamp when the 1RM was last updated.
+ * @property userId The ID of the user
+ * @property exerciseName The name of the exercise
+ * @property oneRepMax The one rep max weight value
+ * @property updatedAt Timestamp when the one rep max was last updated
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Schema(description = "Represents a user's one rep max (1RM) for a specific exercise.")
+@Schema(description = "Represents a user's one rep max for a specific exercise.")
 data class UserOneRepMax(
     /** ID of the user. */
-    @Schema(description = "ID of the user", example = "1")
+    @Schema(description = "ID of the user", example = "1", required = true)
     @param:JsonProperty("user_id") val userId: Int,
     /** Name of the exercise (e.g., "Bench Press"). */
-    @Schema(description = "Name of the exercise", example = "Bench Press")
+    @Schema(description = "Name of the exercise", example = "Bench Press", required = true)
     @param:JsonProperty("exercise_name") val exerciseName: String,
     /** The one rep max weight in kilograms. */
-    @Schema(description = "The one rep max weight in kilograms", example = "100.0")
+    @Schema(description = "The one rep max weight in kilograms", example = "100.0", required = true)
     @param:JsonProperty("one_rep_max") val oneRepMax: BigDecimal,
     /** Timestamp when the 1RM was last updated. */
-    @Schema(description = "Timestamp when the 1RM was last updated", example = "2024-01-01T00:00:00Z")
-    @param:JsonProperty("last_updated") val lastUpdated: LocalDateTime? = null,
+    @Schema(description = "Timestamp when the 1RM was last updated", example = "2024-01-01T00:00:00", required = true)
+    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )

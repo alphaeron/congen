@@ -80,7 +80,6 @@ class ConjugateModelsTest {
         val params =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -95,7 +94,6 @@ class ConjugateModelsTest {
             )
 
         assertEquals(1, params.setNumber)
-        assertTrue(params.wasSetPerformed)
         assertFalse(params.isAmrap)
         assertFalse(params.isEmom)
         assertTrue(params.useTempo)
@@ -114,7 +112,6 @@ class ConjugateModelsTest {
         val params =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -129,7 +126,6 @@ class ConjugateModelsTest {
             )
 
         assertEquals(1, params.setNumber)
-        assertFalse(params.wasSetPerformed)
         assertFalse(params.isAmrap)
         assertFalse(params.isEmom)
         assertFalse(params.useTempo)
@@ -148,7 +144,6 @@ class ConjugateModelsTest {
         val params1 =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -164,7 +159,6 @@ class ConjugateModelsTest {
         val params2 =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -180,7 +174,6 @@ class ConjugateModelsTest {
         val params3 =
             SetSchemeParams(
                 setNumber = 2,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -220,7 +213,6 @@ class ConjugateModelsTest {
         val amrapParams =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = true,
                 isEmom = false,
                 useTempo = false,
@@ -246,7 +238,6 @@ class ConjugateModelsTest {
         val emomParams =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = true,
                 useTempo = false,
@@ -272,7 +263,6 @@ class ConjugateModelsTest {
         val tempoParams =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -299,7 +289,6 @@ class ConjugateModelsTest {
         val originalParams =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = false,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -333,7 +322,6 @@ class ConjugateModelsTest {
         val params =
             SetSchemeParams(
                 setNumber = 1,
-                wasSetPerformed = true,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = true,
@@ -348,13 +336,12 @@ class ConjugateModelsTest {
             )
 
         val (
-            setNumber, wasSetPerformed, isAmrap, isEmom, useTempo, eccentricTempo,
+            setNumber, isAmrap, isEmom, useTempo, eccentricTempo,
             isometricTempo, concentricTempo, targetWeight, performedWeight,
             targetRepCount, performedRepCount, restSeconds
         ) = params
 
         assertEquals(1, setNumber)
-        assertTrue(wasSetPerformed)
         assertFalse(isAmrap)
         assertFalse(isEmom)
         assertTrue(useTempo)

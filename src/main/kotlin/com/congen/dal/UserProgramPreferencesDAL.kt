@@ -144,7 +144,7 @@ class UserProgramPreferencesDAL(
                             postgresClient.update(
                                 """
                                 UPDATE user_program_preferences
-                                SET program_days_per_week=$2, session_time_length_in_minutes=$3
+                                SET program_days_per_week=$2, session_time_length_in_minutes=$3, updated_at=NOW()
                                 WHERE user_id=$1
                                 """.trimIndent(),
                                 userId,
@@ -157,7 +157,7 @@ class UserProgramPreferencesDAL(
                     postgresClient.update(
                         """
                         UPDATE user_program_preferences
-                        SET program_days_per_week=$2, session_time_length_in_minutes=$3
+                        SET program_days_per_week=$2, session_time_length_in_minutes=$3, updated_at=NOW()
                         WHERE user_id=$1
                         """.trimIndent(),
                         userId,

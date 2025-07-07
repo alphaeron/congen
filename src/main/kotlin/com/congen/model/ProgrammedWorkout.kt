@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 /**
  * Represents a scheduled workout within a program.
@@ -39,6 +40,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  * @property programId ID of the training program this workout belongs to
  * @property dayNumber Day number within the program (1-365)
  * @property name Optional name for the workout
+ * @property createdAt Timestamp when the workout was created
+ * @property updatedAt Timestamp when the workout was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -71,10 +74,15 @@ data class ProgrammedWorkout(
         required = true,
     )
     @param:JsonProperty("day_number") val dayNumber: Int,
-    /** Optional name for the workout. */
+    /** Name for the workout. */
     @Schema(
-        description = "Optional name for the workout",
+        description = "Name for the workout",
         example = "Upper Body Strength",
+        required = true,
     )
-    @param:JsonProperty("name") val name: String?,
+    @param:JsonProperty("name") val name: String,
+    @Schema(description = "Created at timestamp", example = "2024-07-06T12:00:00Z", required = true)
+    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    @Schema(description = "Updated at timestamp", example = "2024-07-06T12:00:00Z", required = true)
+    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )

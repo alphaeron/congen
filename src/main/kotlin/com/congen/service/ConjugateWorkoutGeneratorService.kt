@@ -22,6 +22,7 @@ import com.congen.service.conjugate.ExerciseSelectionService
 import com.congen.service.conjugate.SessionTimeCalculator
 import com.congen.service.conjugate.SetSchemeParams
 import com.congen.service.conjugate.WorkoutStageGenerator
+import com.congen.model.WorkoutStageTypeEnum
 import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -155,8 +156,7 @@ class ConjugateWorkoutGeneratorService(
         numDaysPerWeek: Int
     ): Mono<Program> {
         val programName = "Conjugate Powerlifting - Week $currentWeekNumber"
-        val description = "Conjugate powerlifting program with $numDaysPerWeek days per week"
-        return programDAL.insertProgram(userId, programName, description)
+        return programDAL.insertProgram(userId, programName, currentWeekNumber)
     }
 
     /**
@@ -287,7 +287,7 @@ class ConjugateWorkoutGeneratorService(
         // Create primary movement stage
         var primaryMono =
             if (primaryExercise != null) {
-                workoutStageGenerator.createWorkoutStage(workout.id, "primary", stagePosition++)
+                                        workoutStageGenerator.createWorkoutStage(workout.id, WorkoutStageTypeEnum.PRIMARY, stagePosition++)
                     .flatMap { primaryStage ->
                         workoutStageGenerator.createProgrammedExercise(primaryStage.id, primaryExercise.name)
                             .flatMap { primaryProgrammedExercise ->
@@ -301,7 +301,7 @@ class ConjugateWorkoutGeneratorService(
         // Create secondary movement stage
         var secondaryMono =
             if (secondaryExercise != null) {
-                workoutStageGenerator.createWorkoutStage(workout.id, "secondary", stagePosition++)
+                                        workoutStageGenerator.createWorkoutStage(workout.id, WorkoutStageTypeEnum.SECONDARY, stagePosition++)
                     .flatMap { secondaryStage ->
                         workoutStageGenerator.createProgrammedExercise(secondaryStage.id, secondaryExercise.name)
                             .flatMap { secondaryProgrammedExercise ->
@@ -328,7 +328,7 @@ class ConjugateWorkoutGeneratorService(
                     )
 
                 if (accessoryExercise != null) {
-                    workoutStageGenerator.createWorkoutStage(workout.id, "accessory", stagePosition++)
+                                            workoutStageGenerator.createWorkoutStage(workout.id, WorkoutStageTypeEnum.ACCESSORY, stagePosition++)
                         .flatMap { accessoryStage ->
                             workoutStageGenerator.createProgrammedExercise(accessoryStage.id, accessoryExercise.name)
                                 .flatMap { accessoryProgrammedExercise ->
@@ -365,7 +365,7 @@ class ConjugateWorkoutGeneratorService(
                     )
 
                 if (conditioningExercise != null) {
-                    workoutStageGenerator.createWorkoutStage(workout.id, "conditioning", stagePosition)
+                                            workoutStageGenerator.createWorkoutStage(workout.id, WorkoutStageTypeEnum.CONDITIONING, stagePosition)
                         .flatMap { conditioningStage ->
                             workoutStageGenerator.createProgrammedExercise(conditioningStage.id, conditioningExercise.name)
                                 .flatMap { conditioningProgrammedExercise ->
@@ -386,8 +386,38 @@ class ConjugateWorkoutGeneratorService(
             }
 
         // Combine all monos
-        return Flux.concat(
-            listOf(primaryMono, secondaryMono, conditioningMono) + accessoryMonos
-        ).then()
+        val allMonos = mutableListOf<Mono<Void>>()
+        
+        // Add non-empty monos
+        if (primaryExercise != null) {
+            allMonos.add(primaryMono)
+        }
+        if (secondaryExercise != null) {
+            allMonos.add(secondaryMono)
+        }
+        if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
+            val conditioningExercise = exerciseSelectionService.selectRotatingExercise(
+                userId = workout.programId.toInt(),
+                targetMuscles = listOf("full_body"),
+                userEquipment = userEquipment,
+                preferences = preferences,
+                exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
+                isAccessory = true,
+                rotationHistory = rotationHistory
+            )
+            
+            if (conditioningExercise != null) {
+                allMonos.add(conditioningMono)
+            }
+        }
+        
+        // Add non-empty accessory monos
+        allMonos.addAll(accessoryMonos.filter { it != Mono.empty<Void>() })
+        
+        return if (allMonos.isEmpty()) {
+            Mono.empty<Void>()
+        } else {
+            Flux.concat(allMonos).then()
+        }
     }
 }

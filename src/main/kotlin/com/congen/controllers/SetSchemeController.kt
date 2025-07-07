@@ -68,7 +68,6 @@ class SetSchemeController(
      *
      * @param programmedExerciseId The ID of the programmed exercise this set belongs to
      * @param setNumber The set number within the exercise
-     * @param wasSetPerformed Whether the set was completed
      * @param isAmrap As Many Reps As Possible flag
      * @param isEmom Every Minute On the Minute flag
      * @param useTempo Whether to use tempo timing
@@ -86,7 +85,6 @@ class SetSchemeController(
     fun save(
         @RequestParam programmedExerciseId: Long,
         @RequestParam setNumber: Int,
-        @RequestParam wasSetPerformed: Boolean,
         @RequestParam isAmrap: Boolean,
         @RequestParam isEmom: Boolean,
         @RequestParam useTempo: Boolean,
@@ -108,7 +106,6 @@ class SetSchemeController(
         return setSchemeService.insertSetScheme(
             programmedExerciseId,
             setNumber,
-            wasSetPerformed,
             isAmrap,
             isEmom,
             useTempo,
@@ -208,7 +205,6 @@ class SetSchemeController(
      * @param id The unique identifier of the set scheme to update
      * @param programmedExerciseId The updated programmed exercise ID
      * @param setNumber The updated set number within the exercise
-     * @param wasSetPerformed The updated flag indicating whether the set was completed
      * @param isAmrap The updated As Many Reps As Possible flag
      * @param isEmom The updated Every Minute On the Minute flag
      * @param useTempo The updated flag indicating whether to use tempo timing
@@ -227,7 +223,6 @@ class SetSchemeController(
         @PathVariable("id") id: Long,
         @RequestParam programmedExerciseId: Long,
         @RequestParam setNumber: Int,
-        @RequestParam wasSetPerformed: Boolean,
         @RequestParam isAmrap: Boolean,
         @RequestParam isEmom: Boolean,
         @RequestParam useTempo: Boolean,
@@ -252,7 +247,6 @@ class SetSchemeController(
                     id,
                     programmedExerciseId,
                     setNumber,
-                    wasSetPerformed,
                     isAmrap,
                     isEmom,
                     useTempo,

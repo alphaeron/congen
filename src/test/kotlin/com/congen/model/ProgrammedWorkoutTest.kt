@@ -1,149 +1,225 @@
 package com.congen.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
+@SpringBootTest
 class ProgrammedWorkoutTest {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    @Autowired
+    private lateinit var objectMapper: ObjectMapper
+    private val now = LocalDateTime.of(2024, 1, 15, 10, 30, 0)
 
     @Test
-    fun `should create programmed workout with all properties`() {
-        // Given & When
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Day 1 - Max Effort Upper",
-            )
+    fun `test programmed workout creation with all fields`() {
+        val programmedWorkout = ProgrammedWorkout(
+            id = 1L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Week 1 - Upper Body",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        // Then
         assertEquals(1L, programmedWorkout.id)
-        assertEquals(1L, programmedWorkout.programId)
+        assertEquals(123L, programmedWorkout.programId)
         assertEquals(1, programmedWorkout.dayNumber)
-        assertEquals("Day 1 - Max Effort Upper", programmedWorkout.name)
+        assertEquals("Week 1 - Upper Body", programmedWorkout.name)
+        assertEquals(now, programmedWorkout.createdAt)
+        assertEquals(now, programmedWorkout.updatedAt)
     }
 
     @Test
-    fun `should create programmed workout with null name`() {
-        // Given & When
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = null,
-            )
+    fun `test programmed workout creation with minimal fields`() {
+        val programmedWorkout = ProgrammedWorkout(
+            id = 2L,
+            programId = 456L,
+            dayNumber = 2,
+            name = "Week 2 - Lower Body",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        // Then
-        assertEquals(1L, programmedWorkout.id)
-        assertEquals(1L, programmedWorkout.programId)
-        assertEquals(1, programmedWorkout.dayNumber)
-        assertNull(programmedWorkout.name)
+        assertEquals(2L, programmedWorkout.id)
+        assertEquals(456L, programmedWorkout.programId)
+        assertEquals(2, programmedWorkout.dayNumber)
+        assertEquals("Week 2 - Lower Body", programmedWorkout.name)
+        assertEquals(now, programmedWorkout.createdAt)
+        assertEquals(now, programmedWorkout.updatedAt)
     }
 
     @Test
-    fun `should serialize to JSON with snake_case`() {
-        // Given
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Day 1 - Max Effort Upper",
-            )
+    fun `test programmed workout serialization`() {
+        val programmedWorkout = ProgrammedWorkout(
+            id = 1L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Week 1 - Upper Body",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        // When
         val json = objectMapper.writeValueAsString(programmedWorkout)
+        val nowString = now.format(DateTimeFormatter.ISO_DATE_TIME)
 
-        // Then
         assertTrue(json.contains("\"id\":1"))
-        assertTrue(json.contains("\"program_id\":1"))
+        assertTrue(json.contains("\"program_id\":123"))
         assertTrue(json.contains("\"day_number\":1"))
-        assertTrue(json.contains("\"name\":\"Day 1 - Max Effort Upper\""))
+        assertTrue(json.contains("\"name\":\"Week 1 - Upper Body\""))
+        assertTrue(json.contains("\"created_at\":\"${nowString}\""))
+        assertTrue(json.contains("\"updated_at\":\"${nowString}\""))
     }
 
     @Test
-    fun `should deserialize from JSON with snake_case`() {
-        // Given
-        val json =
-            """
+    fun `test programmed workout deserialization`() {
+        val json = """
             {
                 "id": 1,
-                "program_id": 1,
+                "program_id": 123,
                 "day_number": 1,
-                "name": "Day 1 - Max Effort Upper"
+                "name": "Week 1 - Upper Body",
+                "created_at": "${now.toString()}",
+                "updated_at": "${now.toString()}"
             }
-            """.trimIndent()
+        """.trimIndent()
 
-        // When
         val programmedWorkout = objectMapper.readValue(json, ProgrammedWorkout::class.java)
 
-        // Then
         assertEquals(1L, programmedWorkout.id)
-        assertEquals(1L, programmedWorkout.programId)
+        assertEquals(123L, programmedWorkout.programId)
         assertEquals(1, programmedWorkout.dayNumber)
-        assertEquals("Day 1 - Max Effort Upper", programmedWorkout.name)
+        assertEquals("Week 1 - Upper Body", programmedWorkout.name)
+        assertEquals(now, programmedWorkout.createdAt)
+        assertEquals(now, programmedWorkout.updatedAt)
     }
 
     @Test
-    fun `should ignore unknown properties during deserialization`() {
-        // Given
-        val json =
-            """
+    fun `test programmed workout deserialization with null description`() {
+        val json = """
             {
                 "id": 1,
-                "program_id": 1,
+                "program_id": 123,
                 "day_number": 1,
-                "name": "Day 1 - Max Effort Upper",
+                "name": "Week 1 - Upper Body",
+                "created_at": "${now.toString()}",
+                "updated_at": "${now.toString()}"
+            }
+        """.trimIndent()
+
+        val programmedWorkout = objectMapper.readValue(json, ProgrammedWorkout::class.java)
+
+        assertEquals(1L, programmedWorkout.id)
+        assertEquals(123L, programmedWorkout.programId)
+        assertEquals(1, programmedWorkout.dayNumber)
+        assertEquals("Week 1 - Upper Body", programmedWorkout.name)
+        assertEquals(now, programmedWorkout.createdAt)
+        assertEquals(now, programmedWorkout.updatedAt)
+    }
+
+    @Test
+    fun `test programmed workout deserialization with unknown properties`() {
+        val json = """
+            {
+                "id": 1,
+                "program_id": 123,
+                "day_number": 1,
+                "name": "Week 1 - Upper Body",
+                "created_at": "${now.toString()}",
+                "updated_at": "${now.toString()}",
                 "unknown_property": "should be ignored"
             }
-            """.trimIndent()
+        """.trimIndent()
 
-        // When
         val programmedWorkout = objectMapper.readValue(json, ProgrammedWorkout::class.java)
 
-        // Then
         assertEquals(1L, programmedWorkout.id)
-        assertEquals(1L, programmedWorkout.programId)
+        assertEquals(123L, programmedWorkout.programId)
         assertEquals(1, programmedWorkout.dayNumber)
-        assertEquals("Day 1 - Max Effort Upper", programmedWorkout.name)
+        assertEquals("Week 1 - Upper Body", programmedWorkout.name)
+        assertEquals(now, programmedWorkout.createdAt)
+        assertEquals(now, programmedWorkout.updatedAt)
     }
 
     @Test
-    fun `should have correct equals and hashCode`() {
-        // Given
-        val programmedWorkout1 =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Day 1 - Max Effort Upper",
-            )
-        val programmedWorkout2 =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Day 1 - Max Effort Upper",
-            )
-        val programmedWorkout3 =
-            ProgrammedWorkout(
-                id = 2L,
-                programId = 1L,
-                dayNumber = 2,
-                name = "Day 2 - Dynamic Effort Lower",
-            )
+    fun `test programmed workout equality`() {
+        val workout1 = ProgrammedWorkout(
+            id = 1L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Week 1 - Upper Body",
+            createdAt = now,
+            updatedAt = now
+        )
 
-        // Then
-        assertEquals(programmedWorkout1, programmedWorkout2)
-        assertEquals(programmedWorkout1.hashCode(), programmedWorkout2.hashCode())
-        assertFalse(programmedWorkout1 == programmedWorkout3)
-        assertFalse(programmedWorkout1.hashCode() == programmedWorkout3.hashCode())
+        val workout2 = ProgrammedWorkout(
+            id = 1L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Week 1 - Upper Body",
+            createdAt = now,
+            updatedAt = now
+        )
+
+        val workout3 = ProgrammedWorkout(
+            id = 2L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Week 1 - Upper Body",
+            createdAt = now,
+            updatedAt = now
+        )
+
+        assertEquals(workout1, workout2)
+        assertEquals(workout1.hashCode(), workout2.hashCode())
+        assertFalse(workout1 == workout3)
+        assertFalse(workout1.hashCode() == workout3.hashCode())
+    }
+
+    @Test
+    fun `test programmed workout copy`() {
+        val original = ProgrammedWorkout(
+            id = 1L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Original Workout",
+            createdAt = now,
+            updatedAt = now
+        )
+
+        val copied = original.copy(
+            name = "Copied Workout"
+        )
+
+        assertEquals(1L, copied.id)
+        assertEquals(123L, copied.programId)
+        assertEquals(1, copied.dayNumber)
+        assertEquals("Copied Workout", copied.name)
+        assertEquals(now, copied.createdAt)
+        assertEquals(now, copied.updatedAt)
+    }
+
+    @Test
+    fun `test programmed workout toString`() {
+        val programmedWorkout = ProgrammedWorkout(
+            id = 1L,
+            programId = 123L,
+            dayNumber = 1,
+            name = "Week 1 - Upper Body",
+            createdAt = now,
+            updatedAt = now
+        )
+
+        val toString = programmedWorkout.toString()
+        assertTrue(toString.contains("id=1"))
+        assertTrue(toString.contains("programId=123"))
+        assertTrue(toString.contains("dayNumber=1"))
+        assertTrue(toString.contains("name=Week 1 - Upper Body"))
     }
 }

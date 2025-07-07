@@ -6,33 +6,17 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 /**
- * Represents a set within a programmed exercise.
+ * Represents a set scheme for a programmed exercise.
  *
- * A set scheme defines the specific parameters for a single set within an exercise,
- * including performance flags, tempo timing, weight, reps, and rest periods. This
- * provides detailed control over how each set is performed and tracked.
- *
- * ## Performance Flags
- *
- * - **AMRAP**: As Many Reps As Possible - perform maximum reps with given weight
- * - **EMOM**: Every Minute On the Minute - perform work at specific intervals
- * - **Tempo**: Use specific timing for eccentric, isometric, and concentric phases
- *
- * ## Tempo Format
- *
- * Tempo values use a single digit (0-9) representing seconds for each phase:
- * - **Eccentric**: Lowering phase (e.g., "3" = 3 seconds down)
- * - **Isometric**: Hold phase (e.g., "1" = 1 second hold)
- * - **Concentric**: Lifting phase (e.g., "1" = 1 second up)
- *
- * Example: "3-1-1" means 3 seconds down, 1 second hold, 1 second up.
+ * A set scheme defines the specific parameters for individual sets within a
+ * programmed exercise, including weight, reps, tempo, and rest periods.
  *
  * @property id Unique identifier for the set scheme
- * @property programmedExerciseId ID of the programmed exercise this set belongs to
- * @property setNumber Order of this set within the exercise (1-based)
- * @property wasSetPerformed Whether the set was completed
+ * @property programmedExerciseId The ID of the programmed exercise this set belongs to
+ * @property setNumber The set number within the exercise
  * @property isAmrap As Many Reps As Possible flag
  * @property isEmom Every Minute On the Minute flag
  * @property useTempo Whether to use tempo timing
@@ -44,6 +28,8 @@ import java.math.BigDecimal
  * @property targetRepCount Target number of repetitions
  * @property performedRepCount Actual number of repetitions completed
  * @property restSeconds Rest period after the set in seconds
+ * @property createdAt Timestamp when the set scheme was created
+ * @property updatedAt Timestamp when the set scheme was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -53,10 +39,10 @@ import java.math.BigDecimal
 @Schema(
     description = "A set within a programmed exercise with performance parameters",
     example =
-        "SetScheme(id=1, programmedExerciseId=5, setNumber=1, wasSetPerformed=true, " +
-            "isAmrap=false, isEmom=false, useTempo=true, eccentricTempo=\"3\", " +
-            "isometricTempo=\"1\", concentricTempo=\"1\", targetWeight=100.0, " +
-            "performedWeight=100.0, targetRepCount=5, performedRepCount=5, restSeconds=180)",
+        "SetScheme(id=1, programmedExerciseId=5, setNumber=1, isAmrap=false, isEmom=false, " +
+            "useTempo=true, eccentricTempo=\"3\", isometricTempo=\"1\", concentricTempo=\"1\", " +
+            "targetWeight=100.0, performedWeight=100.0, targetRepCount=5, performedRepCount=5, " +
+            "restSeconds=180)",
 )
 data class SetScheme(
     /** Unique identifier for the set scheme. */
@@ -80,34 +66,27 @@ data class SetScheme(
         required = true,
     )
     @param:JsonProperty("set_number") val setNumber: Int,
-    /** Whether the set was completed. */
-    @Schema(
-        description = "Whether the set was completed",
-        example = "true",
-        defaultValue = "true",
-    )
-    @param:JsonProperty("was_set_performed") val wasSetPerformed: Boolean = true,
     /** As Many Reps As Possible flag. */
     @Schema(
         description = "As Many Reps As Possible flag",
         example = "false",
         defaultValue = "false",
     )
-    @param:JsonProperty("is_amrap") val isAmrap: Boolean = false,
+    @param:JsonProperty("is_amrap") val isAmrap: Boolean,
     /** Every Minute On the Minute flag. */
     @Schema(
         description = "Every Minute On the Minute flag",
         example = "false",
         defaultValue = "false",
     )
-    @param:JsonProperty("is_emom") val isEmom: Boolean = false,
+    @param:JsonProperty("is_emom") val isEmom: Boolean,
     /** Whether to use tempo timing. */
     @Schema(
         description = "Whether to use tempo timing",
         example = "false",
         defaultValue = "false",
     )
-    @param:JsonProperty("use_tempo") val useTempo: Boolean = false,
+    @param:JsonProperty("use_tempo") val useTempo: Boolean,
     /** Eccentric phase tempo (0-9 seconds). */
     @Schema(
         description = "Eccentric phase tempo (0-9 seconds)",
@@ -167,4 +146,18 @@ data class SetScheme(
         maximum = "3600",
     )
     @param:JsonProperty("rest_seconds") val restSeconds: Int?,
+    /** Timestamp when the set scheme was created. */
+    @Schema(
+        description = "Timestamp when the set scheme was created",
+        example = "2024-07-06T12:00:00Z",
+        required = true,
+    )
+    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
+    /** Timestamp when the set scheme was last updated. */
+    @Schema(
+        description = "Timestamp when the set scheme was last updated",
+        example = "2024-07-06T12:00:00Z",
+        required = true,
+    )
+    @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )

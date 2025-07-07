@@ -144,7 +144,7 @@ class UserOneRepMaxDAL(
         return postgresClient.update(
             """
             UPDATE user_one_rep_max
-            SET one_rep_max=$3, last_updated=CURRENT_TIMESTAMP
+            SET one_rep_max=$3, updated_at=NOW()
             WHERE user_id=$1 AND exercise_name=$2
             """.trimIndent(),
             userId,

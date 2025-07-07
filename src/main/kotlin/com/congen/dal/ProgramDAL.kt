@@ -25,14 +25,19 @@ import reactor.core.publisher.Mono
  * Programs represent structured workout plans that contain:
  * - Unique identifier and name
  * - Description of the program
+ * - Current week number
  * - Associated programmed workouts (via foreign key relationships)
  *
  * ## Database Schema
  *
  * The program table contains:
  * - `id`: Primary key (auto-generated)
+ * - `user_id`: User ID (required)
  * - `name`: Program name (required)
  * - `description`: Program description (optional)
+ * - `current_week_number`: Current week number (required)
+ * - `created_at`: Creation timestamp (auto-generated)
+ * - `updated_at`: Last update timestamp (auto-generated)
  *
  * @property postgresClient Client for database operations
  *
@@ -89,25 +94,25 @@ class ProgramDAL(
      *
      * @param userId The user ID for the program
      * @param name The name of the program
-     * @param description The description of the program
+     * @param currentWeekNumber The current week number
      * @return Mono containing the inserted program with generated ID
      */
     fun insertProgram(
         userId: Int,
         name: String,
-        description: String?
+        currentWeekNumber: Int
     ): Mono<Program> {
-        logger.debug("Inserting program: {} for user {}", name, userId)
+        logger.debug("Inserting program: {} for user {} with week number {}", name, userId, currentWeekNumber)
         return postgresClient.update(
             """
             INSERT INTO program
-                (user_id, name, description)
+                (user_id, name, current_week_number)
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
             userId,
             name,
-            description,
+            currentWeekNumber,
         )
     }
 
@@ -120,25 +125,26 @@ class ProgramDAL(
      *
      * @param id The unique identifier of the program to update
      * @param name The updated name of the program
-     * @param description The updated description of the program
+     * @param currentWeekNumber The updated current week number
      * @return Mono containing the updated program
      * @throws NoResultsFoundException if no program exists with the given ID
      */
     fun updateProgram(
         id: Long,
         name: String,
-        description: String?
+        currentWeekNumber: Int
     ): Mono<Program> {
         logger.debug("Updating program: {}", id)
+
         return postgresClient.update(
             """
             UPDATE program
-            SET name=$2, description=$3
+            SET name=$2, current_week_number=$3, updated_at=NOW()
             WHERE id=$1
             """.trimIndent(),
             id,
             name,
-            description,
+            currentWeekNumber,
         )
     }
 

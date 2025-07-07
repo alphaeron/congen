@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 /**
  * Represents a type or category of workout stage.
@@ -25,12 +26,16 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Common workout stage types include:
  * - **Warm-up**: Preparatory exercises to increase body temperature and mobility
- * - **Main**: Primary strength or conditioning exercises
+ * - **Primary**: Primary strength or conditioning exercises
+ * - **Secondary**: Supporting compound movements
  * - **Accessory**: Supplementary exercises for muscle balance and development
  * - **Cool-down**: Recovery exercises to reduce heart rate and promote flexibility
+ * - **Mobility**: Flexibility and mobility work
+ * - **Conditioning**: Cardio and conditioning work
  *
  * @property id Unique identifier for the workout stage type
- * @property name Human-readable name of the workout stage type
+ * @property name The name of the workout stage
+ * @property createdAt Created at timestamp
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -39,7 +44,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "A type or category of workout stage",
-    example = "WorkoutStageType(id=1, name=\"Warm-up\")",
+    example = "WorkoutStageType(id=1, name=WARMUP)",
 )
 data class WorkoutStageType(
     /** Unique identifier for the workout stage type. */
@@ -49,11 +54,17 @@ data class WorkoutStageType(
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Int,
-    /** Human-readable name of the workout stage type. */
+    /** The name of the workout stage type. */
     @Schema(
-        description = "Human-readable name of the workout stage type",
-        example = "Warm-up",
+        description = "The name of the workout stage type",
+        example = "WARMUP",
         required = true,
     )
-    @param:JsonProperty("name") val name: String,
+    @param:JsonProperty("name") val name: WorkoutStageTypeEnum,
+    @Schema(
+        description = "Created at timestamp",
+        example = "2024-07-06T12:00:00Z",
+        required = true,
+    )
+    @param:JsonProperty("created_at") val createdAt: LocalDateTime,
 )

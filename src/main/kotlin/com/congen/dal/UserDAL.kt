@@ -149,7 +149,7 @@ class UserDAL(
         return postgresClient.update(
             """
             UPDATE "user"
-            SET name=$2, age=$3, height=$4, weight=$5
+            SET name=$2, age=$3, height=$4, weight=$5, updated_at=NOW()
             WHERE id=$1
             """.trimIndent(),
             id,
