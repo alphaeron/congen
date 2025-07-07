@@ -86,21 +86,22 @@ class SetSchemeServiceTest {
             )
         ).thenReturn(Mono.just(setScheme))
 
-        val result = setSchemeService.insertSetScheme(
-            programmedExerciseId = 1L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("100.0"),
-            performedWeight = null,
-            targetRepCount = null,
-            performedRepCount = null,
-            restSeconds = null,
-        )
+        val result =
+            setSchemeService.insertSetScheme(
+                programmedExerciseId = 1L,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = BigDecimal("100.0"),
+                performedWeight = null,
+                targetRepCount = null,
+                performedRepCount = null,
+                restSeconds = null,
+            )
 
         StepVerifier.create(result)
             .expectNext(setScheme)
@@ -161,12 +162,13 @@ class SetSchemeServiceTest {
                 oneRepMax = BigDecimal("100.0"),
                 updatedAt = now
             )
-        val newOneRepMax = UserOneRepMax(
-            1,
-            "Bench Press",
-            BigDecimal("120.0"),
-            now,
-        )
+        val newOneRepMax =
+            UserOneRepMax(
+                1,
+                "Bench Press",
+                BigDecimal("120.0"),
+                now,
+            )
 
         whenever(
             setSchemeDAL.updateSetScheme(
@@ -266,12 +268,13 @@ class SetSchemeServiceTest {
                 createdAt = now,
                 updatedAt = now
             )
-        val newOneRepMax = UserOneRepMax(
-            2,
-            "Deadlift",
-            BigDecimal("150.0"),
-            now,
-        )
+        val newOneRepMax =
+            UserOneRepMax(
+                2,
+                "Deadlift",
+                BigDecimal("150.0"),
+                now,
+            )
 
         whenever(
             setSchemeDAL.updateSetScheme(

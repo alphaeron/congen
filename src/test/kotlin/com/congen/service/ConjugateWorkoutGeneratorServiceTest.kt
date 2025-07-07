@@ -113,12 +113,14 @@ class ConjugateWorkoutGeneratorServiceTest {
                 sessionTimeCalculator
             )
         // Add default mocks for conjugateTemplates
-        whenever(conjugateTemplates.selectTemplate(any())).thenReturn(listOf(
-            com.congen.service.conjugate.DayTemplate("ME_Upper"),
-            com.congen.service.conjugate.DayTemplate("DE_Lower"),
-            com.congen.service.conjugate.DayTemplate("ME_Lower"),
-            com.congen.service.conjugate.DayTemplate("DE_Upper")
-        ))
+        whenever(conjugateTemplates.selectTemplate(any())).thenReturn(
+            listOf(
+                com.congen.service.conjugate.DayTemplate("ME_Upper"),
+                com.congen.service.conjugate.DayTemplate("DE_Lower"),
+                com.congen.service.conjugate.DayTemplate("ME_Lower"),
+                com.congen.service.conjugate.DayTemplate("DE_Upper")
+            )
+        )
         whenever(conjugateTemplates.hasSecondaryMovement(any())).thenReturn(true)
         whenever(conjugateTemplates.hasConditioning(any())).thenReturn(true)
         // Add default mocks for exerciseSelectionService
@@ -158,10 +160,40 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
         // Add default mocks for workoutStageGenerator
         whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
-            listOf(com.congen.service.conjugate.SetSchemeParams(1, false, false, false, null, null, null, BigDecimal("100.0"), null, 5, null, 180))
+            listOf(
+                com.congen.service.conjugate.SetSchemeParams(
+                    1,
+                    false,
+                    false,
+                    false,
+                    null,
+                    null,
+                    null,
+                    BigDecimal("100.0"),
+                    null,
+                    5,
+                    null,
+                    180
+                )
+            )
         )
         whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any(), any())).thenReturn(
-            listOf(com.congen.service.conjugate.SetSchemeParams(1, false, false, false, null, null, null, BigDecimal("80.0"), null, 8, null, 120))
+            listOf(
+                com.congen.service.conjugate.SetSchemeParams(
+                    1,
+                    false,
+                    false,
+                    false,
+                    null,
+                    null,
+                    null,
+                    BigDecimal("80.0"),
+                    null,
+                    8,
+                    null,
+                    120
+                )
+            )
         )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(
             Mono.just(

@@ -28,4 +28,4 @@ enum class WorkoutStageTypeEnum(val displayName: String) {
             return values().find { it.displayName.equals(displayName, ignoreCase = true) }
         }
     }
-} 
+}

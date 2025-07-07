@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
@@ -61,7 +60,10 @@ class HealthControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.status(HttpStatus.OK).body(healthResponse))
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.OK)
+                assert(resp.body == healthResponse)
+            }
             .verifyComplete()
     }
 
@@ -103,7 +105,10 @@ class HealthControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(healthResponse))
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.SERVICE_UNAVAILABLE)
+                assert(resp.body == healthResponse)
+            }
             .verifyComplete()
     }
 
@@ -145,7 +150,10 @@ class HealthControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.status(HttpStatus.OK).body(healthResponse))
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.OK)
+                assert(resp.body == healthResponse)
+            }
             .verifyComplete()
     }
 }

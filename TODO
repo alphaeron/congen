@@ -1,9 +1,4 @@
-deprecation
-warnings
-
 check missing integration tests
-
-use HttpStatus enum in test assertions
 
 Remove update from /workout_stage/{id}/update since it is redundant, make sure it's a patch request too
 

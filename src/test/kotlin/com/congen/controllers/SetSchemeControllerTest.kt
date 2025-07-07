@@ -74,7 +74,7 @@ class SetSchemeControllerTest {
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
             .assertNext { resp ->
-                assert(resp.statusCodeValue == 200)
+                assert(resp.statusCode == HttpStatus.OK)
                 assert(resp.body == setSchemes)
             }
             .verifyComplete()
@@ -271,7 +271,7 @@ class SetSchemeControllerTest {
                 restSeconds
             )
 
-        assert(result.statusCodeValue == 200)
+        assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<SetScheme>)
             .expectNext(setScheme)
             .verifyComplete()
@@ -303,7 +303,7 @@ class SetSchemeControllerTest {
 
         val result = setSchemeController.delete(1L)
 
-        assert(result.statusCodeValue == 200)
+        assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<SetScheme>)
             .expectNext(setScheme)
             .verifyComplete()

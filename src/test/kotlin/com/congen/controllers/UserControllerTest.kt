@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import kotlin.test.assertEquals
 
 /**
  * Unit tests for UserController.
