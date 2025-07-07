@@ -33,22 +33,23 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should get all exercise rotation histories`() {
         val now = LocalDateTime.now()
-        val exerciseRotationHistories = listOf(
-            ExerciseRotationHistory(
-                id = 1L,
-                userId = 1,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                createdAt = now
-            ),
-            ExerciseRotationHistory(
-                id = 2L,
-                userId = 1,
-                exerciseName = "Squat",
-                isAccessory = true,
-                createdAt = now
+        val exerciseRotationHistories =
+            listOf(
+                ExerciseRotationHistory(
+                    id = 1L,
+                    userId = 1,
+                    exerciseName = "Bench Press",
+                    isAccessory = false,
+                    createdAt = now
+                ),
+                ExerciseRotationHistory(
+                    id = 2L,
+                    userId = 1,
+                    exerciseName = "Squat",
+                    isAccessory = true,
+                    createdAt = now
+                )
             )
-        )
 
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(exerciseRotationHistories))
 
@@ -62,13 +63,14 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should get exercise rotation history by id`() {
         val now = LocalDateTime.now()
-        val exerciseRotationHistory = ExerciseRotationHistory(
-            id = 1L,
-            userId = 1,
-            exerciseName = "Bench Press",
-            isAccessory = false,
-            createdAt = now
-        )
+        val exerciseRotationHistory =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = 1,
+                exerciseName = "Bench Press",
+                isAccessory = false,
+                createdAt = now
+            )
 
         whenever(exerciseRotationHistoryDAL.selectById(1L)).thenReturn(Mono.just(exerciseRotationHistory))
 
@@ -96,13 +98,14 @@ class ExerciseRotationHistoryControllerTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val isAccessory = false
-        val exerciseRotationHistory = ExerciseRotationHistory(
-            id = 1L,
-            userId = userId,
-            exerciseName = exerciseName,
-            isAccessory = isAccessory,
-            createdAt = now
-        )
+        val exerciseRotationHistory =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = userId,
+                exerciseName = exerciseName,
+                isAccessory = isAccessory,
+                createdAt = now
+            )
 
         whenever(exerciseRotationHistoryDAL.insert(userId, exerciseName, isAccessory))
             .thenReturn(Mono.just(exerciseRotationHistory))
@@ -121,13 +124,14 @@ class ExerciseRotationHistoryControllerTest {
         val userId = 1
         val exerciseName = "Barbell Bench Press"
         val isAccessory = true
-        val exerciseRotationHistory = ExerciseRotationHistory(
-            id = id,
-            userId = userId,
-            exerciseName = exerciseName,
-            isAccessory = isAccessory,
-            createdAt = now
-        )
+        val exerciseRotationHistory =
+            ExerciseRotationHistory(
+                id = id,
+                userId = userId,
+                exerciseName = exerciseName,
+                isAccessory = isAccessory,
+                createdAt = now
+            )
 
         whenever(exerciseRotationHistoryDAL.update(id, userId, exerciseName, isAccessory))
             .thenReturn(Mono.just(exerciseRotationHistory))
@@ -154,13 +158,14 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should delete exercise rotation history`() {
         val now = LocalDateTime.now()
-        val exerciseRotationHistory = ExerciseRotationHistory(
-            id = 1L,
-            userId = 1,
-            exerciseName = "Bench Press",
-            isAccessory = false,
-            createdAt = now
-        )
+        val exerciseRotationHistory =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = 1,
+                exerciseName = "Bench Press",
+                isAccessory = false,
+                createdAt = now
+            )
 
         whenever(exerciseRotationHistoryDAL.deleteById(1L)).thenReturn(Mono.just(exerciseRotationHistory))
 
@@ -186,22 +191,23 @@ class ExerciseRotationHistoryControllerTest {
     fun `should get exercise rotation histories by accessory type`() {
         val now = LocalDateTime.now()
         val isAccessory = false
-        val exerciseRotationHistories = listOf(
-            ExerciseRotationHistory(
-                id = 1L,
-                userId = 1,
-                exerciseName = "Bench Press",
-                isAccessory = isAccessory,
-                createdAt = now
-            ),
-            ExerciseRotationHistory(
-                id = 2L,
-                userId = 1,
-                exerciseName = "Squat",
-                isAccessory = isAccessory,
-                createdAt = now
+        val exerciseRotationHistories =
+            listOf(
+                ExerciseRotationHistory(
+                    id = 1L,
+                    userId = 1,
+                    exerciseName = "Bench Press",
+                    isAccessory = isAccessory,
+                    createdAt = now
+                ),
+                ExerciseRotationHistory(
+                    id = 2L,
+                    userId = 1,
+                    exerciseName = "Squat",
+                    isAccessory = isAccessory,
+                    createdAt = now
+                )
             )
-        )
 
         whenever(exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)).thenReturn(Mono.just(exerciseRotationHistories))
 

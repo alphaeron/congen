@@ -1,42 +1,42 @@
 package com.congen.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @SpringBootTest
 class SetSchemeTest {
-
     @Autowired
     private lateinit var objectMapper: ObjectMapper
     private val now = LocalDateTime.now()
 
     @Test
     fun `test set scheme creation with all fields`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(1L, setScheme.id)
         assertEquals(123L, setScheme.programmedExerciseId)
@@ -58,24 +58,25 @@ class SetSchemeTest {
 
     @Test
     fun `test set scheme creation with minimal fields`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = null,
-            performedWeight = null,
-            targetRepCount = null,
-            performedRepCount = null,
-            restSeconds = null,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = null,
+                performedWeight = null,
+                targetRepCount = null,
+                performedRepCount = null,
+                restSeconds = null,
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(1L, setScheme.id)
         assertEquals(123L, setScheme.programmedExerciseId)
@@ -89,24 +90,25 @@ class SetSchemeTest {
 
     @Test
     fun `test set scheme JSON serialization`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
         val json = objectMapper.writeValueAsString(setScheme)
         val deserialized = objectMapper.readValue(json, SetScheme::class.java)
@@ -116,62 +118,65 @@ class SetSchemeTest {
 
     @Test
     fun `test set scheme equality`() {
-        val setScheme1 = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme1 =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val setScheme2 = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme2 =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val setScheme3 = SetScheme(
-            id = 2L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme3 =
+            SetScheme(
+                id = 2L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(setScheme1, setScheme2)
         assertFalse(setScheme1 == setScheme3)
@@ -179,29 +184,31 @@ class SetSchemeTest {
 
     @Test
     fun `test set scheme copy`() {
-        val original = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val original =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val copied = original.copy(
-            setNumber = 2,
-            targetWeight = BigDecimal("250.0")
-        )
+        val copied =
+            original.copy(
+                setNumber = 2,
+                targetWeight = BigDecimal("250.0")
+            )
 
         assertEquals(1L, copied.id)
         assertEquals(123L, copied.programmedExerciseId)
@@ -223,24 +230,25 @@ class SetSchemeTest {
 
     @Test
     fun `test set scheme with null values`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = null,
-            performedWeight = null,
-            targetRepCount = null,
-            performedRepCount = null,
-            restSeconds = null,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = null,
+                performedWeight = null,
+                targetRepCount = null,
+                performedRepCount = null,
+                restSeconds = null,
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(1L, setScheme.id)
         assertEquals(123L, setScheme.programmedExerciseId)
@@ -254,67 +262,70 @@ class SetSchemeTest {
 
     @Test
     fun `test set scheme hash code`() {
-        val setScheme1 = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme1 =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val setScheme2 = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme2 =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(setScheme1.hashCode(), setScheme2.hashCode())
     }
 
     @Test
     fun `test set scheme toString`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 123L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("225.5"),
-            performedWeight = BigDecimal("225.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 123L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("225.5"),
+                performedWeight = BigDecimal("225.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
 
         val toString = setScheme.toString()
         assertTrue(toString.contains("id=1"))

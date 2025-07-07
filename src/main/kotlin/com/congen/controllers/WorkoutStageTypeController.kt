@@ -141,7 +141,7 @@ class WorkoutStageTypeController(
         if (stageType == null) {
             return Mono.just(ResponseEntity.notFound().build())
         }
-        
+
         return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageType)
             .map { workoutStageType ->
                 logger.debug("Found workout stage type: {}", name)

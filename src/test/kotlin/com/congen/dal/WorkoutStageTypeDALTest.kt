@@ -29,11 +29,12 @@ class WorkoutStageTypeDALTest {
     @Test
     fun `selectWorkoutStageTypeById should return workout stage type when found`() {
         // Given
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = LocalDateTime.now()
+            )
 
         whenever(postgresClient.selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE id=$1", 1))
             .thenReturn(Mono.just(workoutStageType))
@@ -52,13 +53,19 @@ class WorkoutStageTypeDALTest {
     @Test
     fun `selectWorkoutStageTypeByEnum should return workout stage type when found`() {
         // Given
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = LocalDateTime.now()
+            )
 
-        whenever(postgresClient.selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE name=$1", WorkoutStageTypeEnum.PRIMARY.displayName))
+        whenever(
+            postgresClient.selectIndividual<WorkoutStageType>(
+                "SELECT * FROM workout_stage_type WHERE name=$1",
+                WorkoutStageTypeEnum.PRIMARY.displayName
+            )
+        )
             .thenReturn(Mono.just(workoutStageType))
 
         // When
@@ -69,24 +76,27 @@ class WorkoutStageTypeDALTest {
             .expectNext(workoutStageType)
             .verifyComplete()
 
-        verify(postgresClient).selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE name=$1", WorkoutStageTypeEnum.PRIMARY.displayName)
+        verify(
+            postgresClient
+        ).selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE name=$1", WorkoutStageTypeEnum.PRIMARY.displayName)
     }
 
     @Test
     fun `selectWorkoutStageTypes should return all workout stage types`() {
         // Given
-        val workoutStageTypes = listOf(
-            WorkoutStageType(
-                id = 1,
-                name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = LocalDateTime.now()
-            ),
-            WorkoutStageType(
-                id = 2,
-                name = WorkoutStageTypeEnum.SECONDARY,
-                createdAt = LocalDateTime.now()
+        val workoutStageTypes =
+            listOf(
+                WorkoutStageType(
+                    id = 1,
+                    name = WorkoutStageTypeEnum.PRIMARY,
+                    createdAt = LocalDateTime.now()
+                ),
+                WorkoutStageType(
+                    id = 2,
+                    name = WorkoutStageTypeEnum.SECONDARY,
+                    createdAt = LocalDateTime.now()
+                )
             )
-        )
 
         whenever(postgresClient.select<WorkoutStageType>("SELECT * FROM workout_stage_type ORDER BY name"))
             .thenReturn(Mono.just(workoutStageTypes))

@@ -24,14 +24,17 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `selectById returns ExerciseRotationHistory`() {
-        val history = ExerciseRotationHistory(
-            id = 1L,
-            userId = 2,
-            exerciseName = "Bench Press",
-            isAccessory = false,
-            createdAt = now
-        )
-        whenever(postgresClient.selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", 1L)).thenReturn(Mono.just(history))
+        val history =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = 2,
+                exerciseName = "Bench Press",
+                isAccessory = false,
+                createdAt = now
+            )
+        whenever(
+            postgresClient.selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", 1L)
+        ).thenReturn(Mono.just(history))
         val result = dal.selectById(1L)
         StepVerifier.create(result).expectNext(history).verifyComplete()
         verify(postgresClient).selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", 1L)
@@ -39,13 +42,14 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `insert returns inserted ExerciseRotationHistory`() {
-        val history = ExerciseRotationHistory(
-            id = 0L,
-            userId = 2,
-            exerciseName = "Bench Press",
-            isAccessory = false,
-            createdAt = now
-        )
+        val history =
+            ExerciseRotationHistory(
+                id = 0L,
+                userId = 2,
+                exerciseName = "Bench Press",
+                isAccessory = false,
+                createdAt = now
+            )
         whenever(
             postgresClient.update<ExerciseRotationHistory>(
                 """
@@ -54,7 +58,9 @@ class ExerciseRotationHistoryDALTest {
                 VALUES
                     ($1, $2, $3)
                 """.trimIndent(),
-                2, "Bench Press", false
+                2,
+                "Bench Press",
+                false
             )
         ).thenReturn(Mono.just(history))
         val result = dal.insert(2, "Bench Press", false)
@@ -66,20 +72,25 @@ class ExerciseRotationHistoryDALTest {
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            2, "Bench Press", false
+            2,
+            "Bench Press",
+            false
         )
     }
 
     @Test
     fun `deleteById returns deleted ExerciseRotationHistory`() {
-        val history = ExerciseRotationHistory(
-            id = 1L,
-            userId = 2,
-            exerciseName = "Bench Press",
-            isAccessory = false,
-            createdAt = now
-        )
-        whenever(postgresClient.update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", 1L)).thenReturn(Mono.just(history))
+        val history =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = 2,
+                exerciseName = "Bench Press",
+                isAccessory = false,
+                createdAt = now
+            )
+        whenever(
+            postgresClient.update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", 1L)
+        ).thenReturn(Mono.just(history))
         val result = dal.deleteById(1L)
         StepVerifier.create(result).expectNext(history).verifyComplete()
         verify(postgresClient).update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", 1L)
@@ -87,18 +98,20 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `update returns updated ExerciseRotationHistory`() {
-        val updated = ExerciseRotationHistory(
-            id = 1L,
-            userId = 3,
-            exerciseName = "Squat",
-            isAccessory = true,
-            createdAt = now
-        )
-        val expectedQuery = """
+        val updated =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = 3,
+                exerciseName = "Squat",
+                isAccessory = true,
+                createdAt = now
+            )
+        val expectedQuery =
+            """
             UPDATE exercise_rotation_history
             SET user_id=$2, exercise_name=$3, is_accessory=$4
             WHERE id=$1
-        """.trimIndent()
+            """.trimIndent()
         whenever(
             postgresClient.update<ExerciseRotationHistory>(
                 expectedQuery,

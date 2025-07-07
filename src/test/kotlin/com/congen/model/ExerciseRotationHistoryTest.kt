@@ -9,13 +9,14 @@ class ExerciseRotationHistoryTest {
 
     @Test
     fun `constructor sets all fields correctly`() {
-        val history = ExerciseRotationHistory(
-            id = 1L,
-            userId = 42,
-            exerciseName = "Squat",
-            isAccessory = true,
-            createdAt = now
-        )
+        val history =
+            ExerciseRotationHistory(
+                id = 1L,
+                userId = 42,
+                exerciseName = "Squat",
+                isAccessory = true,
+                createdAt = now
+            )
         assertEquals(1L, history.id)
         assertEquals(42, history.userId)
         assertEquals("Squat", history.exerciseName)

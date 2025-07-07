@@ -1,7 +1,6 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
-import com.congen.exceptions.ValidationException
 import com.congen.model.WorkoutStage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -11,7 +10,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.LocalDateTime
-import org.mockito.kotlin.eq
 
 class WorkoutStageDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -26,24 +24,7 @@ class WorkoutStageDALTest {
 
     @Test
     fun `selectWorkoutStageById should return workout stage`() {
-        val workoutStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 1,
-            position = 1,
-            name = "Main Lift",
-            createdAt = now,
-            updatedAt = now
-        )
-        whenever(postgresClient.selectIndividual<WorkoutStage>("SELECT * FROM workout_stage WHERE id=$1", 1L)).thenReturn(Mono.just(workoutStage))
-        val result = workoutStageDAL.selectWorkoutStageById(1L)
-        StepVerifier.create(result).expectNext(workoutStage).verifyComplete()
-        verify(postgresClient).selectIndividual<WorkoutStage>("SELECT * FROM workout_stage WHERE id=$1", 1L)
-    }
-
-    @Test
-    fun `selectWorkoutStagesByProgrammedWorkoutId should return list of workout stages`() {
-        val workoutStages = listOf(
+        val workoutStage =
             WorkoutStage(
                 id = 1L,
                 programmedWorkoutId = 5L,
@@ -52,18 +33,41 @@ class WorkoutStageDALTest {
                 name = "Main Lift",
                 createdAt = now,
                 updatedAt = now
-            ),
-            WorkoutStage(
-                id = 2L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 2,
-                position = 2,
-                name = "Accessory",
-                createdAt = now,
-                updatedAt = now
             )
-        )
-        whenever(postgresClient.select<WorkoutStage>("SELECT * FROM workout_stage WHERE programmed_workout_id=$1 ORDER BY position", 5L)).thenReturn(Mono.just(workoutStages))
+        whenever(
+            postgresClient.selectIndividual<WorkoutStage>("SELECT * FROM workout_stage WHERE id=$1", 1L)
+        ).thenReturn(Mono.just(workoutStage))
+        val result = workoutStageDAL.selectWorkoutStageById(1L)
+        StepVerifier.create(result).expectNext(workoutStage).verifyComplete()
+        verify(postgresClient).selectIndividual<WorkoutStage>("SELECT * FROM workout_stage WHERE id=$1", 1L)
+    }
+
+    @Test
+    fun `selectWorkoutStagesByProgrammedWorkoutId should return list of workout stages`() {
+        val workoutStages =
+            listOf(
+                WorkoutStage(
+                    id = 1L,
+                    programmedWorkoutId = 5L,
+                    stageTypeId = 1,
+                    position = 1,
+                    name = "Main Lift",
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                WorkoutStage(
+                    id = 2L,
+                    programmedWorkoutId = 5L,
+                    stageTypeId = 2,
+                    position = 2,
+                    name = "Accessory",
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        whenever(
+            postgresClient.select<WorkoutStage>("SELECT * FROM workout_stage WHERE programmed_workout_id=$1 ORDER BY position", 5L)
+        ).thenReturn(Mono.just(workoutStages))
         val result = workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(5L)
         StepVerifier.create(result).expectNext(workoutStages).verifyComplete()
         verify(postgresClient).select<WorkoutStage>("SELECT * FROM workout_stage WHERE programmed_workout_id=$1 ORDER BY position", 5L)
@@ -71,15 +75,16 @@ class WorkoutStageDALTest {
 
     @Test
     fun `insertWorkoutStage should return inserted workout stage`() {
-        val workoutStage = WorkoutStage(
-            id = 0L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 1,
-            position = 1,
-            name = "Main Lift",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workoutStage =
+            WorkoutStage(
+                id = 0L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 1,
+                position = 1,
+                name = "Main Lift",
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(
             postgresClient.update<WorkoutStage>(
                 """
@@ -94,7 +99,13 @@ class WorkoutStageDALTest {
                 workoutStage.name,
             ),
         ).thenReturn(Mono.just(workoutStage))
-        val result = workoutStageDAL.insertWorkoutStage(workoutStage.programmedWorkoutId, workoutStage.stageTypeId, workoutStage.position, workoutStage.name)
+        val result =
+            workoutStageDAL.insertWorkoutStage(
+                workoutStage.programmedWorkoutId,
+                workoutStage.stageTypeId,
+                workoutStage.position,
+                workoutStage.name
+            )
         StepVerifier.create(result).expectNext(workoutStage).verifyComplete()
         verify(postgresClient).update<WorkoutStage>(
             """
@@ -112,15 +123,16 @@ class WorkoutStageDALTest {
 
     @Test
     fun `updateWorkoutStage should return updated workout stage`() {
-        val workoutStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 2,
-            position = 2,
-            name = "Accessory",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workoutStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 2,
+                position = 2,
+                name = "Accessory",
+                createdAt = now,
+                updatedAt = now
+            )
         val expectedQuery =
             """
             UPDATE workout_stage
@@ -137,7 +149,14 @@ class WorkoutStageDALTest {
                 workoutStage.name,
             ),
         ).thenReturn(Mono.just(workoutStage))
-        val result = workoutStageDAL.updateWorkoutStage(workoutStage.id, workoutStage.programmedWorkoutId, workoutStage.stageTypeId, workoutStage.position, workoutStage.name)
+        val result =
+            workoutStageDAL.updateWorkoutStage(
+                workoutStage.id,
+                workoutStage.programmedWorkoutId,
+                workoutStage.stageTypeId,
+                workoutStage.position,
+                workoutStage.name
+            )
         StepVerifier.create(result).expectNext(workoutStage).verifyComplete()
         verify(postgresClient).update<WorkoutStage>(
             expectedQuery,
@@ -151,15 +170,16 @@ class WorkoutStageDALTest {
 
     @Test
     fun `deleteWorkoutStage should return deleted workout stage`() {
-        val workoutStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 1,
-            position = 1,
-            name = "Main Lift",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workoutStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 1,
+                position = 1,
+                name = "Main Lift",
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(
             postgresClient.update<WorkoutStage>("DELETE FROM workout_stage WHERE id=$1", 1L),
         ).thenReturn(Mono.just(workoutStage))

@@ -171,4 +171,4 @@ class ConjugateTemplatesTest {
         assertEquals(result2, result3)
         assertEquals(result1, result3)
     }
-} 
+}

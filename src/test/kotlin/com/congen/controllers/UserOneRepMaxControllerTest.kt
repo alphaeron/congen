@@ -40,12 +40,13 @@ class UserOneRepMaxControllerTest {
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("225.5")
         val now = LocalDateTime.now()
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = now
+            )
         val savedUserOneRepMax = userOneRepMax.copy(userId = userId)
         whenever(userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.just(savedUserOneRepMax))
 
@@ -64,12 +65,13 @@ class UserOneRepMaxControllerTest {
     fun `getByUserAndExercise should return user one rep max when found`() {
         val userId = 1
         val exerciseName = "Bench Press"
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = BigDecimal("225.5"),
-            updatedAt = LocalDateTime.now()
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = BigDecimal("225.5"),
+                updatedAt = LocalDateTime.now()
+            )
 
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(userOneRepMax))
 
@@ -101,20 +103,21 @@ class UserOneRepMaxControllerTest {
     @Test
     fun `getAllByUser should return all user one rep maxes`() {
         val userId = 1
-        val userOneRepMaxes = listOf(
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("225.5"),
-                updatedAt = LocalDateTime.now()
-            ),
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = "Squat",
-                oneRepMax = BigDecimal("315.0"),
-                updatedAt = LocalDateTime.now()
+        val userOneRepMaxes =
+            listOf(
+                UserOneRepMax(
+                    userId = userId,
+                    exerciseName = "Bench Press",
+                    oneRepMax = BigDecimal("225.5"),
+                    updatedAt = LocalDateTime.now()
+                ),
+                UserOneRepMax(
+                    userId = userId,
+                    exerciseName = "Squat",
+                    oneRepMax = BigDecimal("315.0"),
+                    updatedAt = LocalDateTime.now()
+                )
             )
-        )
 
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(Mono.just(userOneRepMaxes))
 
@@ -132,12 +135,13 @@ class UserOneRepMaxControllerTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("250.0")
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = LocalDateTime.now()
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = LocalDateTime.now()
+            )
 
         whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.just(userOneRepMax))
 
@@ -156,12 +160,13 @@ class UserOneRepMaxControllerTest {
     fun `delete should return deleted user one rep max`() {
         val userId = 1
         val exerciseName = "Bench Press"
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = BigDecimal("225.5"),
-            updatedAt = LocalDateTime.now()
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = BigDecimal("225.5"),
+                updatedAt = LocalDateTime.now()
+            )
 
         whenever(userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(userOneRepMax))
 
@@ -209,7 +214,9 @@ class UserOneRepMaxControllerTest {
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("225.5")
 
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userOneRepMaxController.save(userId, exerciseName, oneRepMax)
 
@@ -226,7 +233,9 @@ class UserOneRepMaxControllerTest {
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("225.5")
 
-        whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userOneRepMaxController.update(userId, exerciseName, oneRepMax)
 

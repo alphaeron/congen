@@ -9,11 +9,12 @@ class UserEquipmentTest {
 
     @Test
     fun `should create user equipment with correct properties`() {
-        val userEquipment = UserEquipment(
-            userId = 1, 
-            equipmentName = "Barbell",
-            createdAt = now
-        )
+        val userEquipment =
+            UserEquipment(
+                userId = 1,
+                equipmentName = "Barbell",
+                createdAt = now
+            )
         assertEquals(1, userEquipment.userId)
         assertEquals("Barbell", userEquipment.equipmentName)
         assertEquals(now, userEquipment.createdAt)

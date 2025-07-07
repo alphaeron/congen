@@ -38,14 +38,17 @@ class UserProgramPreferencesControllerTest {
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
         val now = LocalDateTime.now()
-        val userProgramPreferences = UserProgramPreferences(
-            userId = userId,
-            programDaysPerWeek = programDaysPerWeek,
-            sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
-            createdAt = now,
-            updatedAt = now
-        )
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)).thenReturn(Mono.just(userProgramPreferences))
+        val userProgramPreferences =
+            UserProgramPreferences(
+                userId = userId,
+                programDaysPerWeek = programDaysPerWeek,
+                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                createdAt = now,
+                updatedAt = now
+            )
+        whenever(
+            userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+        ).thenReturn(Mono.just(userProgramPreferences))
 
         val result = userProgramPreferencesController.save(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
 
@@ -64,13 +67,14 @@ class UserProgramPreferencesControllerTest {
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
         val now = LocalDateTime.now()
-        val userProgramPreferences = UserProgramPreferences(
-            userId = userId,
-            programDaysPerWeek = programDaysPerWeek,
-            sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
-            createdAt = now,
-            updatedAt = now
-        )
+        val userProgramPreferences =
+            UserProgramPreferences(
+                userId = userId,
+                programDaysPerWeek = programDaysPerWeek,
+                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(userProgramPreferences))
 
         val result = userProgramPreferencesController.get(userId)
@@ -88,14 +92,17 @@ class UserProgramPreferencesControllerTest {
         val programDaysPerWeek = 5
         val sessionTimeLengthInMinutes = 75
         val now = LocalDateTime.now()
-        val userProgramPreferences = UserProgramPreferences(
-            userId = userId,
-            programDaysPerWeek = programDaysPerWeek,
-            sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
-            createdAt = now,
-            updatedAt = now
-        )
-        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)).thenReturn(Mono.just(userProgramPreferences))
+        val userProgramPreferences =
+            UserProgramPreferences(
+                userId = userId,
+                programDaysPerWeek = programDaysPerWeek,
+                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                createdAt = now,
+                updatedAt = now
+            )
+        whenever(
+            userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+        ).thenReturn(Mono.just(userProgramPreferences))
 
         val result = userProgramPreferencesController.update(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
 
@@ -114,13 +121,14 @@ class UserProgramPreferencesControllerTest {
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
         val now = LocalDateTime.now()
-        val userProgramPreferences = UserProgramPreferences(
-            userId = userId,
-            programDaysPerWeek = programDaysPerWeek,
-            sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
-            createdAt = now,
-            updatedAt = now
-        )
+        val userProgramPreferences =
+            UserProgramPreferences(
+                userId = userId,
+                programDaysPerWeek = programDaysPerWeek,
+                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(userId)).thenReturn(Mono.just(userProgramPreferences))
 
         val result = userProgramPreferencesController.delete(userId)
@@ -140,7 +148,9 @@ class UserProgramPreferencesControllerTest {
         val programDaysPerWeek = 4
         val sessionTimeLengthInMinutes = 60
 
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userProgramPreferencesController.save(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
 
@@ -170,7 +180,9 @@ class UserProgramPreferencesControllerTest {
         val programDaysPerWeek = 5
         val sessionTimeLengthInMinutes = 75
 
-        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userProgramPreferencesController.update(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
 

@@ -6,13 +6,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
@@ -58,7 +55,16 @@ class UserControllerTest {
     @Test
     fun `get should return user when found`() {
         val now = LocalDateTime.now()
-        val user = User(id = 1, name = "John Doe", age = 30, height = BigDecimal("180.5"), weight = BigDecimal("75.0"), createdAt = now, updatedAt = now)
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(userDAL.selectUserById(1)).thenReturn(Mono.just(user))
         val result = userController.get(1)
         StepVerifier.create(result).expectNext(ResponseEntity.ok(user)).verifyComplete()
@@ -68,7 +74,18 @@ class UserControllerTest {
     @Test
     fun `getAll should return all users`() {
         val now = LocalDateTime.now()
-        val users = listOf(User(id = 1, name = "John Doe", age = 30, height = BigDecimal("180.5"), weight = BigDecimal("75.0"), createdAt = now, updatedAt = now))
+        val users =
+            listOf(
+                User(
+                    id = 1,
+                    name = "John Doe",
+                    age = 30,
+                    height = BigDecimal("180.5"),
+                    weight = BigDecimal("75.0"),
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
         whenever(userDAL.selectUsers()).thenReturn(Mono.just(users))
         val result = userController.getAll()
         StepVerifier.create(result)
@@ -95,7 +112,16 @@ class UserControllerTest {
     @Test
     fun `delete should return deleted user`() {
         val now = LocalDateTime.now()
-        val user = User(id = 1, name = "John Doe", age = 30, height = BigDecimal("180.5"), weight = BigDecimal("75.0"), createdAt = now, updatedAt = now)
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(userDAL.deleteUser(1)).thenReturn(Mono.just(user))
         val result = userController.delete(1)
         assertEquals(ResponseEntity.ok(Mono.just(user)), result)
@@ -105,26 +131,27 @@ class UserControllerTest {
     @Test
     fun `should get all users`() {
         val now = LocalDateTime.now()
-        val users = listOf(
-            User(
-                id = 1,
-                name = "John Doe",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
-                createdAt = now,
-                updatedAt = now
-            ),
-            User(
-                id = 2,
-                name = "Jane Smith",
-                age = 25,
-                height = BigDecimal("165.0"),
-                weight = BigDecimal("60.0"),
-                createdAt = now,
-                updatedAt = now
+        val users =
+            listOf(
+                User(
+                    id = 1,
+                    name = "John Doe",
+                    age = 30,
+                    height = BigDecimal("180.5"),
+                    weight = BigDecimal("75.0"),
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                User(
+                    id = 2,
+                    name = "Jane Smith",
+                    age = 25,
+                    height = BigDecimal("165.0"),
+                    weight = BigDecimal("60.0"),
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
-        )
 
         whenever(userDAL.selectUsers()).thenReturn(Mono.just(users))
 
@@ -138,15 +165,16 @@ class UserControllerTest {
     @Test
     fun `should get user by id`() {
         val now = LocalDateTime.now()
-        val user = User(
-            id = 1,
-            name = "John Doe",
-            age = 30,
-            height = BigDecimal("180.5"),
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
 
         whenever(userDAL.selectUserById(1)).thenReturn(Mono.just(user))
 
@@ -175,15 +203,16 @@ class UserControllerTest {
         val age = 30
         val height = BigDecimal("180.5")
         val weight = BigDecimal("75.0")
-        val user = User(
-            id = 0,
-            name = name,
-            age = age,
-            height = height,
-            weight = weight,
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 0,
+                name = name,
+                age = age,
+                height = height,
+                weight = weight,
+                createdAt = now,
+                updatedAt = now
+            )
         val savedUser = user.copy(id = 1)
         whenever(userDAL.insertUser(name, age, height, weight)).thenReturn(Mono.just(savedUser))
 
@@ -202,15 +231,16 @@ class UserControllerTest {
         val age = 30
         val height = BigDecimal("180.5")
         val weight = BigDecimal("75.0")
-        val user = User(
-            id = id,
-            name = name,
-            age = age,
-            height = height,
-            weight = weight,
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = id,
+                name = name,
+                age = age,
+                height = height,
+                weight = weight,
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(userDAL.updateUser(id, name, age, height, weight)).thenReturn(Mono.just(user))
 
         val result = userController.update(id, name, age, height, weight)
@@ -224,7 +254,9 @@ class UserControllerTest {
 
     @Test
     fun `should return error when updating non-existent user`() {
-        whenever(userDAL.updateUser(999, "John Doe", 30, BigDecimal("180.5"), BigDecimal("75.0"))).thenReturn(Mono.error(RuntimeException("Not found")))
+        whenever(
+            userDAL.updateUser(999, "John Doe", 30, BigDecimal("180.5"), BigDecimal("75.0"))
+        ).thenReturn(Mono.error(RuntimeException("Not found")))
 
         val result = userController.update(999, "John Doe", 30, BigDecimal("180.5"), BigDecimal("75.0"))
 
@@ -238,15 +270,16 @@ class UserControllerTest {
     @Test
     fun `should delete user`() {
         val now = LocalDateTime.now()
-        val user = User(
-            id = 1,
-            name = "John Doe",
-            age = 30,
-            height = BigDecimal("180.5"),
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(userDAL.deleteUser(1)).thenReturn(Mono.just(user))
 
         val result = userController.delete(1)

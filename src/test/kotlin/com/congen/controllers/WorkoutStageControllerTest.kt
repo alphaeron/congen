@@ -2,13 +2,10 @@ package com.congen.controllers
 
 import com.congen.dal.WorkoutStageDAL
 import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageType
-import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
@@ -34,15 +31,16 @@ class WorkoutStageControllerTest {
 
     @Test
     fun `GET by ID should return workout stage`() {
-        val workoutStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 1,
-            position = 1,
-            name = "Warmup",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workoutStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 1,
+                position = 1,
+                name = "Warmup",
+                createdAt = now,
+                updatedAt = now
+            )
 
         whenever(workoutStageDAL.selectWorkoutStageById(1L)).thenReturn(Mono.just(workoutStage))
 
@@ -57,26 +55,27 @@ class WorkoutStageControllerTest {
 
     @Test
     fun `GET by programmed workout ID should return list of workout stages`() {
-        val workoutStages = listOf(
-            WorkoutStage(
-                id = 1L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 1,
-                position = 1,
-                name = "Warmup",
-                createdAt = now,
-                updatedAt = now
-            ),
-            WorkoutStage(
-                id = 2L,
-                programmedWorkoutId = 5L,
-                stageTypeId = 2,
-                position = 2,
-                name = "Main Work",
-                createdAt = now,
-                updatedAt = now
+        val workoutStages =
+            listOf(
+                WorkoutStage(
+                    id = 1L,
+                    programmedWorkoutId = 5L,
+                    stageTypeId = 1,
+                    position = 1,
+                    name = "Warmup",
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                WorkoutStage(
+                    id = 2L,
+                    programmedWorkoutId = 5L,
+                    stageTypeId = 2,
+                    position = 2,
+                    name = "Main Work",
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
-        )
 
         whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(5L)).thenReturn(Mono.just(workoutStages))
 
@@ -92,15 +91,16 @@ class WorkoutStageControllerTest {
 
     @Test
     fun `POST workout_stage should create new workout stage`() {
-        val createdStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 1,
-            position = 1,
-            name = "Warmup",
-            createdAt = now,
-            updatedAt = now
-        )
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 1,
+                position = 1,
+                name = "Warmup",
+                createdAt = now,
+                updatedAt = now
+            )
 
         whenever(
             workoutStageDAL.insertWorkoutStage(
@@ -127,15 +127,16 @@ class WorkoutStageControllerTest {
 
     @Test
     fun `update by ID should update workout stage`() {
-        val updatedStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 2,
-            position = 2,
-            name = "Main Work",
-            createdAt = now,
-            updatedAt = now
-        )
+        val updatedStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 2,
+                position = 2,
+                name = "Main Work",
+                createdAt = now,
+                updatedAt = now
+            )
 
         whenever(
             workoutStageDAL.updateWorkoutStage(
@@ -164,15 +165,16 @@ class WorkoutStageControllerTest {
 
     @Test
     fun `DELETE by ID should delete workout stage`() {
-        val deletedStage = WorkoutStage(
-            id = 1L,
-            programmedWorkoutId = 5L,
-            stageTypeId = 1,
-            position = 1,
-            name = "Warmup",
-            createdAt = now,
-            updatedAt = now
-        )
+        val deletedStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 5L,
+                stageTypeId = 1,
+                position = 1,
+                name = "Warmup",
+                createdAt = now,
+                updatedAt = now
+            )
 
         whenever(workoutStageDAL.deleteWorkoutStage(1L)).thenReturn(Mono.just(deletedStage))
 

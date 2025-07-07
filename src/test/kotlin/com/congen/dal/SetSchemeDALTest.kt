@@ -13,7 +13,6 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import org.mockito.kotlin.eq
 
 class SetSchemeDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -214,21 +213,22 @@ class SetSchemeDALTest {
                 createdSetScheme.restSeconds,
             ),
         ).thenReturn(Mono.just(createdSetScheme))
-        val result = setSchemeDAL.insertSetScheme(
-            createdSetScheme.programmedExerciseId,
-            createdSetScheme.setNumber,
-            createdSetScheme.isAmrap,
-            createdSetScheme.isEmom,
-            createdSetScheme.useTempo,
-            createdSetScheme.eccentricTempo,
-            createdSetScheme.isometricTempo,
-            createdSetScheme.concentricTempo,
-            createdSetScheme.targetWeight,
-            createdSetScheme.performedWeight,
-            createdSetScheme.targetRepCount,
-            createdSetScheme.performedRepCount,
-            createdSetScheme.restSeconds
-        )
+        val result =
+            setSchemeDAL.insertSetScheme(
+                createdSetScheme.programmedExerciseId,
+                createdSetScheme.setNumber,
+                createdSetScheme.isAmrap,
+                createdSetScheme.isEmom,
+                createdSetScheme.useTempo,
+                createdSetScheme.eccentricTempo,
+                createdSetScheme.isometricTempo,
+                createdSetScheme.concentricTempo,
+                createdSetScheme.targetWeight,
+                createdSetScheme.performedWeight,
+                createdSetScheme.targetRepCount,
+                createdSetScheme.performedRepCount,
+                createdSetScheme.restSeconds
+            )
         StepVerifier.create(result).expectNext(createdSetScheme).verifyComplete()
         verify(postgresClient).update<SetScheme>(
             expectedQuery,
@@ -313,24 +313,25 @@ class SetSchemeDALTest {
 
     @Test
     fun `updateSetScheme should return updated set scheme`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = true,
-            eccentricTempo = "3",
-            isometricTempo = "1",
-            concentricTempo = "1",
-            targetWeight = BigDecimal("100.0"),
-            performedWeight = BigDecimal("100.0"),
-            targetRepCount = 5,
-            performedRepCount = 5,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 5L,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = true,
+                eccentricTempo = "3",
+                isometricTempo = "1",
+                concentricTempo = "1",
+                targetWeight = BigDecimal("100.0"),
+                performedWeight = BigDecimal("100.0"),
+                targetRepCount = 5,
+                performedRepCount = 5,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
         val expectedQuery =
             """
             UPDATE set_scheme
@@ -359,22 +360,23 @@ class SetSchemeDALTest {
                 setScheme.restSeconds,
             ),
         ).thenReturn(Mono.just(setScheme))
-        val result = setSchemeDAL.updateSetScheme(
-            setScheme.id,
-            setScheme.programmedExerciseId,
-            setScheme.setNumber,
-            setScheme.isAmrap,
-            setScheme.isEmom,
-            setScheme.useTempo,
-            setScheme.eccentricTempo,
-            setScheme.isometricTempo,
-            setScheme.concentricTempo,
-            setScheme.targetWeight,
-            setScheme.performedWeight,
-            setScheme.targetRepCount,
-            setScheme.performedRepCount,
-            setScheme.restSeconds
-        )
+        val result =
+            setSchemeDAL.updateSetScheme(
+                setScheme.id,
+                setScheme.programmedExerciseId,
+                setScheme.setNumber,
+                setScheme.isAmrap,
+                setScheme.isEmom,
+                setScheme.useTempo,
+                setScheme.eccentricTempo,
+                setScheme.isometricTempo,
+                setScheme.concentricTempo,
+                setScheme.targetWeight,
+                setScheme.performedWeight,
+                setScheme.targetRepCount,
+                setScheme.performedRepCount,
+                setScheme.restSeconds
+            )
         StepVerifier.create(result).expectNext(setScheme).verifyComplete()
         verify(postgresClient).update<SetScheme>(
             expectedQuery,

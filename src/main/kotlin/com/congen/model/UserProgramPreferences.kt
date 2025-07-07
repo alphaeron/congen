@@ -40,6 +40,10 @@ data class UserProgramPreferences(
     @Schema(description = "Timestamp when the user program preferences were created", example = "2024-07-06T12:00:00Z", required = true)
     @param:JsonProperty("created_at") val createdAt: LocalDateTime,
     /** Timestamp when the user program preferences were last updated. */
-    @Schema(description = "Timestamp when the user program preferences were last updated", example = "2024-07-06T12:00:00Z", required = true)
+    @Schema(
+        description = "Timestamp when the user program preferences were last updated",
+        example = "2024-07-06T12:00:00Z",
+        required = true
+    )
     @param:JsonProperty("updated_at") val updatedAt: LocalDateTime,
 )

@@ -93,7 +93,9 @@ class SetSchemeServiceTest {
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(1L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Bench Press")).thenReturn(Mono.just(currentOneRepMax))
         whenever(userOneRepMaxDAL.updateUserOneRepMax(any(), any(), any())).thenReturn(Mono.just(currentOneRepMax))
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("110.0"))).thenReturn(Mono.just(UserOneRepMax(1, "Bench Press", BigDecimal("110.0"), now)))
+        whenever(
+            userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("110.0"))
+        ).thenReturn(Mono.just(UserOneRepMax(1, "Bench Press", BigDecimal("110.0"), now)))
 
         val result =
             setSchemeService.insertSetScheme(
@@ -597,33 +599,7 @@ class SetSchemeServiceTest {
 
     @Test
     fun `getSetSchemeById should return set scheme`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("135.0"),
-            performedWeight = null,
-            targetRepCount = 5,
-            performedRepCount = null,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
-        whenever(setSchemeDAL.selectSetSchemeById(1L)).thenReturn(Mono.just(setScheme))
-        val result = setSchemeService.selectSetSchemeById(1L)
-        StepVerifier.create(result).expectNext(setScheme).verifyComplete()
-        verify(setSchemeDAL).selectSetSchemeById(1L)
-    }
-
-    @Test
-    fun `getSetSchemesByProgrammedExercise should return list of set schemes`() {
-        val setSchemes = listOf(
+        val setScheme =
             SetScheme(
                 id = 1L,
                 programmedExerciseId = 5L,
@@ -641,11 +617,67 @@ class SetSchemeServiceTest {
                 restSeconds = 180,
                 createdAt = now,
                 updatedAt = now
-            ),
+            )
+        whenever(setSchemeDAL.selectSetSchemeById(1L)).thenReturn(Mono.just(setScheme))
+        val result = setSchemeService.selectSetSchemeById(1L)
+        StepVerifier.create(result).expectNext(setScheme).verifyComplete()
+        verify(setSchemeDAL).selectSetSchemeById(1L)
+    }
+
+    @Test
+    fun `getSetSchemesByProgrammedExercise should return list of set schemes`() {
+        val setSchemes =
+            listOf(
+                SetScheme(
+                    id = 1L,
+                    programmedExerciseId = 5L,
+                    setNumber = 1,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = null,
+                    isometricTempo = null,
+                    concentricTempo = null,
+                    targetWeight = BigDecimal("135.0"),
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180,
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                SetScheme(
+                    id = 2L,
+                    programmedExerciseId = 5L,
+                    setNumber = 2,
+                    isAmrap = false,
+                    isEmom = false,
+                    useTempo = false,
+                    eccentricTempo = null,
+                    isometricTempo = null,
+                    concentricTempo = null,
+                    targetWeight = BigDecimal("135.0"),
+                    performedWeight = null,
+                    targetRepCount = 5,
+                    performedRepCount = null,
+                    restSeconds = 180,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        whenever(setSchemeDAL.selectSetSchemesByProgrammedExerciseId(5L)).thenReturn(Mono.just(setSchemes))
+        val result = setSchemeService.selectSetSchemesByProgrammedExerciseId(5L)
+        StepVerifier.create(result).expectNext(setSchemes).verifyComplete()
+        verify(setSchemeDAL).selectSetSchemesByProgrammedExerciseId(5L)
+    }
+
+    @Test
+    fun `createSetScheme should return created set scheme`() {
+        val setScheme =
             SetScheme(
-                id = 2L,
+                id = 0L,
                 programmedExerciseId = 5L,
-                setNumber = 2,
+                setNumber = 1,
                 isAmrap = false,
                 isEmom = false,
                 useTempo = false,
@@ -660,46 +692,22 @@ class SetSchemeServiceTest {
                 createdAt = now,
                 updatedAt = now
             )
-        )
-        whenever(setSchemeDAL.selectSetSchemesByProgrammedExerciseId(5L)).thenReturn(Mono.just(setSchemes))
-        val result = setSchemeService.selectSetSchemesByProgrammedExerciseId(5L)
-        StepVerifier.create(result).expectNext(setSchemes).verifyComplete()
-        verify(setSchemeDAL).selectSetSchemesByProgrammedExerciseId(5L)
-    }
-
-    @Test
-    fun `createSetScheme should return created set scheme`() {
-        val setScheme = SetScheme(
-            id = 0L,
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("135.0"),
-            performedWeight = null,
-            targetRepCount = 5,
-            performedRepCount = null,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
-        val programmedExercise = ProgrammedExercise(
-            id = 5L,
-            workoutStageId = 1L,
-            exerciseName = "Bench Press",
-            position = 1,
-            notes = "Test exercise",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedExercise =
+            ProgrammedExercise(
+                id = 5L,
+                workoutStageId = 1L,
+                exerciseName = "Bench Press",
+                position = 1,
+                notes = "Test exercise",
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(5L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(5L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Bench Press")).thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("135.0"))).thenReturn(Mono.just(UserOneRepMax(1, "Bench Press", BigDecimal("135.0"), now)))
+        whenever(
+            userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("135.0"))
+        ).thenReturn(Mono.just(UserOneRepMax(1, "Bench Press", BigDecimal("135.0"), now)))
         whenever(
             setSchemeDAL.insertSetScheme(
                 programmedExerciseId = 5L,
@@ -717,21 +725,22 @@ class SetSchemeServiceTest {
                 restSeconds = 180
             )
         ).thenReturn(Mono.just(setScheme))
-        val result = setSchemeService.insertSetScheme(
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("135.0"),
-            performedWeight = null,
-            targetRepCount = 5,
-            performedRepCount = null,
-            restSeconds = 180
-        )
+        val result =
+            setSchemeService.insertSetScheme(
+                programmedExerciseId = 5L,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = BigDecimal("135.0"),
+                performedWeight = null,
+                targetRepCount = 5,
+                performedRepCount = null,
+                restSeconds = 180
+            )
         StepVerifier.create(result).expectNext(setScheme).verifyComplete()
         verify(setSchemeDAL).insertSetScheme(
             programmedExerciseId = 5L,
@@ -752,37 +761,41 @@ class SetSchemeServiceTest {
 
     @Test
     fun `updateSetScheme should return updated set scheme`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("135.0"),
-            performedWeight = BigDecimal("140.0"),
-            targetRepCount = 5,
-            performedRepCount = 6,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
-        val programmedExercise = ProgrammedExercise(
-            id = 5L,
-            workoutStageId = 1L,
-            exerciseName = "Bench Press",
-            position = 1,
-            notes = "Test exercise",
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 5L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = BigDecimal("135.0"),
+                performedWeight = BigDecimal("140.0"),
+                targetRepCount = 5,
+                performedRepCount = 6,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
+        val programmedExercise =
+            ProgrammedExercise(
+                id = 5L,
+                workoutStageId = 1L,
+                exerciseName = "Bench Press",
+                position = 1,
+                notes = "Test exercise",
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(5L)).thenReturn(Mono.just(1))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(5L)).thenReturn(Mono.just(programmedExercise))
         whenever(userOneRepMaxDAL.selectUserOneRepMax(1, "Bench Press")).thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("140.0"))).thenReturn(Mono.just(UserOneRepMax(1, "Bench Press", BigDecimal("140.0"), now)))
+        whenever(
+            userOneRepMaxDAL.insertUserOneRepMax(1, "Bench Press", BigDecimal("140.0"))
+        ).thenReturn(Mono.just(UserOneRepMax(1, "Bench Press", BigDecimal("140.0"), now)))
         whenever(
             setSchemeDAL.updateSetScheme(
                 id = 1L,
@@ -801,22 +814,23 @@ class SetSchemeServiceTest {
                 restSeconds = 180
             )
         ).thenReturn(Mono.just(setScheme))
-        val result = setSchemeService.updateSetScheme(
-            id = 1L,
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = true,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("135.0"),
-            performedWeight = BigDecimal("140.0"),
-            targetRepCount = 5,
-            performedRepCount = 6,
-            restSeconds = 180
-        )
+        val result =
+            setSchemeService.updateSetScheme(
+                id = 1L,
+                programmedExerciseId = 5L,
+                setNumber = 1,
+                isAmrap = true,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = BigDecimal("135.0"),
+                performedWeight = BigDecimal("140.0"),
+                targetRepCount = 5,
+                performedRepCount = 6,
+                restSeconds = 180
+            )
         StepVerifier.create(result).expectNext(setScheme).verifyComplete()
         verify(setSchemeDAL).updateSetScheme(
             id = 1L,
@@ -838,24 +852,25 @@ class SetSchemeServiceTest {
 
     @Test
     fun `deleteSetScheme should return deleted set scheme`() {
-        val setScheme = SetScheme(
-            id = 1L,
-            programmedExerciseId = 5L,
-            setNumber = 1,
-            isAmrap = false,
-            isEmom = false,
-            useTempo = false,
-            eccentricTempo = null,
-            isometricTempo = null,
-            concentricTempo = null,
-            targetWeight = BigDecimal("135.0"),
-            performedWeight = null,
-            targetRepCount = 5,
-            performedRepCount = null,
-            restSeconds = 180,
-            createdAt = now,
-            updatedAt = now
-        )
+        val setScheme =
+            SetScheme(
+                id = 1L,
+                programmedExerciseId = 5L,
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = BigDecimal("135.0"),
+                performedWeight = null,
+                targetRepCount = 5,
+                performedRepCount = null,
+                restSeconds = 180,
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(setSchemeDAL.deleteSetScheme(1L)).thenReturn(Mono.just(setScheme))
         val result = setSchemeService.deleteSetScheme(1L)
         StepVerifier.create(result).expectNext(setScheme).verifyComplete()

@@ -3,10 +3,6 @@ package com.congen.controllers
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.ProgrammedExercise
-import com.congen.model.ProgrammedWorkout
-import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageType
-import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -57,8 +53,6 @@ class ProgrammedExerciseControllerTest {
                 updatedAt = now
             )
     }
-
-
 
     @Test
     fun `save should create new programmed exercise successfully`() {
@@ -166,10 +160,18 @@ class ProgrammedExerciseControllerTest {
     @Test
     fun `getByStage should return programmed exercises for stage`() {
         // Given
-        val programmedExercises = listOf(
-            testProgrammedExercise,
-            testProgrammedExercise.copy(id = 2L, exerciseName = "Squat", position = 2, notes = "Updated notes", createdAt = now, updatedAt = now)
-        )
+        val programmedExercises =
+            listOf(
+                testProgrammedExercise,
+                testProgrammedExercise.copy(
+                    id = 2L,
+                    exerciseName = "Squat",
+                    position = 2,
+                    notes = "Updated notes",
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
 
         whenever(programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(5L)).thenReturn(Mono.just(programmedExercises))
 
@@ -189,10 +191,18 @@ class ProgrammedExerciseControllerTest {
     @Test
     fun `getAll should return all programmed exercises`() {
         // Given
-        val programmedExercises = listOf(
-            testProgrammedExercise,
-            testProgrammedExercise.copy(id = 2L, exerciseName = "Squat", position = 2, notes = "Updated notes", createdAt = now, updatedAt = now)
-        )
+        val programmedExercises =
+            listOf(
+                testProgrammedExercise,
+                testProgrammedExercise.copy(
+                    id = 2L,
+                    exerciseName = "Squat",
+                    position = 2,
+                    notes = "Updated notes",
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
 
         whenever(programmedExerciseDAL.selectProgrammedExercises()).thenReturn(Mono.just(programmedExercises))
 

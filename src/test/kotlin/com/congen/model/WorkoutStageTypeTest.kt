@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
-import java.time.LocalDateTime
-import kotlin.test.assertTrue
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 @SpringBootTest
 class WorkoutStageTypeTest {
@@ -19,11 +18,12 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should create workout stage type with valid parameters`() {
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
         assertEquals(1, workoutStageType.id)
         assertEquals(WorkoutStageTypeEnum.PRIMARY, workoutStageType.name)
@@ -32,11 +32,12 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should create workout stage type with accessory type`() {
-        val workoutStageType = WorkoutStageType(
-            id = 2,
-            name = WorkoutStageTypeEnum.ACCESSORY,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 2,
+                name = WorkoutStageTypeEnum.ACCESSORY,
+                createdAt = now
+            )
 
         assertEquals(2, workoutStageType.id)
         assertEquals(WorkoutStageTypeEnum.ACCESSORY, workoutStageType.name)
@@ -44,11 +45,12 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should create workout stage type with warmup type`() {
-        val workoutStageType = WorkoutStageType(
-            id = 3,
-            name = WorkoutStageTypeEnum.WARMUP,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 3,
+                name = WorkoutStageTypeEnum.WARMUP,
+                createdAt = now
+            )
 
         assertEquals(3, workoutStageType.id)
         assertEquals(WorkoutStageTypeEnum.WARMUP, workoutStageType.name)
@@ -56,11 +58,12 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should create workout stage type with cooldown type`() {
-        val workoutStageType = WorkoutStageType(
-            id = 4,
-            name = WorkoutStageTypeEnum.COOLDOWN,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 4,
+                name = WorkoutStageTypeEnum.COOLDOWN,
+                createdAt = now
+            )
 
         assertEquals(4, workoutStageType.id)
         assertEquals(WorkoutStageTypeEnum.COOLDOWN, workoutStageType.name)
@@ -69,27 +72,30 @@ class WorkoutStageTypeTest {
     @Test
     fun `should handle different timestamps`() {
         val createdAt = LocalDateTime.of(2024, 1, 1, 10, 0, 0)
-        
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = createdAt
-        )
+
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = createdAt
+            )
 
         assertEquals(createdAt, workoutStageType.createdAt)
     }
 
     @Test
     fun `should support data class copy`() {
-        val originalType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val originalType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
-        val updatedType = originalType.copy(
-            name = WorkoutStageTypeEnum.ACCESSORY
-        )
+        val updatedType =
+            originalType.copy(
+                name = WorkoutStageTypeEnum.ACCESSORY
+            )
 
         assertEquals(1, updatedType.id)
         assertEquals(WorkoutStageTypeEnum.ACCESSORY, updatedType.name)
@@ -98,23 +104,26 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should support data class equality`() {
-        val type1 = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val type1 =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
-        val type2 = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val type2 =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
-        val type3 = WorkoutStageType(
-            id = 2,
-            name = WorkoutStageTypeEnum.ACCESSORY,
-            createdAt = now
-        )
+        val type3 =
+            WorkoutStageType(
+                id = 2,
+                name = WorkoutStageTypeEnum.ACCESSORY,
+                createdAt = now
+            )
 
         assertEquals(type1, type2)
         assertNotNull(type1 != type3)
@@ -122,11 +131,12 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should support data class toString`() {
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
         val toString = workoutStageType.toString()
         assertNotNull(toString)
@@ -137,28 +147,31 @@ class WorkoutStageTypeTest {
 
     @Test
     fun `should support data class hashCode`() {
-        val type1 = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val type1 =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
-        val type2 = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val type2 =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
         assertEquals(type1.hashCode(), type2.hashCode())
     }
 
     @Test
     fun `should support data class component functions`() {
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = now
+            )
 
         val (id, name, createdAt) = workoutStageType
 

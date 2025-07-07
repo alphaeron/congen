@@ -403,4 +403,4 @@ class PrilepinGuidelinesServiceTest {
         assertEquals(180..300, guidelines.restSeconds)
         assertTrue(intensity in 0.8..0.9)
     }
-} 
+}

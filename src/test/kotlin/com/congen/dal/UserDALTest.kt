@@ -25,15 +25,16 @@ class UserDALTest {
 
     @Test
     fun `selectUserById should return user`() {
-        val user = User(
-            id = 1, 
-            name = "John Doe", 
-            age = 30, 
-            height = BigDecimal("180.5"), 
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(postgresClient.selectIndividual<User>("SELECT * FROM \"user\" WHERE id=$1", 1)).thenReturn(Mono.just(user))
         val result = userDAL.selectUserById(1)
         StepVerifier.create(result).expectNext(user).verifyComplete()
@@ -42,15 +43,18 @@ class UserDALTest {
 
     @Test
     fun `selectUsers should return list of users`() {
-        val users = listOf(User(
-            id = 1, 
-            name = "John Doe", 
-            age = 30, 
-            height = BigDecimal("180.5"), 
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        ))
+        val users =
+            listOf(
+                User(
+                    id = 1,
+                    name = "John Doe",
+                    age = 30,
+                    height = BigDecimal("180.5"),
+                    weight = BigDecimal("75.0"),
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
         whenever(postgresClient.select<User>("SELECT * FROM \"user\"")).thenReturn(Mono.just(users))
         val result = userDAL.selectUsers()
         StepVerifier.create(result).expectNext(users).verifyComplete()
@@ -59,15 +63,16 @@ class UserDALTest {
 
     @Test
     fun `insertUser should return inserted user`() {
-        val user = User(
-            id = 0, 
-            name = "John Doe", 
-            age = 30, 
-            height = BigDecimal("180.5"), 
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 0,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(
             postgresClient.update<User>(
                 """
@@ -100,15 +105,16 @@ class UserDALTest {
 
     @Test
     fun `updateUser should return updated user`() {
-        val user = User(
-            id = 1, 
-            name = "John Doe", 
-            age = 31, 
-            height = BigDecimal("180.5"), 
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 31,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(
             postgresClient.update<User>(
                 """
@@ -141,15 +147,16 @@ class UserDALTest {
 
     @Test
     fun `deleteUser should return deleted user`() {
-        val user = User(
-            id = 1, 
-            name = "John Doe", 
-            age = 30, 
-            height = BigDecimal("180.5"), 
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(
             postgresClient.update<User>("DELETE FROM \"user\" WHERE id=$1", 1),
         ).thenReturn(Mono.just(user))

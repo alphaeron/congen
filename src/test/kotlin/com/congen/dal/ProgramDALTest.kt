@@ -10,7 +10,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.LocalDateTime
-import org.mockito.kotlin.eq
 
 class ProgramDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -106,12 +105,13 @@ class ProgramDALTest {
                 updatedAt = java.time.LocalDateTime.now()
             )
 
-        val expectedQuery = """
+        val expectedQuery =
+            """
             INSERT INTO program
                 (user_id, name, current_week_number)
             VALUES
                 ($1, $2, $3)
-        """.trimIndent()
+            """.trimIndent()
 
         whenever(
             postgresClient.update<Program>(

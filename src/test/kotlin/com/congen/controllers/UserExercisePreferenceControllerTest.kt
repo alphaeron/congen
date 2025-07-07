@@ -38,13 +38,16 @@ class UserExercisePreferenceControllerTest {
         val exerciseName = "Bench Press"
         val shouldAvoid = false
         val now = LocalDateTime.now()
-        val userExercisePreference = UserExercisePreference(
-            userId = userId,
-            exerciseName = exerciseName,
-            shouldAvoid = shouldAvoid,
-            createdAt = now
-        )
-        whenever(userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)).thenReturn(Mono.just(userExercisePreference))
+        val userExercisePreference =
+            UserExercisePreference(
+                userId = userId,
+                exerciseName = exerciseName,
+                shouldAvoid = shouldAvoid,
+                createdAt = now
+            )
+        whenever(
+            userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
+        ).thenReturn(Mono.just(userExercisePreference))
 
         val result = userExercisePreferenceController.save(userId, exerciseName, shouldAvoid)
 
@@ -61,20 +64,21 @@ class UserExercisePreferenceControllerTest {
     fun `getByUser should return user exercise preferences when found`() {
         val userId = 1
         val now = LocalDateTime.now()
-        val userExercisePreferences = listOf(
-            UserExercisePreference(
-                userId = userId,
-                exerciseName = "Bench Press",
-                shouldAvoid = false,
-                createdAt = now
-            ),
-            UserExercisePreference(
-                userId = userId,
-                exerciseName = "Squat",
-                shouldAvoid = false,
-                createdAt = now
+        val userExercisePreferences =
+            listOf(
+                UserExercisePreference(
+                    userId = userId,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = false,
+                    createdAt = now
+                ),
+                UserExercisePreference(
+                    userId = userId,
+                    exerciseName = "Squat",
+                    shouldAvoid = false,
+                    createdAt = now
+                )
             )
-        )
 
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(userExercisePreferences))
 
@@ -93,12 +97,13 @@ class UserExercisePreferenceControllerTest {
         val exerciseName = "Bench Press"
         val shouldAvoid = false
         val now = LocalDateTime.now()
-        val userExercisePreference = UserExercisePreference(
-            userId = userId,
-            exerciseName = exerciseName,
-            shouldAvoid = shouldAvoid,
-            createdAt = now
-        )
+        val userExercisePreference =
+            UserExercisePreference(
+                userId = userId,
+                exerciseName = exerciseName,
+                shouldAvoid = shouldAvoid,
+                createdAt = now
+            )
         whenever(userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)).thenReturn(Mono.just(userExercisePreference))
 
         val result = userExercisePreferenceController.delete(userExercisePreference)
@@ -118,7 +123,9 @@ class UserExercisePreferenceControllerTest {
         val exerciseName = "Bench Press"
         val shouldAvoid = false
 
-        whenever(userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userExercisePreferenceController.save(userId, exerciseName, shouldAvoid)
 
@@ -133,7 +140,9 @@ class UserExercisePreferenceControllerTest {
     fun `should handle DAL error gracefully for getByUser`() {
         val userId = 1
 
-        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userExercisePreferenceController.getByUser(userId)
 
@@ -148,14 +157,17 @@ class UserExercisePreferenceControllerTest {
         val exerciseName = "Bench Press"
         val shouldAvoid = false
         val now = LocalDateTime.now()
-        val userExercisePreference = UserExercisePreference(
-            userId = userId,
-            exerciseName = exerciseName,
-            shouldAvoid = shouldAvoid,
-            createdAt = now
-        )
+        val userExercisePreference =
+            UserExercisePreference(
+                userId = userId,
+                exerciseName = exerciseName,
+                shouldAvoid = shouldAvoid,
+                createdAt = now
+            )
 
-        whenever(userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = userExercisePreferenceController.delete(userExercisePreference)
 

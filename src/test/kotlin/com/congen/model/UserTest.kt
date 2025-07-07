@@ -10,15 +10,16 @@ class UserTest {
 
     @Test
     fun `should create user with correct properties`() {
-        val user = User(
-            id = 1, 
-            name = "John Doe", 
-            age = 30, 
-            height = BigDecimal("180.5"), 
-            weight = BigDecimal("75.0"),
-            createdAt = now,
-            updatedAt = now
-        )
+        val user =
+            User(
+                id = 1,
+                name = "John Doe",
+                age = 30,
+                height = BigDecimal("180.5"),
+                weight = BigDecimal("75.0"),
+                createdAt = now,
+                updatedAt = now
+            )
         assertEquals(1, user.id)
         assertEquals("John Doe", user.name)
         assertEquals(30, user.age)

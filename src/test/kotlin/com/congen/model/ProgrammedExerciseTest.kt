@@ -1,18 +1,17 @@
 package com.congen.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import java.time.LocalDateTime
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @SpringBootTest
 class ProgrammedExerciseTest {
-
     @Autowired
     private lateinit var objectMapper: ObjectMapper
     private val now = LocalDateTime.now()
@@ -465,15 +464,16 @@ class ProgrammedExerciseTest {
 
     @Test
     fun `test programmed exercise serialization`() {
-        val programmedExercise = ProgrammedExercise(
-            id = 1L,
-            workoutStageId = 5L,
-            exerciseName = "Bench Press",
-            position = 1,
-            notes = "Focus on controlled descent",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedExercise =
+            ProgrammedExercise(
+                id = 1L,
+                workoutStageId = 5L,
+                exerciseName = "Bench Press",
+                position = 1,
+                notes = "Focus on controlled descent",
+                createdAt = now,
+                updatedAt = now
+            )
 
         val json = objectMapper.writeValueAsString(programmedExercise)
 
@@ -482,23 +482,24 @@ class ProgrammedExerciseTest {
         assertTrue(json.contains("\"exercise_name\":\"Bench Press\""))
         assertTrue(json.contains("\"position\":1"))
         assertTrue(json.contains("\"notes\":\"Focus on controlled descent\""))
-        assertTrue(json.contains("\"created_at\":\"${now.toString()}\""))
-        assertTrue(json.contains("\"updated_at\":\"${now.toString()}\""))
+        assertTrue(json.contains("\"created_at\":\"$now\""))
+        assertTrue(json.contains("\"updated_at\":\"$now\""))
     }
 
     @Test
     fun `test programmed exercise deserialization`() {
-        val json = """
+        val json =
+            """
             {
                 "id": 1,
                 "workout_stage_id": 5,
                 "exercise_name": "Bench Press",
                 "position": 1,
                 "notes": "Focus on controlled descent",
-                "created_at": "${now.toString()}",
-                "updated_at": "${now.toString()}"
+                "created_at": "$now",
+                "updated_at": "$now"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
 
@@ -513,17 +514,18 @@ class ProgrammedExerciseTest {
 
     @Test
     fun `test programmed exercise deserialization with null notes`() {
-        val json = """
+        val json =
+            """
             {
                 "id": 1,
                 "workout_stage_id": 5,
                 "exercise_name": "Bench Press",
                 "position": 1,
                 "notes": null,
-                "created_at": "${now.toString()}",
-                "updated_at": "${now.toString()}"
+                "created_at": "$now",
+                "updated_at": "$now"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
 
@@ -538,18 +540,19 @@ class ProgrammedExerciseTest {
 
     @Test
     fun `test programmed exercise deserialization with unknown properties`() {
-        val json = """
+        val json =
+            """
             {
                 "id": 1,
                 "workout_stage_id": 5,
                 "exercise_name": "Bench Press",
                 "position": 1,
                 "notes": "Focus on controlled descent",
-                "created_at": "${now.toString()}",
-                "updated_at": "${now.toString()}",
+                "created_at": "$now",
+                "updated_at": "$now",
                 "unknown_property": "should be ignored"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val programmedExercise = objectMapper.readValue(json, ProgrammedExercise::class.java)
 

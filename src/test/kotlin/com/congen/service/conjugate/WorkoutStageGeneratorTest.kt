@@ -44,13 +44,14 @@ class WorkoutStageGeneratorTest {
         programmedExerciseDAL = mock()
         setSchemeDAL = mock()
         prilepinGuidelinesService = mock()
-        workoutStageGenerator = WorkoutStageGenerator(
-            workoutStageDAL = workoutStageDAL,
-            workoutStageTypeDAL = workoutStageTypeDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL,
-            prilepinGuidelinesService = prilepinGuidelinesService
-        )
+        workoutStageGenerator =
+            WorkoutStageGenerator(
+                workoutStageDAL = workoutStageDAL,
+                workoutStageTypeDAL = workoutStageTypeDAL,
+                programmedExerciseDAL = programmedExerciseDAL,
+                setSchemeDAL = setSchemeDAL,
+                prilepinGuidelinesService = prilepinGuidelinesService
+            )
     }
 
     @Test
@@ -58,11 +59,12 @@ class WorkoutStageGeneratorTest {
         val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.PRIMARY
         val position = 1
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = LocalDateTime.now()
+            )
         val expectedStage =
             WorkoutStage(
                 id = 1L,
@@ -97,11 +99,12 @@ class WorkoutStageGeneratorTest {
         val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.SECONDARY
         val position = 2
-        val workoutStageType = WorkoutStageType(
-            id = 2,
-            name = WorkoutStageTypeEnum.SECONDARY,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 2,
+                name = WorkoutStageTypeEnum.SECONDARY,
+                createdAt = LocalDateTime.now()
+            )
         val expectedStage =
             WorkoutStage(
                 id = 2L,
@@ -136,11 +139,12 @@ class WorkoutStageGeneratorTest {
         val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.ACCESSORY
         val position = 3
-        val workoutStageType = WorkoutStageType(
-            id = 3,
-            name = WorkoutStageTypeEnum.ACCESSORY,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 3,
+                name = WorkoutStageTypeEnum.ACCESSORY,
+                createdAt = LocalDateTime.now()
+            )
         val expectedStage =
             WorkoutStage(
                 id = 3L,
@@ -175,11 +179,12 @@ class WorkoutStageGeneratorTest {
         val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.CONDITIONING
         val position = 4
-        val workoutStageType = WorkoutStageType(
-            id = 4,
-            name = WorkoutStageTypeEnum.CONDITIONING,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 4,
+                name = WorkoutStageTypeEnum.CONDITIONING,
+                createdAt = LocalDateTime.now()
+            )
         val expectedStage =
             WorkoutStage(
                 id = 4L,
@@ -214,11 +219,12 @@ class WorkoutStageGeneratorTest {
         val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.PRIMARY
         val position = 1
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.PRIMARY,
-            createdAt = LocalDateTime.now()
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.PRIMARY,
+                createdAt = LocalDateTime.now()
+            )
         val expectedStage =
             WorkoutStage(
                 id = 1L,

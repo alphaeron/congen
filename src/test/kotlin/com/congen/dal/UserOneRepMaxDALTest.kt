@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import org.mockito.kotlin.eq
 
 /**
  * Unit tests for UserOneRepMaxDAL.
@@ -40,12 +39,13 @@ class UserOneRepMaxDALTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("225.5")
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = now
+            )
 
         whenever(
             postgresClient.update<UserOneRepMax>(
@@ -87,12 +87,13 @@ class UserOneRepMaxDALTest {
         // Given
         val userId = 1
         val exerciseName = "Bench Press"
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = BigDecimal("225.5"),
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = BigDecimal("225.5"),
+                updatedAt = now
+            )
 
         whenever(
             postgresClient.selectIndividual<UserOneRepMax>(
@@ -193,12 +194,13 @@ class UserOneRepMaxDALTest {
         val userId = 1
         val exerciseName = "Bench Press"
         val oneRepMax = BigDecimal("250.0")
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = now
+            )
         val expectedQuery =
             """
             UPDATE user_one_rep_max
@@ -272,12 +274,13 @@ class UserOneRepMaxDALTest {
         // Given
         val userId = 1
         val exerciseName = "Bench Press"
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = BigDecimal("225.5"),
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = BigDecimal("225.5"),
+                updatedAt = now
+            )
 
         whenever(
             postgresClient.update<UserOneRepMax>(
@@ -337,12 +340,13 @@ class UserOneRepMaxDALTest {
         val userId = 1
         val exerciseName = "Deadlift"
         val oneRepMax = BigDecimal("225.5")
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = now
+            )
 
         whenever(
             postgresClient.update<UserOneRepMax>(
@@ -385,12 +389,13 @@ class UserOneRepMaxDALTest {
         val userId = 1
         val exerciseName = "Barbell Bench Press (Incline)"
         val oneRepMax = BigDecimal("120.0")
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = now
+            )
 
         whenever(
             postgresClient.update<UserOneRepMax>(
@@ -433,12 +438,13 @@ class UserOneRepMaxDALTest {
         val userId = 1
         val exerciseName = "Heavy Deadlift"
         val oneRepMax = BigDecimal("500.0")
-        val userOneRepMax = UserOneRepMax(
-            userId = userId,
-            exerciseName = exerciseName,
-            oneRepMax = oneRepMax,
-            updatedAt = now
-        )
+        val userOneRepMax =
+            UserOneRepMax(
+                userId = userId,
+                exerciseName = exerciseName,
+                oneRepMax = oneRepMax,
+                updatedAt = now
+            )
 
         whenever(
             postgresClient.update<UserOneRepMax>(

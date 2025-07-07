@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -37,11 +36,12 @@ class WorkoutStageTypeControllerTest {
     @Test
     fun `get should return workout stage type when found`() {
         val now = LocalDateTime.now()
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.WARMUP,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.WARMUP,
+                createdAt = now
+            )
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeById(1)).thenReturn(Mono.just(workoutStageType))
 
         val result = workoutStageTypeController.get(1)
@@ -69,11 +69,12 @@ class WorkoutStageTypeControllerTest {
     @Test
     fun `getByName should return workout stage type when found`() {
         val now = LocalDateTime.now()
-        val workoutStageType = WorkoutStageType(
-            id = 1,
-            name = WorkoutStageTypeEnum.WARMUP,
-            createdAt = now
-        )
+        val workoutStageType =
+            WorkoutStageType(
+                id = 1,
+                name = WorkoutStageTypeEnum.WARMUP,
+                createdAt = now
+            )
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)).thenReturn(Mono.just(workoutStageType))
 
         val result = workoutStageTypeController.getByName("Warmup")
@@ -87,7 +88,9 @@ class WorkoutStageTypeControllerTest {
 
     @Test
     fun `getByName should return not found when workout stage type not found`() {
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)).thenReturn(Mono.error(NoResultsFoundException("Not found")))
+        whenever(
+            workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)
+        ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
 
         val result = workoutStageTypeController.getByName("Warmup")
 
@@ -101,18 +104,19 @@ class WorkoutStageTypeControllerTest {
     @Test
     fun `getAll should return all workout stage types`() {
         val now = LocalDateTime.now()
-        val workoutStageTypes = listOf(
-            WorkoutStageType(
-                id = 1,
-                name = WorkoutStageTypeEnum.WARMUP,
-                createdAt = now
-            ),
-            WorkoutStageType(
-                id = 2,
-                name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = now
+        val workoutStageTypes =
+            listOf(
+                WorkoutStageType(
+                    id = 1,
+                    name = WorkoutStageTypeEnum.WARMUP,
+                    createdAt = now
+                ),
+                WorkoutStageType(
+                    id = 2,
+                    name = WorkoutStageTypeEnum.PRIMARY,
+                    createdAt = now
+                )
             )
-        )
         whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.just(workoutStageTypes))
 
         val result = workoutStageTypeController.getAll()
@@ -135,6 +139,3 @@ class WorkoutStageTypeControllerTest {
             .verify()
     }
 }
-
-
-

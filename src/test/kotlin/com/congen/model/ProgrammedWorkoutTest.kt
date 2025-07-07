@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @SpringBootTest
 class ProgrammedWorkoutTest {
@@ -19,14 +18,15 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout creation with all fields`() {
-        val programmedWorkout = ProgrammedWorkout(
-            id = 1L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Week 1 - Upper Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Week 1 - Upper Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(1L, programmedWorkout.id)
         assertEquals(123L, programmedWorkout.programId)
@@ -38,14 +38,15 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout creation with minimal fields`() {
-        val programmedWorkout = ProgrammedWorkout(
-            id = 2L,
-            programId = 456L,
-            dayNumber = 2,
-            name = "Week 2 - Lower Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 2L,
+                programId = 456L,
+                dayNumber = 2,
+                name = "Week 2 - Lower Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(2L, programmedWorkout.id)
         assertEquals(456L, programmedWorkout.programId)
@@ -57,14 +58,15 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout serialization`() {
-        val programmedWorkout = ProgrammedWorkout(
-            id = 1L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Week 1 - Upper Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Week 1 - Upper Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
         val json = objectMapper.writeValueAsString(programmedWorkout)
         val nowString = now.format(DateTimeFormatter.ISO_DATE_TIME)
@@ -79,16 +81,17 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout deserialization`() {
-        val json = """
+        val json =
+            """
             {
                 "id": 1,
                 "program_id": 123,
                 "day_number": 1,
                 "name": "Week 1 - Upper Body",
-                "created_at": "${now.toString()}",
-                "updated_at": "${now.toString()}"
+                "created_at": "$now",
+                "updated_at": "$now"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val programmedWorkout = objectMapper.readValue(json, ProgrammedWorkout::class.java)
 
@@ -102,16 +105,17 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout deserialization with null description`() {
-        val json = """
+        val json =
+            """
             {
                 "id": 1,
                 "program_id": 123,
                 "day_number": 1,
                 "name": "Week 1 - Upper Body",
-                "created_at": "${now.toString()}",
-                "updated_at": "${now.toString()}"
+                "created_at": "$now",
+                "updated_at": "$now"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val programmedWorkout = objectMapper.readValue(json, ProgrammedWorkout::class.java)
 
@@ -125,17 +129,18 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout deserialization with unknown properties`() {
-        val json = """
+        val json =
+            """
             {
                 "id": 1,
                 "program_id": 123,
                 "day_number": 1,
                 "name": "Week 1 - Upper Body",
-                "created_at": "${now.toString()}",
-                "updated_at": "${now.toString()}",
+                "created_at": "$now",
+                "updated_at": "$now",
                 "unknown_property": "should be ignored"
             }
-        """.trimIndent()
+            """.trimIndent()
 
         val programmedWorkout = objectMapper.readValue(json, ProgrammedWorkout::class.java)
 
@@ -149,32 +154,35 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout equality`() {
-        val workout1 = ProgrammedWorkout(
-            id = 1L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Week 1 - Upper Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workout1 =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Week 1 - Upper Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val workout2 = ProgrammedWorkout(
-            id = 1L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Week 1 - Upper Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workout2 =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Week 1 - Upper Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val workout3 = ProgrammedWorkout(
-            id = 2L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Week 1 - Upper Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val workout3 =
+            ProgrammedWorkout(
+                id = 2L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Week 1 - Upper Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
         assertEquals(workout1, workout2)
         assertEquals(workout1.hashCode(), workout2.hashCode())
@@ -184,18 +192,20 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout copy`() {
-        val original = ProgrammedWorkout(
-            id = 1L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Original Workout",
-            createdAt = now,
-            updatedAt = now
-        )
+        val original =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Original Workout",
+                createdAt = now,
+                updatedAt = now
+            )
 
-        val copied = original.copy(
-            name = "Copied Workout"
-        )
+        val copied =
+            original.copy(
+                name = "Copied Workout"
+            )
 
         assertEquals(1L, copied.id)
         assertEquals(123L, copied.programId)
@@ -207,14 +217,15 @@ class ProgrammedWorkoutTest {
 
     @Test
     fun `test programmed workout toString`() {
-        val programmedWorkout = ProgrammedWorkout(
-            id = 1L,
-            programId = 123L,
-            dayNumber = 1,
-            name = "Week 1 - Upper Body",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 123L,
+                dayNumber = 1,
+                name = "Week 1 - Upper Body",
+                createdAt = now,
+                updatedAt = now
+            )
 
         val toString = programmedWorkout.toString()
         assertTrue(toString.contains("id=1"))

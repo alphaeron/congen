@@ -35,24 +35,25 @@ class ProgrammedWorkoutControllerTest {
     @Test
     fun `should get all programmed workouts`() {
         val now = LocalDateTime.now()
-        val programmedWorkouts = listOf(
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Workout 1",
-                createdAt = now,
-                updatedAt = now
-            ),
-            ProgrammedWorkout(
-                id = 2L,
-                programId = 1L,
-                dayNumber = 2,
-                name = "Workout 2",
-                createdAt = now,
-                updatedAt = now
+        val programmedWorkouts =
+            listOf(
+                ProgrammedWorkout(
+                    id = 1L,
+                    programId = 1L,
+                    dayNumber = 1,
+                    name = "Workout 1",
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                ProgrammedWorkout(
+                    id = 2L,
+                    programId = 1L,
+                    dayNumber = 2,
+                    name = "Workout 2",
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
-        )
 
         whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.just(programmedWorkouts))
 
@@ -70,14 +71,15 @@ class ProgrammedWorkoutControllerTest {
     @Test
     fun `should get programmed workout by id`() {
         val now = LocalDateTime.now()
-        val programmedWorkout = ProgrammedWorkout(
-            id = 1L,
-            programId = 1L,
-            dayNumber = 1,
-            name = "Test Workout",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "Test Workout",
+                createdAt = now,
+                updatedAt = now
+            )
 
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(1L)).thenReturn(Mono.just(programmedWorkout))
 
@@ -109,14 +111,15 @@ class ProgrammedWorkoutControllerTest {
         val programId = 1L
         val dayNumber = 1
         val name = "New Workout"
-        val programmedWorkout = ProgrammedWorkout(
-            id = 0L,
-            programId = programId,
-            dayNumber = dayNumber,
-            name = name,
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 0L,
+                programId = programId,
+                dayNumber = dayNumber,
+                name = name,
+                createdAt = now,
+                updatedAt = now
+            )
         val savedProgrammedWorkout = programmedWorkout.copy(id = 1L)
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(programId, dayNumber, name)).thenReturn(Mono.just(savedProgrammedWorkout))
 
@@ -136,14 +139,15 @@ class ProgrammedWorkoutControllerTest {
         val programId = 1L
         val dayNumber = 2
         val name = "Updated Workout"
-        val programmedWorkout = ProgrammedWorkout(
-            id = id,
-            programId = programId,
-            dayNumber = dayNumber,
-            name = name,
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = id,
+                programId = programId,
+                dayNumber = dayNumber,
+                name = name,
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(programmedWorkoutDAL.updateProgrammedWorkout(id, programId, dayNumber, name)).thenReturn(Mono.just(programmedWorkout))
 
         val result = programmedWorkoutController.update(id, programId, dayNumber, name)
@@ -171,14 +175,15 @@ class ProgrammedWorkoutControllerTest {
     @Test
     fun `should delete programmed workout`() {
         val now = LocalDateTime.now()
-        val programmedWorkout = ProgrammedWorkout(
-            id = 1L,
-            programId = 1L,
-            dayNumber = 1,
-            name = "Test Workout",
-            createdAt = now,
-            updatedAt = now
-        )
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "Test Workout",
+                createdAt = now,
+                updatedAt = now
+            )
         whenever(programmedWorkoutDAL.deleteProgrammedWorkout(1L)).thenReturn(Mono.just(programmedWorkout))
 
         val result = programmedWorkoutController.delete(1L)
@@ -207,24 +212,25 @@ class ProgrammedWorkoutControllerTest {
     fun `should get programmed workouts by program`() {
         val now = LocalDateTime.now()
         val programId = 1L
-        val programmedWorkouts = listOf(
-            ProgrammedWorkout(
-                id = 1L,
-                programId = programId,
-                dayNumber = 1,
-                name = "Workout 1",
-                createdAt = now,
-                updatedAt = now
-            ),
-            ProgrammedWorkout(
-                id = 2L,
-                programId = programId,
-                dayNumber = 2,
-                name = "Workout 2",
-                createdAt = now,
-                updatedAt = now
+        val programmedWorkouts =
+            listOf(
+                ProgrammedWorkout(
+                    id = 1L,
+                    programId = programId,
+                    dayNumber = 1,
+                    name = "Workout 1",
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                ProgrammedWorkout(
+                    id = 2L,
+                    programId = programId,
+                    dayNumber = 2,
+                    name = "Workout 2",
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
-        )
 
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)).thenReturn(Mono.just(programmedWorkouts))
 

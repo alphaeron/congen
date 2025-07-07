@@ -9,12 +9,13 @@ class UserExercisePreferenceTest {
 
     @Test
     fun `should create user exercise preference with correct properties`() {
-        val pref = UserExercisePreference(
-            userId = 1, 
-            exerciseName = "Bench Press", 
-            shouldAvoid = true,
-            createdAt = now
-        )
+        val pref =
+            UserExercisePreference(
+                userId = 1,
+                exerciseName = "Bench Press",
+                shouldAvoid = true,
+                createdAt = now
+            )
         assertEquals(1, pref.userId)
         assertEquals("Bench Press", pref.exerciseName)
         assertEquals(true, pref.shouldAvoid)

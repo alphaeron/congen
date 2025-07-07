@@ -6,13 +6,13 @@ import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 class ExerciseSelectionServiceTest {
     private lateinit var exerciseSelectionService: ExerciseSelectionService
@@ -542,4 +542,4 @@ class ExerciseSelectionServiceTest {
         assertNotNull(result)
         assertEquals("Bench Press", result.name)
     }
-} 
+}

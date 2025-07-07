@@ -17,17 +17,13 @@ import com.congen.exceptions.ValidationException
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
-import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
-import com.congen.model.User
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageType
-import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.conjugate.ConjugateTemplates
 import com.congen.service.conjugate.ExerciseSelectionService
 import com.congen.service.conjugate.SessionTimeCalculator
@@ -37,7 +33,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
@@ -102,20 +97,21 @@ class ConjugateWorkoutGeneratorServiceTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        conjugateWorkoutGeneratorService = ConjugateWorkoutGeneratorService(
-            exerciseDAL,
-            userExercisePreferenceDAL,
-            userEquipmentDAL,
-            userOneRepMaxDAL,
-            userProgramPreferencesDAL,
-            exerciseRotationHistoryDAL,
-            programDAL,
-            programmedWorkoutDAL,
-            conjugateTemplates,
-            exerciseSelectionService,
-            workoutStageGenerator,
-            sessionTimeCalculator
-        )
+        conjugateWorkoutGeneratorService =
+            ConjugateWorkoutGeneratorService(
+                exerciseDAL,
+                userExercisePreferenceDAL,
+                userEquipmentDAL,
+                userOneRepMaxDAL,
+                userProgramPreferencesDAL,
+                exerciseRotationHistoryDAL,
+                programDAL,
+                programmedWorkoutDAL,
+                conjugateTemplates,
+                exerciseSelectionService,
+                workoutStageGenerator,
+                sessionTimeCalculator
+            )
     }
 
     @Test
@@ -131,14 +127,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -150,11 +147,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -180,14 +194,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -199,7 +214,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // When
@@ -233,14 +256,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -252,7 +276,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // When
@@ -287,14 +319,15 @@ class ConjugateWorkoutGeneratorServiceTest {
                 )
             )
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -306,7 +339,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // When
@@ -338,14 +379,15 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -357,11 +399,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -393,14 +452,15 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -412,11 +472,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(1, "Test Program", 1)).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -472,14 +549,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences() // program preferences are always required
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -491,11 +569,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -520,14 +615,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -539,11 +635,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -568,14 +681,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -587,11 +701,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "DE_Lower Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "DE_Lower Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation - should create fewer stages for DE days due to conditioning
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -641,14 +772,15 @@ class ConjugateWorkoutGeneratorServiceTest {
                 )
             )
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -660,11 +792,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -689,14 +838,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -708,11 +858,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When
@@ -737,14 +904,15 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        val program = Program(
-            id = 1L,
-            userId = userId,
-            name = "Test Program",
-            currentWeekNumber = currentWeekNumber,
-            createdAt = LocalDateTime.now(),
-            updatedAt = LocalDateTime.now()
-        )
+        val program =
+            Program(
+                id = 1L,
+                userId = userId,
+                name = "Test Program",
+                currentWeekNumber = currentWeekNumber,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
 
         // Mock DAL responses
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -756,11 +924,28 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(program))
 
         // Mock workout creation
-        val createdWorkout = ProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "ME_Upper Day", createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdWorkout =
+            ProgrammedWorkout(
+                id = 1L,
+                programId = 1L,
+                dayNumber = 1,
+                name = "ME_Upper Day",
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
         // Mock stage creation
-        val createdStage = WorkoutStage(id = 1L, programmedWorkoutId = 1L, stageTypeId = 1, name = "Test Stage", position = 1, createdAt = LocalDateTime.now(), updatedAt = LocalDateTime.now())
+        val createdStage =
+            WorkoutStage(
+                id = 1L,
+                programmedWorkoutId = 1L,
+                stageTypeId = 1,
+                name = "Test Stage",
+                position = 1,
+                createdAt = LocalDateTime.now(),
+                updatedAt = LocalDateTime.now()
+            )
         whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(createdStage))
 
         // When

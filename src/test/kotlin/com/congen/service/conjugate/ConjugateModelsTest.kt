@@ -354,4 +354,4 @@ class ConjugateModelsTest {
         assertNull(performedRepCount)
         assertEquals(180, restSeconds)
     }
-} 
+}

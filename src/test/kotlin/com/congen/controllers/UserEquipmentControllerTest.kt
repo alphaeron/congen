@@ -37,11 +37,12 @@ class UserEquipmentControllerTest {
         val userId = 1
         val equipmentName = "Barbell"
         val now = LocalDateTime.now()
-        val userEquipment = UserEquipment(
-            userId = userId,
-            equipmentName = equipmentName,
-            createdAt = now
-        )
+        val userEquipment =
+            UserEquipment(
+                userId = userId,
+                equipmentName = equipmentName,
+                createdAt = now
+            )
         val savedUserEquipment = userEquipment
         whenever(userEquipmentDAL.insertUserEquipment(userId, equipmentName)).thenReturn(Mono.just(savedUserEquipment))
 
@@ -60,18 +61,19 @@ class UserEquipmentControllerTest {
     fun `getByUser should return user equipment when found`() {
         val userId = 1
         val now = LocalDateTime.now()
-        val userEquipment = listOf(
-            UserEquipment(
-                userId = userId,
-                equipmentName = "Barbell",
-                createdAt = now
-            ),
-            UserEquipment(
-                userId = userId,
-                equipmentName = "Dumbbells",
-                createdAt = now
+        val userEquipment =
+            listOf(
+                UserEquipment(
+                    userId = userId,
+                    equipmentName = "Barbell",
+                    createdAt = now
+                ),
+                UserEquipment(
+                    userId = userId,
+                    equipmentName = "Dumbbells",
+                    createdAt = now
+                )
             )
-        )
 
         whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
 
@@ -89,11 +91,12 @@ class UserEquipmentControllerTest {
         val userId = 1
         val equipmentName = "Barbell"
         val now = LocalDateTime.now()
-        val userEquipment = UserEquipment(
-            userId = userId,
-            equipmentName = equipmentName,
-            createdAt = now
-        )
+        val userEquipment =
+            UserEquipment(
+                userId = userId,
+                equipmentName = equipmentName,
+                createdAt = now
+            )
 
         whenever(userEquipmentDAL.deleteUserEquipment(userId, equipmentName)).thenReturn(Mono.just(userEquipment))
 
@@ -142,11 +145,12 @@ class UserEquipmentControllerTest {
         val userId = 1
         val equipmentName = "Barbell"
         val now = LocalDateTime.now()
-        val userEquipment = UserEquipment(
-            userId = userId,
-            equipmentName = equipmentName,
-            createdAt = now
-        )
+        val userEquipment =
+            UserEquipment(
+                userId = userId,
+                equipmentName = equipmentName,
+                createdAt = now
+            )
 
         whenever(userEquipmentDAL.deleteUserEquipment(userId, equipmentName)).thenReturn(Mono.error(RuntimeException("Database error")))
 
