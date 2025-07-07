@@ -185,7 +185,7 @@ class ProgrammedWorkoutDAL(
         return postgresClient.selectIndividual(
             """
             SELECT EXISTS(
-                SELECT 1 
+                SELECT TRUE
                 FROM programmed_workout pw
                 JOIN program p ON pw.program_id = p.id
                 WHERE p.user_id = $1

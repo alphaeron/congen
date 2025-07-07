@@ -13,6 +13,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.LocalDateTime
+import org.mockito.kotlin.eq
 
 class ProgrammedWorkoutDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -115,13 +116,15 @@ class ProgrammedWorkoutDALTest {
             createdAt = now,
             updatedAt = now
         )
+        val expectedQuery =
+            """
+            UPDATE programmed_workout
+            SET program_id=$2, day_number=$3, name=$4, updated_at=NOW()
+            WHERE id=$1
+            """.trimIndent()
         whenever(
             postgresClient.update<ProgrammedWorkout>(
-                """
-                UPDATE programmed_workout
-                SET program_id=$2, day_number=$3, name=$4
-                WHERE id=$1
-                """.trimIndent(),
+                expectedQuery,
                 programmedWorkout.id,
                 programmedWorkout.programId,
                 programmedWorkout.dayNumber,
@@ -131,11 +134,7 @@ class ProgrammedWorkoutDALTest {
         val result = programmedWorkoutDAL.updateProgrammedWorkout(programmedWorkout.id, programmedWorkout.programId, programmedWorkout.dayNumber, programmedWorkout.name)
         StepVerifier.create(result).expectNext(programmedWorkout).verifyComplete()
         verify(postgresClient).update<ProgrammedWorkout>(
-            """
-            UPDATE programmed_workout
-            SET program_id=$2, day_number=$3, name=$4
-            WHERE id=$1
-            """.trimIndent(),
+            expectedQuery,
             programmedWorkout.id,
             programmedWorkout.programId,
             programmedWorkout.dayNumber,
@@ -241,7 +240,7 @@ class ProgrammedWorkoutDALTest {
             postgresClient.selectIndividual<Boolean>(
                 """
                 SELECT EXISTS(
-                    SELECT 1
+                    SELECT TRUE
                     FROM programmed_workout pw
                     JOIN program p ON pw.program_id = p.id
                     WHERE p.user_id = $1
@@ -257,7 +256,7 @@ class ProgrammedWorkoutDALTest {
         verify(postgresClient).selectIndividual<Boolean>(
             """
             SELECT EXISTS(
-                SELECT 1
+                SELECT TRUE
                 FROM programmed_workout pw
                 JOIN program p ON pw.program_id = p.id
                 WHERE p.user_id = $1
@@ -275,7 +274,7 @@ class ProgrammedWorkoutDALTest {
             postgresClient.selectIndividual<Boolean>(
                 """
                 SELECT EXISTS(
-                    SELECT 1
+                    SELECT TRUE
                     FROM programmed_workout pw
                     JOIN program p ON pw.program_id = p.id
                     WHERE p.user_id = $1
@@ -291,7 +290,7 @@ class ProgrammedWorkoutDALTest {
         verify(postgresClient).selectIndividual<Boolean>(
             """
             SELECT EXISTS(
-                SELECT 1
+                SELECT TRUE
                 FROM programmed_workout pw
                 JOIN program p ON pw.program_id = p.id
                 WHERE p.user_id = $1

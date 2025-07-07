@@ -100,7 +100,7 @@ class ProgramDALTest {
             Program(
                 id = 1,
                 userId = 1,
-                name = "Conjugate Powerlifting Program",
+                name = "Test Program",
                 currentWeekNumber = 1,
                 createdAt = java.time.LocalDateTime.now(),
                 updatedAt = java.time.LocalDateTime.now()

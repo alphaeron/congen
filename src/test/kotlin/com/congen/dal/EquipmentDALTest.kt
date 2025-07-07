@@ -9,6 +9,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import org.mockito.kotlin.eq
 
 class EquipmentDALTest {
     private lateinit var postgresClient: PostgresClient

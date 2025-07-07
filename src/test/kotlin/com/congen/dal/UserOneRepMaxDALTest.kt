@@ -12,6 +12,7 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import org.mockito.kotlin.eq
 
 /**
  * Unit tests for UserOneRepMaxDAL.
@@ -198,34 +199,28 @@ class UserOneRepMaxDALTest {
             oneRepMax = oneRepMax,
             updatedAt = now
         )
-
+        val expectedQuery =
+            """
+            UPDATE user_one_rep_max
+            SET one_rep_max=$3, updated_at=NOW()
+            WHERE user_id=$1 AND exercise_name=$2
+            """.trimIndent()
         whenever(
             postgresClient.update<UserOneRepMax>(
-                """
-                UPDATE user_one_rep_max
-                SET one_rep_max=$3, updated_at=NOW()
-                WHERE user_id=$1 AND exercise_name=$2
-                """.trimIndent(),
+                expectedQuery,
                 userId,
                 exerciseName,
                 oneRepMax,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
         // When
         val result = userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)
-
         // Then
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).update<UserOneRepMax>(
-            """
-            UPDATE user_one_rep_max
-            SET one_rep_max=$3, updated_at=NOW()
-            WHERE user_id=$1 AND exercise_name=$2
-            """.trimIndent(),
+            expectedQuery,
             userId,
             exerciseName,
             oneRepMax,

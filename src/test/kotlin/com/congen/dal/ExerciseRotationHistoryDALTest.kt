@@ -84,4 +84,38 @@ class ExerciseRotationHistoryDALTest {
         StepVerifier.create(result).expectNext(history).verifyComplete()
         verify(postgresClient).update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", 1L)
     }
+
+    @Test
+    fun `update returns updated ExerciseRotationHistory`() {
+        val updated = ExerciseRotationHistory(
+            id = 1L,
+            userId = 3,
+            exerciseName = "Squat",
+            isAccessory = true,
+            createdAt = now
+        )
+        val expectedQuery = """
+            UPDATE exercise_rotation_history
+            SET user_id=$2, exercise_name=$3, is_accessory=$4
+            WHERE id=$1
+        """.trimIndent()
+        whenever(
+            postgresClient.update<ExerciseRotationHistory>(
+                expectedQuery,
+                updated.id,
+                updated.userId,
+                updated.exerciseName,
+                updated.isAccessory,
+            )
+        ).thenReturn(Mono.just(updated))
+        val result = dal.update(updated.id, updated.userId, updated.exerciseName, updated.isAccessory)
+        StepVerifier.create(result).expectNext(updated).verifyComplete()
+        verify(postgresClient).update<ExerciseRotationHistory>(
+            expectedQuery,
+            updated.id,
+            updated.userId,
+            updated.exerciseName,
+            updated.isAccessory,
+        )
+    }
 }

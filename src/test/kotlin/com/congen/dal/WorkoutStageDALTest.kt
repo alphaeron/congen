@@ -11,6 +11,7 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.LocalDateTime
+import org.mockito.kotlin.eq
 
 class WorkoutStageDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -120,13 +121,15 @@ class WorkoutStageDALTest {
             createdAt = now,
             updatedAt = now
         )
+        val expectedQuery =
+            """
+            UPDATE workout_stage
+            SET programmed_workout_id=$2, stage_type_id=$3, position=$4, name=$5, updated_at=NOW()
+            WHERE id=$1
+            """.trimIndent()
         whenever(
             postgresClient.update<WorkoutStage>(
-                """
-                UPDATE workout_stage
-                SET programmed_workout_id=$2, stage_type_id=$3, position=$4, name=$5
-                WHERE id=$1
-                """.trimIndent(),
+                expectedQuery,
                 workoutStage.id,
                 workoutStage.programmedWorkoutId,
                 workoutStage.stageTypeId,
@@ -137,11 +140,7 @@ class WorkoutStageDALTest {
         val result = workoutStageDAL.updateWorkoutStage(workoutStage.id, workoutStage.programmedWorkoutId, workoutStage.stageTypeId, workoutStage.position, workoutStage.name)
         StepVerifier.create(result).expectNext(workoutStage).verifyComplete()
         verify(postgresClient).update<WorkoutStage>(
-            """
-            UPDATE workout_stage
-            SET programmed_workout_id=$2, stage_type_id=$3, position=$4, name=$5
-            WHERE id=$1
-            """.trimIndent(),
+            expectedQuery,
             workoutStage.id,
             workoutStage.programmedWorkoutId,
             workoutStage.stageTypeId,

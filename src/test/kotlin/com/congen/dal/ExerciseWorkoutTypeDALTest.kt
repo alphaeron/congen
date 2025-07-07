@@ -25,8 +25,15 @@ class ExerciseWorkoutTypeDALTest {
     @Test
     fun `selectExerciseWorkoutType should return the correct relationship`() {
         val expected = ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort")
+        val expectedQuery = "SELECT * FROM exercise_workout_type WHERE exercise_name=$1 AND movement_type=$2 AND workout_type=$3"
         whenever(
-            postgresClient.selectIndividual(any(), eq(ExerciseWorkoutType::class), any(), any(), any()),
+            postgresClient.selectIndividual(
+                eq(expectedQuery),
+                eq(ExerciseWorkoutType::class),
+                eq("Bench Press"),
+                eq("horizontal push"),
+                eq("dynamic_effort")
+            ),
         ).thenReturn(Mono.just(expected))
         val result = dal.selectExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort")
         StepVerifier.create(result)
@@ -34,7 +41,13 @@ class ExerciseWorkoutTypeDALTest {
             .verifyComplete()
         verify(
             postgresClient,
-        ).selectIndividual(any(), eq(ExerciseWorkoutType::class), eq("Bench Press"), eq("horizontal push"), eq("dynamic_effort"))
+        ).selectIndividual(
+            eq(expectedQuery),
+            eq(ExerciseWorkoutType::class),
+            eq("Bench Press"),
+            eq("horizontal push"),
+            eq("dynamic_effort")
+        )
     }
 
     @Test
