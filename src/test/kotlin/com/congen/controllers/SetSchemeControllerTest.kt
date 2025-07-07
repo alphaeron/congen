@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.mockSetScheme
 import com.congen.model.SetScheme
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
@@ -20,6 +21,20 @@ class SetSchemeControllerTest {
 
     private lateinit var setSchemeController: SetSchemeController
 
+    companion object {
+        private const val SCHEME_ID_1 = 1L
+        private const val SCHEME_ID_2 = 2L
+        private const val PROGRAMMED_EXERCISE_ID = 1L
+        private const val SET_NUMBER_1 = 1
+        private const val SET_NUMBER_2 = 2
+        private const val TARGET_REP_COUNT = 5
+        private const val REST_SECONDS_90 = 90
+        private const val REST_SECONDS_120 = 120
+        private const val NON_EXISTENT_ID = 999L
+        private const val TARGET_WEIGHT_100 = "100.0"
+        private const val TARGET_WEIGHT_110 = "110.0"
+    }
+
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
@@ -31,46 +46,28 @@ class SetSchemeControllerTest {
         val now = Instant.now()
         val setSchemes =
             listOf(
-                SetScheme(
-                    id = 1L,
-                    programmedExerciseId = 1L,
-                    setNumber = 1,
-                    isAmrap = false,
-                    isEmom = false,
-                    useTempo = false,
-                    eccentricTempo = null,
-                    isometricTempo = null,
-                    concentricTempo = null,
-                    targetWeight = BigDecimal("100.0"),
-                    performedWeight = null,
-                    targetRepCount = 5,
-                    performedRepCount = null,
-                    restSeconds = 90,
+                mockSetScheme(
+                    id = SCHEME_ID_1,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_1,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    targetRepCount = TARGET_REP_COUNT,
+                    restSeconds = REST_SECONDS_90,
                     createdAt = now,
                     updatedAt = now
                 ),
-                SetScheme(
-                    id = 2L,
-                    programmedExerciseId = 1L,
-                    setNumber = 2,
+                mockSetScheme(
+                    id = SCHEME_ID_2,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_2,
                     isAmrap = true,
-                    isEmom = false,
-                    useTempo = false,
-                    eccentricTempo = null,
-                    isometricTempo = null,
-                    concentricTempo = null,
-                    targetWeight = BigDecimal("100.0"),
-                    performedWeight = null,
-                    targetRepCount = null,
-                    performedRepCount = null,
-                    restSeconds = 90,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    restSeconds = REST_SECONDS_90,
                     createdAt = now,
                     updatedAt = now
                 )
             )
-
         whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.just(setSchemes))
-
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
             .assertNext { resp ->
@@ -84,29 +81,18 @@ class SetSchemeControllerTest {
     fun `should get set scheme by id`() {
         val now = Instant.now()
         val setScheme =
-            SetScheme(
-                id = 1L,
-                programmedExerciseId = 1L,
-                setNumber = 1,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = BigDecimal("100.0"),
-                performedWeight = null,
-                targetRepCount = 5,
-                performedRepCount = null,
-                restSeconds = 90,
+            mockSetScheme(
+                id = SCHEME_ID_1,
+                programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                setNumber = SET_NUMBER_1,
+                targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                targetRepCount = TARGET_REP_COUNT,
+                restSeconds = REST_SECONDS_90,
                 createdAt = now,
                 updatedAt = now
             )
-
-        whenever(setSchemeService.selectSetSchemeById(1L)).thenReturn(Mono.just(setScheme))
-
-        val result = setSchemeController.get(1L)
-
+        whenever(setSchemeService.selectSetSchemeById(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
+        val result = setSchemeController.get(SCHEME_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
             .verifyComplete()
@@ -114,10 +100,8 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should return empty when set scheme not found`() {
-        whenever(setSchemeService.selectSetSchemeById(999L)).thenReturn(Mono.empty())
-
-        val result = setSchemeController.get(999L)
-
+        whenever(setSchemeService.selectSetSchemeById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
+        val result = setSchemeController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -126,73 +110,50 @@ class SetSchemeControllerTest {
     @Test
     fun `should create set scheme`() {
         val now = Instant.now()
-        val programmedExerciseId = 1L
-        val setNumber = 1
-        val isAmrap = false
-        val isEmom = false
-        val useTempo = false
-        val eccentricTempo: String? = null
-        val isometricTempo: String? = null
-        val concentricTempo: String? = null
-        val targetWeight = "100.0"
-        val performedWeight: String? = null
-        val targetRepCount = 5
-        val performedRepCount: Int? = null
-        val restSeconds = 90
         val setScheme =
-            SetScheme(
-                id = 1L,
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = isAmrap,
-                isEmom = isEmom,
-                useTempo = useTempo,
-                eccentricTempo = eccentricTempo,
-                isometricTempo = isometricTempo,
-                concentricTempo = concentricTempo,
-                targetWeight = BigDecimal("100.0"),
-                performedWeight = performedWeight?.toBigDecimalOrNull(),
-                targetRepCount = targetRepCount,
-                performedRepCount = performedRepCount,
-                restSeconds = restSeconds,
+            mockSetScheme(
+                id = SCHEME_ID_1,
+                programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                setNumber = SET_NUMBER_1,
+                targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                targetRepCount = TARGET_REP_COUNT,
+                restSeconds = REST_SECONDS_90,
                 createdAt = now,
                 updatedAt = now
             )
         whenever(
             setSchemeService.insertSetScheme(
-                programmedExerciseId,
-                setNumber,
-                isAmrap,
-                isEmom,
-                useTempo,
-                eccentricTempo,
-                isometricTempo,
-                concentricTempo,
-                BigDecimal("100.0"),
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_1,
+                false,
+                false,
+                false,
                 null,
-                targetRepCount,
-                performedRepCount,
-                restSeconds
+                null,
+                null,
+                BigDecimal(TARGET_WEIGHT_100),
+                null,
+                TARGET_REP_COUNT,
+                null,
+                REST_SECONDS_90
             )
         ).thenReturn(Mono.just(setScheme))
-
         val result =
             setSchemeController.save(
-                programmedExerciseId,
-                setNumber,
-                isAmrap,
-                isEmom,
-                useTempo,
-                eccentricTempo,
-                isometricTempo,
-                concentricTempo,
-                targetWeight,
-                performedWeight,
-                targetRepCount,
-                performedRepCount,
-                restSeconds
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_1,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                TARGET_WEIGHT_100,
+                null,
+                TARGET_REP_COUNT,
+                null,
+                REST_SECONDS_90
             )
-
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
             .verifyComplete()
@@ -201,76 +162,52 @@ class SetSchemeControllerTest {
     @Test
     fun `should update set scheme`() {
         val now = Instant.now()
-        val id = 1L
-        val programmedExerciseId = 1L
-        val setNumber = 2
-        val isAmrap = true
-        val isEmom = false
-        val useTempo = false
-        val eccentricTempo: String? = null
-        val isometricTempo: String? = null
-        val concentricTempo: String? = null
-        val targetWeight = "110.0"
-        val performedWeight: String? = null
-        val targetRepCount: Int? = null
-        val performedRepCount: Int? = null
-        val restSeconds = 120
         val setScheme =
-            SetScheme(
-                id = id,
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = isAmrap,
-                isEmom = isEmom,
-                useTempo = useTempo,
-                eccentricTempo = eccentricTempo,
-                isometricTempo = isometricTempo,
-                concentricTempo = concentricTempo,
-                targetWeight = BigDecimal("110.0"),
-                performedWeight = performedWeight?.toBigDecimalOrNull(),
-                targetRepCount = targetRepCount,
-                performedRepCount = performedRepCount,
-                restSeconds = restSeconds,
+            mockSetScheme(
+                id = SCHEME_ID_1,
+                programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                setNumber = SET_NUMBER_2,
+                isAmrap = true,
+                targetWeight = BigDecimal(TARGET_WEIGHT_110),
+                restSeconds = REST_SECONDS_120,
                 createdAt = now,
                 updatedAt = now
             )
         whenever(
             setSchemeService.updateSetScheme(
-                id,
-                programmedExerciseId,
-                setNumber,
-                isAmrap,
-                isEmom,
-                useTempo,
-                eccentricTempo,
-                isometricTempo,
-                concentricTempo,
-                BigDecimal("110.0"),
+                SCHEME_ID_1,
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_2,
+                true,
+                false,
+                false,
                 null,
-                targetRepCount,
-                performedRepCount,
-                restSeconds
+                null,
+                null,
+                BigDecimal(TARGET_WEIGHT_110),
+                null,
+                null,
+                null,
+                REST_SECONDS_120
             )
         ).thenReturn(Mono.just(setScheme))
-
         val result =
             setSchemeController.update(
-                id,
-                programmedExerciseId,
-                setNumber,
-                isAmrap,
-                isEmom,
-                useTempo,
-                eccentricTempo,
-                isometricTempo,
-                concentricTempo,
-                targetWeight,
-                performedWeight,
-                targetRepCount,
-                performedRepCount,
-                restSeconds
+                SCHEME_ID_1,
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_2,
+                true,
+                false,
+                false,
+                null,
+                null,
+                null,
+                TARGET_WEIGHT_110,
+                null,
+                null,
+                null,
+                REST_SECONDS_120
             )
-
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<SetScheme>)
             .expectNext(setScheme)
@@ -281,28 +218,18 @@ class SetSchemeControllerTest {
     fun `should delete set scheme`() {
         val now = Instant.now()
         val setScheme =
-            SetScheme(
-                id = 1L,
-                programmedExerciseId = 1L,
-                setNumber = 1,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = BigDecimal("100.0"),
-                performedWeight = null,
-                targetRepCount = 5,
-                performedRepCount = null,
-                restSeconds = 90,
+            mockSetScheme(
+                id = SCHEME_ID_1,
+                programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                setNumber = SET_NUMBER_1,
+                targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                targetRepCount = TARGET_REP_COUNT,
+                restSeconds = REST_SECONDS_90,
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(setSchemeService.deleteSetScheme(1L)).thenReturn(Mono.just(setScheme))
-
-        val result = setSchemeController.delete(1L)
-
+        whenever(setSchemeService.deleteSetScheme(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
+        val result = setSchemeController.delete(SCHEME_ID_1)
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<SetScheme>)
             .expectNext(setScheme)
@@ -312,51 +239,31 @@ class SetSchemeControllerTest {
     @Test
     fun `should get set schemes by programmed exercise`() {
         val now = Instant.now()
-        val programmedExerciseId = 1L
         val setSchemes =
             listOf(
-                SetScheme(
-                    id = 1L,
-                    programmedExerciseId = programmedExerciseId,
-                    setNumber = 1,
-                    isAmrap = false,
-                    isEmom = false,
-                    useTempo = false,
-                    eccentricTempo = null,
-                    isometricTempo = null,
-                    concentricTempo = null,
-                    targetWeight = BigDecimal("100.0"),
-                    performedWeight = null,
-                    targetRepCount = 5,
-                    performedRepCount = null,
-                    restSeconds = 90,
+                mockSetScheme(
+                    id = SCHEME_ID_1,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_1,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    targetRepCount = TARGET_REP_COUNT,
+                    restSeconds = REST_SECONDS_90,
                     createdAt = now,
                     updatedAt = now
                 ),
-                SetScheme(
-                    id = 2L,
-                    programmedExerciseId = programmedExerciseId,
-                    setNumber = 2,
+                mockSetScheme(
+                    id = SCHEME_ID_2,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_2,
                     isAmrap = true,
-                    isEmom = false,
-                    useTempo = false,
-                    eccentricTempo = null,
-                    isometricTempo = null,
-                    concentricTempo = null,
-                    targetWeight = BigDecimal("100.0"),
-                    performedWeight = null,
-                    targetRepCount = null,
-                    performedRepCount = null,
-                    restSeconds = 90,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    restSeconds = REST_SECONDS_90,
                     createdAt = now,
                     updatedAt = now
                 )
             )
-
-        whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)).thenReturn(Mono.just(setSchemes))
-
-        val result = setSchemeController.getByProgrammedExerciseId(programmedExerciseId)
-
+        whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)).thenReturn(Mono.just(setSchemes))
+        val result = setSchemeController.getByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<List<SetScheme>>)
             .expectNext(setSchemes)
@@ -366,9 +273,7 @@ class SetSchemeControllerTest {
     @Test
     fun `should handle service error gracefully`() {
         whenever(setSchemeService.selectSetSchemes()).thenThrow(RuntimeException("Service error"))
-
         val result = setSchemeController.getAll()
-
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()

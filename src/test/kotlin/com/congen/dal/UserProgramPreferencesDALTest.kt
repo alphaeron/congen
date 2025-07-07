@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.exceptions.ValidationException
+import com.congen.mockUserProgramPreferences
 import com.congen.model.UserProgramPreferences
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,13 +11,13 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
 class UserProgramPreferencesDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
-    private val now = Instant.now()
+
+    private val userProgramPreferences = mockUserProgramPreferences()
 
     @BeforeEach
     fun setUp() {
@@ -27,23 +28,17 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `selectUserProgramPreferences should return user program preferences`() {
-        val userProgramPreferences =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 4,
-                sessionTimeLengthInMinutes = 60,
-                createdAt = now,
-                updatedAt = now
-            )
         whenever(
             postgresClient.selectIndividual<UserProgramPreferences>(
                 "SELECT * FROM user_program_preferences WHERE user_id=$1",
-                1,
+                userProgramPreferences.userId,
             ),
         ).thenReturn(Mono.just(userProgramPreferences))
-        val result = userProgramPreferencesDAL.selectUserProgramPreferences(1)
+        val result = userProgramPreferencesDAL.selectUserProgramPreferences(userProgramPreferences.userId)
         StepVerifier.create(result).expectNext(userProgramPreferences).verifyComplete()
-        verify(postgresClient).selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", 1)
+        verify(
+            postgresClient
+        ).selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", userProgramPreferences.userId)
     }
 
     @Test
@@ -61,14 +56,6 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `insertUserProgramPreferences should return inserted user program preferences`() {
-        val userProgramPreferences =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 4,
-                sessionTimeLengthInMinutes = 60,
-                createdAt = now,
-                updatedAt = now
-            )
         whenever(
             postgresClient.update<UserProgramPreferences>(
                 """
@@ -104,62 +91,43 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `updateUserProgramPreferences should return updated user program preferences`() {
-        val userProgramPreferences =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 4,
-                sessionTimeLengthInMinutes = 90,
-                createdAt = now,
-                updatedAt = now
-            )
+        val updatedPrefs = mockUserProgramPreferences(sessionTimeLengthInMinutes = 90)
         val expectedQuery =
             """
             UPDATE user_program_preferences
             SET program_days_per_week=$2, session_time_length_in_minutes=$3, updated_at=NOW()
             WHERE user_id=$1
             """.trimIndent()
-
         whenever(
-            programmedWorkoutDAL.hasUserExistingWorkouts(userProgramPreferences.userId)
-        )
-            .thenReturn(Mono.just(false))
+            programmedWorkoutDAL.hasUserExistingWorkouts(updatedPrefs.userId)
+        ).thenReturn(Mono.just(false))
         whenever(
             postgresClient.update<UserProgramPreferences>(
                 expectedQuery,
-                userProgramPreferences.userId,
-                userProgramPreferences.programDaysPerWeek,
-                userProgramPreferences.sessionTimeLengthInMinutes,
+                updatedPrefs.userId,
+                updatedPrefs.programDaysPerWeek,
+                updatedPrefs.sessionTimeLengthInMinutes,
             ),
-        ).thenReturn(Mono.just(userProgramPreferences))
+        ).thenReturn(Mono.just(updatedPrefs))
         val result =
             userProgramPreferencesDAL.updateUserProgramPreferences(
-                userProgramPreferences.userId,
-                userProgramPreferences.programDaysPerWeek,
-                userProgramPreferences.sessionTimeLengthInMinutes
+                updatedPrefs.userId,
+                updatedPrefs.programDaysPerWeek,
+                updatedPrefs.sessionTimeLengthInMinutes
             )
-        StepVerifier.create(result).expectNext(userProgramPreferences).verifyComplete()
+        StepVerifier.create(result).expectNext(updatedPrefs).verifyComplete()
         verify(postgresClient).update<UserProgramPreferences>(
             expectedQuery,
-            userProgramPreferences.userId,
-            userProgramPreferences.programDaysPerWeek,
-            userProgramPreferences.sessionTimeLengthInMinutes,
+            updatedPrefs.userId,
+            updatedPrefs.programDaysPerWeek,
+            updatedPrefs.sessionTimeLengthInMinutes,
         )
     }
 
     @Test
     fun `updateUserProgramPreferences should return updated preferences when user has no existing workouts`() {
-        val prefs =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 75,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        // Mock that user has no existing workouts
-        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(1)).thenReturn(Mono.just(false))
-
+        val prefs = mockUserProgramPreferences(programDaysPerWeek = 3, sessionTimeLengthInMinutes = 75)
+        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(prefs.userId)).thenReturn(Mono.just(false))
         val expectedQuery =
             """
             UPDATE user_program_preferences
@@ -174,16 +142,14 @@ class UserProgramPreferencesDALTest {
                 prefs.sessionTimeLengthInMinutes,
             ),
         ).thenReturn(Mono.just(prefs))
-
         val result =
             userProgramPreferencesDAL.updateUserProgramPreferences(
                 prefs.userId,
                 prefs.programDaysPerWeek,
                 prefs.sessionTimeLengthInMinutes
             )
-
         StepVerifier.create(result).expectNext(prefs).verifyComplete()
-        verify(programmedWorkoutDAL).hasUserExistingWorkouts(1)
+        verify(programmedWorkoutDAL).hasUserExistingWorkouts(prefs.userId)
         verify(postgresClient).update<UserProgramPreferences>(
             expectedQuery,
             prefs.userId,
@@ -194,34 +160,16 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `updateUserProgramPreferences should allow changing session time when user has existing workouts`() {
-        val currentPrefs =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 60,
-                createdAt = now,
-                updatedAt = now
-            )
-        val updatedPrefs =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 3,
-                sessionTimeLengthInMinutes = 75,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        // Mock that user has existing workouts
-        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(1)).thenReturn(Mono.just(true))
+        val currentPrefs = mockUserProgramPreferences(sessionTimeLengthInMinutes = 60)
+        val updatedPrefs = mockUserProgramPreferences(sessionTimeLengthInMinutes = 75)
+        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(updatedPrefs.userId)).thenReturn(Mono.just(true))
         val expectecCheckPrefsQueryString = "SELECT * FROM user_program_preferences WHERE user_id=$1"
         whenever(
             postgresClient.selectIndividual<UserProgramPreferences>(
                 expectecCheckPrefsQueryString,
-                1
+                updatedPrefs.userId
             )
-        )
-            .thenReturn(Mono.just(currentPrefs))
-
+        ).thenReturn(Mono.just(currentPrefs))
         val expectedUpdateQueryString =
             """
             UPDATE user_program_preferences
@@ -236,17 +184,15 @@ class UserProgramPreferencesDALTest {
                 updatedPrefs.sessionTimeLengthInMinutes,
             ),
         ).thenReturn(Mono.just(updatedPrefs))
-
         val result =
             userProgramPreferencesDAL.updateUserProgramPreferences(
                 updatedPrefs.userId,
                 updatedPrefs.programDaysPerWeek,
                 updatedPrefs.sessionTimeLengthInMinutes
             )
-
         StepVerifier.create(result).expectNext(updatedPrefs).verifyComplete()
-        verify(programmedWorkoutDAL).hasUserExistingWorkouts(1)
-        verify(postgresClient).selectIndividual<UserProgramPreferences>(expectecCheckPrefsQueryString, 1)
+        verify(programmedWorkoutDAL).hasUserExistingWorkouts(updatedPrefs.userId)
+        verify(postgresClient).selectIndividual<UserProgramPreferences>(expectecCheckPrefsQueryString, updatedPrefs.userId)
         verify(postgresClient).update<UserProgramPreferences>(
             expectedUpdateQueryString,
             updatedPrefs.userId,
@@ -257,46 +203,39 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `updateUserProgramPreferences should throw ValidationException when changing program days per week with existing workouts`() {
-        val currentPrefs =
-            UserProgramPreferences(userId = 1, programDaysPerWeek = 3, sessionTimeLengthInMinutes = 60, createdAt = now, updatedAt = now)
+        val currentPrefs = mockUserProgramPreferences(programDaysPerWeek = 3, sessionTimeLengthInMinutes = 60)
         val newProgramDaysPerWeek = 4
         val expectedMessage =
             "Cannot change program days per week from 3 to 4 for user 1 because they have existing workouts. " +
                 "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
                 "and maintain program consistency. To change program frequency, the user must start a new program."
-
-        // Mock that user has existing workouts
-        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(1)).thenReturn(Mono.just(true))
-        whenever(postgresClient.selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", 1))
+        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(currentPrefs.userId)).thenReturn(Mono.just(true))
+        whenever(
+            postgresClient.selectIndividual<UserProgramPreferences>(
+                "SELECT * FROM user_program_preferences WHERE user_id=$1",
+                currentPrefs.userId
+            )
+        )
             .thenReturn(Mono.just(currentPrefs))
-
         val result =
             userProgramPreferencesDAL.updateUserProgramPreferences(
-                1,
+                currentPrefs.userId,
                 newProgramDaysPerWeek,
-                60
+                currentPrefs.sessionTimeLengthInMinutes
             )
-
         StepVerifier.create(result)
             .expectErrorMatches { ex ->
                 ex is ValidationException && ex.message == expectedMessage
             }
             .verify()
-
-        verify(programmedWorkoutDAL).hasUserExistingWorkouts(1)
-        verify(postgresClient).selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", 1)
+        verify(programmedWorkoutDAL).hasUserExistingWorkouts(currentPrefs.userId)
+        verify(
+            postgresClient
+        ).selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", currentPrefs.userId)
     }
 
     @Test
     fun `deleteUserProgramPreferences should return deleted user program preferences`() {
-        val userProgramPreferences =
-            UserProgramPreferences(
-                userId = 1,
-                programDaysPerWeek = 4,
-                sessionTimeLengthInMinutes = 60,
-                createdAt = now,
-                updatedAt = now
-            )
         val expectedQuery =
             """
             DELETE FROM user_program_preferences
@@ -305,11 +244,11 @@ class UserProgramPreferencesDALTest {
         whenever(
             postgresClient.update<UserProgramPreferences>(
                 expectedQuery,
-                1,
+                userProgramPreferences.userId,
             ),
         ).thenReturn(Mono.just(userProgramPreferences))
-        val result = userProgramPreferencesDAL.deleteUserProgramPreferences(1)
+        val result = userProgramPreferencesDAL.deleteUserProgramPreferences(userProgramPreferences.userId)
         StepVerifier.create(result).expectNext(userProgramPreferences).verifyComplete()
-        verify(postgresClient).update<UserProgramPreferences>(expectedQuery, 1)
+        verify(postgresClient).update<UserProgramPreferences>(expectedQuery, userProgramPreferences.userId)
     }
 }

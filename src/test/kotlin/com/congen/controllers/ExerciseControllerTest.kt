@@ -4,9 +4,10 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.mockExercise
+import com.congen.mockExerciseEquipment
+import com.congen.mockExerciseMuscle
 import com.congen.model.Exercise
-import com.congen.model.ExerciseEquipment
-import com.congen.model.ExerciseMuscle
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -23,6 +24,18 @@ class ExerciseControllerTest {
     private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
     private lateinit var exerciseController: ExerciseController
 
+    companion object {
+        private const val EXERCISE_NAME = "Bench Press"
+        private const val NON_EXISTENT_EXERCISE = "NonExistent"
+        private const val EXERCISE_DESCRIPTION = "A compound exercise"
+        private const val MOVEMENT_TYPE = "push"
+        private const val MUSCLE_NAME_1 = "Chest"
+        private const val MUSCLE_NAME_2 = "Triceps"
+        private const val EQUIPMENT_NAME_1 = "Barbell"
+        private const val EQUIPMENT_NAME_2 = "Bench"
+        private const val SQUAT_NAME = "Squat"
+    }
+
     @BeforeEach
     fun setUp() {
         exerciseDAL = mock()
@@ -33,15 +46,14 @@ class ExerciseControllerTest {
 
     @Test
     fun `save should return saved exercise`() {
-        // Given
         val exercise =
-            Exercise(
-                name = "Bench Press",
-                description = "A compound exercise",
-                movementType = "push",
+            mockExercise(
+                name = EXERCISE_NAME,
+                description = EXERCISE_DESCRIPTION,
+                movementType = MOVEMENT_TYPE,
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
 
         whenever(
@@ -55,7 +67,6 @@ class ExerciseControllerTest {
             )
         ).thenReturn(Mono.just(exercise))
 
-        // When
         val result =
             exerciseController.save(
                 exercise.name,
@@ -66,16 +77,13 @@ class ExerciseControllerTest {
                 exercise.isAccessory
             )
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<Exercise>)
             .expectNext(exercise)
             .verifyComplete()
 
-        verify(
-            exerciseDAL
-        ).insertExercise(
+        verify(exerciseDAL).insertExercise(
             exercise.name,
             exercise.description,
             exercise.movementType,
@@ -87,218 +95,177 @@ class ExerciseControllerTest {
 
     @Test
     fun `get should return exercise when found`() {
-        // Given
-        val exerciseName = "Bench Press"
         val exercise =
-            Exercise(
-                name = exerciseName,
-                description = "A compound exercise",
-                movementType = "push",
+            mockExercise(
+                name = EXERCISE_NAME,
+                description = EXERCISE_DESCRIPTION,
+                movementType = MOVEMENT_TYPE,
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
 
-        whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
+        whenever(exerciseDAL.selectExerciseByName(EXERCISE_NAME)).thenReturn(Mono.just(exercise))
 
-        // When
-        val result = exerciseController.get(exerciseName)
+        val result = exerciseController.get(EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exercise))
             .verifyComplete()
 
-        verify(exerciseDAL).selectExerciseByName(exerciseName)
+        verify(exerciseDAL).selectExerciseByName(EXERCISE_NAME)
     }
 
     @Test
     fun `get should return not found when exercise not found`() {
-        // Given
-        val exerciseName = "NonExistent"
+        whenever(exerciseDAL.selectExerciseByName(NON_EXISTENT_EXERCISE))
+            .thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM exercise WHERE name=$1")))
 
-        whenever(
-            exerciseDAL.selectExerciseByName(exerciseName),
-        ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM exercise WHERE name=$1")))
+        val result = exerciseController.get(NON_EXISTENT_EXERCISE)
 
-        // When
-        val result = exerciseController.get(exerciseName)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(exerciseDAL).selectExerciseByName(exerciseName)
+        verify(exerciseDAL).selectExerciseByName(NON_EXISTENT_EXERCISE)
     }
 
     @Test
     fun `getMuscle should return exercise muscles when found`() {
-        // Given
-        val exerciseName = "Bench Press"
         val exercise =
-            Exercise(
-                name = exerciseName,
-                description = "A compound exercise",
-                movementType = "push",
+            mockExercise(
+                name = EXERCISE_NAME,
+                description = EXERCISE_DESCRIPTION,
+                movementType = MOVEMENT_TYPE,
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
         val exerciseMuscles =
             listOf(
-                ExerciseMuscle(
-                    exerciseName = exerciseName,
-                    muscleName = "Chest",
-                ),
-                ExerciseMuscle(
-                    exerciseName = exerciseName,
-                    muscleName = "Triceps",
-                ),
+                mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = MUSCLE_NAME_1),
+                mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = MUSCLE_NAME_2)
             )
 
-        whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
-        whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(exerciseName)).thenReturn(Mono.just(exerciseMuscles))
+        whenever(exerciseDAL.selectExerciseByName(EXERCISE_NAME)).thenReturn(Mono.just(exercise))
+        whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(Mono.just(exerciseMuscles))
 
-        // When
-        val result = exerciseController.getMuscle(exerciseName)
+        val result = exerciseController.getMuscle(EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseMuscles))
             .verifyComplete()
 
-        verify(exerciseDAL).selectExerciseByName(exerciseName)
-        verify(exerciseMuscleDAL).selectExerciseMuscleByExercise(exerciseName)
+        verify(exerciseDAL).selectExerciseByName(EXERCISE_NAME)
+        verify(exerciseMuscleDAL).selectExerciseMuscleByExercise(EXERCISE_NAME)
     }
 
     @Test
     fun `getMuscle should return not found when no muscles found`() {
-        // Given
-        val exerciseName = "NonExistent"
         val exercise =
-            Exercise(
-                name = exerciseName,
+            mockExercise(
+                name = NON_EXISTENT_EXERCISE,
                 description = "A non-existent exercise",
-                movementType = "push",
+                movementType = MOVEMENT_TYPE,
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
 
-        whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
-        whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(exerciseName)).thenReturn(Mono.just(emptyList()))
+        whenever(exerciseDAL.selectExerciseByName(NON_EXISTENT_EXERCISE)).thenReturn(Mono.just(exercise))
+        whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(NON_EXISTENT_EXERCISE)).thenReturn(Mono.just(emptyList()))
 
-        // When
-        val result = exerciseController.getMuscle(exerciseName)
+        val result = exerciseController.getMuscle(NON_EXISTENT_EXERCISE)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(exerciseDAL).selectExerciseByName(exerciseName)
-        verify(exerciseMuscleDAL).selectExerciseMuscleByExercise(exerciseName)
+        verify(exerciseDAL).selectExerciseByName(NON_EXISTENT_EXERCISE)
+        verify(exerciseMuscleDAL).selectExerciseMuscleByExercise(NON_EXISTENT_EXERCISE)
     }
 
     @Test
     fun `getEquipment should return exercise equipment when found`() {
-        // Given
-        val exerciseName = "Bench Press"
         val exercise =
-            Exercise(
-                name = exerciseName,
-                description = "A compound exercise",
-                movementType = "push",
+            mockExercise(
+                name = EXERCISE_NAME,
+                description = EXERCISE_DESCRIPTION,
+                movementType = MOVEMENT_TYPE,
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
         val exerciseEquipment =
             listOf(
-                ExerciseEquipment(
-                    exerciseName = exerciseName,
-                    equipmentName = "Barbell",
-                ),
-                ExerciseEquipment(
-                    exerciseName = exerciseName,
-                    equipmentName = "Bench",
-                ),
+                mockExerciseEquipment(exerciseName = EXERCISE_NAME, equipmentName = EQUIPMENT_NAME_1),
+                mockExerciseEquipment(exerciseName = EXERCISE_NAME, equipmentName = EQUIPMENT_NAME_2)
             )
 
-        whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)).thenReturn(Mono.just(exerciseEquipment))
+        whenever(exerciseDAL.selectExerciseByName(EXERCISE_NAME)).thenReturn(Mono.just(exercise))
+        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(EXERCISE_NAME)).thenReturn(Mono.just(exerciseEquipment))
 
-        // When
-        val result = exerciseController.getEquipment(exerciseName)
+        val result = exerciseController.getEquipment(EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseEquipment))
             .verifyComplete()
 
-        verify(exerciseDAL).selectExerciseByName(exerciseName)
-        verify(exerciseEquipmentDAL).selectExerciseEquipmentByExercise(exerciseName)
+        verify(exerciseDAL).selectExerciseByName(EXERCISE_NAME)
+        verify(exerciseEquipmentDAL).selectExerciseEquipmentByExercise(EXERCISE_NAME)
     }
 
     @Test
     fun `getEquipment should return not found when no equipment found`() {
-        // Given
-        val exerciseName = "NonExistent"
         val exercise =
-            Exercise(
-                name = exerciseName,
+            mockExercise(
+                name = NON_EXISTENT_EXERCISE,
                 description = "A non-existent exercise",
-                movementType = "push",
+                movementType = MOVEMENT_TYPE,
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
 
-        whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(exercise))
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)).thenReturn(Mono.just(emptyList()))
+        whenever(exerciseDAL.selectExerciseByName(NON_EXISTENT_EXERCISE)).thenReturn(Mono.just(exercise))
+        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(NON_EXISTENT_EXERCISE)).thenReturn(Mono.just(emptyList()))
 
-        // When
-        val result = exerciseController.getEquipment(exerciseName)
+        val result = exerciseController.getEquipment(NON_EXISTENT_EXERCISE)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(exerciseDAL).selectExerciseByName(exerciseName)
-        verify(exerciseEquipmentDAL).selectExerciseEquipmentByExercise(exerciseName)
+        verify(exerciseDAL).selectExerciseByName(NON_EXISTENT_EXERCISE)
+        verify(exerciseEquipmentDAL).selectExerciseEquipmentByExercise(NON_EXISTENT_EXERCISE)
     }
 
     @Test
     fun `getAll should return all exercises`() {
-        // Given
         val exercises =
             listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound exercise",
-                    movementType = "push",
+                mockExercise(
+                    name = EXERCISE_NAME,
+                    description = EXERCISE_DESCRIPTION,
+                    movementType = MOVEMENT_TYPE,
                     isUnilateral = false,
                     isUpper = true,
-                    isAccessory = true,
+                    isAccessory = true
                 ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound exercise",
-                    movementType = "push",
+                mockExercise(
+                    name = SQUAT_NAME,
+                    description = EXERCISE_DESCRIPTION,
+                    movementType = MOVEMENT_TYPE,
                     isUnilateral = false,
                     isUpper = false,
-                    isAccessory = true,
-                ),
+                    isAccessory = true
+                )
             )
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
-        // When
         val result = exerciseController.getAll()
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<Exercise>>)

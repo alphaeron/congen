@@ -1,0 +1,407 @@
+package com.congen
+
+import com.congen.model.Equipment
+import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
+import com.congen.model.ExerciseRotationHistory
+import com.congen.model.ExerciseWorkoutType
+import com.congen.model.HealthCheck
+import com.congen.model.HealthCheckResponse
+import com.congen.model.HealthStatus
+import com.congen.model.Muscle
+import com.congen.model.Program
+import com.congen.model.ProgrammedExercise
+import com.congen.model.ProgrammedWorkout
+import com.congen.model.SetScheme
+import com.congen.model.User
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
+import com.congen.model.UserOneRepMax
+import com.congen.model.UserProgramPreferences
+import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageType
+import com.congen.model.WorkoutStageTypeEnum
+import com.congen.service.conjugate.DayTemplate
+import com.congen.service.conjugate.PrilepinGuidelines
+import com.congen.service.conjugate.SetSchemeParams
+import java.math.BigDecimal
+import java.time.Instant
+
+fun sampleInstant(): Instant = Instant.parse("2024-01-01T00:00:00Z")
+
+fun mockUser(
+    id: Int = 1,
+    name: String = "John Doe",
+    age: Int = 30,
+    height: BigDecimal = BigDecimal("180.5"),
+    weight: BigDecimal = BigDecimal("75.0"),
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): User =
+    User(
+        id = id,
+        name = name,
+        age = age,
+        height = height,
+        weight = weight,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+fun mockSetScheme(
+    id: Long = 1L,
+    programmedExerciseId: Long = 1L,
+    setNumber: Int = 1,
+    isAmrap: Boolean = false,
+    isEmom: Boolean = false,
+    useTempo: Boolean = false,
+    eccentricTempo: String? = null,
+    isometricTempo: String? = null,
+    concentricTempo: String? = null,
+    targetWeight: BigDecimal? = BigDecimal("100.0"),
+    performedWeight: BigDecimal? = null,
+    targetRepCount: Int? = null,
+    performedRepCount: Int? = null,
+    restSeconds: Int? = null,
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): SetScheme =
+    SetScheme(
+        id = id,
+        programmedExerciseId = programmedExerciseId,
+        setNumber = setNumber,
+        isAmrap = isAmrap,
+        isEmom = isEmom,
+        useTempo = useTempo,
+        eccentricTempo = eccentricTempo,
+        isometricTempo = isometricTempo,
+        concentricTempo = concentricTempo,
+        targetWeight = targetWeight,
+        performedWeight = performedWeight,
+        targetRepCount = targetRepCount,
+        performedRepCount = performedRepCount,
+        restSeconds = restSeconds,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+fun mockProgrammedExercise(
+    id: Long = 1L,
+    workoutStageId: Long = 1L,
+    exerciseName: String = "Bench Press",
+    position: Int = 1,
+    notes: String? = null,
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): ProgrammedExercise =
+    ProgrammedExercise(
+        id = id,
+        workoutStageId = workoutStageId,
+        exerciseName = exerciseName,
+        position = position,
+        notes = notes,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+fun mockUserOneRepMax(
+    userId: Int = 1,
+    exerciseName: String = "Bench Press",
+    oneRepMax: BigDecimal = BigDecimal("100.0"),
+    updatedAt: Instant = sampleInstant()
+): UserOneRepMax =
+    UserOneRepMax(
+        userId = userId,
+        exerciseName = exerciseName,
+        oneRepMax = oneRepMax,
+        updatedAt = updatedAt
+    )
+
+fun mockUserEquipment(
+    userId: Int = 1,
+    equipmentName: String = "Barbell",
+    createdAt: Instant = sampleInstant()
+): UserEquipment =
+    UserEquipment(
+        userId = userId,
+        equipmentName = equipmentName,
+        createdAt = createdAt
+    )
+
+fun mockUserExercisePreference(
+    userId: Int = 1,
+    exerciseName: String = "Bench Press",
+    shouldAvoid: Boolean = false,
+    createdAt: Instant = sampleInstant()
+): UserExercisePreference =
+    UserExercisePreference(
+        userId = userId,
+        exerciseName = exerciseName,
+        shouldAvoid = shouldAvoid,
+        createdAt = createdAt
+    )
+
+fun mockUserProgramPreferences(
+    userId: Int = 1,
+    programDaysPerWeek: Int = 3,
+    sessionTimeLengthInMinutes: Int = 60,
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): UserProgramPreferences =
+    UserProgramPreferences(
+        userId = userId,
+        programDaysPerWeek = programDaysPerWeek,
+        sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+fun mockExercise(
+    name: String = "Bench Press",
+    description: String = "A compound upper body exercise",
+    movementType: String = "horizontal_push",
+    isUnilateral: Boolean = false,
+    isUpper: Boolean = true,
+    isAccessory: Boolean = false
+): Exercise =
+    Exercise(
+        name = name,
+        description = description,
+        movementType = movementType,
+        isUnilateral = isUnilateral,
+        isUpper = isUpper,
+        isAccessory = isAccessory
+    )
+
+fun mockProgram(
+    id: Long = 1L,
+    userId: Int = 1,
+    name: String = "Test Program",
+    currentWeekNumber: Int = 1,
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): Program =
+    Program(
+        id = id,
+        userId = userId,
+        name = name,
+        currentWeekNumber = currentWeekNumber,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+fun mockProgrammedWorkout(
+    id: Long = 1L,
+    programId: Long = 1L,
+    dayNumber: Int = 1,
+    name: String = "ME_Upper Day",
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): ProgrammedWorkout =
+    ProgrammedWorkout(
+        id = id,
+        programId = programId,
+        dayNumber = dayNumber,
+        name = name,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+// Health check helpers
+fun mockHealthCheck(
+    componentId: String = "postgres",
+    componentType: String = "database",
+    status: HealthStatus = HealthStatus.PASS,
+    output: String = "Database connection successful"
+): HealthCheck =
+    HealthCheck(
+        componentId = componentId,
+        componentType = componentType,
+        status = status,
+        output = output
+    )
+
+fun mockHealthCheckResponse(
+    status: HealthStatus = HealthStatus.PASS,
+    version: String = "1.2.3",
+    releaseId: String = "abc123",
+    databaseStatus: HealthStatus = HealthStatus.PASS,
+    applicationStatus: HealthStatus = HealthStatus.PASS
+): HealthCheckResponse =
+    HealthCheckResponse(
+        status = status,
+        version = version,
+        releaseId = releaseId,
+        checks =
+            mapOf(
+                "database" to
+                    listOf(
+                        mockHealthCheck(
+                            componentId = "postgres",
+                            componentType = "database",
+                            status = databaseStatus,
+                            output =
+                                when (databaseStatus) {
+                                    HealthStatus.PASS -> "Database connection successful"
+                                    HealthStatus.WARN -> "Database connection slow"
+                                    HealthStatus.FAIL -> "Database connection failed"
+                                }
+                        )
+                    ),
+                "application" to
+                    listOf(
+                        mockHealthCheck(
+                            componentId = "congen-api",
+                            componentType = "service",
+                            status = applicationStatus,
+                            output = "Application is running"
+                        )
+                    )
+            )
+    )
+
+// Add more helpers as needed for other models and test data
+
+// Equipment helpers
+fun mockEquipment(
+    name: String = "Barbell",
+    description: String = "A barbell for weightlifting"
+): Equipment =
+    Equipment(
+        name = name,
+        description = description
+    )
+
+fun mockExerciseEquipment(
+    exerciseName: String = "Bench Press",
+    equipmentName: String = "Barbell"
+): ExerciseEquipment =
+    ExerciseEquipment(
+        exerciseName = exerciseName,
+        equipmentName = equipmentName
+    )
+
+// Muscle helpers
+fun mockMuscle(
+    name: String = "Chest",
+    description: String = "Chest muscles"
+): Muscle =
+    Muscle(
+        name = name,
+        description = description
+    )
+
+fun mockExerciseMuscle(
+    exerciseName: String = "Bench Press",
+    muscleName: String = "Chest"
+): ExerciseMuscle =
+    ExerciseMuscle(
+        exerciseName = exerciseName,
+        muscleName = muscleName
+    )
+
+// ExerciseWorkoutType helpers
+fun mockExerciseWorkoutType(
+    exerciseName: String = "Bench Press",
+    movementType: String = "horizontal push",
+    workoutType: String = "dynamic_effort"
+): ExerciseWorkoutType =
+    ExerciseWorkoutType(
+        exerciseName = exerciseName,
+        movementType = movementType,
+        workoutType = workoutType
+    )
+
+// ExerciseRotationHistory helpers
+fun mockExerciseRotationHistory(
+    id: Long = 1L,
+    userId: Int = 1,
+    exerciseName: String = "Bench Press",
+    isAccessory: Boolean = false,
+    createdAt: Instant = sampleInstant()
+): ExerciseRotationHistory =
+    ExerciseRotationHistory(
+        id = id,
+        userId = userId,
+        exerciseName = exerciseName,
+        isAccessory = isAccessory,
+        createdAt = createdAt
+    )
+
+// WorkoutStage helpers
+fun mockWorkoutStage(
+    id: Long = 1L,
+    programmedWorkoutId: Long = 5L,
+    stageTypeId: Int = 1,
+    position: Int = 1,
+    name: String = "Main Lift",
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): WorkoutStage =
+    WorkoutStage(
+        id = id,
+        programmedWorkoutId = programmedWorkoutId,
+        stageTypeId = stageTypeId,
+        position = position,
+        name = name,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+// WorkoutStageType helpers
+fun mockWorkoutStageType(
+    id: Int = 1,
+    name: WorkoutStageTypeEnum = WorkoutStageTypeEnum.PRIMARY,
+    createdAt: Instant = sampleInstant()
+): WorkoutStageType =
+    WorkoutStageType(
+        id = id,
+        name = name,
+        createdAt = createdAt
+    )
+
+// Conjugate service helpers
+fun mockSetSchemeParams(
+    setNumber: Int = 1,
+    isAmrap: Boolean = false,
+    isEmom: Boolean = false,
+    useTempo: Boolean = false,
+    eccentricTempo: String? = null,
+    isometricTempo: String? = null,
+    concentricTempo: String? = null,
+    targetWeight: BigDecimal? = BigDecimal("100.0"),
+    performedWeight: BigDecimal? = null,
+    targetRepCount: Int? = 5,
+    performedRepCount: Int? = null,
+    restSeconds: Int? = 180
+): SetSchemeParams =
+    SetSchemeParams(
+        setNumber = setNumber,
+        isAmrap = isAmrap,
+        isEmom = isEmom,
+        useTempo = useTempo,
+        eccentricTempo = eccentricTempo,
+        isometricTempo = isometricTempo,
+        concentricTempo = concentricTempo,
+        targetWeight = targetWeight,
+        performedWeight = performedWeight,
+        targetRepCount = targetRepCount,
+        performedRepCount = performedRepCount,
+        restSeconds = restSeconds
+    )
+
+fun mockDayTemplate(type: String = "ME_Upper"): DayTemplate = DayTemplate(type = type)
+
+fun mockPrilepinGuidelines(
+    intensityRange: ClosedFloatingPointRange<Double> = 0.8..0.9,
+    repsPerSetRange: IntRange = 2..4,
+    totalReps: Int = 15,
+    restSeconds: IntRange = 180..300
+): PrilepinGuidelines =
+    PrilepinGuidelines(
+        intensityRange = intensityRange,
+        repsPerSetRange = repsPerSetRange,
+        totalReps = totalReps,
+        restSeconds = restSeconds
+    )

@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockExercise
 import com.congen.model.Exercise
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +15,9 @@ class ExerciseDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var exerciseDAL: ExerciseDAL
 
+    private val exercise = mockExercise()
+    private val exercises = listOf(exercise, mockExercise(name = "Squat", isUpper = false))
+
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
@@ -22,88 +26,38 @@ class ExerciseDALTest {
 
     @Test
     fun `selectExerciseByName should return exercise`() {
-        // Given
-        val exerciseName = "Bench Press"
-        val exercise =
-            Exercise(
-                name = exerciseName,
-                description = "A compound exercise",
-                movementType = "push",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = true,
-            )
-
         whenever(
             postgresClient.selectIndividual<Exercise>(
                 "SELECT * FROM exercise WHERE name=$1",
-                exerciseName,
+                exercise.name,
             ),
         ).thenReturn(Mono.just(exercise))
 
-        // When
-        val result = exerciseDAL.selectExerciseByName(exerciseName)
+        val result = exerciseDAL.selectExerciseByName(exercise.name)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
-
         verify(postgresClient).selectIndividual<Exercise>(
             "SELECT * FROM exercise WHERE name=$1",
-            exerciseName,
+            exercise.name,
         )
     }
 
     @Test
     fun `selectExercises should return list of exercises`() {
-        // Given
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound exercise",
-                    movementType = "push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = true,
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound exercise",
-                    movementType = "push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = true,
-                ),
-            )
-
         whenever(postgresClient.select<Exercise>("SELECT * FROM exercise")).thenReturn(Mono.just(exercises))
 
-        // When
         val result = exerciseDAL.selectExercises()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercises)
             .verifyComplete()
-
         verify(postgresClient).select<Exercise>("SELECT * FROM exercise")
     }
 
     @Test
     fun `insertExercise should return inserted exercise`() {
-        // Given
-        val exercise =
-            Exercise(
-                name = "Bench Press",
-                description = "A compound exercise",
-                movementType = "push",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = true,
-            )
-
         val expectedQuery =
             """
             INSERT INTO exercise
@@ -124,7 +78,6 @@ class ExerciseDALTest {
             ),
         ).thenReturn(Mono.just(exercise))
 
-        // When
         val result =
             exerciseDAL.insertExercise(
                 exercise.name,
@@ -135,11 +88,9 @@ class ExerciseDALTest {
                 exercise.isAccessory
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
-
         verify(postgresClient).update<Exercise>(
             expectedQuery,
             exercise.name,
@@ -153,17 +104,7 @@ class ExerciseDALTest {
 
     @Test
     fun `updateExercise should return updated exercise`() {
-        // Given
-        val exercise =
-            Exercise(
-                name = "Bench Press",
-                description = "Updated description",
-                movementType = "push",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = true,
-            )
-
+        val updatedExercise = mockExercise(description = "Updated description")
         val expectedQuery =
             """
             UPDATE exercise
@@ -174,66 +115,48 @@ class ExerciseDALTest {
         whenever(
             postgresClient.update<Exercise>(
                 expectedQuery,
-                exercise.name,
-                exercise.description,
-                exercise.movementType,
-                exercise.isUnilateral,
-                exercise.isUpper,
-                exercise.isAccessory,
+                updatedExercise.name,
+                updatedExercise.description,
+                updatedExercise.movementType,
+                updatedExercise.isUnilateral,
+                updatedExercise.isUpper,
+                updatedExercise.isAccessory,
             ),
-        ).thenReturn(Mono.just(exercise))
+        ).thenReturn(Mono.just(updatedExercise))
 
-        // When
         val result =
             exerciseDAL.updateExercise(
-                exercise.name,
-                exercise.description,
-                exercise.movementType,
-                exercise.isUnilateral,
-                exercise.isUpper,
-                exercise.isAccessory
+                updatedExercise.name,
+                updatedExercise.description,
+                updatedExercise.movementType,
+                updatedExercise.isUnilateral,
+                updatedExercise.isUpper,
+                updatedExercise.isAccessory
             )
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(exercise)
+            .expectNext(updatedExercise)
             .verifyComplete()
-
         verify(postgresClient).update<Exercise>(
             expectedQuery,
-            exercise.name,
-            exercise.description,
-            exercise.movementType,
-            exercise.isUnilateral,
-            exercise.isUpper,
-            exercise.isAccessory,
+            updatedExercise.name,
+            updatedExercise.description,
+            updatedExercise.movementType,
+            updatedExercise.isUnilateral,
+            updatedExercise.isUpper,
+            updatedExercise.isAccessory,
         )
     }
 
     @Test
     fun `deleteExercise should return deleted exercise`() {
-        // Given
-        val exerciseName = "Bench Press"
-        val deletedExercise =
-            Exercise(
-                name = exerciseName,
-                description = "A compound exercise",
-                movementType = "push",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = true,
-            )
+        whenever(postgresClient.update<Exercise>("DELETE FROM exercise WHERE name=$1", exercise.name)).thenReturn(Mono.just(exercise))
 
-        whenever(postgresClient.update<Exercise>("DELETE FROM exercise WHERE name=$1", exerciseName)).thenReturn(Mono.just(deletedExercise))
+        val result = exerciseDAL.deleteExercise(exercise.name)
 
-        // When
-        val result = exerciseDAL.deleteExercise(exerciseName)
-
-        // Then
         StepVerifier.create(result)
-            .expectNext(deletedExercise)
+            .expectNext(exercise)
             .verifyComplete()
-
-        verify(postgresClient).update<Exercise>("DELETE FROM exercise WHERE name=$1", exerciseName)
+        verify(postgresClient).update<Exercise>("DELETE FROM exercise WHERE name=$1", exercise.name)
     }
 }

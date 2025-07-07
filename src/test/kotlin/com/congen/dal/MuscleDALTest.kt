@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockMuscle
 import com.congen.model.Muscle
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +15,9 @@ class MuscleDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var muscleDAL: MuscleDAL
 
+    private val muscle = mockMuscle()
+    private val muscles = listOf(muscle, mockMuscle(name = "Back"))
+
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
@@ -22,72 +26,38 @@ class MuscleDALTest {
 
     @Test
     fun `selectMuscleByName should return muscle`() {
-        // Given
-        val muscleName = "Chest"
-        val muscle =
-            Muscle(
-                name = muscleName,
-                description = "Chest muscles",
-            )
-
         whenever(
             postgresClient.selectIndividual<Muscle>(
                 "SELECT * FROM muscle WHERE name=$1",
-                muscleName,
+                muscle.name,
             ),
         ).thenReturn(Mono.just(muscle))
 
-        // When
-        val result = muscleDAL.selectMuscleByName(muscleName)
+        val result = muscleDAL.selectMuscleByName(muscle.name)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(muscle)
             .verifyComplete()
-
         verify(postgresClient).selectIndividual<Muscle>(
             "SELECT * FROM muscle WHERE name=$1",
-            muscleName,
+            muscle.name,
         )
     }
 
     @Test
     fun `selectMuscles should return list of muscles`() {
-        // Given
-        val muscles =
-            listOf(
-                Muscle(
-                    name = "Chest",
-                    description = "Chest muscles",
-                ),
-                Muscle(
-                    name = "Back",
-                    description = "Back muscles",
-                ),
-            )
-
         whenever(postgresClient.select<Muscle>("SELECT * FROM muscle")).thenReturn(Mono.just(muscles))
 
-        // When
         val result = muscleDAL.selectMuscles()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(muscles)
             .verifyComplete()
-
         verify(postgresClient).select<Muscle>("SELECT * FROM muscle")
     }
 
     @Test
     fun `insertMuscle should return inserted muscle`() {
-        // Given
-        val muscle =
-            Muscle(
-                name = "Chest",
-                description = "Chest muscles",
-            )
-
         val expectedQuery =
             """
             INSERT INTO muscle
@@ -104,14 +74,11 @@ class MuscleDALTest {
             ),
         ).thenReturn(Mono.just(muscle))
 
-        // When
         val result = muscleDAL.insertMuscle(muscle.name, muscle.description)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(muscle)
             .verifyComplete()
-
         verify(postgresClient).update<Muscle>(
             expectedQuery,
             muscle.name,
@@ -121,13 +88,7 @@ class MuscleDALTest {
 
     @Test
     fun `updateMuscle should return updated muscle`() {
-        // Given
-        val muscle =
-            Muscle(
-                name = "Chest",
-                description = "Updated chest muscles description",
-            )
-
+        val updatedMuscle = mockMuscle(description = "Updated description")
         val expectedQuery =
             """
             UPDATE muscle
@@ -138,54 +99,40 @@ class MuscleDALTest {
         whenever(
             postgresClient.update<Muscle>(
                 expectedQuery,
-                muscle.name,
-                muscle.description,
+                updatedMuscle.name,
+                updatedMuscle.description,
             ),
-        ).thenReturn(Mono.just(muscle))
+        ).thenReturn(Mono.just(updatedMuscle))
 
-        // When
-        val result = muscleDAL.updateMuscle(muscle.name, muscle.description)
+        val result = muscleDAL.updateMuscle(updatedMuscle.name, updatedMuscle.description)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(muscle)
+            .expectNext(updatedMuscle)
             .verifyComplete()
-
         verify(postgresClient).update<Muscle>(
             expectedQuery,
-            muscle.name,
-            muscle.description,
+            updatedMuscle.name,
+            updatedMuscle.description,
         )
     }
 
     @Test
     fun `deleteMuscle should return deleted muscle`() {
-        // Given
-        val muscleName = "Chest"
-        val deletedMuscle =
-            Muscle(
-                name = muscleName,
-                description = "Chest muscles",
-            )
-
         whenever(
             postgresClient.update<Muscle>(
                 "DELETE FROM muscle WHERE name=$1",
-                muscleName,
+                muscle.name,
             ),
-        ).thenReturn(Mono.just(deletedMuscle))
+        ).thenReturn(Mono.just(muscle))
 
-        // When
-        val result = muscleDAL.deleteMuscle(muscleName)
+        val result = muscleDAL.deleteMuscle(muscle.name)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(deletedMuscle)
+            .expectNext(muscle)
             .verifyComplete()
-
         verify(postgresClient).update<Muscle>(
             "DELETE FROM muscle WHERE name=$1",
-            muscleName,
+            muscle.name,
         )
     }
 }

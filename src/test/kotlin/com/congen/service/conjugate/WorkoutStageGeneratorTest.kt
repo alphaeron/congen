@@ -4,12 +4,14 @@ import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.model.Exercise
-import com.congen.model.ProgrammedExercise
-import com.congen.model.SetScheme
-import com.congen.model.UserOneRepMax
-import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageType
+import com.congen.mockExercise
+import com.congen.mockPrilepinGuidelines
+import com.congen.mockProgrammedExercise
+import com.congen.mockSetScheme
+import com.congen.mockSetSchemeParams
+import com.congen.mockUserOneRepMax
+import com.congen.mockWorkoutStage
+import com.congen.mockWorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -22,7 +24,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -36,6 +37,11 @@ class WorkoutStageGeneratorTest {
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var setSchemeDAL: SetSchemeDAL
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
+
+    private val workoutId = 1L
+    private val workoutStageId = 1L
+    private val programmedExerciseId = 1L
+    private val userId = 1
 
     @BeforeEach
     fun setUp() {
@@ -56,33 +62,21 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createWorkoutStage should create primary stage`() {
-        val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.PRIMARY
         val position = 1
-        val workoutStageType =
-            WorkoutStageType(
-                id = 1,
-                name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = Instant.now()
-            )
+        val workoutStageType = mockWorkoutStageType(id = 1, name = WorkoutStageTypeEnum.PRIMARY)
         val expectedStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 1,
                 position = position,
-                name = "Primary",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                name = "Primary"
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
             .thenReturn(Mono.just(workoutStageType))
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
-            .thenReturn(Mono.just(workoutStageType))
         whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(1), eq(position), eq("Primary")))
-            .thenReturn(Mono.just(expectedStage))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -96,33 +90,21 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createWorkoutStage should create secondary stage`() {
-        val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.SECONDARY
         val position = 2
-        val workoutStageType =
-            WorkoutStageType(
-                id = 2,
-                name = WorkoutStageTypeEnum.SECONDARY,
-                createdAt = Instant.now()
-            )
+        val workoutStageType = mockWorkoutStageType(id = 2, name = WorkoutStageTypeEnum.SECONDARY)
         val expectedStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 2L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 2,
                 position = position,
-                name = "Secondary",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                name = "Secondary"
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
             .thenReturn(Mono.just(workoutStageType))
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
-            .thenReturn(Mono.just(workoutStageType))
         whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(2), eq(position), eq("Secondary")))
-            .thenReturn(Mono.just(expectedStage))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -136,33 +118,21 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createWorkoutStage should create accessory stage`() {
-        val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.ACCESSORY
         val position = 3
-        val workoutStageType =
-            WorkoutStageType(
-                id = 3,
-                name = WorkoutStageTypeEnum.ACCESSORY,
-                createdAt = Instant.now()
-            )
+        val workoutStageType = mockWorkoutStageType(id = 3, name = WorkoutStageTypeEnum.ACCESSORY)
         val expectedStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 3L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 3,
                 position = position,
-                name = "Accessory",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                name = "Accessory"
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
             .thenReturn(Mono.just(workoutStageType))
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
-            .thenReturn(Mono.just(workoutStageType))
         whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(3), eq(position), eq("Accessory")))
-            .thenReturn(Mono.just(expectedStage))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -176,33 +146,21 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createWorkoutStage should create conditioning stage`() {
-        val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.CONDITIONING
         val position = 4
-        val workoutStageType =
-            WorkoutStageType(
-                id = 4,
-                name = WorkoutStageTypeEnum.CONDITIONING,
-                createdAt = Instant.now()
-            )
+        val workoutStageType = mockWorkoutStageType(id = 4, name = WorkoutStageTypeEnum.CONDITIONING)
         val expectedStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 4L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 4,
                 position = position,
-                name = "Conditioning",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                name = "Conditioning"
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
             .thenReturn(Mono.just(workoutStageType))
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
-            .thenReturn(Mono.just(workoutStageType))
         whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(4), eq(position), eq("Conditioning")))
-            .thenReturn(Mono.just(expectedStage))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -216,33 +174,21 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createWorkoutStage should default to primary for unknown stage type`() {
-        val workoutId = 1L
         val stageType = WorkoutStageTypeEnum.PRIMARY
         val position = 1
-        val workoutStageType =
-            WorkoutStageType(
-                id = 1,
-                name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = Instant.now()
-            )
+        val workoutStageType = mockWorkoutStageType(id = 1, name = WorkoutStageTypeEnum.PRIMARY)
         val expectedStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = workoutId,
                 stageTypeId = 1,
                 position = position,
-                name = "Primary",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                name = "Primary"
             )
 
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(eq(stageType)))
             .thenReturn(Mono.just(workoutStageType))
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(any()))
-            .thenReturn(Mono.just(workoutStageType))
         whenever(workoutStageDAL.insertWorkoutStage(eq(workoutId), eq(1), eq(position), eq("Primary")))
-            .thenReturn(Mono.just(expectedStage))
-        whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.just(expectedStage))
 
         val result = workoutStageGenerator.createWorkoutStage(workoutId, stageType, position)
@@ -256,17 +202,13 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createProgrammedExercise should create exercise`() {
-        val workoutStageId = 1L
         val exerciseName = "Bench Press"
         val expectedExercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = workoutStageId,
                 exerciseName = exerciseName,
-                position = 1,
-                notes = null,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                position = 1
             )
 
         whenever(programmedExerciseDAL.insertProgrammedExercise(workoutStageId, exerciseName, 1, null))
@@ -283,58 +225,32 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createSetSchemes should create multiple set schemes`() {
-        val programmedExerciseId = 1L
         val setSchemeParams =
             listOf(
-                SetSchemeParams(
+                mockSetSchemeParams(
                     setNumber = 1,
-                    isAmrap = false,
-                    isEmom = false,
-                    useTempo = false,
-                    eccentricTempo = null,
-                    isometricTempo = null,
-                    concentricTempo = null,
                     targetWeight = BigDecimal("100.0"),
-                    performedWeight = null,
                     targetRepCount = 5,
-                    performedRepCount = null,
                     restSeconds = 180
                 ),
-                SetSchemeParams(
+                mockSetSchemeParams(
                     setNumber = 2,
-                    isAmrap = false,
-                    isEmom = false,
-                    useTempo = false,
-                    eccentricTempo = null,
-                    isometricTempo = null,
-                    concentricTempo = null,
                     targetWeight = BigDecimal("110.0"),
-                    performedWeight = null,
                     targetRepCount = 5,
-                    performedRepCount = null,
                     restSeconds = 180
                 )
             )
 
         val mockSetScheme =
-            SetScheme(
+            mockSetScheme(
                 id = 1L,
                 programmedExerciseId = 1L,
                 setNumber = 1,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
                 targetWeight = BigDecimal("100.0"),
-                performedWeight = null,
                 targetRepCount = 5,
-                performedRepCount = null,
-                restSeconds = 180,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                restSeconds = 180
             )
+
         whenever(
             setSchemeDAL.insertSetScheme(
                 eq(1L),
@@ -392,36 +308,25 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `generatePrilepinBasedScheme should generate scheme with guidelines`() {
-        val userId = 1
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "Bench Press",
                 description = "A compound upper body exercise",
-                movementType = "horizontal push",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = false
+                movementType = "horizontal push"
             )
         val movementRole = "primary"
         val dayType = "ME_Upper"
         val oneRepMaxes =
             listOf(
-                UserOneRepMax(
+                mockUserOneRepMax(
                     userId = userId,
                     exerciseName = "Bench Press",
-                    oneRepMax = BigDecimal("100.0"),
-                    updatedAt = Instant.now()
+                    oneRepMax = BigDecimal("100.0")
                 )
             )
         val currentWeekNumber = 1
 
-        val guidelines =
-            PrilepinGuidelines(
-                intensityRange = 0.8..0.9,
-                repsPerSetRange = 2..4,
-                totalReps = 15,
-                restSeconds = 180..300
-            )
+        val guidelines = mockPrilepinGuidelines()
         val intensity = 0.85
 
         whenever(
@@ -450,30 +355,26 @@ class WorkoutStageGeneratorTest {
         assertEquals(1, firstSet.setNumber)
         assertFalse(firstSet.isAmrap)
         assertFalse(firstSet.isEmom)
-        assertEquals(BigDecimal("85.00"), firstSet.targetWeight) // 100 * 0.85
+        assertEquals(BigDecimal("85.00"), firstSet.targetWeight)
         assertTrue(firstSet.targetRepCount in 2..4)
         assertTrue(firstSet.restSeconds in 180..300)
     }
 
     @Test
     fun `generateSecondaryExerciseScheme should generate secondary scheme`() {
-        val userId = 1
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "Squat",
                 description = "A compound lower body exercise",
                 movementType = "vertical push",
-                isUnilateral = false,
-                isUpper = false,
-                isAccessory = false
+                isUpper = false
             )
         val oneRepMaxes =
             listOf(
-                UserOneRepMax(
+                mockUserOneRepMax(
                     userId = userId,
                     exerciseName = "Squat",
-                    oneRepMax = BigDecimal("200.0"),
-                    updatedAt = Instant.now()
+                    oneRepMax = BigDecimal("200.0")
                 )
             )
 
@@ -486,30 +387,27 @@ class WorkoutStageGeneratorTest {
         assertEquals(1, firstSet.setNumber)
         assertFalse(firstSet.isAmrap)
         assertFalse(firstSet.isEmom)
-        assertTrue(firstSet.targetWeight!! in BigDecimal("160.0")..BigDecimal("180.0")) // 200 * 0.8-0.9
+        assertTrue(firstSet.targetWeight!! in BigDecimal("160.0")..BigDecimal("180.0"))
         assertTrue(firstSet.targetRepCount in 5..8)
         assertTrue(firstSet.restSeconds in 180..300)
     }
 
     @Test
     fun `generateAmrapOrEmomScheme should generate conditioning scheme`() {
-        val userId = 1
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "Burpees",
                 description = "A conditioning exercise",
                 movementType = "compound",
-                isUnilateral = false,
                 isUpper = false,
                 isAccessory = true
             )
         val oneRepMaxes =
             listOf(
-                UserOneRepMax(
+                mockUserOneRepMax(
                     userId = userId,
                     exerciseName = "Burpees",
-                    oneRepMax = BigDecimal("50.0"),
-                    updatedAt = Instant.now(),
+                    oneRepMax = BigDecimal("50.0")
                 )
             )
 
@@ -520,36 +418,26 @@ class WorkoutStageGeneratorTest {
 
         val set = result[0]
         assertEquals(1, set.setNumber)
-        assertTrue(set.isAmrap.xor(set.isEmom)) // Exactly one is true
-        assertEquals(BigDecimal("25.00"), set.targetWeight) // 50.0 * 0.5 intensity
-        assertNull(set.targetRepCount) // Varies per person for AMRAP/EMOM
-        assertTrue(set.restSeconds == 0 || set.restSeconds == 60) // 0 for AMRAP, 60 for EMOM
+        assertTrue(set.isAmrap.xor(set.isEmom))
+        assertEquals(BigDecimal("25.00"), set.targetWeight)
+        assertNull(set.targetRepCount)
+        assertTrue(set.restSeconds == 0 || set.restSeconds == 60)
     }
 
     @Test
     fun `generatePrilepinBasedScheme should use default weight when no 1RM found`() {
-        val userId = 1
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "New Exercise",
                 description = "A new exercise",
-                movementType = "compound",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = false
+                movementType = "compound"
             )
         val movementRole = "primary"
         val dayType = "ME_Upper"
-        val oneRepMaxes = emptyList<UserOneRepMax>()
+        val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
         val currentWeekNumber = 1
 
-        val guidelines =
-            PrilepinGuidelines(
-                intensityRange = 0.8..0.9,
-                repsPerSetRange = 2..4,
-                totalReps = 15,
-                restSeconds = 180..300
-            )
+        val guidelines = mockPrilepinGuidelines()
         val intensity = 0.85
 
         whenever(
@@ -575,22 +463,18 @@ class WorkoutStageGeneratorTest {
         assertTrue(result.isNotEmpty())
 
         val firstSet = result[0]
-        assertEquals(BigDecimal("50.0"), firstSet.targetWeight) // Default weight
+        assertEquals(BigDecimal("50.0"), firstSet.targetWeight)
     }
 
     @Test
     fun `generateSecondaryExerciseScheme should use default weight when no 1RM found`() {
-        val userId = 1
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "New Exercise",
                 description = "A new exercise",
-                movementType = "compound",
-                isUnilateral = false,
-                isUpper = true,
-                isAccessory = false
+                movementType = "compound"
             )
-        val oneRepMaxes = emptyList<UserOneRepMax>()
+        val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
         val result = workoutStageGenerator.generateSecondaryExerciseScheme(userId, exercise, oneRepMaxes)
 
@@ -598,22 +482,20 @@ class WorkoutStageGeneratorTest {
         assertTrue(result.isNotEmpty())
 
         val firstSet = result[0]
-        assertEquals(BigDecimal("50.0"), firstSet.targetWeight) // Default weight
+        assertEquals(BigDecimal("50.0"), firstSet.targetWeight)
     }
 
     @Test
     fun `generateAmrapOrEmomScheme should use default weight when no 1RM found`() {
-        val userId = 1
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "New Exercise",
                 description = "A new exercise",
                 movementType = "compound",
-                isUnilateral = false,
                 isUpper = false,
                 isAccessory = true
             )
-        val oneRepMaxes = emptyList<UserOneRepMax>()
+        val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
         val result = workoutStageGenerator.generateAmrapOrEmomScheme(userId, exercise, oneRepMaxes)
 

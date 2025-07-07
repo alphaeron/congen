@@ -1,4 +1,6 @@
-check missing integration tests
+check missing +simplify integration tests
+
+reduce duplication in dals (1 base dal with CRUD operations supported, one bean for each sub-controller instantiated with custom queries for the operations?  Still allow additional method definition via subclassing if required though while still supporting crud operations.  only need to test the base class in unit tests then for further simplificaiton.
 
 Only get the latest program for a user.
 
@@ -21,6 +23,10 @@ put generateWorkoutsForWeek in the template itself.
 
 2 or 3 week conjugate generation
 
+default current week number 1 1 in program controller?
+
+use same workout stages across all programs
+
 Add the ability for a user to enter their weak muscles, and have the accessories focus on those.
 
 move to minikube, skaffold, kubernetes manifests for deployment, integrate deployment into gradle targets, document deployment process and how to run/test locally.
@@ -34,7 +40,3 @@ then support adding custom movementType s so there is complete flexability with 
 then support exerciseAttributes instead of isUnilateral, ... (like tags) for even more flexability.
 
 remove unneeded endpoints
-
-default current week number 1 1 in program controller?
-
-use same workout stages across all programs

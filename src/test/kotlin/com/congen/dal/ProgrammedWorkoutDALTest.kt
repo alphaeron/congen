@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.exceptions.ValidationException
+import com.congen.mockProgrammedWorkout
 import com.congen.model.ProgrammedWorkout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -12,12 +13,23 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
 class ProgrammedWorkoutDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
-    private val now = Instant.now()
+
+    private val programmedWorkout = mockProgrammedWorkout()
+    private val programmedWorkoutList =
+        listOf(
+            programmedWorkout,
+            mockProgrammedWorkout(id = 2L, dayNumber = 2, name = "Week 2 - Lower Body")
+        )
+    private val allWorkouts =
+        listOf(
+            mockProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "Bench Press Day"),
+            mockProgrammedWorkout(id = 2L, programId = 1L, dayNumber = 2, name = "Squat Day"),
+            mockProgrammedWorkout(id = 3L, programId = 2L, dayNumber = 1, name = "Deadlift Day")
+        )
 
     @BeforeEach
     fun setUp() {
@@ -27,107 +39,60 @@ class ProgrammedWorkoutDALTest {
 
     @Test
     fun `selectProgrammedWorkoutById should return programmed workout`() {
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 5L,
-                dayNumber = 1,
-                name = "Week 1 - Upper Body",
-                createdAt = now,
-                updatedAt = now
-            )
         whenever(
-            postgresClient.selectIndividual<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE id=$1", 1L)
+            postgresClient.selectIndividual<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE id=$1", programmedWorkout.id)
         ).thenReturn(Mono.just(programmedWorkout))
-        val result = programmedWorkoutDAL.selectProgrammedWorkoutById(1L)
+        val result = programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkout.id)
         StepVerifier.create(result).expectNext(programmedWorkout).verifyComplete()
-        verify(postgresClient).selectIndividual<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE id=$1", 1L)
+        verify(postgresClient).selectIndividual<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE id=$1", programmedWorkout.id)
     }
 
     @Test
     fun `selectProgrammedWorkoutsByProgram should return list of programmed workouts`() {
-        val programmedWorkouts =
-            listOf(
-                ProgrammedWorkout(
-                    id = 1L,
-                    programId = 5L,
-                    dayNumber = 1,
-                    name = "Week 1 - Upper Body",
-                    createdAt = now,
-                    updatedAt = now
-                ),
-                ProgrammedWorkout(
-                    id = 2L,
-                    programId = 5L,
-                    dayNumber = 2,
-                    name = "Week 2 - Lower Body",
-                    createdAt = now,
-                    updatedAt = now
-                )
-            )
         whenever(
-            postgresClient.select<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE program_id=$1 ORDER BY day_number", 5L)
-        ).thenReturn(Mono.just(programmedWorkouts))
-        val result = programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(5L)
-        StepVerifier.create(result).expectNext(programmedWorkouts).verifyComplete()
-        verify(postgresClient).select<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE program_id=$1 ORDER BY day_number", 5L)
+            postgresClient.select<ProgrammedWorkout>(
+                "SELECT * FROM programmed_workout WHERE program_id=$1 ORDER BY day_number",
+                programmedWorkout.programId
+            )
+        ).thenReturn(Mono.just(programmedWorkoutList))
+        val result = programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programmedWorkout.programId)
+        StepVerifier.create(result).expectNext(programmedWorkoutList).verifyComplete()
+        verify(
+            postgresClient
+        ).select<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE program_id=$1 ORDER BY day_number", programmedWorkout.programId)
     }
 
     @Test
     fun `insertProgrammedWorkout should return inserted programmed workout`() {
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 0L,
-                programId = 5L,
-                dayNumber = 1,
-                name = "Week 1 - Upper Body",
-                createdAt = now,
-                updatedAt = now
-            )
-        whenever(
-            postgresClient.update<ProgrammedWorkout>(
-                """
-                INSERT INTO programmed_workout
-                    (program_id, day_number, name)
-                VALUES
-                    ($1, $2, $3)
-                """.trimIndent(),
-                programmedWorkout.programId,
-                programmedWorkout.dayNumber,
-                programmedWorkout.name,
-            ),
-        ).thenReturn(Mono.just(programmedWorkout))
-        val result =
-            programmedWorkoutDAL.insertProgrammedWorkout(
-                programmedWorkout.programId,
-                programmedWorkout.dayNumber,
-                programmedWorkout.name
-            )
-        StepVerifier.create(result).expectNext(programmedWorkout).verifyComplete()
-        verify(postgresClient).update<ProgrammedWorkout>(
+        val insertWorkout = mockProgrammedWorkout(id = 0L)
+        val expectedQuery =
             """
             INSERT INTO programmed_workout
                 (program_id, day_number, name)
             VALUES
                 ($1, $2, $3)
-            """.trimIndent(),
-            programmedWorkout.programId,
-            programmedWorkout.dayNumber,
-            programmedWorkout.name,
+            """.trimIndent()
+        whenever(
+            postgresClient.update<ProgrammedWorkout>(
+                expectedQuery,
+                insertWorkout.programId,
+                insertWorkout.dayNumber,
+                insertWorkout.name,
+            ),
+        ).thenReturn(Mono.just(insertWorkout))
+        val result = programmedWorkoutDAL.insertProgrammedWorkout(insertWorkout.programId, insertWorkout.dayNumber, insertWorkout.name)
+        StepVerifier.create(result).expectNext(insertWorkout).verifyComplete()
+        verify(postgresClient).update<ProgrammedWorkout>(
+            expectedQuery,
+            insertWorkout.programId,
+            insertWorkout.dayNumber,
+            insertWorkout.name,
         )
     }
 
     @Test
     fun `updateProgrammedWorkout should return updated programmed workout`() {
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 5L,
-                dayNumber = 2,
-                name = "Week 1 - Upper Body Focus",
-                createdAt = now,
-                updatedAt = now
-            )
+        val updatedWorkout = mockProgrammedWorkout(dayNumber = 2, name = "Week 1 - Upper Body Focus")
         val expectedQuery =
             """
             UPDATE programmed_workout
@@ -137,88 +102,48 @@ class ProgrammedWorkoutDALTest {
         whenever(
             postgresClient.update<ProgrammedWorkout>(
                 expectedQuery,
-                programmedWorkout.id,
-                programmedWorkout.programId,
-                programmedWorkout.dayNumber,
-                programmedWorkout.name,
+                updatedWorkout.id,
+                updatedWorkout.programId,
+                updatedWorkout.dayNumber,
+                updatedWorkout.name,
             ),
-        ).thenReturn(Mono.just(programmedWorkout))
+        ).thenReturn(Mono.just(updatedWorkout))
         val result =
             programmedWorkoutDAL.updateProgrammedWorkout(
-                programmedWorkout.id,
-                programmedWorkout.programId,
-                programmedWorkout.dayNumber,
-                programmedWorkout.name
+                updatedWorkout.id,
+                updatedWorkout.programId,
+                updatedWorkout.dayNumber,
+                updatedWorkout.name
             )
-        StepVerifier.create(result).expectNext(programmedWorkout).verifyComplete()
+        StepVerifier.create(result).expectNext(updatedWorkout).verifyComplete()
         verify(postgresClient).update<ProgrammedWorkout>(
             expectedQuery,
-            programmedWorkout.id,
-            programmedWorkout.programId,
-            programmedWorkout.dayNumber,
-            programmedWorkout.name,
+            updatedWorkout.id,
+            updatedWorkout.programId,
+            updatedWorkout.dayNumber,
+            updatedWorkout.name,
         )
     }
 
     @Test
     fun `deleteProgrammedWorkout should return deleted programmed workout`() {
-        val programmedWorkout =
-            ProgrammedWorkout(
-                id = 1L,
-                programId = 5L,
-                dayNumber = 1,
-                name = "Week 1 - Upper Body",
-                createdAt = now,
-                updatedAt = now
-            )
         whenever(
-            postgresClient.update<ProgrammedWorkout>("DELETE FROM programmed_workout WHERE id=$1", 1L),
+            postgresClient.update<ProgrammedWorkout>("DELETE FROM programmed_workout WHERE id=$1", programmedWorkout.id),
         ).thenReturn(Mono.just(programmedWorkout))
-        val result = programmedWorkoutDAL.deleteProgrammedWorkout(1L)
+        val result = programmedWorkoutDAL.deleteProgrammedWorkout(programmedWorkout.id)
         StepVerifier.create(result).expectNext(programmedWorkout).verifyComplete()
-        verify(postgresClient).update<ProgrammedWorkout>("DELETE FROM programmed_workout WHERE id=$1", 1L)
+        verify(postgresClient).update<ProgrammedWorkout>("DELETE FROM programmed_workout WHERE id=$1", programmedWorkout.id)
     }
 
     @Test
     fun `selectProgrammedWorkouts should return all programmed workouts`() {
-        val expectedWorkouts =
-            listOf(
-                ProgrammedWorkout(
-                    id = 1L,
-                    programId = 1L,
-                    dayNumber = 1,
-                    name = "Bench Press Day",
-                    createdAt = now,
-                    updatedAt = now
-                ),
-                ProgrammedWorkout(
-                    id = 2L,
-                    programId = 1L,
-                    dayNumber = 2,
-                    name = "Squat Day",
-                    createdAt = now,
-                    updatedAt = now
-                ),
-                ProgrammedWorkout(
-                    id = 3L,
-                    programId = 2L,
-                    dayNumber = 1,
-                    name = "Deadlift Day",
-                    createdAt = now,
-                    updatedAt = now
-                )
-            )
-
         whenever(
             postgresClient.select<ProgrammedWorkout>("SELECT * FROM programmed_workout ORDER BY program_id, day_number")
-        ).thenReturn(Mono.just(expectedWorkouts))
-
+        ).thenReturn(Mono.just(allWorkouts))
         val result = programmedWorkoutDAL.selectProgrammedWorkouts()
-
         StepVerifier.create(result)
-            .expectNext(expectedWorkouts)
+            .expectNext(allWorkouts)
             .verifyComplete()
-
         verify(postgresClient).select<ProgrammedWorkout>("SELECT * FROM programmed_workout ORDER BY program_id, day_number")
     }
 

@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockUserEquipment
 import com.congen.model.UserEquipment
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -9,12 +10,13 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
 class UserEquipmentDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var userEquipmentDAL: UserEquipmentDAL
-    private val now = Instant.now()
+
+    private val userEquipment = mockUserEquipment()
+    private val userEquipmentList = listOf(userEquipment)
 
     @BeforeEach
     fun setUp() {
@@ -24,52 +26,36 @@ class UserEquipmentDALTest {
 
     @Test
     fun `selectUserEquipment should return user equipment`() {
-        val userEquipment =
-            UserEquipment(
-                userId = 1,
-                equipmentName = "Barbell",
-                createdAt = now
-            )
         whenever(
             postgresClient.selectIndividual<UserEquipment>(
                 "SELECT * FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
-                1,
-                "Barbell",
+                userEquipment.userId,
+                userEquipment.equipmentName,
             ),
         ).thenReturn(Mono.just(userEquipment))
-        val result = userEquipmentDAL.selectUserEquipment(1, "Barbell")
+        val result = userEquipmentDAL.selectUserEquipment(userEquipment.userId, userEquipment.equipmentName)
         StepVerifier.create(result).expectNext(userEquipment).verifyComplete()
         verify(
-            postgresClient,
-        ).selectIndividual<UserEquipment>("SELECT * FROM user_equipment WHERE user_id=$1 AND equipment_name=$2", 1, "Barbell")
+            postgresClient
+        ).selectIndividual<UserEquipment>(
+            "SELECT * FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
+            userEquipment.userId,
+            userEquipment.equipmentName
+        )
     }
 
     @Test
     fun `selectUserEquipmentByUser should return list of user equipment`() {
-        val userEquipmentList =
-            listOf(
-                UserEquipment(
-                    userId = 1,
-                    equipmentName = "Barbell",
-                    createdAt = now
-                )
-            )
         whenever(
-            postgresClient.select<UserEquipment>("SELECT * FROM user_equipment WHERE user_id=$1", 1),
+            postgresClient.select<UserEquipment>("SELECT * FROM user_equipment WHERE user_id=$1", userEquipment.userId),
         ).thenReturn(Mono.just(userEquipmentList))
-        val result = userEquipmentDAL.selectUserEquipmentByUser(1)
+        val result = userEquipmentDAL.selectUserEquipmentByUser(userEquipment.userId)
         StepVerifier.create(result).expectNext(userEquipmentList).verifyComplete()
-        verify(postgresClient).select<UserEquipment>("SELECT * FROM user_equipment WHERE user_id=$1", 1)
+        verify(postgresClient).select<UserEquipment>("SELECT * FROM user_equipment WHERE user_id=$1", userEquipment.userId)
     }
 
     @Test
     fun `insertUserEquipment should return inserted user equipment`() {
-        val userEquipment =
-            UserEquipment(
-                userId = 1,
-                equipmentName = "Barbell",
-                createdAt = now
-            )
         whenever(
             postgresClient.update<UserEquipment>(
                 """
@@ -98,27 +84,19 @@ class UserEquipmentDALTest {
 
     @Test
     fun `deleteUserEquipment should return deleted user equipment`() {
-        val userEquipment =
-            UserEquipment(
-                userId = 1,
-                equipmentName = "Barbell",
-                createdAt = now
-            )
         whenever(
             postgresClient.update<UserEquipment>(
                 "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
-                1,
-                "Barbell",
+                userEquipment.userId,
+                userEquipment.equipmentName,
             ),
         ).thenReturn(Mono.just(userEquipment))
-        val result = userEquipmentDAL.deleteUserEquipment(1, "Barbell")
+        val result = userEquipmentDAL.deleteUserEquipment(userEquipment.userId, userEquipment.equipmentName)
         StepVerifier.create(result).expectNext(userEquipment).verifyComplete()
-        verify(
-            postgresClient,
-        ).update<UserEquipment>(
+        verify(postgresClient).update<UserEquipment>(
             "DELETE FROM user_equipment WHERE user_id=$1 AND equipment_name=$2",
-            1,
-            "Barbell",
+            userEquipment.userId,
+            userEquipment.equipmentName,
         )
     }
 }

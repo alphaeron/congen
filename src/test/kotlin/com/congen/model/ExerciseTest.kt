@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockExercise
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
@@ -12,18 +13,16 @@ class ExerciseTest {
 
     @Test
     fun `should create exercise with all properties`() {
-        // Given & When
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
 
-        // Then
         assertEquals("Bench Press", exercise.name)
         assertEquals("A compound exercise", exercise.description)
         assertEquals("push", exercise.movementType)
@@ -34,21 +33,18 @@ class ExerciseTest {
 
     @Test
     fun `should serialize to JSON with snake_case`() {
-        // Given
         val exercise =
-            Exercise(
+            mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
 
-        // When
         val json = objectMapper.writeValueAsString(exercise)
 
-        // Then
         assertTrue(json.contains("\"name\":\"Bench Press\""))
         assertTrue(json.contains("\"description\":\"A compound exercise\""))
         assertTrue(json.contains("\"movement_type\":\"push\""))
@@ -59,7 +55,6 @@ class ExerciseTest {
 
     @Test
     fun `should deserialize from JSON with snake_case`() {
-        // Given
         val json =
             """
             {
@@ -72,10 +67,8 @@ class ExerciseTest {
             }
             """.trimIndent()
 
-        // When
         val exercise = objectMapper.readValue(json, Exercise::class.java)
 
-        // Then
         assertEquals("Bench Press", exercise.name)
         assertEquals("A compound exercise", exercise.description)
         assertEquals("push", exercise.movementType)
@@ -86,7 +79,6 @@ class ExerciseTest {
 
     @Test
     fun `should ignore unknown properties during deserialization`() {
-        // Given
         val json =
             """
             {
@@ -100,10 +92,8 @@ class ExerciseTest {
             }
             """.trimIndent()
 
-        // When
         val exercise = objectMapper.readValue(json, Exercise::class.java)
 
-        // Then
         assertEquals("Bench Press", exercise.name)
         assertEquals("A compound exercise", exercise.description)
         assertEquals("push", exercise.movementType)
@@ -114,36 +104,34 @@ class ExerciseTest {
 
     @Test
     fun `should have correct equals and hashCode`() {
-        // Given
         val exercise1 =
-            Exercise(
+            mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
         val exercise2 =
-            Exercise(
+            mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = true,
-                isAccessory = true,
+                isAccessory = true
             )
         val exercise3 =
-            Exercise(
+            mockExercise(
                 name = "Squat",
                 description = "A compound exercise",
                 movementType = "push",
                 isUnilateral = false,
                 isUpper = false,
-                isAccessory = true,
+                isAccessory = true
             )
 
-        // Then
         assertEquals(exercise1, exercise2)
         assertEquals(exercise1.hashCode(), exercise2.hashCode())
         assertFalse(exercise1 == exercise3)

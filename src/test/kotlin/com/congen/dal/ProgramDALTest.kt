@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockProgram
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -9,11 +10,13 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
 class ProgramDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var programDAL: ProgramDAL
+
+    private val program = mockProgram()
+    private val programs = listOf(program, mockProgram(id = 2L, name = "5/3/1 Program"))
 
     @BeforeEach
     fun setUp() {
@@ -23,88 +26,38 @@ class ProgramDALTest {
 
     @Test
     fun `selectProgramById should return program`() {
-        // Given
-        val programId = 1L
-        val program =
-            Program(
-                id = programId,
-                userId = 1,
-                name = "Conjugate Powerlifting Program",
-                currentWeekNumber = 1,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
-
         whenever(
             postgresClient.selectIndividual<Program>(
                 "SELECT * FROM program WHERE id=$1",
-                programId,
+                program.id,
             ),
         ).thenReturn(Mono.just(program))
 
-        // When
-        val result = programDAL.selectProgramById(programId)
+        val result = programDAL.selectProgramById(program.id)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-
         verify(postgresClient).selectIndividual<Program>(
             "SELECT * FROM program WHERE id=$1",
-            programId,
+            program.id,
         )
     }
 
     @Test
     fun `selectPrograms should return list of programs`() {
-        // Given
-        val programs =
-            listOf(
-                Program(
-                    id = 1L,
-                    userId = 1,
-                    name = "Conjugate Powerlifting Program",
-                    currentWeekNumber = 1,
-                    createdAt = Instant.now(),
-                    updatedAt = Instant.now()
-                ),
-                Program(
-                    id = 2L,
-                    userId = 1,
-                    name = "5/3/1 Program",
-                    currentWeekNumber = 1,
-                    createdAt = Instant.now(),
-                    updatedAt = Instant.now()
-                ),
-            )
-
         whenever(postgresClient.select<Program>("SELECT * FROM program ORDER BY name")).thenReturn(Mono.just(programs))
 
-        // When
         val result = programDAL.selectPrograms()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(programs)
             .verifyComplete()
-
         verify(postgresClient).select<Program>("SELECT * FROM program ORDER BY name")
     }
 
     @Test
     fun `insertProgram should return inserted program`() {
-        // Given
-        val program =
-            Program(
-                id = 1,
-                userId = 1,
-                name = "Test Program",
-                currentWeekNumber = 1,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
-
         val expectedQuery =
             """
             INSERT INTO program
@@ -122,14 +75,11 @@ class ProgramDALTest {
             ),
         ).thenReturn(Mono.just(program))
 
-        // When
-        val result = programDAL.insertProgram(1, "Test Program", 1)
+        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-
         verify(postgresClient).update<Program>(
             expectedQuery,
             program.userId,
@@ -140,17 +90,7 @@ class ProgramDALTest {
 
     @Test
     fun `updateProgram should return updated program`() {
-        // Given
-        val program =
-            Program(
-                id = 1L,
-                userId = 1,
-                name = "Updated Conjugate Program",
-                currentWeekNumber = 2,
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
-            )
-
+        val updatedProgram = mockProgram(name = "Updated Conjugate Program", currentWeekNumber = 2)
         val newName = "Test Program"
         val expectedQuery =
             """
@@ -161,61 +101,42 @@ class ProgramDALTest {
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
-                program.id,
+                updatedProgram.id,
                 newName,
-                program.currentWeekNumber,
+                updatedProgram.currentWeekNumber,
             ),
-        ).thenReturn(Mono.just(program))
+        ).thenReturn(Mono.just(updatedProgram))
 
-        // When
-        val result = programDAL.updateProgram(1L, newName, 2)
+        val result = programDAL.updateProgram(updatedProgram.id, newName, updatedProgram.currentWeekNumber)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(program)
+            .expectNext(updatedProgram)
             .verifyComplete()
-
         verify(postgresClient).update<Program>(
             expectedQuery,
-            program.id,
+            updatedProgram.id,
             newName,
-            program.currentWeekNumber,
+            updatedProgram.currentWeekNumber,
         )
     }
 
     @Test
     fun `deleteProgram should return deleted program`() {
-        // Given
-        val programId = 1L
-        val now = Instant.now()
-        val program =
-            Program(
-                id = programId,
-                userId = 1,
-                name = "Conjugate Powerlifting Program",
-                currentWeekNumber = 1,
-                createdAt = now,
-                updatedAt = now,
-            )
-
         whenever(
             postgresClient.update<Program>(
                 "DELETE FROM program WHERE id=$1",
-                programId,
+                program.id,
             ),
         ).thenReturn(Mono.just(program))
 
-        // When
-        val result = programDAL.deleteProgram(programId)
+        val result = programDAL.deleteProgram(program.id)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-
         verify(postgresClient).update<Program>(
             "DELETE FROM program WHERE id=$1",
-            programId,
+            program.id,
         )
     }
 }

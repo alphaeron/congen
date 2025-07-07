@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.mockUserExercisePreference
 import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,6 +27,13 @@ class UserExercisePreferenceControllerTest {
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
     private lateinit var userExercisePreferenceController: UserExercisePreferenceController
 
+    companion object {
+        private const val USER_ID = 1
+        private const val EXERCISE_NAME = "Bench Press"
+        private const val SQUAT = "Squat"
+        private const val SHOULD_AVOID = false
+    }
+
     @BeforeEach
     fun setUp() {
         userExercisePreferenceDAL = mock()
@@ -34,118 +42,89 @@ class UserExercisePreferenceControllerTest {
 
     @Test
     fun `save should return created user exercise preference`() {
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val shouldAvoid = false
         val now = Instant.now()
         val userExercisePreference =
-            UserExercisePreference(
-                userId = userId,
-                exerciseName = exerciseName,
-                shouldAvoid = shouldAvoid,
+            mockUserExercisePreference(
+                userId = USER_ID,
+                exerciseName = EXERCISE_NAME,
+                shouldAvoid = SHOULD_AVOID,
                 createdAt = now
             )
-        whenever(
-            userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
-        ).thenReturn(Mono.just(userExercisePreference))
-
-        val result = userExercisePreferenceController.save(userId, exerciseName, shouldAvoid)
-
+        whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
+            .thenReturn(Mono.just(userExercisePreference))
+        val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserExercisePreference>)
+        StepVerifier.create(result.body as Mono<UserExercisePreference>)
             .expectNext(userExercisePreference)
             .verifyComplete()
-
-        verify(userExercisePreferenceDAL).insertUserExercisePreference(userId, exerciseName, shouldAvoid)
+        verify(userExercisePreferenceDAL).insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
     }
 
     @Test
     fun `getByUser should return user exercise preferences when found`() {
-        val userId = 1
         val now = Instant.now()
+        val userExercisePreference =
+            mockUserExercisePreference(
+                userId = USER_ID,
+                exerciseName = EXERCISE_NAME,
+                shouldAvoid = SHOULD_AVOID,
+                createdAt = now
+            )
         val userExercisePreferences =
             listOf(
-                UserExercisePreference(
-                    userId = userId,
-                    exerciseName = "Bench Press",
-                    shouldAvoid = false,
-                    createdAt = now
-                ),
-                UserExercisePreference(
-                    userId = userId,
-                    exerciseName = "Squat",
-                    shouldAvoid = false,
+                userExercisePreference,
+                mockUserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = SQUAT,
+                    shouldAvoid = SHOULD_AVOID,
                     createdAt = now
                 )
             )
-
-        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)).thenReturn(Mono.just(userExercisePreferences))
-
-        val result = userExercisePreferenceController.getByUser(userId)
-
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID))
+            .thenReturn(Mono.just(userExercisePreferences))
+        val result = userExercisePreferenceController.getByUser(USER_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(userExercisePreferences))
             .verifyComplete()
-
-        verify(userExercisePreferenceDAL).selectUserExercisePreferencesByUser(userId)
+        verify(userExercisePreferenceDAL).selectUserExercisePreferencesByUser(USER_ID)
     }
 
     @Test
     fun `delete should return deleted user exercise preference`() {
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val shouldAvoid = false
         val now = Instant.now()
         val userExercisePreference =
-            UserExercisePreference(
-                userId = userId,
-                exerciseName = exerciseName,
-                shouldAvoid = shouldAvoid,
+            mockUserExercisePreference(
+                userId = USER_ID,
+                exerciseName = EXERCISE_NAME,
+                shouldAvoid = SHOULD_AVOID,
                 createdAt = now
             )
-        whenever(userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)).thenReturn(Mono.just(userExercisePreference))
-
+        whenever(userExercisePreferenceDAL.deleteUserExercisePreference(USER_ID, EXERCISE_NAME))
+            .thenReturn(Mono.just(userExercisePreference))
         val result = userExercisePreferenceController.delete(userExercisePreference)
-
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserExercisePreference>)
+        StepVerifier.create(result.body as Mono<UserExercisePreference>)
             .expectNext(userExercisePreference)
             .verifyComplete()
-
-        verify(userExercisePreferenceDAL).deleteUserExercisePreference(userId, exerciseName)
+        verify(userExercisePreferenceDAL).deleteUserExercisePreference(USER_ID, EXERCISE_NAME)
     }
 
     @Test
     fun `should handle DAL error gracefully for save`() {
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val shouldAvoid = false
-
-        whenever(
-            userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
-        ).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userExercisePreferenceController.save(userId, exerciseName, shouldAvoid)
-
+        whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserExercisePreference>)
+        StepVerifier.create(result.body as Mono<UserExercisePreference>)
             .expectError(RuntimeException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for getByUser`() {
-        val userId = 1
-
-        whenever(
-            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
-        ).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userExercisePreferenceController.getByUser(userId)
-
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userExercisePreferenceController.getByUser(USER_ID)
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -153,28 +132,20 @@ class UserExercisePreferenceControllerTest {
 
     @Test
     fun `should handle DAL error gracefully for delete`() {
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val shouldAvoid = false
         val now = Instant.now()
         val userExercisePreference =
-            UserExercisePreference(
-                userId = userId,
-                exerciseName = exerciseName,
-                shouldAvoid = shouldAvoid,
+            mockUserExercisePreference(
+                userId = USER_ID,
+                exerciseName = EXERCISE_NAME,
+                shouldAvoid = SHOULD_AVOID,
                 createdAt = now
             )
-
-        whenever(
-            userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)
-        ).thenReturn(Mono.error(RuntimeException("Database error")))
-
+        whenever(userExercisePreferenceDAL.deleteUserExercisePreference(USER_ID, EXERCISE_NAME))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
         val result = userExercisePreferenceController.delete(userExercisePreference)
-
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserExercisePreference>)
+        StepVerifier.create(result.body as Mono<UserExercisePreference>)
             .expectError(RuntimeException::class.java)
             .verify()
     }
-}
+} 

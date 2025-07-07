@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.mockUserOneRepMax
 import com.congen.model.UserOneRepMax
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -11,7 +12,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.Instant
 
 /**
  * Unit tests for UserOneRepMaxDAL.
@@ -25,7 +25,13 @@ import java.time.Instant
 class UserOneRepMaxDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
-    private val now = Instant.now()
+
+    private val userOneRepMax = mockUserOneRepMax()
+    private val userOneRepMaxList =
+        listOf(
+            userOneRepMax,
+            mockUserOneRepMax(exerciseName = "Squat", oneRepMax = BigDecimal("150.0"))
+        )
 
     @BeforeEach
     fun setUp() {
@@ -35,18 +41,6 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should insert user one rep max successfully`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val oneRepMax = BigDecimal("225.5")
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-                updatedAt = now
-            )
-
         whenever(
             postgresClient.update<UserOneRepMax>(
                 """
@@ -55,20 +49,15 @@ class UserOneRepMaxDALTest {
                 VALUES
                     ($1, $2, $3)
                 """.trimIndent(),
-                userId,
-                exerciseName,
-                oneRepMax,
+                userOneRepMax.userId,
+                userOneRepMax.exerciseName,
+                userOneRepMax.oneRepMax,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
-        // When
-        val result = userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)
-
-        // Then
+        val result = userOneRepMaxDAL.insertUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName, userOneRepMax.oneRepMax)
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).update<UserOneRepMax>(
             """
             INSERT INTO user_one_rep_max
@@ -76,54 +65,36 @@ class UserOneRepMaxDALTest {
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            userId,
-            exerciseName,
-            oneRepMax,
+            userOneRepMax.userId,
+            userOneRepMax.exerciseName,
+            userOneRepMax.oneRepMax,
         )
     }
 
     @Test
     fun `should select user one rep max successfully`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = BigDecimal("225.5"),
-                updatedAt = now
-            )
-
         whenever(
             postgresClient.selectIndividual<UserOneRepMax>(
                 "SELECT * FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
-                userId,
-                exerciseName,
+                userOneRepMax.userId,
+                userOneRepMax.exerciseName,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
-        // When
-        val result = userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
-
-        // Then
+        val result = userOneRepMaxDAL.selectUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName)
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).selectIndividual<UserOneRepMax>(
             "SELECT * FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
-            userId,
-            exerciseName,
+            userOneRepMax.userId,
+            userOneRepMax.exerciseName,
         )
     }
 
     @Test
     fun `should return error when user one rep max not found`() {
-        // Given
         val userId = 1
         val exerciseName = "Non-existent Exercise"
-
         whenever(
             postgresClient.selectIndividual<UserOneRepMax>(
                 "SELECT * FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
@@ -131,15 +102,10 @@ class UserOneRepMaxDALTest {
                 exerciseName,
             )
         ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
-
-        // When
         val result = userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
-
-        // Then
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
-
         verify(postgresClient).selectIndividual<UserOneRepMax>(
             "SELECT * FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
             userId,
@@ -149,58 +115,25 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should select all user one rep maxes by user id successfully`() {
-        // Given
-        val userId = 1
-        val expectedUserOneRepMaxes =
-            listOf(
-                UserOneRepMax(
-                    userId = userId,
-                    exerciseName = "Bench Press",
-                    oneRepMax = BigDecimal("100.0"),
-                    updatedAt = now
-                ),
-                UserOneRepMax(
-                    userId = userId,
-                    exerciseName = "Squat",
-                    oneRepMax = BigDecimal("150.0"),
-                    updatedAt = now
-                ),
-            )
-
         whenever(
             postgresClient.select<UserOneRepMax>(
                 "SELECT * FROM user_one_rep_max WHERE user_id=$1 ORDER BY exercise_name",
-                userId,
+                userOneRepMax.userId,
             )
-        ).thenReturn(Mono.just(expectedUserOneRepMaxes))
-
-        // When
-        val result = userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
-
-        // Then
+        ).thenReturn(Mono.just(userOneRepMaxList))
+        val result = userOneRepMaxDAL.selectUserOneRepMaxByUser(userOneRepMax.userId)
         StepVerifier.create(result)
-            .expectNext(expectedUserOneRepMaxes)
+            .expectNext(userOneRepMaxList)
             .verifyComplete()
-
         verify(postgresClient).select<UserOneRepMax>(
             "SELECT * FROM user_one_rep_max WHERE user_id=$1 ORDER BY exercise_name",
-            userId,
+            userOneRepMax.userId,
         )
     }
 
     @Test
     fun `should update user one rep max successfully`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val oneRepMax = BigDecimal("250.0")
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-                updatedAt = now
-            )
+        val updatedOneRepMax = mockUserOneRepMax(oneRepMax = BigDecimal("250.0"))
         val expectedQuery =
             """
             UPDATE user_one_rep_max
@@ -210,32 +143,33 @@ class UserOneRepMaxDALTest {
         whenever(
             postgresClient.update<UserOneRepMax>(
                 expectedQuery,
-                userId,
-                exerciseName,
-                oneRepMax,
+                updatedOneRepMax.userId,
+                updatedOneRepMax.exerciseName,
+                updatedOneRepMax.oneRepMax,
             )
-        ).thenReturn(Mono.just(userOneRepMax))
-        // When
-        val result = userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)
-        // Then
+        ).thenReturn(Mono.just(updatedOneRepMax))
+        val result =
+            userOneRepMaxDAL.updateUserOneRepMax(
+                updatedOneRepMax.userId,
+                updatedOneRepMax.exerciseName,
+                updatedOneRepMax.oneRepMax
+            )
         StepVerifier.create(result)
-            .expectNext(userOneRepMax)
+            .expectNext(updatedOneRepMax)
             .verifyComplete()
         verify(postgresClient).update<UserOneRepMax>(
             expectedQuery,
-            userId,
-            exerciseName,
-            oneRepMax,
+            updatedOneRepMax.userId,
+            updatedOneRepMax.exerciseName,
+            updatedOneRepMax.oneRepMax,
         )
     }
 
     @Test
     fun `should return error when updating non-existent user one rep max`() {
-        // Given
         val userId = 1
         val exerciseName = "Non-existent Exercise"
         val oneRepMax = BigDecimal("250.0")
-
         whenever(
             postgresClient.update<UserOneRepMax>(
                 """
@@ -248,15 +182,10 @@ class UserOneRepMaxDALTest {
                 oneRepMax,
             )
         ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
-
-        // When
         val result = userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, oneRepMax)
-
-        // Then
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
-
         verify(postgresClient).update<UserOneRepMax>(
             """
             UPDATE user_one_rep_max
@@ -271,46 +200,28 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should delete user one rep max successfully`() {
-        // Given
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = BigDecimal("225.5"),
-                updatedAt = now
-            )
-
         whenever(
             postgresClient.update<UserOneRepMax>(
                 "DELETE FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
-                userId,
-                exerciseName,
+                userOneRepMax.userId,
+                userOneRepMax.exerciseName,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
-        // When
-        val result = userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)
-
-        // Then
+        val result = userOneRepMaxDAL.deleteUserOneRepMax(userOneRepMax.userId, userOneRepMax.exerciseName)
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).update<UserOneRepMax>(
             "DELETE FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
-            userId,
-            exerciseName,
+            userOneRepMax.userId,
+            userOneRepMax.exerciseName,
         )
     }
 
     @Test
     fun `should return error when deleting non-existent user one rep max`() {
-        // Given
         val userId = 1
         val exerciseName = "Non-existent Exercise"
-
         whenever(
             postgresClient.update<UserOneRepMax>(
                 "DELETE FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
@@ -318,15 +229,10 @@ class UserOneRepMaxDALTest {
                 exerciseName,
             )
         ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
-
-        // When
         val result = userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)
-
-        // Then
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
-
         verify(postgresClient).update<UserOneRepMax>(
             "DELETE FROM user_one_rep_max WHERE user_id=$1 AND exercise_name=$2",
             userId,
@@ -336,18 +242,10 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should handle decimal one rep max values`() {
-        // Given
         val userId = 1
         val exerciseName = "Deadlift"
         val oneRepMax = BigDecimal("225.5")
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-                updatedAt = now
-            )
-
+        val userOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = oneRepMax)
         whenever(
             postgresClient.update<UserOneRepMax>(
                 """
@@ -361,15 +259,10 @@ class UserOneRepMaxDALTest {
                 oneRepMax,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
-        // When
         val result = userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).update<UserOneRepMax>(
             """
             INSERT INTO user_one_rep_max
@@ -385,18 +278,10 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should handle special characters in exercise name`() {
-        // Given
         val userId = 1
         val exerciseName = "Barbell Bench Press (Incline)"
         val oneRepMax = BigDecimal("120.0")
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-                updatedAt = now
-            )
-
+        val userOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = oneRepMax)
         whenever(
             postgresClient.update<UserOneRepMax>(
                 """
@@ -410,15 +295,10 @@ class UserOneRepMaxDALTest {
                 oneRepMax,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
-        // When
         val result = userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).update<UserOneRepMax>(
             """
             INSERT INTO user_one_rep_max
@@ -434,18 +314,10 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should handle large one rep max values`() {
-        // Given
         val userId = 1
         val exerciseName = "Heavy Deadlift"
         val oneRepMax = BigDecimal("500.0")
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId,
-                exerciseName = exerciseName,
-                oneRepMax = oneRepMax,
-                updatedAt = now
-            )
-
+        val userOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = oneRepMax)
         whenever(
             postgresClient.update<UserOneRepMax>(
                 """
@@ -459,15 +331,10 @@ class UserOneRepMaxDALTest {
                 oneRepMax,
             )
         ).thenReturn(Mono.just(userOneRepMax))
-
-        // When
         val result = userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, oneRepMax)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(userOneRepMax)
             .verifyComplete()
-
         verify(postgresClient).update<UserOneRepMax>(
             """
             INSERT INTO user_one_rep_max

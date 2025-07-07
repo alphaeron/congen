@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockProgrammedWorkout
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +19,7 @@ class ProgrammedWorkoutTest {
     @Test
     fun `test programmed workout creation with all fields`() {
         val programmedWorkout =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 1L,
                 programId = 123L,
                 dayNumber = 1,
@@ -38,7 +39,7 @@ class ProgrammedWorkoutTest {
     @Test
     fun `test programmed workout creation with minimal fields`() {
         val programmedWorkout =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 2L,
                 programId = 456L,
                 dayNumber = 2,
@@ -58,7 +59,7 @@ class ProgrammedWorkoutTest {
     @Test
     fun `test programmed workout serialization`() {
         val programmedWorkout =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 1L,
                 programId = 123L,
                 dayNumber = 1,
@@ -154,7 +155,7 @@ class ProgrammedWorkoutTest {
     @Test
     fun `test programmed workout equality`() {
         val workout1 =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 1L,
                 programId = 123L,
                 dayNumber = 1,
@@ -164,7 +165,7 @@ class ProgrammedWorkoutTest {
             )
 
         val workout2 =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 1L,
                 programId = 123L,
                 dayNumber = 1,
@@ -174,7 +175,7 @@ class ProgrammedWorkoutTest {
             )
 
         val workout3 =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 2L,
                 programId = 123L,
                 dayNumber = 1,
@@ -192,7 +193,7 @@ class ProgrammedWorkoutTest {
     @Test
     fun `test programmed workout copy`() {
         val original =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 1L,
                 programId = 123L,
                 dayNumber = 1,
@@ -201,10 +202,7 @@ class ProgrammedWorkoutTest {
                 updatedAt = now
             )
 
-        val copied =
-            original.copy(
-                name = "Copied Workout"
-            )
+        val copied = original.copy(name = "Copied Workout")
 
         assertEquals(1L, copied.id)
         assertEquals(123L, copied.programId)
@@ -217,7 +215,7 @@ class ProgrammedWorkoutTest {
     @Test
     fun `test programmed workout toString`() {
         val programmedWorkout =
-            ProgrammedWorkout(
+            mockProgrammedWorkout(
                 id = 1L,
                 programId = 123L,
                 dayNumber = 1,

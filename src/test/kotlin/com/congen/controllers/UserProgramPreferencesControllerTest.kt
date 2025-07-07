@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.mockUserProgramPreferences
 import com.congen.model.UserProgramPreferences
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,6 +27,14 @@ class UserProgramPreferencesControllerTest {
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
     private lateinit var userProgramPreferencesController: UserProgramPreferencesController
 
+    companion object {
+        private const val USER_ID = 1
+        private const val PROGRAM_DAYS_PER_WEEK_4 = 4
+        private const val PROGRAM_DAYS_PER_WEEK_5 = 5
+        private const val SESSION_TIME_60 = 60
+        private const val SESSION_TIME_75 = 75
+    }
+
     @BeforeEach
     fun setUp() {
         userProgramPreferencesDAL = mock()
@@ -34,141 +43,101 @@ class UserProgramPreferencesControllerTest {
 
     @Test
     fun `save should return created user program preferences`() {
-        val userId = 1
-        val programDaysPerWeek = 4
-        val sessionTimeLengthInMinutes = 60
         val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = programDaysPerWeek,
-                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                userId = USER_ID,
+                programDaysPerWeek = PROGRAM_DAYS_PER_WEEK_4,
+                sessionTimeLengthInMinutes = SESSION_TIME_60,
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(
-            userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-        ).thenReturn(Mono.just(userProgramPreferences))
-
-        val result = userProgramPreferencesController.save(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-
+        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60))
+            .thenReturn(Mono.just(userProgramPreferences))
+        val result = userProgramPreferencesController.save(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserProgramPreferences>)
+        val body = result.body as Mono<UserProgramPreferences>
+        StepVerifier.create(body)
             .expectNext(userProgramPreferences)
             .verifyComplete()
-
-        verify(userProgramPreferencesDAL).insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+        verify(userProgramPreferencesDAL).insertUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
     }
 
     @Test
     fun `get should return user program preferences when found`() {
-        val userId = 1
-        val programDaysPerWeek = 4
-        val sessionTimeLengthInMinutes = 60
-        val now = Instant.now()
         val userProgramPreferences =
-            UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = programDaysPerWeek,
-                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
-                createdAt = now,
-                updatedAt = now
+            mockUserProgramPreferences(
+                userId = USER_ID,
+                programDaysPerWeek = PROGRAM_DAYS_PER_WEEK_4,
+                sessionTimeLengthInMinutes = SESSION_TIME_60
             )
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.just(userProgramPreferences))
-
-        val result = userProgramPreferencesController.get(userId)
-
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(userProgramPreferences))
+        val result = userProgramPreferencesController.get(USER_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(userProgramPreferences))
             .verifyComplete()
-
-        verify(userProgramPreferencesDAL).selectUserProgramPreferences(userId)
+        verify(userProgramPreferencesDAL).selectUserProgramPreferences(USER_ID)
     }
 
     @Test
     fun `update should return updated user program preferences`() {
-        val userId = 1
-        val programDaysPerWeek = 5
-        val sessionTimeLengthInMinutes = 75
         val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = programDaysPerWeek,
-                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                userId = USER_ID,
+                programDaysPerWeek = PROGRAM_DAYS_PER_WEEK_5,
+                sessionTimeLengthInMinutes = SESSION_TIME_75,
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(
-            userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-        ).thenReturn(Mono.just(userProgramPreferences))
-
-        val result = userProgramPreferencesController.update(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-
+        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75))
+            .thenReturn(Mono.just(userProgramPreferences))
+        val result = userProgramPreferencesController.update(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserProgramPreferences>)
+        val body = result.body as Mono<UserProgramPreferences>
+        StepVerifier.create(body)
             .expectNext(userProgramPreferences)
             .verifyComplete()
-
-        verify(userProgramPreferencesDAL).updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+        verify(userProgramPreferencesDAL).updateUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
     }
 
     @Test
     fun `delete should return deleted user program preferences`() {
-        val userId = 1
-        val programDaysPerWeek = 4
-        val sessionTimeLengthInMinutes = 60
         val now = Instant.now()
         val userProgramPreferences =
             UserProgramPreferences(
-                userId = userId,
-                programDaysPerWeek = programDaysPerWeek,
-                sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
+                userId = USER_ID,
+                programDaysPerWeek = PROGRAM_DAYS_PER_WEEK_4,
+                sessionTimeLengthInMinutes = SESSION_TIME_60,
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(userId)).thenReturn(Mono.just(userProgramPreferences))
-
-        val result = userProgramPreferencesController.delete(userId)
-
+        whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(USER_ID)).thenReturn(Mono.just(userProgramPreferences))
+        val result = userProgramPreferencesController.delete(USER_ID)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserProgramPreferences>)
+        val body = result.body as Mono<UserProgramPreferences>
+        StepVerifier.create(body)
             .expectNext(userProgramPreferences)
             .verifyComplete()
-
-        verify(userProgramPreferencesDAL).deleteUserProgramPreferences(userId)
+        verify(userProgramPreferencesDAL).deleteUserProgramPreferences(USER_ID)
     }
 
     @Test
     fun `should handle DAL error gracefully for save`() {
-        val userId = 1
-        val programDaysPerWeek = 4
-        val sessionTimeLengthInMinutes = 60
-
-        whenever(
-            userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-        ).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userProgramPreferencesController.save(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-
+        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userProgramPreferencesController.save(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserProgramPreferences>)
+        val body = result.body as Mono<UserProgramPreferences>
+        StepVerifier.create(body)
             .expectError(RuntimeException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for get`() {
-        val userId = 1
-
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(userId)).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userProgramPreferencesController.get(userId)
-
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userProgramPreferencesController.get(USER_ID)
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -176,34 +145,23 @@ class UserProgramPreferencesControllerTest {
 
     @Test
     fun `should handle DAL error gracefully for update`() {
-        val userId = 1
-        val programDaysPerWeek = 5
-        val sessionTimeLengthInMinutes = 75
-
-        whenever(
-            userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-        ).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userProgramPreferencesController.update(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-
+        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userProgramPreferencesController.update(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserProgramPreferences>)
+        val body = result.body as Mono<UserProgramPreferences>
+        StepVerifier.create(body)
             .expectError(RuntimeException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for delete`() {
-        val userId = 1
-
-        whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(userId)).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userProgramPreferencesController.delete(userId)
-
+        whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userProgramPreferencesController.delete(USER_ID)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserProgramPreferences>)
+        val body = result.body as Mono<UserProgramPreferences>
+        StepVerifier.create(body)
             .expectError(RuntimeException::class.java)
             .verify()
     }

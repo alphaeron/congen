@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockProgram
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,9 +18,8 @@ class ProgramTest {
 
     @Test
     fun `should create program with all properties`() {
-        // Given & When
         val program =
-            Program(
+            mockProgram(
                 id = 1L,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
@@ -28,7 +28,6 @@ class ProgramTest {
                 updatedAt = now
             )
 
-        // Then
         assertEquals(1L, program.id)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
@@ -38,9 +37,8 @@ class ProgramTest {
 
     @Test
     fun `should serialize to JSON with snake_case`() {
-        // Given
         val program =
-            Program(
+            mockProgram(
                 id = 1L,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
@@ -49,10 +47,8 @@ class ProgramTest {
                 updatedAt = now
             )
 
-        // When
         val json = objectMapper.writeValueAsString(program)
 
-        // Then
         assertTrue(json.contains("\"id\":1"))
         assertTrue(json.contains("\"name\":\"Conjugate Powerlifting Program\""))
         assertTrue(json.contains("\"current_week_number\":1"))
@@ -62,7 +58,6 @@ class ProgramTest {
 
     @Test
     fun `should deserialize from JSON with snake_case`() {
-        // Given
         val json =
             """
             {
@@ -74,10 +69,8 @@ class ProgramTest {
             }
             """.trimIndent()
 
-        // When
         val program = objectMapper.readValue(json, Program::class.java)
 
-        // Then
         assertEquals(1L, program.id)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
@@ -87,7 +80,6 @@ class ProgramTest {
 
     @Test
     fun `should ignore unknown properties during deserialization`() {
-        // Given
         val json =
             """
             {
@@ -100,10 +92,8 @@ class ProgramTest {
             }
             """.trimIndent()
 
-        // When
         val program = objectMapper.readValue(json, Program::class.java)
 
-        // Then
         assertEquals(1L, program.id)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
@@ -113,9 +103,8 @@ class ProgramTest {
 
     @Test
     fun `should have correct equals and hashCode`() {
-        // Given
         val program1 =
-            Program(
+            mockProgram(
                 id = 1L,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
@@ -124,7 +113,7 @@ class ProgramTest {
                 updatedAt = now
             )
         val program2 =
-            Program(
+            mockProgram(
                 id = 1L,
                 userId = 1,
                 name = "Conjugate Powerlifting Program",
@@ -133,7 +122,7 @@ class ProgramTest {
                 updatedAt = now
             )
         val program3 =
-            Program(
+            mockProgram(
                 id = 2L,
                 userId = 1,
                 name = "Different Program",
@@ -142,7 +131,6 @@ class ProgramTest {
                 updatedAt = now
             )
 
-        // Then
         assertEquals(program1, program2)
         assertEquals(program1.hashCode(), program2.hashCode())
         assertFalse(program1 == program3)
@@ -151,9 +139,8 @@ class ProgramTest {
 
     @Test
     fun `should copy program correctly`() {
-        // Given
         val original =
-            Program(
+            mockProgram(
                 id = 1L,
                 userId = 1,
                 name = "Original Program",
@@ -162,14 +149,12 @@ class ProgramTest {
                 updatedAt = now
             )
 
-        // When
         val copied =
             original.copy(
                 name = "Copied Program",
                 currentWeekNumber = 2
             )
 
-        // Then
         assertEquals(1L, copied.id)
         assertEquals(1, copied.userId)
         assertEquals("Copied Program", copied.name)
@@ -180,9 +165,8 @@ class ProgramTest {
 
     @Test
     fun `should have meaningful toString`() {
-        // Given
         val program =
-            Program(
+            mockProgram(
                 id = 1L,
                 userId = 1,
                 name = "Test Program",
@@ -191,10 +175,8 @@ class ProgramTest {
                 updatedAt = now
             )
 
-        // When
         val toString = program.toString()
 
-        // Then
         assertTrue(toString.contains("id=1"))
         assertTrue(toString.contains("userId=1"))
         assertTrue(toString.contains("name=Test Program"))

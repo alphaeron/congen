@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserEquipmentDAL
+import com.congen.mockUserEquipment
 import com.congen.model.UserEquipment
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,6 +27,12 @@ class UserEquipmentControllerTest {
     private lateinit var userEquipmentDAL: UserEquipmentDAL
     private lateinit var userEquipmentController: UserEquipmentController
 
+    companion object {
+        private const val USER_ID = 1
+        private const val EQUIPMENT_NAME = "Barbell"
+        private const val DUMBBELLS = "Dumbbells"
+    }
+
     @BeforeEach
     fun setUp() {
         userEquipmentDAL = mock()
@@ -34,107 +41,63 @@ class UserEquipmentControllerTest {
 
     @Test
     fun `save should return created user equipment`() {
-        val userId = 1
-        val equipmentName = "Barbell"
         val now = Instant.now()
-        val userEquipment =
-            UserEquipment(
-                userId = userId,
-                equipmentName = equipmentName,
-                createdAt = now
-            )
-        val savedUserEquipment = userEquipment
-        whenever(userEquipmentDAL.insertUserEquipment(userId, equipmentName)).thenReturn(Mono.just(savedUserEquipment))
-
-        val result = userEquipmentController.save(userId, equipmentName)
-
+        val userEquipment = mockUserEquipment(userId = USER_ID, equipmentName = EQUIPMENT_NAME, createdAt = now)
+        whenever(userEquipmentDAL.insertUserEquipment(USER_ID, EQUIPMENT_NAME)).thenReturn(Mono.just(userEquipment))
+        val result = userEquipmentController.save(USER_ID, EQUIPMENT_NAME)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserEquipment>)
-            .expectNext(savedUserEquipment)
+        StepVerifier.create(result.body as Mono<UserEquipment>)
+            .expectNext(userEquipment)
             .verifyComplete()
-
-        verify(userEquipmentDAL).insertUserEquipment(userId, equipmentName)
+        verify(userEquipmentDAL).insertUserEquipment(USER_ID, EQUIPMENT_NAME)
     }
 
     @Test
     fun `getByUser should return user equipment when found`() {
-        val userId = 1
         val now = Instant.now()
-        val userEquipment =
+        val userEquipment = mockUserEquipment(userId = USER_ID, equipmentName = EQUIPMENT_NAME, createdAt = now)
+        val userEquipmentList =
             listOf(
-                UserEquipment(
-                    userId = userId,
-                    equipmentName = "Barbell",
-                    createdAt = now
-                ),
-                UserEquipment(
-                    userId = userId,
-                    equipmentName = "Dumbbells",
-                    createdAt = now
-                )
+                userEquipment,
+                mockUserEquipment(userId = USER_ID, equipmentName = DUMBBELLS, createdAt = now)
             )
-
-        whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.just(userEquipment))
-
-        val result = userEquipmentController.getByUser(userId)
-
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipmentList))
+        val result = userEquipmentController.getByUser(USER_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(userEquipment))
+            .expectNext(ResponseEntity.ok(userEquipmentList))
             .verifyComplete()
-
-        verify(userEquipmentDAL).selectUserEquipmentByUser(userId)
+        verify(userEquipmentDAL).selectUserEquipmentByUser(USER_ID)
     }
 
     @Test
     fun `delete should return deleted user equipment`() {
-        val userId = 1
-        val equipmentName = "Barbell"
         val now = Instant.now()
-        val userEquipment =
-            UserEquipment(
-                userId = userId,
-                equipmentName = equipmentName,
-                createdAt = now
-            )
-
-        whenever(userEquipmentDAL.deleteUserEquipment(userId, equipmentName)).thenReturn(Mono.just(userEquipment))
-
+        val userEquipment = mockUserEquipment(userId = USER_ID, equipmentName = EQUIPMENT_NAME, createdAt = now)
+        whenever(userEquipmentDAL.deleteUserEquipment(USER_ID, EQUIPMENT_NAME)).thenReturn(Mono.just(userEquipment))
         val result = userEquipmentController.delete(userEquipment)
-
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserEquipment>)
+        StepVerifier.create(result.body as Mono<UserEquipment>)
             .expectNext(userEquipment)
             .verifyComplete()
-
-        verify(userEquipmentDAL).deleteUserEquipment(userId, equipmentName)
+        verify(userEquipmentDAL).deleteUserEquipment(USER_ID, EQUIPMENT_NAME)
     }
 
     @Test
     fun `should handle DAL error gracefully for save`() {
-        val userId = 1
-        val equipmentName = "Barbell"
-
-        whenever(userEquipmentDAL.insertUserEquipment(userId, equipmentName)).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userEquipmentController.save(userId, equipmentName)
-
+        whenever(userEquipmentDAL.insertUserEquipment(USER_ID, EQUIPMENT_NAME))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userEquipmentController.save(USER_ID, EQUIPMENT_NAME)
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserEquipment>)
+        StepVerifier.create(result.body as Mono<UserEquipment>)
             .expectError(RuntimeException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for getByUser`() {
-        val userId = 1
-
-        whenever(userEquipmentDAL.selectUserEquipmentByUser(userId)).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        val result = userEquipmentController.getByUser(userId)
-
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
+        val result = userEquipmentController.getByUser(USER_ID)
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -142,23 +105,13 @@ class UserEquipmentControllerTest {
 
     @Test
     fun `should handle DAL error gracefully for delete`() {
-        val userId = 1
-        val equipmentName = "Barbell"
         val now = Instant.now()
-        val userEquipment =
-            UserEquipment(
-                userId = userId,
-                equipmentName = equipmentName,
-                createdAt = now
-            )
-
-        whenever(userEquipmentDAL.deleteUserEquipment(userId, equipmentName)).thenReturn(Mono.error(RuntimeException("Database error")))
-
+        val userEquipment = mockUserEquipment(userId = USER_ID, equipmentName = EQUIPMENT_NAME, createdAt = now)
+        whenever(userEquipmentDAL.deleteUserEquipment(USER_ID, EQUIPMENT_NAME))
+            .thenReturn(Mono.error(RuntimeException("Database error")))
         val result = userEquipmentController.delete(userEquipment)
-
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<UserEquipment>)
+        StepVerifier.create(result.body as Mono<UserEquipment>)
             .expectError(RuntimeException::class.java)
             .verify()
     }

@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockHealthCheck
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -9,6 +10,8 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class HealthCheckTest {
+    private val now = Instant.parse("2024-01-01T00:00:00Z")
+
     @Test
     fun `HealthStatus enum should have correct values`() {
         assertEquals("pass", HealthStatus.PASS.value)
@@ -31,7 +34,6 @@ class HealthCheckTest {
                 componentType = "datastore",
                 status = HealthStatus.PASS
             )
-
         assertEquals("database", healthCheck.componentId)
         assertEquals("datastore", healthCheck.componentType)
         assertEquals(HealthStatus.PASS, healthCheck.status)
@@ -45,7 +47,6 @@ class HealthCheckTest {
 
     @Test
     fun `HealthCheck should be created with all fields`() {
-        val time = Instant.parse("2024-01-01T00:00:00Z")
         val healthCheck =
             HealthCheck(
                 componentId = "database",
@@ -54,11 +55,10 @@ class HealthCheckTest {
                 observedUnit = "ms",
                 status = HealthStatus.PASS,
                 affectedEndpoints = listOf("/health", "/api/v1/users"),
-                time = time,
+                time = now,
                 output = "Database connection successful",
                 links = mapOf("self" to "/health/database")
             )
-
         assertEquals("database", healthCheck.componentId)
         assertEquals("datastore", healthCheck.componentType)
         assertEquals(150L, healthCheck.observedValue)
@@ -67,7 +67,7 @@ class HealthCheckTest {
         assertEquals(2, healthCheck.affectedEndpoints.size)
         assertEquals("/health", healthCheck.affectedEndpoints[0])
         assertEquals("/api/v1/users", healthCheck.affectedEndpoints[1])
-        assertEquals(time, healthCheck.time)
+        assertEquals(now, healthCheck.time)
         assertEquals("Database connection successful", healthCheck.output)
         assertEquals(1, healthCheck.links.size)
         assertEquals("/health/database", healthCheck.links["self"])
@@ -76,7 +76,6 @@ class HealthCheckTest {
     @Test
     fun `HealthCheck should use default values when optional fields not provided`() {
         val healthCheck = HealthCheck(status = HealthStatus.FAIL)
-
         assertNull(healthCheck.componentId)
         assertNull(healthCheck.componentType)
         assertNull(healthCheck.observedValue)
@@ -91,7 +90,6 @@ class HealthCheckTest {
     @Test
     fun `DatabaseHealthCheck should be created with required fields`() {
         val dbHealthCheck = DatabaseHealthCheck(status = HealthStatus.PASS)
-
         assertEquals(HealthStatus.PASS, dbHealthCheck.status)
         assertNull(dbHealthCheck.responseTime)
         assertNull(dbHealthCheck.error)
@@ -107,7 +105,6 @@ class HealthCheckTest {
                 error = "Connection timeout",
                 details = mapOf("connections" to 5, "maxConnections" to 10)
             )
-
         assertEquals(HealthStatus.WARN, dbHealthCheck.status)
         assertEquals(200L, dbHealthCheck.responseTime)
         assertEquals("Connection timeout", dbHealthCheck.error)
@@ -124,7 +121,6 @@ class HealthCheckTest {
                 version = "1.0.0",
                 releaseId = "v1.0.0"
             )
-
         assertEquals(HealthStatus.PASS, response.status)
         assertEquals("1.0.0", response.version)
         assertEquals("v1.0.0", response.releaseId)
@@ -142,14 +138,9 @@ class HealthCheckTest {
             mapOf(
                 "database" to
                     listOf(
-                        HealthCheck(
-                            componentId = "database",
-                            componentType = "datastore",
-                            status = HealthStatus.PASS
-                        )
+                        mockHealthCheck(componentId = "database", componentType = "datastore", status = HealthStatus.PASS)
                     )
             )
-
         val response =
             HealthCheckResponse(
                 status = HealthStatus.PASS,
@@ -162,7 +153,6 @@ class HealthCheckTest {
                 serviceId = "custom-service",
                 description = "Custom health check description"
             )
-
         assertEquals(HealthStatus.PASS, response.status)
         assertEquals("1.0.0", response.version)
         assertEquals("v1.0.0", response.releaseId)
@@ -186,7 +176,6 @@ class HealthCheckTest {
                 version = "1.0.0",
                 releaseId = "v1.0.0"
             )
-
         assertEquals(HealthStatus.FAIL, response.status)
         assertEquals("1.0.0", response.version)
         assertEquals("v1.0.0", response.releaseId)
@@ -204,7 +193,6 @@ class HealthCheckTest {
         val healthCheckDouble = HealthCheck(status = HealthStatus.PASS, observedValue = 123.45)
         val healthCheckString = HealthCheck(status = HealthStatus.PASS, observedValue = "OK")
         val healthCheckNull = HealthCheck(status = HealthStatus.PASS)
-
         assertEquals(123L, healthCheckLong.observedValue)
         assertEquals(123.45, healthCheckDouble.observedValue)
         assertEquals("OK", healthCheckString.observedValue)
@@ -220,13 +208,7 @@ class HealthCheckTest {
                 "decimal" to BigDecimal("123.45"),
                 "boolean" to true
             )
-
-        val dbHealthCheck =
-            DatabaseHealthCheck(
-                status = HealthStatus.PASS,
-                details = details
-            )
-
+        val dbHealthCheck = DatabaseHealthCheck(status = HealthStatus.PASS, details = details)
         assertEquals(4, dbHealthCheck.details.size)
         assertEquals("value", dbHealthCheck.details["string"])
         assertEquals(42, dbHealthCheck.details["number"])

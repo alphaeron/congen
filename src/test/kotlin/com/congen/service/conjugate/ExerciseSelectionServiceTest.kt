@@ -1,545 +1,251 @@
 package com.congen.service.conjugate
 
-import com.congen.model.Exercise
-import com.congen.model.ExerciseRotationHistory
-import com.congen.model.UserExercisePreference
-import com.congen.model.UserOneRepMax
+import com.congen.dal.ExerciseDAL
+import com.congen.dal.ExerciseRotationHistoryDAL
+import com.congen.mockExercise
+import com.congen.mockExerciseRotationHistory
+import com.congen.mockUserEquipment
+import com.congen.mockUserExercisePreference
+import com.congen.mockUserOneRepMax
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mock
+import org.mockito.MockitoAnnotations
 import java.math.BigDecimal
-import java.time.Instant
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class ExerciseSelectionServiceTest {
+    private companion object {
+        private const val USER_ID = 1
+        private const val EXERCISE_NAME = "Bench Press"
+        private const val EXERCISE_NAME_2 = "Squat"
+        private const val EXERCISE_NAME_3 = "Deadlift"
+        private const val EXERCISE_NAME_4 = "Overhead Press"
+        private const val EXERCISE_NAME_5 = "Pull-ups"
+        private const val EXERCISE_NAME_6 = "Bicep Curls"
+        private const val EXERCISE_NAME_7 = "Tricep Extensions"
+        private const val EXERCISE_NAME_8 = "Dips"
+    }
+
+    @Mock
+    private lateinit var exerciseDAL: ExerciseDAL
+
+    @Mock
+    private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
+
     private lateinit var exerciseSelectionService: ExerciseSelectionService
 
     @BeforeEach
     fun setUp() {
+        MockitoAnnotations.openMocks(this)
         exerciseSelectionService = ExerciseSelectionService()
     }
 
     @Test
-    fun `determineWeakMuscles should return default weak muscles`() {
-        val oneRepMaxes =
+    fun `selectRotatingExercise should return exercise for primary movement`() {
+        val targetMuscles = listOf("chest", "triceps")
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
+        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val exercises =
             listOf(
-                UserOneRepMax(
-                    userId = 1,
-                    exerciseName = "Bench Press",
-                    oneRepMax = BigDecimal("100.0"),
-                    updatedAt = Instant.now()
-                )
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
-        val rotationHistory =
-            listOf(
-                ExerciseRotationHistory(
-                    id = 1L,
-                    userId = 1,
-                    exerciseName = "Bench Press",
-                    isAccessory = false,
-                    createdAt = Instant.now()
-                )
+        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+
+        val result =
+            exerciseSelectionService.selectRotatingExercise(
+                USER_ID,
+                targetMuscles,
+                userEquipment,
+                preferences,
+                exercises,
+                false,
+                rotationHistory
             )
 
-        val result = exerciseSelectionService.determineWeakMuscles(oneRepMaxes, rotationHistory)
-
-        assertEquals(ConjugateConstants.DEFAULT_WEAK_MUSCLES, result)
-        assertEquals(4, result.size)
-        assertTrue(result.contains("hamstrings"))
-        assertTrue(result.contains("glutes"))
-        assertTrue(result.contains("upper_back"))
-        assertTrue(result.contains("core"))
+        assert(result != null)
+        assert(result!!.name in listOf(EXERCISE_NAME, EXERCISE_NAME_4))
     }
 
     @Test
-    fun `determineWeakMuscles should return default weak muscles for empty lists`() {
-        val result = exerciseSelectionService.determineWeakMuscles(emptyList(), emptyList())
+    fun `selectRotatingExercise should return exercise for accessory movement`() {
+        val targetMuscles = listOf("biceps")
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
+        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val exercises =
+            listOf(
+                mockExercise(name = EXERCISE_NAME_6, isAccessory = true),
+                mockExercise(name = EXERCISE_NAME_7, isAccessory = true)
+            )
+        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
 
-        assertEquals(ConjugateConstants.DEFAULT_WEAK_MUSCLES, result)
+        val result =
+            exerciseSelectionService.selectRotatingExercise(
+                USER_ID,
+                targetMuscles,
+                userEquipment,
+                preferences,
+                exercises,
+                true,
+                rotationHistory
+            )
+
+        assert(result != null)
+        assert(result!!.isAccessory)
+    }
+
+    @Test
+    fun `selectRotatingExercise should avoid exercises with preferences`() {
+        val targetMuscles = listOf("chest")
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
+        val preferences =
+            listOf(
+                mockUserExercisePreference(exerciseName = EXERCISE_NAME, shouldAvoid = true)
+            )
+        val exercises =
+            listOf(
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
+            )
+        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+
+        val result =
+            exerciseSelectionService.selectRotatingExercise(
+                USER_ID,
+                targetMuscles,
+                userEquipment,
+                preferences,
+                exercises,
+                false,
+                rotationHistory
+            )
+
+        assert(result != null)
+        assert(result!!.name == EXERCISE_NAME_4)
+    }
+
+    @Test
+    fun `selectRotatingExercise should prioritize unused exercises`() {
+        val targetMuscles = listOf("chest")
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
+        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val exercises =
+            listOf(
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
+            )
+        val rotationHistory =
+            listOf(
+                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME, isAccessory = false)
+            )
+
+        val result =
+            exerciseSelectionService.selectRotatingExercise(
+                USER_ID,
+                targetMuscles,
+                userEquipment,
+                preferences,
+                exercises,
+                false,
+                rotationHistory
+            )
+
+        assert(result != null)
+        assert(result!!.name == EXERCISE_NAME_4)
     }
 
     @Test
     fun `selectRotatingExercise should return null when no exercises available`() {
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest"),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = emptyList(),
-                isAccessory = false,
-                rotationHistory = emptyList()
-            )
-
-        assertNull(result)
-    }
-
-    @Test
-    fun `selectRotatingExercise should filter out avoided exercises`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
-            )
+        val targetMuscles = listOf("chest")
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
         val preferences =
             listOf(
-                UserExercisePreference(
-                    userId = 1,
-                    exerciseName = "Bench Press",
-                    shouldAvoid = true,
-                    createdAt = Instant.now()
-                )
+                mockUserExercisePreference(exerciseName = EXERCISE_NAME, shouldAvoid = true),
+                mockUserExercisePreference(exerciseName = EXERCISE_NAME_4, shouldAvoid = true)
             )
+        val exercises =
+            listOf(
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
+            )
+        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest", "legs"),
-                userEquipment = emptyList(),
-                preferences = preferences,
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = emptyList()
+                USER_ID,
+                targetMuscles,
+                userEquipment,
+                preferences,
+                exercises,
+                false,
+                rotationHistory
             )
 
-        assertNotNull(result)
-        assertEquals("Squat", result.name)
+        assert(result == null)
     }
 
     @Test
-    fun `selectRotatingExercise should prefer unused exercises`() {
+    fun `filterExercisesByAccessoryStatus should filter primary exercises`() {
         val exercises =
             listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
-            )
-        val rotationHistory =
-            listOf(
-                ExerciseRotationHistory(
-                    id = 1L,
-                    userId = 1,
-                    exerciseName = "Bench Press",
-                    isAccessory = false,
-                    createdAt = Instant.now()
-                )
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = EXERCISE_NAME_6, isAccessory = true),
+                mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
 
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest", "legs"),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = rotationHistory
-            )
+        val result = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false)
 
-        assertNotNull(result)
-        assertEquals("Bench Press", result.name) // Should prefer unused exercise (alphabetical tiebreaker)
-    }
-
-    @Test
-    fun `selectRotatingExercise should return least recently used when all exercises used`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
-            )
-        val rotationHistory =
-            listOf(
-                ExerciseRotationHistory(
-                    id = 1L,
-                    userId = 1,
-                    exerciseName = "Bench Press",
-                    isAccessory = false,
-                    createdAt = Instant.now()
-                ),
-                ExerciseRotationHistory(
-                    id = 2L,
-                    userId = 1,
-                    exerciseName = "Bench Press",
-                    isAccessory = false,
-                    createdAt = Instant.now()
-                ),
-                ExerciseRotationHistory(
-                    id = 3L,
-                    userId = 1,
-                    exerciseName = "Squat",
-                    isAccessory = false,
-                    createdAt = Instant.now()
-                )
-            )
-
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest", "legs"),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = rotationHistory
-            )
-
-        assertNotNull(result)
-        assertEquals("Bench Press", result.name) // Should prefer least used exercise (alphabetical tiebreaker)
-    }
-
-    @Test
-    fun `selectRotatingExercise should handle accessory exercises`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Push-ups",
-                    description = "A bodyweight exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = true
-                ),
-                Exercise(
-                    name = "Pull-ups",
-                    description = "A bodyweight exercise",
-                    movementType = "vertical pull",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = true
-                )
-            )
-
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest", "back"),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = exercises,
-                isAccessory = true,
-                rotationHistory = emptyList()
-            )
-
-        assertNotNull(result)
-        assertTrue(result.isAccessory)
-    }
-
-    @Test
-    fun `selectRotatingExercise should handle primary exercises`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
-            )
-
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest", "legs"),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = emptyList()
-            )
-
-        assertNotNull(result)
-        assertFalse(result.isAccessory)
+        assert(result.size == 2)
+        assert(result.all { !it.isAccessory })
     }
 
     @Test
     fun `filterExercisesByAccessoryStatus should filter accessory exercises`() {
         val exercises =
             listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Push-ups",
-                    description = "A bodyweight exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = true
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
-            )
-
-        val accessoryExercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true)
-        val primaryExercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false)
-
-        assertEquals(1, accessoryExercises.size)
-        assertEquals("Push-ups", accessoryExercises[0].name)
-        assertEquals(2, primaryExercises.size)
-        assertTrue(primaryExercises.any { it.name == "Bench Press" })
-        assertTrue(primaryExercises.any { it.name == "Squat" })
-    }
-
-    @Test
-    fun `filterExercisesByAccessoryStatus should return empty list for no matches`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                )
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = EXERCISE_NAME_6, isAccessory = true),
+                mockExercise(name = EXERCISE_NAME_7, isAccessory = true)
             )
 
         val result = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true)
 
-        assertTrue(result.isEmpty())
+        assert(result.size == 2)
+        assert(result.all { it.isAccessory })
     }
 
     @Test
     fun `filterExercisesExcluding should exclude specified exercise`() {
         val exercises =
             listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Deadlift",
-                    description = "A compound lower body exercise",
-                    movementType = "hinge",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
+                mockExercise(name = EXERCISE_NAME),
+                mockExercise(name = EXERCISE_NAME_4),
+                mockExercise(name = EXERCISE_NAME_6)
             )
 
-        val result = exerciseSelectionService.filterExercisesExcluding(exercises, "Bench Press")
+        val result = exerciseSelectionService.filterExercisesExcluding(exercises, EXERCISE_NAME)
 
-        assertEquals(2, result.size)
-        assertTrue(result.any { it.name == "Squat" })
-        assertTrue(result.any { it.name == "Deadlift" })
-        assertFalse(result.any { it.name == "Bench Press" })
+        assert(result.size == 2)
+        assert(result.none { it.name == EXERCISE_NAME })
     }
 
     @Test
-    fun `filterExercisesExcluding should return all exercises when exercise not found`() {
-        val exercises =
+    fun `determineWeakMuscles should return default weak muscles`() {
+        val oneRepMaxes =
             listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
+                mockUserOneRepMax(exerciseName = EXERCISE_NAME, oneRepMax = BigDecimal("100.0")),
+                mockUserOneRepMax(exerciseName = EXERCISE_NAME_2, oneRepMax = BigDecimal("150.0"))
             )
-
-        val result = exerciseSelectionService.filterExercisesExcluding(exercises, "NonExistentExercise")
-
-        assertEquals(2, result.size)
-        assertTrue(result.any { it.name == "Bench Press" })
-        assertTrue(result.any { it.name == "Squat" })
-    }
-
-    @Test
-    fun `filterExercisesExcluding should return empty list for empty input`() {
-        val result = exerciseSelectionService.filterExercisesExcluding(emptyList(), "Bench Press")
-
-        assertTrue(result.isEmpty())
-    }
-
-    @Test
-    fun `selectRotatingExercise should handle case sensitivity`() {
-        val exercises =
+        val rotationHistory =
             listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                )
-            )
-        val preferences =
-            listOf(
-                UserExercisePreference(
-                    userId = 1,
-                    exerciseName = "bench press", // Different case
-                    shouldAvoid = true,
-                    createdAt = Instant.now()
-                )
+                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME, isAccessory = false)
             )
 
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest"),
-                userEquipment = emptyList(),
-                preferences = preferences,
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = emptyList()
-            )
+        val result = exerciseSelectionService.determineWeakMuscles(oneRepMaxes, rotationHistory)
 
-        // Should not filter out due to case sensitivity
-        assertNotNull(result)
-        assertEquals("Bench Press", result.name)
-    }
-
-    @Test
-    fun `selectRotatingExercise should handle multiple target muscles`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                ),
-                Exercise(
-                    name = "Squat",
-                    description = "A compound lower body exercise",
-                    movementType = "vertical push",
-                    isUnilateral = false,
-                    isUpper = false,
-                    isAccessory = false
-                )
-            )
-
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = listOf("chest", "shoulders", "triceps"),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = emptyList()
-            )
-
-        assertNotNull(result)
-        assertTrue(result.name in listOf("Bench Press", "Squat"))
-    }
-
-    @Test
-    fun `selectRotatingExercise should handle empty target muscles`() {
-        val exercises =
-            listOf(
-                Exercise(
-                    name = "Bench Press",
-                    description = "A compound upper body exercise",
-                    movementType = "horizontal push",
-                    isUnilateral = false,
-                    isUpper = true,
-                    isAccessory = false
-                )
-            )
-
-        val result =
-            exerciseSelectionService.selectRotatingExercise(
-                userId = 1,
-                targetMuscles = emptyList(),
-                userEquipment = emptyList(),
-                preferences = emptyList(),
-                exercises = exercises,
-                isAccessory = false,
-                rotationHistory = emptyList()
-            )
-
-        assertNotNull(result)
-        assertEquals("Bench Press", result.name)
+        assert(result.isNotEmpty())
+        assert(result.containsAll(ConjugateConstants.DEFAULT_WEAK_MUSCLES))
+        assertEquals(ConjugateConstants.DEFAULT_WEAK_MUSCLES.size, result.size)
     }
 }

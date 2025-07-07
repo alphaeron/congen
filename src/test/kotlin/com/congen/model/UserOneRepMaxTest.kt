@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockUserOneRepMax
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -21,7 +22,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should create user one rep max with valid parameters`() {
         val userOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -37,7 +38,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should create user one rep max with different exercise`() {
         val userOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Squat",
                 oneRepMax = BigDecimal("315.0"),
@@ -51,7 +52,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should create user one rep max with decimal weight`() {
         val userOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Deadlift",
                 oneRepMax = BigDecimal("405.5"),
@@ -64,9 +65,8 @@ class UserOneRepMaxTest {
     @Test
     fun `should handle different timestamps`() {
         val updatedAt = Instant.parse("2024-01-01T10:00:00Z")
-
         val userOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -79,17 +79,14 @@ class UserOneRepMaxTest {
     @Test
     fun `should support data class copy`() {
         val originalOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
             )
 
-        val updatedOneRepMax =
-            originalOneRepMax.copy(
-                oneRepMax = BigDecimal("250.0")
-            )
+        val updatedOneRepMax = originalOneRepMax.copy(oneRepMax = BigDecimal("250.0"))
 
         assertEquals(1, updatedOneRepMax.userId)
         assertEquals("Bench Press", updatedOneRepMax.exerciseName)
@@ -100,7 +97,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should support data class equality`() {
         val oneRepMax1 =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -108,7 +105,7 @@ class UserOneRepMaxTest {
             )
 
         val oneRepMax2 =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -116,7 +113,7 @@ class UserOneRepMaxTest {
             )
 
         val oneRepMax3 =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 2,
                 exerciseName = "Squat",
                 oneRepMax = BigDecimal("315.0"),
@@ -130,7 +127,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should support data class toString`() {
         val userOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -148,7 +145,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should support data class hashCode`() {
         val oneRepMax1 =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -156,7 +153,7 @@ class UserOneRepMaxTest {
             )
 
         val oneRepMax2 =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
@@ -169,7 +166,7 @@ class UserOneRepMaxTest {
     @Test
     fun `should support data class component functions`() {
         val userOneRepMax =
-            UserOneRepMax(
+            mockUserOneRepMax(
                 userId = 1,
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),

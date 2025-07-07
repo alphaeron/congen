@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockExerciseWorkoutType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
@@ -12,11 +13,12 @@ class ExerciseWorkoutTypeTest {
     @Test
     fun `should create exercise workout type with all properties`() {
         val exerciseWorkoutType =
-            ExerciseWorkoutType(
+            mockExerciseWorkoutType(
                 exerciseName = "Bench Press",
                 movementType = "horizontal push",
-                workoutType = "dynamic_effort",
+                workoutType = "dynamic_effort"
             )
+
         assertEquals("Bench Press", exerciseWorkoutType.exerciseName)
         assertEquals("horizontal push", exerciseWorkoutType.movementType)
         assertEquals("dynamic_effort", exerciseWorkoutType.workoutType)
@@ -25,12 +27,14 @@ class ExerciseWorkoutTypeTest {
     @Test
     fun `should serialize to JSON with snake_case`() {
         val exerciseWorkoutType =
-            ExerciseWorkoutType(
+            mockExerciseWorkoutType(
                 exerciseName = "Bench Press",
                 movementType = "horizontal push",
-                workoutType = "dynamic_effort",
+                workoutType = "dynamic_effort"
             )
+
         val json = objectMapper.writeValueAsString(exerciseWorkoutType)
+
         assertTrue(json.contains("\"exercise_name\":\"Bench Press\""))
         assertTrue(json.contains("\"movement_type\":\"horizontal push\""))
         assertTrue(json.contains("\"workout_type\":\"dynamic_effort\""))
@@ -46,7 +50,9 @@ class ExerciseWorkoutTypeTest {
                 "workout_type": "dynamic_effort"
             }
             """.trimIndent()
+
         val exerciseWorkoutType = objectMapper.readValue(json, ExerciseWorkoutType::class.java)
+
         assertEquals("Bench Press", exerciseWorkoutType.exerciseName)
         assertEquals("horizontal push", exerciseWorkoutType.movementType)
         assertEquals("dynamic_effort", exerciseWorkoutType.workoutType)

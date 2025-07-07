@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.mockExerciseMuscle
 import com.congen.model.ExerciseMuscle
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,6 +18,15 @@ class ExerciseMuscleControllerTest {
     private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
     private lateinit var exerciseMuscleController: ExerciseMuscleController
 
+    companion object {
+        private const val EXERCISE_NAME = "Bench Press"
+        private const val MUSCLE_NAME = "Chest"
+        private const val NON_EXISTENT_EXERCISE = "NonExistent"
+        private const val NON_EXISTENT_MUSCLE = "NonExistent"
+        private const val SQUAT_NAME = "Squat"
+        private const val LEGS_MUSCLE = "Legs"
+    }
+
     @BeforeEach
     fun setUp() {
         exerciseMuscleDAL = mock()
@@ -25,92 +35,59 @@ class ExerciseMuscleControllerTest {
 
     @Test
     fun `getExerciseMuscle should return exercise muscle when found`() {
-        // Given
-        val exerciseName = "Bench Press"
-        val muscleName = "Chest"
-        val exerciseMuscle =
-            ExerciseMuscle(
-                exerciseName = exerciseName,
-                muscleName = muscleName,
-            )
-        whenever(exerciseMuscleDAL.selectExerciseMuscle(exerciseName, muscleName)).thenReturn(Mono.just(exerciseMuscle))
+        val exerciseMuscle = mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = MUSCLE_NAME)
+        whenever(exerciseMuscleDAL.selectExerciseMuscle(EXERCISE_NAME, MUSCLE_NAME)).thenReturn(Mono.just(exerciseMuscle))
 
-        // When
-        val result = exerciseMuscleController.getExerciseMuscle(exerciseName, muscleName)
+        val result = exerciseMuscleController.getExerciseMuscle(EXERCISE_NAME, MUSCLE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseMuscle))
             .verifyComplete()
 
-        verify(exerciseMuscleDAL).selectExerciseMuscle(exerciseName, muscleName)
+        verify(exerciseMuscleDAL).selectExerciseMuscle(EXERCISE_NAME, MUSCLE_NAME)
     }
 
     @Test
     fun `getExerciseMuscle should return not found when exercise muscle not found`() {
-        // Given
-        val exerciseName = "NonExistent"
-        val muscleName = "NonExistent"
+        whenever(exerciseMuscleDAL.selectExerciseMuscle(NON_EXISTENT_EXERCISE, NON_EXISTENT_MUSCLE))
+            .thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM exercise_muscle WHERE exercise_name=$1 AND muscle_name=$2")))
 
-        whenever(
-            exerciseMuscleDAL.selectExerciseMuscle(exerciseName, muscleName),
-        ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM exercise_muscle WHERE exercise_name=$1 AND muscle_name=$2")))
+        val result = exerciseMuscleController.getExerciseMuscle(NON_EXISTENT_EXERCISE, NON_EXISTENT_MUSCLE)
 
-        // When
-        val result = exerciseMuscleController.getExerciseMuscle(exerciseName, muscleName)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
 
-        verify(exerciseMuscleDAL).selectExerciseMuscle(exerciseName, muscleName)
+        verify(exerciseMuscleDAL).selectExerciseMuscle(NON_EXISTENT_EXERCISE, NON_EXISTENT_MUSCLE)
     }
 
     @Test
     fun `save should return saved exercise muscle`() {
-        // Given
-        val exerciseMuscle =
-            ExerciseMuscle(
-                exerciseName = "Bench Press",
-                muscleName = "Chest",
-            )
-        whenever(
-            exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
-        ).thenReturn(Mono.just(exerciseMuscle))
+        val exerciseMuscle = mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = MUSCLE_NAME)
+        whenever(exerciseMuscleDAL.insertExerciseMuscle(EXERCISE_NAME, MUSCLE_NAME))
+            .thenReturn(Mono.just(exerciseMuscle))
 
-        // When
-        val result = exerciseMuscleController.save(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
+        val result = exerciseMuscleController.save(EXERCISE_NAME, MUSCLE_NAME)
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<ExerciseMuscle>)
             .expectNext(exerciseMuscle)
             .verifyComplete()
-        verify(exerciseMuscleDAL).insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
+        verify(exerciseMuscleDAL).insertExerciseMuscle(EXERCISE_NAME, MUSCLE_NAME)
     }
 
     @Test
     fun `getAll should return all exercise muscles`() {
-        // Given
         val exerciseMuscleList =
             listOf(
-                ExerciseMuscle(
-                    exerciseName = "Bench Press",
-                    muscleName = "Chest",
-                ),
-                ExerciseMuscle(
-                    exerciseName = "Squat",
-                    muscleName = "Legs",
-                ),
+                mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = MUSCLE_NAME),
+                mockExerciseMuscle(exerciseName = SQUAT_NAME, muscleName = LEGS_MUSCLE)
             )
         whenever(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(exerciseMuscleList))
 
-        // When
         val result = exerciseMuscleController.getAll()
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<ExerciseMuscle>>)

@@ -24,6 +24,16 @@ class ExerciseRotationHistoryControllerTest {
     private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
     private lateinit var exerciseRotationHistoryController: ExerciseRotationHistoryController
 
+    companion object {
+        private const val ID_1 = 1L
+        private const val ID_2 = 2L
+        private const val USER_ID = 1
+        private const val BENCH_PRESS = "Bench Press"
+        private const val SQUAT = "Squat"
+        private const val BARBELL_BENCH_PRESS = "Barbell Bench Press"
+        private const val NON_EXISTENT_ID = 999L
+    }
+
     @BeforeEach
     fun setUp() {
         exerciseRotationHistoryDAL = mock()
@@ -36,25 +46,22 @@ class ExerciseRotationHistoryControllerTest {
         val exerciseRotationHistories =
             listOf(
                 ExerciseRotationHistory(
-                    id = 1L,
-                    userId = 1,
-                    exerciseName = "Bench Press",
+                    id = ID_1,
+                    userId = USER_ID,
+                    exerciseName = BENCH_PRESS,
                     isAccessory = false,
                     createdAt = now
                 ),
                 ExerciseRotationHistory(
-                    id = 2L,
-                    userId = 1,
-                    exerciseName = "Squat",
+                    id = ID_2,
+                    userId = USER_ID,
+                    exerciseName = SQUAT,
                     isAccessory = true,
                     createdAt = now
                 )
             )
-
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(exerciseRotationHistories))
-
         val result = exerciseRotationHistoryController.getAll()
-
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistories))
             .verifyComplete()
@@ -65,17 +72,14 @@ class ExerciseRotationHistoryControllerTest {
         val now = Instant.now()
         val exerciseRotationHistory =
             ExerciseRotationHistory(
-                id = 1L,
-                userId = 1,
-                exerciseName = "Bench Press",
+                id = ID_1,
+                userId = USER_ID,
+                exerciseName = BENCH_PRESS,
                 isAccessory = false,
                 createdAt = now
             )
-
-        whenever(exerciseRotationHistoryDAL.selectById(1L)).thenReturn(Mono.just(exerciseRotationHistory))
-
-        val result = exerciseRotationHistoryController.get(1L)
-
+        whenever(exerciseRotationHistoryDAL.selectById(ID_1)).thenReturn(Mono.just(exerciseRotationHistory))
+        val result = exerciseRotationHistoryController.get(ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistory))
             .verifyComplete()
@@ -83,10 +87,8 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should return empty when exercise rotation history not found`() {
-        whenever(exerciseRotationHistoryDAL.selectById(999L)).thenReturn(Mono.empty())
-
-        val result = exerciseRotationHistoryController.get(999L)
-
+        whenever(exerciseRotationHistoryDAL.selectById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
+        val result = exerciseRotationHistoryController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -95,23 +97,16 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should create exercise rotation history`() {
         val now = Instant.now()
-        val userId = 1
-        val exerciseName = "Bench Press"
-        val isAccessory = false
         val exerciseRotationHistory =
             ExerciseRotationHistory(
-                id = 1L,
-                userId = userId,
-                exerciseName = exerciseName,
-                isAccessory = isAccessory,
+                id = ID_1,
+                userId = USER_ID,
+                exerciseName = BENCH_PRESS,
+                isAccessory = false,
                 createdAt = now
             )
-
-        whenever(exerciseRotationHistoryDAL.insert(userId, exerciseName, isAccessory))
-            .thenReturn(Mono.just(exerciseRotationHistory))
-
-        val result = exerciseRotationHistoryController.save(userId, exerciseName, isAccessory)
-
+        whenever(exerciseRotationHistoryDAL.insert(USER_ID, BENCH_PRESS, false)).thenReturn(Mono.just(exerciseRotationHistory))
+        val result = exerciseRotationHistoryController.save(USER_ID, BENCH_PRESS, false)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistory))
             .verifyComplete()
@@ -120,24 +115,16 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should update exercise rotation history`() {
         val now = Instant.now()
-        val id = 1L
-        val userId = 1
-        val exerciseName = "Barbell Bench Press"
-        val isAccessory = true
         val exerciseRotationHistory =
             ExerciseRotationHistory(
-                id = id,
-                userId = userId,
-                exerciseName = exerciseName,
-                isAccessory = isAccessory,
+                id = ID_1,
+                userId = USER_ID,
+                exerciseName = BARBELL_BENCH_PRESS,
+                isAccessory = true,
                 createdAt = now
             )
-
-        whenever(exerciseRotationHistoryDAL.update(id, userId, exerciseName, isAccessory))
-            .thenReturn(Mono.just(exerciseRotationHistory))
-
-        val result = exerciseRotationHistoryController.update(id, userId, exerciseName, isAccessory)
-
+        whenever(exerciseRotationHistoryDAL.update(ID_1, USER_ID, BARBELL_BENCH_PRESS, true)).thenReturn(Mono.just(exerciseRotationHistory))
+        val result = exerciseRotationHistoryController.update(ID_1, USER_ID, BARBELL_BENCH_PRESS, true)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistory))
             .verifyComplete()
@@ -145,11 +132,8 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should return empty when updating non-existent exercise rotation history`() {
-        whenever(exerciseRotationHistoryDAL.update(999L, 1, "Bench Press", false))
-            .thenReturn(Mono.empty())
-
-        val result = exerciseRotationHistoryController.update(999L, 1, "Bench Press", false)
-
+        whenever(exerciseRotationHistoryDAL.update(NON_EXISTENT_ID, USER_ID, BENCH_PRESS, false)).thenReturn(Mono.empty())
+        val result = exerciseRotationHistoryController.update(NON_EXISTENT_ID, USER_ID, BENCH_PRESS, false)
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -160,17 +144,14 @@ class ExerciseRotationHistoryControllerTest {
         val now = Instant.now()
         val exerciseRotationHistory =
             ExerciseRotationHistory(
-                id = 1L,
-                userId = 1,
-                exerciseName = "Bench Press",
+                id = ID_1,
+                userId = USER_ID,
+                exerciseName = BENCH_PRESS,
                 isAccessory = false,
                 createdAt = now
             )
-
-        whenever(exerciseRotationHistoryDAL.deleteById(1L)).thenReturn(Mono.just(exerciseRotationHistory))
-
-        val result = exerciseRotationHistoryController.delete(1L)
-
+        whenever(exerciseRotationHistoryDAL.deleteById(ID_1)).thenReturn(Mono.just(exerciseRotationHistory))
+        val result = exerciseRotationHistoryController.delete(ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistory))
             .verifyComplete()
@@ -178,10 +159,8 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should return empty when deleting non-existent exercise rotation history`() {
-        whenever(exerciseRotationHistoryDAL.deleteById(999L)).thenReturn(Mono.empty())
-
-        val result = exerciseRotationHistoryController.delete(999L)
-
+        whenever(exerciseRotationHistoryDAL.deleteById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
+        val result = exerciseRotationHistoryController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -194,25 +173,22 @@ class ExerciseRotationHistoryControllerTest {
         val exerciseRotationHistories =
             listOf(
                 ExerciseRotationHistory(
-                    id = 1L,
-                    userId = 1,
-                    exerciseName = "Bench Press",
+                    id = ID_1,
+                    userId = USER_ID,
+                    exerciseName = BENCH_PRESS,
                     isAccessory = isAccessory,
                     createdAt = now
                 ),
                 ExerciseRotationHistory(
-                    id = 2L,
-                    userId = 1,
-                    exerciseName = "Squat",
+                    id = ID_2,
+                    userId = USER_ID,
+                    exerciseName = SQUAT,
                     isAccessory = isAccessory,
                     createdAt = now
                 )
             )
-
         whenever(exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)).thenReturn(Mono.just(exerciseRotationHistories))
-
         val result = exerciseRotationHistoryController.getByIsAccessory(isAccessory)
-
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistories))
             .verifyComplete()
@@ -221,9 +197,7 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should return empty list when no exercise rotation histories for accessory type`() {
         whenever(exerciseRotationHistoryDAL.selectByIsAccessory(true)).thenReturn(Mono.just(emptyList()))
-
         val result = exerciseRotationHistoryController.getByIsAccessory(true)
-
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(emptyList<ExerciseRotationHistory>()))
             .verifyComplete()
@@ -232,9 +206,7 @@ class ExerciseRotationHistoryControllerTest {
     @Test
     fun `should handle DAL error gracefully`() {
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.error(RuntimeException("Database error")))
-
         val result = exerciseRotationHistoryController.getAll()
-
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()

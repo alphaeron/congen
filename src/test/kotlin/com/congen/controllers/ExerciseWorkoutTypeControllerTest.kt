@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.mockExerciseWorkoutType
 import com.congen.model.ExerciseWorkoutType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,6 +16,15 @@ class ExerciseWorkoutTypeControllerTest {
     private lateinit var dal: ExerciseWorkoutTypeDAL
     private lateinit var controller: ExerciseWorkoutTypeController
 
+    companion object {
+        private const val EXERCISE_NAME = "Bench Press"
+        private const val MOVEMENT_TYPE = "horizontal push"
+        private const val WORKOUT_TYPE = "dynamic_effort"
+        private const val SQUAT_NAME = "Squat"
+        private const val SQUAT_MOVEMENT = "squat"
+        private const val MAXIMAL_EFFORT = "maximal_effort"
+    }
+
     @BeforeEach
     fun setUp() {
         dal = mock()
@@ -23,61 +33,48 @@ class ExerciseWorkoutTypeControllerTest {
 
     @Test
     fun `getAll should return all relationships`() {
-        whenever(dal.selectAllExerciseWorkoutTypes()).thenReturn(
-            Mono.just(
-                listOf(
-                    ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort"),
-                    ExerciseWorkoutType("Squat", "squat", "maximal_effort"),
-                ),
-            ),
-        )
+        val exerciseWorkoutTypes =
+            listOf(
+                mockExerciseWorkoutType(exerciseName = EXERCISE_NAME, movementType = MOVEMENT_TYPE, workoutType = WORKOUT_TYPE),
+                mockExerciseWorkoutType(exerciseName = SQUAT_NAME, movementType = SQUAT_MOVEMENT, workoutType = MAXIMAL_EFFORT)
+            )
+        whenever(dal.selectAllExerciseWorkoutTypes()).thenReturn(Mono.just(exerciseWorkoutTypes))
         val response = controller.getAll()
 
-        // Since getAll returns ResponseEntity<Mono<List<...>>>, unwrap the Mono
         @Suppress("UNCHECKED_CAST")
         val body = (response.body as Mono<List<ExerciseWorkoutType>>)
         StepVerifier.create(body)
-            .expectNext(
-                listOf(
-                    ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort"),
-                    ExerciseWorkoutType("Squat", "squat", "maximal_effort"),
-                ),
-            )
+            .expectNext(exerciseWorkoutTypes)
             .verifyComplete()
     }
 
     @Test
     fun `getByExercise should return relationships for an exercise using new mapping`() {
-        whenever(dal.selectExerciseWorkoutTypesByExercise("Bench Press")).thenReturn(
-            Mono.just(
-                listOf(
-                    ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort"),
-                    ExerciseWorkoutType("Bench Press", "horizontal push", "maximal_effort"),
-                ),
-            ),
-        )
-        // Simulate calling the new mapping /exercise/{exerciseName}
-        val result = controller.getByExercise("Bench Press")
+        val exerciseWorkoutTypes =
+            listOf(
+                mockExerciseWorkoutType(exerciseName = EXERCISE_NAME, movementType = MOVEMENT_TYPE, workoutType = WORKOUT_TYPE),
+                mockExerciseWorkoutType(exerciseName = EXERCISE_NAME, movementType = MOVEMENT_TYPE, workoutType = MAXIMAL_EFFORT)
+            )
+        whenever(dal.selectExerciseWorkoutTypesByExercise(EXERCISE_NAME)).thenReturn(Mono.just(exerciseWorkoutTypes))
+        val result = controller.getByExercise(EXERCISE_NAME)
         StepVerifier.create(result)
             .assertNext {
-                assertEquals(
-                    ResponseEntity.ok(
-                        listOf(
-                            ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort"),
-                            ExerciseWorkoutType("Bench Press", "horizontal push", "maximal_effort"),
-                        ),
-                    ),
-                    it,
-                )
+                assertEquals(ResponseEntity.ok(exerciseWorkoutTypes), it)
             }
             .verifyComplete()
     }
 
     @Test
     fun `save should insert and return the relationship`() {
-        val input = ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort")
-        whenever(dal.insertExerciseWorkoutType(input.exerciseName, input.movementType, input.workoutType)).thenReturn(Mono.just(input))
-        val response = controller.save(input.exerciseName, input.movementType, input.workoutType)
+        val input =
+            mockExerciseWorkoutType(
+                exerciseName = EXERCISE_NAME,
+                movementType = MOVEMENT_TYPE,
+                workoutType = WORKOUT_TYPE
+            )
+        whenever(dal.insertExerciseWorkoutType(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE))
+            .thenReturn(Mono.just(input))
+        val response = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
 
         @Suppress("UNCHECKED_CAST")
         val body = (response.body as Mono<ExerciseWorkoutType>)
@@ -88,26 +85,16 @@ class ExerciseWorkoutTypeControllerTest {
 
     @Test
     fun `getByMovementType should return relationships for a movementType`() {
-        whenever(dal.selectExerciseWorkoutTypesByMovementType("horizontal push")).thenReturn(
-            Mono.just(
-                listOf(
-                    ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort"),
-                    ExerciseWorkoutType("Bench Press", "horizontal push", "maximal_effort"),
-                ),
-            ),
-        )
-        val result = controller.getByMovementType("horizontal push")
+        val exerciseWorkoutTypes =
+            listOf(
+                mockExerciseWorkoutType(exerciseName = EXERCISE_NAME, movementType = MOVEMENT_TYPE, workoutType = WORKOUT_TYPE),
+                mockExerciseWorkoutType(exerciseName = EXERCISE_NAME, movementType = MOVEMENT_TYPE, workoutType = MAXIMAL_EFFORT)
+            )
+        whenever(dal.selectExerciseWorkoutTypesByMovementType(MOVEMENT_TYPE)).thenReturn(Mono.just(exerciseWorkoutTypes))
+        val result = controller.getByMovementType(MOVEMENT_TYPE)
         StepVerifier.create(result)
             .assertNext {
-                assertEquals(
-                    ResponseEntity.ok(
-                        listOf(
-                            ExerciseWorkoutType("Bench Press", "horizontal push", "dynamic_effort"),
-                            ExerciseWorkoutType("Bench Press", "horizontal push", "maximal_effort"),
-                        ),
-                    ),
-                    it,
-                )
+                assertEquals(ResponseEntity.ok(exerciseWorkoutTypes), it)
             }
             .verifyComplete()
     }

@@ -26,6 +26,21 @@ class ProgrammedWorkoutControllerTest {
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var programmedWorkoutController: ProgrammedWorkoutController
 
+    companion object {
+        private const val WORKOUT_ID_1 = 1L
+        private const val WORKOUT_ID_2 = 2L
+        private const val PROGRAM_ID = 1L
+        private const val DAY_NUMBER_1 = 1
+        private const val DAY_NUMBER_2 = 2
+        private const val NON_EXISTENT_ID = 999L
+        private const val WORKOUT_NAME_1 = "Workout 1"
+        private const val WORKOUT_NAME_2 = "Workout 2"
+        private const val TEST_WORKOUT = "Test Workout"
+        private const val NEW_WORKOUT = "New Workout"
+        private const val UPDATED_WORKOUT = "Updated Workout"
+        private const val TEST_NAME = "Test"
+    }
+
     @BeforeEach
     fun setUp() {
         programmedWorkoutDAL = mock()
@@ -38,33 +53,29 @@ class ProgrammedWorkoutControllerTest {
         val programmedWorkouts =
             listOf(
                 ProgrammedWorkout(
-                    id = 1L,
-                    programId = 1L,
-                    dayNumber = 1,
-                    name = "Workout 1",
+                    id = WORKOUT_ID_1,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_1,
+                    name = WORKOUT_NAME_1,
                     createdAt = now,
                     updatedAt = now
                 ),
                 ProgrammedWorkout(
-                    id = 2L,
-                    programId = 1L,
-                    dayNumber = 2,
-                    name = "Workout 2",
+                    id = WORKOUT_ID_2,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_2,
+                    name = WORKOUT_NAME_2,
                     createdAt = now,
                     updatedAt = now
                 )
             )
-
         whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.just(programmedWorkouts))
-
         val result = programmedWorkoutController.getAll()
-
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
             .expectNext(programmedWorkouts)
             .verifyComplete()
-
         verify(programmedWorkoutDAL).selectProgrammedWorkouts()
     }
 
@@ -73,103 +84,86 @@ class ProgrammedWorkoutControllerTest {
         val now = Instant.now()
         val programmedWorkout =
             ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Test Workout",
+                id = WORKOUT_ID_1,
+                programId = PROGRAM_ID,
+                dayNumber = DAY_NUMBER_1,
+                name = TEST_WORKOUT,
                 createdAt = now,
                 updatedAt = now
             )
-
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(1L)).thenReturn(Mono.just(programmedWorkout))
-
-        val result = programmedWorkoutController.get(1L)
-
+        whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
+        val result = programmedWorkoutController.get(WORKOUT_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(1L)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(WORKOUT_ID_1)
     }
 
     @Test
     fun `should return not found when programmed workout not found`() {
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(999L)).thenReturn(Mono.error(RuntimeException("Not found")))
-
-        val result = programmedWorkoutController.get(999L)
-
+        whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(NON_EXISTENT_ID)).thenReturn(Mono.error(RuntimeException("Not found")))
+        val result = programmedWorkoutController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(999L)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(NON_EXISTENT_ID)
     }
 
     @Test
     fun `should create programmed workout`() {
         val now = Instant.now()
-        val programId = 1L
-        val dayNumber = 1
-        val name = "New Workout"
         val programmedWorkout =
             ProgrammedWorkout(
                 id = 0L,
-                programId = programId,
-                dayNumber = dayNumber,
-                name = name,
+                programId = PROGRAM_ID,
+                dayNumber = DAY_NUMBER_1,
+                name = NEW_WORKOUT,
                 createdAt = now,
                 updatedAt = now
             )
-        val savedProgrammedWorkout = programmedWorkout.copy(id = 1L)
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(programId, dayNumber, name)).thenReturn(Mono.just(savedProgrammedWorkout))
-
-        val result = programmedWorkoutController.save(programId, dayNumber, name)
-
+        val savedProgrammedWorkout = programmedWorkout.copy(id = WORKOUT_ID_1)
+        whenever(
+            programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
+        ).thenReturn(Mono.just(savedProgrammedWorkout))
+        val result = programmedWorkoutController.save(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgrammedWorkout))
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).insertProgrammedWorkout(programId, dayNumber, name)
+        verify(programmedWorkoutDAL).insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
     }
 
     @Test
     fun `should update programmed workout`() {
         val now = Instant.now()
-        val id = 1L
-        val programId = 1L
-        val dayNumber = 2
-        val name = "Updated Workout"
         val programmedWorkout =
             ProgrammedWorkout(
-                id = id,
-                programId = programId,
-                dayNumber = dayNumber,
-                name = name,
+                id = WORKOUT_ID_1,
+                programId = PROGRAM_ID,
+                dayNumber = DAY_NUMBER_2,
+                name = UPDATED_WORKOUT,
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(programmedWorkoutDAL.updateProgrammedWorkout(id, programId, dayNumber, name)).thenReturn(Mono.just(programmedWorkout))
-
-        val result = programmedWorkoutController.update(id, programId, dayNumber, name)
-
+        whenever(
+            programmedWorkoutDAL.updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
+        ).thenReturn(Mono.just(programmedWorkout))
+        val result = programmedWorkoutController.update(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).updateProgrammedWorkout(id, programId, dayNumber, name)
+        verify(programmedWorkoutDAL).updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
     }
 
     @Test
     fun `should return not found when updating non-existent programmed workout`() {
-        whenever(programmedWorkoutDAL.updateProgrammedWorkout(999L, 1L, 1, "Test")).thenReturn(Mono.error(RuntimeException("Not found")))
-
-        val result = programmedWorkoutController.update(999L, 1L, 1, "Test")
-
+        whenever(
+            programmedWorkoutDAL.updateProgrammedWorkout(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
+        ).thenReturn(Mono.error(RuntimeException("Not found")))
+        val result = programmedWorkoutController.update(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).updateProgrammedWorkout(999L, 1L, 1, "Test")
+        verify(programmedWorkoutDAL).updateProgrammedWorkout(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
     }
 
     @Test
@@ -177,101 +171,84 @@ class ProgrammedWorkoutControllerTest {
         val now = Instant.now()
         val programmedWorkout =
             ProgrammedWorkout(
-                id = 1L,
-                programId = 1L,
-                dayNumber = 1,
-                name = "Test Workout",
+                id = WORKOUT_ID_1,
+                programId = PROGRAM_ID,
+                dayNumber = DAY_NUMBER_1,
+                name = TEST_WORKOUT,
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(programmedWorkoutDAL.deleteProgrammedWorkout(1L)).thenReturn(Mono.just(programmedWorkout))
-
-        val result = programmedWorkoutController.delete(1L)
-
+        whenever(programmedWorkoutDAL.deleteProgrammedWorkout(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
+        val result = programmedWorkoutController.delete(WORKOUT_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).deleteProgrammedWorkout(1L)
+        verify(programmedWorkoutDAL).deleteProgrammedWorkout(WORKOUT_ID_1)
     }
 
     @Test
     fun `should return not found when deleting non-existent programmed workout`() {
-        whenever(programmedWorkoutDAL.deleteProgrammedWorkout(999L)).thenReturn(Mono.error(RuntimeException("Not found")))
-
-        val result = programmedWorkoutController.delete(999L)
-
+        whenever(programmedWorkoutDAL.deleteProgrammedWorkout(NON_EXISTENT_ID)).thenReturn(Mono.error(RuntimeException("Not found")))
+        val result = programmedWorkoutController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).deleteProgrammedWorkout(999L)
+        verify(programmedWorkoutDAL).deleteProgrammedWorkout(NON_EXISTENT_ID)
     }
 
     @Test
     fun `should get programmed workouts by program`() {
         val now = Instant.now()
-        val programId = 1L
         val programmedWorkouts =
             listOf(
                 ProgrammedWorkout(
-                    id = 1L,
-                    programId = programId,
-                    dayNumber = 1,
-                    name = "Workout 1",
+                    id = WORKOUT_ID_1,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_1,
+                    name = WORKOUT_NAME_1,
                     createdAt = now,
                     updatedAt = now
                 ),
                 ProgrammedWorkout(
-                    id = 2L,
-                    programId = programId,
-                    dayNumber = 2,
-                    name = "Workout 2",
+                    id = WORKOUT_ID_2,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_2,
+                    name = WORKOUT_NAME_2,
                     createdAt = now,
                     updatedAt = now
                 )
             )
-
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)).thenReturn(Mono.just(programmedWorkouts))
-
-        val result = programmedWorkoutController.getByProgramId(programId)
-
+        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(PROGRAM_ID)).thenReturn(Mono.just(programmedWorkouts))
+        val result = programmedWorkoutController.getByProgramId(PROGRAM_ID)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
             .expectNext(programmedWorkouts)
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(programId)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(PROGRAM_ID)
     }
 
     @Test
     fun `should return empty list when no programmed workouts for program`() {
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(999L)).thenReturn(Mono.just(emptyList()))
-
-        val result = programmedWorkoutController.getByProgramId(999L)
-
+        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)).thenReturn(Mono.just(emptyList()))
+        val result = programmedWorkoutController.getByProgramId(NON_EXISTENT_ID)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
             .expectNext(emptyList<ProgrammedWorkout>())
             .verifyComplete()
-
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(999L)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)
     }
 
     @Test
     fun `should handle DAL error gracefully`() {
         whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.error(RuntimeException("Database error")))
-
         val result = programmedWorkoutController.getAll()
-
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
             .expectError(RuntimeException::class.java)
             .verify()
-
         verify(programmedWorkoutDAL).selectProgrammedWorkouts()
     }
 }

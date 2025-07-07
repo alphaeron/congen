@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockExerciseRotationHistory
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -10,13 +11,14 @@ class ExerciseRotationHistoryTest {
     @Test
     fun `constructor sets all fields correctly`() {
         val history =
-            ExerciseRotationHistory(
+            mockExerciseRotationHistory(
                 id = 1L,
                 userId = 42,
                 exerciseName = "Squat",
                 isAccessory = true,
                 createdAt = now
             )
+
         assertEquals(1L, history.id)
         assertEquals(42, history.userId)
         assertEquals("Squat", history.exerciseName)
@@ -26,39 +28,37 @@ class ExerciseRotationHistoryTest {
 
     @Test
     fun `should create exercise rotation history with correct properties`() {
-        val createdAt = Instant.now()
         val exerciseRotationHistory =
-            ExerciseRotationHistory(
+            mockExerciseRotationHistory(
                 id = 1L,
                 userId = 1,
                 exerciseName = "Bench Press",
                 isAccessory = false,
-                createdAt = createdAt
+                createdAt = now
             )
 
         assertEquals(1L, exerciseRotationHistory.id)
         assertEquals(1, exerciseRotationHistory.userId)
         assertEquals("Bench Press", exerciseRotationHistory.exerciseName)
         assertEquals(false, exerciseRotationHistory.isAccessory)
-        assertEquals(createdAt, exerciseRotationHistory.createdAt)
+        assertEquals(now, exerciseRotationHistory.createdAt)
     }
 
     @Test
     fun `should create exercise rotation history with accessory category`() {
-        val createdAt = Instant.now()
         val exerciseRotationHistory =
-            ExerciseRotationHistory(
+            mockExerciseRotationHistory(
                 id = 2L,
                 userId = 3,
                 exerciseName = "Bicep Curl",
                 isAccessory = true,
-                createdAt = createdAt
+                createdAt = now
             )
 
         assertEquals(2L, exerciseRotationHistory.id)
         assertEquals(3, exerciseRotationHistory.userId)
         assertEquals("Bicep Curl", exerciseRotationHistory.exerciseName)
         assertEquals(true, exerciseRotationHistory.isAccessory)
-        assertEquals(createdAt, exerciseRotationHistory.createdAt)
+        assertEquals(now, exerciseRotationHistory.createdAt)
     }
 }

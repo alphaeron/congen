@@ -30,6 +30,18 @@ class ProgramControllerTest {
 
     private lateinit var programController: ProgramController
 
+    companion object {
+        private const val PROGRAM_ID_1 = 1L
+        private const val PROGRAM_ID_2 = 2L
+        private const val USER_ID = 1
+        private const val CURRENT_WEEK = 1
+        private const val UPDATED_WEEK = 2
+        private const val NON_EXISTENT_ID = 999L
+        private const val CONJUGATE_PROGRAM_NAME = "Conjugate Powerlifting Program"
+        private const val FIVE_THREE_ONE_PROGRAM = "5/3/1 Program"
+        private const val UPDATED_PROGRAM_NAME = "Updated Conjugate Program"
+    }
+
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
@@ -38,216 +50,154 @@ class ProgramControllerTest {
 
     @Test
     fun `save should return created program`() {
-        // Given
         val program =
             Program(
-                id = 1L,
-                userId = 1,
-                name = "Conjugate Powerlifting Program",
-                currentWeekNumber = 1,
+                id = PROGRAM_ID_1,
+                userId = USER_ID,
+                name = CONJUGATE_PROGRAM_NAME,
+                currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
-        val savedProgram = program.copy(id = 2L)
-
-        whenever(programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber)).thenReturn(Mono.just(savedProgram))
-
-        // When
-        val result = programController.save(program.userId, program.name, program.currentWeekNumber)
-
-        // Then
+        val savedProgram = program.copy(id = PROGRAM_ID_2)
+        whenever(programDAL.insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, CURRENT_WEEK)).thenReturn(Mono.just(savedProgram))
+        val result = programController.save(USER_ID, CONJUGATE_PROGRAM_NAME, CURRENT_WEEK)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgram))
             .verifyComplete()
-
-        verify(programDAL).insertProgram(program.userId, program.name, program.currentWeekNumber)
+        verify(programDAL).insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, CURRENT_WEEK)
     }
 
     @Test
     fun `get should return program when found`() {
-        // Given
-        val programId = 1L
         val program =
             Program(
-                id = programId,
-                userId = 1,
-                name = "Conjugate Powerlifting Program",
-                currentWeekNumber = 1,
+                id = PROGRAM_ID_1,
+                userId = USER_ID,
+                name = CONJUGATE_PROGRAM_NAME,
+                currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
-
-        whenever(programDAL.selectProgramById(programId)).thenReturn(Mono.just(program))
-
-        // When
-        val result = programController.get(programId)
-
-        // Then
+        whenever(programDAL.selectProgramById(PROGRAM_ID_1)).thenReturn(Mono.just(program))
+        val result = programController.get(PROGRAM_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(program))
             .verifyComplete()
-
-        verify(programDAL).selectProgramById(programId)
+        verify(programDAL).selectProgramById(PROGRAM_ID_1)
     }
 
     @Test
     fun `get should return not found when program not found`() {
-        // Given
-        val programId = 999L
-
         whenever(
-            programDAL.selectProgramById(programId),
+            programDAL.selectProgramById(NON_EXISTENT_ID)
         ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM program WHERE id=$1")))
-
-        // When
-        val result = programController.get(programId)
-
-        // Then
+        val result = programController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-
-        verify(programDAL).selectProgramById(programId)
+        verify(programDAL).selectProgramById(NON_EXISTENT_ID)
     }
 
     @Test
     fun `getAll should return all programs`() {
-        // Given
         val programs =
             listOf(
                 Program(
-                    id = 1L,
-                    userId = 1,
-                    name = "Conjugate Powerlifting Program",
-                    currentWeekNumber = 1,
+                    id = PROGRAM_ID_1,
+                    userId = USER_ID,
+                    name = CONJUGATE_PROGRAM_NAME,
+                    currentWeekNumber = CURRENT_WEEK,
                     createdAt = Instant.now(),
                     updatedAt = Instant.now()
                 ),
                 Program(
-                    id = 2L,
-                    userId = 1,
-                    name = "5/3/1 Program",
-                    currentWeekNumber = 1,
+                    id = PROGRAM_ID_2,
+                    userId = USER_ID,
+                    name = FIVE_THREE_ONE_PROGRAM,
+                    currentWeekNumber = CURRENT_WEEK,
                     createdAt = Instant.now(),
                     updatedAt = Instant.now()
-                ),
+                )
             )
-
         whenever(programDAL.selectPrograms()).thenReturn(Mono.just(programs))
-
-        // When
         val result = programController.getAll()
-
-        // Then
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<Program>>)
             .expectNext(programs)
             .verifyComplete()
-
         verify(programDAL).selectPrograms()
     }
 
     @Test
     fun `update should return updated program when found`() {
-        // Given
-        val programId = 2L
         val program =
             Program(
-                id = 1,
-                userId = 1,
-                name = "Updated Conjugate Program",
-                currentWeekNumber = 2,
+                id = PROGRAM_ID_1,
+                userId = USER_ID,
+                name = UPDATED_PROGRAM_NAME,
+                currentWeekNumber = UPDATED_WEEK,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
-        val updatedProgram = program.copy(id = programId)
-
-        whenever(programDAL.updateProgram(programId, program.name, program.currentWeekNumber)).thenReturn(Mono.just(updatedProgram))
-
-        // When
-        val result = programController.update(programId, program.name, program.currentWeekNumber)
-
-        // Then
+        val updatedProgram = program.copy(id = PROGRAM_ID_2)
+        whenever(programDAL.updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK)).thenReturn(Mono.just(updatedProgram))
+        val result = programController.update(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedProgram))
             .verifyComplete()
-
-        verify(programDAL).updateProgram(programId, program.name, program.currentWeekNumber)
+        verify(programDAL).updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK)
     }
 
     @Test
     fun `update should return not found when program not found`() {
-        // Given
-        val programId = 999L
         val program =
             Program(
-                id = 1,
-                userId = 1,
-                name = "Updated Conjugate Program",
-                currentWeekNumber = 1,
+                id = PROGRAM_ID_1,
+                userId = USER_ID,
+                name = UPDATED_PROGRAM_NAME,
+                currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
-        val updatedProgram = program.copy(id = programId)
-
-        whenever(
-            programDAL.updateProgram(programId, program.name, program.currentWeekNumber)
-        ).thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
-
-        // When
-        val result = programController.update(programId, program.name, program.currentWeekNumber)
-
-        // Then
+        whenever(programDAL.updateProgram(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK))
+            .thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
+        val result = programController.update(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-
-        verify(programDAL).updateProgram(programId, program.name, program.currentWeekNumber)
+        verify(programDAL).updateProgram(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK)
     }
 
     @Test
     fun `delete should return deleted program when found`() {
-        // Given
-        val programId = 1L
         val program =
             Program(
-                id = programId,
-                userId = 1,
-                name = "Conjugate Powerlifting Program",
-                currentWeekNumber = 1,
+                id = PROGRAM_ID_1,
+                userId = USER_ID,
+                name = CONJUGATE_PROGRAM_NAME,
+                currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
                 updatedAt = Instant.now()
             )
-
-        whenever(programDAL.deleteProgram(programId)).thenReturn(Mono.just(program))
-
-        // When
-        val result = programController.delete(programId)
-
-        // Then
+        whenever(programDAL.deleteProgram(PROGRAM_ID_1)).thenReturn(Mono.just(program))
+        val result = programController.delete(PROGRAM_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(program))
             .verifyComplete()
-
-        verify(programDAL).deleteProgram(programId)
+        verify(programDAL).deleteProgram(PROGRAM_ID_1)
     }
 
     @Test
     fun `delete should return not found when program not found`() {
-        // Given
-        val programId = 999L
-
-        whenever(programDAL.deleteProgram(programId)).thenReturn(Mono.error(NoResultsFoundException("DELETE FROM program WHERE id=$1")))
-
-        // When
-        val result = programController.delete(programId)
-
-        // Then
+        whenever(
+            programDAL.deleteProgram(NON_EXISTENT_ID)
+        ).thenReturn(Mono.error(NoResultsFoundException("DELETE FROM program WHERE id=$1")))
+        val result = programController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-
-        verify(programDAL).deleteProgram(programId)
+        verify(programDAL).deleteProgram(NON_EXISTENT_ID)
     }
 }

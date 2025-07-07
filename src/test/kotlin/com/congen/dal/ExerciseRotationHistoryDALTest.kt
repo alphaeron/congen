@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockExerciseRotationHistory
 import com.congen.model.ExerciseRotationHistory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -9,12 +10,12 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
 class ExerciseRotationHistoryDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var dal: ExerciseRotationHistoryDAL
-    private val now = Instant.now()
+
+    private val history = mockExerciseRotationHistory()
 
     @BeforeEach
     fun setUp() {
@@ -24,32 +25,17 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `selectById returns ExerciseRotationHistory`() {
-        val history =
-            ExerciseRotationHistory(
-                id = 1L,
-                userId = 2,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                createdAt = now
-            )
         whenever(
-            postgresClient.selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", 1L)
+            postgresClient.selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", history.id)
         ).thenReturn(Mono.just(history))
-        val result = dal.selectById(1L)
+        val result = dal.selectById(history.id)
         StepVerifier.create(result).expectNext(history).verifyComplete()
-        verify(postgresClient).selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", 1L)
+        verify(postgresClient).selectIndividual<ExerciseRotationHistory>("SELECT * FROM exercise_rotation_history WHERE id=$1", history.id)
     }
 
     @Test
     fun `insert returns inserted ExerciseRotationHistory`() {
-        val history =
-            ExerciseRotationHistory(
-                id = 0L,
-                userId = 2,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                createdAt = now
-            )
+        val insertHistory = mockExerciseRotationHistory(id = 0L)
         whenever(
             postgresClient.update<ExerciseRotationHistory>(
                 """
@@ -58,13 +44,13 @@ class ExerciseRotationHistoryDALTest {
                 VALUES
                     ($1, $2, $3)
                 """.trimIndent(),
-                2,
-                "Bench Press",
-                false
+                insertHistory.userId,
+                insertHistory.exerciseName,
+                insertHistory.isAccessory
             )
-        ).thenReturn(Mono.just(history))
-        val result = dal.insert(2, "Bench Press", false)
-        StepVerifier.create(result).expectNext(history).verifyComplete()
+        ).thenReturn(Mono.just(insertHistory))
+        val result = dal.insert(insertHistory.userId, insertHistory.exerciseName, insertHistory.isAccessory)
+        StepVerifier.create(result).expectNext(insertHistory).verifyComplete()
         verify(postgresClient).update<ExerciseRotationHistory>(
             """
             INSERT INTO exercise_rotation_history
@@ -72,40 +58,25 @@ class ExerciseRotationHistoryDALTest {
             VALUES
                 ($1, $2, $3)
             """.trimIndent(),
-            2,
-            "Bench Press",
-            false
+            insertHistory.userId,
+            insertHistory.exerciseName,
+            insertHistory.isAccessory
         )
     }
 
     @Test
     fun `deleteById returns deleted ExerciseRotationHistory`() {
-        val history =
-            ExerciseRotationHistory(
-                id = 1L,
-                userId = 2,
-                exerciseName = "Bench Press",
-                isAccessory = false,
-                createdAt = now
-            )
         whenever(
-            postgresClient.update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", 1L)
+            postgresClient.update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", history.id)
         ).thenReturn(Mono.just(history))
-        val result = dal.deleteById(1L)
+        val result = dal.deleteById(history.id)
         StepVerifier.create(result).expectNext(history).verifyComplete()
-        verify(postgresClient).update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", 1L)
+        verify(postgresClient).update<ExerciseRotationHistory>("DELETE FROM exercise_rotation_history WHERE id=$1", history.id)
     }
 
     @Test
     fun `update returns updated ExerciseRotationHistory`() {
-        val updated =
-            ExerciseRotationHistory(
-                id = 1L,
-                userId = 3,
-                exerciseName = "Squat",
-                isAccessory = true,
-                createdAt = now
-            )
+        val updated = mockExerciseRotationHistory(exerciseName = "Squat", isAccessory = true)
         val expectedQuery =
             """
             UPDATE exercise_rotation_history

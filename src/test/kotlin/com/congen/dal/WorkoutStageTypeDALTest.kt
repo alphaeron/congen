@@ -1,65 +1,49 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockWorkoutStageType
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
-import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
-@ExtendWith(MockitoExtension::class)
 class WorkoutStageTypeDALTest {
-    @Mock
     private lateinit var postgresClient: PostgresClient
-
     private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
+
+    private val workoutStageType = mockWorkoutStageType()
+    private val workoutStageTypes =
+        listOf(
+            mockWorkoutStageType(name = WorkoutStageTypeEnum.PRIMARY),
+            mockWorkoutStageType(name = WorkoutStageTypeEnum.SECONDARY)
+        )
 
     @BeforeEach
     fun setUp() {
+        postgresClient = mock()
         workoutStageTypeDAL = WorkoutStageTypeDAL(postgresClient)
     }
 
     @Test
     fun `selectWorkoutStageTypeById should return workout stage type when found`() {
-        // Given
-        val workoutStageType =
-            WorkoutStageType(
-                id = 1,
-                name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = Instant.now()
-            )
-
-        whenever(postgresClient.selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE id=$1", 1))
+        whenever(postgresClient.selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE id=$1", workoutStageType.id))
             .thenReturn(Mono.just(workoutStageType))
 
-        // When
-        val result = workoutStageTypeDAL.selectWorkoutStageTypeById(1)
+        val result = workoutStageTypeDAL.selectWorkoutStageTypeById(workoutStageType.id)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(workoutStageType)
             .verifyComplete()
-
-        verify(postgresClient).selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE id=$1", 1)
+        verify(postgresClient).selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE id=$1", workoutStageType.id)
     }
 
     @Test
     fun `selectWorkoutStageTypeByEnum should return workout stage type when found`() {
-        // Given
-        val workoutStageType =
-            WorkoutStageType(
-                id = 1,
-                name = WorkoutStageTypeEnum.PRIMARY,
-                createdAt = Instant.now()
-            )
-
         whenever(
             postgresClient.selectIndividual<WorkoutStageType>(
                 "SELECT * FROM workout_stage_type WHERE name=$1",
@@ -68,14 +52,11 @@ class WorkoutStageTypeDALTest {
         )
             .thenReturn(Mono.just(workoutStageType))
 
-        // When
         val result = workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.PRIMARY)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(workoutStageType)
             .verifyComplete()
-
         verify(
             postgresClient
         ).selectIndividual<WorkoutStageType>("SELECT * FROM workout_stage_type WHERE name=$1", WorkoutStageTypeEnum.PRIMARY.displayName)
@@ -83,32 +64,14 @@ class WorkoutStageTypeDALTest {
 
     @Test
     fun `selectWorkoutStageTypes should return all workout stage types`() {
-        // Given
-        val workoutStageTypes =
-            listOf(
-                WorkoutStageType(
-                    id = 1,
-                    name = WorkoutStageTypeEnum.PRIMARY,
-                    createdAt = Instant.now()
-                ),
-                WorkoutStageType(
-                    id = 2,
-                    name = WorkoutStageTypeEnum.SECONDARY,
-                    createdAt = Instant.now()
-                )
-            )
-
         whenever(postgresClient.select<WorkoutStageType>("SELECT * FROM workout_stage_type ORDER BY name"))
             .thenReturn(Mono.just(workoutStageTypes))
 
-        // When
         val result = workoutStageTypeDAL.selectWorkoutStageTypes()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(workoutStageTypes)
             .verifyComplete()
-
         verify(postgresClient).select<WorkoutStageType>("SELECT * FROM workout_stage_type ORDER BY name")
     }
 }

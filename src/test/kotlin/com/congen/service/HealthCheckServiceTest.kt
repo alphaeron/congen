@@ -15,15 +15,15 @@ class HealthCheckServiceTest {
     private lateinit var versionConfig: VersionConfig
     private lateinit var healthCheckService: HealthCheckService
 
+    private val defaultVersion = "1.0.0"
+    private val defaultReleaseId = "test-release"
+
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
         versionConfig = mock()
-
-        // Setup default version config values
-        whenever(versionConfig.version).thenReturn("1.0.0")
-        whenever(versionConfig.releaseId).thenReturn("test-release")
-
+        whenever(versionConfig.version).thenReturn(defaultVersion)
+        whenever(versionConfig.releaseId).thenReturn(defaultReleaseId)
         healthCheckService = HealthCheckService(postgresClient, versionConfig)
     }
 

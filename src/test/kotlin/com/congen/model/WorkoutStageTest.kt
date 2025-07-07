@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockWorkoutStage
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import kotlin.test.assertEquals
@@ -10,7 +11,7 @@ class WorkoutStageTest {
     @Test
     fun `should create workout stage with valid parameters`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 1,
@@ -32,7 +33,7 @@ class WorkoutStageTest {
     @Test
     fun `should create workout stage with accessory type`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 2L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 2,
@@ -50,7 +51,7 @@ class WorkoutStageTest {
     @Test
     fun `should create workout stage with warmup type`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 3L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 3,
@@ -68,7 +69,7 @@ class WorkoutStageTest {
     @Test
     fun `should create workout stage with cooldown type`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 4L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 4,
@@ -86,7 +87,7 @@ class WorkoutStageTest {
     @Test
     fun `should handle zero position`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 3,
@@ -102,7 +103,7 @@ class WorkoutStageTest {
     @Test
     fun `should handle high position values`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 2,
@@ -121,7 +122,7 @@ class WorkoutStageTest {
         val updatedAt = Instant.parse("2024-01-02T15:30:00Z")
 
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 1,
@@ -138,7 +139,7 @@ class WorkoutStageTest {
     @Test
     fun `should handle same timestamps`() {
         val workoutStage =
-            WorkoutStage(
+            mockWorkoutStage(
                 id = 1L,
                 programmedWorkoutId = 5L,
                 stageTypeId = 1,

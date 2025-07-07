@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.mockExerciseEquipment
 import com.congen.model.ExerciseEquipment
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,6 +16,12 @@ class ExerciseEquipmentControllerTest {
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
     private lateinit var exerciseEquipmentController: ExerciseEquipmentController
 
+    companion object {
+        private const val EXERCISE_NAME = "Bench Press"
+        private const val EQUIPMENT_NAME = "Barbell"
+        private const val SQUAT_NAME = "Squat"
+    }
+
     @BeforeEach
     fun setUp() {
         exerciseEquipmentDAL = mock()
@@ -23,51 +30,33 @@ class ExerciseEquipmentControllerTest {
 
     @Test
     fun `save should return saved exercise equipment`() {
-        // Given
-        val exerciseEquipment =
-            ExerciseEquipment(
-                exerciseName = "Bench Press",
-                equipmentName = "Barbell",
-            )
-        whenever(
-            exerciseEquipmentDAL.insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
-        ).thenReturn(Mono.just(exerciseEquipment))
+        val exerciseEquipment = mockExerciseEquipment(exerciseName = EXERCISE_NAME, equipmentName = EQUIPMENT_NAME)
+        whenever(exerciseEquipmentDAL.insertExerciseEquipment(EXERCISE_NAME, EQUIPMENT_NAME))
+            .thenReturn(Mono.just(exerciseEquipment))
 
-        // When
-        val result = exerciseEquipmentController.save(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+        val result = exerciseEquipmentController.save(EXERCISE_NAME, EQUIPMENT_NAME)
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<ExerciseEquipment>)
+        StepVerifier.create(result.body as Mono<ExerciseEquipment>)
             .expectNext(exerciseEquipment)
             .verifyComplete()
-        verify(exerciseEquipmentDAL).insertExerciseEquipment(exerciseEquipment.exerciseName, exerciseEquipment.equipmentName)
+        verify(exerciseEquipmentDAL).insertExerciseEquipment(EXERCISE_NAME, EQUIPMENT_NAME)
     }
 
     @Test
     fun `getAll should return all exercise equipment`() {
-        // Given
         val exerciseEquipmentList =
             listOf(
-                ExerciseEquipment(
-                    exerciseName = "Bench Press",
-                    equipmentName = "Barbell",
-                ),
-                ExerciseEquipment(
-                    exerciseName = "Squat",
-                    equipmentName = "Barbell",
-                ),
+                mockExerciseEquipment(exerciseName = EXERCISE_NAME, equipmentName = EQUIPMENT_NAME),
+                mockExerciseEquipment(exerciseName = SQUAT_NAME, equipmentName = EQUIPMENT_NAME)
             )
-        whenever(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(exerciseEquipmentList))
+        whenever(exerciseEquipmentDAL.selectAllExerciseEquipment())
+            .thenReturn(Mono.just(exerciseEquipmentList))
 
-        // When
         val result = exerciseEquipmentController.getAll()
 
-        // Then
         assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ExerciseEquipment>>)
+        StepVerifier.create(result.body as Mono<List<ExerciseEquipment>>)
             .expectNext(exerciseEquipmentList)
             .verifyComplete()
         verify(exerciseEquipmentDAL).selectAllExerciseEquipment()

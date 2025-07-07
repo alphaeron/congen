@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.mockExerciseMuscle
 import com.congen.model.ExerciseMuscle
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,6 +15,23 @@ class ExerciseMuscleDALTest {
     private lateinit var postgresClient: PostgresClient
     private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
 
+    private val exerciseMuscle = mockExerciseMuscle()
+    private val exerciseMuscleList =
+        listOf(
+            exerciseMuscle,
+            mockExerciseMuscle(muscleName = "Triceps")
+        )
+    private val exerciseMuscleListByMuscle =
+        listOf(
+            exerciseMuscle,
+            mockExerciseMuscle(exerciseName = "Push-up")
+        )
+    private val allExerciseMuscles =
+        listOf(
+            exerciseMuscle,
+            mockExerciseMuscle(exerciseName = "Squat", muscleName = "Legs")
+        )
+
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
@@ -22,149 +40,80 @@ class ExerciseMuscleDALTest {
 
     @Test
     fun `selectExerciseMuscle should return exercise muscle`() {
-        // Given
-        val exerciseName = "Bench Press"
-        val muscleName = "Chest"
-        val exerciseMuscle =
-            ExerciseMuscle(
-                exerciseName = exerciseName,
-                muscleName = muscleName,
-            )
-
         whenever(
             postgresClient.selectIndividual<ExerciseMuscle>(
                 "SELECT * FROM exercise_muscle WHERE exercise_name=$1 AND muscle_name=$2",
-                exerciseName,
-                muscleName,
+                exerciseMuscle.exerciseName,
+                exerciseMuscle.muscleName,
             ),
         ).thenReturn(Mono.just(exerciseMuscle))
 
-        // When
-        val result = exerciseMuscleDAL.selectExerciseMuscle(exerciseName, muscleName)
+        val result = exerciseMuscleDAL.selectExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exerciseMuscle)
             .verifyComplete()
-
         verify(postgresClient).selectIndividual<ExerciseMuscle>(
             "SELECT * FROM exercise_muscle WHERE exercise_name=$1 AND muscle_name=$2",
-            exerciseName,
-            muscleName,
+            exerciseMuscle.exerciseName,
+            exerciseMuscle.muscleName,
         )
     }
 
     @Test
     fun `selectExerciseMuscleByExercise should return list of exercise muscles`() {
-        // Given
-        val exerciseName = "Bench Press"
-        val exerciseMuscles =
-            listOf(
-                ExerciseMuscle(
-                    exerciseName = exerciseName,
-                    muscleName = "Chest",
-                ),
-                ExerciseMuscle(
-                    exerciseName = exerciseName,
-                    muscleName = "Triceps",
-                ),
-            )
-
         whenever(
             postgresClient.select<ExerciseMuscle>(
                 "SELECT * FROM exercise_muscle WHERE exercise_name=$1",
-                exerciseName,
+                exerciseMuscle.exerciseName,
             ),
-        ).thenReturn(Mono.just(exerciseMuscles))
+        ).thenReturn(Mono.just(exerciseMuscleList))
 
-        // When
-        val result = exerciseMuscleDAL.selectExerciseMuscleByExercise(exerciseName)
+        val result = exerciseMuscleDAL.selectExerciseMuscleByExercise(exerciseMuscle.exerciseName)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(exerciseMuscles)
+            .expectNext(exerciseMuscleList)
             .verifyComplete()
-
         verify(postgresClient).select<ExerciseMuscle>(
             "SELECT * FROM exercise_muscle WHERE exercise_name=$1",
-            exerciseName,
+            exerciseMuscle.exerciseName,
         )
     }
 
     @Test
     fun `selectExerciseMuscleByMuscle should return list of exercise muscles`() {
-        // Given
-        val muscleName = "Chest"
-        val exerciseMuscles =
-            listOf(
-                ExerciseMuscle(
-                    exerciseName = "Bench Press",
-                    muscleName = muscleName,
-                ),
-                ExerciseMuscle(
-                    exerciseName = "Push-up",
-                    muscleName = muscleName,
-                ),
-            )
-
         whenever(
             postgresClient.select<ExerciseMuscle>(
                 "SELECT * FROM exercise_muscle WHERE muscle_name=$1",
-                muscleName,
+                exerciseMuscle.muscleName,
             ),
-        ).thenReturn(Mono.just(exerciseMuscles))
+        ).thenReturn(Mono.just(exerciseMuscleListByMuscle))
 
-        // When
-        val result = exerciseMuscleDAL.selectExerciseMuscleByMuscle(muscleName)
+        val result = exerciseMuscleDAL.selectExerciseMuscleByMuscle(exerciseMuscle.muscleName)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(exerciseMuscles)
+            .expectNext(exerciseMuscleListByMuscle)
             .verifyComplete()
-
         verify(postgresClient).select<ExerciseMuscle>(
             "SELECT * FROM exercise_muscle WHERE muscle_name=$1",
-            muscleName,
+            exerciseMuscle.muscleName,
         )
     }
 
     @Test
     fun `selectAllExerciseMuscle should return all exercise muscles`() {
-        // Given
-        val exerciseMuscles =
-            listOf(
-                ExerciseMuscle(
-                    exerciseName = "Bench Press",
-                    muscleName = "Chest",
-                ),
-                ExerciseMuscle(
-                    exerciseName = "Squat",
-                    muscleName = "Legs",
-                ),
-            )
+        whenever(postgresClient.select<ExerciseMuscle>("SELECT * FROM exercise_muscle")).thenReturn(Mono.just(allExerciseMuscles))
 
-        whenever(postgresClient.select<ExerciseMuscle>("SELECT * FROM exercise_muscle")).thenReturn(Mono.just(exerciseMuscles))
-
-        // When
         val result = exerciseMuscleDAL.selectAllExerciseMuscle()
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(exerciseMuscles)
+            .expectNext(allExerciseMuscles)
             .verifyComplete()
-
         verify(postgresClient).select<ExerciseMuscle>("SELECT * FROM exercise_muscle")
     }
 
     @Test
     fun `insertExerciseMuscle should return inserted exercise muscle`() {
-        // Given
-        val exerciseMuscle =
-            ExerciseMuscle(
-                exerciseName = "Bench Press",
-                muscleName = "Chest",
-            )
-
         val expectedQuery =
             """
             INSERT INTO exercise_muscle
@@ -181,14 +130,11 @@ class ExerciseMuscleDALTest {
             ),
         ).thenReturn(Mono.just(exerciseMuscle))
 
-        // When
         val result = exerciseMuscleDAL.insertExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exerciseMuscle)
             .verifyComplete()
-
         verify(postgresClient).update<ExerciseMuscle>(
             expectedQuery,
             exerciseMuscle.exerciseName,
@@ -198,35 +144,23 @@ class ExerciseMuscleDALTest {
 
     @Test
     fun `deleteExerciseMuscle should return deleted exercise muscle`() {
-        // Given
-        val exerciseName = "Bench Press"
-        val muscleName = "Chest"
-        val deletedExerciseMuscle =
-            ExerciseMuscle(
-                exerciseName = exerciseName,
-                muscleName = muscleName,
-            )
-
         whenever(
             postgresClient.update<ExerciseMuscle>(
                 "DELETE FROM exercise_muscle WHERE exercise_name=$1 AND muscle_name=$2",
-                exerciseName,
-                muscleName,
+                exerciseMuscle.exerciseName,
+                exerciseMuscle.muscleName,
             ),
-        ).thenReturn(Mono.just(deletedExerciseMuscle))
+        ).thenReturn(Mono.just(exerciseMuscle))
 
-        // When
-        val result = exerciseMuscleDAL.deleteExerciseMuscle(exerciseName, muscleName)
+        val result = exerciseMuscleDAL.deleteExerciseMuscle(exerciseMuscle.exerciseName, exerciseMuscle.muscleName)
 
-        // Then
         StepVerifier.create(result)
-            .expectNext(deletedExerciseMuscle)
+            .expectNext(exerciseMuscle)
             .verifyComplete()
-
         verify(postgresClient).update<ExerciseMuscle>(
             "DELETE FROM exercise_muscle WHERE exercise_name=$1 AND muscle_name=$2",
-            exerciseName,
-            muscleName,
+            exerciseMuscle.exerciseName,
+            exerciseMuscle.muscleName,
         )
     }
 }

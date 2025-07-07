@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockProgrammedExercise
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +20,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should be created with all required fields`() {
         val programmedExercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -41,7 +42,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should be created with all fields`() {
         val programmedExercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -63,7 +64,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle different exercise names`() {
         val benchPress =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -74,7 +75,7 @@ class ProgrammedExerciseTest {
             )
 
         val squat =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 2L,
                 workoutStageId = 5L,
                 exerciseName = "Back Squat",
@@ -85,7 +86,7 @@ class ProgrammedExerciseTest {
             )
 
         val deadlift =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 3L,
                 workoutStageId = 5L,
                 exerciseName = "Deadlift",
@@ -103,7 +104,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle different workout stage IDs`() {
         val exercise1 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 1L,
                 exerciseName = "Bench Press",
@@ -114,7 +115,7 @@ class ProgrammedExerciseTest {
             )
 
         val exercise2 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 2L,
                 workoutStageId = 100L,
                 exerciseName = "Bench Press",
@@ -131,7 +132,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle different IDs`() {
         val exercise1 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -142,7 +143,7 @@ class ProgrammedExerciseTest {
             )
 
         val exercise2 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 999L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -159,7 +160,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle notes`() {
         val exerciseWithNotes =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -170,7 +171,7 @@ class ProgrammedExerciseTest {
             )
 
         val exerciseWithoutNotes =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 2L,
                 workoutStageId = 5L,
                 exerciseName = "Squat",
@@ -187,7 +188,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle empty notes`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -204,7 +205,7 @@ class ProgrammedExerciseTest {
     fun `ProgrammedExercise should handle long exercise names`() {
         val longName = "Very Long Exercise Name That Exceeds Normal Length"
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = longName,
@@ -220,7 +221,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle special characters in exercise names`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press (Barbell)",
@@ -236,7 +237,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle minimum valid values`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 1L,
                 exerciseName = "A",
@@ -255,7 +256,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle maximum reasonable values`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = Long.MAX_VALUE,
                 workoutStageId = Long.MAX_VALUE,
                 exerciseName = "Exercise with maximum ID values",
@@ -274,7 +275,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should support data class copy`() {
         val originalExercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -303,7 +304,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should support data class equality`() {
         val exercise1 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -314,7 +315,7 @@ class ProgrammedExerciseTest {
             )
 
         val exercise2 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -325,7 +326,7 @@ class ProgrammedExerciseTest {
             )
 
         val exercise3 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 2L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -344,7 +345,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should support data class toString`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -366,7 +367,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should support data class hashCode`() {
         val exercise1 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -377,7 +378,7 @@ class ProgrammedExerciseTest {
             )
 
         val exercise2 =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -393,7 +394,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should support data class component functions`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -417,7 +418,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle null notes`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "Bench Press",
@@ -433,7 +434,7 @@ class ProgrammedExerciseTest {
     @Test
     fun `ProgrammedExercise should handle whitespace in exercise names`() {
         val exercise =
-            ProgrammedExercise(
+            mockProgrammedExercise(
                 id = 1L,
                 workoutStageId = 5L,
                 exerciseName = "  Bench Press  ",

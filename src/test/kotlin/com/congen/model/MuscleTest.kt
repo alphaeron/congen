@@ -1,5 +1,6 @@
 package com.congen.model
 
+import com.congen.mockMuscle
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
@@ -12,38 +13,24 @@ class MuscleTest {
 
     @Test
     fun `should create muscle with all properties`() {
-        // Given & When
-        val muscle =
-            Muscle(
-                name = "Chest",
-                description = "Chest muscles",
-            )
+        val muscle = mockMuscle(name = "Chest", description = "Chest muscles")
 
-        // Then
         assertEquals("Chest", muscle.name)
         assertEquals("Chest muscles", muscle.description)
     }
 
     @Test
     fun `should serialize to JSON with snake_case`() {
-        // Given
-        val muscle =
-            Muscle(
-                name = "Chest",
-                description = "Chest muscles",
-            )
+        val muscle = mockMuscle(name = "Chest", description = "Chest muscles")
 
-        // When
         val json = objectMapper.writeValueAsString(muscle)
 
-        // Then
         assertTrue(json.contains("\"name\":\"Chest\""))
         assertTrue(json.contains("\"description\":\"Chest muscles\""))
     }
 
     @Test
     fun `should deserialize from JSON with snake_case`() {
-        // Given
         val json =
             """
             {
@@ -52,17 +39,14 @@ class MuscleTest {
             }
             """.trimIndent()
 
-        // When
         val muscle = objectMapper.readValue(json, Muscle::class.java)
 
-        // Then
         assertEquals("Chest", muscle.name)
         assertEquals("Chest muscles", muscle.description)
     }
 
     @Test
     fun `should ignore unknown properties during deserialization`() {
-        // Given
         val json =
             """
             {
@@ -72,34 +56,18 @@ class MuscleTest {
             }
             """.trimIndent()
 
-        // When
         val muscle = objectMapper.readValue(json, Muscle::class.java)
 
-        // Then
         assertEquals("Chest", muscle.name)
         assertEquals("Chest muscles", muscle.description)
     }
 
     @Test
     fun `should have correct equals and hashCode`() {
-        // Given
-        val muscle1 =
-            Muscle(
-                name = "Chest",
-                description = "Chest muscles",
-            )
-        val muscle2 =
-            Muscle(
-                name = "Chest",
-                description = "Chest muscles",
-            )
-        val muscle3 =
-            Muscle(
-                name = "Back",
-                description = "Back muscles",
-            )
+        val muscle1 = mockMuscle(name = "Chest", description = "Chest muscles")
+        val muscle2 = mockMuscle(name = "Chest", description = "Chest muscles")
+        val muscle3 = mockMuscle(name = "Back", description = "Back muscles")
 
-        // Then
         assertEquals(muscle1, muscle2)
         assertEquals(muscle1.hashCode(), muscle2.hashCode())
         assertFalse(muscle1 == muscle3)
