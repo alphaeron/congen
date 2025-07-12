@@ -368,7 +368,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, null)
         whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
-        whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(programDAL.insertProgram(any(), any(), any(), any())).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
@@ -537,7 +537,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
         if (program != null) {
             whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-            whenever(programDAL.updateProgram(any(), any(), any())).thenReturn(Mono.just(program))
+            whenever(programDAL.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
         }
     }
 
@@ -554,7 +554,8 @@ class ConjugateWorkoutGeneratorServiceTest {
             name = PROGRAM_NAME,
             currentWeekNumber = CURRENT_WEEK,
             createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
+            isActive = true
         )
     }
 

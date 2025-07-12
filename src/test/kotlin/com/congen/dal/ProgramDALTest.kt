@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockProgram
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
@@ -61,10 +62,27 @@ class ProgramDALTest {
         val expectedQuery =
             """
             INSERT INTO program
-                (user_id, name, current_week_number)
+                (user_id, name, current_week_number, is_active)
             VALUES
-                ($1, $2, $3)
+                ($1, $2, $3, $4)
             """.trimIndent()
+
+        // Mock selectProgramsByUserId to return existing programs
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
+                program.userId
+            )
+        ).thenReturn(Mono.just(programs))
+
+        // Mock the updateLiteral call for deactivating existing programs
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+                Any::class,
+                program.userId
+            )
+        ).thenReturn(Mono.empty())
 
         whenever(
             postgresClient.update<Program>(
@@ -72,19 +90,182 @@ class ProgramDALTest {
                 program.userId,
                 program.name,
                 program.currentWeekNumber,
+                program.isActive,
             ),
         ).thenReturn(Mono.just(program))
 
-        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber)
+        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, program.isActive)
 
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
+        verify(postgresClient).updateLiteral<Any>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+            Any::class,
+            program.userId
+        )
         verify(postgresClient).update<Program>(
             expectedQuery,
             program.userId,
             program.name,
             program.currentWeekNumber,
+            program.isActive,
+        )
+    }
+
+    @Test
+    fun `insertProgram should handle NoResultsFoundException when deactivating programs`() {
+        val expectedQuery =
+            """
+            INSERT INTO program
+                (user_id, name, current_week_number, is_active)
+            VALUES
+                ($1, $2, $3, $4)
+            """.trimIndent()
+
+        // Mock selectProgramsByUserId to return existing programs
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
+                program.userId
+            )
+        ).thenReturn(Mono.just(programs))
+
+        // Mock the updateLiteral call to throw NoResultsFoundException (no programs to deactivate)
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+                Any::class,
+                program.userId
+            )
+        ).thenReturn(Mono.error(NoResultsFoundException("No programs found to deactivate")))
+
+        whenever(
+            postgresClient.update<Program>(
+                expectedQuery,
+                program.userId,
+                program.name,
+                program.currentWeekNumber,
+                program.isActive,
+            ),
+        ).thenReturn(Mono.just(program))
+
+        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, program.isActive)
+
+        StepVerifier.create(result)
+            .expectNext(program)
+            .verifyComplete()
+        verify(postgresClient).updateLiteral<Any>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+            Any::class,
+            program.userId
+        )
+        verify(postgresClient).update<Program>(
+            expectedQuery,
+            program.userId,
+            program.name,
+            program.currentWeekNumber,
+            program.isActive,
+        )
+    }
+
+    @Test
+    fun `insertProgram should insert program directly when no existing programs found`() {
+        val expectedQuery =
+            """
+            INSERT INTO program
+                (user_id, name, current_week_number, is_active)
+            VALUES
+                ($1, $2, $3, $4)
+            """.trimIndent()
+
+        // Mock selectProgramsByUserId to return empty list (no existing programs)
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
+                program.userId
+            )
+        ).thenReturn(Mono.just(emptyList()))
+
+        whenever(
+            postgresClient.update<Program>(
+                expectedQuery,
+                program.userId,
+                program.name,
+                program.currentWeekNumber,
+                program.isActive,
+            ),
+        ).thenReturn(Mono.just(program))
+
+        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, program.isActive)
+
+        StepVerifier.create(result)
+            .expectNext(program)
+            .verifyComplete()
+        // Should not call updateLiteral since no existing programs
+        verify(postgresClient).update<Program>(
+            expectedQuery,
+            program.userId,
+            program.name,
+            program.currentWeekNumber,
+            program.isActive,
+        )
+    }
+
+    @Test
+    fun `insertProgram should deactivate existing programs before inserting new one`() {
+        val expectedQuery =
+            """
+            INSERT INTO program
+                (user_id, name, current_week_number, is_active)
+            VALUES
+                ($1, $2, $3, $4)
+            """.trimIndent()
+
+        // Mock selectProgramsByUserId to return existing programs
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
+                program.userId
+            )
+        ).thenReturn(Mono.just(programs))
+
+        // Mock the updateLiteral call for deactivating existing programs
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+                Any::class,
+                program.userId
+            )
+        ).thenReturn(Mono.empty())
+
+        whenever(
+            postgresClient.update<Program>(
+                expectedQuery,
+                program.userId,
+                program.name,
+                program.currentWeekNumber,
+                program.isActive,
+            ),
+        ).thenReturn(Mono.just(program))
+
+        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, program.isActive)
+
+        StepVerifier.create(result)
+            .expectNext(program)
+            .verifyComplete()
+        // Should call updateLiteral to deactivate existing programs
+        verify(postgresClient).updateLiteral<Any>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+            Any::class,
+            program.userId
+        )
+        verify(postgresClient).update<Program>(
+            expectedQuery,
+            program.userId,
+            program.name,
+            program.currentWeekNumber,
+            program.isActive,
         )
     }
 
@@ -95,7 +276,7 @@ class ProgramDALTest {
         val expectedQuery =
             """
             UPDATE program
-            SET name=$2, current_week_number=$3, updated_at=NOW()
+            SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
             WHERE id=$1
             """.trimIndent()
         whenever(
@@ -104,10 +285,11 @@ class ProgramDALTest {
                 updatedProgram.id,
                 newName,
                 updatedProgram.currentWeekNumber,
+                updatedProgram.isActive,
             ),
         ).thenReturn(Mono.just(updatedProgram))
 
-        val result = programDAL.updateProgram(updatedProgram.id, newName, updatedProgram.currentWeekNumber)
+        val result = programDAL.updateProgram(updatedProgram.id, newName, updatedProgram.currentWeekNumber, updatedProgram.isActive)
 
         StepVerifier.create(result)
             .expectNext(updatedProgram)
@@ -117,6 +299,7 @@ class ProgramDALTest {
             updatedProgram.id,
             newName,
             updatedProgram.currentWeekNumber,
+            updatedProgram.isActive,
         )
     }
 
@@ -137,6 +320,72 @@ class ProgramDALTest {
         verify(postgresClient).update<Program>(
             "DELETE FROM program WHERE id=$1",
             program.id,
+        )
+    }
+
+    @Test
+    fun `selectProgramsByUserId should return programs for user without filter`() {
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
+                program.userId
+            )
+        ).thenReturn(Mono.just(programs))
+
+        val result = programDAL.selectProgramsByUserId(program.userId)
+
+        StepVerifier.create(result)
+            .expectNext(programs)
+            .verifyComplete()
+        verify(postgresClient).select<Program>(
+            "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
+            program.userId
+        )
+    }
+
+    @Test
+    fun `selectProgramsByUserId should return active programs for user`() {
+        val activePrograms = listOf(mockProgram(isActive = true))
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
+                program.userId,
+                true
+            )
+        ).thenReturn(Mono.just(activePrograms))
+
+        val result = programDAL.selectProgramsByUserId(program.userId, true)
+
+        StepVerifier.create(result)
+            .expectNext(activePrograms)
+            .verifyComplete()
+        verify(postgresClient).select<Program>(
+            "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
+            program.userId,
+            true
+        )
+    }
+
+    @Test
+    fun `selectProgramsByUserId should return inactive programs for user`() {
+        val inactivePrograms = listOf(mockProgram(isActive = false))
+        whenever(
+            postgresClient.select<Program>(
+                "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
+                program.userId,
+                false
+            )
+        ).thenReturn(Mono.just(inactivePrograms))
+
+        val result = programDAL.selectProgramsByUserId(program.userId, false)
+
+        StepVerifier.create(result)
+            .expectNext(inactivePrograms)
+            .verifyComplete()
+        verify(postgresClient).select<Program>(
+            "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
+            program.userId,
+            false
         )
     }
 }

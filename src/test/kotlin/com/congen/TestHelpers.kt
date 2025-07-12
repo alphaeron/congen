@@ -180,7 +180,8 @@ fun mockProgram(
     name: String = "Test Program",
     currentWeekNumber: Int = 1,
     createdAt: Instant = sampleInstant(),
-    updatedAt: Instant = sampleInstant()
+    updatedAt: Instant = sampleInstant(),
+    isActive: Boolean = true
 ): Program =
     Program(
         id = id,
@@ -188,7 +189,8 @@ fun mockProgram(
         name = name,
         currentWeekNumber = currentWeekNumber,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        isActive = isActive
     )
 
 fun mockProgrammedWorkout(

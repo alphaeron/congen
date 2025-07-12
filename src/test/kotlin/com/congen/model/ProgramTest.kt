@@ -25,7 +25,8 @@ class ProgramTest {
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = true
             )
 
         assertEquals(1L, program.id)
@@ -33,6 +34,7 @@ class ProgramTest {
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)
         assertEquals(now, program.updatedAt)
+        assertTrue(program.isActive)
     }
 
     @Test
@@ -44,7 +46,8 @@ class ProgramTest {
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = true
             )
 
         val json = objectMapper.writeValueAsString(program)
@@ -55,6 +58,7 @@ class ProgramTest {
         assertTrue(json.contains("\"current_week_number\":1"))
         assertTrue(json.contains("\"created_at\":\"$now\""))
         assertTrue(json.contains("\"updated_at\":\"$now\""))
+        assertTrue(json.contains("\"is_active\":true"))
     }
 
     @Test
@@ -67,7 +71,8 @@ class ProgramTest {
                 "name": "Conjugate Powerlifting Program",
                 "current_week_number": 1,
                 "created_at": "$now",
-                "updated_at": "$now"
+                "updated_at": "$now",
+                "is_active": true
             }
             """.trimIndent()
 
@@ -79,6 +84,7 @@ class ProgramTest {
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)
         assertEquals(now, program.updatedAt)
+        assertTrue(program.isActive)
     }
 
     @Test
@@ -92,6 +98,7 @@ class ProgramTest {
                 "current_week_number": 1,
                 "created_at": "$now",
                 "updated_at": "$now",
+                "is_active": true,
                 "unknown_property": "should be ignored"
             }
             """.trimIndent()
@@ -104,6 +111,7 @@ class ProgramTest {
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)
         assertEquals(now, program.updatedAt)
+        assertTrue(program.isActive)
     }
 
     @Test
@@ -115,7 +123,8 @@ class ProgramTest {
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = true
             )
         val program2 =
             mockProgram(
@@ -124,7 +133,8 @@ class ProgramTest {
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = true
             )
         val program3 =
             mockProgram(
@@ -133,7 +143,8 @@ class ProgramTest {
                 name = "Different Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = false
             )
 
         assertEquals(program1, program2)
@@ -151,13 +162,15 @@ class ProgramTest {
                 name = "Original Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = true
             )
 
         val copied =
             original.copy(
                 name = "Copied Program",
-                currentWeekNumber = 2
+                currentWeekNumber = 2,
+                isActive = false
             )
 
         assertEquals(1L, copied.id)
@@ -166,6 +179,7 @@ class ProgramTest {
         assertEquals(2, copied.currentWeekNumber)
         assertEquals(now, copied.createdAt)
         assertEquals(now, copied.updatedAt)
+        assertFalse(copied.isActive)
     }
 
     @Test
@@ -177,7 +191,8 @@ class ProgramTest {
                 name = "Test Program",
                 currentWeekNumber = 1,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                isActive = true
             )
 
         val toString = program.toString()
@@ -186,5 +201,15 @@ class ProgramTest {
         assertTrue(toString.contains("userId=1"))
         assertTrue(toString.contains("name=Test Program"))
         assertTrue(toString.contains("currentWeekNumber=1"))
+        assertTrue(toString.contains("isActive=true"))
+    }
+
+    @Test
+    fun `should handle isActive field correctly`() {
+        val activeProgram = mockProgram(isActive = true)
+        val inactiveProgram = mockProgram(isActive = false)
+
+        assertTrue(activeProgram.isActive)
+        assertFalse(inactiveProgram.isActive)
     }
 }

@@ -91,4 +91,11 @@ data class Program(
      */
     @Schema(description = "Updated at timestamp", example = "2024-07-06T12:00:00Z", required = true)
     @param:JsonProperty("updated_at") val updatedAt: Instant,
+    /**
+     * Whether this program is currently active for the user.
+     * Only one program per user can be active at a time.
+     */
+    @Schema(description = "Whether this program is currently active", example = "true", required = true)
+    @param:JsonProperty("is_active")
+    @get:JsonProperty("is_active") val isActive: Boolean,
 )

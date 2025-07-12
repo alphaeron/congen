@@ -21,6 +21,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath(".user_id").isEqualTo(userId)
             .jsonPath(".name").isEqualTo(IntegrationTestHelpers.TEST_PROGRAM_NAME)
             .jsonPath(".current_week_number").isEqualTo(1)
+            .jsonPath(".is_active").isEqualTo(true)
     }
 
     @Test
@@ -43,6 +44,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.name").isEqualTo(IntegrationTestHelpers.TEST_PROGRAM_NAME)
             .jsonPath("$.current_week_number").isEqualTo(1)
+            .jsonPath("$.is_active").isEqualTo(true)
     }
 
     @Test
@@ -76,7 +78,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Then update it
         webTestClient.patch()
-            .uri("/program/$programId?name=Updated Program&currentWeekNumber=3")
+            .uri("/program/$programId?name=Updated Program&currentWeekNumber=3&isActive=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -84,12 +86,13 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.name").isEqualTo("Updated Program")
             .jsonPath("$.current_week_number").isEqualTo(3)
+            .jsonPath("$.is_active").isEqualTo(false)
     }
 
     @Test
     fun `should return 404 when updating non-existent program`() {
         webTestClient.patch()
-            .uri("/program/999?name=Updated Program&currentWeekNumber=3")
+            .uri("/program/999?name=Updated Program&currentWeekNumber=3&isActive=true")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -111,6 +114,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.id").isEqualTo(programId)
             .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.name").isEqualTo(IntegrationTestHelpers.TEST_PROGRAM_NAME)
+            .jsonPath("$.is_active").isEqualTo(true)
     }
 
     @Test
@@ -119,5 +123,116 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .uri("/program/999")
             .exchange()
             .expectStatus().isNotFound()
+    }
+
+    @Test
+    fun `should get programs by user id without filter`() {
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 1")
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 2")
+
+        webTestClient.get()
+            .uri("/program/user/$userId")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(2)
+    }
+
+    @Test
+    fun `should get active programs by user id`() {
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Active Program")
+
+        webTestClient.get()
+            .uri("/program/user/$userId?isActive=true")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+    }
+
+    @Test
+    fun `should get inactive programs by user id`() {
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
+
+        // Deactivate the program
+        webTestClient.patch()
+            .uri("/program/$programId?name=Test Program&currentWeekNumber=1&isActive=false")
+            .exchange()
+            .expectStatus().isOk()
+
+        webTestClient.get()
+            .uri("/program/user/$userId?isActive=false")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].is_active").isEqualTo(false)
+    }
+
+    @Test
+    fun `should deactivate other programs when creating new active program`() {
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+
+        // Create first program (should be active by default)
+        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program")
+
+        // Create second program (should deactivate the first one)
+        val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program")
+
+        // Check that only the second program is active
+        webTestClient.get()
+            .uri("/program/user/$userId?isActive=true")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId2)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+
+        // Check that the first program is now inactive
+        webTestClient.get()
+            .uri("/program/user/$userId?isActive=false")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId1)
+            .jsonPath("$[0].is_active").isEqualTo(false)
+    }
+
+    @Test
+    fun `should create inactive program without deactivating others`() {
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+
+        // Create first program (should be active by default)
+        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program")
+
+        // Create second program as inactive
+        webTestClient.post()
+            .uri("/program/?userId=$userId&name=Second Program&isActive=false")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath(".is_active").isEqualTo(false)
+
+        // Check that the first program is still active
+        webTestClient.get()
+            .uri("/program/user/$userId?isActive=true")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId1)
+            .jsonPath("$[0].is_active").isEqualTo(true)
     }
 }

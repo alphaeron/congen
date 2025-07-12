@@ -44,7 +44,8 @@ class ConjugateWorkoutGeneratorControllerTest {
                 name = PROGRAM_NAME,
                 currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                isActive = true
             )
     }
 

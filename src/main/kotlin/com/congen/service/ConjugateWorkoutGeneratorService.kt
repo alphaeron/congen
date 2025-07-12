@@ -151,7 +151,8 @@ class ConjugateWorkoutGeneratorService(
                         programDAL.updateProgram(
                             id = program.id,
                             name = "Conjugate Powerlifting - Week $nextWeekNumber",
-                            currentWeekNumber = nextWeekNumber
+                            currentWeekNumber = nextWeekNumber,
+                            isActive = program.isActive
                         )
                     )
                 }

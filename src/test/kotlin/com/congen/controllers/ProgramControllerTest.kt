@@ -57,15 +57,25 @@ class ProgramControllerTest {
                 name = CONJUGATE_PROGRAM_NAME,
                 currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                isActive = true
             )
-        val savedProgram = program.copy(id = PROGRAM_ID_2)
-        whenever(programDAL.insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, 1)).thenReturn(Mono.just(savedProgram))
-        val result = programController.save(USER_ID, CONJUGATE_PROGRAM_NAME)
+        val savedProgram =
+            Program(
+                id = PROGRAM_ID_2,
+                userId = USER_ID,
+                name = CONJUGATE_PROGRAM_NAME,
+                currentWeekNumber = CURRENT_WEEK,
+                createdAt = program.createdAt,
+                updatedAt = program.updatedAt,
+                isActive = true
+            )
+        whenever(programDAL.insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, 1, true)).thenReturn(Mono.just(savedProgram))
+        val result = programController.save(USER_ID, CONJUGATE_PROGRAM_NAME, true)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgram))
             .verifyComplete()
-        verify(programDAL).insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, 1)
+        verify(programDAL).insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, 1, true)
     }
 
     @Test
@@ -77,7 +87,8 @@ class ProgramControllerTest {
                 name = CONJUGATE_PROGRAM_NAME,
                 currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                isActive = true
             )
         whenever(programDAL.selectProgramById(PROGRAM_ID_1)).thenReturn(Mono.just(program))
         val result = programController.get(PROGRAM_ID_1)
@@ -109,7 +120,8 @@ class ProgramControllerTest {
                     name = CONJUGATE_PROGRAM_NAME,
                     currentWeekNumber = CURRENT_WEEK,
                     createdAt = Instant.now(),
-                    updatedAt = Instant.now()
+                    updatedAt = Instant.now(),
+                    isActive = true
                 ),
                 Program(
                     id = PROGRAM_ID_2,
@@ -117,7 +129,8 @@ class ProgramControllerTest {
                     name = FIVE_THREE_ONE_PROGRAM,
                     currentWeekNumber = CURRENT_WEEK,
                     createdAt = Instant.now(),
-                    updatedAt = Instant.now()
+                    updatedAt = Instant.now(),
+                    isActive = false
                 )
             )
         whenever(programDAL.selectPrograms()).thenReturn(Mono.just(programs))
@@ -139,15 +152,25 @@ class ProgramControllerTest {
                 name = UPDATED_PROGRAM_NAME,
                 currentWeekNumber = UPDATED_WEEK,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                isActive = true
             )
-        val updatedProgram = program.copy(id = PROGRAM_ID_2)
-        whenever(programDAL.updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK)).thenReturn(Mono.just(updatedProgram))
-        val result = programController.update(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK)
+        val updatedProgram =
+            Program(
+                id = PROGRAM_ID_2,
+                userId = USER_ID,
+                name = UPDATED_PROGRAM_NAME,
+                currentWeekNumber = UPDATED_WEEK,
+                createdAt = program.createdAt,
+                updatedAt = program.updatedAt,
+                isActive = true
+            )
+        whenever(programDAL.updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK, true)).thenReturn(Mono.just(updatedProgram))
+        val result = programController.update(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK, true)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedProgram))
             .verifyComplete()
-        verify(programDAL).updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK)
+        verify(programDAL).updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK, true)
     }
 
     @Test
@@ -159,15 +182,16 @@ class ProgramControllerTest {
                 name = UPDATED_PROGRAM_NAME,
                 currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                isActive = true
             )
-        whenever(programDAL.updateProgram(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK))
+        whenever(programDAL.updateProgram(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK, true))
             .thenReturn(Mono.error(NoResultsFoundException("UPDATE program WHERE id=$1")))
-        val result = programController.update(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK)
+        val result = programController.update(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK, true)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
-        verify(programDAL).updateProgram(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK)
+        verify(programDAL).updateProgram(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK, true)
     }
 
     @Test
@@ -179,7 +203,8 @@ class ProgramControllerTest {
                 name = CONJUGATE_PROGRAM_NAME,
                 currentWeekNumber = CURRENT_WEEK,
                 createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                updatedAt = Instant.now(),
+                isActive = true
             )
         whenever(programDAL.deleteProgram(PROGRAM_ID_1)).thenReturn(Mono.just(program))
         val result = programController.delete(PROGRAM_ID_1)
@@ -199,5 +224,86 @@ class ProgramControllerTest {
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
         verify(programDAL).deleteProgram(NON_EXISTENT_ID)
+    }
+
+    @Test
+    fun `getByUserId should return programs for user without filter`() {
+        val programs =
+            listOf(
+                Program(
+                    id = PROGRAM_ID_1,
+                    userId = USER_ID,
+                    name = CONJUGATE_PROGRAM_NAME,
+                    currentWeekNumber = CURRENT_WEEK,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                    isActive = true
+                ),
+                Program(
+                    id = PROGRAM_ID_2,
+                    userId = USER_ID,
+                    name = FIVE_THREE_ONE_PROGRAM,
+                    currentWeekNumber = CURRENT_WEEK,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                    isActive = false
+                )
+            )
+        whenever(programDAL.selectProgramsByUserId(USER_ID, null)).thenReturn(Mono.just(programs))
+        val result = programController.getByUserId(USER_ID, null)
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<List<Program>>)
+            .expectNext(programs)
+            .verifyComplete()
+        verify(programDAL).selectProgramsByUserId(USER_ID, null)
+    }
+
+    @Test
+    fun `getByUserId should return active programs for user`() {
+        val activePrograms =
+            listOf(
+                Program(
+                    id = PROGRAM_ID_1,
+                    userId = USER_ID,
+                    name = CONJUGATE_PROGRAM_NAME,
+                    currentWeekNumber = CURRENT_WEEK,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                    isActive = true
+                )
+            )
+        whenever(programDAL.selectProgramsByUserId(USER_ID, true)).thenReturn(Mono.just(activePrograms))
+        val result = programController.getByUserId(USER_ID, true)
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<List<Program>>)
+            .expectNext(activePrograms)
+            .verifyComplete()
+        verify(programDAL).selectProgramsByUserId(USER_ID, true)
+    }
+
+    @Test
+    fun `getByUserId should return inactive programs for user`() {
+        val inactivePrograms =
+            listOf(
+                Program(
+                    id = PROGRAM_ID_2,
+                    userId = USER_ID,
+                    name = FIVE_THREE_ONE_PROGRAM,
+                    currentWeekNumber = CURRENT_WEEK,
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                    isActive = false
+                )
+            )
+        whenever(programDAL.selectProgramsByUserId(USER_ID, false)).thenReturn(Mono.just(inactivePrograms))
+        val result = programController.getByUserId(USER_ID, false)
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<*>
+        StepVerifier.create(body as Mono<List<Program>>)
+            .expectNext(inactivePrograms)
+            .verifyComplete()
+        verify(programDAL).selectProgramsByUserId(USER_ID, false)
     }
 }
