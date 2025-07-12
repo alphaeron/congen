@@ -210,7 +210,7 @@ object IntegrationTestHelpers {
     ) {
         // Now create the one rep max - use raw exercise name for query parameters
         val bigDecimalValue = java.math.BigDecimal(oneRepMax)
-        webTestClient.post()
+        webTestClient.put()
             .uri("/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$bigDecimalValue")
             .exchange()
             .expectStatus().isOk()

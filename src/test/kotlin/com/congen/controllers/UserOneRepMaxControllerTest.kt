@@ -46,18 +46,33 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `save should return created user one rep max`() {
+    fun `upsert should return created user one rep max when it does not exist`() {
         val now = Instant.now()
         val oneRepMax = BigDecimal(ONE_REP_MAX_225)
         val userOneRepMax = mockUserOneRepMax(userId = USER_ID, exerciseName = EXERCISE_NAME, oneRepMax = oneRepMax, updatedAt = now)
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(USER_ID, EXERCISE_NAME, oneRepMax)).thenReturn(Mono.just(userOneRepMax))
-        val result = userOneRepMaxController.save(USER_ID, EXERCISE_NAME, oneRepMax)
+        whenever(userOneRepMaxDAL.upsertUserOneRepMax(USER_ID, EXERCISE_NAME, oneRepMax)).thenReturn(Mono.just(userOneRepMax))
+        val result = userOneRepMaxController.upsert(USER_ID, EXERCISE_NAME, oneRepMax)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<UserOneRepMax>
         StepVerifier.create(body)
             .expectNext(userOneRepMax)
             .verifyComplete()
-        verify(userOneRepMaxDAL).insertUserOneRepMax(USER_ID, EXERCISE_NAME, oneRepMax)
+        verify(userOneRepMaxDAL).upsertUserOneRepMax(USER_ID, EXERCISE_NAME, oneRepMax)
+    }
+
+    @Test
+    fun `upsert should return updated user one rep max when it already exists`() {
+        val now = Instant.now()
+        val updatedOneRepMax = BigDecimal(ONE_REP_MAX_250)
+        val userOneRepMax = mockUserOneRepMax(userId = USER_ID, exerciseName = EXERCISE_NAME, oneRepMax = updatedOneRepMax, updatedAt = now)
+        whenever(userOneRepMaxDAL.upsertUserOneRepMax(USER_ID, EXERCISE_NAME, updatedOneRepMax)).thenReturn(Mono.just(userOneRepMax))
+        val result = userOneRepMaxController.upsert(USER_ID, EXERCISE_NAME, updatedOneRepMax)
+        assert(result.statusCode == HttpStatus.OK)
+        val body = result.body as Mono<UserOneRepMax>
+        StepVerifier.create(body)
+            .expectNext(userOneRepMax)
+            .verifyComplete()
+        verify(userOneRepMaxDAL).upsertUserOneRepMax(USER_ID, EXERCISE_NAME, updatedOneRepMax)
     }
 
     @Test
@@ -102,21 +117,6 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `update should return updated user one rep max`() {
-        val now = Instant.now()
-        val updatedOneRepMax = BigDecimal(ONE_REP_MAX_250)
-        val userOneRepMax = mockUserOneRepMax(userId = USER_ID, exerciseName = EXERCISE_NAME, oneRepMax = updatedOneRepMax, updatedAt = now)
-        whenever(userOneRepMaxDAL.updateUserOneRepMax(USER_ID, EXERCISE_NAME, updatedOneRepMax)).thenReturn(Mono.just(userOneRepMax))
-        val result = userOneRepMaxController.update(USER_ID, EXERCISE_NAME, updatedOneRepMax)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserOneRepMax>
-        StepVerifier.create(body)
-            .expectNext(userOneRepMax)
-            .verifyComplete()
-        verify(userOneRepMaxDAL).updateUserOneRepMax(USER_ID, EXERCISE_NAME, updatedOneRepMax)
-    }
-
-    @Test
     fun `delete should return deleted user one rep max`() {
         val now = Instant.now()
         val oneRepMax = BigDecimal(ONE_REP_MAX_225)
@@ -150,26 +150,12 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `should handle DAL error gracefully for save`() {
+    fun `should handle DAL error gracefully for upsert`() {
         val oneRepMax = BigDecimal(ONE_REP_MAX_225)
         whenever(
-            userOneRepMaxDAL.insertUserOneRepMax(USER_ID, EXERCISE_NAME, oneRepMax)
+            userOneRepMaxDAL.upsertUserOneRepMax(USER_ID, EXERCISE_NAME, oneRepMax)
         ).thenReturn(Mono.error(RuntimeException("Database error")))
-        val result = userOneRepMaxController.save(USER_ID, EXERCISE_NAME, oneRepMax)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserOneRepMax>
-        StepVerifier.create(body)
-            .expectError(RuntimeException::class.java)
-            .verify()
-    }
-
-    @Test
-    fun `should handle DAL error gracefully for update`() {
-        val updatedOneRepMax = BigDecimal(ONE_REP_MAX_250)
-        whenever(
-            userOneRepMaxDAL.updateUserOneRepMax(USER_ID, EXERCISE_NAME, updatedOneRepMax)
-        ).thenReturn(Mono.error(RuntimeException("Database error")))
-        val result = userOneRepMaxController.update(USER_ID, EXERCISE_NAME, updatedOneRepMax)
+        val result = userOneRepMaxController.upsert(USER_ID, EXERCISE_NAME, oneRepMax)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<UserOneRepMax>
         StepVerifier.create(body)

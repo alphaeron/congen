@@ -241,6 +241,45 @@ class UserOneRepMaxDALTest {
     }
 
     @Test
+    fun `should upsert user one rep max successfully`() {
+        val updatedOneRepMax = mockUserOneRepMax(oneRepMax = BigDecimal("250.0"))
+        val expectedQuery =
+            """
+            INSERT INTO user_one_rep_max
+                (user_id, exercise_name, one_rep_max)
+            VALUES
+                ($1, $2, $3)
+            ON CONFLICT (user_id, exercise_name)
+            DO UPDATE SET
+                one_rep_max = EXCLUDED.one_rep_max,
+                updated_at = NOW()
+            """.trimIndent()
+        whenever(
+            postgresClient.update<UserOneRepMax>(
+                expectedQuery,
+                updatedOneRepMax.userId,
+                updatedOneRepMax.exerciseName,
+                updatedOneRepMax.oneRepMax,
+            )
+        ).thenReturn(Mono.just(updatedOneRepMax))
+        val result =
+            userOneRepMaxDAL.upsertUserOneRepMax(
+                updatedOneRepMax.userId,
+                updatedOneRepMax.exerciseName,
+                updatedOneRepMax.oneRepMax
+            )
+        StepVerifier.create(result)
+            .expectNext(updatedOneRepMax)
+            .verifyComplete()
+        verify(postgresClient).update<UserOneRepMax>(
+            expectedQuery,
+            updatedOneRepMax.userId,
+            updatedOneRepMax.exerciseName,
+            updatedOneRepMax.oneRepMax,
+        )
+    }
+
+    @Test
     fun `should handle decimal one rep max values`() {
         val userId = 1
         val exerciseName = "Deadlift"

@@ -1,12 +1,12 @@
-remove compilation warnings + ensure tests pass
-
-use snake_case for api values
-
-exercise movement type enum?
+Active program
 
 Only get the latest program for a user.
 
-just put endpoint for user 1rm
+Pass program id to generator
+
+Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
+
+If muscle imbalance, prefer unilateral accessories
 
 only update current_week_number in program, don't create a whole new program each time we make a new week of workouts.
 Can you get currentWeekNumber from the database too, instead of taking it as a parameter?  For example, by looking at the number of workouts a user has had in the past in their current program.
@@ -42,3 +42,7 @@ then support adding custom movementType s so there is complete flexability with 
 then support exerciseAttributes instead of isUnilateral, ... (like tags) for even more flexability.
 
 remove unneeded endpoints
+
+exercise movement type enum?
+
+use snake_case for api values

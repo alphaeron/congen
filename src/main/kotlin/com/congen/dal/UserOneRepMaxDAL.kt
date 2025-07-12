@@ -154,6 +154,43 @@ class UserOneRepMaxDAL(
     }
 
     /**
+     * Creates or updates a user-exercise one rep max in the database.
+     *
+     * This method performs an upsert operation - if a 1RM exists for the specified user and exercise,
+     * it will be updated; otherwise, a new 1RM will be created.
+     *
+     * @param userId The unique identifier of the user
+     * @param exerciseName The name of the exercise
+     * @param oneRepMax The one rep max weight value
+     * @return Mono containing the created or updated user-exercise 1RM
+     * @throws DatabaseException when database operation fails
+     */
+    fun upsertUserOneRepMax(
+        userId: Int,
+        exerciseName: String,
+        oneRepMax: java.math.BigDecimal,
+    ): Mono<UserOneRepMax> {
+        logger.debug("Upserting user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
+        // Validate all CHECK constraints
+        ValidationUtil.validateOneRepMax(oneRepMax)
+        return postgresClient.update(
+            """
+            INSERT INTO user_one_rep_max
+                (user_id, exercise_name, one_rep_max)
+            VALUES
+                ($1, $2, $3)
+            ON CONFLICT (user_id, exercise_name)
+            DO UPDATE SET
+                one_rep_max = EXCLUDED.one_rep_max,
+                updated_at = NOW()
+            """.trimIndent(),
+            userId,
+            exerciseName,
+            oneRepMax,
+        )
+    }
+
+    /**
      * Deletes a user-exercise one rep max from the database.
      *
      * This method removes the 1RM between the specified user and exercise.

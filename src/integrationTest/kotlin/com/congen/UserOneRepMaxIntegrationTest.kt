@@ -27,10 +27,18 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should save user one rep max`() {
-        // First create a one rep max record
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
+    fun `should create user one rep max when it does not exist`() {
+        // Create a one rep max record using PUT (upsert)
+        webTestClient.put()
+            .uri("/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=100.0")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
+            .jsonPath("$.one_rep_max").isEqualTo(100.0)
 
+        // Verify it was created
         webTestClient.get()
             .uri("/user_one_rep_max/$userId1/Bench Press")
             .exchange()
@@ -39,6 +47,28 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_id").isEqualTo(userId1)
             .jsonPath("$.exercise_name").isEqualTo("Bench Press")
             .jsonPath("$.one_rep_max").isEqualTo(100.0)
+    }
+
+    @Test
+    fun `should update user one rep max when it already exists`() {
+        // First create a one rep max record
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press", 100.0)
+
+        // Then update it using PUT (upsert)
+        webTestClient.put()
+            .uri("/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=150.0")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.one_rep_max").isEqualTo(150.0)
+
+        // Verify it was updated
+        webTestClient.get()
+            .uri("/user_one_rep_max/$userId1/Bench Press")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.one_rep_max").isEqualTo(150.0)
     }
 
     @Test
@@ -55,20 +85,6 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_id").isEqualTo(userId1)
             .jsonPath("$.exercise_name").isEqualTo("Bench Press")
             .jsonPath("$.one_rep_max").isEqualTo(200.0)
-    }
-
-    @Test
-    fun `should update user one rep max`() {
-        // First create a one rep max record
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
-
-        // Then update it using PATCH with query parameters
-        webTestClient.patch()
-            .uri("/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=110.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.one_rep_max").isEqualTo(110.0)
     }
 
     @Test
