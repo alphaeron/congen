@@ -204,17 +204,17 @@ object ValidationUtil {
     }
 
     /**
-     * Validates tempo value for set schemes (DB: single digit 0-9).
+     * Validates tempo value for set schemes (DB: single digit 0-9 or X/x for explosive).
      * @param tempo Tempo value as string
      * @param fieldName Name of the tempo field
-     * @throws ValidationException if not a single digit 0-9
+     * @throws ValidationException if not a single digit 0-9 or X/x
      */
     fun validateTempo(
         tempo: String?,
         fieldName: String,
     ) {
-        if (tempo != null && !tempo.matches(Regex("[0-9]"))) {
-            val message = "$fieldName tempo must be a single digit (0-9), got: $tempo"
+        if (tempo != null && !tempo.matches(Regex("[0-9Xx]"))) {
+            val message = "$fieldName tempo must be a single digit (0-9) or X/x for explosive, got: $tempo"
             logger.error(message)
             throw ValidationException(message)
         }

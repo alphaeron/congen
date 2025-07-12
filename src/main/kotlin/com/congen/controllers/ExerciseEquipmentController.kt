@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.exceptions.DatabaseQueryException
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -126,8 +128,17 @@ class ExerciseEquipmentController(
         @RequestParam equipmentName: String,
     ): ResponseEntity<*> {
         logger.info("Saving exercise equipment relationship: {} - {}", exerciseName, equipmentName)
-        return ResponseEntity.ok(
-            exerciseEquipmentDAL.insertExerciseEquipment(exerciseName, equipmentName),
-        )
+        return try {
+            ResponseEntity.ok(
+                exerciseEquipmentDAL.insertExerciseEquipment(exerciseName, equipmentName),
+            )
+        } catch (e: DatabaseQueryException) {
+            val msg = e.cause?.message ?: e.message ?: "Database error"
+            return when {
+                msg.contains("duplicate key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
+                msg.contains("violates foreign key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise or equipment does not exist")
+                else -> throw e
+            }
+        }
     }
 }

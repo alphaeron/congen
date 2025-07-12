@@ -1,82 +1,90 @@
 package com.congen
 
 import com.congen.model.User
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class UserIntegrationTest : BaseIntegrationTest() {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+        val unique = System.nanoTime()
+        val userName = "UserIntegrationTest User $unique"
+        val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, userName)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId)
+        this.testUserName = userName
+    }
+
+    private lateinit var testUserName: String
 
     @Test
     fun `should return 422 when user age is 0`() {
         webTestClient.post()
-            .uri("/user/?name=Test%20User&age=0&height=175.0&weight=70.0")
+            .uri("/user/?name=$testUserName&age=0&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath("$.error").isEqualTo("User age must be between 1 and 150, got: 0")
+            .jsonPath("$.error").value<String> { error ->
+                assert(error.contains("User age must be between 1 and 150"))
+            }
     }
 
     @Test
     fun `should return 422 when user age is 151`() {
         webTestClient.post()
-            .uri("/user/?name=Test%20User&age=151&height=175.0&weight=70.0")
+            .uri("/user/?name=$testUserName&age=151&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath("$.error").isEqualTo("User age must be between 1 and 150, got: 151")
+            .jsonPath("$.error").value<String> { error ->
+                assert(error.contains("User age must be between 1 and 150"))
+            }
     }
 
     @Test
     fun `should return 422 when user height is 0`() {
         webTestClient.post()
-            .uri("/user/?name=Test%20User&age=25&height=0&weight=70.0")
+            .uri("/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=0&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath("$.error").isEqualTo("User height must be between 0.01 and 300 cm, got: 0")
+            .jsonPath("$.error").value<String> { error ->
+                assert(error.contains("User height must be between 0.01 and 300 cm"))
+            }
     }
 
     @Test
     fun `should return 422 when user weight is 0`() {
         webTestClient.post()
-            .uri("/user/?name=Test%20User&age=25&height=175.0&weight=0")
+            .uri("/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=0")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath("$.error").isEqualTo("User weight must be between 0.01 and 1000 kg, got: 0")
+            .jsonPath("$.error").value<String> { error ->
+                assert(error.contains("User weight must be between 0.01 and 1000 kg"))
+            }
     }
 
     @Test
     fun `should accept valid user data`() {
         webTestClient.post()
-            .uri("/user/?name=Test%20User&age=25&height=175.0&weight=70.0")
+            .uri("/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should get user by id`() {
-        // First create a user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Integration%20Test%20User&age=30&height=180.0&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        // Then get the user by id
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         webTestClient.get()
-            .uri("/user/${userResponse.id}")
+            .uri("/user/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(userResponse.id)
-            .jsonPath("$.name").isEqualTo("Integration Test User")
-            .jsonPath("$.age").isEqualTo(30)
+            .jsonPath(".id").isEqualTo(userId)
+            .jsonPath(".name").isEqualTo(IntegrationTestHelpers.TEST_USER_NAME)
+            .jsonPath(".age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
     }
 
     @Test

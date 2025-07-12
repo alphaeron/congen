@@ -3,6 +3,7 @@ package com.congen
 import org.junit.jupiter.api.Test
 
 class HealthCheckIntegrationTest : BaseIntegrationTest() {
+
     @Test
     fun `health check should return proper structure and status`() {
         webTestClient.get()
@@ -13,7 +14,7 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.status").isEqualTo("pass")
             .jsonPath("$.version").exists()
             .jsonPath("$.release_id").exists()
-            .jsonPath("$.serviceId").isEqualTo("congen")
+            .jsonPath("$.service_id").isEqualTo("congen")
             .jsonPath("$.description").isEqualTo("Congen Exercise API Health Check")
             .jsonPath("$.checks.database").exists()
             .jsonPath("$.checks.application").exists()

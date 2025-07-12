@@ -174,9 +174,13 @@ class ConjugateWorkoutGeneratorService(
         weakMuscles: List<String>,
         currentWeekNumber: Int
     ): Mono<Void> {
-        return template.foldIndexed(Mono.empty<Void>()) { dayIndex, mono, dayTemplate ->
-            mono.flatMap {
-                val dayNumber = (currentWeekNumber - 1) * template.size + dayIndex + 1
+        return Flux.fromIterable(template)
+            .index()
+            .flatMap { tuple ->
+                val dayIndex = tuple.t1
+                val dayTemplate = tuple.t2
+                val dayNumber = (currentWeekNumber - 1) * template.size + dayIndex.toInt() + 1
+                
                 programmedWorkoutDAL.insertProgrammedWorkout(program.id, dayNumber, "${dayTemplate.type} Day")
                     .flatMap { createdWorkout ->
                         generateWorkoutStages(
@@ -193,7 +197,7 @@ class ConjugateWorkoutGeneratorService(
                         )
                     }
             }
-        }
+            .then()
     }
 
     /**
@@ -419,10 +423,10 @@ class ConjugateWorkoutGeneratorService(
                     rotationHistory = rotationHistory
                 )
 
-            if (conditioningExercise != null) {
-                allMonos.add(conditioningMono)
+                if (conditioningExercise != null) {
+                    allMonos.add(conditioningMono)
+                }
             }
-        }
 
         // Add non-empty accessory monos
         allMonos.addAll(accessoryMonos.filter { it != Mono.empty<Void>() })

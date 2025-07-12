@@ -1,4 +1,18 @@
-check missing +simplify integration tests
+linting
+
+fix unit tests
+
+ensure integration tests pass
+
+remove compilation warnings
+
+unit tests pass
+
+parallel integration test execution
+
+use snake_case for api values
+
+exercise movement type enum?
 
 reduce duplication in dals (1 base dal with CRUD operations supported, one bean for each sub-controller instantiated with custom queries for the operations?  Still allow additional method definition via subclassing if required though while still supporting crud operations.  only need to test the base class in unit tests then for further simplificaiton.
 

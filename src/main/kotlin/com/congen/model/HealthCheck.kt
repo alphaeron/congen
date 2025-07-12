@@ -43,7 +43,6 @@ data class HealthCheckResponse(
     val links: Map<String, String> = emptyMap(),
     /** Service identifier. */
     @Schema(description = "Service identifier.")
-    @JsonProperty("serviceId")
     val serviceId: String = "congen",
     /** Description of the health check response. */
     @Schema(description = "Description of the health check response.")

@@ -231,12 +231,8 @@ class SetSchemeService(
      * @return Mono that completes when the 1RM check/update is done
      */
     private fun checkAndUpdateOneRepMax(setScheme: SetScheme): Mono<Void> {
-        println(setScheme.programmedExerciseId)
-        println("HER EHERE HER E")
         return programmedExerciseDAL.selectProgrammedExerciseById(setScheme.programmedExerciseId)
             .flatMap { programmedExercise ->
-                println(setScheme)
-                println(programmedExercise)
                 // Get the user ID by tracing the relationship chain
                 getUserIdFromProgrammedExercise(programmedExercise.id)
                     .flatMap { userId ->

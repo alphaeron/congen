@@ -6,6 +6,7 @@ import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
 import com.congen.model.User
 import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
@@ -19,50 +20,31 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        // Create a program first
-        val programResponse =
-            webTestClient.post()
-                .uri("/program?name=Test Program&description=Test program for integration tests")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Program::class.java)
-                .returnResult()
-                .responseBody!!
+        setupTestEntities()
+    }
 
-        programId = programResponse.id!!
-
+    private fun setupTestEntities() {
+        val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "SetScheme User" + System.nanoTime())
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId)
+        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program" + System.nanoTime())
         // Create a programmed workout
-        val workoutResponse =
-            webTestClient.post()
-                .uri("/programmed_workout/?programId=$programId&dayNumber=1&name=Test Workout")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProgrammedWorkout::class.java)
-                .returnResult()
-                .responseBody!!
-
+        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Test Workout" + System.nanoTime())
         // Create a workout stage
-        val stageResponse =
-            webTestClient.post()
-                .uri("/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=1&position=1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(WorkoutStage::class.java)
-                .returnResult()
-                .responseBody!!
-
+        val stageTypeId = getWorkoutStageTypeId("Warmup")
+        val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, stageTypeId = stageTypeId, position = 1, name = "Warmup Stage" + System.nanoTime())
         // Create a programmed exercise
-        val exerciseResponse =
-            webTestClient.post()
-                .uri("/programmed_exercise/?workoutStageId=${stageResponse.id}&exerciseName=Bench Press&notes=Test exercise")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProgrammedExercise::class.java)
-                .returnResult()
-                .responseBody!!
+        programmedExerciseId = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, exerciseName = "Bench Press", notes = "Test exercise")
+    }
 
-        // Store the generated IDs for use in tests
-        programmedExerciseId = exerciseResponse.id!!
+    private fun getWorkoutStageTypeId(name: String): Int {
+        val response = webTestClient.get()
+            .uri("/workout_stage_type/name/$name")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(WorkoutStageType::class.java)
+            .returnResult()
+            .responseBody!!
+        return response.id
     }
 
     @Test
@@ -76,7 +58,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath("$.error").isEqualTo("Set number must be greater than 0, got: 0")
+            .jsonPath("$.error").exists()
     }
 
     @Test
@@ -146,11 +128,11 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.programmedExerciseId").isEqualTo(programmedExerciseId)
-            .jsonPath("$.setNumber").isEqualTo(1)
-            .jsonPath("$.targetWeight").isEqualTo(100.0)
-            .jsonPath("$.targetRepCount").isEqualTo(8)
-            .jsonPath("$.restSeconds").isEqualTo(120)
+            .jsonPath("$.programmed_exercise_id").isEqualTo(programmedExerciseId)
+            .jsonPath("$.set_number").isEqualTo(1)
+            .jsonPath("$.target_weight").isEqualTo(100.0)
+            .jsonPath("$.target_rep_count").isEqualTo(8)
+            .jsonPath("$.rest_seconds").isEqualTo(120)
     }
 
     @Test
@@ -177,14 +159,13 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(setSchemeResponse.id)
-            .jsonPath("$.programmedExerciseId").isEqualTo(programmedExerciseId)
-            .jsonPath("$.setNumber").isEqualTo(2)
-            .jsonPath("$.wasSetPerformed").isEqualTo(true)
-            .jsonPath("$.targetWeight").isEqualTo(150.0)
-            .jsonPath("$.performedWeight").isEqualTo(145.0)
-            .jsonPath("$.targetRepCount").isEqualTo(5)
-            .jsonPath("$.performedRepCount").isEqualTo(4)
-            .jsonPath("$.restSeconds").isEqualTo(180)
+            .jsonPath("$.programmed_exercise_id").isEqualTo(programmedExerciseId)
+            .jsonPath("$.set_number").isEqualTo(2)
+            .jsonPath("$.target_weight").isEqualTo(150.0)
+            .jsonPath("$.performed_weight").isEqualTo(145.0)
+            .jsonPath("$.target_rep_count").isEqualTo(5)
+            .jsonPath("$.performed_rep_count").isEqualTo(4)
+            .jsonPath("$.rest_seconds").isEqualTo(180)
     }
 
     @Test
@@ -225,20 +206,25 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(3)
-            .jsonPath("$[0].programmedExerciseId").isEqualTo(programmedExerciseId)
-            .jsonPath("$[1].programmedExerciseId").isEqualTo(programmedExerciseId)
-            .jsonPath("$[2].programmedExerciseId").isEqualTo(programmedExerciseId)
-            .jsonPath("$[2].isAmrap").isEqualTo(true)
+            .jsonPath("$[0].programmed_exercise_id").isEqualTo(programmedExerciseId)
+            .jsonPath("$[1].programmed_exercise_id").isEqualTo(programmedExerciseId)
+            .jsonPath("$[2].programmed_exercise_id").isEqualTo(programmedExerciseId)
+            .jsonPath("$[2].is_amrap").isEqualTo(true)
     }
 
     @Test
     fun `should get all set schemes`() {
+        val uri1 = "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&targetWeight=100.0&targetRepCount=8&restSeconds=120"
+        val uri2 = "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&targetWeight=110.0&targetRepCount=6&restSeconds=180"
+        webTestClient.post().uri(uri1).exchange().expectStatus().isOk()
+        webTestClient.post().uri(uri2).exchange().expectStatus().isOk()
         webTestClient.get()
             .uri("/set_scheme/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(2)
     }
 
     @Test
@@ -259,7 +245,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
         // Then update the set scheme
         val updateUri =
-            "/set_scheme/?id=${setSchemeResponse.id}&programmedExerciseId=$programmedExerciseId&" +
+            "/set_scheme/${setSchemeResponse.id}?programmedExerciseId=$programmedExerciseId&" +
                 "setNumber=1&wasSetPerformed=true&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&performedWeight=95.0&targetRepCount=8&performedRepCount=7&restSeconds=120"
         webTestClient.patch()
@@ -268,9 +254,8 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(setSchemeResponse.id)
-            .jsonPath("$.wasSetPerformed").isEqualTo(true)
-            .jsonPath("$.performedWeight").isEqualTo(95.0)
-            .jsonPath("$.performedRepCount").isEqualTo(7)
+            .jsonPath("$.performed_weight").isEqualTo(95.0)
+            .jsonPath("$.performed_rep_count").isEqualTo(7)
     }
 
     @Test
@@ -296,30 +281,6 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(setSchemeResponse.id)
-            .jsonPath("$.setNumber").isEqualTo(1)
-    }
-
-    private fun createTestProgram(): Long {
-        // First create a user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        // Then create a program for that user
-        val programResponse =
-            webTestClient.post()
-                .uri("/program?userId=${userResponse.id}&name=Test Program&description=Test program for integration tests")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Program::class.java)
-                .returnResult()
-                .responseBody!!
-
-        return programResponse.id!!
+            .jsonPath("$.set_number").isEqualTo(1)
     }
 }

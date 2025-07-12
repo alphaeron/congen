@@ -162,6 +162,27 @@ class PostgresClient(
         vararg queryArgs: Any?,
     ): Mono<T> = queryIndividual(postgresDBWriter, "$query RETURNING *", cls, *queryArgs)
 
+
+
+    /**
+     * Executes an update query using the writer connection.
+     *
+     * This method executes an update query and returns the updated data. The query
+     * is automatically modified to include "RETURNING *" to return the result.
+     *
+     * @param query SQL update query to execute
+     * @param cls Class type for result mapping
+     * @param queryArgs Query parameters
+     * @return Mono containing the updated result
+     * @throws DatabaseConnectionException if connection fails
+     * @throws DatabaseQueryException if query execution fails
+     */
+    fun <T : Any> updateLiteral(
+        query: String,
+        cls: KClass<T>,
+        vararg queryArgs: Any?,
+    ): Mono<T> = queryIndividual(postgresDBWriter, query, cls, *queryArgs)
+
     /**
      * Executes a query expecting exactly one result.
      *

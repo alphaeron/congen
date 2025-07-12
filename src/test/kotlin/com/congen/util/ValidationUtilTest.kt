@@ -169,18 +169,20 @@ class ValidationUtilTest {
         assertDoesNotThrow { ValidationUtil.validateTempo("0", "Test") }
         assertDoesNotThrow { ValidationUtil.validateTempo("5", "Test") }
         assertDoesNotThrow { ValidationUtil.validateTempo("9", "Test") }
+        assertDoesNotThrow { ValidationUtil.validateTempo("X", "Test") }
+        assertDoesNotThrow { ValidationUtil.validateTempo("x", "Test") }
     }
 
     @Test
     fun `validateTempo should throw for invalid tempo values`() {
         val exception1 = assertThrows<ValidationException> { ValidationUtil.validateTempo("10", "Test") }
-        assertEquals("Test tempo must be a single digit (0-9), got: 10", exception1.message)
+        assertEquals("Test tempo must be a single digit (0-9) or X/x for explosive, got: 10", exception1.message)
 
         val exception2 = assertThrows<ValidationException> { ValidationUtil.validateTempo("a", "Test") }
-        assertEquals("Test tempo must be a single digit (0-9), got: a", exception2.message)
+        assertEquals("Test tempo must be a single digit (0-9) or X/x for explosive, got: a", exception2.message)
 
         val exception3 = assertThrows<ValidationException> { ValidationUtil.validateTempo("", "Test") }
-        assertEquals("Test tempo must be a single digit (0-9), got: ", exception3.message)
+        assertEquals("Test tempo must be a single digit (0-9) or X/x for explosive, got: ", exception3.message)
     }
 
     @Test

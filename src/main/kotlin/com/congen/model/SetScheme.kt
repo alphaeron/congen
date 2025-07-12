@@ -66,27 +66,15 @@ data class SetScheme(
         required = true,
     )
     @param:JsonProperty("set_number") val setNumber: Int,
-    /** As Many Reps As Possible flag. */
-    @Schema(
-        description = "As Many Reps As Possible flag",
-        example = "false",
-        defaultValue = "false",
-    )
-    @param:JsonProperty("is_amrap") val isAmrap: Boolean,
-    /** Every Minute On the Minute flag. */
-    @Schema(
-        description = "Every Minute On the Minute flag",
-        example = "false",
-        defaultValue = "false",
-    )
-    @param:JsonProperty("is_emom") val isEmom: Boolean,
-    /** Whether to use tempo timing. */
-    @Schema(
-        description = "Whether to use tempo timing",
-        example = "false",
-        defaultValue = "false",
-    )
-    @param:JsonProperty("use_tempo") val useTempo: Boolean,
+    /** Whether this set scheme is AMRAP (As Many Reps As Possible). */
+    @Schema(description = "Whether this set scheme is AMRAP", example = "false")
+    @param:JsonProperty("is_amrap") @get:JsonProperty("is_amrap") val isAmrap: Boolean,
+    /** Whether this set scheme is EMOM (Every Minute On the Minute). */
+    @Schema(description = "Whether this set scheme is EMOM", example = "false")
+    @param:JsonProperty("is_emom") @get:JsonProperty("is_emom") val isEmom: Boolean,
+    /** Whether tempo should be used for this set scheme. */
+    @Schema(description = "Whether tempo should be used for this set scheme", example = "true")
+    @param:JsonProperty("use_tempo") @get:JsonProperty("use_tempo") val useTempo: Boolean,
     /** Eccentric phase tempo (0-9 seconds). */
     @Schema(
         description = "Eccentric phase tempo (0-9 seconds)",

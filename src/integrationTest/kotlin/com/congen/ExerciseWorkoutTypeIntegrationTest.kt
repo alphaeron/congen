@@ -1,0 +1,164 @@
+package com.congen
+
+import com.congen.model.ExerciseWorkoutType
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+
+class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+    }
+
+    @Test
+    fun `should create exercise workout type relationship`() {
+        // Use unique exercise name that doesn't exist in migrations
+        val uniqueExercise = "Test Exercise ${System.nanoTime()}"
+        
+        // First create the exercise
+        webTestClient.post()
+            .uri("/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false")
+            .exchange()
+            .expectStatus().isOk()
+        
+        // Then create the exercise-workout-type relationship
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.exercise_name").isEqualTo(uniqueExercise)
+            .jsonPath("$.movement_type").isEqualTo("horizontal push")
+            .jsonPath("$.workout_type").isEqualTo("dynamic_effort")
+    }
+
+    @Test
+    fun `should get all exercise workout types`() {
+        // Use unique exercise name that doesn't exist in migrations
+        val uniqueExercise = "Test Exercise ${System.nanoTime()}"
+        
+        // First create the exercise
+        webTestClient.post()
+            .uri("/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false")
+            .exchange()
+            .expectStatus().isOk()
+        
+        // Create the relationships
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=maximal_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.get()
+            .uri("/exercise_workout_type/exercise/$uniqueExercise")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").value<Int> { length ->
+                assert(length >= 2) { "Expected at least 2 exercise workout types, got $length" }
+            }
+    }
+
+    @Test
+    fun `should get workout types by exercise name`() {
+        // Use unique exercise name that doesn't exist in migrations
+        val uniqueExercise = "Test Exercise ${System.nanoTime()}"
+        
+        // First create the exercise
+        webTestClient.post()
+            .uri("/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false")
+            .exchange()
+            .expectStatus().isOk()
+        
+        // Create the relationships
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=maximal_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.get()
+            .uri("/exercise_workout_type/exercise/$uniqueExercise")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").value<Int> { length ->
+                assert(length >= 2) { "Expected at least 2 exercise workout types, got $length" }
+            }
+    }
+
+    @Test
+    fun `should get workout types by movement type`() {
+        // Use unique exercise name that doesn't exist in migrations
+        val uniqueExercise = "Test Exercise ${System.nanoTime()}"
+        
+        // First create the exercise
+        webTestClient.post()
+            .uri("/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false")
+            .exchange()
+            .expectStatus().isOk()
+        
+        // Create the relationship
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.get()
+            .uri("/exercise_workout_type/movement_type/horizontal push")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").value<Int> { length ->
+                // Should have at least 1 relationship for this movement type
+                assert(length >= 1) { "Expected at least 1 exercise workout type, got $length" }
+            }
+    }
+
+    @Test
+    fun `should handle multiple workout types for same exercise`() {
+        // Use unique exercise name that doesn't exist in migrations
+        val uniqueExercise = "Test Exercise ${System.nanoTime()}"
+        
+        // First create the exercise
+        webTestClient.post()
+            .uri("/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false")
+            .exchange()
+            .expectStatus().isOk()
+        
+        // Create multiple relationships for the same exercise
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.post()
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=maximal_effort")
+            .exchange()
+            .expectStatus().isOk()
+            
+        webTestClient.get()
+            .uri("/exercise_workout_type/")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").value<Int> { length ->
+                // Should have at least 2 relationships for this exercise
+                assert(length >= 2) { "Expected at least 2 exercise workout types, got $length" }
+            }
+    }
+} 

@@ -3,6 +3,8 @@ package com.congen
 import io.vertx.sqlclient.SqlClient
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -13,10 +15,11 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
+@ActiveProfiles(profiles = ["test", "integration-test"])
 @SpringBootTest
 @AutoConfigureWebTestClient
-@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Execution(ExecutionMode.SAME_THREAD)
 open class BaseIntegrationTest {
     @Autowired
     protected lateinit var webTestClient: WebTestClient
@@ -40,6 +43,9 @@ open class BaseIntegrationTest {
     private fun cleanupDatabase() {
         try {
             // Truncate all tables in dependency-safe order using CASCADE
+            // Exclude tables that are pre-populated by data migrations:
+            // - muscle, equipment, exercise, exercise_muscle, exercise_equipment
+            // - workout_stage_type, exercise_workout_type
             val truncateSql =
                 """
                 TRUNCATE TABLE 
@@ -52,13 +58,8 @@ open class BaseIntegrationTest {
                     user_program_preferences,
                     user_equipment,
                     "user",
-                    exercise_workout_type,
-                    exercise_equipment,
-                    exercise_muscle,
-                    exercise,
-                    equipment,
-                    muscle,
-                    workout_stage_type
+                    exercise_rotation_history,
+                    user_one_rep_max
                 CASCADE;
                 """.trimIndent()
 

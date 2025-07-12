@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import java.math.BigDecimal
+import java.time.Instant
 
 /**
  * Integration tests for UserOneRepMax functionality.
@@ -23,190 +24,97 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-
-        // Create test users
-        val user1Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 1&age=25&height=175.0&weight=80.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        val user2Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 2&age=30&height=180.0&weight=85.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        userId1 = user1Response.id
-        userId2 = user2Response.id
+        val unique = System.nanoTime()
+        // Create test users with unique names using helpers
+        userId1 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 1 $unique")
+        userId2 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 2 $unique")
+        // Exercises already exist in migrations
     }
 
     @Test
     fun `should save user one rep max`() {
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0")
-            )
+        // First create a one rep max record
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
 
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
+        webTestClient.get()
+            .uri("/user_one_rep_max/$userId1/Bench Press")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.userId").isEqualTo(userId1)
-            .jsonPath("$.exerciseName").isEqualTo("Bench Press")
-            .jsonPath("$.oneRepMax").isEqualTo(100.0)
+            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
+            .jsonPath("$.one_rep_max").isEqualTo(100.0)
     }
 
     @Test
     fun `should get user one rep max by user and exercise`() {
-        // First save a one rep max
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Deadlift",
-                oneRepMax = BigDecimal("200.0")
-            )
-
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
+        // First create a one rep max record
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press", 200.0)
 
         // Then retrieve it
         webTestClient.get()
-            .uri("/user-one-rep-max/user/$userId1/exercise/Deadlift")
+            .uri("/user_one_rep_max/$userId1/Bench Press")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.userId").isEqualTo(userId1)
-            .jsonPath("$.exerciseName").isEqualTo("Deadlift")
-            .jsonPath("$.oneRepMax").isEqualTo(200.0)
+            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
+            .jsonPath("$.one_rep_max").isEqualTo(200.0)
     }
 
     @Test
     fun `should update user one rep max`() {
-        // First save a one rep max
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0")
-            )
+        // First create a one rep max record
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
 
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
+        // Then update it using PATCH with query parameters
+        webTestClient.patch()
+            .uri("/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=110.0")
             .exchange()
-            .expectStatus().isOk
-
-        // Then update it
-        val updatedOneRepMax =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("110.0")
-            )
-
-        webTestClient.put()
-            .uri("/user-one-rep-max/user/$userId1/exercise/Bench Press")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(updatedOneRepMax)
-            .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.oneRepMax").isEqualTo(110.0)
+            .jsonPath("$.one_rep_max").isEqualTo(110.0)
     }
 
     @Test
     fun `should delete user one rep max`() {
         // First save a one rep max
-        val userOneRepMax =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Deadlift",
-                oneRepMax = BigDecimal("200.0")
-            )
-
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(userOneRepMax)
-            .exchange()
-            .expectStatus().isOk
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
 
         // Then delete it
         webTestClient.delete()
-            .uri("/user-one-rep-max/user/$userId1/exercise/Deadlift")
+            .uri("/user_one_rep_max/$userId1/Bench Press")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
 
         // Verify it's deleted
         webTestClient.get()
-            .uri("/user-one-rep-max/user/$userId1/exercise/Deadlift")
+            .uri("/user_one_rep_max/$userId1/Bench Press")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus().isNotFound()
     }
 
     @Test
     fun `should return not found when user one rep max not found`() {
         webTestClient.get()
-            .uri("/user-one-rep-max/user/$userId1/exercise/NonExistent")
+            .uri("/user_one_rep_max/$userId1/NonExistent")
             .exchange()
-            .expectStatus().isNotFound
+            .expectStatus().isNotFound()
     }
 
     @Test
-    fun `should get all one rep maxes for user`() {
-        // Save multiple one rep maxes
-        val oneRepMax1 =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Bench Press",
-                oneRepMax = BigDecimal("100.0")
-            )
-
-        val oneRepMax2 =
-            UserOneRepMax(
-                userId = userId1,
-                exerciseName = "Deadlift",
-                oneRepMax = BigDecimal("200.0")
-            )
-
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(oneRepMax1)
-            .exchange()
-            .expectStatus().isOk
-
-        webTestClient.post()
-            .uri("/user-one-rep-max/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(oneRepMax2)
-            .exchange()
-            .expectStatus().isOk
-
-        // Get all for user
+    fun `should get all user one rep maxes`() {
+        // Create one rep max records for the existing user
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
+        // Create another exercise and one rep max for the same user - use Safety Bar Squat which exists in migrations
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Safety Bar Squat", 150.0)
+        
         webTestClient.get()
-            .uri("/user-one-rep-max/user/$userId1")
+            .uri("/user_one_rep_max/$userId1")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$").isArray
+            .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(2)
     }
 }

@@ -13,11 +13,18 @@ import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.MuscleDAL
 import com.congen.service.HealthCheckService
 import org.junit.jupiter.api.Test
+import com.congen.model.HealthCheck
+import com.congen.model.HealthCheckResponse
+import com.congen.model.HealthStatus
+import org.junit.jupiter.api.BeforeEach
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
+import reactor.core.publisher.Mono
+import java.time.Instant
 
 @WebFluxTest(
     controllers = [
@@ -50,6 +57,39 @@ class CongenApplicationTests {
 
     @MockBean
     private lateinit var healthCheckService: HealthCheckService
+
+    @BeforeEach
+    fun setUp() {
+        val mockHealthResponse = HealthCheckResponse(
+            status = HealthStatus.PASS,
+            version = "1.0.0",
+            releaseId = "test-release",
+            checks = mapOf(
+                "database" to listOf(
+                    HealthCheck(
+                        componentId = "postgres",
+                        componentType = "database",
+                        status = HealthStatus.PASS,
+                        output = "Database connection successful",
+                        links = mapOf("self" to "/health"),
+                        time = Instant.now()
+                    )
+                ),
+                "application" to listOf(
+                    HealthCheck(
+                        componentId = "congen-api",
+                        componentType = "service",
+                        status = HealthStatus.PASS,
+                        output = "Application is running",
+                        links = mapOf("self" to "/health"),
+                        time = Instant.now()
+                    )
+                )
+            )
+        )
+
+        `when`(healthCheckService.performHealthCheck()).thenReturn(Mono.just(mockHealthResponse))
+    }
 
     @Test
     fun `should return 404 for non-existent endpoints`() {

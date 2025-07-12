@@ -1,85 +1,79 @@
 package com.congen
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.web.reactive.function.BodyInserters
+import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 
 class UserEquipmentIntegrationTest : BaseIntegrationTest() {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private var userId: Int = 0
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+        // Create a unique user for each test
+        val unique = System.nanoTime()
+        userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
+    }
 
     @Test
     fun `should save user equipment`() {
-        webTestClient.post()
-            .uri("/user-equipment/?userId=1&equipmentName=Barbell")
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
+        
+        // Verify the user equipment was created correctly
+        webTestClient.get()
+            .uri("/user_equipment/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.userId").isEqualTo(1)
-            .jsonPath("$.equipmentName").isEqualTo("Barbell")
+            .jsonPath("$[0].user_id").isEqualTo(userId)
+            .jsonPath("$[0].equipment_name").isEqualTo(IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
     }
 
     @Test
     fun `should get user equipment by user id`() {
-        // First create user equipment
-        webTestClient.post()
-            .uri("/user-equipment/?userId=2&equipmentName=Dumbbells")
-            .exchange()
-            .expectStatus().isOk()
-
-        // Then get equipment for the user
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
         webTestClient.get()
-            .uri("/user-equipment/2")
+            .uri("/user_equipment/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$").isArray()
-            .jsonPath("$[0].userId").isEqualTo(2)
-            .jsonPath("$[0].equipmentName").isEqualTo("Dumbbells")
+            .jsonPath("$[0].user_id").isEqualTo(userId)
+            .jsonPath("$[0].equipment_name").isEqualTo(IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
     }
 
     @Test
     fun `should delete user equipment`() {
-        // First create user equipment
-        webTestClient.post()
-            .uri("/user-equipment/?userId=3&equipmentName=Kettlebell")
-            .exchange()
-            .expectStatus().isOk()
-
-        // Then delete the equipment
-        webTestClient.delete()
-            .uri("/user-equipment/3/Kettlebell")
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
+        
+        // Delete the user equipment using the correct endpoint format
+        val createdAt = java.time.Instant.now().toString()
+        val jsonBody = """{"user_id":$userId,"equipment_name":"${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}","created_at":"$createdAt"}"""
+        webTestClient.method(HttpMethod.DELETE)
+            .uri("/user_equipment/")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(jsonBody)
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.userId").isEqualTo(3)
-            .jsonPath("$.equipmentName").isEqualTo("Kettlebell")
+            .jsonPath("$.user_id").isEqualTo(userId)
+            .jsonPath("$.equipment_name").isEqualTo(IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
     }
 
     @Test
     fun `should handle multiple equipment for same user`() {
         // Add multiple equipment for the same user
-        webTestClient.post()
-            .uri("/user-equipment/?userId=4&equipmentName=Barbell")
-            .exchange()
-            .expectStatus().isOk()
-
-        webTestClient.post()
-            .uri("/user-equipment/?userId=4&equipmentName=Dumbbells")
-            .exchange()
-            .expectStatus().isOk()
-
-        webTestClient.post()
-            .uri("/user-equipment/?userId=4&equipmentName=Bench")
-            .exchange()
-            .expectStatus().isOk()
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME_2)
 
         // Get all equipment for the user
         webTestClient.get()
-            .uri("/user-equipment/4")
+            .uri("/user_equipment/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$").isArray()
-            .jsonPath("$.length()").isEqualTo(3)
+            .jsonPath("$.length()").isEqualTo(2)
     }
 }

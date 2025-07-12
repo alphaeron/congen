@@ -1,8 +1,11 @@
 package com.congen
 
 import com.congen.model.User
+import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.MediaType
+import org.springframework.http.HttpMethod
 
 class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     private var userId1: Int = 0
@@ -10,156 +13,85 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     private var userId3: Int = 0
     private var userId4: Int = 0
     private var userId5: Int = 0
+    private val exerciseNames = listOf("Bench Press", "Safety Bar Squat", "Deadlift", "Overhead Press")
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-
-        // Create test users
-        val user1Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 1&age=25&height=175.0&weight=80.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        val user2Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 2&age=30&height=180.0&weight=85.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        val user3Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 3&age=35&height=170.0&weight=75.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        val user4Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 4&age=28&height=185.0&weight=90.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        val user5Response =
-            webTestClient.post()
-                .uri("/user/?name=Test User 5&age=32&height=165.0&weight=70.0")
-                .exchange()
-                .expectStatus().isOk
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        userId1 = user1Response.id
-        userId2 = user2Response.id
-        userId3 = user3Response.id
-        userId4 = user4Response.id
-        userId5 = user5Response.id
+        val unique = System.nanoTime()
+        userId1 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 1 $unique")
+        userId2 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 2 $unique")
+        userId3 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 3 $unique")
+        userId4 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 4 $unique")
+        userId5 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 5 $unique")
+        // Exercises already exist in migrations
     }
 
     @Test
-    fun `should save user exercise preference`() {
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=$userId1&exerciseName=Bench Press&shouldAvoid=false")
+    fun `should get all user exercise preferences`() {
+        IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId1, "Bench Press", false)
+        webTestClient.get()
+            .uri("/user_exercise_preference/$userId1")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.userId").isEqualTo(userId1)
-            .jsonPath("$.exerciseName").isEqualTo("Bench Press")
-            .jsonPath("$.shouldAvoid").isEqualTo(false)
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
     }
 
     @Test
     fun `should get user exercise preferences by user id`() {
         // First create user exercise preference
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=$userId2&exerciseName=Squat&shouldAvoid=true")
-            .exchange()
-            .expectStatus().isOk
+        IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId2, "Safety Bar Squat", true)
 
-        // Then retrieve it
+        // Then retrieve it - the controller only has GET /{userId} endpoint
         webTestClient.get()
-            .uri("/user-exercise-preference/user/$userId2/exercise/Squat")
+            .uri("/user_exercise_preference/$userId2")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
             .jsonPath("$").isArray()
-            .jsonPath("$[0].userId").isEqualTo(userId2)
-            .jsonPath("$[0].exerciseName").isEqualTo("Squat")
-            .jsonPath("$[0].shouldAvoid").isEqualTo(true)
-    }
-
-    @Test
-    fun `should update user exercise preference`() {
-        // First create user exercise preference
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=3&exerciseName=Deadlift&shouldAvoid=false")
-            .exchange()
-            .expectStatus().isOk
-
-        // Then update the preference
-        webTestClient.patch()
-            .uri("/user-exercise-preferences/update?userId=$userId3&exerciseName=Deadlift&shouldAvoid=true")
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.userId").isEqualTo(userId3)
-            .jsonPath("$.exerciseName").isEqualTo("Deadlift")
-            .jsonPath("$.shouldAvoid").isEqualTo(true)
+            .jsonPath("$[0].user_id").isEqualTo(userId2)
+            .jsonPath("$[0].exercise_name").isEqualTo("Safety Bar Squat")
+            .jsonPath("$[0].should_avoid").isEqualTo(true)
     }
 
     @Test
     fun `should delete user exercise preference`() {
         // First create user exercise preference
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=$userId4&exerciseName=Overhead Press&shouldAvoid=false")
-            .exchange()
-            .expectStatus().isOk
+        IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId4, "Overhead Press", false)
 
-        // Then delete it
-        webTestClient.delete()
-            .uri("/user-exercise-preference/$userId4/exercise/Overhead Press")
+        // Then delete it using the DELETE / endpoint with request body
+        val preferenceToDelete = UserExercisePreference(
+            userId = userId4,
+            exerciseName = "Overhead Press",
+            shouldAvoid = false,
+            createdAt = java.time.Instant.now()
+        )
+        
+        webTestClient.method(HttpMethod.DELETE)
+            .uri("/user_exercise_preference/")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(preferenceToDelete)
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.userId").isEqualTo(userId4)
-            .jsonPath("$.exerciseName").isEqualTo("Overhead Press")
+            .jsonPath("$.user_id").isEqualTo(userId4)
+            .jsonPath("$.exercise_name").isEqualTo("Overhead Press")
     }
 
     @Test
     fun `should handle multiple exercise preferences for same user`() {
         // Add multiple preferences for the same user
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=$userId5&exerciseName=Bench Press&shouldAvoid=false")
-            .exchange()
-            .expectStatus().isOk()
-
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=$userId5&exerciseName=Squat&shouldAvoid=true")
-            .exchange()
-            .expectStatus().isOk
-
-        webTestClient.post()
-            .uri("/user-exercise-preferences/?userId=$userId5&exerciseName=Deadlift&shouldAvoid=false")
-            .exchange()
-            .expectStatus().isOk
+        IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId5, "Bench Press", false)
+        IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId5, "Safety Bar Squat", true)
+        IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId5, "Deadlift", false)
 
         // Get all preferences for the user
         webTestClient.get()
-            .uri("/user-exercise-preferences/$userId5")
+            .uri("/user_exercise_preference/$userId5")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(3)

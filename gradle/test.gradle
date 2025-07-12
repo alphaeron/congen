@@ -76,21 +76,29 @@ task integrationTest(type: Test) {
     
     useJUnitPlatform()
     
-    // Run integration tests sequentially to avoid database conflicts
-    maxParallelForks = 1
-    
     testLogging {
         exceptionFormat = 'full'
         showStandardStreams = true
     }
     
-    // Only run integration tests if explicitly requested
-    onlyIf {
-        project.hasProperty('runIntegrationTests')
-    }
+    // // Only run integration tests if explicitly requested
+    // onlyIf {
+    //     project.hasProperty('runIntegrationTests')
+    // }
     
     // Don't depend on unit tests
     dependsOn = []
+
+    // Use both the test and integration-test Spring profiles
+    systemProperty 'spring.profiles.active', 'test,integration-test'
+    
+    // Disable JUnit and Spring parallel execution (redundant, but safe)
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
+    systemProperty 'spring.test.context.parallel.enabled', 'false'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'same_thread'
+    maxParallelForks = 1
+    forkEvery = 0
 }
 
 // Integration test coverage report
@@ -109,4 +117,8 @@ task jacocoIntegrationTestReport(type: JacocoReport) {
         csv.required = true
         html.outputLocation = layout.buildDirectory.dir("jacocoIntegrationTestHtml")
     }
+}
+
+tasks.named('processIntegrationTestResources') {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }

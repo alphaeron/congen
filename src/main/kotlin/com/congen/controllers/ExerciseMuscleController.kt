@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.ExerciseMuscle
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -179,8 +181,17 @@ class ExerciseMuscleController(
         @RequestParam muscleName: String,
     ): ResponseEntity<*> {
         logger.info("Saving exercise muscle relationship: {} - {}", exerciseName, muscleName)
-        return ResponseEntity.ok(
-            exerciseMuscleDAL.insertExerciseMuscle(exerciseName, muscleName),
-        )
+        return try {
+            ResponseEntity.ok(
+                exerciseMuscleDAL.insertExerciseMuscle(exerciseName, muscleName),
+            )
+        } catch (e: DatabaseQueryException) {
+            val msg = e.cause?.message ?: e.message ?: "Database error"
+            return when {
+                msg.contains("duplicate key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
+                msg.contains("violates foreign key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise or muscle does not exist")
+                else -> throw e
+            }
+        }
     }
 }

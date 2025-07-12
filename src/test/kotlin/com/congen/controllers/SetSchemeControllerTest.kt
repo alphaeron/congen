@@ -208,9 +208,11 @@ class SetSchemeControllerTest {
                 null,
                 REST_SECONDS_120
             )
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<SetScheme>)
-            .expectNext(setScheme)
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.statusCode == HttpStatus.OK)
+                assert(response.body == setScheme)
+            }
             .verifyComplete()
     }
 
@@ -230,9 +232,11 @@ class SetSchemeControllerTest {
             )
         whenever(setSchemeService.deleteSetScheme(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
         val result = setSchemeController.delete(SCHEME_ID_1)
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<SetScheme>)
-            .expectNext(setScheme)
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.statusCode == HttpStatus.OK)
+                assert(response.body == setScheme)
+            }
             .verifyComplete()
     }
 
@@ -264,15 +268,17 @@ class SetSchemeControllerTest {
             )
         whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)).thenReturn(Mono.just(setSchemes))
         val result = setSchemeController.getByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<List<SetScheme>>)
-            .expectNext(setSchemes)
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.statusCode == HttpStatus.OK)
+                assert(response.body == setSchemes)
+            }
             .verifyComplete()
     }
 
     @Test
     fun `should handle service error gracefully`() {
-        whenever(setSchemeService.selectSetSchemes()).thenThrow(RuntimeException("Service error"))
+        whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.error(RuntimeException("Service error")))
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)

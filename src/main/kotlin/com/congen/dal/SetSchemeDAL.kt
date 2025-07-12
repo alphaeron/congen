@@ -254,14 +254,19 @@ class SetSchemeDAL(
         ValidationUtil.validatePerformedRepCount(performedRepCount)
         ValidationUtil.validateRestSeconds(restSeconds)
 
-        return postgresClient.update(
+        // First perform the update without returning data
+        return postgresClient.updateLiteral(
             """
             UPDATE set_scheme
             SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
                 eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
                 target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, updated_at=NOW()
             WHERE id=$1
+            RETURNING id, programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
+                      eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
+                      target_rep_count, performed_rep_count, rest_seconds, created_at, updated_at
             """.trimIndent(),
+            SetScheme::class,
             id,
             programmedExerciseId,
             setNumber,

@@ -33,11 +33,11 @@ data class Exercise(
     @param:JsonProperty("movement_type") val movementType: String,
     /** Whether the exercise is performed one side at a time. */
     @Schema(description = "Whether the exercise is unilateral (one side at a time)", example = "false")
-    @param:JsonProperty("is_unilateral") val isUnilateral: Boolean,
+    @param:JsonProperty("is_unilateral") @get:JsonProperty("is_unilateral") val isUnilateral: Boolean,
     /** Whether the exercise targets the upper body. */
     @Schema(description = "Whether the exercise targets upper body", example = "true")
-    @param:JsonProperty("is_upper") val isUpper: Boolean,
+    @param:JsonProperty("is_upper") @get:JsonProperty("is_upper") val isUpper: Boolean,
     /** Whether the exercise is considered an accessory movement. */
     @Schema(description = "Whether the exercise is an accessory movement", example = "false")
-    @param:JsonProperty("is_accessory") val isAccessory: Boolean,
+    @param:JsonProperty("is_accessory") @get:JsonProperty("is_accessory") val isAccessory: Boolean,
 )

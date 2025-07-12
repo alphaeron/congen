@@ -97,6 +97,8 @@ class HealthCheckService(
                 status = overallStatus,
                 version = versionConfig.version,
                 releaseId = versionConfig.releaseId,
+                serviceId = "congen",
+                description = "Congen Exercise API Health Check",
                 checks =
                     mapOf(
                         "database" to listOf(dbHealth),

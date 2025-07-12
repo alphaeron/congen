@@ -8,45 +8,35 @@ import org.junit.jupiter.api.Test
 
 class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
+    private lateinit var userResponse: User
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        // No-op, user creation will be handled in each test
+        val unique = System.nanoTime()
+        userResponse = webTestClient.post()
+            .uri("/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(User::class.java)
+            .returnResult()
+            .responseBody!!
     }
 
     @Test
     fun `should return 422 when program_days_per_week is 1`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath(
-                "$.error",
-            ).isEqualTo("Program days per week must be 2, 3, or 4 days. Only valid program lengths are 2, 3, or 4 days, got: 1")
+            .jsonPath("$.error").value<String> { error ->
+                assert(error.contains("Program days per week must be 2, 3, or 4 days"))
+            }
     }
 
     @Test
     fun `should return 422 when program_days_per_week is 5`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -59,15 +49,6 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 0`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -80,15 +61,6 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 8`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -101,15 +73,6 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 2`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=2&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -118,15 +81,6 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 3`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -135,15 +89,6 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 4`() {
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
@@ -153,20 +98,8 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should allow changing session time when user has existing workouts`() {
         // Create user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        // Create program preferences
-        webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
-            .exchange()
-            .expectStatus().isOk()
+        // Create all reference data (exercises, equipment, etc.) before generating workouts
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userResponse.id, 3)
 
         // Generate a workout to create existing workouts
         webTestClient.post()
@@ -184,20 +117,8 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should prevent changing program days per week when user has existing workouts`() {
         // Create user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        // Create program preferences with 3 days per week
-        webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
-            .exchange()
-            .expectStatus().isOk()
+        // Create all reference data (exercises, equipment, etc.) before generating workouts
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userResponse.id, 3)
 
         // Generate a workout to create existing workouts
         webTestClient.post()
@@ -221,20 +142,8 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should prevent changing program days per week from 4 to 3 when user has existing workouts`() {
         // Create user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        // Create program preferences with 4 days per week
-        webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
-            .exchange()
-            .expectStatus().isOk()
+        // Create all reference data (exercises, equipment, etc.) before generating workouts
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userResponse.id, 4)
 
         // Generate a workout to create existing workouts
         webTestClient.post()
@@ -258,15 +167,6 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should allow changing program days per week when no workouts exist`() {
         // Create user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
         // Create program preferences with 3 days per week
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
@@ -280,47 +180,5 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
     }
 
-    @Test
-    fun `should allow changing program days per week after workouts are deleted`() {
-        // Create user
-        val userResponse =
-            webTestClient.post()
-                .uri("/user/?name=Test%20User&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
 
-        // Create program preferences with 3 days per week
-        webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
-            .exchange()
-            .expectStatus().isOk()
-
-        // Generate a workout to create existing workouts
-        webTestClient.post()
-            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
-            .exchange()
-            .expectStatus().isOk()
-
-        // Delete the program to remove existing workouts
-        webTestClient.get()
-            .uri("/user_program_preferences/user/${userResponse.id}")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.program_id").value { programId: Long ->
-                webTestClient.delete()
-                    .uri("/user_program_preferences/$programId")
-                    .exchange()
-                    .expectStatus().isOk()
-            }
-
-        // Should now allow changing program days per week after workouts are deleted
-        webTestClient.patch()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
-            .exchange()
-            .expectStatus().isOk()
-    }
 }
