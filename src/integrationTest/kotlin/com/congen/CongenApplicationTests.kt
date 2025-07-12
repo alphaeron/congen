@@ -11,12 +11,12 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.MuscleDAL
-import com.congen.service.HealthCheckService
-import org.junit.jupiter.api.Test
 import com.congen.model.HealthCheck
 import com.congen.model.HealthCheckResponse
 import com.congen.model.HealthStatus
+import com.congen.service.HealthCheckService
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
@@ -60,33 +60,37 @@ class CongenApplicationTests {
 
     @BeforeEach
     fun setUp() {
-        val mockHealthResponse = HealthCheckResponse(
-            status = HealthStatus.PASS,
-            version = "1.0.0",
-            releaseId = "test-release",
-            checks = mapOf(
-                "database" to listOf(
-                    HealthCheck(
-                        componentId = "postgres",
-                        componentType = "database",
-                        status = HealthStatus.PASS,
-                        output = "Database connection successful",
-                        links = mapOf("self" to "/health"),
-                        time = Instant.now()
+        val mockHealthResponse =
+            HealthCheckResponse(
+                status = HealthStatus.PASS,
+                version = "1.0.0",
+                releaseId = "test-release",
+                checks =
+                    mapOf(
+                        "database" to
+                            listOf(
+                                HealthCheck(
+                                    componentId = "postgres",
+                                    componentType = "database",
+                                    status = HealthStatus.PASS,
+                                    output = "Database connection successful",
+                                    links = mapOf("self" to "/health"),
+                                    time = Instant.now()
+                                )
+                            ),
+                        "application" to
+                            listOf(
+                                HealthCheck(
+                                    componentId = "congen-api",
+                                    componentType = "service",
+                                    status = HealthStatus.PASS,
+                                    output = "Application is running",
+                                    links = mapOf("self" to "/health"),
+                                    time = Instant.now()
+                                )
+                            )
                     )
-                ),
-                "application" to listOf(
-                    HealthCheck(
-                        componentId = "congen-api",
-                        componentType = "service",
-                        status = HealthStatus.PASS,
-                        output = "Application is running",
-                        links = mapOf("self" to "/health"),
-                        time = Instant.now()
-                    )
-                )
             )
-        )
 
         `when`(healthCheckService.performHealthCheck()).thenReturn(Mono.just(mockHealthResponse))
     }

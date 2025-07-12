@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class WorkoutStageTypeTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = Instant.now()
+    private val now = Instant.parse("2024-01-15T10:30:00Z")
 
     @Test
     fun `should create workout stage type with valid parameters`() {
@@ -184,13 +184,13 @@ class WorkoutStageTypeTest {
             mockWorkoutStageType(
                 id = 1,
                 name = WorkoutStageTypeEnum.WARMUP,
-                createdAt = Instant.now()
+                createdAt = now
             )
 
         val json = objectMapper.writeValueAsString(workoutStageType)
 
         assertTrue(json.contains("\"id\":1"))
-        assertTrue(json.contains("\"name\":\"WARMUP\""))
+        assertTrue(json.contains("\"name\":\"Warmup\""))
     }
 
     @Test

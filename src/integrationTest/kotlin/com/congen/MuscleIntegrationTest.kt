@@ -1,11 +1,9 @@
 package com.congen
 
-import com.congen.model.Muscle
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class MuscleIntegrationTest : BaseIntegrationTest() {
-
     @BeforeEach
     override fun setUp() {
         super.setUp()
@@ -100,4 +98,4 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
     }
-} 
+}

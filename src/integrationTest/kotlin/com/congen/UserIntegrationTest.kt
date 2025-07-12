@@ -1,11 +1,9 @@
 package com.congen
 
-import com.congen.model.User
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class UserIntegrationTest : BaseIntegrationTest() {
-
     @BeforeEach
     override fun setUp() {
         super.setUp()
@@ -21,7 +19,9 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when user age is 0`() {
         webTestClient.post()
-            .uri("/user/?name=$testUserName&age=0&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
+            .uri(
+                "/user/?name=$testUserName&age=0&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+            )
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -33,7 +33,9 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when user age is 151`() {
         webTestClient.post()
-            .uri("/user/?name=$testUserName&age=151&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
+            .uri(
+                "/user/?name=$testUserName&age=151&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+            )
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -45,7 +47,9 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when user height is 0`() {
         webTestClient.post()
-            .uri("/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=0&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
+            .uri(
+                "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=0&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+            )
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -57,7 +61,9 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when user weight is 0`() {
         webTestClient.post()
-            .uri("/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=0")
+            .uri(
+                "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=0"
+            )
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
@@ -69,7 +75,9 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid user data`() {
         webTestClient.post()
-            .uri("/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}")
+            .uri(
+                "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+            )
             .exchange()
             .expectStatus().isOk()
     }

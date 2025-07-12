@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.mockSetScheme
-import com.congen.model.SetScheme
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

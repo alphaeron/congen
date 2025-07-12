@@ -1,14 +1,6 @@
-linting
+remove compilation warnings + ensure tests pass
 
-fix unit tests
-
-ensure integration tests pass
-
-remove compilation warnings
-
-unit tests pass
-
-parallel integration test execution
+parallel integration test execution + ensure tests pass
 
 use snake_case for api values
 

@@ -6,13 +6,13 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.datatype.jsr310.deser.InstantDeserializer
-import com.fasterxml.jackson.datatype.jsr310.ser.InstantSerializer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -20,8 +20,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.fasterxml.jackson.databind.JsonMappingException
 import java.util.NoSuchElementException
 
 /**
@@ -37,6 +35,41 @@ import java.util.NoSuchElementException
  */
 @Configuration
 class JacksonConfig {
+    /**
+     * Custom Instant serializer that outputs ISO string format.
+     *
+     * This serializer ensures that Instant values are serialized as ISO-8601 strings
+     * (e.g., "2024-01-01T12:00:00Z") instead of Unix timestamps.
+     */
+    class CustomInstantSerializer : JsonSerializer<Instant>() {
+        override fun serialize(
+            value: Instant?,
+            gen: JsonGenerator,
+            serializers: SerializerProvider
+        ) {
+            if (value != null) {
+                gen.writeString(value.toString())
+            }
+        }
+    }
+
+    /**
+     * Custom WorkoutStageTypeEnum serializer that uses the enum name.
+     *
+     * This serializer ensures that WorkoutStageTypeEnum values are serialized as their
+     * enum names (e.g., "WARMUP") instead of their display names (e.g., "Warmup").
+     */
+    class WorkoutStageTypeEnumSerializer : JsonSerializer<WorkoutStageTypeEnum>() {
+        override fun serialize(
+            value: WorkoutStageTypeEnum?,
+            gen: JsonGenerator,
+            serializers: SerializerProvider
+        ) {
+            if (value != null) {
+                gen.writeString(value.displayName)
+            }
+        }
+    }
 
     /**
      * Custom Instant deserializer that handles various timestamp formats.
@@ -49,7 +82,10 @@ class JacksonConfig {
      * All timestamps are treated as UTC, which aligns with the project's UTC-only datetime policy.
      */
     class CustomInstantDeserializer : JsonDeserializer<Instant>() {
-        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Instant {
+        override fun deserialize(
+            p: JsonParser,
+            ctxt: DeserializationContext
+        ): Instant {
             val text = p.text
             return try {
                 // Try to parse as ISO instant first
@@ -80,7 +116,10 @@ class JacksonConfig {
      * and other numeric objects that might be returned from the database.
      */
     class NumericIntDeserializer : JsonDeserializer<Int>() {
-        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Int {
+        override fun deserialize(
+            p: JsonParser,
+            ctxt: DeserializationContext
+        ): Int {
             return when (p.currentToken) {
                 JsonToken.VALUE_NUMBER_INT -> p.intValue
                 JsonToken.VALUE_NUMBER_FLOAT -> p.doubleValue.toInt()
@@ -96,10 +135,10 @@ class JacksonConfig {
                             fieldValue.isLong -> fieldValue.asLong().toInt()
                             fieldValue.isDouble -> fieldValue.asDouble().toInt()
                             fieldValue.isTextual -> fieldValue.asText().toInt()
-                            else -> throw JsonMappingException(p, "Cannot deserialize object with field '$fieldName' to Int: ${node.toString()}")
+                            else -> throw JsonMappingException(p, "Cannot deserialize object with field '$fieldName' to Int: $node")
                         }
                     } else {
-                        throw JsonMappingException(p, "Cannot deserialize object with multiple or unknown fields to Int: ${node.toString()}")
+                        throw JsonMappingException(p, "Cannot deserialize object with multiple or unknown fields to Int: $node")
                     }
                 }
                 else -> throw JsonMappingException(p, "Cannot deserialize ${p.currentToken} to Int")
@@ -111,24 +150,16 @@ class JacksonConfig {
      * Custom deserializer for WorkoutStageTypeEnum.
      */
     class WorkoutStageTypeEnumDeserializer : JsonDeserializer<WorkoutStageTypeEnum>() {
-        override fun deserialize(p: JsonParser, ctxt: DeserializationContext): WorkoutStageTypeEnum {
+        override fun deserialize(
+            p: JsonParser,
+            ctxt: DeserializationContext
+        ): WorkoutStageTypeEnum {
             val value = p.text
             return try {
                 // Try to match ignoring case
                 WorkoutStageTypeEnum.values().first { it.name.equals(value, ignoreCase = true) }
             } catch (e: NoSuchElementException) {
                 throw JsonMappingException(p, "Invalid WorkoutStageTypeEnum value: $value")
-            }
-        }
-    }
-
-    /**
-     * Custom WorkoutStageTypeEnum serializer that serializes to display names.
-     */
-    class WorkoutStageTypeEnumSerializer : JsonSerializer<WorkoutStageTypeEnum>() {
-        override fun serialize(value: WorkoutStageTypeEnum?, gen: JsonGenerator, serializers: SerializerProvider) {
-            if (value != null) {
-                gen.writeString(value.displayName)
             }
         }
     }
@@ -155,14 +186,18 @@ class JacksonConfig {
         fun configureObjectMapper(mapper: ObjectMapper) {
             // Set property naming strategy to SNAKE_CASE globally
             mapper.propertyNamingStrategy = PropertyNamingStrategies.SNAKE_CASE
-            
+
             // Register JavaTimeModule for Java 8 time support
             val javaTimeModule = JavaTimeModule()
             // Configure Instant serialization/deserialization
-            javaTimeModule.addSerializer(Instant::class.java, InstantSerializer.INSTANCE)
+            javaTimeModule.addSerializer(Instant::class.java, CustomInstantSerializer())
             javaTimeModule.addDeserializer(Instant::class.java, CustomInstantDeserializer())
+
+            // Configure WorkoutStageTypeEnum serialization
+            javaTimeModule.addSerializer(WorkoutStageTypeEnum::class.java, WorkoutStageTypeEnumSerializer())
+
             mapper.registerModule(javaTimeModule)
-            
+
             // Register custom module for WorkoutStageTypeEnum and numeric types
             val customModule = SimpleModule()
             customModule.addDeserializer(WorkoutStageTypeEnum::class.java, WorkoutStageTypeEnumDeserializer())

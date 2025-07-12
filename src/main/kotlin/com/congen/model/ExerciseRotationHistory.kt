@@ -50,7 +50,8 @@ data class ExerciseRotationHistory(
     @param:JsonProperty("exercise_name") val exerciseName: String,
     /** Whether the exercise is an accessory movement. */
     @Schema(description = "Whether the exercise is an accessory movement", example = "false")
-    @param:JsonProperty("is_accessory") @get:JsonProperty("is_accessory") val isAccessory: Boolean,
+    @param:JsonProperty("is_accessory")
+    @get:JsonProperty("is_accessory") val isAccessory: Boolean,
     /** Timestamp when the exercise was used. */
     @Schema(
         description = "Timestamp when the exercise was used",

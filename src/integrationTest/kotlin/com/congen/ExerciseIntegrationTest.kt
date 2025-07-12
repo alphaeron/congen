@@ -1,15 +1,15 @@
 package com.congen
 
-import com.congen.model.Exercise
 import org.junit.jupiter.api.Test
 
 class ExerciseIntegrationTest : BaseIntegrationTest() {
-
     @Test
     fun `should create exercise`() {
         val uniqueExerciseName = "testexerciseout-${System.nanoTime()}"
         webTestClient.post()
-            .uri("/exercise/?name=$uniqueExerciseName&description=testexerciseout&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false")
+            .uri(
+                "/exercise/?name=$uniqueExerciseName&description=testexerciseout&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+            )
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -118,4 +118,4 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
     }
-} 
+}

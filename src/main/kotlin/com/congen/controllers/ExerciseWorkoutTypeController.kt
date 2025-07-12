@@ -1,8 +1,8 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseWorkoutTypeDAL
-import com.congen.model.ExerciseWorkoutType
 import com.congen.exceptions.DatabaseQueryException
+import com.congen.model.ExerciseWorkoutType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -10,8 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
-import org.springframework.http.ResponseEntity
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -229,8 +229,14 @@ class ExerciseWorkoutTypeController(
         } catch (e: DatabaseQueryException) {
             val msg = e.cause?.message ?: e.message ?: "Database error"
             return when {
-                msg.contains("duplicate key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
-                msg.contains("violates foreign key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise, movement type, or workout type does not exist")
+                msg.contains(
+                    "duplicate key",
+                    ignoreCase = true
+                ) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
+                msg.contains(
+                    "violates foreign key",
+                    ignoreCase = true
+                ) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise, movement type, or workout type does not exist")
                 else -> throw e
             }
         }

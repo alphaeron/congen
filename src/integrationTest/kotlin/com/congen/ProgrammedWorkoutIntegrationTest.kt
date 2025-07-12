@@ -1,8 +1,6 @@
 package com.congen
 
-import com.congen.model.Program
 import com.congen.model.ProgrammedWorkout
-import com.congen.model.User
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach

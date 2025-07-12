@@ -14,13 +14,14 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     override fun setUp() {
         super.setUp()
         val unique = System.nanoTime()
-        userResponse = webTestClient.post()
-            .uri("/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
+        userResponse =
+            webTestClient.post()
+                .uri("/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
     }
 
     @Test
@@ -179,6 +180,4 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
     }
-
-
 }

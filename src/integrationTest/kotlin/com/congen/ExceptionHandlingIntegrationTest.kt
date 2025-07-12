@@ -3,7 +3,6 @@ package com.congen
 import org.junit.jupiter.api.Test
 
 class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
-
     @Test
     fun `should handle validation exception with 422 status`() {
         // Test validation exception by providing invalid user data
@@ -88,4 +87,4 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
     }
-} 
+}

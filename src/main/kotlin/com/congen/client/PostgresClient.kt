@@ -162,8 +162,6 @@ class PostgresClient(
         vararg queryArgs: Any?,
     ): Mono<T> = queryIndividual(postgresDBWriter, "$query RETURNING *", cls, *queryArgs)
 
-
-
     /**
      * Executes an update query using the writer connection.
      *

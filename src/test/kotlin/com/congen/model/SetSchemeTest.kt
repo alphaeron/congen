@@ -15,7 +15,7 @@ import kotlin.test.assertTrue
 class SetSchemeTest {
     @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = Instant.now()
+    private val now = Instant.parse("2025-07-12T01:33:49.262037Z")
 
     @Test
     fun `test set scheme creation with all fields`() {

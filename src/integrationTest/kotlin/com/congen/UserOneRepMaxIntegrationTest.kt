@@ -1,12 +1,7 @@
 package com.congen
 
-import com.congen.model.User
-import com.congen.model.UserOneRepMax
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
-import java.math.BigDecimal
-import java.time.Instant
 
 /**
  * Integration tests for UserOneRepMax functionality.
@@ -108,7 +103,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press")
         // Create another exercise and one rep max for the same user - use Safety Bar Squat which exists in migrations
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Safety Bar Squat", 150.0)
-        
+
         webTestClient.get()
             .uri("/user_one_rep_max/$userId1")
             .exchange()

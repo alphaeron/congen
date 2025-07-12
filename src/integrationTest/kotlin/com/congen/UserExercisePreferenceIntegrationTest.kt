@@ -1,11 +1,10 @@
 package com.congen
 
-import com.congen.model.User
 import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
 import org.springframework.http.HttpMethod
+import org.springframework.http.MediaType
 
 class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     private var userId1: Int = 0
@@ -62,13 +61,14 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId4, "Overhead Press", false)
 
         // Then delete it using the DELETE / endpoint with request body
-        val preferenceToDelete = UserExercisePreference(
-            userId = userId4,
-            exerciseName = "Overhead Press",
-            shouldAvoid = false,
-            createdAt = java.time.Instant.now()
-        )
-        
+        val preferenceToDelete =
+            UserExercisePreference(
+                userId = userId4,
+                exerciseName = "Overhead Press",
+                shouldAvoid = false,
+                createdAt = java.time.Instant.now()
+            )
+
         webTestClient.method(HttpMethod.DELETE)
             .uri("/user_exercise_preference/")
             .contentType(MediaType.APPLICATION_JSON)

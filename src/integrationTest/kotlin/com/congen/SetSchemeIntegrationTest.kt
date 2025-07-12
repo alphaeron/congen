@@ -1,11 +1,6 @@
 package com.congen
 
-import com.congen.model.Program
-import com.congen.model.ProgrammedExercise
-import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
-import com.congen.model.User
-import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
@@ -28,22 +23,42 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId)
         programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program" + System.nanoTime())
         // Create a programmed workout
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Test Workout" + System.nanoTime())
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Test Workout" + System.nanoTime()
+            )
         // Create a workout stage
         val stageTypeId = getWorkoutStageTypeId("Warmup")
-        val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, stageTypeId = stageTypeId, position = 1, name = "Warmup Stage" + System.nanoTime())
+        val stageId =
+            IntegrationTestHelpers.createTestWorkoutStage(
+                webTestClient,
+                workoutId,
+                stageTypeId = stageTypeId,
+                position = 1,
+                name = "Warmup Stage" + System.nanoTime()
+            )
         // Create a programmed exercise
-        programmedExerciseId = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, exerciseName = "Bench Press", notes = "Test exercise")
+        programmedExerciseId =
+            IntegrationTestHelpers.createTestProgrammedExercise(
+                webTestClient,
+                stageId,
+                exerciseName = "Bench Press",
+                notes = "Test exercise"
+            )
     }
 
     private fun getWorkoutStageTypeId(name: String): Int {
-        val response = webTestClient.get()
-            .uri("/workout_stage_type/name/$name")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(WorkoutStageType::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.get()
+                .uri("/workout_stage_type/name/$name")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(WorkoutStageType::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id
     }
 
@@ -214,8 +229,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all set schemes`() {
-        val uri1 = "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&targetWeight=100.0&targetRepCount=8&restSeconds=120"
-        val uri2 = "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&targetWeight=110.0&targetRepCount=6&restSeconds=180"
+        val uri1 =
+            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+                "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
+                "targetWeight=100.0&targetRepCount=8&restSeconds=120"
+        val uri2 =
+            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
+                "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
+                "targetWeight=110.0&targetRepCount=6&restSeconds=180"
         webTestClient.post().uri(uri1).exchange().expectStatus().isOk()
         webTestClient.post().uri(uri2).exchange().expectStatus().isOk()
         webTestClient.get()

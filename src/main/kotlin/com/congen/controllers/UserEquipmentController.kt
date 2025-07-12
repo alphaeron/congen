@@ -99,8 +99,14 @@ class UserEquipmentController(
         } catch (e: DatabaseQueryException) {
             val msg = e.cause?.message ?: e.message ?: "Database error"
             return when {
-                msg.contains("duplicate key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
-                msg.contains("violates foreign key", ignoreCase = true) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("User or equipment does not exist")
+                msg.contains(
+                    "duplicate key",
+                    ignoreCase = true
+                ) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
+                msg.contains(
+                    "violates foreign key",
+                    ignoreCase = true
+                ) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("User or equipment does not exist")
                 else -> throw e
             }
         }

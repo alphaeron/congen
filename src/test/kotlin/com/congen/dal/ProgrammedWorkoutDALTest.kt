@@ -179,32 +179,33 @@ class ProgrammedWorkoutDALTest {
     @Test
     fun `hasUserExistingWorkouts should return true when user has workouts`() {
         val userId = 1
+        val mockResult = mapOf("value" to true)
 
         whenever(
-            postgresClient.selectIndividual<Boolean>(
+            postgresClient.selectIndividual<Map<String, Any>>(
                 """
                 SELECT EXISTS(
-                    SELECT TRUE
+                    SELECT 1
                     FROM programmed_workout pw
                     JOIN program p ON pw.program_id = p.id
                     WHERE p.user_id = $1
-                )
+                ) AS value
                 """.trimIndent(),
                 userId
             )
-        ).thenReturn(Mono.just(true))
+        ).thenReturn(Mono.just(mockResult))
 
         val result = programmedWorkoutDAL.hasUserExistingWorkouts(userId)
 
         StepVerifier.create(result).expectNext(true).verifyComplete()
-        verify(postgresClient).selectIndividual<Boolean>(
+        verify(postgresClient).selectIndividual<Map<String, Any>>(
             """
             SELECT EXISTS(
-                SELECT TRUE
+                SELECT 1
                 FROM programmed_workout pw
                 JOIN program p ON pw.program_id = p.id
                 WHERE p.user_id = $1
-            )
+            ) AS value
             """.trimIndent(),
             userId
         )
@@ -213,32 +214,33 @@ class ProgrammedWorkoutDALTest {
     @Test
     fun `hasUserExistingWorkouts should return false when user has no workouts`() {
         val userId = 1
+        val mockResult = mapOf("value" to false)
 
         whenever(
-            postgresClient.selectIndividual<Boolean>(
+            postgresClient.selectIndividual<Map<String, Any>>(
                 """
                 SELECT EXISTS(
-                    SELECT TRUE
+                    SELECT 1
                     FROM programmed_workout pw
                     JOIN program p ON pw.program_id = p.id
                     WHERE p.user_id = $1
-                )
+                ) AS value
                 """.trimIndent(),
                 userId
             )
-        ).thenReturn(Mono.just(false))
+        ).thenReturn(Mono.just(mockResult))
 
         val result = programmedWorkoutDAL.hasUserExistingWorkouts(userId)
 
         StepVerifier.create(result).expectNext(false).verifyComplete()
-        verify(postgresClient).selectIndividual<Boolean>(
+        verify(postgresClient).selectIndividual<Map<String, Any>>(
             """
             SELECT EXISTS(
-                SELECT TRUE
+                SELECT 1
                 FROM programmed_workout pw
                 JOIN program p ON pw.program_id = p.id
                 WHERE p.user_id = $1
-            )
+            ) AS value
             """.trimIndent(),
             userId
         )

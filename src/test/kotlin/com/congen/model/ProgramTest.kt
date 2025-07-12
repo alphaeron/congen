@@ -50,6 +50,7 @@ class ProgramTest {
         val json = objectMapper.writeValueAsString(program)
 
         assertTrue(json.contains("\"id\":1"))
+        assertTrue(json.contains("\"user_id\":1"))
         assertTrue(json.contains("\"name\":\"Conjugate Powerlifting Program\""))
         assertTrue(json.contains("\"current_week_number\":1"))
         assertTrue(json.contains("\"created_at\":\"$now\""))
@@ -62,6 +63,7 @@ class ProgramTest {
             """
             {
                 "id": 1,
+                "user_id": 1,
                 "name": "Conjugate Powerlifting Program",
                 "current_week_number": 1,
                 "created_at": "$now",
@@ -72,6 +74,7 @@ class ProgramTest {
         val program = objectMapper.readValue(json, Program::class.java)
 
         assertEquals(1L, program.id)
+        assertEquals(1, program.userId)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)
@@ -84,6 +87,7 @@ class ProgramTest {
             """
             {
                 "id": 1,
+                "user_id": 1,
                 "name": "Conjugate Powerlifting Program",
                 "current_week_number": 1,
                 "created_at": "$now",
@@ -95,6 +99,7 @@ class ProgramTest {
         val program = objectMapper.readValue(json, Program::class.java)
 
         assertEquals(1L, program.id)
+        assertEquals(1, program.userId)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)

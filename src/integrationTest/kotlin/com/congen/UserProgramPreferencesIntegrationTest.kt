@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.model.UserProgramPreferences
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -22,7 +21,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should create user program preferences`() {
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60)
-        
+
         // Verify the preferences were created correctly
         webTestClient.get()
             .uri("/user_program_preferences/$userId")
@@ -107,4 +106,4 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.program_days_per_week").isEqualTo(4)
             .jsonPath("$.session_time_length_in_minutes").isEqualTo(45)
     }
-} 
+}

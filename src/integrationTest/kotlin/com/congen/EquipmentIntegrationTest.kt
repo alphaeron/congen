@@ -1,11 +1,9 @@
 package com.congen
 
-import com.congen.model.Equipment
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class EquipmentIntegrationTest : BaseIntegrationTest() {
-
     @BeforeEach
     override fun setUp() {
         super.setUp()
@@ -89,4 +87,4 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
     }
-} 
+}

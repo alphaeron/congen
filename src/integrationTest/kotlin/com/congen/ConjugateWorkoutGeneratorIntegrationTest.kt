@@ -1,14 +1,12 @@
 package com.congen
 
-import com.congen.model.User
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.MediaType
 
 class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     private var userId: Int = 0
-    
+
     @BeforeEach
     override fun setUp() {
         super.setUp()
@@ -20,13 +18,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate 3-day conjugate workout program successfully`() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.name.contains("Week 1"))
         webTestClient.get()
@@ -41,13 +40,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate 2-day conjugate workout program successfully`() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2)
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.name.contains("Week 1"))
         webTestClient.get()
@@ -62,13 +62,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate 4-day conjugate workout program successfully`() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4)
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.name.contains("Week 1"))
         webTestClient.get()
@@ -88,7 +89,9 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isEqualTo(422)
             .expectBody()
-            .jsonPath("$.error").isEqualTo("Program days per week must be 2, 3, or 4 days. Only valid program lengths are 2, 3, or 4 days, got: 5")
+            .jsonPath(
+                "$.error"
+            ).isEqualTo("Program days per week must be 2, 3, or 4 days. Only valid program lengths are 2, 3, or 4 days, got: 5")
     }
 
     @Test
@@ -131,13 +134,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         // When - Generate workout program
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)
@@ -154,13 +158,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells")
 
         // When - Generate workout program
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)
@@ -178,13 +183,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat")
 
         // When - Generate workout program
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)

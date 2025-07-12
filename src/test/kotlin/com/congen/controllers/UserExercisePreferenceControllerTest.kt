@@ -148,4 +148,4 @@ class UserExercisePreferenceControllerTest {
             .expectError(RuntimeException::class.java)
             .verify()
     }
-} 
+}

@@ -45,13 +45,14 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
     }
 
     private fun getWorkoutStageTypeId(name: String): Long {
-        val response = webTestClient.get()
-            .uri("/workout_stage_type/name/$name")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(WorkoutStageType::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.get()
+                .uri("/workout_stage_type/name/$name")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(WorkoutStageType::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id.toLong()
     }
 
@@ -233,7 +234,9 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         webTestClient.patch()
-            .uri("/workout_stage/?id=${stageResponse.id}&programmedWorkoutId=${workoutResponse.id}&stageTypeId=$primaryId&position=15&name=Updated Stage")
+            .uri(
+                "/workout_stage/?id=${stageResponse.id}&programmedWorkoutId=${workoutResponse.id}&stageTypeId=$primaryId&position=15&name=Updated Stage"
+            )
             .exchange()
             .expectStatus().isOk()
             .expectBody()

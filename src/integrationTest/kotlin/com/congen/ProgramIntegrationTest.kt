@@ -1,11 +1,9 @@
 package com.congen
 
-import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class ProgramIntegrationTest : BaseIntegrationTest() {
-
     @BeforeEach
     override fun setUp() {
         super.setUp()
@@ -28,7 +26,13 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get program by id`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = IntegrationTestHelpers.TEST_PROGRAM_NAME, currentWeekNumber = 1)
+        val programId =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = IntegrationTestHelpers.TEST_PROGRAM_NAME,
+                currentWeekNumber = 1
+            )
         webTestClient.get()
             .uri("/program/$programId")
             .exchange()
@@ -67,13 +71,13 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should update program`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        
+
         // First create a program
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME, 1)
 
         // Then update it
         webTestClient.patch()
-            .uri("/program/${programId}?name=Updated Program&currentWeekNumber=3")
+            .uri("/program/$programId?name=Updated Program&currentWeekNumber=3")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -94,9 +98,15 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should delete program`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = IntegrationTestHelpers.TEST_PROGRAM_NAME, currentWeekNumber = 1)
+        val programId =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = IntegrationTestHelpers.TEST_PROGRAM_NAME,
+                currentWeekNumber = 1
+            )
         webTestClient.delete()
-            .uri("/program/${programId}")
+            .uri("/program/$programId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -112,4 +122,4 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
     }
-} 
+}

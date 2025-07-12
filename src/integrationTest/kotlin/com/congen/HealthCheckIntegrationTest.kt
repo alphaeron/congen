@@ -3,7 +3,6 @@ package com.congen
 import org.junit.jupiter.api.Test
 
 class HealthCheckIntegrationTest : BaseIntegrationTest() {
-
     @Test
     fun `health check should return proper structure and status`() {
         webTestClient.get()

@@ -5,20 +5,20 @@ import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.Test
 
 class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
-
     @Test
     fun `should get workout stage type by id`() {
         // First create a workout stage type
         val stageTypeName = IntegrationTestHelpers.createTestWorkoutStageType(webTestClient, WorkoutStageTypeEnum.WARMUP)
 
         // Get the stage type by name to get its ID
-        val stageTypeResponse = webTestClient.get()
-            .uri("/workout_stage_type/name/$stageTypeName")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(WorkoutStageType::class.java)
-            .returnResult()
-            .responseBody!!
+        val stageTypeResponse =
+            webTestClient.get()
+                .uri("/workout_stage_type/name/$stageTypeName")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(WorkoutStageType::class.java)
+                .returnResult()
+                .responseBody!!
 
         // Then get it by id
         webTestClient.get()
@@ -72,4 +72,4 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$").isArray()
             .jsonPath("$.length()").isEqualTo(WorkoutStageTypeEnum.values().size)
     }
-} 
+}

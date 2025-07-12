@@ -32,7 +32,8 @@ data class UserExercisePreference(
     @param:JsonProperty("exercise_name") val exerciseName: String,
     /** Whether the user should avoid this exercise. */
     @Schema(description = "Whether the user should avoid this exercise", example = "false")
-    @param:JsonProperty("should_avoid") @get:JsonProperty("should_avoid") val shouldAvoid: Boolean,
+    @param:JsonProperty("should_avoid")
+    @get:JsonProperty("should_avoid") val shouldAvoid: Boolean,
     /** Timestamp when the preference was created */
     @Schema(description = "Timestamp when the preference was created", example = "2024-07-06T12:00:00Z", required = true)
     @param:JsonProperty("created_at") val createdAt: Instant,

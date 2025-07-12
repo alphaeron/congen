@@ -1,10 +1,8 @@
 package com.congen
 
-import com.congen.model.ProgrammedExercise
 import org.junit.jupiter.api.Test
 
 class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
-
     @Test
     fun `should create programmed exercise`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
@@ -32,7 +30,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Exercises and equipment already exist in migrations
         val programmedExercise = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         webTestClient.get()
-            .uri("/programmed_exercise/${programmedExercise}")
+            .uri("/programmed_exercise/$programmedExercise")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -74,7 +72,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1")
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1)
         // Exercises and equipment already exist in migrations
-        
+
         // Create programmed exercises for the stage
         IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, "Deadlift")
@@ -97,13 +95,15 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1")
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1)
         // Exercises and equipment already exist in migrations
-        
+
         // First create a programmed exercise
         val exerciseResponse = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
 
         // Then update it
         webTestClient.patch()
-            .uri("/programmed_exercise/${exerciseResponse}?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=2")
+            .uri(
+                "/programmed_exercise/$exerciseResponse?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=2"
+            )
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -128,13 +128,13 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1")
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1)
         // Exercises and equipment already exist in migrations
-        
+
         // First create a programmed exercise
         val exerciseResponse = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
 
         // Then delete it
         webTestClient.delete()
-            .uri("/programmed_exercise/${exerciseResponse}")
+            .uri("/programmed_exercise/$exerciseResponse")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -150,4 +150,4 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
     }
-} 
+}

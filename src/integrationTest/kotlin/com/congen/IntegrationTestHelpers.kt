@@ -3,53 +3,52 @@ package com.congen
 import com.congen.model.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.web.reactive.function.server.ServerResponse
-import reactor.core.publisher.Mono
 
 /**
  * Helper class for integration tests providing reusable constants and helper methods.
  * This class reduces duplication across integration tests and provides consistent test data.
  */
 object IntegrationTestHelpers {
-    
     // Common test data constants
     const val TEST_USER_NAME = "Integration Test User"
     const val TEST_USER_AGE = 30
     const val TEST_USER_HEIGHT = 180.0
     const val TEST_USER_WEIGHT = 75.0
-    
+
     const val TEST_EQUIPMENT_NAME = "bench"
     const val TEST_EQUIPMENT_DESCRIPTION = "A bench with a foam pad, commonly used for the bench press or other similar exercises."
     const val TEST_EQUIPMENT_NAME_2 = "power bar"
     const val TEST_EQUIPMENT_DESCRIPTION_2 = "A universal weightlifting bar that can be used to perform a variety of exercises."
-    
+
     const val TEST_MUSCLE_NAME = "pec major"
-    const val TEST_MUSCLE_DESCRIPTION = "The primary functions are flexion, adduction, and internal rotation of the humerus. The pectoral major may colloquially be referred to as \"pecs\", \"pectoral muscle\", or \"chest muscle\", because it is the largest and most superficial muscle in the chest area."
+    const val TEST_MUSCLE_DESCRIPTION =
+        "The primary functions are flexion, adduction, and internal rotation of the humerus. " +
+            "The pectoral major may colloquially be referred to as \"pecs\", \"pectoral muscle\", or \"chest muscle\", " +
+            "because it is the largest and most superficial muscle in the chest area."
     const val TEST_MUSCLE_NAME_2 = "lats"
     const val TEST_MUSCLE_DESCRIPTION_2 = "Functionally, the latissimus dorsi muscle belongs to the muscles of the scapular motion."
-    
+
     const val TEST_EXERCISE_NAME = "Bench Press"
     const val TEST_EXERCISE_DESCRIPTION = "Standard bench press"
     const val TEST_EXERCISE_NAME_2 = "Safety Bar Squat"
     const val TEST_EXERCISE_DESCRIPTION_2 = "Squat with a safety bar."
-    
+
     const val TEST_PROGRAM_NAME = "Strength Program"
     const val TEST_PROGRAM_DESCRIPTION = "A comprehensive strength training program"
-    
+
     const val TEST_WORKOUT_NAME = "Upper Body Workout"
     const val TEST_WORKOUT_DESCRIPTION = "Focus on upper body strength"
-    
+
     const val TEST_STAGE_NAME = "Warm-up"
     const val TEST_STAGE_DESCRIPTION = "Light warm-up exercises"
-    
+
     const val TEST_SET_SCHEME_NAME = "3x5"
     const val TEST_SET_SCHEME_DESCRIPTION = "Three sets of five reps"
-    
+
     // Object mapper for JSON operations
     val objectMapper = ObjectMapper().registerKotlinModule()
-    
+
     /**
      * Creates a test user via the API and returns the user ID.
      */
@@ -60,16 +59,17 @@ object IntegrationTestHelpers {
         height: Double = TEST_USER_HEIGHT,
         weight: Double = TEST_USER_WEIGHT
     ): Int {
-        val response = webTestClient.post()
-            .uri("/user/?name=$name&age=$age&height=$height&weight=$weight")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.post()
+                .uri("/user/?name=$name&age=$age&height=$height&weight=$weight")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id
     }
-    
+
     /**
      * Returns the equipment name for testing.
      * Equipment already exists in migrations, so we don't need to create it.
@@ -80,7 +80,7 @@ object IntegrationTestHelpers {
     ): String {
         return name
     }
-    
+
     /**
      * Returns the muscle name for testing.
      * Muscles already exist in migrations, so we don't need to create them.
@@ -91,7 +91,7 @@ object IntegrationTestHelpers {
     ): String {
         return name
     }
-    
+
     /**
      * Returns the exercise name for testing.
      * Exercises already exist in migrations, so we don't need to create them.
@@ -102,7 +102,7 @@ object IntegrationTestHelpers {
     ): String {
         return name
     }
-    
+
     /**
      * Creates test program via the API and returns the program ID.
      */
@@ -112,16 +112,17 @@ object IntegrationTestHelpers {
         name: String = TEST_PROGRAM_NAME,
         currentWeekNumber: Int = 1
     ): Long {
-        val response = webTestClient.post()
-            .uri("/program/?userId=$userId&name=$name&currentWeekNumber=$currentWeekNumber")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.post()
+                .uri("/program/?userId=$userId&name=$name&currentWeekNumber=$currentWeekNumber")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id
     }
-    
+
     /**
      * Creates test programmed workout via the API and returns the workout ID.
      */
@@ -131,16 +132,17 @@ object IntegrationTestHelpers {
         dayNumber: Int = 1,
         name: String = TEST_WORKOUT_NAME
     ): Long {
-        val response = webTestClient.post()
-            .uri("/programmed_workout/?programId=$programId&dayNumber=$dayNumber&name=$name")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProgrammedWorkout::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.post()
+                .uri("/programmed_workout/?programId=$programId&dayNumber=$dayNumber&name=$name")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProgrammedWorkout::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id
     }
-    
+
     /**
      * Creates test workout stage via the API and returns the stage ID.
      */
@@ -151,13 +153,14 @@ object IntegrationTestHelpers {
         position: Int = 1,
         name: String = TEST_STAGE_NAME
     ): Long {
-        val response = webTestClient.post()
-            .uri("/workout_stage/?programmedWorkoutId=$programmedWorkoutId&stageTypeId=$stageTypeId&position=$position&name=$name")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(WorkoutStage::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.post()
+                .uri("/workout_stage/?programmedWorkoutId=$programmedWorkoutId&stageTypeId=$stageTypeId&position=$position&name=$name")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(WorkoutStage::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id
     }
 
@@ -169,14 +172,14 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         equipmentName: String = TEST_EQUIPMENT_NAME
-    ) {        
+    ) {
         // Now create the user equipment relationship
         webTestClient.post()
             .uri("/user_equipment/?userId=$userId&equipmentName=$equipmentName")
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test user exercise preference via the API.
      * Exercises need to exist first, so we create them if needed.
@@ -194,7 +197,7 @@ object IntegrationTestHelpers {
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test user one rep max via the API.
      * Exercises need to exist first, so we create them if needed.
@@ -212,7 +215,7 @@ object IntegrationTestHelpers {
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test user program preferences via the API.
      */
@@ -223,58 +226,68 @@ object IntegrationTestHelpers {
         sessionTimeLengthInMinutes: Int = 60
     ) {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=$programDaysPerWeek&sessionTimeLengthInMinutes=$sessionTimeLengthInMinutes")
+            .uri(
+                "/user_program_preferences/?userId=$userId&programDaysPerWeek=$programDaysPerWeek&sessionTimeLengthInMinutes=$sessionTimeLengthInMinutes"
+            )
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates a test user and returns the user ID.
      */
-    fun createTestUserWithId(webTestClient: WebTestClient, name: String = TEST_USER_NAME): Int {
-        val response = webTestClient.post()
-            .uri("/user/?name=$name&age=$TEST_USER_AGE&height=$TEST_USER_HEIGHT&weight=$TEST_USER_WEIGHT")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
-        
+    fun createTestUserWithId(
+        webTestClient: WebTestClient,
+        name: String = TEST_USER_NAME
+    ): Int {
+        val response =
+            webTestClient.post()
+                .uri("/user/?name=$name&age=$TEST_USER_AGE&height=$TEST_USER_HEIGHT&weight=$TEST_USER_WEIGHT")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+                .responseBody!!
+
         return response.id
     }
-    
+
     /**
      * Creates a test user and program preferences, then generates a conjugate program.
      */
     fun createTestUserWithConjugateProgram(
-        webTestClient: WebTestClient, 
+        webTestClient: WebTestClient,
         userName: String = "Test User",
         programDaysPerWeek: Int = 3
     ): Pair<Int, Program> {
         val userId = createTestUserWithId(webTestClient, userName)
         createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek)
-        
-        val programResponse = webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(Program::class.java)
-            .returnResult()
-            .responseBody!!
-        
+
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+
         return Pair(userId, programResponse)
     }
-    
+
     /**
      * Creates test user program preferences via the API.
      */
-    fun createTestUserProgramPreferences(webTestClient: WebTestClient, userId: Int) {
+    fun createTestUserProgramPreferences(
+        webTestClient: WebTestClient,
+        userId: Int
+    ) {
         webTestClient.post()
             .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test exercise equipment relationship via the API.
      */
@@ -288,7 +301,7 @@ object IntegrationTestHelpers {
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test exercise muscle relationship via the API.
      */
@@ -303,7 +316,7 @@ object IntegrationTestHelpers {
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test exercise workout type relationship via the API.
      */
@@ -318,7 +331,7 @@ object IntegrationTestHelpers {
             .exchange()
             .expectStatus().isOk()
     }
-    
+
     /**
      * Creates test programmed exercise via the API and returns the programmed exercise ID.
      */
@@ -331,35 +344,45 @@ object IntegrationTestHelpers {
     ): Long {
         val uri = StringBuilder("/programmed_exercise/?workoutStageId=$workoutStageId&exerciseName=$exerciseName&position=$position")
         if (notes != null) uri.append("&notes=$notes")
-        val response = webTestClient.post()
-            .uri(uri.toString())
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ProgrammedExercise::class.java)
-            .returnResult()
-            .responseBody!!
+        val response =
+            webTestClient.post()
+                .uri(uri.toString())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ProgrammedExercise::class.java)
+                .returnResult()
+                .responseBody!!
         return response.id
     }
-    
+
     /**
      * Creates test exercise rotation history via the API.
      */
-    fun createTestExerciseRotationHistory(webTestClient: WebTestClient, userId: Int, exerciseName: String = TEST_EXERCISE_NAME, isAccessory: Boolean = false): Long {
-        val response = webTestClient.post()
-            .uri("/exercise_rotation_history/?userId=$userId&exerciseName=$exerciseName&isAccessory=$isAccessory")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(ExerciseRotationHistory::class.java)
-            .returnResult()
-            .responseBody!!
-        
+    fun createTestExerciseRotationHistory(
+        webTestClient: WebTestClient,
+        userId: Int,
+        exerciseName: String = TEST_EXERCISE_NAME,
+        isAccessory: Boolean = false
+    ): Long {
+        val response =
+            webTestClient.post()
+                .uri("/exercise_rotation_history/?userId=$userId&exerciseName=$exerciseName&isAccessory=$isAccessory")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ExerciseRotationHistory::class.java)
+                .returnResult()
+                .responseBody!!
+
         return response.id
     }
-    
+
     /**
      * Gets test workout stage type display name (workout stage types are pre-populated in database).
      */
-    fun createTestWorkoutStageType(webTestClient: WebTestClient, name: WorkoutStageTypeEnum = WorkoutStageTypeEnum.WARMUP): String {
+    fun createTestWorkoutStageType(
+        webTestClient: WebTestClient,
+        name: WorkoutStageTypeEnum = WorkoutStageTypeEnum.WARMUP
+    ): String {
         // Workout stage types are pre-populated in the database by BaseIntegrationTest
         return name.displayName
     }
@@ -388,7 +411,11 @@ object IntegrationTestHelpers {
      *
      * Note: Only adds each equipment once per user. If a test adds 'power bar' or 'bench' separately, do not add it again here.
      */
-    fun createAllReferenceDataForUser(webTestClient: WebTestClient, userId: Int, programDaysPerWeek: Int = 3) {
+    fun createAllReferenceDataForUser(
+        webTestClient: WebTestClient,
+        userId: Int,
+        programDaysPerWeek: Int = 3
+    ) {
         // Equipment and exercises already exist in migrations
         createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek)
         // Only add each equipment once per user
@@ -403,4 +430,4 @@ object IntegrationTestHelpers {
         createTestUserOneRepMax(webTestClient, userId, "Deadlift")
         createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat")
     }
-} 
+}

@@ -2,7 +2,6 @@ package com.congen
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 
@@ -20,7 +19,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should save user equipment`() {
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
-        
+
         // Verify the user equipment was created correctly
         webTestClient.get()
             .uri("/user_equipment/$userId")
@@ -46,7 +45,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should delete user equipment`() {
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
-        
+
         // Delete the user equipment using the correct endpoint format
         val createdAt = java.time.Instant.now().toString()
         val jsonBody = """{"user_id":$userId,"equipment_name":"${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}","created_at":"$createdAt"}"""
