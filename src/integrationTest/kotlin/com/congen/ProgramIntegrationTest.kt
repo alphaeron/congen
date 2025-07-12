@@ -14,7 +14,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should create program`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         webTestClient.post()
-            .uri("/program/?userId=$userId&name=${IntegrationTestHelpers.TEST_PROGRAM_NAME}&currentWeekNumber=1")
+            .uri("/program/?userId=$userId&name=${IntegrationTestHelpers.TEST_PROGRAM_NAME}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -30,8 +30,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             IntegrationTestHelpers.createTestProgram(
                 webTestClient,
                 userId,
-                name = IntegrationTestHelpers.TEST_PROGRAM_NAME,
-                currentWeekNumber = 1
+                name = IntegrationTestHelpers.TEST_PROGRAM_NAME
             )
         webTestClient.get()
             .uri("/program/$programId")
@@ -57,7 +56,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get all programs`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME)
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Another Program")
         webTestClient.get()
             .uri("/program/")
@@ -73,7 +72,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
 
         // First create a program
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME, 1)
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME)
 
         // Then update it
         webTestClient.patch()
@@ -102,8 +101,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             IntegrationTestHelpers.createTestProgram(
                 webTestClient,
                 userId,
-                name = IntegrationTestHelpers.TEST_PROGRAM_NAME,
-                currentWeekNumber = 1
+                name = IntegrationTestHelpers.TEST_PROGRAM_NAME
             )
         webTestClient.delete()
             .uri("/program/$programId")

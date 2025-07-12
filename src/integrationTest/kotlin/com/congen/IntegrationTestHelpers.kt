@@ -109,12 +109,11 @@ object IntegrationTestHelpers {
     fun createTestProgram(
         webTestClient: WebTestClient,
         userId: Int,
-        name: String = TEST_PROGRAM_NAME,
-        currentWeekNumber: Int = 1
+        name: String = TEST_PROGRAM_NAME
     ): Long {
         val response =
             webTestClient.post()
-                .uri("/program/?userId=$userId&name=$name&currentWeekNumber=$currentWeekNumber")
+                .uri("/program/?userId=$userId&name=$name")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -250,29 +249,6 @@ object IntegrationTestHelpers {
                 .responseBody!!
 
         return response.id
-    }
-
-    /**
-     * Creates a test user and program preferences, then generates a conjugate program.
-     */
-    fun createTestUserWithConjugateProgram(
-        webTestClient: WebTestClient,
-        userName: String = "Test User",
-        programDaysPerWeek: Int = 3
-    ): Pair<Int, Program> {
-        val userId = createTestUserWithId(webTestClient, userName)
-        createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek)
-
-        val programResponse =
-            webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Program::class.java)
-                .returnResult()
-                .responseBody!!
-
-        return Pair(userId, programResponse)
     }
 
     /**

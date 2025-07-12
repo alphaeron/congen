@@ -2,14 +2,9 @@ Active program
 
 Only get the latest program for a user.
 
-Pass program id to generator
-
 Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
 
 If muscle imbalance, prefer unilateral accessories
-
-only update current_week_number in program, don't create a whole new program each time we make a new week of workouts.
-Can you get currentWeekNumber from the database too, instead of taking it as a parameter?  For example, by looking at the number of workouts a user has had in the past in their current program.
 
 fix weight rounding issue / handle input units for weights (do all calculations in kg, but support outputting in lbs or kgs).
 
@@ -24,8 +19,6 @@ band weight for de exercises.
 put generateWorkoutsForWeek in the template itself.
 
 2 or 3 week conjugate generation
-
-default current week number 1 1 in program controller?
 
 use same workout stages across all programs
 

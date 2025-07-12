@@ -102,9 +102,12 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Create all reference data (exercises, equipment, etc.) before generating workouts
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userResponse.id, 3)
 
+        // Create a program first
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userResponse.id, "Test Program")
+
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/$programId")
             .exchange()
             .expectStatus().isOk()
 
@@ -121,9 +124,12 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Create all reference data (exercises, equipment, etc.) before generating workouts
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userResponse.id, 3)
 
+        // Create a program first
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userResponse.id, "Test Program")
+
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/$programId")
             .exchange()
             .expectStatus().isOk()
 
@@ -146,9 +152,12 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Create all reference data (exercises, equipment, etc.) before generating workouts
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userResponse.id, 4)
 
+        // Create a program first
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userResponse.id, "Test Program")
+
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate_workout_generator/${userResponse.id}/generate")
+            .uri("/conjugate_workout_generator/$programId")
             .exchange()
             .expectStatus().isOk()
 

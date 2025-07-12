@@ -45,8 +45,8 @@ import reactor.core.publisher.Mono
  *
  * ## Program Structure
  *
- * - **2-day programs**: Condensed conjugate approach (Phil Daru method)
- * - **3-day programs**: Traditional conjugate with ME/DE/accessory split
+ * - **2-day programs**: DE+ME same day, alternating lower and upper
+ * - **3-day programs**: same as 2-day programs, but with an additional full body DE day
  * - **4-day programs**: Extended conjugate with additional volume
  *
  * ## Exercise Categories
@@ -93,44 +93,49 @@ class ConjugateWorkoutGeneratorService(
     }
 
     /**
-     * Generates the next week of workouts for a user's conjugate powerlifting program.
+     * Generates the next week of workouts for an existing conjugate powerlifting program.
      *
-     * This method creates a complete week of workouts based on the conjugate method,
+     * This method generates a complete week of workouts for an existing program based on the conjugate method,
      * incorporating user preferences, available equipment, and exercise rotation history.
      *
-     * @param userId The ID of the user
-     * @param currentWeekNumber The current week number in the program
-     * @return Mono containing the generated program with workouts
+     * @param programId The ID of the existing program
+     * @return Mono containing the updated program with new workouts
      * @throws com.congen.exceptions.ValidationException if the user's program contains an invalid number of days/week
+     * @throws com.congen.exceptions.NoResultsFoundException if the program is not found
      */
-    fun generateNextWeek(
-        userId: Int,
-        currentWeekNumber: Int
-    ): Mono<Program> {
-        logger.info("Generating week {} for user {}", currentWeekNumber, userId)
+    fun generateNextWeek(programId: Long): Mono<Program> {
+        logger.info("Generating next week for program {}", programId)
 
-        return Mono.zip(
-            exerciseDAL.selectExercises(),
-            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId),
-            userEquipmentDAL.selectUserEquipmentByUser(userId),
-            userOneRepMaxDAL.selectUserOneRepMaxByUser(userId),
-            userProgramPreferencesDAL.selectUserProgramPreferences(userId),
-            exerciseRotationHistoryDAL.selectAll()
-        ).flatMap { tuple ->
-            val exercises = tuple.t1
-            val preferences = tuple.t2
-            val userEquipment = tuple.t3
-            val oneRepMaxes = tuple.t4
-            val programPreferences = tuple.t5
-            val rotationHistory = tuple.t6
-            val numDaysPerWeek = programPreferences.programDaysPerWeek
+        return programDAL.selectProgramById(programId)
+            .flatMap { program ->
+                Mono.zip(
+                    exerciseDAL.selectExercises(),
+                    userExercisePreferenceDAL.selectUserExercisePreferencesByUser(program.userId),
+                    userEquipmentDAL.selectUserEquipmentByUser(program.userId),
+                    userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId),
+                    userProgramPreferencesDAL.selectUserProgramPreferences(program.userId),
+                    exerciseRotationHistoryDAL.selectAll()
+                ).flatMap { tuple ->
+                    val exercises = tuple.t1
+                    val preferences = tuple.t2
+                    val userEquipment = tuple.t3
+                    val oneRepMaxes = tuple.t4
+                    val programPreferences = tuple.t5
+                    val rotationHistory = tuple.t6
 
-            ValidationUtil.validateProgramDaysPerWeek(numDaysPerWeek)
-            val template = conjugateTemplates.selectTemplate(numDaysPerWeek)
-            val weakMuscles = exerciseSelectionService.determineWeakMuscles(oneRepMaxes, rotationHistory)
+                    // Get the next week number from the program
+                    val nextWeekNumber = program.currentWeekNumber + 1
 
-            createProgram(userId, currentWeekNumber, numDaysPerWeek)
-                .flatMap { program ->
+                    // Validate program days per week
+                    ValidationUtil.validateProgramDaysPerWeek(programPreferences.programDaysPerWeek)
+
+                    // Get conjugate template based on program days per week
+                    val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
+
+                    // Determine weak muscles based on user preferences and history
+                    val weakMuscles = exerciseSelectionService.determineWeakMuscles(oneRepMaxes, rotationHistory)
+
+                    // Generate workouts for the week
                     generateWorkoutsForWeek(
                         program = program,
                         exercises = exercises,
@@ -141,22 +146,16 @@ class ConjugateWorkoutGeneratorService(
                         rotationHistory = rotationHistory,
                         template = template,
                         weakMuscles = weakMuscles,
-                        currentWeekNumber = currentWeekNumber
-                    ).thenReturn(program)
+                        currentWeekNumber = nextWeekNumber
+                    ).then(
+                        programDAL.updateProgram(
+                            id = program.id,
+                            name = "Conjugate Powerlifting - Week $nextWeekNumber",
+                            currentWeekNumber = nextWeekNumber
+                        )
+                    )
                 }
-        }
-    }
-
-    /**
-     * Creates a new program for the user.
-     */
-    private fun createProgram(
-        userId: Int,
-        currentWeekNumber: Int,
-        numDaysPerWeek: Int
-    ): Mono<Program> {
-        val programName = "Conjugate Powerlifting - Week $currentWeekNumber"
-        return programDAL.insertProgram(userId, programName, currentWeekNumber)
+            }
     }
 
     /**
@@ -193,7 +192,8 @@ class ConjugateWorkoutGeneratorService(
                             programPreferences = programPreferences,
                             rotationHistory = rotationHistory,
                             weakMuscles = weakMuscles,
-                            currentWeekNumber = currentWeekNumber
+                            currentWeekNumber = currentWeekNumber,
+                            userId = program.userId
                         )
                     }
             }
@@ -213,14 +213,15 @@ class ConjugateWorkoutGeneratorService(
         programPreferences: UserProgramPreferences,
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
-        currentWeekNumber: Int
+        currentWeekNumber: Int,
+        userId: Int
     ): Mono<Void> {
         var stagePosition = 1
 
         // Primary movement stage (ME or DE exercise)
         val primaryExercise =
             exerciseSelectionService.selectRotatingExercise(
-                userId = workout.programId.toInt(), // Using program ID as user ID for now
+                userId = userId,
                 targetMuscles = weakMuscles,
                 userEquipment = userEquipment,
                 preferences = preferences,
@@ -234,7 +235,7 @@ class ConjugateWorkoutGeneratorService(
         val primarySetSchemes: List<SetSchemeParams> =
             if (primaryExercise != null) {
                 workoutStageGenerator.generatePrilepinBasedScheme(
-                    userId = workout.programId.toInt(),
+                    userId = userId,
                     exercise = primaryExercise,
                     movementRole = "primary",
                     dayType = dayTemplate.type,
@@ -249,7 +250,7 @@ class ConjugateWorkoutGeneratorService(
         val secondaryExercise =
             if (conjugateTemplates.hasSecondaryMovement(dayTemplate.type)) {
                 exerciseSelectionService.selectRotatingExercise(
-                    userId = workout.programId.toInt(),
+                    userId = userId,
                     targetMuscles = weakMuscles,
                     userEquipment = userEquipment,
                     preferences = preferences,
@@ -270,7 +271,7 @@ class ConjugateWorkoutGeneratorService(
         val secondarySetSchemes: List<SetSchemeParams> =
             if (secondaryExercise != null) {
                 workoutStageGenerator.generateSecondaryExerciseScheme(
-                    userId = workout.programId.toInt(),
+                    userId = userId,
                     exercise = secondaryExercise,
                     oneRepMaxes = oneRepMaxes
                 )
@@ -325,7 +326,7 @@ class ConjugateWorkoutGeneratorService(
             (0 until numAccessoryExercises).map { accessoryIndex ->
                 val accessoryExercise =
                     exerciseSelectionService.selectRotatingExercise(
-                        userId = workout.programId.toInt(),
+                        userId = userId,
                         targetMuscles = weakMuscles,
                         userEquipment = userEquipment,
                         preferences = preferences,
@@ -346,7 +347,7 @@ class ConjugateWorkoutGeneratorService(
                                 .flatMap { accessoryProgrammedExercise ->
                                     val accessoryScheme =
                                         workoutStageGenerator.generatePrilepinBasedScheme(
-                                            userId = workout.programId.toInt(),
+                                            userId = userId,
                                             exercise = accessoryExercise,
                                             movementRole = "accessory",
                                             dayType = dayTemplate.type,
@@ -366,7 +367,7 @@ class ConjugateWorkoutGeneratorService(
             if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
                 val conditioningExercise =
                     exerciseSelectionService.selectRotatingExercise(
-                        userId = workout.programId.toInt(),
+                        userId = userId,
                         targetMuscles = listOf("full_body"),
                         userEquipment = userEquipment,
                         preferences = preferences,
@@ -387,7 +388,7 @@ class ConjugateWorkoutGeneratorService(
                                 .flatMap { conditioningProgrammedExercise ->
                                     val conditioningScheme =
                                         workoutStageGenerator.generateAmrapOrEmomScheme(
-                                            userId = workout.programId.toInt(),
+                                            userId = userId,
                                             exercise = conditioningExercise,
                                             oneRepMaxes = oneRepMaxes
                                         )
@@ -414,7 +415,7 @@ class ConjugateWorkoutGeneratorService(
         if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
             val conditioningExercise =
                 exerciseSelectionService.selectRotatingExercise(
-                    userId = workout.programId.toInt(),
+                    userId = userId,
                     targetMuscles = listOf("full_body"),
                     userEquipment = userEquipment,
                     preferences = preferences,

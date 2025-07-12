@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 
 class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     private var userId: Int = 0
+    private var programId: Long = 0
 
     @BeforeEach
     override fun setUp() {
@@ -13,6 +14,8 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create a unique user for each test
         val unique = System.nanoTime()
         userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
+        // Always create a program for the user for each test
+        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique")
     }
 
     @Test
@@ -20,14 +23,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
                 .returnResult()
                 .responseBody!!
         assert(programResponse.userId == userId)
-        assert(programResponse.name.contains("Week 1"))
+        assert(programResponse.id == programId)
+        assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/programmed_workout/program/${programResponse.id}")
             .exchange()
@@ -42,14 +46,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2)
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
                 .returnResult()
                 .responseBody!!
         assert(programResponse.userId == userId)
-        assert(programResponse.name.contains("Week 1"))
+        assert(programResponse.id == programId)
+        assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/programmed_workout/program/${programResponse.id}")
             .exchange()
@@ -64,14 +69,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4)
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
                 .returnResult()
                 .responseBody!!
         assert(programResponse.userId == userId)
-        assert(programResponse.name.contains("Week 1"))
+        assert(programResponse.id == programId)
+        assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/programmed_workout/program/${programResponse.id}")
             .exchange()
@@ -95,29 +101,18 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should handle invalid currentWeekNumber parameter`() {
-        // Create user program preferences
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
-
-        // When & Then - Try to generate with invalid week number
+    fun `should handle non-existent program`() {
+        // When & Then - Try to generate for non-existent program
         webTestClient.post()
-            .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=0")
-            .exchange()
-            .expectStatus().isBadRequest()
-    }
-
-    @Test
-    fun `should handle non-existent user`() {
-        // When & Then - Try to generate for non-existent user
-        webTestClient.post()
-            .uri("/conjugate_workout_generator/99999/generate?currentWeekNumber=1")
+            .uri("/conjugate_workout_generator/999999/generate")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should generate workout with user exercise preferences`() {
-        // Create user program preferences
+        // Already created in setUp or not needed here
+        // Create user program preferences (required for workout generation)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
 
         // Exercises already exist in migrations
@@ -136,7 +131,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -145,11 +140,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)
+        assert(programResponse.id == programId)
     }
 
     @Test
     fun `should generate workout with user equipment`() {
-        // Create user program preferences
+        // Already created in setUp or not needed here
+        // Create user program preferences (required for workout generation)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
 
         // Equipment already exists in migrations
@@ -160,7 +157,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -169,11 +166,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)
+        assert(programResponse.id == programId)
     }
 
     @Test
     fun `should generate workout with user one rep max data`() {
-        // Create user program preferences
+        // Already created in setUp or not needed here
+        // Create user program preferences (required for workout generation)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
 
         // Exercises already exist in migrations
@@ -185,7 +184,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -194,6 +193,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)
+        assert(programResponse.id == programId)
     }
 
     @Test
@@ -207,7 +207,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$userId/generate?currentWeekNumber=1")
+                .uri("/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -216,5 +216,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Then - Verify program was created
         assert(programResponse.userId == userId)
+        assert(programResponse.id == programId)
     }
 }

@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.ValidationException
 import com.congen.model.Program
 import com.congen.service.ConjugateWorkoutGeneratorService
 import org.junit.jupiter.api.BeforeEach
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.never
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
@@ -30,10 +30,7 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     companion object {
         private const val USER_ID = 123
-        private const val INVALID_USER_ID = 999
         private const val CURRENT_WEEK = 1
-        private const val INVALID_WEEK_ZERO = 0
-        private const val INVALID_WEEK_NEGATIVE = -1
         private const val PROGRAM_ID = 1L
         private const val PROGRAM_NAME = "Conjugate Powerlifting - Week 1"
     }
@@ -53,86 +50,45 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should generate workout program successfully`() {
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any(), any()))
+        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.just(testProgram))
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(testProgram))
             .verifyComplete()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(USER_ID, CURRENT_WEEK)
+        verify(conjugateWorkoutGeneratorService).generateNextWeek(PROGRAM_ID)
     }
 
     @Test
-    fun `generateNextWeek should use default week number when not provided`() {
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any(), any()))
-            .thenReturn(Mono.just(testProgram))
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, CURRENT_WEEK)
+    fun `generateNextWeek should return 404 when program not found`() {
+        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
+            .thenReturn(Mono.error(NoResultsFoundException("Program not found")))
+        val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testProgram))
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(USER_ID, CURRENT_WEEK)
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
+        verify(conjugateWorkoutGeneratorService).generateNextWeek(PROGRAM_ID)
     }
 
     @Test
-    fun `generateNextWeek should return bad request for invalid week number`() {
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, INVALID_WEEK_ZERO)
+    fun `generateNextWeek should return 422 for validation error`() {
+        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
+            .thenReturn(Mono.error(ValidationException("Invalid program parameters")))
+        val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.badRequest().build())
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService, never()).generateNextWeek(USER_ID, INVALID_WEEK_ZERO)
+            .expectError(ValidationException::class.java)
+            .verify()
+        verify(conjugateWorkoutGeneratorService).generateNextWeek(PROGRAM_ID)
     }
 
     @Test
-    fun `generateNextWeek should return bad request for negative week number`() {
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, INVALID_WEEK_NEGATIVE)
+    fun `generateNextWeek should return 500 for unexpected error`() {
+        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
+            .thenReturn(Mono.error(RuntimeException("Unexpected error")))
+        val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.badRequest().build())
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService, never()).generateNextWeek(USER_ID, INVALID_WEEK_NEGATIVE)
-    }
-
-    @Test
-    fun `generateNextWeek should return 404 when user not found`() {
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any(), any()))
-            .thenReturn(Mono.error(NoResultsFoundException("User not found")))
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(INVALID_USER_ID, CURRENT_WEEK)
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(INVALID_USER_ID, CURRENT_WEEK)
-    }
-
-    @Test
-    fun `generateNextWeek should return bad request for IllegalArgumentException`() {
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any(), any()))
-            .thenReturn(Mono.error(IllegalArgumentException("Invalid parameters")))
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, CURRENT_WEEK)
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.badRequest().build())
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(USER_ID, CURRENT_WEEK)
-    }
-
-    @Test
-    fun `generateNextWeek should return unprocessable entity for other errors`() {
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any(), any()))
-            .thenReturn(Mono.error(RuntimeException("Generation failed")))
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, CURRENT_WEEK)
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.unprocessableEntity().build())
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(USER_ID, CURRENT_WEEK)
-    }
-
-    @Test
-    fun `generateNextWeek should handle service error`() {
-        val error = RuntimeException("Database error")
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any(), any()))
-            .thenReturn(Mono.error(error))
-        val result = conjugateWorkoutGeneratorController.generateNextWeek(USER_ID, CURRENT_WEEK)
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.unprocessableEntity().build())
-            .verifyComplete()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(USER_ID, CURRENT_WEEK)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(conjugateWorkoutGeneratorService).generateNextWeek(PROGRAM_ID)
     }
 }

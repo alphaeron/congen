@@ -239,7 +239,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -259,7 +259,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -287,7 +287,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -310,7 +310,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -330,7 +330,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -350,7 +350,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -367,9 +367,10 @@ class ConjugateWorkoutGeneratorServiceTest {
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, null)
+        whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
         whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
@@ -389,7 +390,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -409,7 +410,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -429,7 +430,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -454,7 +455,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -474,7 +475,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -494,7 +495,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
         setupWorkoutMocks()
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectNext(program)
@@ -511,8 +512,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, null)
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(USER_ID, CURRENT_WEEK)
+        whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
@@ -534,7 +535,10 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        program?.let { whenever(programDAL.insertProgram(any(), any(), any())).thenReturn(Mono.just(it)) }
+        if (program != null) {
+            whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
+            whenever(programDAL.updateProgram(any(), any(), any())).thenReturn(Mono.just(program))
+        }
     }
 
     private fun setupWorkoutMocks() {

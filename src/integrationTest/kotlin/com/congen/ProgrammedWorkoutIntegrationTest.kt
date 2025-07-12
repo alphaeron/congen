@@ -18,7 +18,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         // Always create a valid user and program for each test
         userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = programName, currentWeekNumber = 1)
+        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = programName)
     }
 
     @Test
@@ -81,7 +81,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     fun `should get programmed workouts by program id`() {
         // Create a second program for this test
         val userId2 = IntegrationTestHelpers.createTestUser(webTestClient)
-        val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId2, name = "Test Program 2", currentWeekNumber = 1)
+        val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId2, name = "Test Program 2")
 
         // First create multiple workouts for the same program
         IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId2, dayNumber = 1, name = "Workout 1")
@@ -126,7 +126,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     fun `should update programmed workout`() {
         // Create a third program for this test
         val userId3 = IntegrationTestHelpers.createTestUser(webTestClient)
-        val programId3 = IntegrationTestHelpers.createTestProgram(webTestClient, userId3, name = "Test Program 3", currentWeekNumber = 1)
+        val programId3 = IntegrationTestHelpers.createTestProgram(webTestClient, userId3, name = "Test Program 3")
 
         // First create a programmed workout
         val workoutResponse =

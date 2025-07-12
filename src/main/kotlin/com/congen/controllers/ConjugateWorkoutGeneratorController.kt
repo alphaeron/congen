@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.ValidationException
 import com.congen.model.Program
 import com.congen.service.ConjugateWorkoutGeneratorService
 import io.swagger.v3.oas.annotations.Operation
@@ -14,42 +15,27 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 /**
- * REST controller for conjugate workout program generation.
+ * Controller for generating conjugate workout programs.
  *
- * This controller provides endpoints for generating conjugate powerlifting workout programs
- * based on the Westside Barbell methodology, incorporating user preferences, available
- * equipment, and exercise rotation history.
- *
- * ## Conjugate Method
- *
- * The conjugate method is a powerlifting training system developed by Louie Simmons
- * at Westside Barbell. It combines:
- * - **Max Effort (ME)**: Heavy singles, doubles, or triples at 85-92% 1RM
- * - **Dynamic Effort (DE)**: Speed work at 60-70% 1RM with explosive intent
- * - **Accessory Work**: Targeted muscle development and weak point training
- * - **Exercise Rotation**: Prevent accommodation by rotating exercises every 1-3 weeks
- *
- * ## Program Options
- *
- * - **2-day programs**: Condensed conjugate approach (Phil Daru method)
- * - **3-day programs**: Traditional conjugate with ME/DE/accessory split
- * - **4-day programs**: Extended conjugate with additional volume
+ * This controller provides endpoints for generating conjugate powerlifting workout programs.
+ * The conjugate method is a training system that rotates exercises to prevent accommodation
+ * and promote continuous strength gains.
  *
  * ## Endpoints
  *
- * - `GET /conjugate_workout_generator/{userId}/generate` - Generate next week of workouts
+ * - **POST /{programId}/generate**: Generate the next week of workouts for an existing program
  *
- * ## Error Handling
+ * ## Features
  *
- * - **400 Bad Request**: When parameters are invalid
- * - **404 Not Found**: When user doesn't exist
- * - **422 Unprocessable Entity**: When generation fails
- * - **500 Internal Server Error**: When database operations fail
+ * - **Program-based Generation**: Works with existing programs instead of creating new ones
+ * - **Automatic Week Progression**: Automatically determines the next week number from the program
+ * - **User Preference Integration**: Incorporates user exercise preferences and equipment
+ * - **Exercise Rotation**: Implements exercise rotation to prevent accommodation
+ * - **Validation**: Comprehensive validation of program parameters
  *
  * @property conjugateWorkoutGeneratorService Service for generating conjugate workout programs
  *
@@ -68,21 +54,22 @@ class ConjugateWorkoutGeneratorController(
     }
 
     /**
-     * Generates the next week of workouts for a user's conjugate powerlifting program.
+     * Generates the next week of workouts for an existing conjugate powerlifting program.
      *
-     * This endpoint creates a complete week of workouts based on the conjugate method,
-     * incorporating user preferences, available equipment, and exercise rotation history.
-     * The generated program includes programmed workouts, workout stages, programmed exercises,
-     * and set schemes with Prilepin-based guidelines.
+     * This endpoint generates a complete week of workouts for an existing program based on the conjugate method.
+     * The week number is automatically determined from the program's current week number and incremented by 1.
      *
-     * @param userId The ID of the user
-     * @param currentWeekNumber The current week number in the program (default: 1)
-     * @return Mono containing the generated program with workouts
+     * @param programId The ID of the existing program to generate workouts for
+     * @return ResponseEntity containing the updated program with new workouts
+     * @throws NoResultsFoundException if the program is not found
+     * @throws ValidationException if the program parameters are invalid
      */
-    @PostMapping("/{userId}/generate")
+    @PostMapping("/{programId}")
     @Operation(
-        summary = "Generate conjugate workout program",
-        description = " Generates the next week of workouts for a user's conjugate powerlifting program."
+        summary = "Generate next week of conjugate workout program",
+        description =
+            "Generates the next week of workouts for an existing conjugate powerlifting program. " +
+                "The week number is automatically determined from the program's current week number."
     )
     @ApiResponses(
         value = [
@@ -92,49 +79,31 @@ class ConjugateWorkoutGeneratorController(
                 content = [Content(mediaType = "application/json")]
             ),
             ApiResponse(
-                responseCode = "400",
-                description = "Invalid parameters"
-            ),
-            ApiResponse(
                 responseCode = "404",
-                description = "User not found"
+                description = "Program not found"
             ),
             ApiResponse(
                 responseCode = "422",
-                description = "Workout generation failed"
-            ),
-            ApiResponse(
-                responseCode = "500",
-                description = "Internal server error"
+                description = "Validation error"
             )
         ]
     )
     fun generateNextWeek(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
-        @Parameter(description = "Current week number in the program", required = false)
-        @RequestParam("currentWeekNumber", defaultValue = "1") currentWeekNumber: Int
+        @Parameter(description = "ID of the program to generate workouts for", required = true)
+        @PathVariable programId: Long
     ): Mono<ResponseEntity<Program>> {
-        logger.info("Generating conjugate workout program for user: {}, week: {}", userId, currentWeekNumber)
+        logger.info("Generating conjugate workout program for program: {}, next week", programId)
 
-        // Validate parameters
-        if (currentWeekNumber < 1) {
-            logger.warn("Invalid currentWeekNumber: {} for user: {}", currentWeekNumber, userId)
-            return Mono.just(ResponseEntity.badRequest().build())
-        }
-
-        return conjugateWorkoutGeneratorService.generateNextWeek(userId, currentWeekNumber)
-            .map { program ->
-                logger.debug("Successfully generated program: {} for user: {}", program.id, userId)
-                ResponseEntity.ok(program)
+        return conjugateWorkoutGeneratorService.generateNextWeek(programId)
+            .map { program -> ResponseEntity.ok(program) }
+            .doOnError(NoResultsFoundException::class.java) { error ->
+                logger.error("Error generating workout program for program: {}", programId, error)
             }
-            .onErrorResume { error ->
-                logger.error("Error generating workout program for user: {}", userId, error)
-                when (error) {
-                    is IllegalArgumentException -> Mono.just(ResponseEntity.badRequest().build())
-                    is NoResultsFoundException -> Mono.just(ResponseEntity.notFound().build())
-                    else -> Mono.just(ResponseEntity.unprocessableEntity().build())
-                }
+            .doOnError(ValidationException::class.java) { error ->
+                logger.error("Validation error generating workout program for program: {}", programId, error)
+            }
+            .doOnError { error ->
+                logger.error("Unexpected error generating workout program for program: {}", programId, error)
             }
     }
 }

@@ -60,12 +60,12 @@ class ProgramControllerTest {
                 updatedAt = Instant.now()
             )
         val savedProgram = program.copy(id = PROGRAM_ID_2)
-        whenever(programDAL.insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, CURRENT_WEEK)).thenReturn(Mono.just(savedProgram))
-        val result = programController.save(USER_ID, CONJUGATE_PROGRAM_NAME, CURRENT_WEEK)
+        whenever(programDAL.insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, 1)).thenReturn(Mono.just(savedProgram))
+        val result = programController.save(USER_ID, CONJUGATE_PROGRAM_NAME)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgram))
             .verifyComplete()
-        verify(programDAL).insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, CURRENT_WEEK)
+        verify(programDAL).insertProgram(USER_ID, CONJUGATE_PROGRAM_NAME, 1)
     }
 
     @Test
