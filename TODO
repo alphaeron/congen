@@ -6,8 +6,6 @@ use snake_case for api values
 
 exercise movement type enum?
 
-reduce duplication in dals (1 base dal with CRUD operations supported, one bean for each sub-controller instantiated with custom queries for the operations?  Still allow additional method definition via subclassing if required though while still supporting crud operations.  only need to test the base class in unit tests then for further simplificaiton.
-
 Only get the latest program for a user.
 
 just put endpoint for user 1rm
