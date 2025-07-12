@@ -1,7 +1,5 @@
 remove compilation warnings + ensure tests pass
 
-parallel integration test execution + ensure tests pass
-
 use snake_case for api values
 
 exercise movement type enum?

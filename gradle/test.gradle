@@ -88,17 +88,6 @@ task integrationTest(type: Test) {
     
     // Don't depend on unit tests
     dependsOn = []
-
-    // Use both the test and integration-test Spring profiles
-    systemProperty 'spring.profiles.active', 'test,integration-test'
-    
-    // Disable JUnit and Spring parallel execution (redundant, but safe)
-    systemProperty 'junit.jupiter.execution.parallel.enabled', 'false'
-    systemProperty 'spring.test.context.parallel.enabled', 'false'
-    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'same_thread'
-    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'same_thread'
-    maxParallelForks = 1
-    forkEvery = 0
 }
 
 // Integration test coverage report

@@ -3,23 +3,16 @@ package com.congen
 import io.vertx.sqlclient.SqlClient
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@ActiveProfiles(profiles = ["test", "integration-test"])
 @SpringBootTest
 @AutoConfigureWebTestClient
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@Execution(ExecutionMode.SAME_THREAD)
 open class BaseIntegrationTest {
     @Autowired
     protected lateinit var webTestClient: WebTestClient

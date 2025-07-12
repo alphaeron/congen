@@ -16,6 +16,9 @@ output-reports:
 
 style:
   active: true
+  UnusedImports:
+    active: true
+    severity: error
 
 comments:
   active: true
