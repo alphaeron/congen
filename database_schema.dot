@@ -1,0 +1,128 @@
+digraph DatabaseSchema {
+    // Graph settings
+    rankdir=TB;
+    node [shape=record, fontname="Arial", fontsize=10];
+    edge [fontname="Arial", fontsize=8];
+    
+    // Color scheme
+    node [style=filled];
+    
+    // Core exercise tables (blue)
+    exercise [fillcolor=lightblue, label="{exercise|name (PK)\l description\l movement_type\l is_unilateral\l is_upper\l is_accessory}"];
+    muscle [fillcolor=lightblue, label="{muscle|name (PK)\l description}"];
+    equipment [fillcolor=lightblue, label="{equipment|name (PK)\l description}"];
+    
+    // Junction tables (light green)
+    exercise_muscle [fillcolor=lightgreen, label="{exercise_muscle|exercise_name (FK)\l muscle_name (FK)}"];
+    exercise_equipment [fillcolor=lightgreen, label="{exercise_equipment|exercise_name (FK)\l equipment_name (FK)}"];
+    exercise_workout_type [fillcolor=lightgreen, label="{exercise_workout_type|exercise_name (FK)\l movement_type\l workout_type}"];
+    
+    // User tables (yellow)
+    user [fillcolor=lightyellow, label="{user|id (PK)\l name\l age\l height\l weight\l created_at\l updated_at}"];
+    user_equipment [fillcolor=lightyellow, label="{user_equipment|user_id (FK)\l equipment_name (FK)\l created_at}"];
+    user_program_preferences [fillcolor=lightyellow, label="{user_program_preferences|user_id (PK, FK)\l program_days_per_week\l session_time_length_in_minutes\l created_at\l updated_at}"];
+    user_exercise_preference [fillcolor=lightyellow, label="{user_exercise_preference|user_id (FK)\l exercise_name (FK)\l should_avoid\l created_at}"];
+    user_one_rep_max [fillcolor=lightyellow, label="{user_one_rep_max|user_id (FK)\l exercise_name (FK)\l one_rep_max\l updated_at}"];
+    user_weight_unit_preference [fillcolor=lightyellow, label="{user_weight_unit_preference|user_id (FK)\l exercise_name (FK)\l preferred_unit\l created_at\l updated_at}"];
+    
+    // Program tables (orange)
+    program [fillcolor=orange, label="{program|id (PK)\l user_id (FK)\l name\l current_week_number\l is_active\l created_at\l updated_at}"];
+    programmed_workout [fillcolor=orange, label="{programmed_workout|id (PK)\l program_id (FK)\l day_number\l name\l created_at\l updated_at}"];
+    
+    // Workout structure tables (pink)
+    workout_stage_type [fillcolor=lightpink, label="{workout_stage_type|id (PK)\l name\l created_at}"];
+    workout_stage [fillcolor=lightpink, label="{workout_stage|id (PK)\l programmed_workout_id (FK)\l stage_type_id (FK)\l position\l name\l created_at\l updated_at}"];
+    programmed_exercise [fillcolor=lightpink, label="{programmed_exercise|id (PK)\l workout_stage_id (FK)\l exercise_name (FK)\l position\l notes\l created_at\l updated_at}"];
+    
+    // Set scheme table (purple)
+    set_scheme [fillcolor=plum, label="{set_scheme|id (PK)\l programmed_exercise_id (FK)\l set_number\l is_amrap\l is_emom\l use_tempo\l eccentric_tempo\l isometric_tempo\l concentric_tempo\l target_weight\l performed_weight\l target_rep_count\l performed_rep_count\l rest_seconds\l created_at\l updated_at}"];
+    
+    // History table (gray)
+    exercise_rotation_history [fillcolor=lightgray, label="{exercise_rotation_history|id (PK)\l user_id (FK)\l exercise_name (FK)\l is_accessory\l created_at}"];
+    
+    // Relationships from exercise
+    exercise -> exercise_muscle [label="1:N"];
+    exercise -> exercise_equipment [label="1:N"];
+    exercise -> exercise_workout_type [label="1:N"];
+    exercise -> user_exercise_preference [label="1:N"];
+    exercise -> user_one_rep_max [label="1:N"];
+    exercise -> user_weight_unit_preference [label="1:N"];
+    exercise -> programmed_exercise [label="1:N"];
+    exercise -> exercise_rotation_history [label="1:N"];
+    
+    // Relationships from muscle
+    muscle -> exercise_muscle [label="1:N"];
+    
+    // Relationships from equipment
+    equipment -> exercise_equipment [label="1:N"];
+    equipment -> user_equipment [label="1:N"];
+    
+    // Relationships from user
+    user -> user_equipment [label="1:N"];
+    user -> user_program_preferences [label="1:1"];
+    user -> user_exercise_preference [label="1:N"];
+    user -> user_one_rep_max [label="1:N"];
+    user -> user_weight_unit_preference [label="1:N"];
+    user -> program [label="1:N"];
+    user -> exercise_rotation_history [label="1:N"];
+    
+    // Relationships from program
+    program -> programmed_workout [label="1:N"];
+    
+    // Relationships from programmed_workout
+    programmed_workout -> workout_stage [label="1:N"];
+    
+    // Relationships from workout_stage_type
+    workout_stage_type -> workout_stage [label="1:N"];
+    
+    // Relationships from workout_stage
+    workout_stage -> programmed_exercise [label="1:N"];
+    
+    // Relationships from programmed_exercise
+    programmed_exercise -> set_scheme [label="1:N"];
+    
+    // Subgraph for better organization
+    subgraph cluster_exercise {
+        label="Exercise Domain";
+        style=filled;
+        color=lightblue;
+        exercise; muscle; equipment;
+        exercise_muscle; exercise_equipment; exercise_workout_type;
+    }
+    
+    subgraph cluster_user {
+        label="User Domain";
+        style=filled;
+        color=lightyellow;
+        user; user_equipment; user_program_preferences;
+        user_exercise_preference; user_one_rep_max; user_weight_unit_preference;
+    }
+    
+    subgraph cluster_program {
+        label="Program Domain";
+        style=filled;
+        color=orange;
+        program; programmed_workout;
+    }
+    
+    subgraph cluster_workout {
+        label="Workout Structure";
+        style=filled;
+        color=lightpink;
+        workout_stage_type; workout_stage; programmed_exercise;
+    }
+    
+    subgraph cluster_sets {
+        label="Set Management";
+        style=filled;
+        color=plum;
+        set_scheme;
+    }
+    
+    subgraph cluster_history {
+        label="History Tracking";
+        style=filled;
+        color=lightgray;
+        exercise_rotation_history;
+    }
+} 
