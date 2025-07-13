@@ -140,6 +140,25 @@ task cleanDocs(type: Delete) {
     }
 }
 
+// Task to generate database schema DOT file from Liquibase migrations
+task generateSchemaDot(type: Exec) {
+    group = 'Documentation'
+    description = 'Generate Graphviz DOT file from Liquibase migrations'
+    
+    commandLine 'bash', 'scripts/generate-schema-dot.sh'
+    
+    doFirst {
+        println "Generating database schema DOT file from Liquibase migrations..."
+    }
+    
+    doLast {
+        println "Database schema DOT file generated!"
+        println "Files created:"
+        println "  - database_schema_auto.dot"
+        println "  - database_schema_auto.png (if Graphviz is installed)"
+    }
+}
+
 // Configure tasks to depend on each other
 generateApiDocs.dependsOn createDocsStructure
 generateOpenApiJson.dependsOn createDocsStructure

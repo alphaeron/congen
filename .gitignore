@@ -24,3 +24,8 @@ bin/
 # Ignore generated documentation
 /docs/
 /build/dokka/
+
+# Ignore database schema documentation generation related files
+schemaspy.jar
+postgresql-jdbc.jar
+.temp_schemaspy_output/
