@@ -1,6 +1,7 @@
 package com.congen
 
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
     @Test
@@ -9,7 +10,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user/?name=Test%20User&age=0&height=175.0&weight=70.0")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("User age must be between 1 and 150, got: 0")
     }
@@ -31,7 +32,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user/?name=Test%20User&age=0&height=0&weight=0")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { errorMessage ->
                 errorMessage.contains("User age must be between 1 and 150")

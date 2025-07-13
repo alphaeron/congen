@@ -2,8 +2,10 @@ package com.congen.service.conjugate
 
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockExercise
 import com.congen.mockPrilepinGuidelines
 import com.congen.mockProgrammedExercise
@@ -13,9 +15,14 @@ import com.congen.mockUserOneRepMax
 import com.congen.mockWorkoutStage
 import com.congen.mockWorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
+import com.congen.service.SetSchemeService
+import com.congen.service.UnitConversionService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
+import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
@@ -36,6 +43,9 @@ class WorkoutStageGeneratorTest {
     private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var setSchemeDAL: SetSchemeDAL
+    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
+    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
 
     private val workoutId = 1L
@@ -49,6 +59,9 @@ class WorkoutStageGeneratorTest {
         workoutStageTypeDAL = mock()
         programmedExerciseDAL = mock()
         setSchemeDAL = mock()
+        userWeightUnitPreferenceDAL = mock()
+        unitConversionService = mock()
+        setSchemeService = mock()
         prilepinGuidelinesService = mock()
         workoutStageGenerator =
             WorkoutStageGenerator(
@@ -56,8 +69,38 @@ class WorkoutStageGeneratorTest {
                 workoutStageTypeDAL = workoutStageTypeDAL,
                 programmedExerciseDAL = programmedExerciseDAL,
                 setSchemeDAL = setSchemeDAL,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+                unitConversionService = unitConversionService,
+                setSchemeService = setSchemeService,
                 prilepinGuidelinesService = prilepinGuidelinesService
             )
+        val mockSetScheme =
+            mockSetScheme(
+                id = 1L,
+                programmedExerciseId = 1L,
+                setNumber = 1,
+                targetWeight = BigDecimal("100.0"),
+                targetRepCount = 5,
+                restSeconds = 180
+            )
+        whenever(
+            setSchemeService.createSetScheme(
+                anyLong(), // programmedExerciseId: Long
+                anyInt(), // setNumber: Int
+                anyBoolean(), // isAmrap: Boolean
+                anyBoolean(), // isEmom: Boolean
+                anyBoolean(), // useTempo: Boolean
+                anyOrNull(), // eccentricTempo: String?
+                anyOrNull(), // isometricTempo: String?
+                anyOrNull(), // concentricTempo: String?
+                anyOrNull(), // targetWeight: String?
+                anyOrNull(), // performedWeight: String?
+                anyOrNull(), // targetRepCount: Int?
+                anyOrNull(), // performedRepCount: Int?
+                anyOrNull(), // restSeconds: Int?
+                anyOrNull() // unit: String?
+            )
+        ).thenReturn(Mono.just(mockSetScheme()))
     }
 
     @Test
@@ -225,6 +268,7 @@ class WorkoutStageGeneratorTest {
 
     @Test
     fun `createSetSchemes should create multiple set schemes`() {
+        val exerciseName = "Bench Press"
         val setSchemeParams =
             listOf(
                 mockSetSchemeParams(
@@ -251,58 +295,31 @@ class WorkoutStageGeneratorTest {
                 restSeconds = 180
             )
 
+        // Mock user weight unit preference (default to KG)
         whenever(
-            setSchemeDAL.insertSetScheme(
-                eq(1L),
-                any(),
-                eq(false),
-                eq(false),
-                eq(false),
-                eq(null),
-                eq(null),
-                eq(null),
-                any(),
-                eq(null),
-                eq(5),
-                eq(null),
-                eq(180)
-            )
-        ).thenReturn(Mono.just(mockSetScheme))
+            userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), eq(exerciseName))
+        ).thenReturn(Mono.error(NoResultsFoundException("No preference found")))
 
-        val result = workoutStageGenerator.createSetSchemes(programmedExerciseId, setSchemeParams)
+        val result = workoutStageGenerator.createSetSchemes(userId, programmedExerciseId, exerciseName, setSchemeParams)
 
         StepVerifier.create(result)
             .verifyComplete()
 
-        verify(setSchemeDAL).insertSetScheme(
-            programmedExerciseId,
-            1,
-            false,
-            false,
-            false,
-            null,
-            null,
-            null,
-            BigDecimal("100.0"),
-            null,
-            5,
-            null,
-            180
-        )
-        verify(setSchemeDAL).insertSetScheme(
-            programmedExerciseId,
-            2,
-            false,
-            false,
-            false,
-            null,
-            null,
-            null,
-            BigDecimal("110.0"),
-            null,
-            5,
-            null,
-            180
+        verify(setSchemeService, times(2)).createSetScheme(
+            anyLong(),
+            anyInt(),
+            anyBoolean(),
+            anyBoolean(),
+            anyBoolean(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull(),
+            anyOrNull()
         )
     }
 

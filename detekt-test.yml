@@ -17,6 +17,9 @@ style:
   UnusedImports:
     active: true
     severity: error
+  WildcardImport:
+    active: true
+    severity: error
 
 comments:
   active: false

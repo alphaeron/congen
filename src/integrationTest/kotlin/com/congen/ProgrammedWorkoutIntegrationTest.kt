@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
@@ -26,7 +27,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/programmed_workout/?programId=$programId&dayNumber=0&name=Test Workout")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Day number must be between 1 and 365, got: 0")
     }
@@ -36,7 +37,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/programmed_workout/?programId=$programId&dayNumber=366&name=Test Workout")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Day number must be between 1 and 365, got: 366")
     }

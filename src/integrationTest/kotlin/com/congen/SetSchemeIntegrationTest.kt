@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class SetSchemeIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
@@ -71,7 +72,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(uri)
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").exists()
     }
@@ -85,7 +86,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(uri)
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Set number must be greater than 0, got: -1")
     }
@@ -99,7 +100,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(uri)
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Target weight must be greater than 0, got: 0")
     }
@@ -113,7 +114,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(uri)
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Target rep count must be between 1 and 1000, got: 0")
     }
@@ -127,7 +128,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(uri)
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Rest seconds must be between 0 and 3600, got: -1")
     }

@@ -16,4 +16,4 @@ package com.congen.exceptions
  * @author Congen Development Team
  * @since 1.0.0
  */
-class ValidationException(message: String) : RuntimeException(message)
+open class ValidationException(message: String) : RuntimeException(message)

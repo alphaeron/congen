@@ -2,6 +2,7 @@ package com.congen
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class UserIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
@@ -23,7 +24,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
                 "/user/?name=$testUserName&age=0&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { error ->
                 assert(error.contains("User age must be between 1 and 150"))
@@ -37,7 +38,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
                 "/user/?name=$testUserName&age=151&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { error ->
                 assert(error.contains("User age must be between 1 and 150"))
@@ -51,7 +52,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
                 "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=0&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { error ->
                 assert(error.contains("User height must be between 0.01 and 300 cm"))
@@ -65,7 +66,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
                 "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=0"
             )
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { error ->
                 assert(error.contains("User weight must be between 0.01 and 1000 kg"))

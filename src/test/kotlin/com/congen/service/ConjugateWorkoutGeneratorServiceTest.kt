@@ -11,6 +11,7 @@ import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.ValidationException
@@ -131,6 +132,9 @@ class ConjugateWorkoutGeneratorServiceTest {
     @Mock
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
 
+    @Mock
+    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
+
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
 
     @BeforeEach
@@ -219,7 +223,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(
             Mono.just(mockProgrammedExercise())
         )
-        whenever(workoutStageGenerator.createSetSchemes(any(), any())).thenReturn(Mono.empty())
+        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
 
         whenever(
             sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(any(), any(), any(), any())

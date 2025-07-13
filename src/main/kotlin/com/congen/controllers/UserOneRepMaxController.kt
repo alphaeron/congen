@@ -1,15 +1,9 @@
 package com.congen.controllers
 
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserOneRepMax
-import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
-import io.swagger.v3.oas.annotations.media.Content
-import io.swagger.v3.oas.annotations.responses.ApiResponse
-import io.swagger.v3.oas.annotations.responses.ApiResponses
-import io.swagger.v3.oas.annotations.tags.Tag
-import org.slf4j.LoggerFactory
+import com.congen.service.UserOneRepMaxService
+import com.congen.util.ValidationUtil
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
 
 /**
  * REST controller for UserOneRepMax entity operations.
@@ -55,181 +50,80 @@ import reactor.core.publisher.Mono
  */
 @RestController
 @RequestMapping("/user_one_rep_max")
-@Tag(
-    name = "User One Rep Max Management",
-    description = "Operations for managing user one rep max values",
-)
 class UserOneRepMaxController(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val userOneRepMaxService: UserOneRepMaxService,
+    private val validationUtil: ValidationUtil
 ) {
-    companion object {
-        /** Logger instance for this class. */
-        private val logger = LoggerFactory.getLogger(UserOneRepMaxController::class.java)
+    /**
+     * Get all one rep max records for a user.
+     *
+     * @param userId The user ID
+     * @param unit Optional unit to convert weights to (kg or lbs)
+     * @return Mono containing list of one rep max records
+     */
+    @GetMapping("/user/{userId}")
+    fun getOneRepMaxesByUserId(
+        @PathVariable userId: Int,
+        @RequestParam(required = false) unit: String?
+    ): Mono<ResponseEntity<List<UserOneRepMax>>> {
+        return userOneRepMaxService.getAllByUser(userId, unit)
+            .map { ResponseEntity.ok(it) }
     }
 
     /**
-     * Creates or updates a user one rep max.
+     * Get a specific one rep max record by user and exercise.
      *
-     * This endpoint performs an upsert operation - if a one rep max exists for the specified user and exercise,
-     * it will be updated; otherwise, a new one rep max will be created.
+     * @param userId The user ID
+     * @param exerciseName The exercise name
+     * @param unit Optional unit to convert weight to (kg or lbs)
+     * @return Mono containing the one rep max record or empty if not found
+     */
+    @GetMapping("/user/{userId}/exercise/{exerciseName}")
+    fun getOneRepMaxByUserAndExercise(
+        @PathVariable userId: Int,
+        @PathVariable exerciseName: String,
+        @RequestParam(required = false) unit: String?
+    ): Mono<ResponseEntity<UserOneRepMax>> {
+        return userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
+            .map { ResponseEntity.ok(it) }
+            .onErrorResume { Mono.just(ResponseEntity.notFound().build()) }
+    }
+
+    /**
+     * Create or update a one rep max record.
      *
-     * @param userId The unique identifier of the user
-     * @param exerciseName The name of the exercise
+     * @param userId The user ID
+     * @param exerciseName The exercise name
      * @param oneRepMax The one rep max weight value
-     * @return ResponseEntity containing the created or updated user one rep max
+     * @param unit The weight unit (kg or lbs)
+     * @return Mono containing the created or updated one rep max record
      */
     @PutMapping("/")
-    @Operation(
-        summary = "Create or update user one rep max",
-        description = "Creates a new user one rep max or updates an existing one (upsert operation).",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "User one rep max created or updated successfully",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun upsert(
-        @Parameter(description = "User ID", required = true)
+    fun upsertOneRepMax(
         @RequestParam userId: Int,
-        @Parameter(description = "Exercise name", required = true)
         @RequestParam exerciseName: String,
-        @Parameter(description = "One rep max weight value", required = true)
-        @RequestParam oneRepMax: java.math.BigDecimal,
-    ): ResponseEntity<*> {
-        logger.info("Upserting user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
-        return ResponseEntity.ok(
-            userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, oneRepMax),
-        )
-    }
-
-    /**
-     * Retrieves all one rep max values for a specific user.
-     *
-     * This endpoint fetches all one rep max values that are associated with the specified user,
-     * returning a list of user-exercise 1RM relationships.
-     *
-     * @param userId The unique identifier of the user
-     * @return Mono containing a list of user one rep max values
-     */
-    @GetMapping("/{userId}")
-    @Operation(
-        summary = "Get all one rep max values for a user",
-        description = "Retrieves all one rep max values for a given user.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "One rep max values retrieved successfully",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun getAllByUser(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
-    ): Mono<ResponseEntity<List<UserOneRepMax>>> {
-        return userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
-            .map {
-                logger.debug("Found {} one rep max values for user: {}", it.size, userId)
-                ResponseEntity.ok(it)
-            }
-            .doOnError { e ->
-                logger.error("Error getting one rep max values for user: {}", userId, e)
-            }
-    }
-
-    /**
-     * Retrieves a specific one rep max for a user and exercise.
-     *
-     * This endpoint fetches the one rep max value for the specified user and exercise.
-     * If no 1RM exists, a 404 error will be returned.
-     *
-     * @param userId The unique identifier of the user
-     * @param exerciseName The name of the exercise
-     * @return Mono containing the user one rep max if found, or 404 if not found
-     */
-    @GetMapping("/{userId}/{exerciseName}")
-    @Operation(
-        summary = "Get one rep max for user and exercise",
-        description = "Retrieves a specific one rep max for a given user and exercise.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "One rep max found",
-                content = [Content(mediaType = "application/json")],
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "One rep max not found",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun getByUserAndExercise(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
-        @Parameter(description = "Exercise name", required = true)
-        @PathVariable("exerciseName") exerciseName: String,
+        @RequestParam oneRepMax: BigDecimal,
+        @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
-        return userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
-            .map {
-                logger.debug("Found one rep max for user: {} and exercise: {}", userId, exerciseName)
-                ResponseEntity.ok(it)
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("One rep max not found for user: {} and exercise: {}", userId, exerciseName)
-                Mono.just(ResponseEntity.notFound().build())
-            }
-            .doOnError { e ->
-                logger.error("Error getting one rep max for user: {} and exercise: {}", userId, exerciseName, e)
-            }
+        return userOneRepMaxService.upsertOneRepMax(userId, exerciseName, oneRepMax, unit)
+            .map { ResponseEntity.ok(it) }
     }
 
     /**
-     * Deletes a user one rep max by user ID and exercise name.
+     * Delete a one rep max record.
      *
-     * This endpoint removes the one rep max for the specified user and exercise.
-     * If no 1RM exists, a 404 error will be returned.
-     *
-     * @param userId The unique identifier of the user
-     * @param exerciseName The name of the exercise
-     * @return ResponseEntity containing the deleted user one rep max
+     * @param userId The user ID
+     * @param exerciseName The exercise name
+     * @return Mono containing ResponseEntity with no content
      */
-    @DeleteMapping("/{userId}/{exerciseName}")
-    @Operation(
-        summary = "Delete user one rep max",
-        description = "Deletes a user one rep max for a given user and exercise.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "User one rep max deleted successfully",
-                content = [Content(mediaType = "application/json")],
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "One rep max not found",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun delete(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
-        @Parameter(description = "Exercise name", required = true)
-        @PathVariable("exerciseName") exerciseName: String,
-    ): ResponseEntity<*> {
-        logger.info("Deleting user one rep max: {} - {}", userId, exerciseName)
-        return ResponseEntity.ok(
-            userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName),
-        )
+    @DeleteMapping("/user/{userId}/exercise/{exerciseName}")
+    fun deleteOneRepMax(
+        @PathVariable userId: Int,
+        @PathVariable exerciseName: String
+    ): Mono<ResponseEntity<Void>> {
+        return userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
+            .map { ResponseEntity.noContent().build<Void>() }
+            .onErrorResume { Mono.just(ResponseEntity.notFound().build()) }
     }
 }

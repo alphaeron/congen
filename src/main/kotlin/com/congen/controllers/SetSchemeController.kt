@@ -79,6 +79,7 @@ class SetSchemeController(
      * @param targetRepCount Target number of repetitions
      * @param performedRepCount Actual number of repetitions completed
      * @param restSeconds Rest period after the set in seconds
+     * @param unit Optional unit for weight values (KG or LBS). Defaults to KG
      * @return Mono containing the created set scheme with generated ID
      */
     @PostMapping("/")
@@ -96,14 +97,9 @@ class SetSchemeController(
         @RequestParam targetRepCount: Int?,
         @RequestParam performedRepCount: Int?,
         @RequestParam restSeconds: Int?,
+        @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<SetScheme>> {
-        logger.info("Saving set scheme for exercise: {}, set: {}", programmedExerciseId, setNumber)
-
-        // Convert String weights to BigDecimal
-        val targetWeightBD = targetWeight?.toBigDecimalOrNull()
-        val performedWeightBD = performedWeight?.toBigDecimalOrNull()
-
-        return setSchemeService.insertSetScheme(
+        return setSchemeService.createSetScheme(
             programmedExerciseId,
             setNumber,
             isAmrap,
@@ -112,19 +108,14 @@ class SetSchemeController(
             eccentricTempo,
             isometricTempo,
             concentricTempo,
-            targetWeightBD,
-            performedWeightBD,
+            targetWeight,
+            performedWeight,
             targetRepCount,
             performedRepCount,
-            restSeconds
+            restSeconds,
+            unit
         )
-            .map { savedScheme ->
-                logger.debug("Saved set scheme with id: {}", savedScheme.id)
-                ResponseEntity.ok(savedScheme)
-            }
-            .doOnError { e ->
-                logger.error("Error saving set scheme for exercise: {}, set: {}", programmedExerciseId, setNumber, e)
-            }
+            .map { setScheme -> ResponseEntity.ok(setScheme) }
     }
 
     /**
@@ -141,13 +132,7 @@ class SetSchemeController(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {
         return setSchemeService.selectSetSchemeById(id)
-            .map { setScheme ->
-                logger.debug("Found set scheme: {}", id)
-                ResponseEntity.ok(setScheme)
-            }
-            .doOnError { e ->
-                logger.error("Error getting set scheme: {}", id, e)
-            }
+            .map { setScheme -> ResponseEntity.ok(setScheme) }
     }
 
     /**
@@ -160,14 +145,8 @@ class SetSchemeController(
      */
     @GetMapping("/")
     fun getAll(): Mono<ResponseEntity<List<SetScheme>>> {
-        logger.debug("Getting all set schemes")
         return setSchemeService.selectSetSchemes()
-            .map { setSchemes ->
-                ResponseEntity.ok(setSchemes)
-            }
-            .doOnError { e ->
-                logger.error("Error getting all set schemes", e)
-            }
+            .map { setSchemes -> ResponseEntity.ok(setSchemes) }
     }
 
     /**
@@ -183,14 +162,8 @@ class SetSchemeController(
     fun getByProgrammedExerciseId(
         @PathVariable("programmedExerciseId") programmedExerciseId: Long,
     ): Mono<ResponseEntity<List<SetScheme>>> {
-        logger.debug("Getting set schemes for programmed exercise: {}", programmedExerciseId)
         return setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
-            .map { setSchemes ->
-                ResponseEntity.ok(setSchemes)
-            }
-            .doOnError { e ->
-                logger.error("Error getting set schemes for programmed exercise: {}", programmedExerciseId, e)
-            }
+            .map { setSchemes -> ResponseEntity.ok(setSchemes) }
     }
 
     /**
@@ -214,6 +187,7 @@ class SetSchemeController(
      * @param targetRepCount The updated target number of repetitions
      * @param performedRepCount The updated actual number of repetitions completed
      * @param restSeconds The updated rest period after the set in seconds
+     * @param unit Optional unit for weight values (KG or LBS). Defaults to KG
      * @return ResponseEntity containing the updated set scheme
      */
     @PatchMapping("/{id}")
@@ -232,14 +206,9 @@ class SetSchemeController(
         @RequestParam targetRepCount: Int?,
         @RequestParam performedRepCount: Int?,
         @RequestParam restSeconds: Int?,
+        @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<SetScheme>> {
-        logger.info("Updating set scheme: {}", id)
-
-        // Convert String weights to BigDecimal
-        val targetWeightBD = targetWeight?.toBigDecimalOrNull()
-        val performedWeightBD = performedWeight?.toBigDecimalOrNull()
-
-        return setSchemeService.updateSetScheme(
+        return setSchemeService.updateSetSchemeWithUnit(
             id,
             programmedExerciseId,
             setNumber,
@@ -249,19 +218,14 @@ class SetSchemeController(
             eccentricTempo,
             isometricTempo,
             concentricTempo,
-            targetWeightBD,
-            performedWeightBD,
+            targetWeight,
+            performedWeight,
             targetRepCount,
             performedRepCount,
-            restSeconds
+            restSeconds,
+            unit
         )
-            .map { updatedScheme ->
-                logger.debug("Updated set scheme: {}", id)
-                ResponseEntity.ok(updatedScheme)
-            }
-            .doOnError { e ->
-                logger.error("Error updating set scheme: {}", id, e)
-            }
+            .map { setScheme -> ResponseEntity.ok(setScheme) }
     }
 
     /**
@@ -277,14 +241,7 @@ class SetSchemeController(
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {
-        logger.info("Deleting set scheme: {}", id)
         return setSchemeService.deleteSetScheme(id)
-            .map { deletedScheme ->
-                logger.debug("Deleted set scheme: {}", id)
-                ResponseEntity.ok(deletedScheme)
-            }
-            .doOnError { e ->
-                logger.error("Error deleting set scheme: {}", id, e)
-            }
+            .map { setScheme -> ResponseEntity.ok(setScheme) }
     }
 }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class WorkoutStageIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
@@ -72,7 +73,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=0&name=Test Stage")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Position must be greater than 0, got: 0")
     }
@@ -93,7 +94,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=-1&name=Test Stage")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").isEqualTo("Position must be greater than 0, got: -1")
     }

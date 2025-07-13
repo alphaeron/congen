@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.exceptions.InvalidResultException
+import com.congen.exceptions.InvalidWeightUnitException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import org.junit.jupiter.api.Test
@@ -64,5 +65,14 @@ class ExceptionHandlingControllerTest {
         // This test verifies that the method is public and accessible
         val exception = ValidationException("Test validation error")
         exceptionHandlingController.handleValidationException(exception)
+    }
+
+    @Test
+    fun `handleInvalidWeightUnitException should return 422 status with error message`() {
+        val errorMessage = "Invalid weight unit: foo. Must be KG or LBS."
+        val exception = InvalidWeightUnitException(errorMessage)
+        val response = exceptionHandlingController.handleInvalidWeightUnitException(exception)
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode)
+        assertEquals(mapOf("error" to errorMessage), response.body)
     }
 }

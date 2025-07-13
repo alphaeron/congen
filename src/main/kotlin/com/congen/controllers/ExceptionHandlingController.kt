@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.exceptions.InvalidResultException
+import com.congen.exceptions.InvalidWeightUnitException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import org.slf4j.LoggerFactory
@@ -97,5 +98,20 @@ public class ExceptionHandlingController {
         return ResponseEntity.status(
             HttpStatus.UNPROCESSABLE_ENTITY,
         ).body(mapOf("error" to (exception.message ?: "Unknown validation error")))
+    }
+
+    /**
+     * Handles InvalidWeightUnitException by returning HTTP 422 Unprocessable Entity.
+     *
+     * This method handles errors when an invalid weight unit is provided in the request.
+     *
+     * @param exception The InvalidWeightUnitException that was thrown
+     * @return ResponseEntity with HTTP 422 status and error details
+     */
+    @ExceptionHandler(InvalidWeightUnitException::class)
+    fun handleInvalidWeightUnitException(exception: InvalidWeightUnitException): ResponseEntity<Map<String, String>> {
+        logger.error("Invalid weight unit: {}", exception.message)
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+            .body(mapOf("error" to (exception.message ?: "Invalid weight unit")))
     }
 }

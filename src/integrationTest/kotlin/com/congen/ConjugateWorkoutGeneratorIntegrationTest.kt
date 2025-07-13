@@ -3,6 +3,7 @@ package com.congen
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     private var userId: Int = 0
@@ -93,7 +94,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error"

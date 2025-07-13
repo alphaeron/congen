@@ -6,6 +6,8 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.SetScheme
+import com.congen.model.WeightUnit
+import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -40,6 +42,7 @@ import java.math.BigDecimal
  * @property programmedExerciseDAL Data access layer for programmed exercise operations
  * @property programDAL Data access layer for program operations
  * @property userOneRepMaxDAL Data access layer for user one rep max operations
+ * @property unitConversionService Service for unit conversions
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -50,6 +53,7 @@ class SetSchemeService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val programDAL: ProgramDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
+    private val unitConversionService: UnitConversionService,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -57,23 +61,29 @@ class SetSchemeService(
     }
 
     /**
-     * Inserts a new set scheme and checks for 1RM updates.
+     * Creates a new set scheme with unit conversion and validation.
      *
-     * This method creates a new set scheme and automatically updates the user's
-     * one rep max if the performed weight exceeds the current 1RM for the exercise.
+     * This method accepts set scheme parameters, validates them, converts weights
+     * to kg for storage, and saves the set scheme to the database. The method
+     * returns the created set scheme with weights converted to the requested unit.
      *
      * @param programmedExerciseId The ID of the programmed exercise this set belongs to
      * @param setNumber The set number within the exercise
-     * @param targetWeight The target weight for this set
-     * @param targetReps The target number of reps for this set
-     * @param targetTempo The target tempo for this set
-     * @param restSeconds The rest period in seconds after this set
-     * @param performedWeight The actual weight performed (optional)
-     * @param performedReps The actual reps performed (optional)
-     * @param performedTempo The actual tempo performed (optional)
-     * @return Mono containing the inserted set scheme
+     * @param isAmrap As Many Reps As Possible flag
+     * @param isEmom Every Minute On the Minute flag
+     * @param useTempo Whether to use tempo timing
+     * @param eccentricTempo Eccentric phase tempo (0-9 seconds)
+     * @param isometricTempo Isometric phase tempo (0-9 seconds)
+     * @param concentricTempo Concentric phase tempo (0-9 seconds)
+     * @param targetWeight Target weight for the set (as string)
+     * @param performedWeight Actual weight used (as string)
+     * @param targetRepCount Target number of repetitions
+     * @param performedRepCount Actual number of repetitions completed
+     * @param restSeconds Rest period after the set in seconds
+     * @param unit The unit of the weight values (KG or LBS). Defaults to KG
+     * @return Mono containing the created set scheme with weights in requested unit
      */
-    fun insertSetScheme(
+    fun createSetScheme(
         programmedExerciseId: Long,
         setNumber: Int,
         isAmrap: Boolean,
@@ -82,13 +92,24 @@ class SetSchemeService(
         eccentricTempo: String?,
         isometricTempo: String?,
         concentricTempo: String?,
-        targetWeight: BigDecimal?,
-        performedWeight: BigDecimal?,
+        targetWeight: String?,
+        performedWeight: String?,
         targetRepCount: Int?,
         performedRepCount: Int?,
         restSeconds: Int?,
+        unit: String?,
     ): Mono<SetScheme> {
-        logger.debug("Inserting set scheme for exercise: {}", programmedExerciseId)
+        logger.info("Creating set scheme for exercise: {}, set: {}", programmedExerciseId, setNumber)
+
+        val weightUnit = WeightUnit.fromString(unit)
+        val targetWeightBD =
+            targetWeight?.toBigDecimalOrNull()?.let {
+                ValidationUtil.validateTargetWeightWithUnit(it, weightUnit, unitConversionService)
+            }
+        val performedWeightBD =
+            performedWeight?.toBigDecimalOrNull()?.let {
+                ValidationUtil.validatePerformedWeightWithUnit(it, weightUnit, unitConversionService)
+            }
 
         return setSchemeDAL.insertSetScheme(
             programmedExerciseId,
@@ -99,12 +120,122 @@ class SetSchemeService(
             eccentricTempo,
             isometricTempo,
             concentricTempo,
-            targetWeight,
-            performedWeight,
+            targetWeightBD,
+            performedWeightBD,
             targetRepCount,
             performedRepCount,
             restSeconds
         )
+            .map { savedScheme ->
+                logger.debug("Created set scheme with id: {}", savedScheme.id)
+                // Convert output weights to requested unit (if not kg)
+                if (unit != null && weightUnit != WeightUnit.KG) {
+                    savedScheme.copy(
+                        targetWeight = savedScheme.targetWeight?.let { unitConversionService.fromKg(it, weightUnit) },
+                        performedWeight = savedScheme.performedWeight?.let { unitConversionService.fromKg(it, weightUnit) }
+                    )
+                } else {
+                    savedScheme
+                }
+            }
+            .doOnError { e ->
+                logger.error("Error creating set scheme for exercise: {}, set: {}", programmedExerciseId, setNumber, e)
+            }
+    }
+
+    /**
+     * Updates an existing set scheme with unit conversion and validation.
+     *
+     * This method updates an existing set scheme, validates the parameters,
+     * converts weights to kg for storage, and returns the updated set scheme
+     * with weights converted to the requested unit.
+     *
+     * @param id The unique identifier of the set scheme to update
+     * @param programmedExerciseId The ID of the programmed exercise this set belongs to
+     * @param setNumber The set number within the exercise
+     * @param isAmrap As Many Reps As Possible flag
+     * @param isEmom Every Minute On the Minute flag
+     * @param useTempo Whether to use tempo timing
+     * @param eccentricTempo Eccentric phase tempo (0-9 seconds)
+     * @param isometricTempo Isometric phase tempo (0-9 seconds)
+     * @param concentricTempo Concentric phase tempo (0-9 seconds)
+     * @param targetWeight Target weight for the set (as string)
+     * @param performedWeight Actual weight used (as string)
+     * @param targetRepCount Target number of repetitions
+     * @param performedRepCount Actual number of repetitions completed
+     * @param restSeconds Rest period after the set in seconds
+     * @param unit The unit of the weight values (KG or LBS). Defaults to KG
+     * @return Mono containing the updated set scheme with weights in requested unit
+     */
+    fun updateSetSchemeWithUnit(
+        id: Long,
+        programmedExerciseId: Long,
+        setNumber: Int,
+        isAmrap: Boolean,
+        isEmom: Boolean,
+        useTempo: Boolean,
+        eccentricTempo: String?,
+        isometricTempo: String?,
+        concentricTempo: String?,
+        targetWeight: String?,
+        performedWeight: String?,
+        targetRepCount: Int?,
+        performedRepCount: Int?,
+        restSeconds: Int?,
+        unit: String?,
+    ): Mono<SetScheme> {
+        logger.info("Updating set scheme: {}", id)
+
+        val weightUnit = WeightUnit.fromString(unit)
+        val targetWeightBD =
+            targetWeight?.toBigDecimalOrNull()?.let {
+                ValidationUtil.validateTargetWeightWithUnit(it, weightUnit, unitConversionService)
+            }
+        val performedWeightBD =
+            performedWeight?.toBigDecimalOrNull()?.let {
+                ValidationUtil.validatePerformedWeightWithUnit(it, weightUnit, unitConversionService)
+            }
+
+        return setSchemeDAL.updateSetScheme(
+            id,
+            programmedExerciseId,
+            setNumber,
+            isAmrap,
+            isEmom,
+            useTempo,
+            eccentricTempo,
+            isometricTempo,
+            concentricTempo,
+            targetWeightBD,
+            performedWeightBD,
+            targetRepCount,
+            performedRepCount,
+            restSeconds
+        )
+            .flatMap { updatedSetScheme ->
+                // Check for 1RM update if the set has a performed weight
+                if (updatedSetScheme.performedWeight != null) {
+                    checkAndUpdateOneRepMax(updatedSetScheme)
+                        .thenReturn(updatedSetScheme)
+                } else {
+                    Mono.just(updatedSetScheme)
+                }
+            }
+            .map { updatedScheme ->
+                logger.debug("Updated set scheme: {}", id)
+                // Convert output weights to requested unit (if not kg)
+                if (unit != null && weightUnit != WeightUnit.KG) {
+                    updatedScheme.copy(
+                        targetWeight = updatedScheme.targetWeight?.let { unitConversionService.fromKg(it, weightUnit) },
+                        performedWeight = updatedScheme.performedWeight?.let { unitConversionService.fromKg(it, weightUnit) }
+                    )
+                } else {
+                    updatedScheme
+                }
+            }
+            .doOnError { e ->
+                logger.error("Error updating set scheme: {}", id, e)
+            }
     }
 
     /**
@@ -184,6 +315,9 @@ class SetSchemeService(
      */
     fun selectSetSchemeById(id: Long): Mono<SetScheme> {
         return setSchemeDAL.selectSetSchemeById(id)
+            .doOnError { e ->
+                logger.error("Error getting set scheme: {}", id, e)
+            }
     }
 
     /**
@@ -195,7 +329,11 @@ class SetSchemeService(
      * @return Mono containing a list of set schemes for the exercise
      */
     fun selectSetSchemesByProgrammedExerciseId(programmedExerciseId: Long): Mono<List<SetScheme>> {
+        logger.debug("Getting set schemes for programmed exercise: {}", programmedExerciseId)
         return setSchemeDAL.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
+            .doOnError { e ->
+                logger.error("Error getting set schemes for programmed exercise: {}", programmedExerciseId, e)
+            }
     }
 
     /**
@@ -206,7 +344,11 @@ class SetSchemeService(
      * @return Mono containing a list of all set schemes
      */
     fun selectSetSchemes(): Mono<List<SetScheme>> {
+        logger.debug("Getting all set schemes")
         return setSchemeDAL.selectSetSchemes()
+            .doOnError { e ->
+                logger.error("Error getting all set schemes", e)
+            }
     }
 
     /**
@@ -218,7 +360,14 @@ class SetSchemeService(
      * @return Mono containing the deleted set scheme
      */
     fun deleteSetScheme(id: Long): Mono<SetScheme> {
+        logger.info("Deleting set scheme: {}", id)
         return setSchemeDAL.deleteSetScheme(id)
+            .doOnSuccess { deletedScheme ->
+                logger.debug("Deleted set scheme: {}", id)
+            }
+            .doOnError { e ->
+                logger.error("Error deleting set scheme: {}", id, e)
+            }
     }
 
     /**

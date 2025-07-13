@@ -1,8 +1,8 @@
-Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
+AEnsure accommodated resistance taken into account.  Check wenning videos for other laws to include too
 
 If muscle imbalance, prefer unilateral accessories
 
-fix weight rounding issue / handle input units for weights (do all calculations in kg, but support outputting in lbs or kgs).
+fix weight rounding issue to nearest plate
 
 Secondary movement selection should pick an exercise simlar to the primary movement.
 

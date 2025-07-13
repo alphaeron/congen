@@ -1,6 +1,13 @@
 package com.congen
 
-import com.congen.model.*
+import com.congen.model.ExerciseRotationHistory
+import com.congen.model.Program
+import com.congen.model.ProgrammedExercise
+import com.congen.model.ProgrammedWorkout
+import com.congen.model.User
+import com.congen.model.UserOneRepMax
+import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -205,12 +212,13 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         exerciseName: String = TEST_EXERCISE_NAME,
-        oneRepMax: Double = 100.0
+        oneRepMax: Double = 100.0,
+        unit: String = "KG"
     ) {
         // Now create the one rep max - use raw exercise name for query parameters
         val bigDecimalValue = java.math.BigDecimal(oneRepMax)
         webTestClient.put()
-            .uri("/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$bigDecimalValue")
+            .uri("/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$bigDecimalValue&unit=$unit")
             .exchange()
             .expectStatus().isOk()
     }
@@ -405,5 +413,84 @@ object IntegrationTestHelpers {
         createTestUserExercisePreference(webTestClient, userId, "Safety Bar Squat", false)
         createTestUserOneRepMax(webTestClient, userId, "Deadlift")
         createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat")
+    }
+
+    /**
+     * Sets a user's weight unit preference for a specific exercise via the API.
+     */
+    fun setUserWeightUnitPreference(
+        webTestClient: WebTestClient,
+        userId: Int,
+        exerciseName: String,
+        preferredUnit: String
+    ) {
+        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
+        webTestClient.put()
+            .uri("/user_weight_unit_preference/?userId=$userId&exerciseName=$encodedExerciseName&preferredUnit=$preferredUnit")
+            .exchange()
+            .expectStatus().isOk()
+    }
+
+    /**
+     * Creates or updates a user's one rep max for a specific exercise, with optional unit.
+     * Returns the created UserOneRepMax object.
+     */
+    fun putUserOneRepMax(
+        webTestClient: WebTestClient,
+        userId: Int,
+        exerciseName: String,
+        oneRepMax: java.math.BigDecimal,
+        unit: String? = null
+    ): UserOneRepMax {
+        val uri = StringBuilder("/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$oneRepMax")
+        if (unit != null) {
+            uri.append("&unit=$unit")
+        }
+        return webTestClient.put()
+            .uri(uri.toString())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(UserOneRepMax::class.java)
+            .returnResult()
+            .responseBody!!
+    }
+
+    /**
+     * Gets a user's one rep max for a specific exercise, with optional unit for conversion.
+     * Returns the UserOneRepMax object.
+     */
+    fun getUserOneRepMax(
+        webTestClient: WebTestClient,
+        userId: Int,
+        exerciseName: String,
+        unit: String? = null
+    ): UserOneRepMax {
+        val uri = StringBuilder("/user_one_rep_max/user/$userId/exercise/$exerciseName")
+        if (unit != null) {
+            uri.append("?unit=$unit")
+        }
+        return webTestClient.get()
+            .uri(uri.toString())
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(UserOneRepMax::class.java)
+            .returnResult()
+            .responseBody!!
+    }
+
+    /**
+     * Gets all one rep maxes for a user, returned as a list.
+     */
+    fun getAllUserOneRepMaxes(
+        webTestClient: WebTestClient,
+        userId: Int
+    ): List<UserOneRepMax> {
+        return webTestClient.get()
+            .uri("/user_one_rep_max/user/$userId")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBodyList(UserOneRepMax::class.java)
+            .returnResult()
+            .responseBody ?: emptyList()
     }
 }

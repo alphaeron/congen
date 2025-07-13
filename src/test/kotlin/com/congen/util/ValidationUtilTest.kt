@@ -1,9 +1,16 @@
 package com.congen.util
 
+import com.congen.exceptions.InvalidWeightUnitException
 import com.congen.exceptions.ValidationException
+import com.congen.model.WeightUnit
+import com.congen.service.UnitConversionService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 import java.math.BigDecimal
 import kotlin.test.assertEquals
 
@@ -360,5 +367,195 @@ class ValidationUtilTest {
                 "To change program frequency, the user must start a new program.",
             exception3.message
         )
+    }
+
+    @Test
+    fun `validateUserWeightWithUnit should pass for valid weights in KG`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        assertDoesNotThrow {
+            ValidationUtil.validateUserWeightWithUnit(BigDecimal("80.5"), WeightUnit.KG, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validateUserWeightWithUnit should pass for valid weights in LBS`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 100 lbs -> 45.36 kg (valid)
+        whenever(mockUnitConversionService.toKg(BigDecimal("100"), WeightUnit.LBS)).thenReturn(BigDecimal("45.36"))
+
+        assertDoesNotThrow {
+            ValidationUtil.validateUserWeightWithUnit(BigDecimal("100"), WeightUnit.LBS, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validateUserWeightWithUnit should throw for invalid unit`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        assertThrows<InvalidWeightUnitException> {
+            WeightUnit.fromString("INVALID")
+        }
+    }
+
+    @Test
+    fun `validateUserWeightWithUnit should throw for weight too high after conversion`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 2500 lbs -> 1134 kg (too high)
+        whenever(mockUnitConversionService.toKg(BigDecimal("2500"), WeightUnit.LBS)).thenReturn(BigDecimal("1134"))
+
+        val exception =
+            assertThrows<ValidationException> {
+                ValidationUtil.validateUserWeightWithUnit(BigDecimal("2500"), WeightUnit.LBS, mockUnitConversionService)
+            }
+        assertEquals("User weight must be between 0.01 and 1000 kg, got: 1134", exception.message)
+    }
+
+    @Test
+    fun `validateOneRepMaxWithUnit should pass for valid one rep max in KG`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        assertDoesNotThrow {
+            ValidationUtil.validateOneRepMaxWithUnit(BigDecimal("200.0"), WeightUnit.KG, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validateOneRepMaxWithUnit should pass for valid one rep max in LBS`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 300 lbs -> 136.08 kg (valid)
+        whenever(mockUnitConversionService.toKg(BigDecimal("300"), WeightUnit.LBS)).thenReturn(BigDecimal("136.08"))
+
+        assertDoesNotThrow {
+            ValidationUtil.validateOneRepMaxWithUnit(BigDecimal("300"), WeightUnit.LBS, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validateOneRepMaxWithUnit should throw for invalid unit`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+
+        val exception =
+            assertThrows<InvalidWeightUnitException> {
+                WeightUnit.fromString("INVALID")
+            }
+        assertEquals("Invalid weight unit: INVALID. Must be KG or LBS.", exception.message)
+    }
+
+    @Test
+    fun `validateOneRepMaxWithUnit should throw for one rep max too high after conversion`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 2500 lbs -> 1134 kg (too high)
+        whenever(mockUnitConversionService.toKg(BigDecimal("2500"), WeightUnit.LBS)).thenReturn(BigDecimal("1134"))
+
+        val exception =
+            assertThrows<ValidationException> {
+                ValidationUtil.validateOneRepMaxWithUnit(BigDecimal("2500"), WeightUnit.LBS, mockUnitConversionService)
+            }
+        assertEquals("One rep max must be between 0.01 and 1000 kg, got: 1134", exception.message)
+    }
+
+    @Test
+    fun `validateTargetWeightWithUnit should pass for valid target weight in KG`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        assertDoesNotThrow {
+            ValidationUtil.validateTargetWeightWithUnit(BigDecimal("100.0"), WeightUnit.KG, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validateTargetWeightWithUnit should pass for valid target weight in LBS`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 150 lbs -> 68.04 kg (valid)
+        whenever(mockUnitConversionService.toKg(BigDecimal("150"), WeightUnit.LBS)).thenReturn(BigDecimal("68.04"))
+
+        assertDoesNotThrow {
+            ValidationUtil.validateTargetWeightWithUnit(BigDecimal("150"), WeightUnit.LBS, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validateTargetWeightWithUnit should pass for null weight`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        val result = ValidationUtil.validateTargetWeightWithUnit(null, WeightUnit.KG, mockUnitConversionService)
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `validateTargetWeightWithUnit should throw for invalid unit`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+
+        val exception =
+            assertThrows<InvalidWeightUnitException> {
+                WeightUnit.fromString("INVALID")
+            }
+        assertEquals("Invalid weight unit: INVALID. Must be KG or LBS.", exception.message)
+    }
+
+    @Test
+    fun `validateTargetWeightWithUnit should throw for target weight too low after conversion`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 0.5 lbs -> 0 kg (too low)
+        whenever(mockUnitConversionService.toKg(BigDecimal("0.5"), WeightUnit.LBS)).thenReturn(BigDecimal.ZERO)
+
+        val exception =
+            assertThrows<ValidationException> {
+                ValidationUtil.validateTargetWeightWithUnit(BigDecimal("0.5"), WeightUnit.LBS, mockUnitConversionService)
+            }
+        assertEquals("Target weight must be greater than 0, got: 0", exception.message)
+    }
+
+    @Test
+    fun `validatePerformedWeightWithUnit should pass for valid performed weight in KG`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        assertDoesNotThrow {
+            ValidationUtil.validatePerformedWeightWithUnit(BigDecimal("95.0"), WeightUnit.KG, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validatePerformedWeightWithUnit should pass for valid performed weight in LBS`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 140 lbs -> 63.50 kg (valid)
+        whenever(mockUnitConversionService.toKg(BigDecimal("140"), WeightUnit.LBS)).thenReturn(BigDecimal("63.50"))
+
+        assertDoesNotThrow {
+            ValidationUtil.validatePerformedWeightWithUnit(BigDecimal("140"), WeightUnit.LBS, mockUnitConversionService)
+        }
+    }
+
+    @Test
+    fun `validatePerformedWeightWithUnit should pass for null weight`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        val result = ValidationUtil.validatePerformedWeightWithUnit(null, WeightUnit.KG, mockUnitConversionService)
+        assertEquals(null, result)
+    }
+
+    @Test
+    fun `validatePerformedWeightWithUnit should throw for invalid unit`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+
+        val exception =
+            assertThrows<InvalidWeightUnitException> {
+                WeightUnit.fromString("INVALID")
+            }
+        assertEquals("Invalid weight unit: INVALID. Must be KG or LBS.", exception.message)
+    }
+
+    @Test
+    fun `validatePerformedWeightWithUnit should throw for performed weight too low after conversion`() {
+        val mockUnitConversionService = createMockUnitConversionService()
+        // Mock conversion: 0.1 lbs -> 0 kg (too low)
+        whenever(mockUnitConversionService.toKg(BigDecimal("0.1"), WeightUnit.LBS)).thenReturn(BigDecimal.ZERO)
+
+        val exception =
+            assertThrows<ValidationException> {
+                ValidationUtil.validatePerformedWeightWithUnit(BigDecimal("0.1"), WeightUnit.LBS, mockUnitConversionService)
+            }
+        assertEquals("Performed weight must be greater than 0, got: 0", exception.message)
+    }
+
+    private fun createMockUnitConversionService(): UnitConversionService {
+        val mockService = mock<UnitConversionService>()
+        // Default behavior: return the same value for KG (no conversion)
+        whenever(mockService.toKg(any(), eq(WeightUnit.KG))).thenAnswer { it.getArgument<BigDecimal>(0) }
+        return mockService
     }
 }

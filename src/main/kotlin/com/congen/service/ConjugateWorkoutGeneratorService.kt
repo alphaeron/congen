@@ -85,7 +85,7 @@ class ConjugateWorkoutGeneratorService(
     private val conjugateTemplates: ConjugateTemplates,
     private val exerciseSelectionService: ExerciseSelectionService,
     private val workoutStageGenerator: WorkoutStageGenerator,
-    private val sessionTimeCalculator: SessionTimeCalculator
+    private val sessionTimeCalculator: SessionTimeCalculator,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -297,7 +297,12 @@ class ConjugateWorkoutGeneratorService(
                     .flatMap { primaryStage ->
                         workoutStageGenerator.createProgrammedExercise(primaryStage.id, primaryExercise.name)
                             .flatMap { primaryProgrammedExercise ->
-                                workoutStageGenerator.createSetSchemes(primaryProgrammedExercise.id, primarySetSchemes)
+                                workoutStageGenerator.createSetSchemes(
+                                    userId,
+                                    primaryProgrammedExercise.id,
+                                    primaryExercise.name,
+                                    primarySetSchemes
+                                )
                             }
                     }
             } else {
@@ -315,7 +320,12 @@ class ConjugateWorkoutGeneratorService(
                     .flatMap { secondaryStage ->
                         workoutStageGenerator.createProgrammedExercise(secondaryStage.id, secondaryExercise.name)
                             .flatMap { secondaryProgrammedExercise ->
-                                workoutStageGenerator.createSetSchemes(secondaryProgrammedExercise.id, secondarySetSchemes)
+                                workoutStageGenerator.createSetSchemes(
+                                    userId,
+                                    secondaryProgrammedExercise.id,
+                                    secondaryExercise.name,
+                                    secondarySetSchemes
+                                )
                             }
                     }
             } else {
@@ -355,7 +365,12 @@ class ConjugateWorkoutGeneratorService(
                                             oneRepMaxes = oneRepMaxes,
                                             currentWeekNumber = currentWeekNumber
                                         )
-                                    workoutStageGenerator.createSetSchemes(accessoryProgrammedExercise.id, accessoryScheme)
+                                    workoutStageGenerator.createSetSchemes(
+                                        userId,
+                                        accessoryProgrammedExercise.id,
+                                        accessoryExercise.name,
+                                        accessoryScheme
+                                    )
                                 }
                         }
                 } else {
@@ -393,7 +408,12 @@ class ConjugateWorkoutGeneratorService(
                                             exercise = conditioningExercise,
                                             oneRepMaxes = oneRepMaxes
                                         )
-                                    workoutStageGenerator.createSetSchemes(conditioningProgrammedExercise.id, conditioningScheme)
+                                    workoutStageGenerator.createSetSchemes(
+                                        userId,
+                                        conditioningProgrammedExercise.id,
+                                        conditioningExercise.name,
+                                        conditioningScheme
+                                    )
                                 }
                         }
                 } else {

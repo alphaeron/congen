@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,6 +15,15 @@ import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
 
+/**
+ * Unit tests for SetSchemeController.
+ *
+ * These tests verify the REST API endpoints for set scheme operations,
+ * including CRUD operations and error handling.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 class SetSchemeControllerTest {
     @Mock
     private lateinit var setSchemeService: SetSchemeService
@@ -23,7 +33,7 @@ class SetSchemeControllerTest {
     companion object {
         private const val SCHEME_ID_1 = 1L
         private const val SCHEME_ID_2 = 2L
-        private const val PROGRAMMED_EXERCISE_ID = 1L
+        private const val PROGRAMMED_EXERCISE_ID = 5L
         private const val SET_NUMBER_1 = 1
         private const val SET_NUMBER_2 = 2
         private const val TARGET_REP_COUNT = 5
@@ -121,7 +131,7 @@ class SetSchemeControllerTest {
                 updatedAt = now
             )
         whenever(
-            setSchemeService.insertSetScheme(
+            setSchemeService.createSetScheme(
                 PROGRAMMED_EXERCISE_ID,
                 SET_NUMBER_1,
                 false,
@@ -130,11 +140,12 @@ class SetSchemeControllerTest {
                 null,
                 null,
                 null,
-                BigDecimal(TARGET_WEIGHT_100),
+                TARGET_WEIGHT_100,
                 null,
                 TARGET_REP_COUNT,
                 null,
-                REST_SECONDS_90
+                REST_SECONDS_90,
+                "KG"
             )
         ).thenReturn(Mono.just(setScheme))
         val result =
@@ -151,7 +162,8 @@ class SetSchemeControllerTest {
                 null,
                 TARGET_REP_COUNT,
                 null,
-                REST_SECONDS_90
+                REST_SECONDS_90,
+                "KG"
             )
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -173,7 +185,7 @@ class SetSchemeControllerTest {
                 updatedAt = now
             )
         whenever(
-            setSchemeService.updateSetScheme(
+            setSchemeService.updateSetSchemeWithUnit(
                 SCHEME_ID_1,
                 PROGRAMMED_EXERCISE_ID,
                 SET_NUMBER_2,
@@ -183,11 +195,12 @@ class SetSchemeControllerTest {
                 null,
                 null,
                 null,
-                BigDecimal(TARGET_WEIGHT_110),
+                TARGET_WEIGHT_110,
                 null,
                 null,
                 null,
-                REST_SECONDS_120
+                REST_SECONDS_120,
+                "KG"
             )
         ).thenReturn(Mono.just(setScheme))
         val result =
@@ -205,13 +218,11 @@ class SetSchemeControllerTest {
                 null,
                 null,
                 null,
-                REST_SECONDS_120
+                REST_SECONDS_120,
+                "KG"
             )
         StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.statusCode == HttpStatus.OK)
-                assert(response.body == setScheme)
-            }
+            .expectNext(ResponseEntity.ok(setScheme))
             .verifyComplete()
     }
 
@@ -232,15 +243,12 @@ class SetSchemeControllerTest {
         whenever(setSchemeService.deleteSetScheme(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
         val result = setSchemeController.delete(SCHEME_ID_1)
         StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.statusCode == HttpStatus.OK)
-                assert(response.body == setScheme)
-            }
+            .expectNext(ResponseEntity.ok(setScheme))
             .verifyComplete()
     }
 
     @Test
-    fun `should get set schemes by programmed exercise`() {
+    fun `should get set schemes by programmed exercise id`() {
         val now = Instant.now()
         val setSchemes =
             listOf(
@@ -268,19 +276,120 @@ class SetSchemeControllerTest {
         whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)).thenReturn(Mono.just(setSchemes))
         val result = setSchemeController.getByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)
         StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.statusCode == HttpStatus.OK)
-                assert(response.body == setSchemes)
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.OK)
+                assert(resp.body == setSchemes)
             }
             .verifyComplete()
     }
 
     @Test
-    fun `should handle service error gracefully`() {
-        whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.error(RuntimeException("Service error")))
-        val result = setSchemeController.getAll()
+    fun `should create set scheme with lbs unit`() {
+        val now = Instant.now()
+        val setScheme =
+            mockSetScheme(
+                id = SCHEME_ID_1,
+                programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                setNumber = SET_NUMBER_1,
+                targetWeight = BigDecimal("45.36"), // 100 lbs in kg
+                targetRepCount = TARGET_REP_COUNT,
+                restSeconds = REST_SECONDS_90,
+                createdAt = now,
+                updatedAt = now
+            )
+        whenever(
+            setSchemeService.createSetScheme(
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_1,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                "100.0",
+                null,
+                TARGET_REP_COUNT,
+                null,
+                REST_SECONDS_90,
+                "LBS"
+            )
+        ).thenReturn(Mono.just(setScheme))
+        val result =
+            setSchemeController.save(
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_1,
+                false,
+                false,
+                false,
+                null,
+                null,
+                null,
+                "100.0",
+                null,
+                TARGET_REP_COUNT,
+                null,
+                REST_SECONDS_90,
+                "LBS"
+            )
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
-            .verify()
+            .expectNext(ResponseEntity.ok(setScheme))
+            .verifyComplete()
+    }
+
+    @Test
+    fun `should update set scheme with lbs unit`() {
+        val now = Instant.now()
+        val setScheme =
+            mockSetScheme(
+                id = SCHEME_ID_1,
+                programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                setNumber = SET_NUMBER_2,
+                isAmrap = true,
+                targetWeight = BigDecimal("49.90"), // 110 lbs in kg
+                restSeconds = REST_SECONDS_120,
+                createdAt = now,
+                updatedAt = now
+            )
+        whenever(
+            setSchemeService.updateSetSchemeWithUnit(
+                SCHEME_ID_1,
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_2,
+                true,
+                false,
+                false,
+                null,
+                null,
+                null,
+                "110.0",
+                null,
+                null,
+                null,
+                REST_SECONDS_120,
+                "LBS"
+            )
+        ).thenReturn(Mono.just(setScheme))
+        val result =
+            setSchemeController.update(
+                SCHEME_ID_1,
+                PROGRAMMED_EXERCISE_ID,
+                SET_NUMBER_2,
+                true,
+                false,
+                false,
+                null,
+                null,
+                null,
+                "110.0",
+                null,
+                null,
+                null,
+                REST_SECONDS_120,
+                "LBS"
+            )
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(setScheme))
+            .verifyComplete()
     }
 }

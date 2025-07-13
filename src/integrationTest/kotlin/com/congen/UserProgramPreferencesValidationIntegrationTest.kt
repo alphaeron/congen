@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
@@ -29,7 +30,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { error ->
                 assert(error.contains("Program days per week must be 2, 3, or 4 days"))
@@ -41,7 +42,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error",
@@ -53,7 +54,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error",
@@ -65,7 +66,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error",
@@ -137,7 +138,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         webTestClient.patch()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error"
@@ -165,7 +166,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         webTestClient.patch()
             .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
-            .expectStatus().isEqualTo(422)
+            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error"

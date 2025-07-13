@@ -1,7 +1,10 @@
 package com.congen.util
 
 import com.congen.exceptions.ValidationException
+import com.congen.model.WeightUnit
+import com.congen.service.UnitConversionService
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 /**
@@ -18,6 +21,7 @@ import java.math.BigDecimal
  * - [validateUserAge] - Validates user age (1-150 years)
  * - [validateUserHeight] - Validates user height (0.01-300 cm)
  * - [validateUserWeight] - Validates user weight (0.01-1000 kg)
+ * - [validateUserWeightWithUnit] - Validates user weight with unit conversion (0.01-1000 kg equivalent)
  *
  * ### Program Preferences Validations
  * - [validateProgramDaysPerWeek] - Validates program days per week (2, 3, or 4)
@@ -32,9 +36,15 @@ import java.math.BigDecimal
  * - [validateTempo] - Validates tempo format (single digit 0-9)
  * - [validateTargetWeight] - Validates target weight (> 0)
  * - [validatePerformedWeight] - Validates performed weight (> 0)
+ * - [validateTargetWeightWithUnit] - Validates target weight with unit conversion (> 0 kg equivalent)
+ * - [validatePerformedWeightWithUnit] - Validates performed weight with unit conversion (> 0 kg equivalent)
  * - [validateTargetRepCount] - Validates target reps (1-1000)
  * - [validatePerformedRepCount] - Validates performed reps (1-1000)
  * - [validateRestSeconds] - Validates rest time (0-3600 seconds)
+ *
+ * ### One Rep Max Validations
+ * - [validateOneRepMax] - Validates one rep max (0.01-1000 kg)
+ * - [validateOneRepMaxWithUnit] - Validates one rep max with unit conversion (0.01-1000 kg equivalent)
  *
  * ## Usage
  *
@@ -43,6 +53,9 @@ import java.math.BigDecimal
  * ValidationUtil.validateUserAge(25)
  * ValidationUtil.validateUserHeight(BigDecimal("175.5"))
  * ValidationUtil.validateUserWeight(BigDecimal("80.0"))
+ *
+ * // Validate with unit conversion
+ * val weightInKg = ValidationUtil.validateUserWeightWithUnit(BigDecimal("176.0"), WeightUnit.LBS, unitConversionService)
  *
  * // Validate program preferences
  * ValidationUtil.validateProgramDaysPerWeek(3)
@@ -58,6 +71,7 @@ import java.math.BigDecimal
  * @author Congen Development Team
  * @since 1.0.0
  */
+@Component
 object ValidationUtil {
     private val logger = LoggerFactory.getLogger(ValidationUtil::class.java)
 
@@ -340,5 +354,84 @@ object ValidationUtil {
             logger.error(message)
             throw ValidationException(message)
         }
+    }
+
+    /**
+     * Validates user weight with unit conversion to ensure it matches DB constraints.
+     * Weight must be > 0 and <= 1000 kg equivalent after conversion.
+     *
+     * @param weight Weight value in the specified unit
+     * @param unit The unit of the weight value
+     * @param unitConversionService Service for unit conversions
+     * @return The weight converted to kg if validation passes
+     * @throws ValidationException if weight is not in valid range after conversion to kg
+     */
+    fun validateUserWeightWithUnit(
+        weight: BigDecimal,
+        unit: WeightUnit,
+        unitConversionService: UnitConversionService
+    ): BigDecimal {
+        val weightInKg = unitConversionService.toKg(weight, unit)
+        validateUserWeight(weightInKg)
+        return weightInKg
+    }
+
+    /**
+     * Validates one rep max value with unit conversion for user_one_rep_max (DB: > 0 and <= 1000 kg equivalent).
+     *
+     * @param oneRepMax One rep max value in the specified unit
+     * @param unit The unit of the one rep max value
+     * @param unitConversionService Service for unit conversions
+     * @return The one rep max converted to kg if validation passes
+     * @throws ValidationException if not in valid range after conversion to kg
+     */
+    fun validateOneRepMaxWithUnit(
+        oneRepMax: BigDecimal,
+        unit: WeightUnit,
+        unitConversionService: UnitConversionService
+    ): BigDecimal {
+        val oneRepMaxInKg = unitConversionService.toKg(oneRepMax, unit)
+        validateOneRepMax(oneRepMaxInKg)
+        return oneRepMaxInKg
+    }
+
+    /**
+     * Validates target weight with unit conversion for set schemes (DB: > 0 kg equivalent).
+     *
+     * @param weight Target weight value in the specified unit, or null
+     * @param unit The unit of the weight value
+     * @param unitConversionService Service for unit conversions
+     * @return The weight converted to kg if validation passes, or null if input was null
+     * @throws ValidationException if not > 0 after conversion to kg
+     */
+    fun validateTargetWeightWithUnit(
+        weight: BigDecimal?,
+        unit: WeightUnit,
+        unitConversionService: UnitConversionService
+    ): BigDecimal? {
+        if (weight == null) return null
+        val weightInKg = unitConversionService.toKg(weight, unit)
+        validateTargetWeight(weightInKg)
+        return weightInKg
+    }
+
+    /**
+     * Validates performed weight with unit conversion for set schemes (DB: > 0 kg equivalent).
+     *
+     * @param weight Performed weight value in the specified unit, or null
+     * @param unit The unit of the weight value
+     * @param unitConversionService Service for unit conversions
+     * @return The weight converted to kg if validation passes, or null if input was null
+     * @throws ValidationException if not > 0 after conversion to kg
+     */
+    fun validatePerformedWeightWithUnit(
+        weight: BigDecimal?,
+        unit: WeightUnit,
+        unitConversionService: UnitConversionService
+    ): BigDecimal? {
+        if (weight == null) return null
+        val weightInKg = unitConversionService.toKg(weight, unit)
+        validatePerformedWeight(weightInKg)
+        return weightInKg
     }
 }

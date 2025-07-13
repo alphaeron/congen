@@ -407,3 +407,61 @@ fun mockPrilepinGuidelines(
         totalReps = totalReps,
         restSeconds = restSeconds
     )
+
+// Weight unit preference helpers
+fun mockUserWeightUnitPreference(
+    userId: Int = 1,
+    exerciseName: String = "Bench Press",
+    preferredUnit: com.congen.model.WeightUnit = com.congen.model.WeightUnit.LBS,
+    createdAt: Instant = sampleInstant(),
+    updatedAt: Instant = sampleInstant()
+): com.congen.model.UserWeightUnitPreference =
+    com.congen.model.UserWeightUnitPreference(
+        userId = userId,
+        exerciseName = exerciseName,
+        preferredUnit = preferredUnit,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+
+// Mock setup helpers for reactive testing
+fun <T : Any> createMockMono(value: T): reactor.core.publisher.Mono<T> = reactor.core.publisher.Mono.just(value)
+
+fun <T : Any> createMockMonoError(exception: Exception): reactor.core.publisher.Mono<T> = reactor.core.publisher.Mono.error(exception)
+
+fun <T : Any> createMockFlux(values: List<T>): reactor.core.publisher.Flux<T> = reactor.core.publisher.Flux.fromIterable(values)
+
+fun <T : Any> createMockFluxEmpty(): reactor.core.publisher.Flux<T> = reactor.core.publisher.Flux.empty()
+
+// Common test assertions for reactive streams
+fun <T : Any> assertMonoSuccess(
+    mono: reactor.core.publisher.Mono<T>,
+    expectedValue: T
+) {
+    reactor.test.StepVerifier.create(mono)
+        .expectNext(expectedValue)
+        .verifyComplete()
+}
+
+fun <T : Any> assertMonoError(
+    mono: reactor.core.publisher.Mono<T>,
+    expectedException: Class<out Exception>
+) {
+    reactor.test.StepVerifier.create(mono)
+        .expectError(expectedException)
+        .verify()
+}
+
+fun <T : Any> assertFluxSuccess(
+    flux: reactor.core.publisher.Flux<T>,
+    expectedValues: List<T>
+) {
+    reactor.test.StepVerifier.create(flux)
+        .expectNextSequence(expectedValues)
+        .verifyComplete()
+}
+
+fun <T : Any> assertFluxEmpty(flux: reactor.core.publisher.Flux<T>) {
+    reactor.test.StepVerifier.create(flux)
+        .verifyComplete()
+}

@@ -2,13 +2,18 @@ package com.congen.service.conjugate
 
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
 import com.congen.model.ProgrammedExercise
 import com.congen.model.UserOneRepMax
+import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum
+import com.congen.service.SetSchemeService
+import com.congen.service.UnitConversionService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -44,6 +49,9 @@ import kotlin.random.Random
  * @property workoutStageTypeDAL Data access layer for workout stage type operations
  * @property programmedExerciseDAL Data access layer for programmed exercise operations
  * @property setSchemeDAL Data access layer for set scheme operations
+ * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preference operations
+ * @property unitConversionService Service for unit conversions
+ * @property setSchemeService Service for set scheme operations
  * @property prilepinGuidelinesService Service for Prilepin-based guidelines
  *
  * @author Congen Development Team
@@ -55,6 +63,9 @@ class WorkoutStageGenerator(
     private val workoutStageTypeDAL: WorkoutStageTypeDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
+    private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
+    private val unitConversionService: UnitConversionService,
+    private val setSchemeService: SetSchemeService,
     private val prilepinGuidelinesService: PrilepinGuidelinesService,
 ) {
     /**
@@ -91,33 +102,52 @@ class WorkoutStageGenerator(
     }
 
     /**
-     * Creates set schemes for a programmed exercise.
+     * Creates set schemes for a programmed exercise with unit conversion based on user preferences.
      *
+     * @param userId The ID of the user (needed for weight unit preferences)
      * @param programmedExerciseId The ID of the programmed exercise
+     * @param exerciseName The name of the exercise (needed for weight unit preferences)
      * @param setSchemeParams List of set scheme parameters to create
      * @return Mono that completes when all set schemes are created
      */
     fun createSetSchemes(
+        userId: Int,
         programmedExerciseId: Long,
+        exerciseName: String,
         setSchemeParams: List<SetSchemeParams>
     ): Mono<Void> {
         return Flux.fromIterable(setSchemeParams)
             .concatMap { params ->
-                setSchemeDAL.insertSetScheme(
-                    programmedExerciseId,
-                    params.setNumber,
-                    params.isAmrap,
-                    params.isEmom,
-                    params.useTempo,
-                    params.eccentricTempo,
-                    params.isometricTempo,
-                    params.concentricTempo,
-                    params.targetWeight,
-                    params.performedWeight,
-                    params.targetRepCount,
-                    params.performedRepCount,
-                    params.restSeconds
-                ).then()
+                // Get user's weight unit preference for this exercise, default to KG if not found
+                val unitMono =
+                    userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
+                        .map { it.preferredUnit.name }
+                        .onErrorResume(NoResultsFoundException::class.java) {
+                            // Default to KG if no preference found
+                            Mono.just(WeightUnit.KG.name)
+                        }
+
+                unitMono.flatMap { unit ->
+                    // Convert target weight to string for the service method
+                    val targetWeightString = params.targetWeight?.toString()
+
+                    setSchemeService.createSetScheme(
+                        programmedExerciseId,
+                        params.setNumber,
+                        params.isAmrap,
+                        params.isEmom,
+                        params.useTempo,
+                        params.eccentricTempo,
+                        params.isometricTempo,
+                        params.concentricTempo,
+                        targetWeightString,
+                        params.performedWeight?.toString(),
+                        params.targetRepCount,
+                        params.performedRepCount,
+                        params.restSeconds,
+                        unit
+                    ).then()
+                }
             }
             .then()
     }

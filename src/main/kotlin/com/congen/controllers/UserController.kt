@@ -1,7 +1,7 @@
 package com.congen.controllers
 
-import com.congen.dal.UserDAL
 import com.congen.model.User
+import com.congen.service.UserService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -59,7 +59,7 @@ import java.math.BigDecimal
     description = "Operations for managing user profiles and preferences",
 )
 class UserController(
-    private val userDAL: UserDAL,
+    private val userService: UserService,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserController::class.java)
@@ -133,15 +133,13 @@ class UserController(
             example = "80.0",
         )
         @RequestParam weight: BigDecimal,
+        @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<User>> {
         logger.info("Saving user: {}", name)
-        return userDAL.insertUser(name, age, height, weight)
+        return userService.createUser(name, age, height, weight, unit)
             .map { savedUser ->
                 logger.debug("Saved user with id: {}", savedUser.id)
                 ResponseEntity.ok(savedUser)
-            }
-            .doOnError { e ->
-                logger.error("Error saving user: {}", name, e)
             }
     }
 
@@ -191,13 +189,10 @@ class UserController(
         )
         @PathVariable("id") id: Int,
     ): Mono<ResponseEntity<User>> {
-        return userDAL.selectUserById(id)
+        return userService.getUserById(id)
             .map {
                 logger.debug("Found user: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .doOnError { e ->
-                logger.error("Error getting user: {}", id, e)
             }
     }
 
@@ -229,11 +224,10 @@ class UserController(
             ),
         ],
     )
-    fun getAll(): Mono<ResponseEntity<*>> {
+    fun getAll(): Mono<ResponseEntity<List<User>>> {
         logger.debug("Getting all users")
-        return userDAL.selectUsers().map {
-            ResponseEntity.ok(it)
-        }
+        return userService.getAllUsers()
+            .map { ResponseEntity.ok(it) }
     }
 
     /**
@@ -312,11 +306,11 @@ class UserController(
             example = "80.0",
         )
         @RequestParam weight: BigDecimal,
-    ): ResponseEntity<*> {
+        @RequestParam(required = false, defaultValue = "KG") unit: String?,
+    ): Mono<ResponseEntity<User>> {
         logger.info("Updating user: {}", id)
-        return ResponseEntity.ok(
-            userDAL.updateUser(id, name, age, height, weight),
-        )
+        return userService.updateUser(id, name, age, height, weight, unit)
+            .map { ResponseEntity.ok(it) }
     }
 
     /**
@@ -366,10 +360,9 @@ class UserController(
             example = "1",
         )
         @PathVariable("id") id: Int,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<User>> {
         logger.info("Deleting user: {}", id)
-        return ResponseEntity.ok(
-            userDAL.deleteUser(id),
-        )
+        return userService.deleteUser(id)
+            .map { ResponseEntity.ok(it) }
     }
 }
