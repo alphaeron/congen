@@ -6,12 +6,10 @@ import com.congen.mockExercise
 import com.congen.mockExerciseRotationHistory
 import com.congen.mockUserEquipment
 import com.congen.mockUserExercisePreference
-import com.congen.mockUserOneRepMax
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
-import java.math.BigDecimal
 import kotlin.test.assertEquals
 
 class ExerciseSelectionServiceTest {
@@ -55,7 +53,6 @@ class ExerciseSelectionServiceTest {
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
-                USER_ID,
                 targetMuscles,
                 userEquipment,
                 preferences,
@@ -82,7 +79,6 @@ class ExerciseSelectionServiceTest {
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
-                USER_ID,
                 targetMuscles,
                 userEquipment,
                 preferences,
@@ -112,7 +108,6 @@ class ExerciseSelectionServiceTest {
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
-                USER_ID,
                 targetMuscles,
                 userEquipment,
                 preferences,
@@ -142,7 +137,6 @@ class ExerciseSelectionServiceTest {
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
-                USER_ID,
                 targetMuscles,
                 userEquipment,
                 preferences,
@@ -173,7 +167,6 @@ class ExerciseSelectionServiceTest {
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
-                USER_ID,
                 targetMuscles,
                 userEquipment,
                 preferences,
@@ -232,17 +225,7 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `determineWeakMuscles should return default weak muscles`() {
-        val oneRepMaxes =
-            listOf(
-                mockUserOneRepMax(exerciseName = EXERCISE_NAME, oneRepMax = BigDecimal("100.0")),
-                mockUserOneRepMax(exerciseName = EXERCISE_NAME_2, oneRepMax = BigDecimal("150.0"))
-            )
-        val rotationHistory =
-            listOf(
-                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME, isAccessory = false)
-            )
-
-        val result = exerciseSelectionService.determineWeakMuscles(oneRepMaxes, rotationHistory)
+        val result = exerciseSelectionService.determineWeakMuscles()
 
         assert(result.isNotEmpty())
         assert(result.containsAll(ConjugateConstants.DEFAULT_WEAK_MUSCLES))

@@ -81,10 +81,7 @@ object IntegrationTestHelpers {
      * Returns the equipment name for testing.
      * Equipment already exists in migrations, so we don't need to create it.
      */
-    fun getTestEquipment(
-        webTestClient: WebTestClient,
-        name: String = TEST_EQUIPMENT_NAME
-    ): String {
+    fun getTestEquipment(name: String = TEST_EQUIPMENT_NAME): String {
         return name
     }
 
@@ -92,10 +89,7 @@ object IntegrationTestHelpers {
      * Returns the muscle name for testing.
      * Muscles already exist in migrations, so we don't need to create them.
      */
-    fun getTestMuscle(
-        webTestClient: WebTestClient,
-        name: String = TEST_MUSCLE_NAME
-    ): String {
+    fun getTestMuscle(name: String = TEST_MUSCLE_NAME): String {
         return name
     }
 
@@ -103,10 +97,7 @@ object IntegrationTestHelpers {
      * Returns the exercise name for testing.
      * Exercises already exist in migrations, so we don't need to create them.
      */
-    fun getTestExercise(
-        webTestClient: WebTestClient,
-        name: String = TEST_EXERCISE_NAME
-    ): String {
+    fun getTestExercise(name: String = TEST_EXERCISE_NAME): String {
         return name
     }
 
@@ -363,10 +354,7 @@ object IntegrationTestHelpers {
     /**
      * Gets test workout stage type display name (workout stage types are pre-populated in database).
      */
-    fun createTestWorkoutStageType(
-        webTestClient: WebTestClient,
-        name: WorkoutStageTypeEnum = WorkoutStageTypeEnum.WARMUP
-    ): String {
+    fun createTestWorkoutStageType(name: WorkoutStageTypeEnum = WorkoutStageTypeEnum.WARMUP): String {
         // Workout stage types are pre-populated in the database by BaseIntegrationTest
         return name.displayName
     }
@@ -375,7 +363,7 @@ object IntegrationTestHelpers {
      * Returns a set of primary and accessory exercises for testing.
      * Exercises already exist in migrations, so we don't need to create them.
      */
-    fun getPrimaryAndAccessoryExercises(webTestClient: WebTestClient) {
+    fun getPrimaryAndAccessoryExercises() {
         // Primary exercises already exist in migrations: "Deadlift", "Safety Bar Squat", "Bent-Over Row", etc.
         // Accessory exercises already exist in migrations: "Chin-Up", "Ab Wheel", "GHR", etc.
         // No need to create anything
@@ -385,7 +373,7 @@ object IntegrationTestHelpers {
      * Returns all required equipment for testing.
      * Equipment already exists in migrations, so we don't need to create it.
      */
-    fun getAllEquipment(webTestClient: WebTestClient) {
+    fun getAllEquipment() {
         // Equipment already exists in migrations: "power bar", "dumbbells", etc.
         // No need to create anything
     }

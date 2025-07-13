@@ -99,4 +99,4 @@ class UserService(
             .doOnSuccess { logger.debug("Deleted user: {}", id) }
             .doOnError { e -> logger.error("Error deleting user: {}", id, e) }
     }
-} 
+}

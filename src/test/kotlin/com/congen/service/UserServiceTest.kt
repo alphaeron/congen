@@ -312,4 +312,4 @@ class UserServiceTest {
 
         verify(userDAL).deleteUser(USER_ID)
     }
-} 
+}

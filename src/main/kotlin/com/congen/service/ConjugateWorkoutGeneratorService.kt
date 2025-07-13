@@ -133,7 +133,7 @@ class ConjugateWorkoutGeneratorService(
                     val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
 
                     // Determine weak muscles based on user preferences and history
-                    val weakMuscles = exerciseSelectionService.determineWeakMuscles(oneRepMaxes, rotationHistory)
+                    val weakMuscles = exerciseSelectionService.determineWeakMuscles()
 
                     // Generate workouts for the week
                     generateWorkoutsForWeek(
@@ -222,7 +222,6 @@ class ConjugateWorkoutGeneratorService(
         // Primary movement stage (ME or DE exercise)
         val primaryExercise =
             exerciseSelectionService.selectRotatingExercise(
-                userId = userId,
                 targetMuscles = weakMuscles,
                 userEquipment = userEquipment,
                 preferences = preferences,
@@ -236,7 +235,6 @@ class ConjugateWorkoutGeneratorService(
         val primarySetSchemes: List<SetSchemeParams> =
             if (primaryExercise != null) {
                 workoutStageGenerator.generatePrilepinBasedScheme(
-                    userId = userId,
                     exercise = primaryExercise,
                     movementRole = "primary",
                     dayType = dayTemplate.type,
@@ -251,7 +249,6 @@ class ConjugateWorkoutGeneratorService(
         val secondaryExercise =
             if (conjugateTemplates.hasSecondaryMovement(dayTemplate.type)) {
                 exerciseSelectionService.selectRotatingExercise(
-                    userId = userId,
                     targetMuscles = weakMuscles,
                     userEquipment = userEquipment,
                     preferences = preferences,
@@ -272,7 +269,6 @@ class ConjugateWorkoutGeneratorService(
         val secondarySetSchemes: List<SetSchemeParams> =
             if (secondaryExercise != null) {
                 workoutStageGenerator.generateSecondaryExerciseScheme(
-                    userId = userId,
                     exercise = secondaryExercise,
                     oneRepMaxes = oneRepMaxes
                 )
@@ -337,7 +333,6 @@ class ConjugateWorkoutGeneratorService(
             (0 until numAccessoryExercises).map { accessoryIndex ->
                 val accessoryExercise =
                     exerciseSelectionService.selectRotatingExercise(
-                        userId = userId,
                         targetMuscles = weakMuscles,
                         userEquipment = userEquipment,
                         preferences = preferences,
@@ -358,7 +353,6 @@ class ConjugateWorkoutGeneratorService(
                                 .flatMap { accessoryProgrammedExercise ->
                                     val accessoryScheme =
                                         workoutStageGenerator.generatePrilepinBasedScheme(
-                                            userId = userId,
                                             exercise = accessoryExercise,
                                             movementRole = "accessory",
                                             dayType = dayTemplate.type,
@@ -383,7 +377,6 @@ class ConjugateWorkoutGeneratorService(
             if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
                 val conditioningExercise =
                     exerciseSelectionService.selectRotatingExercise(
-                        userId = userId,
                         targetMuscles = listOf("full_body"),
                         userEquipment = userEquipment,
                         preferences = preferences,
@@ -404,7 +397,6 @@ class ConjugateWorkoutGeneratorService(
                                 .flatMap { conditioningProgrammedExercise ->
                                     val conditioningScheme =
                                         workoutStageGenerator.generateAmrapOrEmomScheme(
-                                            userId = userId,
                                             exercise = conditioningExercise,
                                             oneRepMaxes = oneRepMaxes
                                         )
@@ -436,7 +428,6 @@ class ConjugateWorkoutGeneratorService(
         if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
             val conditioningExercise =
                 exerciseSelectionService.selectRotatingExercise(
-                    userId = userId,
                     targetMuscles = listOf("full_body"),
                     userEquipment = userEquipment,
                     preferences = preferences,

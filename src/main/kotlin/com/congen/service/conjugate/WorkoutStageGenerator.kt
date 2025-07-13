@@ -155,7 +155,6 @@ class WorkoutStageGenerator(
     /**
      * Generates a Prilepin-based set scheme for an exercise with undulating periodization.
      *
-     * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param movementRole The role of the movement (primary, secondary, accessory)
      * @param dayType The type of workout day (ME_Upper, DE_Lower, etc.)
@@ -164,7 +163,6 @@ class WorkoutStageGenerator(
      * @return List of set scheme parameters
      */
     fun generatePrilepinBasedScheme(
-        userId: Int,
         exercise: Exercise,
         movementRole: String,
         dayType: String,
@@ -174,9 +172,7 @@ class WorkoutStageGenerator(
         val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
-                movementRole = movementRole,
-                currentWeekNumber = currentWeekNumber,
-                exercise = exercise.name
+                currentWeekNumber = currentWeekNumber
             )
 
         val repsPerSet = guidelines.repsPerSetRange.random()
@@ -184,7 +180,7 @@ class WorkoutStageGenerator(
         val restSeconds = guidelines.restSeconds.random()
 
         // Determine target weight
-        val targetWeight = getTargetWeight(userId, exercise.name, intensity, oneRepMaxes)
+        val targetWeight = getTargetWeight(exercise.name, intensity, oneRepMaxes)
 
         // Tempo: vary if accessory, else default
         val useTempo = movementRole != "primary" && Random.nextBoolean()
@@ -228,13 +224,11 @@ class WorkoutStageGenerator(
      * - 5-8 reps per set
      * - 180-300 second rest periods
      *
-     * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
      * @return List of set scheme parameters
      */
     fun generateSecondaryExerciseScheme(
-        userId: Int,
         exercise: Exercise,
         oneRepMaxes: List<UserOneRepMax>
     ): List<SetSchemeParams> {
@@ -245,7 +239,7 @@ class WorkoutStageGenerator(
         val restSeconds = (180..300).random()
 
         // Determine target weight
-        val targetWeight = getTargetWeight(userId, exercise.name, intensity, oneRepMaxes)
+        val targetWeight = getTargetWeight(exercise.name, intensity, oneRepMaxes)
 
         // Tempo: vary for secondary exercises
         val useTempo = Random.nextBoolean()
@@ -283,18 +277,16 @@ class WorkoutStageGenerator(
     /**
      * Generates an AMRAP or EMOM set scheme for conditioning exercises.
      *
-     * @param userId The user ID
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
      * @return List of set scheme parameters
      */
     fun generateAmrapOrEmomScheme(
-        userId: Int,
         exercise: Exercise,
         oneRepMaxes: List<UserOneRepMax>
     ): List<SetSchemeParams> {
         val isAmrap = Random.nextBoolean()
-        val targetWeight = getTargetWeight(userId, exercise.name, 0.5, oneRepMaxes)
+        val targetWeight = getTargetWeight(exercise.name, 0.5, oneRepMaxes)
 
         val useTempo = Random.nextBoolean()
         val eccentric = if (useTempo) Random.nextInt(2, 4).toString() else "0"
@@ -338,7 +330,6 @@ class WorkoutStageGenerator(
      * @return The target weight
      */
     private fun getTargetWeight(
-        userId: Int,
         exerciseName: String,
         intensity: Double,
         oneRepMaxes: List<UserOneRepMax>

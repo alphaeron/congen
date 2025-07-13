@@ -15,13 +15,14 @@ output-reports:
   active: true
 
 style:
-  active: true
   UnusedImports:
     active: true
-    severity: error
+  UnusedPrivateMember:
+    active: true
+  UnusedParameter:
+    active: true
   WildcardImport:
     active: true
-    severity: error
 
 comments:
   active: true

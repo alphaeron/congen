@@ -349,15 +349,12 @@ class WorkoutStageGeneratorTest {
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
-                movementRole = movementRole,
-                currentWeekNumber = currentWeekNumber,
-                exercise = exercise.name
+                currentWeekNumber = currentWeekNumber
             )
         ).thenReturn(Pair(guidelines, intensity))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
-                userId,
                 exercise,
                 movementRole,
                 dayType,
@@ -395,7 +392,7 @@ class WorkoutStageGeneratorTest {
                 )
             )
 
-        val result = workoutStageGenerator.generateSecondaryExerciseScheme(userId, exercise, oneRepMaxes)
+        val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes)
 
         assertNotNull(result)
         assertTrue(result.isNotEmpty())
@@ -428,7 +425,7 @@ class WorkoutStageGeneratorTest {
                 )
             )
 
-        val result = workoutStageGenerator.generateAmrapOrEmomScheme(userId, exercise, oneRepMaxes)
+        val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes)
 
         assertNotNull(result)
         assertEquals(1, result.size)
@@ -460,15 +457,12 @@ class WorkoutStageGeneratorTest {
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
-                movementRole = movementRole,
-                currentWeekNumber = currentWeekNumber,
-                exercise = exercise.name
+                currentWeekNumber = currentWeekNumber
             )
         ).thenReturn(Pair(guidelines, intensity))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
-                userId,
                 exercise,
                 movementRole,
                 dayType,
@@ -493,7 +487,7 @@ class WorkoutStageGeneratorTest {
             )
         val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
-        val result = workoutStageGenerator.generateSecondaryExerciseScheme(userId, exercise, oneRepMaxes)
+        val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes)
 
         assertNotNull(result)
         assertTrue(result.isNotEmpty())
@@ -514,7 +508,7 @@ class WorkoutStageGeneratorTest {
             )
         val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
-        val result = workoutStageGenerator.generateAmrapOrEmomScheme(userId, exercise, oneRepMaxes)
+        val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes)
 
         assertNotNull(result)
         assertEquals(1, result.size)

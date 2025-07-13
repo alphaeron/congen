@@ -192,7 +192,7 @@ class EquipmentController(
     ): Mono<ResponseEntity<List<ExerciseEquipment>>> {
         // First check if the equipment exists
         return equipmentDAL.selectEquipmentByName(name)
-            .flatMap { _ ->
+            .flatMap {
                 // Equipment exists, now get its exercises
                 exerciseEquipmentDAL.selectExerciseEquipmentByEquipment(name)
                     .flatMap { exercises ->

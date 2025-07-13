@@ -20,14 +20,9 @@ class ExerciseSelectionService {
     /**
      * Determines weak muscles based on user's 1RM data and exercise history.
      *
-     * @param oneRepMaxes List of user's one rep max values
-     * @param rotationHistory List of exercise rotation history
      * @return List of weak muscle groups to target
      */
-    fun determineWeakMuscles(
-        oneRepMaxes: List<com.congen.model.UserOneRepMax>,
-        rotationHistory: List<ExerciseRotationHistory>
-    ): List<String> {
+    fun determineWeakMuscles(): List<String> {
         // For now, return default weak muscles
         // In a real implementation, this would analyze 1RM data and exercise history
         // to identify areas that need more attention
@@ -37,7 +32,6 @@ class ExerciseSelectionService {
     /**
      * Selects a rotating exercise based on various criteria.
      *
-     * @param userId The user ID
      * @param targetMuscles List of target muscles to focus on
      * @param userEquipment List of user's available equipment
      * @param preferences List of user's exercise preferences
@@ -47,7 +41,6 @@ class ExerciseSelectionService {
      * @return Selected exercise or null if none available
      */
     fun selectRotatingExercise(
-        userId: Int,
         targetMuscles: List<String>,
         userEquipment: List<UserEquipment>,
         preferences: List<UserExercisePreference>,

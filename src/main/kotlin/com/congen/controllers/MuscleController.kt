@@ -187,7 +187,7 @@ class MuscleController(
     ): Mono<ResponseEntity<List<ExerciseMuscle>>> {
         // First check if the muscle exists
         return muscleDAL.selectMuscleByName(name)
-            .flatMap { _ ->
+            .flatMap {
                 // Muscle exists, now get its exercises
                 exerciseMuscleDAL.selectExerciseMuscleByMuscle(name)
                     .flatMap { exercises ->

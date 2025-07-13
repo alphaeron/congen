@@ -204,7 +204,7 @@ class ExerciseController(
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<List<ExerciseMuscle>>> {
         return exerciseDAL.selectExerciseByName(name)
-            .flatMap { _ ->
+            .flatMap {
                 exerciseMuscleDAL.selectExerciseMuscleByExercise(name)
                     .flatMap { muscles ->
                         if (muscles.isEmpty()) {
@@ -261,7 +261,7 @@ class ExerciseController(
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<List<ExerciseEquipment>>> {
         return exerciseDAL.selectExerciseByName(name)
-            .flatMap { _ ->
+            .flatMap {
                 exerciseEquipmentDAL.selectExerciseEquipmentByExercise(name)
                     .flatMap { equipment ->
                         if (equipment.isEmpty()) {

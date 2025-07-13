@@ -171,7 +171,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.hasSecondaryMovement(any())).thenReturn(true)
         whenever(conjugateTemplates.hasConditioning(any())).thenReturn(true)
 
-        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any(), any())).thenReturn(
+        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any())).thenReturn(
             mockExercise(name = EXERCISE_NAME)
         )
         whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any())).thenReturn(
@@ -181,7 +181,7 @@ class ConjugateWorkoutGeneratorServiceTest {
             listOf(mockExercise(name = EXERCISE_NAME_2))
         )
 
-        whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
+        whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any())).thenReturn(
             listOf(
                 com.congen.service.conjugate.SetSchemeParams(
                     1,
@@ -199,7 +199,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 )
             )
         )
-        whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any(), any())).thenReturn(
+        whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any())).thenReturn(
             listOf(
                 com.congen.service.conjugate.SetSchemeParams(
                     1,

@@ -31,9 +31,7 @@ class PrilepinGuidelinesServiceTest {
         val result =
             service.getUndulatingPeriodizationGuidelines(
                 DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_BENCH_PRESS
+                CURRENT_WEEK_1
             )
         assertNotNull(result)
         val guidelines = result.first
@@ -47,7 +45,7 @@ class PrilepinGuidelinesServiceTest {
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should return guidelines for ME_Lower primary`() {
-        val result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_LOWER, MOVEMENT_ROLE_PRIMARY, CURRENT_WEEK_1, EXERCISE_SQUAT)
+        val result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_LOWER, CURRENT_WEEK_1)
         assertNotNull(result)
         val guidelines = result.first
         val intensity = result.second
@@ -63,9 +61,7 @@ class PrilepinGuidelinesServiceTest {
         val result =
             service.getUndulatingPeriodizationGuidelines(
                 DAY_TYPE_DE_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_BENCH_PRESS
+                CURRENT_WEEK_1
             )
         assertNotNull(result)
         val guidelines = result.first
@@ -79,7 +75,7 @@ class PrilepinGuidelinesServiceTest {
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should return guidelines for DE_Lower primary`() {
-        val result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_DE_LOWER, MOVEMENT_ROLE_PRIMARY, CURRENT_WEEK_1, EXERCISE_SQUAT)
+        val result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_DE_LOWER, CURRENT_WEEK_1)
         assertNotNull(result)
         val guidelines = result.first
         val intensity = result.second
@@ -95,9 +91,7 @@ class PrilepinGuidelinesServiceTest {
         val result =
             service.getUndulatingPeriodizationGuidelines(
                 DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_SECONDARY,
-                CURRENT_WEEK_1,
-                EXERCISE_OVERHEAD_PRESS
+                CURRENT_WEEK_1
             )
         assertNotNull(result)
         val guidelines = result.first
@@ -111,27 +105,9 @@ class PrilepinGuidelinesServiceTest {
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should handle different week numbers`() {
-        val week1Result =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_BENCH_PRESS
-            )
-        val week2Result =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_2,
-                EXERCISE_BENCH_PRESS
-            )
-        val week3Result =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_3,
-                EXERCISE_BENCH_PRESS
-            )
+        val week1Result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_1)
+        val week2Result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_2)
+        val week3Result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_3)
         assertNotNull(week1Result)
         assertNotNull(week2Result)
         assertNotNull(week3Result)
@@ -145,20 +121,8 @@ class PrilepinGuidelinesServiceTest {
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should handle different exercises`() {
-        val benchResult =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_BENCH_PRESS
-            )
-        val pressResult =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_OVERHEAD_PRESS
-            )
+        val benchResult = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_1)
+        val pressResult = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_1)
         assertNotNull(benchResult)
         assertNotNull(pressResult)
         val benchIntensity = benchResult.second
@@ -169,39 +133,15 @@ class PrilepinGuidelinesServiceTest {
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should return consistent results for same inputs`() {
-        val result1 =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_BENCH_PRESS
-            )
-        val result2 =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_1,
-                EXERCISE_BENCH_PRESS
-            )
+        val result1 = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_1)
+        val result2 = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_1)
         assertEquals(result1.first, result2.first)
     }
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should handle edge case week numbers`() {
-        val week0Result =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_0,
-                EXERCISE_BENCH_PRESS
-            )
-        val week52Result =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_52,
-                EXERCISE_BENCH_PRESS
-            )
+        val week0Result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_0)
+        val week52Result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_52)
         assertNotNull(week0Result)
         assertNotNull(week52Result)
         val week0Intensity = week0Result.second
@@ -212,13 +152,7 @@ class PrilepinGuidelinesServiceTest {
 
     @Test
     fun `getUndulatingPeriodizationGuidelines should handle negative week numbers`() {
-        val result =
-            service.getUndulatingPeriodizationGuidelines(
-                DAY_TYPE_ME_UPPER,
-                MOVEMENT_ROLE_PRIMARY,
-                CURRENT_WEEK_NEG1,
-                EXERCISE_BENCH_PRESS
-            )
+        val result = service.getUndulatingPeriodizationGuidelines(DAY_TYPE_ME_UPPER, CURRENT_WEEK_NEG1)
         assertNotNull(result)
         val guidelines = result.first
         val intensity = result.second

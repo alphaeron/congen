@@ -8,7 +8,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get workout stage type by id`() {
         // First create a workout stage type
-        val stageTypeName = IntegrationTestHelpers.createTestWorkoutStageType(webTestClient, WorkoutStageTypeEnum.WARMUP)
+        val stageTypeName = IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.WARMUP)
 
         // Get the stage type by name to get its ID
         val stageTypeResponse =
@@ -41,7 +41,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get workout stage type by name`() {
         // First create a workout stage type
-        val stageTypeName = IntegrationTestHelpers.createTestWorkoutStageType(webTestClient, WorkoutStageTypeEnum.WARMUP)
+        val stageTypeName = IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.WARMUP)
 
         // Then get it by name
         webTestClient.get()
@@ -62,8 +62,8 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all workout stage types`() {
-        IntegrationTestHelpers.createTestWorkoutStageType(webTestClient, WorkoutStageTypeEnum.WARMUP)
-        IntegrationTestHelpers.createTestWorkoutStageType(webTestClient, WorkoutStageTypeEnum.PRIMARY)
+        IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.WARMUP)
+        IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.PRIMARY)
         webTestClient.get()
             .uri("/workout_stage_type/")
             .exchange()

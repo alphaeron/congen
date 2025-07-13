@@ -62,9 +62,7 @@ class PrilepinGuidelinesService {
      */
     fun getUndulatingPeriodizationGuidelines(
         dayType: String,
-        movementRole: String,
-        currentWeekNumber: Int,
-        exercise: String
+        currentWeekNumber: Int
     ): Pair<PrilepinGuidelines, Double> {
         val weekInCycle = ((currentWeekNumber - 1) % 4) + 1
         val isUpperBody = dayType.contains("Upper")
