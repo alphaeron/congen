@@ -3,16 +3,36 @@ kind: Job
 metadata:
   name: liquibase-migration
 spec:
+  ttlSecondsAfterFinished: 3600
   template:
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
       - name: liquibase
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         command:
         - bash
         - -xc
         - |
           rm -f $READY_FILE &&
           liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD validate &&
-          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="prod" update &&
+          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="staging" update &&
           touch $READY_FILE &&
           sleep 5 

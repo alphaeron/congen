@@ -24,6 +24,10 @@ patches:
   target:
     kind: Service
     name: congen
+- path: local-patches/liquibase-job-labels-patch.yaml
+  target:
+    kind: Job
+    name: liquibase-migration
 
 images:
 - name: congen

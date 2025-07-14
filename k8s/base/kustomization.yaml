@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
 - namespace.yaml
+- service-account.yaml
 - migrations-configmap.yaml
 - liquibase-job.yaml
 - congen-configmap.yaml

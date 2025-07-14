@@ -3,4 +3,6 @@ kind: Service
 metadata:
   name: congen
 spec:
+  selector:
+    app: congen
   type: LoadBalancer 

@@ -3,10 +3,28 @@ kind: Deployment
 metadata:
   name: congen
 spec:
+  selector:
+    matchLabels:
+      app: congen
   template:
+    metadata:
+      labels:
+        app: congen
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
       - name: congen
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         imagePullPolicy: Never
         resources:
           requests:

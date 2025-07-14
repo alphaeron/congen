@@ -33,6 +33,6 @@ spec:
         - |
           rm -f $READY_FILE &&
           liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD validate &&
-          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="prod" update &&
+          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="test" update &&
           touch $READY_FILE &&
           sleep 5 

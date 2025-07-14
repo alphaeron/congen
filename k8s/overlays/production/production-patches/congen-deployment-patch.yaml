@@ -4,10 +4,40 @@ metadata:
   name: congen
 spec:
   replicas: 3
+  selector:
+    matchLabels:
+      app: congen
   template:
+    metadata:
+      labels:
+        app: congen
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - congen
+              topologyKey: kubernetes.io/hostname
       containers:
       - name: congen
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         resources:
           requests:
             memory: "2Gi"
