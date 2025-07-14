@@ -119,10 +119,37 @@ Extended conjugate with additional volume:
 
 The service uses a sophisticated algorithm to select exercises:
 
-1. **Filter by Exercise Type**: 
-   - Primary stage: Select ME/DE exercises (`is_accessory = false`)
-   - Secondary stage: Select different primary exercises (`is_accessory = false`) that are not the same as the primary exercise
-   - Accessory stage: Select accessory exercises (`is_accessory = true`)
+### Primary Exercise Selection
+1. **Filter by Exercise Type**: Select ME/DE exercises (`is_accessory = false`)
+2. **Filter by User Preferences**: Exclude exercises the user wants to avoid
+3. **Filter by Equipment**: Only include exercises the user can perform with available equipment
+4. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
+5. **Sort by Priority**: Sort by equipment options, targeted muscles, and exercise name
+
+### Secondary Exercise Selection
+Secondary exercises are selected to be similar to the primary exercise in terms of movement type and muscles worked:
+
+1. **Similarity-Based Selection**: Uses a scoring algorithm to find exercises most similar to the primary movement
+2. **Movement Type Matching**: Prioritizes exercises with the same movement type (e.g., "horizontal push")
+3. **Muscle Overlap Analysis**: Calculates muscle overlap between primary and potential secondary exercises
+4. **Movement Category Similarity**: Provides partial credit for related movement types:
+   - Same category (push/pull): 50 points
+   - Same plane (horizontal/vertical): 25 points  
+   - Same body part focus (upper/lower): 15 points
+5. **Rotation History Bonus**: Gives preference to less recently used exercises
+6. **User Preferences & Equipment**: Applies the same filtering as primary exercises
+
+#### Similarity Scoring Algorithm
+The system calculates a similarity score for each potential secondary exercise:
+
+- **Movement Type Match**: 100 points for exact match
+- **Muscle Overlap**: Up to 50 points based on percentage of primary muscles targeted
+- **Rotation Bonus**: 0-20 points based on usage frequency (less used = higher bonus)
+
+The exercise with the highest total score is selected as the secondary movement.
+
+### Accessory Exercise Selection
+1. **Filter by Exercise Type**: Select accessory exercises (`is_accessory = true`)
 2. **Filter by User Preferences**: Exclude exercises the user wants to avoid
 3. **Filter by Equipment**: Only include exercises the user can perform with available equipment
 4. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
@@ -206,15 +233,27 @@ This periodization approach ensures progressive overload while incorporating pla
 
 ## Secondary Exercise Guidelines
 
-Secondary exercises (additional primary movements) follow specific guidelines:
+Secondary exercises (additional primary movements) are intelligently selected to complement the primary movement and follow specific guidelines:
 
+### Selection Criteria
+- **Movement Similarity**: Prioritizes exercises with the same movement type as the primary exercise
+- **Muscle Overlap**: Selects exercises that target similar muscle groups to the primary movement
+- **Exercise Variety**: Ensures rotation and prevents accommodation through usage tracking
+- **User Preferences**: Respects user's exercise preferences and equipment availability
+
+### Training Parameters
 - **Intensity**: 80-90% of 1RM
 - **Sets**: 3-4 sets
 - **Reps**: 5-8 reps per set
 - **Rest**: 180-300 seconds between sets
 - **Tempo**: Variable (may include eccentric, isometric, and concentric timing)
 
-These guidelines provide additional volume for primary movement patterns while maintaining proper intensity for strength development.
+### Examples of Secondary Exercise Selection
+- **Primary: Bench Press (horizontal push)** → **Secondary: Incline Bench Press (horizontal push)**
+- **Primary: Overhead Press (vertical push)** → **Secondary: Push Press (vertical push)**
+- **Primary: Squat (squat)** → **Secondary: Front Squat (squat)**
+
+These guidelines provide additional volume for primary movement patterns while maintaining proper intensity for strength development and ensuring movement pattern consistency.
 
 ## Set Scheme Generation
 
@@ -260,11 +299,37 @@ The service handles various edge cases:
 - **Database Errors**: Proper error propagation and logging
 - **Invalid Parameters**: Validation of input parameters
 
-## Testing
+## Technical Implementation
+
+### Secondary Exercise Selection Implementation
+The secondary exercise selection is implemented in the `ExerciseSelectionService` with the following key components:
+
+#### `selectSimilarSecondaryExercise()` Method
+- **Input**: Primary exercise, user equipment, preferences, available exercises, rotation history
+- **Process**: 
+  1. Filters exercises by user preferences and equipment
+  2. Fetches muscle data for primary exercise from database
+  3. Scores each potential secondary exercise using similarity algorithm
+  4. Returns the highest-scoring exercise
+- **Output**: `Mono<Exercise?>` - Reactive stream containing the selected exercise or null
+
+#### Similarity Scoring Functions
+- **`calculateExerciseSimilarityScore()`**: Main scoring function that combines movement type, muscle overlap, and rotation history
+- **`calculateMovementTypeSimilarity()`**: Provides partial credit for related movement types
+- **`calculateMuscleOverlapScore()`**: Calculates percentage overlap between primary and secondary exercise muscles
+- **`calculateRotationBonus()`**: Awards points based on exercise usage frequency
+
+#### Database Integration
+- Uses `ExerciseMuscleDAL` to fetch muscle relationships for exercises
+- Reactive database queries ensure non-blocking operation
+- Error handling with fallback to null when muscle data is unavailable
+
+### Testing
 
 ### Unit Tests
 Comprehensive unit tests cover:
 - Exercise selection logic
+- Secondary exercise similarity scoring
 - Set scheme generation
 - Error handling
 - Edge cases with missing data

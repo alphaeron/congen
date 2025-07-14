@@ -1,18 +1,22 @@
 package com.congen.service.conjugate
 
+import com.congen.dal.ExerciseMuscleDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
 
 /**
  * Service for selecting exercises based on various criteria including rotation history,
  * user preferences, equipment availability, and target muscles.
  */
 @Service
-class ExerciseSelectionService {
+class ExerciseSelectionService(
+    private val exerciseMuscleDAL: ExerciseMuscleDAL
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseSelectionService::class.java)
     }
@@ -118,6 +122,189 @@ class ExerciseSelectionService {
             )
 
         return sortedExercises.firstOrNull()
+    }
+
+    /**
+     * Selects a secondary exercise similar to the primary exercise in terms of movement type and muscles worked.
+     *
+     * @param primaryExercise The primary exercise to find a similar secondary exercise for
+     * @param userEquipment List of user's available equipment
+     * @param preferences List of user's exercise preferences
+     * @param exercises List of available exercises (already filtered to exclude primary exercise)
+     * @param rotationHistory List of exercise rotation history
+     * @return Selected secondary exercise or null if none available
+     */
+    fun selectSimilarSecondaryExercise(
+        primaryExercise: Exercise,
+        userEquipment: List<UserEquipment>,
+        preferences: List<UserExercisePreference>,
+        exercises: List<Exercise>,
+        rotationHistory: List<ExerciseRotationHistory>
+    ): Mono<Exercise?> {
+        val availableExercises =
+            exercises.filter { exercise ->
+                !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
+            }
+        if (availableExercises.isEmpty()) {
+            logger.warn("No available exercises found for secondary movement")
+            return Mono.justOrEmpty(null)
+        }
+        val equipmentFilteredExercises =
+            availableExercises.filter { exercise ->
+                userEquipment.any { _ -> true }
+            }
+        if (equipmentFilteredExercises.isEmpty()) {
+            logger.warn("No exercises available with user's equipment for secondary movement")
+            return Mono.justOrEmpty(availableExercises.firstOrNull())
+        }
+        return exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
+            .flatMap { primaryExerciseMuscles ->
+                val primaryMuscleNames = primaryExerciseMuscles.map { it.muscleName }.toSet()
+                val exerciseScoringMonos =
+                    equipmentFilteredExercises.map { exercise ->
+                        exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                            .map { exerciseMuscles ->
+                                val exerciseMuscleNames = exerciseMuscles.map { it.muscleName }.toSet()
+                                val exerciseScore =
+                                    calculateExerciseSimilarityScore(
+                                        exercise = exercise,
+                                        primaryMovementType = primaryExercise.movementType,
+                                        primaryMuscles = primaryMuscleNames,
+                                        exerciseMuscles = exerciseMuscleNames,
+                                        rotationHistory = rotationHistory
+                                    )
+                                exercise to exerciseScore
+                            }
+                            .onErrorReturn(exercise to 0.0)
+                    }
+                if (exerciseScoringMonos.isEmpty()) {
+                    return@flatMap Mono.justOrEmpty(null)
+                }
+                @Suppress("UNCHECKED_CAST")
+                return@flatMap Mono.zip(exerciseScoringMonos) { results: Array<Any?> ->
+                    val scoredExercises = results.map { it as Pair<Exercise, Double> }
+                    scoredExercises
+                        .sortedByDescending { it.second }
+                        .firstOrNull()
+                        ?.first
+                } as Mono<Exercise?>
+            }
+    }
+
+    /**
+     * Calculates a similarity score for an exercise compared to the primary exercise.
+     * Higher scores indicate more similarity.
+     *
+     * @param exercise The exercise to score
+     * @param primaryMovementType The movement type of the primary exercise
+     * @param primaryMuscles The muscles worked by the primary exercise
+     * @param exerciseMuscles The muscles worked by the exercise being scored
+     * @param rotationHistory List of exercise rotation history
+     * @return Similarity score (higher is more similar)
+     */
+    private fun calculateExerciseSimilarityScore(
+        exercise: Exercise,
+        primaryMovementType: String,
+        primaryMuscles: Set<String>,
+        exerciseMuscles: Set<String>,
+        rotationHistory: List<ExerciseRotationHistory>
+    ): Double {
+        var score = 0.0
+
+        // Movement type similarity (highest weight)
+        if (exercise.movementType == primaryMovementType) {
+            score += 100.0
+        } else {
+            // Partial credit for related movement types
+            score += calculateMovementTypeSimilarity(exercise.movementType, primaryMovementType)
+        }
+
+        // Muscle overlap similarity
+        val muscleOverlapScore = calculateMuscleOverlapScore(primaryMuscles, exerciseMuscles)
+        score += muscleOverlapScore
+
+        // Rotation history bonus (prefer less recently used exercises)
+        val rotationBonus = calculateRotationBonus(exercise, rotationHistory)
+        score += rotationBonus
+
+        return score
+    }
+
+    /**
+     * Calculates similarity between movement types.
+     *
+     * @param movementType1 First movement type
+     * @param movementType2 Second movement type
+     * @return Similarity score
+     */
+    private fun calculateMovementTypeSimilarity(
+        movementType1: String,
+        movementType2: String
+    ): Double {
+        return when {
+            // Same category (push/pull)
+            (movementType1.contains("push") && movementType2.contains("push")) ||
+                (movementType1.contains("pull") && movementType2.contains("pull")) -> 50.0
+
+            // Same plane (horizontal/vertical)
+            (movementType1.contains("horizontal") && movementType2.contains("horizontal")) ||
+                (movementType1.contains("vertical") && movementType2.contains("vertical")) -> 25.0
+
+            // Same body part focus (upper/lower)
+            (movementType1.contains("upper") && movementType2.contains("upper")) ||
+                (movementType1.contains("lower") && movementType2.contains("lower")) -> 15.0
+
+            else -> 0.0
+        }
+    }
+
+    /**
+     * Calculates muscle overlap score between primary and secondary exercise muscles.
+     *
+     * @param primaryMuscles The muscles worked by the primary exercise
+     * @param exerciseMuscles The muscles worked by the exercise being evaluated
+     * @return Muscle overlap score
+     */
+    private fun calculateMuscleOverlapScore(
+        primaryMuscles: Set<String>,
+        exerciseMuscles: Set<String>
+    ): Double {
+        if (primaryMuscles.isEmpty() || exerciseMuscles.isEmpty()) {
+            return 0.0
+        }
+
+        // Calculate intersection (overlapping muscles)
+        val overlappingMuscles = primaryMuscles.intersect(exerciseMuscles)
+
+        // Calculate overlap percentage
+        val overlapPercentage = overlappingMuscles.size.toDouble() / primaryMuscles.size.toDouble()
+
+        // Score based on overlap percentage (max 50 points for complete overlap)
+        return overlapPercentage * 50.0
+    }
+
+    /**
+     * Calculates rotation bonus based on how recently an exercise was used.
+     *
+     * @param exercise The exercise to evaluate
+     * @param rotationHistory List of exercise rotation history
+     * @return Rotation bonus score
+     */
+    private fun calculateRotationBonus(
+        exercise: Exercise,
+        rotationHistory: List<ExerciseRotationHistory>
+    ): Double {
+        val categoryHistory = rotationHistory.filter { !it.isAccessory } // Primary exercises
+        val exerciseUsageCount = categoryHistory.count { it.exerciseName == exercise.name }
+
+        // Bonus for less frequently used exercises
+        return when (exerciseUsageCount) {
+            0 -> 20.0 // Never used - highest bonus
+            1 -> 15.0
+            2 -> 10.0
+            3 -> 5.0
+            else -> 0.0 // Frequently used - no bonus
+        }
     }
 
     /**

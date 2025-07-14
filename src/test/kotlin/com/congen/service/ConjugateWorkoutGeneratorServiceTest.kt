@@ -174,6 +174,9 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any())).thenReturn(
             mockExercise(name = EXERCISE_NAME)
         )
+        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(any(), any(), any(), any(), any())).thenReturn(
+            Mono.just(mockExercise(name = EXERCISE_NAME_2))
+        )
         whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any())).thenReturn(
             listOf(mockExercise(name = EXERCISE_NAME))
         )

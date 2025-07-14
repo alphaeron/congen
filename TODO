@@ -1,15 +1,55 @@
-fix weight rounding issue to nearest plate
+There is an issue where when we calculate a weight, we need to run it to the correct size so that the user can use
+a standard set of weightlifting plates to load the bar for the exercise.  lbs and kg have different size plate sets.
+
+Here are the plate sizes for those units.
+2.5, 5, 10, 25, 45 lbs
+1.25, 2.5, 5, 10, 15, 20, 25 kg
+
+If an exercise uses kettlebells, here are the weights of kettlebells that should be used for rounding.
+
+Update the exercise selection algorithm so that when we calculate the weight, we round it so that it can be computed by adding plates of the above weights together (starting using the heaviest plates possible before dropping down to a lower-weight plate).
+
+
+
+There is a separate issue for Dynamic Effort (DE) exercises when computing weight.  bands are used for a portion of the dynamic effort weight.
+
+Here is how the band to bar weight distribution should look like based on undulating periodization.
+
+- **Week 1**: 12 sets of 2 reps or 5 sets of 5 reps, 25% band weight, 50% bar weight
+- **Week 2**: 10 sets of 2 reps or 5 sets of 5 reps, 25% band weight, 55% bar weight
+- **Week 3**: 8 sets of 2 reps or 5 sets of 5 reps, 25% band weight, 60% bar weight
+- **Week 4**: 12 sets of 2 reps or 5 sets of 5 reps, 0% band weight, 50% bar weight
+
+2 bands are used per exercise in all cases.
+
+Bands come in these sizes (weight of individual band):
+
+Black: 100lbs
+Green: 65lbs
+Blue: 50lbs
+Red: 30lbs
+Orange: 15lbs
+
+Bands only come in lbs weight, and are reported using the color of the band.
+
+If the unit for the exercise is kg, convert the kg weight to lbs weight, determine how much weight is bars and how much is bands, then select the band weight.  then, convert the bar weight back to kg, and round as we usually do based on plate size to determine the final bar weight in kg.
+
+If the unit for the exercise is lbs, we can determine how much weight is bars and how much is bands, then select the band weight.  then, just round as we usually do based on plate size to determine the final bar weight in lbs.
+
+Update how weight for an exercise is stored so we can properly store the band weight in the database as well.
+
+Update the documentation with how DE exercise weights are computed as well.
+
+
+
+
+
 
 exercise movement type enum?
 
 use snake_case for api values
 
 band weight for de exercises.
-
-
-
-
-Secondary movement selection should pick an exercise simlar to the primary movement.
 
 
 
@@ -30,6 +70,12 @@ If muscle imbalance, prefer unilateral accessories
 don't hardcode default weight of 50 lbs?
 
 function to estimate default weight if missing based on other user 1rms?
+
+
+
+
+
+how can we further optimize exercise selection to optimize performance?
 
 
 
