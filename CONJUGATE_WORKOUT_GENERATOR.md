@@ -4,6 +4,81 @@
 
 The Conjugate Workout Generator is a service that implements the Westside Barbell conjugate method for powerlifting, incorporating undulating periodization, exercise rotation, and personalized programming based on user preferences and available equipment.
 
+## System Architecture
+
+The service is built with a modular architecture that provides clear separation of concerns:
+
+### Package Structure
+
+```
+src/main/kotlin/com/congen/service/conjugate/
+├── ConjugateModels.kt           # Data classes and constants
+├── ConjugateTemplates.kt        # Workout templates and selection logic
+├── PrilepinGuidelinesService.kt # Prilepin chart and periodization logic
+├── ExerciseSelectionService.kt  # Exercise selection and filtering logic
+├── WorkoutStageGenerator.kt     # Individual stage generation helpers
+└── SessionTimeCalculator.kt     # Session time allocation utilities
+```
+
+### Component Responsibilities
+
+#### 1. ConjugateModels.kt
+- **Purpose**: Centralized data classes and constants
+- **Contains**:
+  - `DayTemplate` data class
+  - `PrilepinGuidelines` data class
+  - `ConjugateConstants` object with default values and time allocations
+- **Benefits**: Eliminates code duplication and provides single source of truth
+
+#### 2. ConjugateTemplates.kt
+- **Purpose**: Manages workout templates and template selection logic
+- **Responsibilities**:
+  - Template selection based on days per week (2, 3, or 4)
+  - Helper methods for determining secondary movement and conditioning inclusion
+- **Benefits**: Isolates template logic and makes it easily testable
+
+#### 3. PrilepinGuidelinesService.kt
+- **Purpose**: Handles all Prilepin chart guidelines and undulating periodization
+- **Responsibilities**:
+  - Prilepin chart constants and guidelines
+  - Undulating periodization logic (4-week cycles)
+  - Max Effort, Dynamic Effort, and Accessory guidelines
+- **Benefits**: Centralizes complex periodization logic in one place
+
+#### 4. ExerciseSelectionService.kt
+- **Purpose**: Manages exercise selection based on various criteria
+- **Responsibilities**:
+  - Exercise rotation history management
+  - User preference filtering
+  - Equipment availability checking
+  - Weak muscle determination
+  - Exercise filtering utilities
+- **Benefits**: Separates exercise selection logic from workout generation
+
+#### 5. WorkoutStageGenerator.kt
+- **Purpose**: Generates individual workout stages and their components
+- **Responsibilities**:
+  - Workout stage creation
+  - Programmed exercise creation
+  - Set scheme generation (Prilepin-based, secondary, AMRAP/EMOM)
+  - Target weight calculation
+- **Benefits**: Focuses on stage-level generation details
+
+#### 6. SessionTimeCalculator.kt
+- **Purpose**: Handles session time calculations and accessory exercise count
+- **Responsibilities**:
+  - Time allocation calculations
+  - Accessory exercise count determination
+  - Utility methods for time management
+- **Benefits**: Isolates time-related logic for easy modification
+
+### Main Service (ConjugateWorkoutGeneratorService.kt)
+
+The main service is a lightweight orchestrator that:
+- Coordinates between the modular components
+- Handles the high-level workflow
+- Manages data flow between components
+
 ## Conjugate Method Principles
 
 The conjugate method, developed by Louie Simmons at Westside Barbell, combines:
@@ -39,35 +114,6 @@ Extended conjugate with additional volume:
 - **Secondary**: Additional primary movements (different from the main ME/DE exercise) - `isAccessory = false`
 - **Accessory**: Isolation and weak point training - `isAccessory = true`
 - **Conditioning**: Cardio and recovery work - `isAccessory = true`
-
-## API Endpoints
-
-### Generate Workout Program
-
-```
-GET /conjugate-workout-generator/{userId}/generate
-```
-
-**Parameters:**
-- `userId` (path): The ID of the user
-- `currentWeekNumber` (query, optional): Current week number in the program (default: 1)
-- `numDaysPerWeek` (query, optional): Number of training days per week (2, 3, or 4, default: 3)
-
-**Response:**
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "name": "Conjugate Powerlifting - Week 1",
-  "description": "Conjugate powerlifting program with 3 days per week"
-}
-```
-
-**Error Responses:**
-- `400 Bad Request`: Invalid parameters (numDaysPerWeek must be 2, 3, or 4)
-- `404 Not Found`: User doesn't exist
-- `422 Unprocessable Entity`: Workout generation failed
-- `500 Internal Server Error`: Database operations failed
 
 ## Exercise Selection Algorithm
 
@@ -205,16 +251,6 @@ The service personalizes workouts based on:
 - Tracks exercise rotation to ensure variety
 - Prevents overuse of the same exercises
 
-## Database Schema
-
-The service integrates with existing models:
-
-- **Program**: Contains the overall workout program
-- **ProgrammedWorkout**: Individual workouts within the program
-- **WorkoutStage**: Stages within each workout (primary, secondary, accessory, conditioning)
-- **ProgrammedExercise**: Exercises within each stage
-- **SetScheme**: Individual sets with specific parameters
-
 ## Error Handling
 
 The service handles various edge cases:
@@ -232,6 +268,7 @@ Comprehensive unit tests cover:
 - Set scheme generation
 - Error handling
 - Edge cases with missing data
+- Individual component functionality (templates, periodization, exercise selection, stage generation, time calculations)
 
 ### Integration Tests
 End-to-end tests verify:
@@ -239,6 +276,7 @@ End-to-end tests verify:
 - Database persistence
 - API endpoint functionality
 - User personalization features
+- Component integration
 
 ## Usage Examples
 
@@ -264,4 +302,8 @@ Potential improvements include:
 - Machine learning for exercise selection optimization
 - Integration with wearable devices for real-time feedback
 - Seasonal periodization planning
-- Competition preparation programs 
+- Competition preparation programs
+- Configuration management for different training styles
+- Plugin architecture for new exercise selection algorithms
+- Performance optimization of individual components
+- Feature extensions for new workout types or periodization schemes 

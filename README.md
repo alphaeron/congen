@@ -162,6 +162,49 @@ For detailed Kubernetes deployment instructions, see [KUBERNETES_DEPLOYMENT.md](
 ./gradlew skaffoldDelete
 ```
 
+## 🔒 Security
+
+### CORS Configuration
+
+The application implements production-ready CORS (Cross-Origin Resource Sharing) security with environment-based configuration:
+
+#### Security Features
+- **Environment-Based Configuration**: Different settings for local, staging, and production
+- **Origin Validation**: Whitelist-based origin validation with HTTPS enforcement in production
+- **Rate Limiting**: CORS violation rate limiting (10 violations per IP per 5 minutes)
+- **Security Headers**: Comprehensive security headers including CSP, HSTS, and XSS protection
+
+#### Environment Configuration
+
+**Production** (HTTPS-only):
+```properties
+cors.allowed-origins=https://your-production-domain.com,https://www.your-production-domain.com
+cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
+cors.allowed-headers=Content-Type,Authorization,X-Requested-With
+cors.exposed-headers=Content-Type,Content-Range
+cors.max-age=3600
+```
+
+**Staging** (Mixed HTTP/HTTPS):
+```properties
+cors.allowed-origins=https://staging.your-domain.com,http://localhost:3000
+cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
+cors.allowed-headers=Content-Type,Authorization,X-Requested-With
+cors.exposed-headers=Content-Type,Content-Range
+cors.max-age=7200
+```
+
+#### Security Headers
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `HSTS` (production only)
+- `Content Security Policy (CSP)`
+- `Permissions Policy` (production only)
+
+For detailed CORS configuration and troubleshooting, see [CORS_SECURITY.md](CORS_SECURITY.md).
+
 ## 📚 API Documentation
 
 ### Base URL
