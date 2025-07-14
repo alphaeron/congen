@@ -1,0 +1,10 @@
+# ShellCheck configuration for Congen project
+# Enforce curly braces for all variable expansions and best practices
+
+# Enable all checks
+# (SC2081 is the check for missing curly braces in variable expansions)
+enable=all
+
+# Optionally, you can add:
+# shellcheck disable=SC2081
+# ...to disable this check in specific files or lines if needed. 

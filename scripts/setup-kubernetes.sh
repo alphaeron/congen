@@ -9,8 +9,8 @@ echo "🚀 Setting up Kubernetes environment for Congen..."
 
 # Check if required tools are installed
 check_tool() {
-    if ! command -v $1 &> /dev/null; then
-        echo "❌ $1 is not installed. Please install it first."
+    if ! command -v "${1}" &> /dev/null; then
+        echo "❌ ${1} is not installed. Please install it first."
         exit 1
     fi
 }
@@ -39,11 +39,13 @@ minikube addons enable metrics-server
 
 # Point shell to minikube's docker-daemon
 echo "🔧 Configuring Docker environment..."
-eval $(minikube docker-env)
+MINIKUBE_DOCKER_ENV_OUTPUT="$(minikube docker-env)"
+eval "${MINIKUBE_DOCKER_ENV_OUTPUT}"
 
 # Create namespace
 echo "🔧 Creating congen namespace..."
-kubectl create namespace congen --dry-run=client -o yaml | kubectl apply -f -
+KUBECTL_NAMESPACE_YAML_OUTPUT="$(kubectl create namespace congen --dry-run=client -o yaml)"
+echo "${KUBECTL_NAMESPACE_YAML_OUTPUT}" | kubectl apply -f -
 
 echo "✅ Kubernetes environment setup complete!"
 echo ""
@@ -53,6 +55,7 @@ echo "2. Deploy to local: ./gradlew deployToLocal"
 echo "3. Or use Skaffold: ./gradlew skaffoldDev"
 echo ""
 echo "Access the application:"
-echo "- Minikube IP: $(minikube ip)"
-echo "- Application: http://$(minikube ip):30080"
-echo "- Health check: http://$(minikube ip):30080/actuator/health" 
+MINIKUBE_IP_OUTPUT="$(minikube ip)"
+echo "- Minikube IP: ${MINIKUBE_IP_OUTPUT}"
+echo "- Application: http://${MINIKUBE_IP_OUTPUT}:30080"
+echo "- Health check: http://${MINIKUBE_IP_OUTPUT}:30080/actuator/health" 

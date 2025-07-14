@@ -31,7 +31,7 @@ print_error() {
 
 # Function to check if command exists
 check_command() {
-    if ! command -v $1 &> /dev/null; then
+    if ! command -v "$1" &> /dev/null; then
         print_error "$1 is not installed. Please install it first."
         exit 1
     fi
@@ -42,10 +42,12 @@ check_minikube() {
     if ! minikube status &> /dev/null; then
         print_warning "Minikube is not running. Starting Minikube..."
         minikube start --memory=8192 --cpus=4 --disk-size=20g
-        eval $(minikube docker-env)
+        MINIKUBE_DOCKER_ENV_OUTPUT="$(minikube docker-env)"
+        eval "${MINIKUBE_DOCKER_ENV_OUTPUT}"
     else
         print_success "Minikube is running"
-        eval $(minikube docker-env)
+        MINIKUBE_DOCKER_ENV_OUTPUT="$(minikube docker-env)"
+        eval "${MINIKUBE_DOCKER_ENV_OUTPUT}"
     fi
 }
 
@@ -66,7 +68,8 @@ deploy_local() {
     ./gradlew deployToLocal
     
     print_success "Local deployment complete!"
-    print_status "Access the application at: http://$(minikube ip):30080"
+    MINIKUBE_IP_OUTPUT="$(minikube ip)"
+    print_status "Access the application at: http://${MINIKUBE_IP_OUTPUT}:30080"
 }
 
 # Function to deploy to staging
@@ -95,7 +98,7 @@ deploy_production() {
     # Confirm production deployment
     read -p "Are you sure you want to deploy to production? (y/N): " -n 1 -r
     echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    if [[ ! ${REPLY} =~ ^[Yy]$ ]]; then
         print_warning "Production deployment cancelled"
         exit 0
     fi
@@ -166,12 +169,12 @@ show_status() {
 show_logs() {
     local pod_name=$1
     
-    if [ -z "$pod_name" ]; then
+    if [[ -z "${pod_name}" ]]; then
         print_status "Showing logs for congen pod..."
         kubectl logs -n congen -l app=congen -f
     else
-        print_status "Showing logs for pod: $pod_name"
-        kubectl logs -n congen $pod_name -f
+        print_status "Showing logs for pod: ${pod_name}"
+        kubectl logs -n congen "${pod_name}" -f
     fi
 }
 
@@ -221,13 +224,13 @@ main() {
             deploy_production
             ;;
         "cleanup")
-            cleanup $2
+            cleanup "$2"
             ;;
         "status")
             show_status
             ;;
         "logs")
-            show_logs $2
+            show_logs "$2"
             ;;
         "help"|"--help"|"-h")
             show_help
@@ -265,4 +268,4 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Run main function
-main "$COMMAND" "$ENV" "$POD_NAME" 
+main "${COMMAND}" "${ENV}" "${POD_NAME}" 

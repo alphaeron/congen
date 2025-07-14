@@ -31,8 +31,8 @@ print_error() {
 
 # Function to check if command exists
 check_command() {
-    if ! command -v $1 &> /dev/null; then
-        print_error "$1 is not installed. Please install it first."
+    if ! command -v "${1}" &> /dev/null; then
+        print_error "${1} is not installed. Please install it first."
         exit 1
     fi
 }
@@ -51,13 +51,15 @@ check_minikube() {
     fi
     
     # Point shell to minikube's docker-daemon
-    eval $(minikube docker-env)
+    MINIKUBE_DOCKER_ENV_OUTPUT="$(minikube docker-env)"
+    eval "${MINIKUBE_DOCKER_ENV_OUTPUT}"
 }
 
 # Function to create namespace
 create_namespace() {
     print_status "Creating congen namespace..."
-    kubectl create namespace congen --dry-run=client -o yaml | kubectl apply -f -
+    KUBECTL_NAMESPACE_YAML_OUTPUT="$(kubectl create namespace congen --dry-run=client -o yaml)"
+    echo "${KUBECTL_NAMESPACE_YAML_OUTPUT}" | kubectl apply -f -
 }
 
 # Function to build and deploy application
@@ -76,19 +78,19 @@ wait_for_ready() {
     local max_attempts=30
     local attempt=1
     
-    while [ $attempt -le $max_attempts ]; do
+    while [[ "${attempt}" -le "${max_attempts}" ]]; do
         if kubectl exec -n congen deployment/postgres -- pg_isready -U postgres &> /dev/null; then
             print_success "PostgreSQL is ready"
             break
         fi
         
-        print_status "Attempt $attempt/$max_attempts: PostgreSQL not ready yet..."
+        print_status "Attempt ${attempt}/${max_attempts}: PostgreSQL not ready yet..."
         sleep 2
         ((attempt++))
     done
     
-    if [ $attempt -gt $max_attempts ]; then
-        print_error "PostgreSQL failed to become ready after $max_attempts attempts"
+    if [[ "${attempt}" -gt "${max_attempts}" ]]; then
+        print_error "PostgreSQL failed to become ready after ${max_attempts} attempts"
         exit 1
     fi
     
@@ -114,20 +116,21 @@ setup_port_forward() {
     # Check if port forward is working
     if ! nc -z localhost 5432; then
         print_error "Port forward failed to establish"
-        kill $port_forward_pid 2>/dev/null || true
+        kill "${port_forward_pid}" 2>/dev/null || true
         exit 1
     fi
     
-    print_success "Port forward established (PID: $port_forward_pid)"
-    echo $port_forward_pid > /tmp/k8s-test-port-forward.pid
+    print_success "Port forward established (PID: ${port_forward_pid})"
+    echo "${port_forward_pid}" > /tmp/k8s-test-port-forward.pid
 }
 
 # Function to cleanup port forward
 cleanup_port_forward() {
-    if [ -f /tmp/k8s-test-port-forward.pid ]; then
-        local pid=$(cat /tmp/k8s-test-port-forward.pid)
-        print_status "Cleaning up port forward (PID: $pid)..."
-        kill $pid 2>/dev/null || true
+    if [[ -f /tmp/k8s-test-port-forward.pid ]]; then
+        local pid
+        pid=$(cat /tmp/k8s-test-port-forward.pid)
+        print_status "Cleaning up port forward (PID: ${pid})..."
+        kill "${pid}" 2>/dev/null || true
         rm -f /tmp/k8s-test-port-forward.pid
     fi
     
@@ -140,7 +143,7 @@ cleanup_port_forward() {
 main() {
     local action=$1
     
-    case $action in
+    case ${action} in
         "setup")
             print_status "Setting up Kubernetes test environment..."
             check_command "minikube"
@@ -184,7 +187,7 @@ main() {
             fi
             ;;
         *)
-            print_error "Unknown action: $action"
+            print_error "Unknown action: ${action}"
             print_error "Use: setup, cleanup, or status"
             exit 1
             ;;

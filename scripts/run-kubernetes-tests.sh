@@ -31,8 +31,8 @@ print_error() {
 
 # Function to check if command exists
 check_command() {
-    if ! command -v $1 &> /dev/null; then
-        print_error "$1 is not installed. Please install it first."
+    if ! command -v "${1}" &> /dev/null; then
+        print_error "${1} is not installed. Please install it first."
         exit 1
     fi
 }
@@ -42,10 +42,12 @@ check_minikube() {
     if ! minikube status &> /dev/null; then
         print_warning "Minikube is not running. Starting Minikube..."
         minikube start --memory=8192 --cpus=4 --disk-size=20g
-        eval $(minikube docker-env)
+        MINIKUBE_DOCKER_ENV_OUTPUT="$(minikube docker-env)"
+        eval "${MINIKUBE_DOCKER_ENV_OUTPUT}"
     else
         print_success "Minikube is running"
-        eval $(minikube docker-env)
+        MINIKUBE_DOCKER_ENV_OUTPUT="$(minikube docker-env)"
+        eval "${MINIKUBE_DOCKER_ENV_OUTPUT}"
     fi
 }
 
@@ -66,18 +68,18 @@ wait_for_postgres() {
     local max_attempts=30
     local attempt=1
     
-    while [ $attempt -le $max_attempts ]; do
+    while [[ "${attempt}" -le "${max_attempts}" ]]; do
         if kubectl exec -n congen deployment/postgres -- pg_isready -U postgres &> /dev/null; then
             print_success "PostgreSQL is ready"
             return 0
         fi
         
-        print_status "Attempt $attempt/$max_attempts: PostgreSQL not ready yet..."
+        print_status "Attempt ${attempt}/${max_attempts}: PostgreSQL not ready yet..."
         sleep 2
         ((attempt++))
     done
     
-    print_error "PostgreSQL failed to become ready after $max_attempts attempts"
+    print_error "PostgreSQL failed to become ready after ${max_attempts} attempts"
     return 1
 }
 
@@ -98,20 +100,21 @@ setup_port_forward() {
     # Check if port forward is working
     if ! nc -z localhost 5432; then
         print_error "Port forward failed to establish"
-        kill $port_forward_pid 2>/dev/null || true
+        kill "${port_forward_pid}" 2>/dev/null || true
         return 1
     fi
     
-    print_success "Port forward established (PID: $port_forward_pid)"
-    echo $port_forward_pid > /tmp/k8s-test-port-forward.pid
+    print_success "Port forward established (PID: ${port_forward_pid})"
+    echo "${port_forward_pid}" > /tmp/k8s-test-port-forward.pid
 }
 
 # Function to cleanup port forward
 cleanup_port_forward() {
-    if [ -f /tmp/k8s-test-port-forward.pid ]; then
-        local pid=$(cat /tmp/k8s-test-port-forward.pid)
-        print_status "Cleaning up port forward (PID: $pid)..."
-        kill $pid 2>/dev/null || true
+    if [[ -f /tmp/k8s-test-port-forward.pid ]]; then
+        local pid
+        pid=$(cat /tmp/k8s-test-port-forward.pid)
+        print_status "Cleaning up port forward (PID: ${pid})..."
+        kill "${pid}" 2>/dev/null || true
         rm -f /tmp/k8s-test-port-forward.pid
     fi
 }
@@ -120,7 +123,7 @@ cleanup_port_forward() {
 run_tests() {
     local test_type=$1
     
-    case $test_type in
+    case ${test_type} in
         "kubernetes")
             print_status "Running integration tests against Kubernetes..."
             ./gradlew kubernetesIntegrationTest
@@ -135,7 +138,7 @@ run_tests() {
             ./gradlew kubernetesIntegrationTest
             ;;
         *)
-            print_error "Unknown test type: $test_type"
+            print_error "Unknown test type: ${test_type}"
             print_error "Use: kubernetes, containers, or all"
             exit 1
             ;;
@@ -203,13 +206,13 @@ main() {
     check_command "gradle"
     check_command "nc"
     
-    if [ "$cleanup_only" = true ]; then
+    if [[ "${cleanup_only}" = true ]]; then
         cleanup_port_forward
         print_success "Cleanup complete"
         exit 0
     fi
     
-    if [ "$test_type" = "kubernetes" ] || [ "$test_type" = "all" ]; then
+    if [[ "${test_type}" = "kubernetes" ]] || [[ "${test_type}" = "all" ]]; then
         # Setup Kubernetes environment
         check_minikube
         check_deployment
@@ -220,7 +223,7 @@ main() {
         trap cleanup_port_forward EXIT
     fi
     
-    if [ "$setup_only" = true ]; then
+    if [[ "${setup_only}" = true ]]; then
         print_success "Environment setup complete"
         print_status "You can now run tests manually:"
         print_status "  ./gradlew kubernetesIntegrationTest"
@@ -228,7 +231,7 @@ main() {
     fi
     
     # Run tests
-    run_tests $test_type
+    run_tests "${test_type}"
     
     print_success "Integration tests completed!"
 }

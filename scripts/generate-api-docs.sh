@@ -14,12 +14,11 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_NAME="congen"
 DOCS_DIR="docs"
-API_DOCS_FILE="$DOCS_DIR/api-documentation.md"
-OPENAPI_JSON_FILE="$DOCS_DIR/openapi.json"
-OPENAPI_YAML_FILE="$DOCS_DIR/openapi.yaml"
-SWAGGER_UI_DIR="$DOCS_DIR/swagger-ui"
+API_DOCS_FILE="${DOCS_DIR}/api-documentation.md"
+OPENAPI_JSON_FILE="${DOCS_DIR}/openapi.json"
+OPENAPI_YAML_FILE="${DOCS_DIR}/openapi.yaml"
+SWAGGER_UI_DIR="${DOCS_DIR}/swagger-ui"
 
 # Function to print colored output
 print_status() {
@@ -65,8 +64,8 @@ check_dependencies() {
 create_docs_structure() {
     print_status "Creating documentation directory structure..."
     
-    mkdir -p "$DOCS_DIR"
-    mkdir -p "$SWAGGER_UI_DIR"
+    mkdir -p "${DOCS_DIR}"
+    mkdir -p "${SWAGGER_UI_DIR}"
     
     print_success "Documentation directory structure created"
 }
@@ -91,19 +90,19 @@ start_application() {
     # Check if application is running
     if ! curl -s http://localhost:8080/actuator/health > /dev/null; then
         print_error "Application failed to start"
-        kill $APP_PID 2>/dev/null || true
+        kill "${APP_PID}" 2>/dev/null || true
         exit 1
     fi
     
-    print_success "Application started successfully (PID: $APP_PID)"
+    print_success "Application started successfully (PID: ${APP_PID})"
 }
 
 # Function to generate OpenAPI JSON
 generate_openapi_json() {
     print_status "Generating OpenAPI JSON specification..."
     
-    if curl -s http://localhost:8080/api-docs > "$OPENAPI_JSON_FILE"; then
-        print_success "OpenAPI JSON generated: $OPENAPI_JSON_FILE"
+    if curl -s http://localhost:8080/api-docs > "${OPENAPI_JSON_FILE}"; then
+        print_success "OpenAPI JSON generated: ${OPENAPI_JSON_FILE}"
     else
         print_error "Failed to generate OpenAPI JSON"
         return 1
@@ -114,8 +113,8 @@ generate_openapi_json() {
 generate_openapi_yaml() {
     print_status "Generating OpenAPI YAML specification..."
     
-    if curl -s http://localhost:8080/api-docs.yaml > "$OPENAPI_YAML_FILE"; then
-        print_success "OpenAPI YAML generated: $OPENAPI_YAML_FILE"
+    if curl -s http://localhost:8080/api-docs.yaml > "${OPENAPI_YAML_FILE}"; then
+        print_success "OpenAPI YAML generated: ${OPENAPI_YAML_FILE}"
     else
         print_warning "OpenAPI YAML generation failed (endpoint may not be available)"
     fi
@@ -125,7 +124,7 @@ generate_openapi_yaml() {
 generate_markdown_docs() {
     print_status "Generating markdown documentation..."
     
-    cat > "$API_DOCS_FILE" << 'EOF'
+    cat > "${API_DOCS_FILE}" << 'EOF'
 # Congen API Documentation
 
 This documentation is automatically generated from the Spring Boot application source code.
@@ -377,14 +376,14 @@ Currently, the API does not require authentication. All endpoints are publicly a
 *This documentation was automatically generated on $(date)*
 EOF
 
-    print_success "Markdown documentation generated: $API_DOCS_FILE"
+    print_success "Markdown documentation generated: ${API_DOCS_FILE}"
 }
 
 # Function to create a simple index file
 create_index_file() {
     print_status "Creating documentation index..."
     
-    cat > "$DOCS_DIR/README.md" << 'EOF'
+    cat > "${DOCS_DIR}/README.md" << 'EOF'
 # Congen API Documentation
 
 Welcome to the Congen API documentation. This directory contains automatically generated documentation for the Conjugate Workout Generator API.
@@ -427,20 +426,20 @@ If you prefer to generate documentation manually:
 *Documentation generated on $(date)*
 EOF
 
-    print_success "Documentation index created: $DOCS_DIR/README.md"
+    print_success "Documentation index created: ${DOCS_DIR}/README.md"
 }
 
 # Function to stop the application
 stop_application() {
-    if [ ! -z "$APP_PID" ]; then
-        print_status "Stopping application (PID: $APP_PID)..."
-        kill $APP_PID 2>/dev/null || true
+    if [[ -n "${APP_PID}" ]]; then
+        print_status "Stopping application (PID: ${APP_PID})..."
+        kill "${APP_PID}" 2>/dev/null || true
         sleep 5
         
         # Check if process is still running
-        if kill -0 $APP_PID 2>/dev/null; then
+        if kill -0 "${APP_PID}" 2>/dev/null; then
             print_warning "Application did not stop gracefully, forcing termination..."
-            kill -9 $APP_PID 2>/dev/null || true
+            kill -9 "${APP_PID}" 2>/dev/null || true
         fi
         
         print_success "Application stopped"
@@ -470,7 +469,7 @@ main() {
     create_index_file
     
     print_success "API documentation generation completed!"
-    print_status "Documentation files created in: $DOCS_DIR"
+    print_status "Documentation files created in: ${DOCS_DIR}"
     print_status "Interactive documentation available at: http://localhost:8080/swagger-ui.html"
 }
 
