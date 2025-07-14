@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: liquibase-migration
+spec:
+  template:
+    spec:
+      containers:
+      - name: liquibase
+        command:
+        - bash
+        - -xc
+        - |
+          rm -f $READY_FILE &&
+          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD validate &&
+          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="prod" update &&
+          touch $READY_FILE &&
+          sleep 5 

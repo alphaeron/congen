@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: congen
+
+resources:
+- ../../base
+- production-secret.yaml
+- hpa.yaml
+
+patches:
+- path: production-patches/congen-configmap-patch.yaml
+  target:
+    kind: ConfigMap
+    name: congen-config
+- path: production-patches/congen-deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: congen
+- path: production-patches/congen-service-patch.yaml
+  target:
+    kind: Service
+    name: congen
+- path: production-patches/ingress-patch.yaml
+  target:
+    kind: Ingress
+    name: congen-ingress
+- path: production-patches/liquibase-job-labels-patch.yaml
+  target:
+    kind: Job
+    name: liquibase-migration
+
+images:
+- name: congen
+  newName: congen
+  newTag: production 

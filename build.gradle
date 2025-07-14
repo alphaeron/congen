@@ -143,6 +143,7 @@ jib {
             '-XX:MetaspaceSize=256M', '-XX:MaxMetaspaceSize=256M',
             '-XX:ActiveProcessorCount=2',
             '-Djava.security.edg=file:/dev/./urandom',
+            '-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-loc}',
             '-classpath', '/app/resources:/app/classes:/app/libs/*',
             'com.congen.CongenApplicationKt'
         ]
@@ -155,4 +156,190 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
         freeCompilerArgs += ["-Xjsr305=strict"]
     }
 }
+
+// Task to create migrations ConfigMap
+task createMigrationsConfigMap {
+    dependsOn processResources
+    description = 'Generate migrations ConfigMap from Liquibase migration files'
+    group = 'kubernetes'
+    
+    doLast {
+        def migrationsDir = file('resources/migrations')
+        def outputFile = file('k8s/base/migrations-configmap.yaml')
+        
+        if (!migrationsDir.exists()) {
+            throw new GradleException("Migrations directory not found: ${migrationsDir.absolutePath}")
+        }
+        
+        // Create the ConfigMap content
+        def configMapContent = """apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migrations-config
+  namespace: congen
+data:
+"""
+        
+        // Add each migration file to the ConfigMap
+        migrationsDir.eachFileRecurse { file ->
+            if (file.isFile() && (file.name.endsWith('.sql') || file.name.endsWith('.xml') || file.name == 'liquibase.properties')) {
+                def relativePath = file.path.substring(migrationsDir.path.length() + 1)
+                def key = relativePath.replaceAll(/[^a-zA-Z0-9._-]/, '_')
+                def content = file.text
+                
+                configMapContent += "  ${key}: |-\n"
+                content.split('\n').each { line ->
+                    configMapContent += "    ${line}\n"
+                }
+            }
+        }
+        
+        // Write the ConfigMap to file
+        outputFile.parentFile.mkdirs()
+        outputFile.text = configMapContent
+        
+        println "✅ Generated migrations ConfigMap: ${outputFile.absolutePath}"
+    }
+}
+
+// Kubernetes and Skaffold tasks
+task buildDockerImage {
+    dependsOn jibDockerBuild
+    description = 'Build Docker image using JIB'
+    group = 'build'
+}
+
+task deployToLocal(type: Exec) {
+    dependsOn buildDockerImage, createMigrationsConfigMap
+    commandLine 'kubectl', 'apply', '-k', 'k8s/overlays/local'
+}
+
+task buildImageForKubernetes {
+    dependsOn jibDockerBuild
+    description = 'Build Docker image for Kubernetes deployment using JIB'
+    group = 'build'
+    doLast {
+        println "✅ Docker image built using JIB: congen:${tag}"
+        println "✅ Docker image built using JIB: congen:latest"
+    }
+}
+
+task buildAndPushImage {
+    dependsOn jib
+    description = 'Build and push Docker image to registry using JIB'
+    group = 'build'
+    doLast {
+        println "✅ Docker image built and pushed using JIB: congen:${tag}"
+    }
+}
+
+// Environment-specific JIB tasks
+task buildImageForLocal {
+    dependsOn jibDockerBuild
+    description = 'Build Docker image for local environment using JIB'
+    group = 'build'
+    doLast {
+        println "✅ Docker image built for local environment: congen:${tag}"
+    }
+}
+
+task buildImageForStaging {
+    dependsOn jibDockerBuild
+    description = 'Build Docker image for staging environment using JIB'
+    group = 'build'
+    doLast {
+        println "✅ Docker image built for staging environment: congen:${tag}"
+    }
+}
+
+task buildImageForProduction {
+    dependsOn jibDockerBuild
+    description = 'Build Docker image for production environment using JIB'
+    group = 'build'
+    doLast {
+        println "✅ Docker image built for production environment: congen:${tag}"
+    }
+}
+
+task deleteLocalDeployment(type: Exec) {
+    commandLine 'kubectl', 'delete', '-k', 'k8s/overlays/local'
+}
+
+task skaffoldDev(type: Exec) {
+    dependsOn buildDockerImage, createMigrationsConfigMap
+    commandLine 'skaffold', 'dev', '-f', 'skaffold-dev.yaml'
+}
+
+task skaffoldRun(type: Exec) {
+    dependsOn buildDockerImage, createMigrationsConfigMap
+    commandLine 'skaffold', 'run', '-f', 'skaffold-dev.yaml'
+}
+
+task skaffoldDelete(type: Exec) {
+    commandLine 'skaffold', 'delete', '-f', 'skaffold-dev.yaml'
+}
+
+// Kubernetes integration test task
+task kubernetesIntegrationTest(type: Test) {
+    description = 'Runs integration tests against Kubernetes cluster'
+    group = 'verification'
+    
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    
+    useJUnitPlatform()
+    
+    systemProperty 'spring.profiles.active', 'kubernetes-test'
+    
+    testLogging {
+        exceptionFormat = 'full'
+        showStandardStreams = true
+    }
+    
+    // Setup Kubernetes environment before tests
+    dependsOn 'setupKubernetesForTesting'
+    
+    // Cleanup after tests
+    finalizedBy 'cleanupKubernetesTestEnv'
+}
+
+// Task to setup Kubernetes environment for testing (using shell script)
+task setupKubernetesForTesting(type: Exec) {
+    description = 'Setup Kubernetes environment for integration testing'
+    group = 'verification'
+    
+    commandLine './scripts/setup-kubernetes-test-env.sh', 'setup'
+}
+
+// Task to cleanup Kubernetes test environment
+task cleanupKubernetesTestEnv(type: Exec) {
+    description = 'Cleanup Kubernetes test environment'
+    group = 'verification'
+    
+    commandLine './scripts/setup-kubernetes-test-env.sh', 'cleanup'
+}
+
+// Task to check Kubernetes test environment status
+task checkKubernetesTestEnv(type: Exec) {
+    description = 'Check Kubernetes test environment status'
+    group = 'verification'
+    
+    commandLine './scripts/setup-kubernetes-test-env.sh', 'status'
+}
+
+// Task to run all integration tests (both TestContainers and Kubernetes)
+task allIntegrationTests(type: Test) {
+    description = 'Runs all integration tests (TestContainers and Kubernetes)'
+    group = 'verification'
+    
+    dependsOn 'integrationTest', 'kubernetesIntegrationTest'
+    
+    // This task just depends on the other two, no actual test execution
+    doLast {
+        println "✅ All integration tests completed!"
+    }
+}
+
+// Make check depend on all test types
+check.dependsOn test, integrationTest, kubernetesIntegrationTest
 

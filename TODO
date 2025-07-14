@@ -1,16 +1,18 @@
-Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
-
-If muscle imbalance, prefer unilateral accessories
-
 fix weight rounding issue to nearest plate
+
+exercise movement type enum?
+
+use snake_case for api values
+
+band weight for de exercises.
+
+
+
 
 Secondary movement selection should pick an exercise simlar to the primary movement.
 
-don't hardcode default weight of 50 lbs?
 
-function to estimate default weight if missing based on other user 1rms?
 
-band weight for de exercises.
 
 put generateWorkoutsForWeek in the template itself.
 
@@ -18,9 +20,19 @@ put generateWorkoutsForWeek in the template itself.
 
 Add the ability for a user to enter their weak muscles, and have the accessories focus on those.
 
-move to minikube, skaffold, kubernetes manifests for deployment, integrate deployment into gradle targets, document deployment process and how to run/test locally.
+Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
 
-pull values from application.properties from k8s manifest.  This way, we only need 1 application.properties, and the k8s manifests will specify differences.
+If muscle imbalance, prefer unilateral accessories
+
+
+
+
+don't hardcode default weight of 50 lbs?
+
+function to estimate default weight if missing based on other user 1rms?
+
+
+
 
 then move hardcoded program templates into database models to add flexability.
 
@@ -30,6 +42,4 @@ then support exerciseAttributes instead of isUnilateral, ... (like tags) for eve
 
 remove unneeded endpoints
 
-exercise movement type enum?
-
-use snake_case for api values
+pull values from application.properties from k8s manifest.  This way, we only need 1 application.properties, and the k8s manifests will specify differences.

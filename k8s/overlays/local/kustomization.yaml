@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: congen
+
+resources:
+- ../../base
+- postgres-deployment.yaml
+- postgres-service.yaml
+- postgres-configmap.yaml
+- postgres-pvc.yaml
+- local-secret.yaml
+
+patches:
+- path: local-patches/congen-configmap-patch.yaml
+  target:
+    kind: ConfigMap
+    name: congen-config
+- path: local-patches/congen-deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: congen
+- path: local-patches/congen-service-patch.yaml
+  target:
+    kind: Service
+    name: congen
+
+images:
+- name: congen
+  newName: congen
+  newTag: latest 

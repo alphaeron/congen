@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: congen
+  namespace: congen
+  labels:
+    app: congen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: congen
+  template:
+    metadata:
+      labels:
+        app: congen
+    spec:
+      serviceAccountName: congen-service-account
+      containers:
+      - name: congen
+        image: congen:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: congen-config
+        - secretRef:
+            name: congen-secret
+        env:
+        - name: SERVER_PORT
+          value: "8080"
+        - name: PGWRITERHOST
+          value: "postgres"
+        - name: PGREADERHOST
+          value: "postgres"
+        - name: PGPORT
+          value: "5432"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m" 

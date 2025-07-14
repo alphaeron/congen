@@ -4,7 +4,96 @@ This directory contains scripts and utilities for documentation and development 
 
 ## Scripts
 
-### generate-api-docs.sh
+### Kubernetes Deployment Scripts
+
+#### setup-kubernetes.sh
+Sets up the local Kubernetes environment for development.
+
+**Usage:**
+```bash
+./scripts/setup-kubernetes.sh
+```
+
+**What it does:**
+- Checks prerequisites (minikube, kubectl, skaffold, docker, kustomize)
+- Starts Minikube if not running
+- Enables required addons (ingress, metrics-server)
+- Configures Docker environment
+- Creates the congen namespace
+
+#### deploy.sh
+Comprehensive deployment script for all environments.
+
+**Usage:**
+```bash
+# Deploy to local environment
+./scripts/deploy.sh local
+
+# Deploy to staging
+./scripts/deploy.sh staging
+
+# Deploy to production
+./scripts/deploy.sh production
+
+# Check deployment status
+./scripts/deploy.sh status
+
+# View logs
+./scripts/deploy.sh logs
+
+# Clean up
+./scripts/deploy.sh cleanup --env local
+```
+
+#### cleanup-kubernetes.sh
+Cleans up the local Kubernetes environment.
+
+**Usage:**
+```bash
+./scripts/cleanup-kubernetes.sh
+```
+
+### Integration Testing Scripts
+
+#### setup-kubernetes-test-env.sh
+Sets up Kubernetes environment specifically for integration testing.
+
+**Usage:**
+```bash
+# Setup environment
+./scripts/setup-kubernetes-test-env.sh setup
+
+# Check status
+./scripts/setup-kubernetes-test-env.sh status
+
+# Cleanup
+./scripts/setup-kubernetes-test-env.sh cleanup
+```
+
+#### run-kubernetes-tests.sh
+Runs integration tests against Kubernetes with automatic environment setup.
+
+**Usage:**
+```bash
+# Run tests against Kubernetes
+./scripts/run-kubernetes-tests.sh kubernetes
+
+# Run tests with TestContainers
+./scripts/run-kubernetes-tests.sh containers
+
+# Run all integration tests
+./scripts/run-kubernetes-tests.sh all
+
+# Setup environment only
+./scripts/run-kubernetes-tests.sh --setup-only
+
+# Cleanup only
+./scripts/run-kubernetes-tests.sh --cleanup-only
+```
+
+### Documentation Scripts
+
+#### generate-api-docs.sh
 
 Generates API documentation from the running application, including:
 - OpenAPI JSON and YAML specs

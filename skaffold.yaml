@@ -1,0 +1,29 @@
+apiVersion: skaffold/v2beta29
+kind: Config
+metadata:
+  name: congen
+
+build:
+  artifacts:
+  - image: congen
+    jib: {}
+  local:
+    push: false
+
+deploy:
+  kubectl:
+    flags:
+      global:
+      - --namespace=congen
+
+portForward:
+- resourceType: service
+  resourceName: congen
+  port: 8080
+  localPort: 8080
+- resourceType: service
+  resourceName: postgres
+  port: 5432
+  localPort: 5432
+
+ 

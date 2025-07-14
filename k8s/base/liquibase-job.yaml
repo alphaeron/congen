@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: liquibase-migration
+  namespace: congen
+spec:
+  template:
+    spec:
+      containers:
+      - name: liquibase
+        image: sfat/liquibase:4.11.0
+        env:
+        - name: DEFAULTS_FILE
+          value: ./changelog/liquibase.properties
+        - name: DB
+          value: jdbc:postgresql://postgres:5432/postgres
+        - name: USERNAME
+          value: postgres
+        - name: PASSWORD
+          value: postgres
+        - name: READY_FILE
+          value: migrations_complete
+        volumeMounts:
+        - name: migrations
+          mountPath: /liquibase/changelog
+        command:
+        - bash
+        - -xc
+        - |
+          rm -f $READY_FILE &&
+          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD validate &&
+          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="test" update &&
+          touch $READY_FILE &&
+          sleep 5
+      volumes:
+      - name: migrations
+        configMap:
+          name: migrations-config
+      restartPolicy: Never
+  backoffLimit: 3 

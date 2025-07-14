@@ -33,8 +33,10 @@ The application follows a layered architecture pattern:
 
 - Java 17 or higher
 - Gradle 8.0 or higher
-- PostgreSQL 12 or higher
-- Docker (optional, for containerized development)
+- Minikube (for local Kubernetes development)
+- kubectl (Kubernetes command-line tool)
+- Skaffold (for streamlined development)
+- Docker (for containerization)
 
 ### Local Development Setup
 
@@ -44,24 +46,34 @@ The application follows a layered architecture pattern:
    cd congen
    ```
 
-2. **Set up PostgreSQL**
-   
-   **Option A: Using Docker (Recommended)**
+2. **Set up Kubernetes environment**
    ```bash
-   docker-compose up
-   ```
-   
-   **Option B: Local PostgreSQL**
-   - Install PostgreSQL
-   - Create a database named `congen`
-   - Update `application.properties` with your connection details
-
-3. **Run the application**
-   ```bash
-   ./gradlew bootRun
+   # Run the setup script
+   ./scripts/setup-kubernetes.sh
    ```
 
-4. **Run tests**
+3. **Build and deploy the application**
+   ```bash
+   # Build Docker image using JIB and deploy to Kubernetes
+   ./gradlew buildDockerImage deployToLocal
+   
+   # Or use Skaffold for development (watches for changes)
+   ./gradlew skaffoldDev
+   ```
+
+4. **Access the application**
+   ```bash
+   # Get Minikube IP
+   minikube ip
+   
+   # Access the application (NodePort 30080)
+   curl http://$(minikube ip):30080/actuator/health
+   
+   # Or use port forwarding
+   kubectl port-forward -n congen service/congen 8080:8080
+   ```
+
+5. **Run tests**
    ```bash
    # Unit tests
    ./gradlew test
@@ -73,6 +85,20 @@ The application follows a layered architecture pattern:
    ./gradlew check
    ```
 
+### Alternative: Traditional Local Development
+
+If you prefer to run the application locally without Kubernetes:
+
+1. **Set up PostgreSQL**
+   - Install PostgreSQL
+   - Create a database named `congen`
+   - Update `application.properties` with your connection details
+
+2. **Run the application**
+   ```bash
+   ./gradlew bootRun
+   ```
+
 ### Configuration
 
 The application supports multiple profiles:
@@ -81,6 +107,58 @@ The application supports multiple profiles:
 - **Test**: `application-test.properties`
 - **Staging**: `application-staging.properties`
 - **Production**: `application-prod.properties`
+
+### Kubernetes Deployment
+
+The application is designed to run on Kubernetes with environment-specific configurations:
+
+**Note**: Database migrations are automatically generated from Liquibase files during deployment. The `k8s/base/migrations-configmap.yaml` file is auto-generated and should not be manually edited.
+
+- **Local Development**: `k8s/overlays/local/`
+- **Staging**: `k8s/overlays/staging/`
+- **Production**: `k8s/overlays/production/`
+
+For detailed Kubernetes deployment instructions, see [KUBERNETES_DEPLOYMENT.md](KUBERNETES_DEPLOYMENT.md).
+
+#### Quick Kubernetes Commands
+
+```bash
+# Deploy to local environment
+./gradlew deployToLocal
+
+# Deploy to staging
+kubectl apply -k k8s/overlays/staging
+
+# Deploy to production
+kubectl apply -k k8s/overlays/production
+
+# Clean up
+./gradlew skaffoldDelete
+```
+
+#### Using the Deployment Script
+
+For a more streamlined experience, use the comprehensive deployment script:
+
+```bash
+# Deploy to local environment
+./scripts/deploy.sh local
+
+# Deploy to staging
+./scripts/deploy.sh staging
+
+# Deploy to production
+./scripts/deploy.sh production
+
+# Check deployment status
+./scripts/deploy.sh status
+
+# View logs
+./scripts/deploy.sh logs
+
+# Clean up
+./scripts/deploy.sh cleanup --env local
+```
 
 ## 📚 API Documentation
 
@@ -151,7 +229,7 @@ Currently, the API does not require authentication. All endpoints are publicly a
 - `PUT /user-program-preferences/{id}` - Update user program preferences
 - `DELETE /user-program-preferences/{id}` - Delete user program preferences
 
-For detailed API documentation, see [API.md](docs/API.md).
+For detailed API documentation, see [api-documentation.md](docs/api-documentation.md).
 
 ## 🧪 Testing
 
@@ -169,12 +247,54 @@ For detailed API documentation, see [API.md](docs/API.md).
 # Run only unit tests
 ./gradlew test
 
-# Run only integration tests
+# Run only integration tests (TestContainers)
 ./gradlew integrationTest
+
+# Run integration tests against Kubernetes
+./gradlew kubernetesIntegrationTest
+
+# Run all integration tests (TestContainers + Kubernetes)
+./gradlew allIntegrationTests
+
+# Check Kubernetes test environment status
+./gradlew checkKubernetesTestEnv
+
+# Cleanup Kubernetes test environment
+./gradlew cleanupKubernetesTestEnv
 
 # Run tests with coverage
 ./gradlew jacocoTestReport
 ```
+
+### Integration Testing with Kubernetes
+
+The application supports multiple integration testing approaches:
+
+#### Option 1: TestContainers (Recommended for Development)
+```bash
+# Fast, isolated testing
+./gradlew integrationTest
+```
+
+#### Option 2: Kubernetes Integration Testing
+```bash
+# Test against actual Kubernetes deployment (automatic setup)
+./gradlew kubernetesIntegrationTest
+
+# Or use the script for more control
+./scripts/run-kubernetes-tests.sh kubernetes
+```
+
+#### Option 3: All Integration Tests
+```bash
+# Run both TestContainers and Kubernetes tests
+./gradlew allIntegrationTests
+
+# Or use the script
+./scripts/run-kubernetes-tests.sh all
+```
+
+For detailed information about integration testing, see [INTEGRATION_TESTING_KUBERNETES.md](docs/INTEGRATION_TESTING_KUBERNETES.md).
 
 ### Test Database
 
@@ -198,6 +318,10 @@ The application uses PostgreSQL with the following main tables:
 ### Migrations
 
 Database schema changes are managed using Liquibase migrations located in `resources/migrations/`. Each migration is versioned and includes both schema changes and data population scripts.
+
+For detailed information about the migration system, see [DATABASE_MIGRATIONS.md](docs/DATABASE_MIGRATIONS.md).
+
+**Quick Reference**: [MIGRATION_QUICK_REFERENCE.md](docs/MIGRATION_QUICK_REFERENCE.md)
 
 ## 🔧 Development
 
@@ -230,10 +354,10 @@ The project follows Kotlin coding conventions and uses ktlint for code formattin
 
 ```bash
 # Build Docker image
-docker build -t congen .
+./gradlew buildDockerImage
 
-# Run with Docker Compose
-docker-compose up
+# Or manually
+docker build -t congen .
 ```
 
 ## 📁 Project Structure
@@ -257,7 +381,9 @@ congen/
 │   ├── migrations/         # Database migrations
 │   └── application-*.properties
 ├── docs/                   # Documentation
-└── docker-compose.yml
+├── k8s/                    # Kubernetes manifests
+├── scripts/                # Utility scripts
+└── skaffold*.yaml          # Skaffold configuration
 ```
 
 ## 🤝 Contributing

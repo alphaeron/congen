@@ -41,3 +41,27 @@ task detektTest(type: JavaExec, group: 'verification') {
     args '--input', 'src/test,src/integrationTest', '--config', 'detekt-test.yml', '--report', 'txt:build/reports/detekt/detekt-test.txt', '--report', 'xml:build/reports/detekt/detekt-test.xml'
 }
 check.dependsOn(detektTest)
+
+task kubeval(type: Exec, group: 'verification') {
+    description = 'Lint Kubernetes manifests with kubeval'
+    commandLine 'sh', '-c', 'kustomize build k8s/overlays/production | kubeval --strict'
+}
+
+task kubeLinter(type: Exec, group: 'verification') {
+    description = 'Lint Kubernetes manifests with kube-linter'
+    commandLine 'kube-linter', 'lint', 'k8s/overlays/production'
+}
+
+task kubectlDryRun(type: Exec, group: 'verification') {
+    description = 'Validate kustomize output with kubectl dry-run'
+    commandLine 'kubectl', 'apply', '--dry-run=client', '-k', 'k8s/overlays/production'
+}
+
+task shellCheck(type: Exec, group: 'verification') {
+    description = 'Lint all bash scripts with ShellCheck'
+    commandLine 'sh', '-c', 'find scripts -name "*.sh" | xargs shellcheck'
+}
+
+task kubeCheck(group: 'verification', description: 'Comprehensive Kubernetes linting (kubeval, kube-linter, kubectl dry-run)') {
+    dependsOn kubeval, kubeLinter, kubectlDryRun
+}

@@ -29,3 +29,6 @@ bin/
 schemaspy.jar
 postgresql-jdbc.jar
 .temp_schemaspy_output/
+
+# Kubernetes generated files
+k8s/base/migrations-configmap.yaml
