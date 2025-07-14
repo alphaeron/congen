@@ -296,7 +296,7 @@ The application uses PostgreSQL with the following main tables:
 
 Database schema changes are managed using Liquibase migrations located in `resources/migrations/`. Each migration is versioned and includes both schema changes and data population scripts.
 
-For detailed information about the migration system, see [DATABASE_MIGRATIONS.md](docs/DATABASE_MIGRATIONS.md).
+For detailed information about the migration system, see [resources/migrations/README.md](resources/migrations/README.md).
 
 **Quick Reference**: [MIGRATION_QUICK_REFERENCE.md](docs/MIGRATION_QUICK_REFERENCE.md)
 

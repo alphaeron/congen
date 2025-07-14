@@ -2,6 +2,13 @@
 
 This document describes how to deploy the Congen application using Kubernetes with Minikube for local development and Skaffold for streamlined development workflows.
 
+## Image Tagging and Deployment Strategy
+
+- **No 'latest' tag:** Images are always tagged with a unique, versioned tag (e.g., `main-<git-hash>-<env>-<timestamp>`). The `latest` tag is not used or referenced in any deployment.
+- **Image management:** The image is set via a dedicated `image-tag-patch.yaml` in each overlay (local, staging, production). The main deployment and environment patches do not set the image or pull policy.
+- **ImagePullPolicy:** This is set in the base deployment (`k8s/base/congen-deployment.yaml`) and inherited by all overlays. The default is `IfNotPresent`.
+- **Patch structure:** Overlays’ deployment patches (`congen-deployment-patch.yaml`) do not set the image or pull policy. Only the image-tag-patch controls the deployed image version.
+
 ## Prerequisites
 
 ### Required Tools
@@ -50,42 +57,68 @@ This document describes how to deploy the Congen application using Kubernetes wi
 ### 1. Start Minikube
 
 ```bash
-# Start Minikube with sufficient resources
 minikube start --memory=8192 --cpus=4 --disk-size=20g
-
-# Enable addons
 minikube addons enable ingress
 minikube addons enable metrics-server
 
 # Point your shell to minikube's docker-daemon
+# This is required so that images you build are available to the cluster
+# You must do this in every new shell before building images for local deployment
+
 eval $(minikube docker-env)
 ```
 
-### 2. Build and Deploy
+### 2. Build and Deploy (All Environments)
 
-#### Option A: Using Gradle Tasks (Recommended)
+#### Unified Deployment Task
 
-```bash
-# Build the application and Docker image using JIB
-./gradlew jibDockerBuild
-
-# Deploy to local Kubernetes
-./gradlew deployToKubernetes -Penvironment=local
-
-# Check deployment status
-kubectl get pods -n congen
-kubectl get services -n congen
-```
-
-#### Option B: Using Skaffold (Development Mode)
+Use the unified deployment task for all environments:
 
 ```bash
-# Start Skaffold in development mode (watches for changes)
-./gradlew skaffoldDev
-
-# Or run once
-./gradlew skaffoldRun
+./gradlew deployToKubernetes -Penvironment=local|staging|production
 ```
+
+#### Environment-Specific Requirements
+
+**Local Environment:**
+- Requires minikube to be running
+- Automatically builds image in minikube's Docker daemon
+- No registry push required
+
+**Staging/Production Environments:**
+- Requires remote registry configuration
+- Automatically builds and pushes image to remote registry
+- Production requires user confirmation
+
+```bash
+# For staging/production, set your registry
+./gradlew deployToKubernetes -Penvironment=staging -PremoteRegistry=your-registry.example.com
+
+# For production with confirmation
+./gradlew deployToKubernetes -Penvironment=production -PremoteRegistry=your-registry.example.com
+```
+
+#### What the Unified Task Does
+
+- Builds Docker image using JIB
+- Handles image for the environment:
+  - Local: builds in minikube Docker daemon
+  - Staging/Production: pushes to remote registry
+- Generates image tag patch with correct image reference
+- Creates a ConfigMap for application configuration (including database schema and application settings) from the files in resources/migrations and applies it to the cluster
+- Deploys to Kubernetes using kustomize overlays
+- Waits for deployment to be ready
+- Provides environment-specific feedback
+
+**ConfigMap Details:**
+- The ConfigMap is generated automatically from the contents of `resources/migrations` and other configuration files.
+- It is applied as part of the deployment and made available to the application pods.
+- You do not need to manually manage this ConfigMap; it is always kept in sync with your source files during deployment.
+
+**Note:**
+- The image tag in the deployment always matches the built image
+- The imagePullPolicy is inherited from the base deployment
+- All overlays use image-tag-patch.yaml to control the deployed image version
 
 ### 3. Access the Application
 
@@ -162,7 +195,7 @@ jib {
     }
     to {
         image = 'congen'
-        tags = [tag, 'latest']
+        tags = [tag] // Only versioned tags are used; 'latest' is not used
     }
     container {
         appRoot = '/app'
@@ -347,7 +380,7 @@ kubectl get jobs -n congen
 kubectl logs job/liquibase-migration -n congen
 ```
 
-For comprehensive information about the database migration system, see [DATABASE_MIGRATIONS.md](docs/DATABASE_MIGRATIONS.md).
+For comprehensive information about the database migration system, see [resources/migrations/README.md](../resources/migrations/README.md).
 
 ## Troubleshooting
 

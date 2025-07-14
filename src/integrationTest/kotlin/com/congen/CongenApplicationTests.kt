@@ -129,7 +129,7 @@ class CongenApplicationTests {
     @Test
     fun `should handle missing required fields gracefully`() {
         val invalidEquipment = mapOf("description" to "Missing name field")
-		
+
         webTestClient.post()
             .uri("/equipment/")
             .contentType(MediaType.APPLICATION_JSON)

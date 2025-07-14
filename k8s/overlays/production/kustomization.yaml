@@ -17,6 +17,10 @@ patches:
   target:
     kind: Deployment
     name: congen
+- path: production-patches/image-tag-patch.yaml
+  target:
+    kind: Deployment
+    name: congen
 - path: production-patches/congen-service-patch.yaml
   target:
     kind: Service

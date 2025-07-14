@@ -116,14 +116,18 @@ class UnitConversionServiceTest {
         @JvmStatic
         fun unitConversionTestCases() =
             listOf(
-                // kg to lbs conversions
-                arrayOf(BigDecimal("100.0"), WeightUnit.KG, BigDecimal("220.46")), // 100 kg = 220.46 lbs
-                arrayOf(BigDecimal("50.0"), WeightUnit.KG, BigDecimal("110.23")), // 50 kg = 110.23 lbs
-                arrayOf(BigDecimal("0.0"), WeightUnit.KG, BigDecimal("0.00")), // 0 kg = 0 lbs
-                // lbs to kg conversions
-                arrayOf(BigDecimal("225.0"), WeightUnit.LBS, BigDecimal("102.06")), // 225 lbs = 102.06 kg
-                arrayOf(BigDecimal("100.0"), WeightUnit.LBS, BigDecimal("45.36")), // 100 lbs = 45.36 kg
-                arrayOf(BigDecimal("0.0"), WeightUnit.LBS, BigDecimal("0.00")) // 0 lbs = 0 kg
+                // 100 kg = 220.46 lbs
+                arrayOf(BigDecimal("100.0"), WeightUnit.KG, BigDecimal("220.46")),
+                // 50 kg = 110.23 lbs
+                arrayOf(BigDecimal("50.0"), WeightUnit.KG, BigDecimal("110.23")),
+                // 0 kg = 0 lbs
+                arrayOf(BigDecimal("0.0"), WeightUnit.KG, BigDecimal("0.00")),
+                // 225 lbs = 102.06 kg
+                arrayOf(BigDecimal("225.0"), WeightUnit.LBS, BigDecimal("102.06")),
+                // 100 lbs = 45.36 kg
+                arrayOf(BigDecimal("100.0"), WeightUnit.LBS, BigDecimal("45.36")),
+                // 0 lbs = 0 kg
+                arrayOf(BigDecimal("0.0"), WeightUnit.LBS, BigDecimal("0.00"))
             )
     }
 

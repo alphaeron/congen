@@ -227,7 +227,8 @@ class ConjugateWorkoutGeneratorService(
                 preferences = preferences,
                 // Only primary exercises (is_accessory = false)
                 exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
-                isAccessory = false, // Primary movements are not accessories
+                // Primary movements are not accessories
+                isAccessory = false,
                 rotationHistory = rotationHistory
             )
 
@@ -258,7 +259,8 @@ class ConjugateWorkoutGeneratorService(
                             primaryExercise?.name ?: ""
                         ),
                     // Only primary exercises that are different from primary
-                    isAccessory = false, // Secondary movements are not accessories
+                    // Secondary movements are not accessories
+                    isAccessory = false,
                     rotationHistory = rotationHistory
                 )
             } else {
@@ -338,7 +340,8 @@ class ConjugateWorkoutGeneratorService(
                         preferences = preferences,
                         // Only accessory exercises (is_accessory = true)
                         exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-                        isAccessory = true, // Accessory movements are accessories
+                        // Accessory movements are accessories
+                        isAccessory = true,
                         rotationHistory = rotationHistory
                     )
 
@@ -382,7 +385,8 @@ class ConjugateWorkoutGeneratorService(
                         preferences = preferences,
                         // Use accessory exercises for conditioning (is_accessory = true)
                         exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-                        isAccessory = true, // Conditioning uses accessory exercises
+                        // Conditioning uses accessory exercises
+                        isAccessory = true,
                         rotationHistory = rotationHistory
                     )
 
@@ -432,6 +436,7 @@ class ConjugateWorkoutGeneratorService(
                     userEquipment = userEquipment,
                     preferences = preferences,
                     exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
+                    // Conditioning uses accessory exercises
                     isAccessory = true,
                     rotationHistory = rotationHistory
                 )

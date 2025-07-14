@@ -52,42 +52,42 @@ class OpenApiConfig {
                     .description(
                         """
                         # Conjugate Workout Generator API
-                        
+
                         A comprehensive REST API for managing workout programs, exercises, users, and preferences
                         using the conjugate method. This API provides endpoints for creating personalized
                         workout programs based on user preferences and available equipment.
-                        
+
                         ## Key Features
-                        
+
                         - **User Management**: Create and manage user profiles with fitness preferences
                         - **Exercise Library**: Comprehensive database of exercises with equipment and muscle targeting
                         - **Program Generation**: Generate personalized workout programs using the conjugate method
                         - **Preference Management**: Store and retrieve user preferences for programs and exercises
                         - **Equipment Tracking**: Manage available equipment for users
-                        
+
                         ## Authentication
-                        
+
                         Currently, the API does not require authentication. All endpoints are publicly accessible.
-                        
+
                         ## Rate Limiting
-                        
+
                         API requests are rate-limited to ensure fair usage. Please respect the rate limits
                         and implement appropriate retry logic in your applications.
-                        
+
                         ## Error Handling
-                        
+
                         The API uses standard HTTP status codes and returns detailed error messages
                         in JSON format for validation and processing errors.
-                        
+
                         ## Data Validation
-                        
+
                         All input data is validated according to business rules:
                         - User age: 1-150 years
                         - User weight: 0.01-1000 kg
                         - User height: 0.01-300 cm
                         - Program days per week: 2, 3, or 4 days
                         - Exercise parameters: Valid ranges for reps, sets, weights, etc.
-                        
+
                         For detailed validation rules, see the individual endpoint documentation.
                         """.trimIndent(),
                     )

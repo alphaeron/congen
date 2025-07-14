@@ -10,7 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @ExtendWith(MockitoExtension::class)

@@ -59,7 +59,11 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get all programs`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
-        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Another Program")
+        // Create second program as inactive to avoid unique constraint violation
+        webTestClient.post()
+            .uri("/program/?userId=$userId&name=Another Program&isActive=false")
+            .exchange()
+            .expectStatus().isOk()
         webTestClient.get()
             .uri("/program/")
             .exchange()
@@ -129,7 +133,11 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get programs by user id without filter`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 1")
-        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 2")
+        // Create second program as inactive to avoid unique constraint violation
+        webTestClient.post()
+            .uri("/program/?userId=$userId&name=Test Program 2&isActive=false")
+            .exchange()
+            .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/program/user/$userId")

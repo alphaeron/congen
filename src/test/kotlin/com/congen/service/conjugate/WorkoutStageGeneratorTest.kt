@@ -85,20 +85,34 @@ class WorkoutStageGeneratorTest {
             )
         whenever(
             setSchemeService.createSetScheme(
-                anyLong(), // programmedExerciseId: Long
-                anyInt(), // setNumber: Int
-                anyBoolean(), // isAmrap: Boolean
-                anyBoolean(), // isEmom: Boolean
-                anyBoolean(), // useTempo: Boolean
-                anyOrNull(), // eccentricTempo: String?
-                anyOrNull(), // isometricTempo: String?
-                anyOrNull(), // concentricTempo: String?
-                anyOrNull(), // targetWeight: String?
-                anyOrNull(), // performedWeight: String?
-                anyOrNull(), // targetRepCount: Int?
-                anyOrNull(), // performedRepCount: Int?
-                anyOrNull(), // restSeconds: Int?
-                anyOrNull() // unit: String?
+                // programmedExerciseId: Long
+                anyLong(),
+                // setNumber: Int
+                anyInt(),
+                // isAmrap: Boolean
+                anyBoolean(),
+                // isEmom: Boolean
+                anyBoolean(),
+                // useTempo: Boolean
+                anyBoolean(),
+                // eccentricTempo: String?
+                anyOrNull(),
+                // isometricTempo: String?
+                anyOrNull(),
+                // concentricTempo: String?
+                anyOrNull(),
+                // targetWeight: String?
+                anyOrNull(),
+                // performedWeight: String?
+                anyOrNull(),
+                // targetRepCount: Int?
+                anyOrNull(),
+                // performedRepCount: Int?
+                anyOrNull(),
+                // restSeconds: Int?
+                anyOrNull(),
+                // unit: String?
+                anyOrNull()
             )
         ).thenReturn(Mono.just(mockSetScheme()))
     }

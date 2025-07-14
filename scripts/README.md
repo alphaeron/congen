@@ -21,7 +21,7 @@ Sets up the local Kubernetes environment for development.
 - Configures Docker environment
 - Creates the congen namespace
 
-**Note:** Deployment is now handled entirely by Gradle tasks. See the main README for deployment commands.
+**Note:** Deployment and integration testing are now handled entirely by Gradle tasks. See the main README for deployment and testing commands.
 
 #### cleanup-kubernetes.sh
 Cleans up the local Kubernetes environment.
@@ -31,42 +31,13 @@ Cleans up the local Kubernetes environment.
 ./scripts/cleanup-kubernetes.sh
 ```
 
-### Integration Testing Scripts
-
-#### setup-kubernetes-test-env.sh
-Sets up Kubernetes environment specifically for integration testing.
+#### start-local-access.sh / stop-local-access.sh
+Set up or tear down port forwarding to access the application locally.
 
 **Usage:**
 ```bash
-# Setup environment
-./scripts/setup-kubernetes-test-env.sh setup
-
-# Check status
-./scripts/setup-kubernetes-test-env.sh status
-
-# Cleanup
-./scripts/setup-kubernetes-test-env.sh cleanup
-```
-
-#### run-kubernetes-tests.sh
-Runs integration tests against Kubernetes with automatic environment setup.
-
-**Usage:**
-```bash
-# Run tests against Kubernetes
-./scripts/run-kubernetes-tests.sh kubernetes
-
-# Run tests with TestContainers
-./scripts/run-kubernetes-tests.sh containers
-
-# Run all integration tests
-./scripts/run-kubernetes-tests.sh all
-
-# Setup environment only
-./scripts/run-kubernetes-tests.sh --setup-only
-
-# Cleanup only
-./scripts/run-kubernetes-tests.sh --cleanup-only
+./scripts/start-local-access.sh
+./scripts/stop-local-access.sh
 ```
 
 ### Documentation Scripts

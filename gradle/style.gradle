@@ -90,10 +90,7 @@ task kubeCheck(group: 'verification', description: 'Comprehensive Kubernetes lin
 }
 
 // Gradle-specific linting tasks
-task gradleLint(type: Exec, group: 'verification') {
-    description = 'Lint Gradle build files using gradle-lint plugin'
-    commandLine './gradlew', 'lintGradle'
-}
+// Note: Gradle linting is handled by spotlessCheck via gradleCheck task
 
 task gradleFormat(type: Exec, group: 'formatting') {
     description = 'Format Gradle build files using Spotless'
@@ -107,7 +104,7 @@ task gradleCheck(type: Exec, group: 'verification') {
 
 // Comprehensive linting task that includes Gradle files
 task allLint(group: 'verification', description: 'Run all linting checks including Gradle files') {
-    dependsOn ktlint, detekt, detektTest, shellCheck, kubeCheck, gradleLint, gradleCheck
+    dependsOn ktlint, detekt, detektTest, shellCheck, kubeCheck, gradleCheck
 }
 
 // Comprehensive formatting task

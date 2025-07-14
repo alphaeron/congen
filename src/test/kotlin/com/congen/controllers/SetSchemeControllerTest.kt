@@ -291,7 +291,8 @@ class SetSchemeControllerTest {
                 id = SCHEME_ID_1,
                 programmedExerciseId = PROGRAMMED_EXERCISE_ID,
                 setNumber = SET_NUMBER_1,
-                targetWeight = BigDecimal("45.36"), // 100 lbs in kg
+                // 100 lbs in kg
+                targetWeight = BigDecimal("45.36"),
                 targetRepCount = TARGET_REP_COUNT,
                 restSeconds = REST_SECONDS_90,
                 createdAt = now,
@@ -346,7 +347,8 @@ class SetSchemeControllerTest {
                 programmedExerciseId = PROGRAMMED_EXERCISE_ID,
                 setNumber = SET_NUMBER_2,
                 isAmrap = true,
-                targetWeight = BigDecimal("49.90"), // 110 lbs in kg
+                // 110 lbs in kg
+                targetWeight = BigDecimal("49.90"),
                 restSeconds = REST_SECONDS_120,
                 createdAt = now,
                 updatedAt = now

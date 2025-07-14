@@ -182,8 +182,9 @@ show_environment_info() {
     if kubectl get pods -n congen &> /dev/null; then
         print_success "Application is deployed"
         echo "  - Pods:"
-        kubectl get pods -n congen --no-headers | while read line; do
-            echo "    $line"
+        # shellcheck disable=SC2312
+        kubectl get pods -n congen --no-headers | while read -r line; do
+            echo "    ${line}"
         done
     else
         print_warning "Application is not deployed"
@@ -259,7 +260,7 @@ main() {
             build_and_deploy
             wait_for_ready
             
-            if [[ "$enable_test" == "true" ]]; then
+            if [[ "${enable_test}" == "true" ]]; then
                 setup_test_port_forward
                 print_success "Kubernetes environment setup complete with test port forwarding!"
             else
@@ -276,7 +277,7 @@ main() {
             build_and_deploy
             wait_for_ready
             
-            if [[ "$enable_test" == "true" ]]; then
+            if [[ "${enable_test}" == "true" ]]; then
                 setup_test_port_forward
                 print_success "Application deployment complete with test port forwarding!"
             else

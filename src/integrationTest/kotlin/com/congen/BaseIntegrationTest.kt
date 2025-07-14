@@ -41,7 +41,7 @@ open class BaseIntegrationTest {
             // - workout_stage_type, exercise_workout_type
             val truncateSql =
                 """
-                TRUNCATE TABLE 
+                TRUNCATE TABLE
                     set_scheme,
                     programmed_exercise,
                     workout_stage,

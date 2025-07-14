@@ -313,7 +313,8 @@ class WorkoutStageGenerator(
                 concentricTempo = concentric,
                 targetWeight = targetWeight,
                 performedWeight = null,
-                targetRepCount = null, // Varies per person for AMRAP/EMOM
+                // Varies per person for AMRAP/EMOM
+                targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = if (isAmrap) 0 else 60
             )

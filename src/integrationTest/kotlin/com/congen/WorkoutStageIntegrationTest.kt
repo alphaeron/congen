@@ -236,7 +236,8 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.patch()
             .uri(
-                "/workout_stage/?id=${stageResponse.id}&programmedWorkoutId=${workoutResponse.id}&stageTypeId=$primaryId&position=15&name=Updated Stage"
+                "/workout_stage/?id=${stageResponse.id}&programmedWorkoutId=${workoutResponse.id}" +
+                    "&stageTypeId=$primaryId&position=15&name=Updated Stage"
             )
             .exchange()
             .expectStatus().isOk()

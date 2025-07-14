@@ -182,7 +182,8 @@ class ProgrammedWorkoutDAL(
      */
     fun hasUserExistingWorkouts(userId: Int): Mono<Boolean> {
         logger.debug("Checking if user has existing workouts: {}", userId)
-        return postgresClient.selectIndividual<Map<String, Any>>( // Explicit type
+        // Explicit type
+        return postgresClient.selectIndividual<Map<String, Any>>(
             """
             SELECT EXISTS(
                 SELECT 1

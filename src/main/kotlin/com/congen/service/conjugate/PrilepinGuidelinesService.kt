@@ -228,7 +228,8 @@ class PrilepinGuidelinesService {
                     PrilepinGuidelines(
                         intensityRange = 0.5..0.5,
                         repsPerSetRange = 3..3,
-                        totalReps = 27, // 9*3
+                        // 9*3
+                        totalReps = 27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.5)
@@ -239,7 +240,8 @@ class PrilepinGuidelinesService {
                     PrilepinGuidelines(
                         intensityRange = 0.55..0.55,
                         repsPerSetRange = 3..3,
-                        totalReps = 27, // 9*3
+                        // 9*3
+                        totalReps = 27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.55)
@@ -250,7 +252,8 @@ class PrilepinGuidelinesService {
                     PrilepinGuidelines(
                         intensityRange = 0.6..0.6,
                         repsPerSetRange = 3..3,
-                        totalReps = 27, // 9*3
+                        // 9*3
+                        totalReps = 27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.6)
@@ -261,7 +264,8 @@ class PrilepinGuidelinesService {
                     PrilepinGuidelines(
                         intensityRange = 0.5..0.5,
                         repsPerSetRange = 3..3,
-                        totalReps = 27, // 9*3
+                        // 9*3
+                        totalReps = 27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.5)
