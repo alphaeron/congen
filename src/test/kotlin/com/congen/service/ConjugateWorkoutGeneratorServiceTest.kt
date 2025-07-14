@@ -184,39 +184,43 @@ class ConjugateWorkoutGeneratorServiceTest {
             listOf(mockExercise(name = EXERCISE_NAME_2))
         )
 
-        whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any())).thenReturn(
-            listOf(
-                com.congen.service.conjugate.SetSchemeParams(
-                    1,
-                    false,
-                    false,
-                    false,
-                    null,
-                    null,
-                    null,
-                    BigDecimal(WEIGHT_PRIMARY),
-                    null,
-                    TARGET_REPS_PRIMARY,
-                    null,
-                    REST_SECONDS_PRIMARY
+        whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
+            Mono.just(
+                listOf(
+                    com.congen.service.conjugate.SetSchemeParams(
+                        1,
+                        false,
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        BigDecimal(WEIGHT_PRIMARY),
+                        null,
+                        TARGET_REPS_PRIMARY,
+                        null,
+                        REST_SECONDS_PRIMARY
+                    )
                 )
             )
         )
-        whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any())).thenReturn(
-            listOf(
-                com.congen.service.conjugate.SetSchemeParams(
-                    1,
-                    false,
-                    false,
-                    false,
-                    null,
-                    null,
-                    null,
-                    BigDecimal(WEIGHT_SECONDARY),
-                    null,
-                    TARGET_REPS_SECONDARY,
-                    null,
-                    REST_SECONDS_SECONDARY
+        whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any(), any())).thenReturn(
+            Mono.just(
+                listOf(
+                    com.congen.service.conjugate.SetSchemeParams(
+                        1,
+                        false,
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        BigDecimal(WEIGHT_SECONDARY),
+                        null,
+                        TARGET_REPS_SECONDARY,
+                        null,
+                        REST_SECONDS_SECONDARY
+                    )
                 )
             )
         )
@@ -227,6 +231,26 @@ class ConjugateWorkoutGeneratorServiceTest {
             Mono.just(mockProgrammedExercise())
         )
         whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+        whenever(workoutStageGenerator.generateAmrapOrEmomScheme(any(), any(), any())).thenReturn(
+            Mono.just(
+                listOf(
+                    com.congen.service.conjugate.SetSchemeParams(
+                        1,
+                        true,
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        BigDecimal("50.0"),
+                        null,
+                        null,
+                        null,
+                        0
+                    )
+                )
+            )
+        )
 
         whenever(
             sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(any(), any(), any(), any())

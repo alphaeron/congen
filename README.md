@@ -276,6 +276,51 @@ Currently, the API does not require authentication. All endpoints are publicly a
 
 For detailed API documentation, see [api-documentation.md](docs/api-documentation.md).
 
+## ⚖️ Weight Selection
+
+The application automatically rounds calculated weights to match available equipment sizes, ensuring users can achieve the target weight using standard weightlifting equipment.
+
+### Equipment-Based Weight Rounding
+
+#### Barbell Exercises
+- **Equipment**: power bar, safety squat bar, trap bar, landmine
+- **Bar Weight**: 45 lbs (20 kg)
+- **Plate Sizes**:
+  - **Pounds**: 2.5, 5, 10, 25, 45 lbs
+  - **Kilograms**: 1.25, 2.5, 5, 10, 15, 20, 25 kg
+- **Algorithm**: Starts with bar weight, then adds plates using heaviest-first approach
+
+#### Kettlebell Exercises
+- **Equipment**: kettlebell
+- **Available Weights**:
+  - **Pounds**: 9, 13, 18, 26, 35, 40, 44, 53, 62, 70, 80, 88, 97, 106, 124, 150, 176 lb
+  - **Kilograms**: 4, 6, 8, 12, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 56, 68, 80 kg
+- **Algorithm**: Rounds to nearest available kettlebell weight
+
+#### Dumbbell Exercises
+- **Equipment**: dumbbells
+- **Rounding**:
+  - **Pounds**: Nearest 5 lb increment
+  - **Kilograms**: Nearest 2.5 kg increment
+- **Algorithm**: Simple rounding to nearest increment
+
+#### Other Exercises
+- **Bodyweight exercises**: No weight rounding applied
+- **Equipment not found**: Returns original calculated weight
+
+### Example Weight Calculations
+
+```kotlin
+// Barbell example: 185 lb target
+// Result: 45lb bar + 2x45lb + 2x25lb plates = 185lbs
+
+// Kettlebell example: 37 lb target  
+// Result: 40lb kettlebell (closest available)
+
+// Dumbbell example: 27.5 lb target
+// Result: 30lb dumbbells (rounded to nearest 5lb)
+```
+
 ## 🧪 Testing
 
 ### Test Structure

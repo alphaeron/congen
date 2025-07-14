@@ -1,13 +1,23 @@
-There is an issue where when we calculate a weight, we need to run it to the correct size so that the user can use
-a standard set of weightlifting plates to load the bar for the exercise.  lbs and kg have different size plate sets.
+# Pounds.
+REP_TO_PERCENTAGES: Final = {
+    1: 1.0,
+    2: 0.95,
+    3: 0.93,
+    4: 0.90,
+    5: 0.87,
+    6: 0.85,
+    7: 0.83,
+    8: 0.80,
+    9: 0.77,
+    10: 0.75,
+    12: 0.70,
+}
 
-Here are the plate sizes for those units.
-2.5, 5, 10, 25, 45 lbs
-1.25, 2.5, 5, 10, 15, 20, 25 kg
 
-If an exercise uses kettlebells, here are the weights of kettlebells that should be used for rounding.
 
-Update the exercise selection algorithm so that when we calculate the weight, we round it so that it can be computed by adding plates of the above weights together (starting using the heaviest plates possible before dropping down to a lower-weight plate).
+
+
+
 
 
 
@@ -32,7 +42,7 @@ Orange: 15lbs
 
 Bands only come in lbs weight, and are reported using the color of the band.
 
-If the unit for the exercise is kg, convert the kg weight to lbs weight, determine how much weight is bars and how much is bands, then select the band weight.  then, convert the bar weight back to kg, and round as we usually do based on plate size to determine the final bar weight in kg.
+If the unit for the exercise is kg, convert the kg weight to lbs weight, determine how much weight is bars and how much is bands, then select the band weight.  then, subtract the total band weight (2 * the weight of a single band) from the input weight, convert that back to kg, and round as we usually do based on plate size to determine the final bar weight in kg.
 
 If the unit for the exercise is lbs, we can determine how much weight is bars and how much is bands, then select the band weight.  then, just round as we usually do based on plate size to determine the final bar weight in lbs.
 

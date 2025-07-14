@@ -14,6 +14,7 @@ import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
 import com.congen.service.UnitConversionService
+import com.congen.service.WeightSelectionService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -67,6 +68,7 @@ class WorkoutStageGenerator(
     private val unitConversionService: UnitConversionService,
     private val setSchemeService: SetSchemeService,
     private val prilepinGuidelinesService: PrilepinGuidelinesService,
+    private val weightSelectionService: WeightSelectionService,
 ) {
     /**
      * Creates a workout stage.
@@ -160,15 +162,17 @@ class WorkoutStageGenerator(
      * @param dayType The type of workout day (ME_Upper, DE_Lower, etc.)
      * @param oneRepMaxes List of user's one rep max values
      * @param currentWeekNumber The current week number in the program
-     * @return List of set scheme parameters
+     * @param userId The user ID for weight unit preferences
+     * @return Mono containing list of set scheme parameters
      */
     fun generatePrilepinBasedScheme(
         exercise: Exercise,
         movementRole: String,
         dayType: String,
         oneRepMaxes: List<UserOneRepMax>,
-        currentWeekNumber: Int
-    ): List<SetSchemeParams> {
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
         val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
@@ -180,39 +184,40 @@ class WorkoutStageGenerator(
         val restSeconds = guidelines.restSeconds.random()
 
         // Determine target weight
-        val targetWeight = getTargetWeight(exercise.name, intensity, oneRepMaxes)
+        return getTargetWeight(exercise.name, intensity, oneRepMaxes, userId)
+            .map { targetWeight ->
+                // Tempo: vary if accessory, else default
+                val useTempo = movementRole != "primary" && Random.nextBoolean()
+                val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
+                val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
+                val concentric =
+                    if (useTempo) {
+                        if (Random.nextBoolean()) {
+                            "1"
+                        } else {
+                            "X"
+                        }
+                    } else {
+                        "0"
+                    }
 
-        // Tempo: vary if accessory, else default
-        val useTempo = movementRole != "primary" && Random.nextBoolean()
-        val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
-        val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
-        val concentric =
-            if (useTempo) {
-                if (Random.nextBoolean()) {
-                    "1"
-                } else {
-                    "X"
+                (1..numSets).map { setNumber ->
+                    SetSchemeParams(
+                        setNumber = setNumber,
+                        isAmrap = false,
+                        isEmom = false,
+                        useTempo = useTempo,
+                        eccentricTempo = eccentric,
+                        isometricTempo = isometric,
+                        concentricTempo = concentric,
+                        targetWeight = targetWeight,
+                        performedWeight = null,
+                        targetRepCount = repsPerSet,
+                        performedRepCount = null,
+                        restSeconds = restSeconds
+                    )
                 }
-            } else {
-                "0"
             }
-
-        return (1..numSets).map { setNumber ->
-            SetSchemeParams(
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = useTempo,
-                eccentricTempo = eccentric,
-                isometricTempo = isometric,
-                concentricTempo = concentric,
-                targetWeight = targetWeight,
-                performedWeight = null,
-                targetRepCount = repsPerSet,
-                performedRepCount = null,
-                restSeconds = restSeconds
-            )
-        }
     }
 
     /**
@@ -226,12 +231,14 @@ class WorkoutStageGenerator(
      *
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
-     * @return List of set scheme parameters
+     * @param userId The user ID for weight unit preferences
+     * @return Mono containing list of set scheme parameters
      */
     fun generateSecondaryExerciseScheme(
         exercise: Exercise,
-        oneRepMaxes: List<UserOneRepMax>
-    ): List<SetSchemeParams> {
+        oneRepMaxes: List<UserOneRepMax>,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
         // Secondary exercise guidelines: 80-90% intensity, 3-4 sets of 5-8 reps
         val intensity = Random.nextDouble(0.8, 0.9)
         val repsPerSet = (5..8).random()
@@ -239,39 +246,40 @@ class WorkoutStageGenerator(
         val restSeconds = (180..300).random()
 
         // Determine target weight
-        val targetWeight = getTargetWeight(exercise.name, intensity, oneRepMaxes)
+        return getTargetWeight(exercise.name, intensity, oneRepMaxes, userId)
+            .map { targetWeight ->
+                // Tempo: vary for secondary exercises
+                val useTempo = Random.nextBoolean()
+                val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
+                val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
+                val concentric =
+                    if (useTempo) {
+                        if (Random.nextBoolean()) {
+                            "1"
+                        } else {
+                            "X"
+                        }
+                    } else {
+                        "0"
+                    }
 
-        // Tempo: vary for secondary exercises
-        val useTempo = Random.nextBoolean()
-        val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
-        val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
-        val concentric =
-            if (useTempo) {
-                if (Random.nextBoolean()) {
-                    "1"
-                } else {
-                    "X"
+                (1..numSets).map { setNumber ->
+                    SetSchemeParams(
+                        setNumber = setNumber,
+                        isAmrap = false,
+                        isEmom = false,
+                        useTempo = useTempo,
+                        eccentricTempo = eccentric,
+                        isometricTempo = isometric,
+                        concentricTempo = concentric,
+                        targetWeight = targetWeight,
+                        performedWeight = null,
+                        targetRepCount = repsPerSet,
+                        performedRepCount = null,
+                        restSeconds = restSeconds
+                    )
                 }
-            } else {
-                "0"
             }
-
-        return (1..numSets).map { setNumber ->
-            SetSchemeParams(
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = useTempo,
-                eccentricTempo = eccentric,
-                isometricTempo = isometric,
-                concentricTempo = concentric,
-                targetWeight = targetWeight,
-                performedWeight = null,
-                targetRepCount = repsPerSet,
-                performedRepCount = null,
-                restSeconds = restSeconds
-            )
-        }
     }
 
     /**
@@ -279,68 +287,82 @@ class WorkoutStageGenerator(
      *
      * @param exercise The exercise to generate a scheme for
      * @param oneRepMaxes List of user's one rep max values
-     * @return List of set scheme parameters
+     * @param userId The user ID for weight unit preferences
+     * @return Mono containing list of set scheme parameters
      */
     fun generateAmrapOrEmomScheme(
         exercise: Exercise,
-        oneRepMaxes: List<UserOneRepMax>
-    ): List<SetSchemeParams> {
+        oneRepMaxes: List<UserOneRepMax>,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
         val isAmrap = Random.nextBoolean()
-        val targetWeight = getTargetWeight(exercise.name, 0.5, oneRepMaxes)
 
-        val useTempo = Random.nextBoolean()
-        val eccentric = if (useTempo) Random.nextInt(2, 4).toString() else "0"
-        val isometric = if (useTempo) Random.nextInt(1, 3).toString() else "0"
-        val concentric =
-            if (useTempo) {
-                if (Random.nextBoolean()) {
-                    "1"
-                } else {
-                    "X"
-                }
-            } else {
-                "0"
+        return getTargetWeight(exercise.name, 0.5, oneRepMaxes, userId)
+            .map { targetWeight ->
+                val useTempo = Random.nextBoolean()
+                val eccentric = if (useTempo) Random.nextInt(2, 4).toString() else "0"
+                val isometric = if (useTempo) Random.nextInt(1, 3).toString() else "0"
+                val concentric =
+                    if (useTempo) {
+                        if (Random.nextBoolean()) {
+                            "1"
+                        } else {
+                            "X"
+                        }
+                    } else {
+                        "0"
+                    }
+
+                listOf(
+                    SetSchemeParams(
+                        setNumber = 1,
+                        isAmrap = isAmrap,
+                        isEmom = !isAmrap,
+                        useTempo = useTempo,
+                        eccentricTempo = eccentric,
+                        isometricTempo = isometric,
+                        concentricTempo = concentric,
+                        targetWeight = targetWeight,
+                        performedWeight = null,
+                        // Varies per person for AMRAP/EMOM
+                        targetRepCount = null,
+                        performedRepCount = null,
+                        restSeconds = if (isAmrap) 0 else 60
+                    )
+                )
             }
-
-        return listOf(
-            SetSchemeParams(
-                setNumber = 1,
-                isAmrap = isAmrap,
-                isEmom = !isAmrap,
-                useTempo = useTempo,
-                eccentricTempo = eccentric,
-                isometricTempo = isometric,
-                concentricTempo = concentric,
-                targetWeight = targetWeight,
-                performedWeight = null,
-                // Varies per person for AMRAP/EMOM
-                targetRepCount = null,
-                performedRepCount = null,
-                restSeconds = if (isAmrap) 0 else 60
-            )
-        )
     }
 
     /**
-     * Gets the target weight for an exercise based on user's 1RM.
+     * Gets the target weight for an exercise based on user's 1RM, rounded to achievable equipment weights.
      *
-     * @param userId The user ID
      * @param exerciseName The name of the exercise
      * @param intensity The intensity as a percentage of 1RM
      * @param oneRepMaxes List of user's one rep max values
-     * @return The target weight
+     * @param userId The user ID for weight unit preferences
+     * @return Mono containing the target weight rounded to achievable equipment weights
      */
     private fun getTargetWeight(
         exerciseName: String,
         intensity: Double,
-        oneRepMaxes: List<UserOneRepMax>
-    ): BigDecimal {
+        oneRepMaxes: List<UserOneRepMax>,
+        userId: Int
+    ): Mono<BigDecimal> {
         val oneRepMax = oneRepMaxes.find { it.exerciseName == exerciseName }?.oneRepMax
-        return if (oneRepMax != null) {
-            (oneRepMax * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
-        } else {
-            // Default weight for new users (would need to be configured)
-            BigDecimal(ConjugateConstants.DEFAULT_WEIGHT)
-        }
+        val calculatedWeight =
+            if (oneRepMax != null) {
+                (oneRepMax * BigDecimal(intensity)).setScale(2, RoundingMode.HALF_UP)
+            } else {
+                // Default weight for new users (would need to be configured)
+                BigDecimal(ConjugateConstants.DEFAULT_WEIGHT)
+            }
+
+        // Get user's weight unit preference for this exercise, default to KG if not found
+        return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
+            .map { it.preferredUnit }
+            .onErrorReturn(WeightUnit.KG) // Default to KG if no preference found
+            .flatMap { weightUnit ->
+                weightSelectionService.roundWeightForExercise(exerciseName, calculatedWeight, weightUnit)
+            }
     }
 }

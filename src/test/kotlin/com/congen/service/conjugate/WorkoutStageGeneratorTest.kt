@@ -12,16 +12,21 @@ import com.congen.mockProgrammedExercise
 import com.congen.mockSetScheme
 import com.congen.mockSetSchemeParams
 import com.congen.mockUserOneRepMax
+import com.congen.mockUserWeightUnitPreference
 import com.congen.mockWorkoutStage
 import com.congen.mockWorkoutStageType
+import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
 import com.congen.service.UnitConversionService
+import com.congen.service.WeightSelectionService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -31,11 +36,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class WorkoutStageGeneratorTest {
     private lateinit var workoutStageGenerator: WorkoutStageGenerator
@@ -47,6 +47,7 @@ class WorkoutStageGeneratorTest {
     private lateinit var unitConversionService: UnitConversionService
     private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
+    private lateinit var weightSelectionService: WeightSelectionService
 
     private val workoutId = 1L
     private val workoutStageId = 1L
@@ -63,6 +64,7 @@ class WorkoutStageGeneratorTest {
         unitConversionService = mock()
         setSchemeService = mock()
         prilepinGuidelinesService = mock()
+        weightSelectionService = mock()
         workoutStageGenerator =
             WorkoutStageGenerator(
                 workoutStageDAL = workoutStageDAL,
@@ -72,7 +74,8 @@ class WorkoutStageGeneratorTest {
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
                 unitConversionService = unitConversionService,
                 setSchemeService = setSchemeService,
-                prilepinGuidelinesService = prilepinGuidelinesService
+                prilepinGuidelinesService = prilepinGuidelinesService,
+                weightSelectionService = weightSelectionService
             )
         val mockSetScheme =
             mockSetScheme(
@@ -367,25 +370,34 @@ class WorkoutStageGeneratorTest {
             )
         ).thenReturn(Pair(guidelines, intensity))
 
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "Bench Press", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
+            .thenReturn(Mono.just(weightUnitPreference))
+
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+            .thenReturn(Mono.just(BigDecimal("85.00")))
+
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
                 exercise,
                 movementRole,
                 dayType,
                 oneRepMaxes,
-                currentWeekNumber
+                currentWeekNumber,
+                userId
             )
 
-        assertNotNull(result)
-        assertTrue(result.isNotEmpty())
-
-        val firstSet = result[0]
-        assertEquals(1, firstSet.setNumber)
-        assertFalse(firstSet.isAmrap)
-        assertFalse(firstSet.isEmom)
-        assertEquals(BigDecimal("85.00"), firstSet.targetWeight)
-        assertTrue(firstSet.targetRepCount in 2..4)
-        assertTrue(firstSet.restSeconds in 180..300)
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() && schemes[0].setNumber == 1 &&
+                    !schemes[0].isAmrap && !schemes[0].isEmom &&
+                    schemes[0].targetWeight == BigDecimal("85.00") &&
+                    schemes[0].targetRepCount in 2..4 &&
+                    schemes[0].restSeconds in 180..300
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -406,18 +418,26 @@ class WorkoutStageGeneratorTest {
                 )
             )
 
-        val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes)
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "Squat", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Squat"))
+            .thenReturn(Mono.just(weightUnitPreference))
 
-        assertNotNull(result)
-        assertTrue(result.isNotEmpty())
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+            .thenReturn(Mono.just(BigDecimal("170.00")))
 
-        val firstSet = result[0]
-        assertEquals(1, firstSet.setNumber)
-        assertFalse(firstSet.isAmrap)
-        assertFalse(firstSet.isEmom)
-        assertTrue(firstSet.targetWeight!! in BigDecimal("160.0")..BigDecimal("180.0"))
-        assertTrue(firstSet.targetRepCount in 5..8)
-        assertTrue(firstSet.restSeconds in 180..300)
+        val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes, userId)
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() && schemes[0].setNumber == 1 &&
+                    !schemes[0].isAmrap && !schemes[0].isEmom &&
+                    schemes[0].targetWeight!! in BigDecimal("160.0")..BigDecimal("180.0") &&
+                    schemes[0].targetRepCount in 5..8 &&
+                    schemes[0].restSeconds in 180..300
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -439,17 +459,26 @@ class WorkoutStageGeneratorTest {
                 )
             )
 
-        val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes)
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "Burpees", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Burpees"))
+            .thenReturn(Mono.just(weightUnitPreference))
 
-        assertNotNull(result)
-        assertEquals(1, result.size)
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+            .thenReturn(Mono.just(BigDecimal("25.00")))
 
-        val set = result[0]
-        assertEquals(1, set.setNumber)
-        assertTrue(set.isAmrap.xor(set.isEmom))
-        assertEquals(BigDecimal("25.00"), set.targetWeight)
-        assertNull(set.targetRepCount)
-        assertTrue(set.restSeconds == 0 || set.restSeconds == 60)
+        val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes, userId)
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.size == 1 && schemes[0].setNumber == 1 &&
+                    schemes[0].isAmrap.xor(schemes[0].isEmom) &&
+                    schemes[0].targetWeight == BigDecimal("25.00") &&
+                    schemes[0].targetRepCount == null &&
+                    (schemes[0].restSeconds == 0 || schemes[0].restSeconds == 60)
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -475,20 +504,30 @@ class WorkoutStageGeneratorTest {
             )
         ).thenReturn(Pair(guidelines, intensity))
 
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Exercise", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
+            .thenReturn(Mono.just(weightUnitPreference))
+
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+            .thenReturn(Mono.just(BigDecimal("50.0")))
+
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
                 exercise,
                 movementRole,
                 dayType,
                 oneRepMaxes,
-                currentWeekNumber
+                currentWeekNumber,
+                userId
             )
 
-        assertNotNull(result)
-        assertTrue(result.isNotEmpty())
-
-        val firstSet = result[0]
-        assertEquals(BigDecimal("50.0"), firstSet.targetWeight)
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() && schemes[0].targetWeight == BigDecimal("50.0")
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -501,13 +540,22 @@ class WorkoutStageGeneratorTest {
             )
         val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
-        val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes)
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Exercise", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
+            .thenReturn(Mono.just(weightUnitPreference))
 
-        assertNotNull(result)
-        assertTrue(result.isNotEmpty())
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+            .thenReturn(Mono.just(BigDecimal("50.0")))
 
-        val firstSet = result[0]
-        assertEquals(BigDecimal("50.0"), firstSet.targetWeight)
+        val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes, userId)
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() && schemes[0].targetWeight == BigDecimal("50.0")
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -522,12 +570,21 @@ class WorkoutStageGeneratorTest {
             )
         val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
-        val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes)
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Exercise", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
+            .thenReturn(Mono.just(weightUnitPreference))
 
-        assertNotNull(result)
-        assertEquals(1, result.size)
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+            .thenReturn(Mono.just(BigDecimal("50.0")))
 
-        val set = result[0]
-        assertEquals(BigDecimal("50.0"), set.targetWeight)
+        val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes, userId)
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.size == 1 && schemes[0].targetWeight == BigDecimal("50.0")
+            }
+            .verifyComplete()
     }
 }
