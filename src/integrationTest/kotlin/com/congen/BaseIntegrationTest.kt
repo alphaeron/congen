@@ -11,7 +11,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
-@SpringBootTest
+@SpringBootTest(properties = ["spring.profiles.active=integration-test"])
 @AutoConfigureWebTestClient
 open class BaseIntegrationTest {
     @Autowired

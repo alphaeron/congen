@@ -8,7 +8,8 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
         val uniqueExerciseName = "testexerciseout-${System.nanoTime()}"
         webTestClient.post()
             .uri(
-                "/exercise/?name=$uniqueExerciseName&description=testexerciseout&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                "/exercise/?name=$uniqueExerciseName&description=testexerciseout" +
+                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()

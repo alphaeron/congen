@@ -68,7 +68,12 @@ object IntegrationTestHelpers {
     ): Int {
         val response =
             webTestClient.post()
-                .uri("/user/?name=$name&age=$age&height=$height&weight=$weight")
+                .uri(
+                    "/user/?name=$name" +
+                        "&age=$age" +
+                        "&height=$height" +
+                        "&weight=$weight"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -111,7 +116,10 @@ object IntegrationTestHelpers {
     ): Long {
         val response =
             webTestClient.post()
-                .uri("/program/?userId=$userId&name=$name")
+                .uri(
+                    "/program/?userId=$userId" +
+                        "&name=$name"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -131,7 +139,11 @@ object IntegrationTestHelpers {
     ): Long {
         val response =
             webTestClient.post()
-                .uri("/programmed_workout/?programId=$programId&dayNumber=$dayNumber&name=$name")
+                .uri(
+                    "/programmed_workout/?programId=$programId" +
+                        "&dayNumber=$dayNumber" +
+                        "&name=$name"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -152,7 +164,12 @@ object IntegrationTestHelpers {
     ): Long {
         val response =
             webTestClient.post()
-                .uri("/workout_stage/?programmedWorkoutId=$programmedWorkoutId&stageTypeId=$stageTypeId&position=$position&name=$name")
+                .uri(
+                    "/workout_stage/?programmedWorkoutId=$programmedWorkoutId" +
+                        "&stageTypeId=$stageTypeId" +
+                        "&position=$position" +
+                        "&name=$name"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStage::class.java)
@@ -172,7 +189,10 @@ object IntegrationTestHelpers {
     ) {
         // Now create the user equipment relationship
         webTestClient.post()
-            .uri("/user_equipment/?userId=$userId&equipmentName=$equipmentName")
+            .uri(
+                "/user_equipment/?userId=$userId" +
+                    "&equipmentName=$equipmentName"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -190,7 +210,11 @@ object IntegrationTestHelpers {
         // Now create the preference
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
         webTestClient.post()
-            .uri("/user_exercise_preference/?userId=$userId&exerciseName=$encodedExerciseName&shouldAvoid=$shouldAvoid")
+            .uri(
+                "/user_exercise_preference/?userId=$userId" +
+                    "&exerciseName=$encodedExerciseName" +
+                    "&shouldAvoid=$shouldAvoid"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -209,7 +233,12 @@ object IntegrationTestHelpers {
         // Now create the one rep max - use raw exercise name for query parameters
         val bigDecimalValue = java.math.BigDecimal(oneRepMax)
         webTestClient.put()
-            .uri("/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$bigDecimalValue&unit=$unit")
+            .uri(
+                "/user_one_rep_max/?userId=$userId" +
+                    "&exerciseName=$exerciseName" +
+                    "&oneRepMax=$bigDecimalValue" +
+                    "&unit=$unit"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -225,7 +254,9 @@ object IntegrationTestHelpers {
     ) {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=$userId&programDaysPerWeek=$programDaysPerWeek&sessionTimeLengthInMinutes=$sessionTimeLengthInMinutes"
+                "/user_program_preferences/?userId=$userId" +
+                    "&programDaysPerWeek=$programDaysPerWeek" +
+                    "&sessionTimeLengthInMinutes=$sessionTimeLengthInMinutes"
             )
             .exchange()
             .expectStatus().isOk()
@@ -258,7 +289,11 @@ object IntegrationTestHelpers {
         userId: Int
     ) {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=$userId" +
+                    "&programDaysPerWeek=3" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -272,7 +307,10 @@ object IntegrationTestHelpers {
         equipmentName: String = TEST_EQUIPMENT_NAME
     ) {
         webTestClient.post()
-            .uri("/exercise_equipment/?exerciseName=$exerciseName&equipmentName=$equipmentName")
+            .uri(
+                "/exercise_equipment/?exerciseName=$exerciseName" +
+                    "&equipmentName=$equipmentName"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -287,7 +325,11 @@ object IntegrationTestHelpers {
         isPrimary: Boolean = true
     ) {
         webTestClient.post()
-            .uri("/exercise_muscle/?exerciseName=$exerciseName&muscleName=$muscleName&isPrimary=$isPrimary")
+            .uri(
+                "/exercise_muscle/?exerciseName=$exerciseName" +
+                    "&muscleName=$muscleName" +
+                    "&isPrimary=$isPrimary"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -302,7 +344,11 @@ object IntegrationTestHelpers {
         workoutType: String = "dynamic_effort"
     ) {
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$exerciseName&movementType=$movementType&workoutType=$workoutType")
+            .uri(
+                "/exercise_workout_type/?exerciseName=$exerciseName" +
+                    "&movementType=$movementType" +
+                    "&workoutType=$workoutType"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -341,7 +387,11 @@ object IntegrationTestHelpers {
     ): Long {
         val response =
             webTestClient.post()
-                .uri("/exercise_rotation_history/?userId=$userId&exerciseName=$exerciseName&isAccessory=$isAccessory")
+                .uri(
+                    "/exercise_rotation_history/?userId=$userId" +
+                        "&exerciseName=$exerciseName" +
+                        "&isAccessory=$isAccessory"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -414,7 +464,11 @@ object IntegrationTestHelpers {
     ) {
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
         webTestClient.put()
-            .uri("/user_weight_unit_preference/?userId=$userId&exerciseName=$encodedExerciseName&preferredUnit=$preferredUnit")
+            .uri(
+                "/user_weight_unit_preference/?userId=$userId" +
+                    "&exerciseName=$encodedExerciseName" +
+                    "&preferredUnit=$preferredUnit"
+            )
             .exchange()
             .expectStatus().isOk()
     }

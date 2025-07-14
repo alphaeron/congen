@@ -12,6 +12,10 @@ resources:
 - local-secret.yaml
 
 patches:
+- path: local-patches/image-tag-patch.yaml
+  target:
+    kind: Deployment
+    name: congen
 - path: local-patches/congen-configmap-patch.yaml
   target:
     kind: ConfigMap
@@ -27,9 +31,4 @@ patches:
 - path: local-patches/liquibase-job-labels-patch.yaml
   target:
     kind: Job
-    name: liquibase-migration
-
-images:
-- name: congen
-  newName: congen
-  newTag: latest 
+    name: liquibase-migration 

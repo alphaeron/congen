@@ -28,9 +28,4 @@ patches:
 - path: production-patches/liquibase-job-labels-patch.yaml
   target:
     kind: Job
-    name: liquibase-migration
-
-images:
-- name: congen
-  newName: congen
-  newTag: production 
+    name: liquibase-migration 

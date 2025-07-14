@@ -18,7 +18,8 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
         // First create the exercise
         webTestClient.post()
             .uri(
-                "/exercise/?name=$uniqueExercise&description=Test exercise for muscle relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                "/exercise/?name=$uniqueExercise&description=Test exercise for muscle relationship" +
+                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
@@ -49,7 +50,8 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
         // First create the exercise
         webTestClient.post()
             .uri(
-                "/exercise/?name=$uniqueExercise&description=Test exercise for muscle relationship&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                "/exercise/?name=$uniqueExercise&description=Test exercise for muscle relationship" +
+                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()

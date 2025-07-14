@@ -6,6 +6,8 @@ import com.congen.mockUser
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -25,6 +27,7 @@ import java.time.Instant
  * @author Congen Development Team
  * @since 1.0.0
  */
+@ExtendWith(MockitoExtension::class)
 class UserServiceTest {
     private lateinit var userService: UserService
     private lateinit var userDAL: UserDAL
@@ -48,9 +51,6 @@ class UserServiceTest {
         userDAL = mock()
         unitConversionService = mock()
         userService = UserService(userDAL, unitConversionService)
-
-        // Default mock for unit conversion
-        whenever(unitConversionService.toKg(any(), any())).thenAnswer { it.getArgument<BigDecimal>(0) }
     }
 
     @Test
@@ -68,6 +68,9 @@ class UserServiceTest {
             )
         val savedUser = user.copy(id = USER_ID)
 
+        // Mock unit conversion for KG (no conversion needed)
+        whenever(unitConversionService.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
+            .thenReturn(BigDecimal(WEIGHT))
         whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT))))
             .thenReturn(Mono.just(savedUser))
 
@@ -216,6 +219,9 @@ class UserServiceTest {
                 updatedAt = now
             )
 
+        // Mock unit conversion for KG (no conversion needed)
+        whenever(unitConversionService.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
+            .thenReturn(BigDecimal(WEIGHT))
         whenever(userDAL.updateUser(eq(USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT))))
             .thenReturn(Mono.just(user))
 

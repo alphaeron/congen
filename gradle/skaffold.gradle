@@ -1,0 +1,14 @@
+// Skaffold tasks for local development
+
+task skaffoldDev(type: Exec) {
+    dependsOn jibDockerBuild, createMigrationsConfigMap
+    description = 'Run Skaffold in development mode with file watching and hot reload'
+    group = 'skaffold'
+    commandLine 'skaffold', 'dev', '-f', 'skaffold.yaml'
+}
+
+task skaffoldDelete(type: Exec) {
+    description = 'Delete all resources deployed by Skaffold'
+    group = 'skaffold'
+    commandLine 'skaffold', 'delete', '-f', 'skaffold.yaml'
+}

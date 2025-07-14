@@ -31,8 +31,34 @@ spec:
         - bash
         - -xc
         - |
-          rm -f $READY_FILE &&
-          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD validate &&
-          liquibase --defaultsFile=$DEFAULTS_FILE --url=$DB --username=$USERNAME --password=$PASSWORD --labels="prod" update &&
-          touch $READY_FILE &&
+          # Create writable directory structure in /tmp
+          mkdir -p /tmp/liquibase/schema /tmp/liquibase/data
+          
+          # Copy files from ConfigMap to writable location
+          cp /liquibase/changelog/liquibase.properties /tmp/liquibase/
+          cp /liquibase/changelog/changelog-root.xml /tmp/liquibase/
+          
+          # Copy schema files (remove schema_ prefix)
+          for file in /liquibase/changelog/schema_*.sql; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              cp "$file" "/tmp/liquibase/schema/${filename#schema_}"
+            fi
+          done
+          
+          # Copy data files (remove data_ prefix)
+          for file in /liquibase/changelog/data_*.sql; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              cp "$file" "/tmp/liquibase/data/${filename#data_}"
+            fi
+          done
+          
+          # Construct JDBC URL from secret values
+          export DB="${DB_BASE_URL}${PGHOST}:${PGPORT}/${PGDATABASE}"
+          
+          # Run Liquibase migrations from the writable location
+          cd /tmp/liquibase
+          liquibase --changelogFile=changelog-root.xml --url=$DB --username=$PGUSER --password=$PGPASSWORD validate &&
+          liquibase --changelogFile=changelog-root.xml --url=$DB --username=$PGUSER --password=$PGPASSWORD --labels="prod" update &&
           sleep 5 

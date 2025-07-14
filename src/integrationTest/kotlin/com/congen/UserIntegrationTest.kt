@@ -21,7 +21,10 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user age is 0`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName&age=0&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+                "/user/?name=$testUserName" +
+                    "&age=0" +
+                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -35,7 +38,10 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user age is 151`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName&age=151&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+                "/user/?name=$testUserName" +
+                    "&age=151" +
+                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -49,7 +55,10 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user height is 0`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=0&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+                "/user/?name=$testUserName" +
+                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
+                    "&height=0" +
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -63,7 +72,10 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user weight is 0`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=0"
+                "/user/?name=$testUserName" +
+                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
+                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
+                    "&weight=0"
             )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -77,7 +89,10 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should accept valid user data`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName&age=${IntegrationTestHelpers.TEST_USER_AGE}&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
+                "/user/?name=$testUserName" +
+                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
+                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .exchange()
             .expectStatus().isOk()

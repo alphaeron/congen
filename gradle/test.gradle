@@ -1,8 +1,30 @@
+// Configure integration test dependencies
+configurations {
+    integrationTestImplementation.extendsFrom implementation, testImplementation
+}
+
+// Test dependencies
+dependencies {
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
+    //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
+    testImplementation 'io.projectreactor:reactor-test:3.6.5'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
+    testImplementation 'org.mockito:mockito-core:5.18.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
+
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    integrationTestImplementation 'org.testcontainers:postgresql:1.19.3'
+}
+
 // Define source sets for unit and integration tests
 sourceSets {
     test {
-        java {
+        kotlin {
             srcDirs = ['src/test/kotlin']
+        }
+        resources {
+            srcDir 'src/test/resources'
         }
     }
     integrationTest {
@@ -25,9 +47,11 @@ test {
         exceptionFormat = 'full'
         showStandardStreams = true
     }
-    
+
     // Explicitly exclude integration tests from unit test run
     exclude '**/integrationTest/**'
+    exclude '**/*IntegrationTest*'
+    exclude '**/*Integration*'
 }
 
 jacocoTestReport {
@@ -64,30 +88,29 @@ jacocoTestCoverageVerification {
 
 // Integration test task
 // To run integration tests, first start the required resources:
-// 1. Start PostgreSQL: docker-compose up -d postgres
-// 2. Wait for PostgreSQL to be ready (check with: docker-compose ps)
-// 3. Run: ./gradlew integrationTest -PrunIntegrationTests
+// 1. Start Minikube: minikube start
+// 2. Run: ./gradlew integrationTest
 task integrationTest(type: Test) {
-    description = 'Runs integration tests'
+    description = 'Runs integration tests against Kubernetes cluster'
     group = 'verification'
-    
+
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
-    
+
     useJUnitPlatform()
-    
+
+    systemProperty 'spring.profiles.active', 'integration-test'
+
     testLogging {
         exceptionFormat = 'full'
         showStandardStreams = true
     }
-    
-    // // Only run integration tests if explicitly requested
-    // onlyIf {
-    //     project.hasProperty('runIntegrationTests')
-    // }
-    
-    // Don't depend on unit tests
-    dependsOn = []
+
+    // Setup Kubernetes environment before tests
+    dependsOn 'setupKubernetesForTesting'
+
+    // Cleanup after tests
+    finalizedBy 'cleanupKubernetesTestEnv'
 }
 
 // Integration test coverage report
@@ -111,3 +134,30 @@ task jacocoIntegrationTestReport(type: JacocoReport) {
 tasks.named('processIntegrationTestResources') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+// Task to setup Kubernetes environment for testing (using shell script)
+task setupKubernetesForTesting(type: Exec) {
+    description = 'Setup Kubernetes environment for integration testing'
+    group = 'verification'
+
+    commandLine './scripts/setup-kubernetes.sh', 'setup', '--test'
+}
+
+// Task to cleanup Kubernetes test environment
+task cleanupKubernetesTestEnv(type: Exec) {
+    description = 'Cleanup Kubernetes test environment'
+    group = 'verification'
+
+    commandLine './scripts/setup-kubernetes.sh', 'cleanup'
+}
+
+// Task to check Kubernetes test environment status
+task checkKubernetesTestEnv(type: Exec) {
+    description = 'Check Kubernetes test environment status'
+    group = 'verification'
+
+    commandLine './scripts/setup-kubernetes.sh', 'status'
+}
+
+// Make check depend on all test types (moved to end after all tasks are defined)
+check.dependsOn test, integrationTest

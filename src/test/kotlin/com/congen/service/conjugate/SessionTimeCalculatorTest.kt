@@ -3,14 +3,19 @@ package com.congen.service.conjugate
 import com.congen.mockSetSchemeParams
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 
-@SpringBootTest
+@ExtendWith(MockitoExtension::class)
 class SessionTimeCalculatorTest {
-    @Autowired
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
+
+    @BeforeEach
+    fun setUp() {
+        sessionTimeCalculator = SessionTimeCalculator()
+    }
 
     @Test
     fun `calculateNumAccessoryExercisesDynamic with primary exercise only`() {

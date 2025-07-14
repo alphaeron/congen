@@ -3,21 +3,12 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.4'
     id 'org.jetbrains.kotlin.jvm' version '1.9.23'
     id 'org.jetbrains.kotlin.plugin.spring' version '1.9.23'
-
-    // KDoc (Dokka) documentation generation
-    // Usage: ./gradlew dokkaHtml
-    // Output: build/dokka/
+    id 'jacoco'
+    id 'com.diffplug.spotless' version '6.25.0'
     id 'org.jetbrains.dokka' version '1.9.20'
-
     id 'com.google.cloud.tools.jib' version '3.4.2'
     id 'com.palantir.git-version' version '3.0.0'
-
-    id 'jacoco'
 }
-
-apply from: './gradle/test.gradle'
-apply from: './gradle/style.gradle'
-apply from: './gradle/docs.gradle'
 
 java {
     toolchain {
@@ -31,55 +22,19 @@ kotlin {
     }
 }
 
-compileKotlin {
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
     kotlinOptions {
-        freeCompilerArgs = ["-Xjsr305=strict"]
         jvmTarget = "17"
-    }
-}
-compileTestKotlin {
-    kotlinOptions {
-        freeCompilerArgs = ["-Xjsr305=strict"]
-        jvmTarget = "17"
-    }
-}
-compileIntegrationTestKotlin {
-    kotlinOptions {
-        freeCompilerArgs = ["-Xjsr305=strict"]
-        jvmTarget = "17"
+        freeCompilerArgs += ["-Xjsr305=strict"]
     }
 }
 
 repositories {
-	  mavenCentral()
+      mavenCentral()
 }
 
 group = 'com.congen'
 version = '0.0.1-SNAPSHOT'
-
-def versionInfo = versionDetails()
-def timestamp = new Date().getTime()
-def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${timestamp}"
-
-// Task to generate version properties
-task generateVersionProperties {
-    doLast {
-        def versionProps = new Properties()
-        versionProps.setProperty('app.version', version)
-        versionProps.setProperty('app.releaseId', tag)
-        versionProps.setProperty('app.buildTime', new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
-        versionProps.setProperty('app.gitHash', versionInfo.gitHash)
-        versionProps.setProperty('app.gitBranch', versionInfo.branchName)
-        versionProps.setProperty('app.gitDirty', versionInfo.isCleanTag ? 'false' : 'true')
-        
-        def versionFile = file("${sourceSets.main.resources.srcDirs.first()}/version.properties")
-        versionFile.parentFile.mkdirs()
-        versionFile.withOutputStream { versionProps.store(it, 'Generated version information') }
-    }
-}
-
-// Make processResources depend on generateVersionProperties
-processResources.dependsOn generateVersionProperties
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux:3.2.5'
@@ -108,238 +63,10 @@ dependencies {
 
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.12'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
-    //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
-    testImplementation 'io.projectreactor:reactor-test:3.6.5'
-    testImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
-    testImplementation 'org.mockito:mockito-core:5.18.0'
-    testImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
-    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
-    
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.3'
-    integrationTestImplementation 'org.testcontainers:postgresql:1.19.3'
 }
 
-configurations {
-    integrationTestImplementation.extendsFrom implementation, testImplementation
-}
-
-jib {
-    from {
-        image = 'docker://amazoncorretto:17.0.11-alpine3.19'
-    }
-    to {
-        image = 'congen'
-        tags = [tag]
-    }
-    container {
-        appRoot = '/app'
-        workingDirectory = '/app/classes'
-        creationTime = 'USE_CURRENT_TIMESTAMP'
-        entrypoint = [
-            'java',
-            '-XX:+UseG1GC', '-Xms2048m', '-Xmx2048m',
-            '-XX:MetaspaceSize=256M', '-XX:MaxMetaspaceSize=256M',
-            '-XX:ActiveProcessorCount=2',
-            '-Djava.security.edg=file:/dev/./urandom',
-            '-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-loc}',
-            '-classpath', '/app/resources:/app/classes:/app/libs/*',
-            'com.congen.CongenApplicationKt'
-        ]
-    }
-}
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += ["-Xjsr305=strict"]
-    }
-}
-
-// Task to create migrations ConfigMap
-task createMigrationsConfigMap {
-    dependsOn processResources
-    description = 'Generate migrations ConfigMap from Liquibase migration files'
-    group = 'kubernetes'
-    
-    doLast {
-        def migrationsDir = file('resources/migrations')
-        def outputFile = file('k8s/base/migrations-configmap.yaml')
-        
-        if (!migrationsDir.exists()) {
-            throw new GradleException("Migrations directory not found: ${migrationsDir.absolutePath}")
-        }
-        
-        // Create the ConfigMap content
-        def configMapContent = """apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: migrations-config
-  namespace: congen
-data:
-"""
-        
-        // Add each migration file to the ConfigMap
-        migrationsDir.eachFileRecurse { file ->
-            if (file.isFile() && (file.name.endsWith('.sql') || file.name.endsWith('.xml') || file.name == 'liquibase.properties')) {
-                def relativePath = file.path.substring(migrationsDir.path.length() + 1)
-                def key = relativePath.replaceAll(/[^a-zA-Z0-9._-]/, '_')
-                def content = file.text
-                
-                configMapContent += "  ${key}: |-\n"
-                content.split('\n').each { line ->
-                    configMapContent += "    ${line}\n"
-                }
-            }
-        }
-        
-        // Write the ConfigMap to file
-        outputFile.parentFile.mkdirs()
-        outputFile.text = configMapContent
-        
-        println "✅ Generated migrations ConfigMap: ${outputFile.absolutePath}"
-    }
-}
-
-// Kubernetes and Skaffold tasks
-task buildDockerImage {
-    dependsOn jibDockerBuild
-    description = 'Build Docker image using JIB'
-    group = 'build'
-}
-
-task deployToLocal(type: Exec) {
-    dependsOn buildDockerImage, createMigrationsConfigMap
-    commandLine 'kubectl', 'apply', '-k', 'k8s/overlays/local'
-}
-
-task buildImageForKubernetes {
-    dependsOn jibDockerBuild
-    description = 'Build Docker image for Kubernetes deployment using JIB'
-    group = 'build'
-    doLast {
-        println "✅ Docker image built using JIB: congen:${tag}"
-        println "✅ Docker image built using JIB: congen:latest"
-    }
-}
-
-task buildAndPushImage {
-    dependsOn jib
-    description = 'Build and push Docker image to registry using JIB'
-    group = 'build'
-    doLast {
-        println "✅ Docker image built and pushed using JIB: congen:${tag}"
-    }
-}
-
-// Environment-specific JIB tasks
-task buildImageForLocal {
-    dependsOn jibDockerBuild
-    description = 'Build Docker image for local environment using JIB'
-    group = 'build'
-    doLast {
-        println "✅ Docker image built for local environment: congen:${tag}"
-    }
-}
-
-task buildImageForStaging {
-    dependsOn jibDockerBuild
-    description = 'Build Docker image for staging environment using JIB'
-    group = 'build'
-    doLast {
-        println "✅ Docker image built for staging environment: congen:${tag}"
-    }
-}
-
-task buildImageForProduction {
-    dependsOn jibDockerBuild
-    description = 'Build Docker image for production environment using JIB'
-    group = 'build'
-    doLast {
-        println "✅ Docker image built for production environment: congen:${tag}"
-    }
-}
-
-task deleteLocalDeployment(type: Exec) {
-    commandLine 'kubectl', 'delete', '-k', 'k8s/overlays/local'
-}
-
-task skaffoldDev(type: Exec) {
-    dependsOn buildDockerImage, createMigrationsConfigMap
-    commandLine 'skaffold', 'dev', '-f', 'skaffold-dev.yaml'
-}
-
-task skaffoldRun(type: Exec) {
-    dependsOn buildDockerImage, createMigrationsConfigMap
-    commandLine 'skaffold', 'run', '-f', 'skaffold-dev.yaml'
-}
-
-task skaffoldDelete(type: Exec) {
-    commandLine 'skaffold', 'delete', '-f', 'skaffold-dev.yaml'
-}
-
-// Kubernetes integration test task
-task kubernetesIntegrationTest(type: Test) {
-    description = 'Runs integration tests against Kubernetes cluster'
-    group = 'verification'
-    
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
-    
-    useJUnitPlatform()
-    
-    systemProperty 'spring.profiles.active', 'kubernetes-test'
-    
-    testLogging {
-        exceptionFormat = 'full'
-        showStandardStreams = true
-    }
-    
-    // Setup Kubernetes environment before tests
-    dependsOn 'setupKubernetesForTesting'
-    
-    // Cleanup after tests
-    finalizedBy 'cleanupKubernetesTestEnv'
-}
-
-// Task to setup Kubernetes environment for testing (using shell script)
-task setupKubernetesForTesting(type: Exec) {
-    description = 'Setup Kubernetes environment for integration testing'
-    group = 'verification'
-    
-    commandLine './scripts/setup-kubernetes-test-env.sh', 'setup'
-}
-
-// Task to cleanup Kubernetes test environment
-task cleanupKubernetesTestEnv(type: Exec) {
-    description = 'Cleanup Kubernetes test environment'
-    group = 'verification'
-    
-    commandLine './scripts/setup-kubernetes-test-env.sh', 'cleanup'
-}
-
-// Task to check Kubernetes test environment status
-task checkKubernetesTestEnv(type: Exec) {
-    description = 'Check Kubernetes test environment status'
-    group = 'verification'
-    
-    commandLine './scripts/setup-kubernetes-test-env.sh', 'status'
-}
-
-// Task to run all integration tests (both TestContainers and Kubernetes)
-task allIntegrationTests(type: Test) {
-    description = 'Runs all integration tests (TestContainers and Kubernetes)'
-    group = 'verification'
-    
-    dependsOn 'integrationTest', 'kubernetesIntegrationTest'
-    
-    // This task just depends on the other two, no actual test execution
-    doLast {
-        println "✅ All integration tests completed!"
-    }
-}
-
-// Make check depend on all test types
-check.dependsOn test, integrationTest, kubernetesIntegrationTest
-
+apply from: './gradle/test.gradle'
+apply from: './gradle/style.gradle'
+apply from: './gradle/docs.gradle'
+apply from: './gradle/deploy.gradle'
+apply from: './gradle/skaffold.gradle'

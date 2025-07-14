@@ -1,21 +1,28 @@
 package com.congen.model
 
+import com.congen.config.JacksonConfig
 import com.congen.mockWorkoutStageType
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-@SpringBootTest
+@ExtendWith(MockitoExtension::class)
 class WorkoutStageTypeTest {
-    @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = Instant.parse("2024-01-15T10:30:00Z")
+    private val now = Instant.now()
+
+    @BeforeEach
+    fun setUp() {
+        objectMapper = ObjectMapper()
+        JacksonConfig.configureObjectMapper(objectMapper)
+    }
 
     @Test
     fun `should create workout stage type with valid parameters`() {
@@ -124,7 +131,7 @@ class WorkoutStageTypeTest {
             )
 
         assertEquals(type1, type2)
-        assertNotNull(type1 != type3)
+        assertFalse(type1 == type3)
     }
 
     @Test
@@ -137,10 +144,9 @@ class WorkoutStageTypeTest {
             )
 
         val toString = workoutStageType.toString()
-        assertNotNull(toString)
-        assert(toString.contains("WorkoutStageType"))
-        assert(toString.contains("id=1"))
-        assert(toString.contains("name=PRIMARY"))
+        assertTrue(toString.contains("WorkoutStageType"))
+        assertTrue(toString.contains("id=1"))
+        assertTrue(toString.contains("name=PRIMARY"))
     }
 
     @Test

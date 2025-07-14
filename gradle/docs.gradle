@@ -2,29 +2,31 @@
 
 /**
  * Gradle tasks for generating API documentation from the Spring Boot application.
- * 
+ *
  * This build file provides tasks to:
  * - Generate OpenAPI specifications
  * - Create markdown documentation
  * - Set up documentation structure
- * 
+ * - Generate Kotlin documentation (KDoc)
+ *
  * Usage:
  * - ./gradlew generateApiDocs - Generate all documentation
  * - ./gradlew generateOpenApiJson - Generate only OpenAPI JSON
  * - ./gradlew generateMarkdownDocs - Generate only markdown docs
+ * - ./gradlew dokkaHtml - Generate Kotlin documentation
  */
 
 // Task to generate API documentation
 task generateApiDocs(type: Exec) {
     group = 'Documentation'
     description = 'Generate complete API documentation including OpenAPI specs and markdown'
-    
+
     commandLine 'bash', 'scripts/generate-api-docs.sh'
-    
+
     doFirst {
         println "Generating API documentation..."
     }
-    
+
     doLast {
         println "API documentation generation completed!"
         println "Documentation files created in: docs/"
@@ -36,15 +38,15 @@ task generateApiDocs(type: Exec) {
 task generateOpenApiJson(type: Exec) {
     group = 'Documentation'
     description = 'Generate OpenAPI JSON specification'
-    
+
     commandLine 'curl', '-s', 'http://localhost:8080/api-docs', '-o', 'docs/openapi.json'
-    
+
     doFirst {
         println "Generating OpenAPI JSON specification..."
         // Ensure docs directory exists
         file('docs').mkdirs()
     }
-    
+
     doLast {
         println "OpenAPI JSON generated: docs/openapi.json"
     }
@@ -54,15 +56,15 @@ task generateOpenApiJson(type: Exec) {
 task generateOpenApiYaml(type: Exec) {
     group = 'Documentation'
     description = 'Generate OpenAPI YAML specification'
-    
+
     commandLine 'curl', '-s', 'http://localhost:8080/api-docs.yaml', '-o', 'docs/openapi.yaml'
-    
+
     doFirst {
         println "Generating OpenAPI YAML specification..."
         // Ensure docs directory exists
         file('docs').mkdirs()
     }
-    
+
     doLast {
         println "OpenAPI YAML generated: docs/openapi.yaml"
     }
@@ -72,16 +74,16 @@ task generateOpenApiYaml(type: Exec) {
 task createDocsStructure {
     group = 'Documentation'
     description = 'Create documentation directory structure'
-    
+
     doLast {
         println "Creating documentation directory structure..."
-        
+
         def docsDir = file('docs')
         def swaggerUiDir = file('docs/swagger-ui')
-        
+
         docsDir.mkdirs()
         swaggerUiDir.mkdirs()
-        
+
         println "Documentation directory structure created:"
         println "  - docs/"
         println "  - docs/swagger-ui/"
@@ -92,12 +94,12 @@ task createDocsStructure {
 task validateOpenApiSpec(type: Exec) {
     group = 'Documentation'
     description = 'Validate OpenAPI specification using swagger-cli (if available)'
-    
+
     commandLine 'swagger-cli', 'validate', 'docs/openapi.json'
-    
+
     doFirst {
         println "Validating OpenAPI specification..."
-        
+
         // Check if swagger-cli is available
         try {
             exec {
@@ -108,7 +110,7 @@ task validateOpenApiSpec(type: Exec) {
             enabled = false
         }
     }
-    
+
     doLast {
         println "OpenAPI specification validation completed!"
     }
@@ -118,9 +120,9 @@ task validateOpenApiSpec(type: Exec) {
 task serveDocs(type: Exec) {
     group = 'Documentation'
     description = 'Serve documentation locally using Python HTTP server'
-    
+
     commandLine 'python3', '-m', 'http.server', '8000', '-d', 'docs'
-    
+
     doFirst {
         println "Starting documentation server..."
         println "Documentation available at: http://localhost:8000"
@@ -132,9 +134,9 @@ task serveDocs(type: Exec) {
 task cleanDocs(type: Delete) {
     group = 'Documentation'
     description = 'Clean generated documentation files'
-    
+
     delete fileTree(dir: 'docs', include: ['*.json', '*.yaml', '*.md'])
-    
+
     doLast {
         println "Documentation files cleaned from docs/"
     }
@@ -144,13 +146,13 @@ task cleanDocs(type: Delete) {
 task generateSchemaDot(type: Exec) {
     group = 'Documentation'
     description = 'Generate Graphviz DOT file from Liquibase migrations'
-    
+
     commandLine 'bash', 'scripts/generate-schema-dot.sh'
-    
+
     doFirst {
         println "Generating database schema DOT file from Liquibase migrations..."
     }
-    
+
     doLast {
         println "Database schema DOT file generated!"
         println "Files created:"
@@ -163,4 +165,4 @@ task generateSchemaDot(type: Exec) {
 generateApiDocs.dependsOn createDocsStructure
 generateOpenApiJson.dependsOn createDocsStructure
 generateOpenApiYaml.dependsOn createDocsStructure
-validateOpenApiSpec.dependsOn generateOpenApiJson 
+validateOpenApiSpec.dependsOn generateOpenApiJson

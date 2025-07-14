@@ -1,0 +1,319 @@
+// Version information for deployment
+def versionInfo = versionDetails()
+def timestamp = new Date().getTime()
+
+// Get environment from project property, default to 'local'
+def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+
+// Generate final image tag
+def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${environment}-${timestamp}"
+
+// Configurable local registry port
+def localRegistryPort = project.hasProperty('localRegistryPort') ? project.getProperty('localRegistryPort') : '5001'
+
+// Task to generate version properties
+task generateVersionProperties {
+    doLast {
+        def versionProps = new Properties()
+        versionProps.setProperty('app.version', version)
+        versionProps.setProperty('app.releaseId', tag)
+        versionProps.setProperty('app.buildTime', new Date().format("yyyy-MM-dd'T'HH:mm:ss'Z'"))
+        versionProps.setProperty('app.gitHash', versionInfo.gitHash)
+        versionProps.setProperty('app.gitBranch', versionInfo.branchName)
+        versionProps.setProperty('app.gitDirty', versionInfo.isCleanTag ? 'false' : 'true')
+
+        def versionFile = file("${sourceSets.main.resources.srcDirs.first()}/version.properties")
+        versionFile.parentFile.mkdirs()
+        versionFile.withOutputStream { versionProps.store(it, 'Generated version information') }
+    }
+}
+
+// Make processResources depend on generateVersionProperties
+processResources.dependsOn generateVersionProperties
+
+// JIB configuration for Docker image building
+jib {
+    from {
+        image = 'docker://amazoncorretto:17.0.11-alpine3.19'
+    }
+    to {
+        image = 'congen'
+        tags = [tag]
+    }
+    container {
+        appRoot = '/app'
+        workingDirectory = '/app/classes'
+        creationTime = 'USE_CURRENT_TIMESTAMP'
+        entrypoint = [
+            'java',
+            '-XX:+UseG1GC', '-Xms2048m', '-Xmx2048m',
+            '-XX:MetaspaceSize=256M', '-XX:MaxMetaspaceSize=256M',
+            '-XX:ActiveProcessorCount=2',
+            '-Djava.security.edg=file:/dev/./urandom',
+            '-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-loc}',
+            '-classpath', '/app/resources:/app/classes:/app/libs/*',
+            'com.congen.CongenApplicationKt'
+        ]
+    }
+}
+
+// Task to create migrations ConfigMap
+task createMigrationsConfigMap {
+    dependsOn processResources
+    description = 'Generate migrations ConfigMap from Liquibase migration files'
+    group = 'kubernetes'
+
+    doLast {
+        def migrationsDir = file('resources/migrations')
+        def outputFile = file('k8s/base/migrations-configmap.yaml')
+
+        if (!migrationsDir.exists()) {
+            throw new GradleException("Migrations directory not found: ${migrationsDir.absolutePath}")
+        }
+
+        // Create the ConfigMap content
+        def configMapContent = """apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migrations-config
+  namespace: congen
+data:
+"""
+
+        // Add each migration file to the ConfigMap with proper directory structure
+        migrationsDir.eachFileRecurse { file ->
+            if (file.isFile() && (file.name.endsWith('.sql') || file.name.endsWith('.xml') || file.name == 'liquibase.properties')) {
+                def relativePath = file.path.substring(migrationsDir.path.length() + 1)
+                def content = file.text
+
+                // Create the proper directory structure in the ConfigMap
+                def key = relativePath.replaceAll(/[^a-zA-Z0-9._-]/, '_')
+                
+                configMapContent += "  ${key}: |-\n"
+                content.split('\n').each { line ->
+                    configMapContent += "    ${line}\n"
+                }
+            }
+        }
+
+        // Write the ConfigMap to file
+        outputFile.parentFile.mkdirs()
+        outputFile.text = configMapContent
+
+        println "✅ Generated migrations ConfigMap: ${outputFile.absolutePath}"
+    }
+}
+
+// Task to generate image tag patch for the target environment
+task generateImageTagPatch {
+    dependsOn jibDockerBuild
+    description = 'Generate image tag patch for the target environment'
+    group = 'kubernetes'
+    
+    doLast {
+        if (!project.hasProperty('environment')) {
+            throw new GradleException("environment parameter is required. Use: -Penvironment=local|staging|production")
+        }
+        
+        def overlayDir = "k8s/overlays/${environment}"
+        def patchFile = file("${overlayDir}/${environment}-patches/image-tag-patch.yaml")
+        
+        // Create the patch directory if it doesn't exist
+        patchFile.parentFile.mkdirs()
+        
+        def imageName = environment == 'local' ? "congen" : "localhost:${localRegistryPort}/congen"
+        def imageTag = tag
+        
+        def patchContent = """apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: congen
+spec:
+  template:
+    spec:
+      containers:
+      - name: congen
+        image: ${imageName}:${imageTag}
+"""
+        
+        patchFile.text = patchContent
+        
+        // Update the kustomization.yaml to include the image tag patch
+        def kustomizationFile = file("${overlayDir}/kustomization.yaml")
+        def kustomizationContent = kustomizationFile.text
+        
+        // Remove the images section since we're using patches
+        kustomizationContent = kustomizationContent.replaceAll(/(?s)images:.*?- name: congen.*?newTag:.*?\n/, '')
+        
+        // Add the image tag patch if it's not already there
+        if (!kustomizationContent.contains('image-tag-patch.yaml')) {
+            def patchIndex = kustomizationContent.indexOf('patches:')
+            if (patchIndex != -1) {
+                def insertIndex = kustomizationContent.indexOf('\n', patchIndex) + 1
+                def patchEntry = """- path: ${environment}-patches/image-tag-patch.yaml
+  target:
+    kind: Deployment
+    name: congen
+"""
+                kustomizationContent = kustomizationContent.substring(0, insertIndex) + patchEntry + kustomizationContent.substring(insertIndex)
+            }
+        }
+        
+        kustomizationFile.text = kustomizationContent
+        
+        println "✅ Generated image tag patch for ${environment}: ${imageName}:${imageTag}"
+    }
+}
+
+// Task to prepare image for local minikube deployment
+task prepareLocalImage {
+    dependsOn jibDockerBuild
+    description = 'Prepare Docker image for local minikube deployment'
+    group = 'kubernetes'
+    
+    doFirst {
+        println "🚀 Preparing image for local minikube deployment..."
+        
+        // Ensure base image is available in minikube
+        println "Ensuring base image is available in minikube Docker daemon..."
+        exec {
+            commandLine 'sh', '-c', "eval \$(minikube docker-env) && docker pull amazoncorretto:17.0.11-alpine3.19"
+            ignoreExitValue = false
+        }
+        
+        // Build image in minikube Docker daemon
+        println "Building image in minikube Docker daemon..."
+        exec {
+            commandLine 'sh', '-c', "eval \$(minikube docker-env) && ./gradlew jibDockerBuild"
+            ignoreExitValue = false
+        }
+        
+        // Update the image tag patch to use the local image (no registry prefix)
+        def overlayDir = "k8s/overlays/local"
+        def patchFile = file("${overlayDir}/local-patches/image-tag-patch.yaml")
+        
+        def imageName = "congen"  // Use local image name for minikube
+        def imageTag = tag
+    
+        def patchContent = """apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: congen
+spec:
+  template:
+    spec:
+      containers:
+      - name: congen
+        image: ${imageName}:${imageTag}
+"""
+        
+        patchFile.text = patchContent
+        println "✅ Updated image tag patch for local: ${imageName}:${imageTag}"
+    }
+}
+
+// Task to prepare image for registry-based deployment
+task prepareRegistryImage {
+    dependsOn jibDockerBuild
+    description = 'Prepare Docker image for registry-based deployment'
+    group = 'kubernetes'
+    
+    doFirst {
+        println "🚀 Preparing image for registry-based deployment..."
+        println "Local registry port: ${localRegistryPort}"
+        
+        // Ensure local registry is running
+        def registryRunning = false
+        try {
+            def result = exec {
+                commandLine 'docker', 'ps', '--filter', 'name=congen-local-registry', '--format', '{{.Names}}'
+                ignoreExitValue = true
+            }
+            if (result.exitValue == 0 && result.standardOutput.toString().trim() == 'congen-local-registry') {
+                registryRunning = true
+            }
+        } catch (Exception e) {
+            // Registry not running
+        }
+        
+        if (!registryRunning) {
+            println "Starting local Docker registry on port ${localRegistryPort}..."
+            exec {
+                commandLine 'docker', 'run', '-d', '--restart=always', '-p', "${localRegistryPort}:5000", '--name', 'congen-local-registry', 'registry:2'
+                ignoreExitValue = true
+            }
+        } else {
+            println "Local Docker registry already running on port ${localRegistryPort}"
+        }
+        
+        // Build and push to local registry
+        def localImageName = "localhost:${localRegistryPort}/congen:${tag}"
+        exec {
+            commandLine 'docker', 'tag', "congen:${tag}", localImageName
+        }
+        exec {
+            commandLine 'docker', 'push', localImageName
+        }
+        
+        println "✅ Image prepared for registry deployment: ${localImageName}"
+    }
+}
+
+// Task to confirm production deployment
+task confirmProductionDeployment {
+    description = 'Confirm production deployment with user input'
+    group = 'kubernetes'
+    
+    doLast {
+        if (environment == 'production') {
+            def response = System.console()?.readLine("Are you sure you want to deploy to production? (y/N): ")
+            if (response != 'y' && response != 'Y') {
+                throw new GradleException("Production deployment cancelled")
+            }
+            println "✅ Production deployment confirmed"
+        }
+    }
+}
+
+// Task to deploy to Kubernetes using kubectl
+task deployToKubernetes(type: Exec) {
+    dependsOn createMigrationsConfigMap, generateImageTagPatch
+    description = 'Deploy to specified Kubernetes environment (requires -Penvironment=env)'
+    group = 'kubernetes'
+
+    // Set up environment-specific dependencies
+    doFirst {
+        if (!project.hasProperty('environment')) {
+            throw new GradleException("environment parameter is required. Use: -Penvironment=local|staging|production")
+        }
+        println "Deploying to environment: ${environment} with image tag: ${tag}"
+    }
+
+    // Configure dependencies based on environment
+    project.afterEvaluate {
+        if (project.hasProperty('environment')) {
+            if (environment == 'local') {
+                deployToKubernetes.dependsOn prepareLocalImage
+            } else {
+                deployToKubernetes.dependsOn prepareRegistryImage
+            }
+            if (environment == 'production') {
+                deployToKubernetes.dependsOn confirmProductionDeployment
+            }
+        }
+    }
+
+    // Always set the commandLine for Exec before execution
+    commandLine 'kubectl', 'apply', '-k', "k8s/overlays/${environment}"
+
+    doLast {
+        if (environment == 'local') {
+            println "✅ Local deployment complete!"
+            println "Access the application at: http://\$(minikube ip):30080"
+            println "For localhost access, run: ./scripts/access-local-app.sh"
+            println "Or manually: kubectl port-forward service/congen 8080:8080 -n congen"
+        } else {
+            println "✅ ${environment} deployment complete!"
+        }
+    }
+}

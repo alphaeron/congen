@@ -1,3 +1,15 @@
+linting
+
+pass integration tests
+
+pass unit tests
+
+need to unify migration documentation, and put in resources/migrations/README.md
+
+
+
+
+
 fix weight rounding issue to nearest plate
 
 exercise movement type enum?

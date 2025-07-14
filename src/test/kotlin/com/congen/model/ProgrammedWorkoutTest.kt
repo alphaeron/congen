@@ -1,20 +1,27 @@
 package com.congen.model
 
+import com.congen.config.JacksonConfig
 import com.congen.mockProgrammedWorkout
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-@SpringBootTest
+@ExtendWith(MockitoExtension::class)
 class ProgrammedWorkoutTest {
-    @Autowired
     private lateinit var objectMapper: ObjectMapper
-    private val now = Instant.parse("2024-01-15T10:30:00Z")
+    private val now = Instant.now()
+
+    @BeforeEach
+    fun setUp() {
+        objectMapper = ObjectMapper()
+        JacksonConfig.configureObjectMapper(objectMapper)
+    }
 
     @Test
     fun `test programmed workout creation with all fields`() {

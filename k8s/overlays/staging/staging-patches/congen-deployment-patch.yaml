@@ -38,6 +38,8 @@ spec:
           capabilities:
             drop:
             - ALL
+        image: congen:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "1Gi"

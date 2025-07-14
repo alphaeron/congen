@@ -2,20 +2,30 @@ package com.congen.model
 
 import com.congen.mockSetScheme
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 import java.math.BigDecimal
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-@SpringBootTest
+@ExtendWith(MockitoExtension::class)
 class SetSchemeTest {
-    @Autowired
     private lateinit var objectMapper: ObjectMapper
     private val now = Instant.parse("2025-07-12T01:33:49.262037Z")
+
+    @BeforeEach
+    fun setUp() {
+        objectMapper =
+            ObjectMapper()
+                .registerModule(KotlinModule.Builder().build())
+                .registerModule(JavaTimeModule())
+    }
 
     @Test
     fun `test set scheme creation with all fields`() {

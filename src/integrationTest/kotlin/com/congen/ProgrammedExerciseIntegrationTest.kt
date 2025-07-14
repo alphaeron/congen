@@ -102,7 +102,9 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Then update it
         webTestClient.patch()
             .uri(
-                "/programmed_exercise/$exerciseResponse?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=2"
+                "/programmed_exercise/$exerciseResponse?workoutStageId=$stageId" +
+                    "&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}" +
+                    "&position=2"
             )
             .exchange()
             .expectStatus().isOk()

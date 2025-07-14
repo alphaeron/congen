@@ -25,7 +25,8 @@ spec:
           capabilities:
             drop:
             - ALL
-        imagePullPolicy: Never
+        image: congen:latest
+        imagePullPolicy: IfNotPresent
         resources:
           requests:
             memory: "256Mi"

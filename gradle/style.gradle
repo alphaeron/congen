@@ -6,9 +6,25 @@ configurations {
 dependencies {
     ktlint 'com.pinterest.ktlint:ktlint-cli:1.2.1'
     ktlint 'com.pinterest.ktlint:ktlint-ruleset-standard:1.2.1'
-    
+
     detekt 'io.gitlab.arturbosch.detekt:detekt-cli:1.23.5'
     detekt 'io.gitlab.arturbosch.detekt:detekt-rules-documentation:1.23.5'
+}
+
+// Spotless configuration for code formatting
+spotless {
+    format('gradle') {
+        target '*.gradle', 'gradle/*.gradle'
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    kotlin {
+        target 'src/**/*.kt'
+        ktlint()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
 }
 
 task ktlint (type: JavaExec, group: 'verification') {
@@ -71,4 +87,30 @@ task shellCheck(type: Exec, group: 'verification') {
 
 task kubeCheck(group: 'verification', description: 'Comprehensive Kubernetes linting (kubeval, kube-linter, kubectl dry-run)') {
     dependsOn kubeval, kubeLinter, kubectlDryRun
+}
+
+// Gradle-specific linting tasks
+task gradleLint(type: Exec, group: 'verification') {
+    description = 'Lint Gradle build files using gradle-lint plugin'
+    commandLine './gradlew', 'lintGradle'
+}
+
+task gradleFormat(type: Exec, group: 'formatting') {
+    description = 'Format Gradle build files using Spotless'
+    commandLine './gradlew', 'spotlessApply'
+}
+
+task gradleCheck(type: Exec, group: 'verification') {
+    description = 'Check Gradle build files formatting using Spotless'
+    commandLine './gradlew', 'spotlessCheck'
+}
+
+// Comprehensive linting task that includes Gradle files
+task allLint(group: 'verification', description: 'Run all linting checks including Gradle files') {
+    dependsOn ktlint, detekt, detektTest, shellCheck, kubeCheck, gradleLint, gradleCheck
+}
+
+// Comprehensive formatting task
+task allFormat(group: 'formatting', description: 'Format all code including Gradle files') {
+    dependsOn ktlintFormat, gradleFormat
 }

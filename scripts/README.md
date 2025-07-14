@@ -21,29 +21,7 @@ Sets up the local Kubernetes environment for development.
 - Configures Docker environment
 - Creates the congen namespace
 
-#### deploy.sh
-Comprehensive deployment script for all environments.
-
-**Usage:**
-```bash
-# Deploy to local environment
-./scripts/deploy.sh local
-
-# Deploy to staging
-./scripts/deploy.sh staging
-
-# Deploy to production
-./scripts/deploy.sh production
-
-# Check deployment status
-./scripts/deploy.sh status
-
-# View logs
-./scripts/deploy.sh logs
-
-# Clean up
-./scripts/deploy.sh cleanup --env local
-```
+**Note:** Deployment is now handled entirely by Gradle tasks. See the main README for deployment commands.
 
 #### cleanup-kubernetes.sh
 Cleans up the local Kubernetes environment.

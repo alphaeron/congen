@@ -2,20 +2,30 @@ package com.congen.model
 
 import com.congen.mockProgrammedExercise
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-@SpringBootTest
+@ExtendWith(MockitoExtension::class)
 class ProgrammedExerciseTest {
-    @Autowired
     private lateinit var objectMapper: ObjectMapper
     private val now = Instant.now()
+
+    @BeforeEach
+    fun setUp() {
+        objectMapper =
+            ObjectMapper()
+                .registerModule(KotlinModule.Builder().build())
+                .registerModule(JavaTimeModule())
+    }
 
     @Test
     fun `ProgrammedExercise should be created with all required fields`() {

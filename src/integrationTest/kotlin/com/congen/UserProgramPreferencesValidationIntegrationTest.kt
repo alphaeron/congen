@@ -28,7 +28,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when program_days_per_week is 1`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=1&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=1" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -40,7 +44,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when program_days_per_week is 5`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=5" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -52,7 +60,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when program_days_per_week is 0`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=0&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=0" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -64,7 +76,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when program_days_per_week is 8`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=8&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=8" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -76,7 +92,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid program_days_per_week value 2`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=2&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=2" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -84,7 +104,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid program_days_per_week value 3`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=3" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -92,7 +116,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid program_days_per_week value 4`() {
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=4" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -114,7 +142,11 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Should allow changing session time
         webTestClient.patch()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=90")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=3" +
+                    "&sessionTimeLengthInMinutes=90"
+            )
             .exchange()
             .expectStatus().isOk()
     }
@@ -136,14 +168,22 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Should prevent changing program days per week from 3 to 4
         webTestClient.patch()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=4" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error"
             ).isEqualTo(
-                "Cannot change program days per week from 3 to 4 for user ${userResponse.id} because they have existing workouts. Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts and maintain program consistency. To change program frequency, the user must start a new program."
+                "Cannot change program days per week from 3 to 4 for user " +
+                    "${userResponse.id} because they have existing workouts. " +
+                    "Program days per week becomes immutable once workouts are " +
+                    "generated to prevent day numbering conflicts and maintain program consistency. " +
+                    "To change program frequency, the user must start a new program."
             )
     }
 
@@ -163,16 +203,23 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         // Should prevent changing program days per week from 4 to 3
+        val userIdStr = userResponse.id.toString()
+        val errorPart1 = "Cannot change program days per week from 4 to 3 for user "
+        val errorPart2 = userIdStr + " because they have existing workouts. "
+        val errorPart3 = "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts "
+        val errorPart4 = "and maintain program consistency. To change program frequency, the user must start a new program."
+        val expectedError = errorPart1 + errorPart2 + errorPart3 + errorPart4
         webTestClient.patch()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=3" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
-            .jsonPath(
-                "$.error"
-            ).isEqualTo(
-                "Cannot change program days per week from 4 to 3 for user ${userResponse.id} because they have existing workouts. Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts and maintain program consistency. To change program frequency, the user must start a new program."
-            )
+            .jsonPath("$.error")
+            .isEqualTo(expectedError)
     }
 
     @Test
@@ -180,13 +227,21 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Create user
         // Create program preferences with 3 days per week
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=3" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isOk()
 
         // Should allow changing program days per week when no workouts exist
         webTestClient.patch()
-            .uri("/user_program_preferences/?userId=${userResponse.id}&programDaysPerWeek=4&sessionTimeLengthInMinutes=60")
+            .uri(
+                "/user_program_preferences/?userId=${userResponse.id}" +
+                    "&programDaysPerWeek=4" +
+                    "&sessionTimeLengthInMinutes=60"
+            )
             .exchange()
             .expectStatus().isOk()
     }

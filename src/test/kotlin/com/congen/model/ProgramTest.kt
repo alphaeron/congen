@@ -1,20 +1,27 @@
 package com.congen.model
 
+import com.congen.config.JacksonConfig
 import com.congen.mockProgram
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.junit.jupiter.api.extension.ExtendWith
+import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-@SpringBootTest
+@ExtendWith(MockitoExtension::class)
 class ProgramTest {
-    @Autowired
     private lateinit var objectMapper: ObjectMapper
     private val now = Instant.now()
+
+    @BeforeEach
+    fun setUp() {
+        objectMapper = ObjectMapper()
+        JacksonConfig.configureObjectMapper(objectMapper)
+    }
 
     @Test
     fun `should create program with all properties`() {

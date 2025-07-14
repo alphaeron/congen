@@ -67,10 +67,10 @@ eval $(minikube docker-env)
 
 ```bash
 # Build the application and Docker image using JIB
-./gradlew buildDockerImage
+./gradlew jibDockerBuild
 
 # Deploy to local Kubernetes
-./gradlew deployToLocal
+./gradlew deployToKubernetes -Penvironment=local
 
 # Check deployment status
 kubectl get pods -n congen
@@ -185,13 +185,9 @@ jib {
 
 The following Gradle tasks are available for Kubernetes operations:
 
-- `buildDockerImage` - Build Docker image using JIB
-- `buildImageForKubernetes` - Build Docker image for Kubernetes deployment using JIB
-- `buildAndPushImage` - Build and push Docker image to registry using JIB
-- `buildImageForLocal` - Build Docker image for local environment
-- `buildImageForStaging` - Build Docker image for staging environment
-- `buildImageForProduction` - Build Docker image for production environment
-- `deployToLocal` - Deploy to local Minikube cluster
+- `jibDockerBuild` - Build Docker image locally using JIB
+- `jib` - Build and push Docker image to remote registry using JIB
+- `deployToKubernetes` - Deploy to specified Kubernetes environment (use -Penvironment=local|staging|production)
 - `deleteLocalDeployment` - Remove local deployment
 - `skaffoldDev` - Start Skaffold in development mode
 - `skaffoldRun` - Run Skaffold once
@@ -202,7 +198,7 @@ The following Gradle tasks are available for Kubernetes operations:
 
 ```bash
 # Complete local development workflow
-./gradlew clean build buildDockerImage deployToLocal
+./gradlew clean build jibDockerBuild deployToKubernetes -Penvironment=local
 
 # Development with Skaffold
 ./gradlew skaffoldDev
@@ -363,7 +359,7 @@ For comprehensive information about the database migration system, see [DATABASE
    eval $(minikube docker-env)
    
    # Rebuild image using JIB
-   ./gradlew buildDockerImage
+   ./gradlew jibDockerBuild
    
    # Or build directly with JIB
    ./gradlew jibDockerBuild

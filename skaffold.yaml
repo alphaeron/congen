@@ -15,6 +15,8 @@ deploy:
     flags:
       global:
       - --namespace=congen
+    manifests:
+      - k8s/overlays/local
 
 portForward:
 - resourceType: service
@@ -24,6 +26,4 @@ portForward:
 - resourceType: service
   resourceName: postgres
   port: 5432
-  localPort: 5432
-
- 
+  localPort: 5432 
