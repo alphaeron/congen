@@ -125,7 +125,9 @@ class UserServiceTest {
         val result = userService.createUser(NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")
 
         StepVerifier.create(result)
-            .expectError(ValidationException::class.java)
+            .expectErrorSatisfies { ex ->
+                assert(ex is ValidationException)
+            }
             .verify()
     }
 
@@ -162,7 +164,9 @@ class UserServiceTest {
         val result = userService.getUserById(USER_ID)
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectErrorSatisfies { ex ->
+                assert(ex is RuntimeException)
+            }
             .verify()
 
         verify(userDAL).selectUserById(USER_ID)
@@ -275,7 +279,9 @@ class UserServiceTest {
         val result = userService.updateUser(USER_ID, NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")
 
         StepVerifier.create(result)
-            .expectError(ValidationException::class.java)
+            .expectErrorSatisfies { ex ->
+                assert(ex is ValidationException)
+            }
             .verify()
     }
 
@@ -312,7 +318,9 @@ class UserServiceTest {
         val result = userService.deleteUser(USER_ID)
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectErrorSatisfies { ex ->
+                assert(ex is RuntimeException)
+            }
             .verify()
 
         verify(userDAL).deleteUser(USER_ID)

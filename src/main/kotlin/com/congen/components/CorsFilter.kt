@@ -84,13 +84,13 @@ class CorsFilter(
     private val allowedOrigins: Set<String> = allowedOriginsConfig.split(",").map { it.trim() }.toSet()
 
     /** Set of allowed HTTP methods parsed from configuration. */
-    private val allowedMethods: Set<String> = allowedMethodsConfig.split(",").map { it.trim() }.toSet()
+    private val allowedMethods: String = allowedMethodsConfig
 
     /** Set of allowed request headers parsed from configuration. */
-    private val allowedHeaders: Set<String> = allowedHeadersConfig.split(",").map { it.trim() }.toSet()
+    private val allowedHeaders: String = allowedHeadersConfig
 
     /** Set of exposed response headers parsed from configuration. */
-    private val exposedHeaders: Set<String> = exposedHeadersConfig.split(",").map { it.trim() }.toSet()
+    private val exposedHeaders: String = exposedHeadersConfig
 
     /** Maximum age for preflight responses. */
     private val maxAge: String = maxAgeConfig
@@ -130,7 +130,7 @@ class CorsFilter(
             throw IllegalStateException("Wildcard origins not allowed in production")
         }
 
-        if (allowedOrigins.isEmpty()) {
+        if (allowedOrigins.isEmpty() || (allowedOrigins.size == 1 && allowedOrigins.first().isEmpty())) {
             logger.error("No allowed origins configured for production")
             throw IllegalStateException("At least one allowed origin must be configured")
         }
@@ -185,8 +185,8 @@ class CorsFilter(
             }
 
             // Set CORS headers
-            exchange.response.headers.add("Access-Control-Allow-Methods", allowedMethods.joinToString(", "))
-            exchange.response.headers.add("Access-Control-Allow-Headers", allowedHeaders.joinToString(", "))
+            exchange.response.headers.add("Access-Control-Allow-Methods", allowedMethods)
+            exchange.response.headers.add("Access-Control-Allow-Headers", allowedHeaders)
 
             if (requestMethod == HttpMethod.OPTIONS) {
                 exchange.response.headers.add("Access-Control-Max-Age", maxAge)
@@ -194,7 +194,7 @@ class CorsFilter(
                 logger.debug("CORS preflight request handled for path: {}", requestPath)
                 return Mono.empty()
             } else {
-                exchange.response.headers.add("Access-Control-Expose-Headers", exposedHeaders.joinToString(", "))
+                exchange.response.headers.add("Access-Control-Expose-Headers", exposedHeaders)
                 return chain.filter(exchange)
             }
         } catch (e: Exception) {
@@ -223,6 +223,11 @@ class CorsFilter(
         if (isProduction && origin.startsWith("http://")) {
             logger.warn("Rejecting HTTP origin in production: {}", origin)
             return false
+        }
+
+        // Handle wildcard origins in non-production environments
+        if (allowedOrigins.contains("*") && !isProduction) {
+            return true
         }
 
         return allowedOrigins.contains(origin)
