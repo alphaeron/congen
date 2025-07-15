@@ -14,16 +14,17 @@ import org.springframework.test.context.TestPropertySource
  * @since 1.0.0
  */
 @SpringBootTest
-@TestPropertySource(properties = [
-    "CORS_ALLOWED_ORIGINS=http://localhost:3000,https://example.com",
-    "CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE",
-    "CORS_ALLOWED_HEADERS=Content-Type,Authorization",
-    "CORS_EXPOSED_HEADERS=X-Total-Count",
-    "CORS_MAX_AGE=3600",
-    "spring.profiles.active=test"
-])
+@TestPropertySource(
+    properties = [
+        "CORS_ALLOWED_ORIGINS=http://localhost:3000,https://example.com",
+        "CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE",
+        "CORS_ALLOWED_HEADERS=Content-Type,Authorization",
+        "CORS_EXPOSED_HEADERS=X-Total-Count",
+        "CORS_MAX_AGE=3600",
+        "spring.profiles.active=test"
+    ]
+)
 class CongenApplicationTest {
-
     @Test
     fun `should load application context`() {
         // This test will pass if the application context loads successfully
@@ -42,4 +43,4 @@ class CongenApplicationTest {
         // We can verify the class exists and has the SpringBootApplication annotation
         assert(CongenApplication::class.java.isAnnotationPresent(org.springframework.boot.autoconfigure.SpringBootApplication::class.java))
     }
-} 
+}

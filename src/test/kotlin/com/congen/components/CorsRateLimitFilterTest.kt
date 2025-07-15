@@ -27,7 +27,6 @@ import java.net.InetSocketAddress
  * @since 1.0.0
  */
 class CorsRateLimitFilterTest {
-
     @Mock
     private lateinit var webFilterChain: WebFilterChain
 
@@ -42,15 +41,17 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should allow request from allowed origin`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://example.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://example.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -67,14 +68,16 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should allow request without origin header`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -91,15 +94,17 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should rate limit after exceeding violation threshold`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -122,16 +127,18 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should detect client IP from X-Forwarded-For header`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .header("X-Forwarded-For", "192.168.1.100, 10.0.0.1")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .header("X-Forwarded-For", "192.168.1.100, 10.0.0.1")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -149,16 +156,18 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should detect client IP from X-Real-IP header`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .header("X-Real-IP", "192.168.1.200")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .header("X-Real-IP", "192.168.1.200")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -175,20 +184,23 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should fallback to remote address when no headers present`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .build()
 
-        val requestWithRemote = MockServerHttpRequest.get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .remoteAddress(InetSocketAddress("192.168.1.300", 8080))
-            .build()
+        val requestWithRemote =
+            MockServerHttpRequest.get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .remoteAddress(InetSocketAddress("192.168.1.300", 8080))
+                .build()
         val exchange = MockServerWebExchange.from(requestWithRemote)
 
         // When
@@ -204,19 +216,22 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should return unknown when no IP information available`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .build()
 
-        val requestWithNoRemote = MockServerHttpRequest.get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .build()
+        val requestWithNoRemote =
+            MockServerHttpRequest.get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .build()
         val exchange = MockServerWebExchange.from(requestWithNoRemote)
 
         // When
@@ -232,15 +247,17 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should reject HTTP origin in production`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "http://localhost:3000,https://example.com",
-            activeProfile = "production"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "http://localhost:3000,https://example.com",
+                activeProfile = "production"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "http://localhost:3000")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "http://localhost:3000")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -258,15 +275,17 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should allow HTTPS origin in production`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "production"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "production"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://example.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://example.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -283,15 +302,17 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should handle prod profile detection`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "http://localhost:3000",
-            activeProfile = "prod"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "http://localhost:3000",
+                activeProfile = "prod"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "http://localhost:3000")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "http://localhost:3000")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -309,15 +330,17 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should handle comma-separated allowed origins`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com, https://test.com , http://localhost:3000",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com, https://test.com , http://localhost:3000",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://test.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://test.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -334,16 +357,18 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should handle empty X-Forwarded-For header`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .header("X-Forwarded-For", "")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .header("X-Forwarded-For", "")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -360,16 +385,18 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should handle blank X-Real-IP header`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .header("X-Real-IP", "   ")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .header("X-Real-IP", "   ")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -386,18 +413,20 @@ class CorsRateLimitFilterTest {
     @Test
     fun `should handle multiple violations from different IPs`() {
         // Given
-        corsRateLimitFilter = CorsRateLimitFilter(
-            allowedOriginsConfig = "https://example.com",
-            activeProfile = "test"
-        )
+        corsRateLimitFilter =
+            CorsRateLimitFilter(
+                allowedOriginsConfig = "https://example.com",
+                activeProfile = "test"
+            )
 
         // Make violations from different IPs (these should not trigger rate limiting)
         repeat(5) { ipIndex ->
-            val request = MockServerHttpRequest
-                .get("/api/test")
-                .header("Origin", "https://malicious.com")
-                .header("X-Real-IP", "192.168.1.$ipIndex")
-                .build()
+            val request =
+                MockServerHttpRequest
+                    .get("/api/test")
+                    .header("Origin", "https://malicious.com")
+                    .header("X-Real-IP", "192.168.1.$ipIndex")
+                    .build()
 
             val exchange = MockServerWebExchange.from(request)
             corsRateLimitFilter.filter(exchange, webFilterChain).block()
@@ -406,22 +435,24 @@ class CorsRateLimitFilterTest {
         // Make violations from the same IP to trigger rate limiting
         val targetIp = "192.168.1.100"
         repeat(10) { // Make exactly 10 violations (the limit)
-            val request = MockServerHttpRequest
-                .get("/api/test")
-                .header("Origin", "https://malicious.com")
-                .header("X-Real-IP", targetIp)
-                .build()
+            val request =
+                MockServerHttpRequest
+                    .get("/api/test")
+                    .header("Origin", "https://malicious.com")
+                    .header("X-Real-IP", targetIp)
+                    .build()
 
             val exchange = MockServerWebExchange.from(request)
             corsRateLimitFilter.filter(exchange, webFilterChain).block()
         }
 
         // Make the 11th violation from the same IP (should trigger rate limit)
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .header("X-Real-IP", targetIp)
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .header("X-Real-IP", targetIp)
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -434,4 +465,4 @@ class CorsRateLimitFilterTest {
 
         assert(exchange.response.statusCode == HttpStatus.TOO_MANY_REQUESTS)
     }
-} 
+}

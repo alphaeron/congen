@@ -1,10 +1,5 @@
 package com.congen.config
 
-import io.swagger.v3.oas.models.OpenAPI
-import io.swagger.v3.oas.models.info.Contact
-import io.swagger.v3.oas.models.info.Info
-import io.swagger.v3.oas.models.info.License
-import io.swagger.v3.oas.models.servers.Server
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
@@ -25,7 +20,6 @@ import org.springframework.test.util.ReflectionTestUtils
  * @since 1.0.0
  */
 class OpenApiConfigTest {
-
     private lateinit var openApiConfig: OpenApiConfig
 
     @BeforeEach
@@ -167,4 +161,4 @@ class OpenApiConfigTest {
         assert(description.contains("Preference Management"))
         assert(description.contains("Equipment Tracking"))
     }
-} 
+}

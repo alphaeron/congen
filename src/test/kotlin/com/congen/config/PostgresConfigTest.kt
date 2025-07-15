@@ -1,10 +1,8 @@
 package com.congen.config
 
-import io.vertx.sqlclient.SqlClient
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.test.util.ReflectionTestUtils
 
 /**
  * Unit tests for [PostgresConfig].
@@ -20,20 +18,20 @@ import org.springframework.test.util.ReflectionTestUtils
  * @since 1.0.0
  */
 class PostgresConfigTest {
-
     private lateinit var postgresConfig: PostgresConfig
 
     @BeforeEach
     fun setUp() {
-        postgresConfig = PostgresConfig(
-            writerHost = "localhost",
-            readerHost = "localhost",
-            port = 5432,
-            usernameV = "testuser",
-            passwordV = "testpass",
-            dbName = "testdb",
-            sslMode = false
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "localhost",
+                readerHost = "localhost",
+                port = 5432,
+                usernameV = "testuser",
+                passwordV = "testpass",
+                dbName = "testdb",
+                sslMode = false
+            )
     }
 
     @Test
@@ -57,15 +55,16 @@ class PostgresConfigTest {
     @Test
     fun `should create writer connection with SSL enabled`() {
         // Given
-        postgresConfig = PostgresConfig(
-            writerHost = "localhost",
-            readerHost = "localhost",
-            port = 5432,
-            usernameV = "testuser",
-            passwordV = "testpass",
-            dbName = "testdb",
-            sslMode = true
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "localhost",
+                readerHost = "localhost",
+                port = 5432,
+                usernameV = "testuser",
+                passwordV = "testpass",
+                dbName = "testdb",
+                sslMode = true
+            )
 
         // When
         val writer = postgresConfig.postgresDBWriter()
@@ -77,15 +76,16 @@ class PostgresConfigTest {
     @Test
     fun `should create reader connection with SSL enabled`() {
         // Given
-        postgresConfig = PostgresConfig(
-            writerHost = "localhost",
-            readerHost = "localhost",
-            port = 5432,
-            usernameV = "testuser",
-            passwordV = "testpass",
-            dbName = "testdb",
-            sslMode = true
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "localhost",
+                readerHost = "localhost",
+                port = 5432,
+                usernameV = "testuser",
+                passwordV = "testpass",
+                dbName = "testdb",
+                sslMode = true
+            )
 
         // When
         val reader = postgresConfig.postgresDBReader()
@@ -97,15 +97,16 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different hosts`() {
         // Given
-        postgresConfig = PostgresConfig(
-            writerHost = "writer.example.com",
-            readerHost = "reader.example.com",
-            port = 5432,
-            usernameV = "testuser",
-            passwordV = "testpass",
-            dbName = "testdb",
-            sslMode = false
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "writer.example.com",
+                readerHost = "reader.example.com",
+                port = 5432,
+                usernameV = "testuser",
+                passwordV = "testpass",
+                dbName = "testdb",
+                sslMode = false
+            )
 
         // When
         val writer = postgresConfig.postgresDBWriter()
@@ -119,15 +120,16 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different ports`() {
         // Given
-        postgresConfig = PostgresConfig(
-            writerHost = "localhost",
-            readerHost = "localhost",
-            port = 5433,
-            usernameV = "testuser",
-            passwordV = "testpass",
-            dbName = "testdb",
-            sslMode = false
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "localhost",
+                readerHost = "localhost",
+                port = 5433,
+                usernameV = "testuser",
+                passwordV = "testpass",
+                dbName = "testdb",
+                sslMode = false
+            )
 
         // When
         val writer = postgresConfig.postgresDBWriter()
@@ -141,15 +143,16 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different database names`() {
         // Given
-        postgresConfig = PostgresConfig(
-            writerHost = "localhost",
-            readerHost = "localhost",
-            port = 5432,
-            usernameV = "testuser",
-            passwordV = "testpass",
-            dbName = "productiondb",
-            sslMode = false
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "localhost",
+                readerHost = "localhost",
+                port = 5432,
+                usernameV = "testuser",
+                passwordV = "testpass",
+                dbName = "productiondb",
+                sslMode = false
+            )
 
         // When
         val writer = postgresConfig.postgresDBWriter()
@@ -163,15 +166,16 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different credentials`() {
         // Given
-        postgresConfig = PostgresConfig(
-            writerHost = "localhost",
-            readerHost = "localhost",
-            port = 5432,
-            usernameV = "produser",
-            passwordV = "prodpass",
-            dbName = "testdb",
-            sslMode = false
-        )
+        postgresConfig =
+            PostgresConfig(
+                writerHost = "localhost",
+                readerHost = "localhost",
+                port = 5432,
+                usernameV = "produser",
+                passwordV = "prodpass",
+                dbName = "testdb",
+                sslMode = false
+            )
 
         // When
         val writer = postgresConfig.postgresDBWriter()
@@ -221,4 +225,4 @@ class PostgresConfigTest {
         assertNotNull(writer)
         assertNotNull(reader)
     }
-} 
+}

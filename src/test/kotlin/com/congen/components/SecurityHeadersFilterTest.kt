@@ -24,7 +24,6 @@ import reactor.test.StepVerifier
  * @since 1.0.0
  */
 class SecurityHeadersFilterTest {
-
     @Mock
     private lateinit var webFilterChain: WebFilterChain
 
@@ -41,9 +40,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -66,9 +66,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -85,7 +86,11 @@ class SecurityHeadersFilterTest {
         assert(responseHeaders.getFirst("X-XSS-Protection") == "1; mode=block")
         assert(responseHeaders.getFirst("Referrer-Policy") == "strict-origin-when-cross-origin")
         assert(responseHeaders.getFirst("Strict-Transport-Security") == "max-age=31536000; includeSubDomains; preload")
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';")
+        assert(
+            responseHeaders.getFirst("Content-Security-Policy") ==
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+                "img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';"
+        )
         assert(responseHeaders.getFirst("Permissions-Policy") == "geolocation=(), microphone=(), camera=()")
     }
 
@@ -94,9 +99,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "prod")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -109,7 +115,11 @@ class SecurityHeadersFilterTest {
 
         val responseHeaders = exchange.response.headers
         assert(responseHeaders.getFirst("Strict-Transport-Security") == "max-age=31536000; includeSubDomains; preload")
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';")
+        assert(
+            responseHeaders.getFirst("Content-Security-Policy") ==
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+                "img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';"
+        )
         assert(responseHeaders.getFirst("Permissions-Policy") == "geolocation=(), microphone=(), camera=()")
     }
 
@@ -118,9 +128,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "local")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -136,7 +147,11 @@ class SecurityHeadersFilterTest {
         assert(responseHeaders.getFirst("X-Frame-Options") == "DENY")
         assert(responseHeaders.getFirst("X-XSS-Protection") == "1; mode=block")
         assert(responseHeaders.getFirst("Referrer-Policy") == "strict-origin-when-cross-origin")
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;")
+        assert(
+            responseHeaders.getFirst(
+                "Content-Security-Policy"
+            ) == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;"
+        )
         assert(responseHeaders.getFirst("Strict-Transport-Security") == null)
         assert(responseHeaders.getFirst("Permissions-Policy") == null)
     }
@@ -146,9 +161,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "staging")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -160,7 +176,11 @@ class SecurityHeadersFilterTest {
             .verifyComplete()
 
         val responseHeaders = exchange.response.headers
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;")
+        assert(
+            responseHeaders.getFirst(
+                "Content-Security-Policy"
+            ) == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;"
+        )
         assert(responseHeaders.getFirst("Strict-Transport-Security") == null)
         assert(responseHeaders.getFirst("Permissions-Policy") == null)
     }
@@ -170,9 +190,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -184,7 +205,11 @@ class SecurityHeadersFilterTest {
             .verifyComplete()
 
         val responseHeaders = exchange.response.headers
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;")
+        assert(
+            responseHeaders.getFirst(
+                "Content-Security-Policy"
+            ) == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;"
+        )
         assert(responseHeaders.getFirst("Strict-Transport-Security") == null)
         assert(responseHeaders.getFirst("Permissions-Policy") == null)
     }
@@ -194,9 +219,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "local")
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -208,7 +234,11 @@ class SecurityHeadersFilterTest {
             .verifyComplete()
 
         val responseHeaders = exchange.response.headers
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;")
+        assert(
+            responseHeaders.getFirst(
+                "Content-Security-Policy"
+            ) == "default-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' http: https:;"
+        )
         assert(responseHeaders.getFirst("Strict-Transport-Security") == null)
         assert(responseHeaders.getFirst("Permissions-Policy") == null)
     }
@@ -218,9 +248,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
-        val request = MockServerHttpRequest
-            .post("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .post("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -243,9 +274,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
-        val request = MockServerHttpRequest
-            .put("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .put("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -266,9 +298,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "prod")
 
-        val request = MockServerHttpRequest
-            .delete("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .delete("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -281,7 +314,11 @@ class SecurityHeadersFilterTest {
 
         val responseHeaders = exchange.response.headers
         assert(responseHeaders.getFirst("Strict-Transport-Security") == "max-age=31536000; includeSubDomains; preload")
-        assert(responseHeaders.getFirst("Content-Security-Policy") == "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';")
+        assert(
+            responseHeaders.getFirst("Content-Security-Policy") ==
+                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
+                "img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';"
+        )
     }
 
     @Test
@@ -289,9 +326,10 @@ class SecurityHeadersFilterTest {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
-        val request = MockServerHttpRequest
-            .options("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .options("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -308,4 +346,4 @@ class SecurityHeadersFilterTest {
         assert(responseHeaders.getFirst("X-XSS-Protection") == "1; mode=block")
         assert(responseHeaders.getFirst("Referrer-Policy") == "strict-origin-when-cross-origin")
     }
-} 
+}

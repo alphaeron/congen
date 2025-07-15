@@ -271,11 +271,10 @@ class PostgresClient(
         return sqlClient
             .preparedQuery(query)
             .execute(Tuple.wrap(arrayOf(*queryArgs)))
-            .onFailure { throwable ->
-                val cause = throwable.cause
-                if (cause != null && cause::class.java == ConnectException::class.java) {
-                    logger.error("Database connection error for query: {}", query, cause)
-                    throw DatabaseConnectionException(cause)
+            .recover { throwable ->
+                if (throwable::class.java == ConnectException::class.java) {
+                    logger.error("Database connection error for query: {}", query, throwable)
+                    throw DatabaseConnectionException(throwable)
                 } else {
                     // Assume the issue was with the query itself if it was not a connection error.
                     logger.error("Database query error for query: {}", query, throwable)

@@ -6,10 +6,8 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonMappingException
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializerProvider
-import com.fasterxml.jackson.databind.node.ObjectNode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
@@ -34,7 +32,6 @@ import java.time.Instant
  * @since 1.0.0
  */
 class JacksonConfigTest {
-
     @Mock
     private lateinit var jsonGenerator: JsonGenerator
 
@@ -228,9 +225,10 @@ class JacksonConfigTest {
 
     @Test
     fun `should deserialize object with single int field to Int`() {
-        val json = ObjectMapper().createObjectNode().apply {
-            put("value", 42)
-        }.toString()
+        val json =
+            ObjectMapper().createObjectNode().apply {
+                put("value", 42)
+            }.toString()
 
         val result = jacksonConfig.objectMapper().readValue(json, Int::class.java)
 
@@ -239,9 +237,10 @@ class JacksonConfigTest {
 
     @Test
     fun `should deserialize object with single long field to Int`() {
-        val json = ObjectMapper().createObjectNode().apply {
-            put("value", 42L)
-        }.toString()
+        val json =
+            ObjectMapper().createObjectNode().apply {
+                put("value", 42L)
+            }.toString()
 
         val result = jacksonConfig.objectMapper().readValue(json, Int::class.java)
 
@@ -250,9 +249,10 @@ class JacksonConfigTest {
 
     @Test
     fun `should deserialize object with single double field to Int`() {
-        val json = ObjectMapper().createObjectNode().apply {
-            put("value", 42.0)
-        }.toString()
+        val json =
+            ObjectMapper().createObjectNode().apply {
+                put("value", 42.0)
+            }.toString()
 
         val result = jacksonConfig.objectMapper().readValue(json, Int::class.java)
 
@@ -261,9 +261,10 @@ class JacksonConfigTest {
 
     @Test
     fun `should deserialize object with single string field to Int`() {
-        val json = ObjectMapper().createObjectNode().apply {
-            put("value", "42")
-        }.toString()
+        val json =
+            ObjectMapper().createObjectNode().apply {
+                put("value", "42")
+            }.toString()
 
         val result = jacksonConfig.objectMapper().readValue(json, Int::class.java)
 
@@ -272,10 +273,11 @@ class JacksonConfigTest {
 
     @Test
     fun `should throw exception for object with multiple fields`() {
-        val json = ObjectMapper().createObjectNode().apply {
-            put("value1", 42)
-            put("value2", 100)
-        }.toString()
+        val json =
+            ObjectMapper().createObjectNode().apply {
+                put("value1", 42)
+                put("value2", 100)
+            }.toString()
 
         assertThrows<Exception> {
             jacksonConfig.objectMapper().readValue(json, Int::class.java)
@@ -344,4 +346,4 @@ class JacksonConfigTest {
             assertEquals(enumValue, result)
         }
     }
-} 
+}

@@ -6,9 +6,6 @@ import org.junit.jupiter.api.assertThrows
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest
 import org.springframework.mock.web.server.MockServerWebExchange
 import org.springframework.web.server.WebFilterChain
@@ -29,7 +26,6 @@ import reactor.test.StepVerifier
  * @since 1.0.0
  */
 class CorsFilterTest {
-
     @Mock
     private lateinit var webFilterChain: WebFilterChain
 
@@ -44,19 +40,21 @@ class CorsFilterTest {
     @Test
     fun `should allow CORS request from allowed origin`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "http://localhost:3000,https://example.com",
-            allowedMethodsConfig = "GET,POST,PUT,DELETE",
-            allowedHeadersConfig = "Content-Type,Authorization",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "http://localhost:3000,https://example.com",
+                allowedMethodsConfig = "GET,POST,PUT,DELETE",
+                allowedHeadersConfig = "Content-Type,Authorization",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "http://localhost:3000")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "http://localhost:3000")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -78,19 +76,21 @@ class CorsFilterTest {
     @Test
     fun `should handle preflight OPTIONS request`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .options("/api/test")
-            .header("Origin", "https://example.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .options("/api/test")
+                .header("Origin", "https://example.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -107,25 +107,27 @@ class CorsFilterTest {
         assert(responseHeaders.getFirst("Access-Control-Allow-Methods") == "GET,POST")
         assert(responseHeaders.getFirst("Access-Control-Allow-Headers") == "Content-Type")
         assert(responseHeaders.getFirst("Access-Control-Max-Age") == "3600")
-        assert(exchange.response.statusCode == HttpStatus.NO_CONTENT)
+        assert(exchange.response.statusCode == org.springframework.http.HttpStatus.NO_CONTENT)
     }
 
     @Test
     fun `should reject CORS request from disallowed origin`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -144,18 +146,20 @@ class CorsFilterTest {
     @Test
     fun `should handle request without origin header`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -174,19 +178,21 @@ class CorsFilterTest {
     @Test
     fun `should reject HTTP origin in production`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "http://localhost:3000,https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "production"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "http://localhost:3000,https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "production"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "http://localhost:3000")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "http://localhost:3000")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -205,19 +211,21 @@ class CorsFilterTest {
     @Test
     fun `should allow HTTPS origin in production`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "production"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "production"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://example.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://example.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -266,19 +274,21 @@ class CorsFilterTest {
     @Test
     fun `should allow wildcard origins in non-production`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "*",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "*",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://any-origin.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://any-origin.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -297,20 +307,22 @@ class CorsFilterTest {
     @Test
     fun `should handle request with user agent header`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .header("User-Agent", "Mozilla/5.0 Test Browser")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .header("User-Agent", "Mozilla/5.0 Test Browser")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -328,19 +340,21 @@ class CorsFilterTest {
     @Test
     fun `should handle request without user agent header`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://malicious.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://malicious.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -358,19 +372,21 @@ class CorsFilterTest {
     @Test
     fun `should handle comma-separated configuration values`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "https://example.com, https://test.com , http://localhost:3000",
-            allowedMethodsConfig = "GET, POST , PUT,DELETE",
-            allowedHeadersConfig = "Content-Type, Authorization , X-Requested-With",
-            exposedHeadersConfig = "X-Total-Count, X-Page-Count ",
-            maxAgeConfig = "3600",
-            activeProfile = "test"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "https://example.com, https://test.com , http://localhost:3000",
+                allowedMethodsConfig = "GET, POST , PUT,DELETE",
+                allowedHeadersConfig = "Content-Type, Authorization , X-Requested-With",
+                exposedHeadersConfig = "X-Total-Count, X-Page-Count ",
+                maxAgeConfig = "3600",
+                activeProfile = "test"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "https://test.com")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "https://test.com")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -391,19 +407,21 @@ class CorsFilterTest {
     @Test
     fun `should handle prod profile detection`() {
         // Given
-        corsFilter = CorsFilter(
-            allowedOriginsConfig = "http://localhost:3000",
-            allowedMethodsConfig = "GET,POST",
-            allowedHeadersConfig = "Content-Type",
-            exposedHeadersConfig = "X-Total-Count",
-            maxAgeConfig = "3600",
-            activeProfile = "prod"
-        )
+        corsFilter =
+            CorsFilter(
+                allowedOriginsConfig = "http://localhost:3000",
+                allowedMethodsConfig = "GET,POST",
+                allowedHeadersConfig = "Content-Type",
+                exposedHeadersConfig = "X-Total-Count",
+                maxAgeConfig = "3600",
+                activeProfile = "prod"
+            )
 
-        val request = MockServerHttpRequest
-            .get("/api/test")
-            .header("Origin", "http://localhost:3000")
-            .build()
+        val request =
+            MockServerHttpRequest
+                .get("/api/test")
+                .header("Origin", "http://localhost:3000")
+                .build()
 
         val exchange = MockServerWebExchange.from(request)
 
@@ -417,4 +435,4 @@ class CorsFilterTest {
         val responseHeaders = exchange.response.headers
         assert(responseHeaders.getFirst("Access-Control-Allow-Origin") == null)
     }
-} 
+}

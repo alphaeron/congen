@@ -1,6 +1,5 @@
 package com.congen.config
 
-import io.vertx.core.Vertx
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 
@@ -16,7 +15,6 @@ import org.junit.jupiter.api.Test
  * @since 1.0.0
  */
 class VertxConfigTest {
-
     private val vertxConfig = VertxConfig()
 
     @Test
@@ -50,4 +48,4 @@ class VertxConfigTest {
         // We can't easily test the internal mapper configuration without reflection
         // but the test ensures the method completes successfully
     }
-} 
+}

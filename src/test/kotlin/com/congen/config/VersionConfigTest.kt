@@ -1,7 +1,6 @@
 package com.congen.config
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -19,7 +18,6 @@ import org.junit.jupiter.api.Test
  * @since 1.0.0
  */
 class VersionConfigTest {
-
     @Test
     fun `should create VersionConfig with default values`() {
         // When
@@ -98,4 +96,4 @@ class VersionConfigTest {
         // gitDirty should be a valid boolean value
         assert(versionConfig.gitDirty == true || versionConfig.gitDirty == false)
     }
-} 
+}
