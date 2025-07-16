@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockWorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
@@ -123,10 +124,10 @@ class WorkoutStageTypeControllerTest {
 
     @Test
     fun `should handle DAL error gracefully for getAll`() {
-        whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = workoutStageTypeController.getAll()
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 }

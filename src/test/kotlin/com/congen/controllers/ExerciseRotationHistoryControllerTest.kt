@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseRotationHistoryDAL
+import com.congen.exceptions.DatabaseException
 import com.congen.model.ExerciseRotationHistory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -205,10 +206,10 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should handle DAL error gracefully`() {
-        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.error(DatabaseException("Database error")))
         val result = exerciseRotationHistoryController.getAll()
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseException::class.java)
             .verify()
     }
 }

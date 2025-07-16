@@ -1,6 +1,7 @@
 package com.congen.service
 
 import com.congen.dal.UserDAL
+import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.ValidationException
 import com.congen.mockUser
 import com.congen.model.WeightUnit
@@ -158,14 +159,14 @@ class UserServiceTest {
 
     @Test
     fun `getUserById should propagate error when user not found`() {
-        val error = RuntimeException("User not found")
+        val error = DatabaseException("User not found")
         whenever(userDAL.selectUserById(USER_ID)).thenReturn(Mono.error(error))
 
         val result = userService.getUserById(USER_ID)
 
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
-                assert(ex is RuntimeException)
+                assert(ex is DatabaseException)
             }
             .verify()
 
@@ -312,14 +313,14 @@ class UserServiceTest {
 
     @Test
     fun `deleteUser should propagate error when user not found`() {
-        val error = RuntimeException("User not found")
+        val error = DatabaseException("User not found")
         whenever(userDAL.deleteUser(USER_ID)).thenReturn(Mono.error(error))
 
         val result = userService.deleteUser(USER_ID)
 
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
-                assert(ex is RuntimeException)
+                assert(ex is DatabaseException)
             }
             .verify()
 

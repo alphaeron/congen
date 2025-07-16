@@ -1,6 +1,7 @@
 package com.congen.service
 
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.exceptions.DatabaseException
 import com.congen.model.ExerciseEquipment
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
@@ -206,7 +207,7 @@ class WeightSelectionServiceTest {
         val weightUnit = WeightUnit.LBS
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseException("Database error")))
 
         // When
         val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)

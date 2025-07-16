@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserProgramPreferences
 import com.congen.model.UserProgramPreferences
 import org.junit.jupiter.api.BeforeEach
@@ -124,45 +125,59 @@ class UserProgramPreferencesControllerTest {
 
     @Test
     fun `should handle DAL error gracefully for save`() {
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userProgramPreferencesDAL.insertUserProgramPreferences(
+                USER_ID,
+                PROGRAM_DAYS_PER_WEEK_4,
+                SESSION_TIME_60
+            )
+        )
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.save(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<UserProgramPreferences>
         StepVerifier.create(body)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for get`() {
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.get(USER_ID)
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for update`() {
-        whenever(userProgramPreferencesDAL.updateUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userProgramPreferencesDAL.updateUserProgramPreferences(
+                USER_ID,
+                PROGRAM_DAYS_PER_WEEK_5,
+                SESSION_TIME_75
+            )
+        )
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.update(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<UserProgramPreferences>
         StepVerifier.create(body)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for delete`() {
-        whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(USER_ID))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.delete(USER_ID)
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<UserProgramPreferences>
         StepVerifier.create(body)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 }

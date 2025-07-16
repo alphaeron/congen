@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserExercisePreference
 import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
@@ -112,21 +113,21 @@ class UserExercisePreferenceControllerTest {
     @Test
     fun `should handle DAL error gracefully for save`() {
         whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<UserExercisePreference>)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for getByUser`() {
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userExercisePreferenceController.getByUser(USER_ID)
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
@@ -141,11 +142,11 @@ class UserExercisePreferenceControllerTest {
                 createdAt = now
             )
         whenever(userExercisePreferenceDAL.deleteUserExercisePreference(USER_ID, EXERCISE_NAME))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userExercisePreferenceController.delete(userExercisePreference)
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<UserExercisePreference>)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 }

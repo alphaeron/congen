@@ -14,6 +14,7 @@ import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.ValidationException
 import com.congen.mockExercise
 import com.congen.mockExerciseRotationHistory
@@ -397,14 +398,45 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = createSampleProgramPreferences()
         val rotationHistory = emptyList<ExerciseRotationHistory>()
 
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, null)
+        setupDALMocks(
+            exercises,
+            preferences,
+            userEquipment,
+            oneRepMaxes,
+            programPreferences,
+            rotationHistory,
+            null
+        )
         whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
-        whenever(programDAL.insertProgram(any(), any(), any(), any())).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(programDAL.insertProgram(any(), any(), any(), any())).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(exerciseDAL.selectExercises()).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
+        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(
+            Mono.error(DatabaseException("Database error"))
+        )
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseException::class.java)
             .verify()
     }
 

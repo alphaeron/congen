@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.ProgrammedWorkout
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -242,12 +243,12 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should handle DAL error gracefully`() {
-        whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = programmedWorkoutController.getAll()
         assert(result.statusCode == HttpStatus.OK)
         val body = result.body as Mono<*>
         StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
         verify(programmedWorkoutDAL).selectProgrammedWorkouts()
     }

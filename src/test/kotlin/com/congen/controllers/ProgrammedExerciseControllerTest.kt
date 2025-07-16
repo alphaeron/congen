@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.ProgrammedExercise
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -121,6 +122,23 @@ class ProgrammedExerciseControllerTest {
     }
 
     @Test
+    fun `save should handle database errors`() {
+        whenever(programmedExerciseDAL.insertProgrammedExercise(any(), any(), any(), any()))
+            .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
+        val result =
+            programmedExerciseController.save(
+                workoutStageId = WORKOUT_STAGE_ID,
+                exerciseName = BENCH_PRESS,
+                position = POSITION_1,
+                notes = NOTES
+            )
+        StepVerifier.create(result)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+        verify(programmedExerciseDAL).insertProgrammedExercise(WORKOUT_STAGE_ID, BENCH_PRESS, POSITION_1, NOTES)
+    }
+
+    @Test
     fun `get should return programmed exercise when found`() {
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(EXERCISE_ID_1)).thenReturn(Mono.just(testProgrammedExercise))
         val result = programmedExerciseController.get(EXERCISE_ID_1)
@@ -139,6 +157,17 @@ class ProgrammedExerciseControllerTest {
             .expectNext(ResponseEntity.notFound().build())
             .verifyComplete()
         verify(programmedExerciseDAL).selectProgrammedExerciseById(NON_EXISTENT_ID)
+    }
+
+    @Test
+    fun `get should handle database errors`() {
+        whenever(programmedExerciseDAL.selectProgrammedExerciseById(EXERCISE_ID_1))
+            .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
+        val result = programmedExerciseController.get(EXERCISE_ID_1)
+        StepVerifier.create(result)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+        verify(programmedExerciseDAL).selectProgrammedExerciseById(EXERCISE_ID_1)
     }
 
     @Test
@@ -168,6 +197,17 @@ class ProgrammedExerciseControllerTest {
     }
 
     @Test
+    fun `getByStage should handle database errors`() {
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID))
+            .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
+        val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
+        StepVerifier.create(result.body as Mono<List<ProgrammedExercise>>)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+        verify(programmedExerciseDAL).selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID)
+    }
+
+    @Test
     fun `getAll should return all programmed exercises`() {
         val programmedExercises =
             listOf(
@@ -189,5 +229,135 @@ class ProgrammedExerciseControllerTest {
             .expectNext(programmedExercises)
             .verifyComplete()
         verify(programmedExerciseDAL).selectProgrammedExercises()
+    }
+
+    @Test
+    fun `getAll should handle database errors`() {
+        whenever(programmedExerciseDAL.selectProgrammedExercises())
+            .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
+        val result = programmedExerciseController.getAll()
+        StepVerifier.create(result.body as Mono<List<ProgrammedExercise>>)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+        verify(programmedExerciseDAL).selectProgrammedExercises()
+    }
+
+    @Test
+    fun `update should update programmed exercise successfully`() {
+        val updatedExercise =
+            testProgrammedExercise.copy(
+                exerciseName = SQUAT,
+                position = POSITION_2,
+                notes = UPDATED_NOTES,
+                updatedAt = now
+            )
+        whenever(programmedExerciseDAL.updateProgrammedExercise(any(), any(), any(), any(), any()))
+            .thenReturn(Mono.just(updatedExercise))
+        val result =
+            programmedExerciseController.update(
+                id = EXERCISE_ID_1,
+                workoutStageId = WORKOUT_STAGE_ID,
+                exerciseName = SQUAT,
+                position = POSITION_2,
+                notes = UPDATED_NOTES
+            )
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(updatedExercise))
+            .verifyComplete()
+        verify(programmedExerciseDAL).updateProgrammedExercise(EXERCISE_ID_1, WORKOUT_STAGE_ID, SQUAT, POSITION_2, UPDATED_NOTES)
+    }
+
+    @Test
+    fun `update should handle null notes`() {
+        val updatedExercise =
+            testProgrammedExercise.copy(
+                exerciseName = SQUAT,
+                position = POSITION_2,
+                notes = null,
+                updatedAt = now
+            )
+        whenever(programmedExerciseDAL.updateProgrammedExercise(EXERCISE_ID_1, WORKOUT_STAGE_ID, SQUAT, POSITION_2, null))
+            .thenReturn(Mono.just(updatedExercise))
+        val result =
+            programmedExerciseController.update(
+                id = EXERCISE_ID_1,
+                workoutStageId = WORKOUT_STAGE_ID,
+                exerciseName = SQUAT,
+                position = POSITION_2,
+                notes = null
+            )
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(updatedExercise))
+            .verifyComplete()
+        verify(programmedExerciseDAL).updateProgrammedExercise(EXERCISE_ID_1, WORKOUT_STAGE_ID, SQUAT, POSITION_2, null)
+    }
+
+    @Test
+    fun `update should return not found when programmed exercise not found`() {
+        whenever(programmedExerciseDAL.updateProgrammedExercise(any(), any(), any(), any(), any()))
+            .thenReturn(Mono.error(NoResultsFoundException("Not found")))
+        val result =
+            programmedExerciseController.update(
+                id = NON_EXISTENT_ID,
+                workoutStageId = WORKOUT_STAGE_ID,
+                exerciseName = SQUAT,
+                position = POSITION_2,
+                notes = UPDATED_NOTES
+            )
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.notFound().build())
+            .verifyComplete()
+        verify(programmedExerciseDAL).updateProgrammedExercise(NON_EXISTENT_ID, WORKOUT_STAGE_ID, SQUAT, POSITION_2, UPDATED_NOTES)
+    }
+
+    @Test
+    fun `update should handle database errors`() {
+        whenever(programmedExerciseDAL.updateProgrammedExercise(any(), any(), any(), any(), any()))
+            .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
+        val result =
+            programmedExerciseController.update(
+                id = EXERCISE_ID_1,
+                workoutStageId = WORKOUT_STAGE_ID,
+                exerciseName = SQUAT,
+                position = POSITION_2,
+                notes = UPDATED_NOTES
+            )
+        StepVerifier.create(result)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+        verify(programmedExerciseDAL).updateProgrammedExercise(EXERCISE_ID_1, WORKOUT_STAGE_ID, SQUAT, POSITION_2, UPDATED_NOTES)
+    }
+
+    @Test
+    fun `delete should delete programmed exercise successfully`() {
+        whenever(programmedExerciseDAL.deleteProgrammedExercise(EXERCISE_ID_1))
+            .thenReturn(Mono.just(testProgrammedExercise))
+        val result = programmedExerciseController.delete(EXERCISE_ID_1)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(testProgrammedExercise))
+            .verifyComplete()
+        verify(programmedExerciseDAL).deleteProgrammedExercise(EXERCISE_ID_1)
+    }
+
+    @Test
+    fun `delete should return not found when programmed exercise not found`() {
+        whenever(programmedExerciseDAL.deleteProgrammedExercise(NON_EXISTENT_ID))
+            .thenReturn(Mono.error(NoResultsFoundException("Not found")))
+        val result = programmedExerciseController.delete(NON_EXISTENT_ID)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.notFound().build())
+            .verifyComplete()
+        verify(programmedExerciseDAL).deleteProgrammedExercise(NON_EXISTENT_ID)
+    }
+
+    @Test
+    fun `delete should handle database errors`() {
+        whenever(programmedExerciseDAL.deleteProgrammedExercise(EXERCISE_ID_1))
+            .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
+        val result = programmedExerciseController.delete(EXERCISE_ID_1)
+        StepVerifier.create(result)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+        verify(programmedExerciseDAL).deleteProgrammedExercise(EXERCISE_ID_1)
     }
 }

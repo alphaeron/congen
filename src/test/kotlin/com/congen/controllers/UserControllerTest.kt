@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUser
 import com.congen.service.UserService
 import org.junit.jupiter.api.BeforeEach
@@ -188,13 +189,13 @@ class UserControllerTest {
 
     @Test
     fun `should propagate error when user not found`() {
-        val error = RuntimeException("Not found")
+        val error = DatabaseQueryException("Not found")
         whenever(userService.getUserById(NON_EXISTENT_USER_ID)).thenReturn(Mono.error(error))
 
         val result = userController.get(NON_EXISTENT_USER_ID)
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
 
         verify(userService).getUserById(NON_EXISTENT_USER_ID)
@@ -202,7 +203,7 @@ class UserControllerTest {
 
     @Test
     fun `should propagate error when updating non-existent user`() {
-        val error = RuntimeException("Not found")
+        val error = DatabaseQueryException("Not found")
         whenever(
             userService.updateUser(eq(NON_EXISTENT_USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT)), eq("KG"))
         )
@@ -211,7 +212,7 @@ class UserControllerTest {
         val result = userController.update(NON_EXISTENT_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
 
         verify(userService).updateUser(NON_EXISTENT_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
@@ -219,13 +220,13 @@ class UserControllerTest {
 
     @Test
     fun `should propagate error when deleting non-existent user`() {
-        val error = RuntimeException("Not found")
+        val error = DatabaseQueryException("Not found")
         whenever(userService.deleteUser(NON_EXISTENT_USER_ID)).thenReturn(Mono.error(error))
 
         val result = userController.delete(NON_EXISTENT_USER_ID)
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
 
         verify(userService).deleteUser(NON_EXISTENT_USER_ID)
@@ -233,13 +234,13 @@ class UserControllerTest {
 
     @Test
     fun `should propagate service error gracefully for getAll`() {
-        val error = RuntimeException("Database error")
+        val error = DatabaseQueryException("Database error")
         whenever(userService.getAllUsers()).thenReturn(Mono.error(error))
 
         val result = userController.getAll()
 
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
 
         verify(userService).getAllUsers()

@@ -2,6 +2,7 @@ package com.congen.service
 
 import com.congen.client.PostgresClient
 import com.congen.config.VersionConfig
+import com.congen.exceptions.DatabaseException
 import com.congen.model.HealthStatus
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -55,7 +56,7 @@ class HealthCheckServiceTest {
     fun `performHealthCheck should return fail status when database is unhealthy`() {
         // Given
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
-            .thenReturn(Mono.error(RuntimeException("Database connection failed")))
+            .thenReturn(Mono.error(DatabaseException("Database connection failed")))
 
         // When
         val result = healthCheckService.performHealthCheck()
@@ -102,7 +103,7 @@ class HealthCheckServiceTest {
         // Given
         val errorMessage = "Connection timeout"
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
-            .thenReturn(Mono.error(RuntimeException(errorMessage)))
+            .thenReturn(Mono.error(DatabaseException(errorMessage)))
 
         // When
         val result = healthCheckService.performHealthCheck()

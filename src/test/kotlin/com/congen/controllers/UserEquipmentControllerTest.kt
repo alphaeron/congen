@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserEquipmentDAL
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserEquipment
 import com.congen.model.UserEquipment
 import org.junit.jupiter.api.BeforeEach
@@ -85,21 +86,21 @@ class UserEquipmentControllerTest {
     @Test
     fun `should handle DAL error gracefully for save`() {
         whenever(userEquipmentDAL.insertUserEquipment(USER_ID, EQUIPMENT_NAME))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userEquipmentController.save(USER_ID, EQUIPMENT_NAME)
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<UserEquipment>)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
     @Test
     fun `should handle DAL error gracefully for getByUser`() {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userEquipmentController.getByUser(USER_ID)
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
@@ -108,11 +109,11 @@ class UserEquipmentControllerTest {
         val now = Instant.now()
         val userEquipment = mockUserEquipment(userId = USER_ID, equipmentName = EQUIPMENT_NAME, createdAt = now)
         whenever(userEquipmentDAL.deleteUserEquipment(USER_ID, EQUIPMENT_NAME))
-            .thenReturn(Mono.error(RuntimeException("Database error")))
+            .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userEquipmentController.delete(userEquipment)
         assert(result.statusCode == HttpStatus.OK)
         StepVerifier.create(result.body as Mono<UserEquipment>)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 }

@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.model.Program
@@ -85,10 +86,10 @@ class ConjugateWorkoutGeneratorControllerTest {
     @Test
     fun `generateNextWeek should return 500 for unexpected error`() {
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
-            .thenReturn(Mono.error(RuntimeException("Unexpected error")))
+            .thenReturn(Mono.error(DatabaseException("Unexpected error")))
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
+            .expectError(DatabaseException::class.java)
             .verify()
         verify(conjugateWorkoutGeneratorService).generateNextWeek(PROGRAM_ID)
     }

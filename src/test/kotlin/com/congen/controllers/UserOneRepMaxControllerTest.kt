@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.UserOneRepMaxDAL
+import com.congen.exceptions.DatabaseException
 import com.congen.model.UserOneRepMax
 import com.congen.service.UserOneRepMaxService
 import com.congen.util.ValidationUtil
@@ -102,7 +103,7 @@ class UserOneRepMaxControllerTest {
     fun `getOneRepMaxByUserAndExercise should return not found when not found`() {
         // Given
         whenever(userOneRepMaxService.getByUserAndExercise(testUserId, testExerciseName, null))
-            .thenReturn(Mono.error(RuntimeException("Not found")))
+            .thenReturn(Mono.error(DatabaseException("Not found")))
 
         // When
         val result = controller.getOneRepMaxByUserAndExercise(testUserId, testExerciseName, null)
@@ -189,7 +190,7 @@ class UserOneRepMaxControllerTest {
     fun `deleteOneRepMax should return not found when not found`() {
         // Given
         whenever(userOneRepMaxService.deleteOneRepMax(testUserId, testExerciseName))
-            .thenReturn(Mono.error(RuntimeException("Not found")))
+            .thenReturn(Mono.error(DatabaseException("Not found")))
 
         // When
         val result = controller.deleteOneRepMax(testUserId, testExerciseName)
