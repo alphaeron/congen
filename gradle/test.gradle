@@ -1,4 +1,5 @@
 // Configure integration test dependencies
+// Note: Gradle automatically creates configurations for sourceSets, but we need to configure them before using them
 configurations {
     integrationTestImplementation.extendsFrom implementation, testImplementation
 }

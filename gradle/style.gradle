@@ -29,7 +29,7 @@ spotless {
 
 task ktlint (type: JavaExec, group: 'verification') {
     description = 'Check Kotlin Style.'
-    main = 'com.pinterest.ktlint.Main'
+    mainClass = 'com.pinterest.ktlint.Main'
     classpath = configurations.ktlint
     args '--color', 'src/**/*.kt'
 }
@@ -37,14 +37,14 @@ check.dependsOn(ktlint)
 
 task ktlintFormat(type: JavaExec, group: 'formatting') {
     description = 'Fix Kotlin Style.'
-    main = 'com.pinterest.ktlint.Main'
+    mainClass = 'com.pinterest.ktlint.Main'
     classpath = configurations.ktlint
     args '-F', '--color', 'src/**/*.kt'
 }
 
 task detekt(type: JavaExec, group: 'verification') {
     description = 'Run Detekt static analysis on main source code.'
-    main = 'io.gitlab.arturbosch.detekt.cli.Main'
+    mainClass = 'io.gitlab.arturbosch.detekt.cli.Main'
     classpath = configurations.detekt
     args '--input', 'src', '--config', 'detekt.yml', '--excludes', 'src/test/**,src/integrationTest/**', '--report', 'txt:build/reports/detekt/detekt.txt', '--report', 'xml:build/reports/detekt/detekt.xml'
 }
@@ -52,7 +52,7 @@ check.dependsOn(detekt)
 
 task detektTest(type: JavaExec, group: 'verification') {
     description = 'Run Detekt static analysis on test files (unit tests and integration tests) for unused imports only.'
-    main = 'io.gitlab.arturbosch.detekt.cli.Main'
+    mainClass = 'io.gitlab.arturbosch.detekt.cli.Main'
     classpath = configurations.detekt
     args '--input', 'src/test,src/integrationTest', '--config', 'detekt-test.yml', '--report', 'txt:build/reports/detekt/detekt-test.txt', '--report', 'xml:build/reports/detekt/detekt-test.xml'
 }
