@@ -68,8 +68,20 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get exercise rotation history by isAccessory`() {
         // First create some records for different accessory types
-        IntegrationTestHelpers.createTestExerciseRotationHistory(webTestClient, testUserId, "Bench Press", true)
-        IntegrationTestHelpers.createTestExerciseRotationHistory(webTestClient, testUserId, "Safety Bar Squat", true)
+        IntegrationTestHelpers.createTestExerciseRotationHistory(
+            webTestClient,
+            testUserId,
+            "Bench Press",
+            "2024-01-01",
+            isAccessory = false
+        )
+        IntegrationTestHelpers.createTestExerciseRotationHistory(
+            webTestClient,
+            testUserId,
+            "Safety Bar Squat",
+            "2024-01-01",
+            isAccessory = true
+        )
 
         // Then get records for accessory exercises
         webTestClient.get()
@@ -83,8 +95,20 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all exercise rotation history`() {
-        IntegrationTestHelpers.createTestExerciseRotationHistory(webTestClient, testUserId, "Bench Press")
-        IntegrationTestHelpers.createTestExerciseRotationHistory(webTestClient, testUserId, "Safety Bar Squat")
+        IntegrationTestHelpers.createTestExerciseRotationHistory(
+            webTestClient,
+            testUserId,
+            "Bench Press",
+            "2024-01-01",
+            isAccessory = false
+        )
+        IntegrationTestHelpers.createTestExerciseRotationHistory(
+            webTestClient,
+            testUserId,
+            "Safety Bar Squat",
+            "2024-01-01",
+            isAccessory = true
+        )
         webTestClient.get()
             .uri("/exercise_rotation_history/")
             .exchange()

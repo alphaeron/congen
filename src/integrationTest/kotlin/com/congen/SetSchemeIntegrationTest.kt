@@ -41,13 +41,12 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 position = 1,
                 name = "Warmup Stage" + System.nanoTime()
             )
-        // Create a programmed exercise
+        // Create a programmed exercise first
         programmedExerciseId =
             IntegrationTestHelpers.createTestProgrammedExercise(
                 webTestClient,
                 stageId,
-                exerciseName = "Bench Press",
-                notes = "Test exercise"
+                exerciseName = "Bench Press"
             )
     }
 

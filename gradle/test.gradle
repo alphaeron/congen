@@ -8,26 +8,71 @@ configurations {
 dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
     //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
     testImplementation 'io.projectreactor:reactor-test:3.6.5'
     testImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
     testImplementation 'org.mockito:mockito-core:5.18.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
 
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.3'
-    integrationTestImplementation 'org.testcontainers:postgresql:1.19.3'
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
+    integrationTestImplementation 'io.projectreactor:reactor-test:3.6.5'
+    integrationTestImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
+    integrationTestImplementation 'org.mockito:mockito-core:5.18.0'
+    integrationTestImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
+    integrationTestImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
 }
 
-// Define source sets for unit and integration tests
-sourceSets {
-    test {
-        kotlin {
-            srcDirs = ['src/test/kotlin']
-        }
-        resources {
-            srcDir 'src/test/resources'
-        }
+// Configure test tasks
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat = 'full'
+        showStandardStreams = true
     }
+}
+
+// Configure integration tests
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests with full Kubernetes deployment'
+    group = 'verification'
+
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+
+    // Disable parallel execution to avoid database constraint violations
+    maxParallelForks = 1
+
+    // Use integration test source set
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+
+    // Set Spring profile for integration tests
+    systemProperty 'spring.profiles.active', 'integration-test'
+
+    // Setup and cleanup
+    dependsOn 'setupTestPortForward'
+    finalizedBy 'cleanupPortForward'
+}
+
+// Task to cleanup port forwarding
+tasks.register('cleanupPortForward') {
+    description = 'Cleanup port forwarding for integration tests'
+    group = 'kubernetes'
+
+    doLast {
+        println "🧹 Cleaning up port forwarding..."
+        exec {
+            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
+            ignoreExitValue = true
+        }
+        println "✅ Port forwarding cleaned up"
+    }
+}
+
+// Configure source sets
+sourceSets {
     integrationTest {
         kotlin {
             srcDir 'src/integrationTest/kotlin'
@@ -87,33 +132,6 @@ jacocoTestCoverageVerification {
     }
 }
 
-// Integration test task
-// To run integration tests, first start the required resources:
-// 1. Start Minikube: minikube start
-// 2. Run: ./gradlew integrationTest
-task integrationTest(type: Test) {
-    description = 'Runs integration tests against Kubernetes cluster'
-    group = 'verification'
-
-    testClassesDirs = sourceSets.integrationTest.output.classesDirs
-    classpath = sourceSets.integrationTest.runtimeClasspath
-
-    useJUnitPlatform()
-
-    systemProperty 'spring.profiles.active', 'integration-test'
-
-    testLogging {
-        exceptionFormat = 'full'
-        showStandardStreams = true
-    }
-
-    // Setup Kubernetes environment before tests
-    dependsOn 'setupKubernetesForTesting'
-
-    // Cleanup port forwarding after tests
-    finalizedBy 'cleanupPortForward'
-}
-
 // Integration test coverage report
 task jacocoIntegrationTestReport(type: JacocoReport) {
     dependsOn integrationTest
@@ -134,53 +152,6 @@ task jacocoIntegrationTestReport(type: JacocoReport) {
 
 tasks.named('processIntegrationTestResources') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-}
-
-// Task to setup Kubernetes environment for testing
-task setupKubernetesForTesting {
-    description = 'Setup Kubernetes environment for integration testing'
-    group = 'verification'
-
-    // Set environment property at configuration time
-    project.ext.set('environment', 'local')
-
-    dependsOn 'deployToKubernetes', 'setupTestPortForward'
-}
-
-// Task to check Kubernetes test environment status
-task checkKubernetesTestEnv {
-    description = 'Check Kubernetes test environment status'
-    group = 'verification'
-
-    doLast {
-        exec {
-            commandLine 'kubectl', 'get', 'pods', '-n', 'congen'
-        }
-    }
-}
-
-// Task to cleanup port forwarding
-task cleanupPortForward {
-    description = 'Cleanup port forwarding for integration tests'
-    group = 'verification'
-
-    doLast {
-        println "🧹 Cleaning up port forwarding..."
-
-        // Try to kill using PID file first
-        exec {
-            commandLine 'sh', '-c', 'if [ -f /tmp/port-forward.pid ]; then kill $(cat /tmp/port-forward.pid) 2>/dev/null; rm -f /tmp/port-forward.pid; fi'
-            ignoreExitValue = true
-        }
-
-        // Fallback to pkill
-        exec {
-            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
-            ignoreExitValue = true
-        }
-
-        println "✅ Port forwarding cleanup complete"
-    }
 }
 
 // Make check depend on all test types (moved to end after all tasks are defined)

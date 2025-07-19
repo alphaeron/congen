@@ -4,6 +4,7 @@ import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
+import com.congen.model.SetScheme
 import com.congen.model.User
 import com.congen.model.UserOneRepMax
 import com.congen.model.WorkoutStage
@@ -83,6 +84,16 @@ object IntegrationTestHelpers {
     }
 
     /**
+     * Creates a test user with a unique name and returns the user ID.
+     */
+    fun createTestUserWithId(
+        webTestClient: WebTestClient,
+        name: String = TEST_USER_NAME
+    ): Int {
+        return createTestUser(webTestClient, name)
+    }
+
+    /**
      * Returns the equipment name for testing.
      * Equipment already exists in migrations, so we don't need to create it.
      */
@@ -112,13 +123,15 @@ object IntegrationTestHelpers {
     fun createTestProgram(
         webTestClient: WebTestClient,
         userId: Int,
-        name: String = TEST_PROGRAM_NAME
+        name: String = TEST_PROGRAM_NAME,
+        isActive: Boolean = true
     ): Long {
         val response =
             webTestClient.post()
                 .uri(
                     "/program/?userId=$userId" +
-                        "&name=$name"
+                        "&name=$name" +
+                        "&isActive=$isActive"
                 )
                 .exchange()
                 .expectStatus().isOk()
@@ -134,7 +147,8 @@ object IntegrationTestHelpers {
     fun createTestProgrammedWorkout(
         webTestClient: WebTestClient,
         programId: Long,
-        dayNumber: Int = 1,
+        // Use unique day number
+        dayNumber: Int = (System.nanoTime() % 1000).toInt() + 1,
         name: String = TEST_WORKOUT_NAME
     ): Long {
         val response =
@@ -159,7 +173,8 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         programmedWorkoutId: Long,
         stageTypeId: Int = 1,
-        position: Int = 1,
+        // Use unique position
+        position: Int = (System.nanoTime() % 1000).toInt() + 1,
         name: String = TEST_STAGE_NAME
     ): Long {
         val response =
@@ -199,7 +214,6 @@ object IntegrationTestHelpers {
 
     /**
      * Creates test user exercise preference via the API.
-     * Exercises need to exist first, so we create them if needed.
      */
     fun createTestUserExercisePreference(
         webTestClient: WebTestClient,
@@ -207,12 +221,10 @@ object IntegrationTestHelpers {
         exerciseName: String = TEST_EXERCISE_NAME,
         shouldAvoid: Boolean = false
     ) {
-        // Now create the preference
-        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
         webTestClient.post()
             .uri(
                 "/user_exercise_preference/?userId=$userId" +
-                    "&exerciseName=$encodedExerciseName" +
+                    "&exerciseName=$exerciseName" +
                     "&shouldAvoid=$shouldAvoid"
             )
             .exchange()
@@ -221,7 +233,6 @@ object IntegrationTestHelpers {
 
     /**
      * Creates test user one rep max via the API.
-     * Exercises need to exist first, so we create them if needed.
      */
     fun createTestUserOneRepMax(
         webTestClient: WebTestClient,
@@ -230,13 +241,11 @@ object IntegrationTestHelpers {
         oneRepMax: Double = 100.0,
         unit: String = "KG"
     ) {
-        // Now create the one rep max - use raw exercise name for query parameters
-        val bigDecimalValue = java.math.BigDecimal(oneRepMax)
         webTestClient.put()
             .uri(
                 "/user_one_rep_max/?userId=$userId" +
                     "&exerciseName=$exerciseName" +
-                    "&oneRepMax=$bigDecimalValue" +
+                    "&oneRepMax=$oneRepMax" +
                     "&unit=$unit"
             )
             .exchange()
@@ -263,94 +272,96 @@ object IntegrationTestHelpers {
     }
 
     /**
-     * Creates a test user and returns the user ID.
+     * Creates minimal reference data for a user (just program preferences and one piece of equipment).
+     * This is much faster than creating all reference data.
      */
-    fun createTestUserWithId(
-        webTestClient: WebTestClient,
-        name: String = TEST_USER_NAME
-    ): Int {
-        val response =
-            webTestClient.post()
-                .uri("/user/?name=$name&age=$TEST_USER_AGE&height=$TEST_USER_HEIGHT&weight=$TEST_USER_WEIGHT")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
-        return response.id
-    }
-
-    /**
-     * Creates test user program preferences via the API.
-     */
-    fun createTestUserProgramPreferences(
+    fun createMinimalReferenceDataForUser(
         webTestClient: WebTestClient,
         userId: Int
     ) {
-        webTestClient.post()
-            .uri(
-                "/user_program_preferences/?userId=$userId" +
-                    "&programDaysPerWeek=3" +
-                    "&sessionTimeLengthInMinutes=60"
-            )
-            .exchange()
-            .expectStatus().isOk()
+        createTestUserProgramPreferences(webTestClient, userId)
+        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME)
     }
 
     /**
-     * Creates test exercise equipment relationship via the API.
+     * Creates all reference data for a user.
+     * Use createMinimalReferenceDataForUser for faster tests when full data isn't needed.
      */
-    fun createTestExerciseEquipment(
+    fun createAllReferenceDataForUser(
         webTestClient: WebTestClient,
-        exerciseName: String = TEST_EXERCISE_NAME,
-        equipmentName: String = TEST_EQUIPMENT_NAME
+        userId: Int,
+        programDaysPerWeek: Int = 3
     ) {
-        webTestClient.post()
-            .uri(
-                "/exercise_equipment/?exerciseName=$exerciseName" +
-                    "&equipmentName=$equipmentName"
-            )
-            .exchange()
-            .expectStatus().isOk()
+        // Create program preferences
+        createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek)
+
+        // Create user equipment (bench and power bar)
+        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME)
+        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME_2)
+
+        // Create user exercise preferences
+        createTestUserExercisePreference(webTestClient, userId, "Deadlift")
+        createTestUserExercisePreference(webTestClient, userId, TEST_EXERCISE_NAME_2)
+
+        // Create user one rep maxes
+        createTestUserOneRepMax(webTestClient, userId, "Deadlift")
+        createTestUserOneRepMax(webTestClient, userId, TEST_EXERCISE_NAME_2)
     }
 
     /**
-     * Creates test exercise muscle relationship via the API.
+     * Creates a complete test program with workout, stage, and exercise.
+     * Returns a map with all the created IDs for easy access.
      */
-    fun createTestExerciseMuscle(
+    fun createCompleteTestProgram(
         webTestClient: WebTestClient,
-        exerciseName: String = TEST_EXERCISE_NAME,
-        muscleName: String = TEST_MUSCLE_NAME,
-        isPrimary: Boolean = true
-    ) {
-        webTestClient.post()
-            .uri(
-                "/exercise_muscle/?exerciseName=$exerciseName" +
-                    "&muscleName=$muscleName" +
-                    "&isPrimary=$isPrimary"
-            )
-            .exchange()
-            .expectStatus().isOk()
+        userId: Int
+    ): Map<String, Any> {
+        val programId = createTestProgram(webTestClient, userId)
+        val workoutId = createTestProgrammedWorkout(webTestClient, programId)
+        val stageId = createTestWorkoutStage(webTestClient, workoutId)
+
+        return mapOf(
+            "userId" to userId,
+            "programId" to programId,
+            "workoutId" to workoutId,
+            "stageId" to stageId
+        )
     }
 
     /**
-     * Creates test exercise workout type relationship via the API.
+     * Creates test set scheme via the API and returns the set scheme ID.
      */
-    fun createTestExerciseWorkoutType(
+    fun createTestSetScheme(
         webTestClient: WebTestClient,
-        exerciseName: String = TEST_EXERCISE_NAME,
-        movementType: String = "horizontal push",
-        workoutType: String = "dynamic_effort"
-    ) {
-        webTestClient.post()
-            .uri(
-                "/exercise_workout_type/?exerciseName=$exerciseName" +
-                    "&movementType=$movementType" +
-                    "&workoutType=$workoutType"
-            )
-            .exchange()
-            .expectStatus().isOk()
+        programmedExerciseId: Long,
+        setNumber: Int = 1,
+        targetWeight: Double = 100.0,
+        targetRepCount: Int = 8,
+        restSeconds: Int = 120,
+        wasSetPerformed: Boolean = false,
+        isAmrap: Boolean = false,
+        isEmom: Boolean = false,
+        useTempo: Boolean = false
+    ): Long {
+        val response =
+            webTestClient.post()
+                .uri(
+                    "/set_scheme/?programmedExerciseId=$programmedExerciseId" +
+                        "&setNumber=$setNumber" +
+                        "&wasSetPerformed=$wasSetPerformed" +
+                        "&isAmrap=$isAmrap" +
+                        "&isEmom=$isEmom" +
+                        "&useTempo=$useTempo" +
+                        "&targetWeight=$targetWeight" +
+                        "&targetRepCount=$targetRepCount" +
+                        "&restSeconds=$restSeconds"
+                )
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SetScheme::class.java)
+                .returnResult()
+                .responseBody!!
+        return response.id
     }
 
     /**
@@ -360,14 +371,15 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         workoutStageId: Long,
         exerciseName: String = TEST_EXERCISE_NAME,
-        position: Int = 1,
-        notes: String? = null
+        position: Int = 1
     ): Long {
-        val uri = StringBuilder("/programmed_exercise/?workoutStageId=$workoutStageId&exerciseName=$exerciseName&position=$position")
-        if (notes != null) uri.append("&notes=$notes")
         val response =
             webTestClient.post()
-                .uri(uri.toString())
+                .uri(
+                    "/programmed_exercise/?workoutStageId=$workoutStageId" +
+                        "&exerciseName=$exerciseName" +
+                        "&position=$position"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedExercise::class.java)
@@ -377,12 +389,13 @@ object IntegrationTestHelpers {
     }
 
     /**
-     * Creates test exercise rotation history via the API.
+     * Creates test exercise rotation history via the API and returns the record ID.
      */
     fun createTestExerciseRotationHistory(
         webTestClient: WebTestClient,
         userId: Int,
-        exerciseName: String = TEST_EXERCISE_NAME,
+        exerciseName: String,
+        rotationDate: String,
         isAccessory: Boolean = false
     ): Long {
         val response =
@@ -390,6 +403,7 @@ object IntegrationTestHelpers {
                 .uri(
                     "/exercise_rotation_history/?userId=$userId" +
                         "&exerciseName=$exerciseName" +
+                        "&rotationDate=$rotationDate" +
                         "&isAccessory=$isAccessory"
                 )
                 .exchange()
@@ -397,7 +411,6 @@ object IntegrationTestHelpers {
                 .expectBody(ExerciseRotationHistory::class.java)
                 .returnResult()
                 .responseBody!!
-
         return response.id
     }
 
@@ -426,31 +439,6 @@ object IntegrationTestHelpers {
     fun getAllEquipment() {
         // Equipment already exists in migrations: "power bar", "dumbbells", etc.
         // No need to create anything
-    }
-
-    /**
-     * Creates all reference data for a user: equipment, exercises, preferences, one rep maxes, etc.
-     *
-     * Note: Only adds each equipment once per user. If a test adds 'power bar' or 'bench' separately, do not add it again here.
-     */
-    fun createAllReferenceDataForUser(
-        webTestClient: WebTestClient,
-        userId: Int,
-        programDaysPerWeek: Int = 3
-    ) {
-        // Equipment and exercises already exist in migrations
-        createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek)
-        // Only add each equipment once per user
-        if (TEST_EQUIPMENT_NAME != TEST_EQUIPMENT_NAME_2) {
-            createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME)
-            createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME_2)
-        } else {
-            createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME)
-        }
-        createTestUserExercisePreference(webTestClient, userId, "Deadlift", false)
-        createTestUserExercisePreference(webTestClient, userId, "Safety Bar Squat", false)
-        createTestUserOneRepMax(webTestClient, userId, "Deadlift")
-        createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat")
     }
 
     /**

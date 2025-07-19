@@ -8,10 +8,12 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
+        // Only create minimal data needed for user tests
         val unique = System.nanoTime()
         val userName = "UserIntegrationTest User $unique"
         val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, userName)
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId)
+        // Use minimal reference data instead of full data for faster tests
+        IntegrationTestHelpers.createMinimalReferenceDataForUser(webTestClient, userId)
         this.testUserName = userName
     }
 
