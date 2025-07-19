@@ -48,7 +48,7 @@ class WorkoutStageGeneratorTest {
     private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
     private lateinit var weightSelectionService: WeightSelectionService
-    private lateinit var bandWeightService: BandWeightService
+    private lateinit var conjugateWeightSelectionService: ConjugateWeightSelectionService
 
     private val workoutId = 1L
     private val workoutStageId = 1L
@@ -66,7 +66,7 @@ class WorkoutStageGeneratorTest {
         setSchemeService = mock()
         prilepinGuidelinesService = mock()
         weightSelectionService = mock()
-        bandWeightService = mock()
+        conjugateWeightSelectionService = mock()
 
         val exerciseDAL = mock<com.congen.dal.ExerciseDAL>()
         val exerciseEquipmentDAL = mock<com.congen.dal.ExerciseEquipmentDAL>()
@@ -79,17 +79,11 @@ class WorkoutStageGeneratorTest {
                 workoutStageTypeDAL = workoutStageTypeDAL,
                 programmedExerciseDAL = programmedExerciseDAL,
                 setSchemeDAL = setSchemeDAL,
-                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-                unitConversionService = unitConversionService,
                 setSchemeService = setSchemeService,
                 prilepinGuidelinesService = prilepinGuidelinesService,
                 weightSelectionService = weightSelectionService,
-                bandWeightService = bandWeightService,
-                exerciseMatchingService = ExerciseMatchingService(ReferenceExerciseDetector()),
-                exerciseDAL = exerciseDAL,
-                exerciseEquipmentDAL = exerciseEquipmentDAL,
-                exerciseMuscleDAL = exerciseMuscleDAL,
-                userOneRepMaxDAL = userOneRepMaxDAL
+                conjugateWeightSelectionService = conjugateWeightSelectionService,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL
             )
 
         // Mock DAL methods that return null by default
@@ -386,9 +380,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("Bench Press"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("85.00")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("85.00"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                eq("Bench Press"),
+                any(),
+                eq(oneRepMaxes),
+                eq(userId),
+                eq(false),
+                any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
@@ -434,9 +441,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Squat"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("Squat"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("170.00")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("170.00"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                eq("Squat"),
+                any(),
+                eq(oneRepMaxes),
+                eq(userId),
+                eq(false),
+                any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes, userId)
 
@@ -475,9 +495,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Burpees"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("Burpees"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("25.00")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("25.00"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                eq("Burpees"),
+                any(),
+                eq(oneRepMaxes),
+                eq(userId),
+                eq(false),
+                any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes, userId)
 
@@ -520,9 +553,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("New Exercise"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("50.00")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("50.00"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                eq("New Exercise"),
+                any(),
+                eq(oneRepMaxes),
+                eq(userId),
+                eq(false),
+                any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
@@ -561,9 +607,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Secondary Exercise"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("New Secondary Exercise"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("50.00")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("50.00"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                eq("New Secondary Exercise"),
+                any(),
+                eq(oneRepMaxes),
+                eq(userId),
+                eq(false),
+                any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes, userId)
 
@@ -595,9 +654,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Conditioning Exercise"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("New Conditioning Exercise"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("25.00")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("25.00"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                eq("New Conditioning Exercise"),
+                any(),
+                eq(oneRepMaxes),
+                eq(userId),
+                eq(false),
+                any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes, userId)
 
@@ -647,24 +719,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock band weight service
-        val bandWeightResult =
-            BandWeightService.Companion.BandWeightResult(
-                band = com.congen.model.Band(BigDecimal("30")),
-                barWeight = BigDecimal("70.0")
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("70.0"),
+                band = com.congen.model.Band(BigDecimal("30"))
             )
         whenever(
-            bandWeightService.computeBandAndBarWeights(
+            conjugateWeightSelectionService.getTargetWeight(
                 exerciseName = any(),
-                totalTargetWeight = any(),
-                weightUnit = any(),
-                weekInCycle = any()
+                intensity = any(),
+                oneRepMaxes = any(),
+                userId = any(),
+                isDynamicEffort = any(),
+                currentWeekNumber = any()
             )
-        ).thenReturn(bandWeightResult)
-
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("Bench Press"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("70.0")))
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
@@ -723,9 +793,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(any(), any(), any()))
-            .thenReturn(Mono.just(BigDecimal("170.0")))
+        // Mock conjugate weight selection service
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("170.0"),
+                band = null
+            )
+        whenever(
+            conjugateWeightSelectionService.getTargetWeight(
+                exerciseName = any(),
+                intensity = any(),
+                oneRepMaxes = any(),
+                userId = any(),
+                isDynamicEffort = any(),
+                currentWeekNumber = any()
+            )
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
@@ -745,10 +828,12 @@ class WorkoutStageGeneratorTest {
             }
             .verifyComplete()
 
-        verify(bandWeightService, times(0)).computeBandAndBarWeights(
+        verify(conjugateWeightSelectionService, times(1)).getTargetWeight(
             any(),
             any(),
             any(),
+            any(),
+            eq(false),
             any()
         )
     }
@@ -788,24 +873,22 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock band weight service for deload week (no bands)
-        val bandWeightResult =
-            BandWeightService.Companion.BandWeightResult(
-                band = null,
-                barWeight = BigDecimal("100.0")
+        // Mock conjugate weight selection service for deload week (no bands)
+        val targetWeightResult =
+            ConjugateWeightSelectionService.TargetWeightResult(
+                targetWeight = BigDecimal("100.0"),
+                band = null
             )
         whenever(
-            bandWeightService.computeBandAndBarWeights(
+            conjugateWeightSelectionService.getTargetWeight(
                 exerciseName = any(),
-                totalTargetWeight = any(),
-                weightUnit = any(),
-                weekInCycle = any()
+                intensity = any(),
+                oneRepMaxes = any(),
+                userId = any(),
+                isDynamicEffort = any(),
+                currentWeekNumber = any()
             )
-        ).thenReturn(bandWeightResult)
-
-        // Mock weight selection service - this is called by getTargetWeight method
-        whenever(weightSelectionService.roundWeightForExercise(eq("Bench Press"), any(), eq(WeightUnit.KG)))
-            .thenReturn(Mono.just(BigDecimal("100.0")))
+        ).thenReturn(Mono.just(targetWeightResult))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(

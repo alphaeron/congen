@@ -1,3 +1,5 @@
+use snake_case for api values
+
 separate utility for stages, to allow cleaner sharing between templates
 
 put generateWorkoutsForWeek in the template itself.
@@ -29,7 +31,3 @@ then support exerciseAttributes instead of isUnilateral, ... (like tags) for eve
 remove unneeded endpoints
 
 tempo enum
-
-use snake_case for api values
-
-WeightSelectionService
