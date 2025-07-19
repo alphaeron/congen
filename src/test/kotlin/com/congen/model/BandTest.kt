@@ -78,12 +78,12 @@ class BandTest {
     fun `should serialize to JSON with weight`() {
         val band = Band(BigDecimal("100"))
         val json = objectMapper.writeValueAsString(band)
-        assertEquals("{\"weightLbs\":100,\"color\":\"Black\"}", json)
+        assertEquals("100", json)
     }
 
     @Test
     fun `should deserialize from JSON with weight`() {
-        val band = objectMapper.readValue("{\"weightLbs\":100}", Band::class.java)
+        val band = objectMapper.readValue("100", Band::class.java)
         assertEquals(BigDecimal("100"), band.weightLbs)
     }
 }

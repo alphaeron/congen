@@ -5,7 +5,7 @@ resources:
 - namespace.yaml
 - service-account.yaml
 - migrations-configmap.yaml
-- liquibase-job.yaml
+- migration-service-deployment.yaml
 - congen-configmap.yaml
 - congen-deployment.yaml
 - congen-service.yaml

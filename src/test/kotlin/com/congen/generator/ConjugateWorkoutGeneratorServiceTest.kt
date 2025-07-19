@@ -698,14 +698,14 @@ class ConjugateWorkoutGeneratorServiceTest {
             ),
             mockExercise(
                 name = EXERCISE_NAME_5,
-                description = "A compound vertical push exercise",
+                description = "A compound vertical_push exercise",
                 movementType = MovementType.VERTICAL_PUSH,
                 isUpper = true,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_6,
-                description = "A compound vertical pull exercise",
+                description = "A compound vertical_pull exercise",
                 movementType = MovementType.VERTICAL_PULL,
                 isUpper = true,
                 isAccessory = false

@@ -70,7 +70,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/user/?name=$name" +
+                    "/api/v1/user/?name=$name" +
                         "&age=$age" +
                         "&height=$height" +
                         "&weight=$weight"
@@ -129,7 +129,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/program/?userId=$userId" +
+                    "/api/v1/program/?userId=$userId" +
                         "&name=$name" +
                         "&isActive=$isActive"
                 )
@@ -154,7 +154,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/programmed_workout/?programId=$programId" +
+                    "/api/v1/programmed_workout/?programId=$programId" +
                         "&dayNumber=$dayNumber" +
                         "&name=$name"
                 )
@@ -180,7 +180,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/workout_stage/?programmedWorkoutId=$programmedWorkoutId" +
+                    "/api/v1/workout_stage/?programmedWorkoutId=$programmedWorkoutId" +
                         "&stageTypeId=$stageTypeId" +
                         "&position=$position" +
                         "&name=$name"
@@ -205,7 +205,7 @@ object IntegrationTestHelpers {
         // Now create the user equipment relationship
         webTestClient.post()
             .uri(
-                "/user_equipment/?userId=$userId" +
+                "/api/v1/user_equipment/?userId=$userId" +
                     "&equipmentName=$equipmentName"
             )
             .exchange()
@@ -223,7 +223,7 @@ object IntegrationTestHelpers {
     ) {
         webTestClient.post()
             .uri(
-                "/user_exercise_preference/?userId=$userId" +
+                "/api/v1/user_exercise_preference/?userId=$userId" +
                     "&exerciseName=$exerciseName" +
                     "&shouldAvoid=$shouldAvoid"
             )
@@ -243,7 +243,7 @@ object IntegrationTestHelpers {
     ) {
         webTestClient.put()
             .uri(
-                "/user_one_rep_max/?userId=$userId" +
+                "/api/v1/user_one_rep_max/?userId=$userId" +
                     "&exerciseName=$exerciseName" +
                     "&oneRepMax=$oneRepMax" +
                     "&unit=$unit"
@@ -263,7 +263,7 @@ object IntegrationTestHelpers {
     ) {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=$userId" +
+                "/api/v1/user_program_preferences/?userId=$userId" +
                     "&programDaysPerWeek=$programDaysPerWeek" +
                     "&sessionTimeLengthInMinutes=$sessionTimeLengthInMinutes"
             )
@@ -346,7 +346,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/set_scheme/?programmedExerciseId=$programmedExerciseId" +
+                    "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId" +
                         "&setNumber=$setNumber" +
                         "&wasSetPerformed=$wasSetPerformed" +
                         "&isAmrap=$isAmrap" +
@@ -376,7 +376,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/programmed_exercise/?workoutStageId=$workoutStageId" +
+                    "/api/v1/programmed_exercise/?workoutStageId=$workoutStageId" +
                         "&exerciseName=$exerciseName" +
                         "&position=$position"
                 )
@@ -401,7 +401,7 @@ object IntegrationTestHelpers {
         val response =
             webTestClient.post()
                 .uri(
-                    "/exercise_rotation_history/?userId=$userId" +
+                    "/api/v1/exercise_rotation_history/?userId=$userId" +
                         "&exerciseName=$exerciseName" +
                         "&rotationDate=$rotationDate" +
                         "&isAccessory=$isAccessory"
@@ -453,7 +453,7 @@ object IntegrationTestHelpers {
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
         webTestClient.put()
             .uri(
-                "/user_weight_unit_preference/?userId=$userId" +
+                "/api/v1/user_weight_unit_preference/?userId=$userId" +
                     "&exerciseName=$encodedExerciseName" +
                     "&preferredUnit=$preferredUnit"
             )
@@ -472,7 +472,7 @@ object IntegrationTestHelpers {
         oneRepMax: java.math.BigDecimal,
         unit: String? = null
     ): UserOneRepMax {
-        val uri = StringBuilder("/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$oneRepMax")
+        val uri = StringBuilder("/api/v1/user_one_rep_max/?userId=$userId&exerciseName=$exerciseName&oneRepMax=$oneRepMax")
         if (unit != null) {
             uri.append("&unit=$unit")
         }
@@ -495,7 +495,7 @@ object IntegrationTestHelpers {
         exerciseName: String,
         unit: String? = null
     ): UserOneRepMax {
-        val uri = StringBuilder("/user_one_rep_max/user/$userId/exercise/$exerciseName")
+        val uri = StringBuilder("/api/v1/user_one_rep_max/user/$userId/exercise/$exerciseName")
         if (unit != null) {
             uri.append("?unit=$unit")
         }
@@ -516,7 +516,7 @@ object IntegrationTestHelpers {
         userId: Int
     ): List<UserOneRepMax> {
         return webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId")
+            .uri("/api/v1/user_one_rep_max/user/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBodyList(UserOneRepMax::class.java)

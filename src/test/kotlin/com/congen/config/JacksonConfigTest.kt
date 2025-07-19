@@ -100,29 +100,7 @@ class JacksonConfigTest {
         serializer.serialize(null, jsonGenerator, serializerProvider)
     }
 
-    @Test
-    fun `should serialize WorkoutStageTypeEnum to display name`() {
-        // Given
-        val enumValue = WorkoutStageTypeEnum.WARMUP
-        val serializer = JacksonConfig.WorkoutStageTypeEnumSerializer()
 
-        // When
-        serializer.serialize(enumValue, jsonGenerator, serializerProvider)
-
-        // Then - Verify that writeString was called with the display name
-        // Note: We can't easily verify the exact call due to Mockito limitations with JsonGenerator
-        // The test ensures the method doesn't throw exceptions
-    }
-
-    @Test
-    fun `should serialize null WorkoutStageTypeEnum`() {
-        // Given
-        val serializer = JacksonConfig.WorkoutStageTypeEnumSerializer()
-
-        // When & Then
-        // Should not throw exception
-        serializer.serialize(null, jsonGenerator, serializerProvider)
-    }
 
     @Test
     fun `should deserialize ISO instant string`() {
@@ -296,54 +274,5 @@ class JacksonConfigTest {
         }
     }
 
-    @Test
-    fun `should deserialize valid WorkoutStageTypeEnum value`() {
-        // Given
-        val deserializer = JacksonConfig.WorkoutStageTypeEnumDeserializer()
-        `when`(jsonParser.text).thenReturn("WARMUP")
 
-        // When
-        val result = deserializer.deserialize(jsonParser, deserializationContext)
-
-        // Then
-        assertEquals(WorkoutStageTypeEnum.WARMUP, result)
-    }
-
-    @Test
-    fun `should deserialize WorkoutStageTypeEnum value case insensitive`() {
-        // Given
-        val deserializer = JacksonConfig.WorkoutStageTypeEnumDeserializer()
-        `when`(jsonParser.text).thenReturn("warmup")
-
-        // When
-        val result = deserializer.deserialize(jsonParser, deserializationContext)
-
-        // Then
-        assertEquals(WorkoutStageTypeEnum.WARMUP, result)
-    }
-
-    @Test
-    fun `should throw exception for invalid WorkoutStageTypeEnum value`() {
-        // Given
-        val deserializer = JacksonConfig.WorkoutStageTypeEnumDeserializer()
-        `when`(jsonParser.text).thenReturn("INVALID")
-
-        // When & Then
-        assertThrows<JsonMappingException> {
-            deserializer.deserialize(jsonParser, deserializationContext)
-        }
-    }
-
-    @Test
-    fun `should handle all WorkoutStageTypeEnum values`() {
-        // Given
-        val deserializer = JacksonConfig.WorkoutStageTypeEnumDeserializer()
-
-        // When & Then
-        WorkoutStageTypeEnum.values().forEach { enumValue ->
-            `when`(jsonParser.text).thenReturn(enumValue.name)
-            val result = deserializer.deserialize(jsonParser, deserializationContext)
-            assertEquals(enumValue, result)
-        }
-    }
 }

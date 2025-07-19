@@ -24,7 +24,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Verify the preferences were created correctly
         webTestClient.get()
-            .uri("/user_program_preferences/$userId")
+            .uri("/api/v1/user_program_preferences/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -40,7 +40,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Then get them by user id
         webTestClient.get()
-            .uri("/user_program_preferences/$userId")
+            .uri("/api/v1/user_program_preferences/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -56,7 +56,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Then update them
         webTestClient.patch()
-            .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=4&sessionTimeLengthInMinutes=90")
+            .uri("/api/v1/user_program_preferences/?userId=$userId&programDaysPerWeek=4&sessionTimeLengthInMinutes=90")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -72,7 +72,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Then delete them
         webTestClient.delete()
-            .uri("/user_program_preferences/$userId")
+            .uri("/api/v1/user_program_preferences/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -89,7 +89,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Verify each user has their own preferences
         webTestClient.get()
-            .uri("/user_program_preferences/$userId1")
+            .uri("/api/v1/user_program_preferences/$userId1")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -98,7 +98,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.session_time_length_in_minutes").isEqualTo(60)
 
         webTestClient.get()
-            .uri("/user_program_preferences/$userId2")
+            .uri("/api/v1/user_program_preferences/$userId2")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

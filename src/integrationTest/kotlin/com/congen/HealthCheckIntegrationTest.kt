@@ -6,7 +6,7 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `health check should return proper structure and status`() {
         webTestClient.get()
-            .uri("/health/")
+            .uri("/api/v1/health/")
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -26,7 +26,7 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `health check should include database response time`() {
         webTestClient.get()
-            .uri("/health/")
+            .uri("/api/v1/health/")
             .exchange()
             .expectStatus().isOk
             .expectBody()

@@ -51,9 +51,18 @@ tasks.register('integrationTest', Test) {
     // Set Spring profile for integration tests
     systemProperty 'spring.profiles.active', 'integration-test'
 
-    // Setup and cleanup
+    // Setup port forwarding (which depends on deployment)
     dependsOn 'setupTestPortForward'
     finalizedBy 'cleanupPortForward'
+}
+
+// Configure the environment for integration tests
+project.afterEvaluate {
+    // Set environment for integration test deployment
+    integrationTest.doFirst {
+        project.ext.environment = 'local'
+        println "🎯 Integration test deployment environment: ${project.ext.environment}"
+    }
 }
 
 // Task to cleanup port forwarding

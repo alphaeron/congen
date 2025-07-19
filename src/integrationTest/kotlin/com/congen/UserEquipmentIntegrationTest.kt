@@ -22,7 +22,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
         // Verify the user equipment was created correctly
         webTestClient.get()
-            .uri("/user_equipment/$userId")
+            .uri("/api/v1/user_equipment/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -34,7 +34,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should get user equipment by user id`() {
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
         webTestClient.get()
-            .uri("/user_equipment/$userId")
+            .uri("/api/v1/user_equipment/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -50,7 +50,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
         val createdAt = java.time.Instant.now().toString()
         val jsonBody = """{"user_id":$userId,"equipment_name":"${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}","created_at":"$createdAt"}"""
         webTestClient.method(HttpMethod.DELETE)
-            .uri("/user_equipment/")
+            .uri("/api/v1/user_equipment/")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(jsonBody)
             .exchange()
@@ -68,7 +68,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
         // Get all equipment for the user
         webTestClient.get()
-            .uri("/user_equipment/$userId")
+            .uri("/api/v1/user_equipment/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

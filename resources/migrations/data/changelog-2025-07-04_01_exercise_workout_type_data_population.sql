@@ -7,20 +7,20 @@
 
 -- Dynamic Effort exercises (typically compound movements that are not accessories)
 -- Horizontal Push - Dynamic Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bench Press', 'horizontal push', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Incline Bench Press', 'horizontal push', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Floor Press', 'horizontal push', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Bench Press', 'horizontal push', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bench Press', 'horizontal_push', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Incline Bench Press', 'horizontal_push', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Floor Press', 'horizontal_push', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Bench Press', 'horizontal_push', 'dynamic_effort');
 
 -- Vertical Push - Dynamic Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Overhead Press', 'vertical push', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Overhead Press', 'vertical_push', 'dynamic_effort');
 
 -- Horizontal Pull - Dynamic Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bent-Over Row', 'vertical pull', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Landmine Row', 'horizontal pull', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bent-Over Row', 'vertical_pull', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Landmine Row', 'horizontal_pull', 'dynamic_effort');
 
 -- Vertical Pull - Dynamic Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Chin-Up', 'vertical pull', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Chin-Up', 'vertical_pull', 'dynamic_effort');
 
 -- Squat - Dynamic Effort
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Safety Bar Squat', 'squat', 'dynamic_effort');
@@ -37,19 +37,19 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 
 -- Maximal Effort exercises (typically compound movements that are not accessories)
 -- Horizontal Push - Maximal Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bench Press', 'horizontal push', 'maximal_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Incline Bench Press', 'horizontal push', 'maximal_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Floor Press', 'horizontal push', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bench Press', 'horizontal_push', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Incline Bench Press', 'horizontal_push', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Floor Press', 'horizontal_push', 'maximal_effort');
 
 -- Vertical Push - Maximal Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Overhead Press', 'vertical push', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Overhead Press', 'vertical_push', 'maximal_effort');
 
 -- Horizontal Pull - Maximal Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bent-Over Row', 'vertical pull', 'maximal_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Landmine Row', 'horizontal pull', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bent-Over Row', 'vertical_pull', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Landmine Row', 'horizontal_pull', 'maximal_effort');
 
 -- Vertical Pull - Maximal Effort
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Chin-Up', 'vertical pull', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Chin-Up', 'vertical_pull', 'maximal_effort');
 
 -- Squat - Maximal Effort
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Safety Bar Squat', 'squat', 'maximal_effort');
@@ -62,4 +62,4 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Deadlift', 'hinge', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Sumo Deadlift', 'hinge', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Trap Bar Deadlift', 'hinge', 'maximal_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Romanian Deadlift', 'hinge', 'maximal_effort'); 
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Romanian Deadlift', 'hinge', 'maximal_effort');

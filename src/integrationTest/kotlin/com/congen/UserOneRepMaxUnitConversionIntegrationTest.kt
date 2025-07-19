@@ -27,7 +27,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val unique = System.nanoTime()
         userResponse =
             webTestClient.post()
-                .uri("/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
+                .uri("/api/v1/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -180,7 +180,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val weight = BigDecimal("225.0")
         val invalidUnit = "INVALID"
 
-        val uri = "/user_one_rep_max/?userId=${userResponse.id}&exerciseName=$exerciseName&oneRepMax=$weight&unit=$invalidUnit"
+        val uri = "/api/v1/user_one_rep_max/?userId=${userResponse.id}&exerciseName=$exerciseName&oneRepMax=$weight&unit=$invalidUnit"
         webTestClient.put()
             .uri(uri)
             .exchange()

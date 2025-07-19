@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: migration-service
+  namespace: congen
+spec:
+  template:
+    spec:
+      containers:
+      - name: migration-service
+        env:
+        - name: MIGRATION_LABELS
+          value: "test" 

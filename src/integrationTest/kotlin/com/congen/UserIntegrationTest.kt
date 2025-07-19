@@ -23,7 +23,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user age is 0`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName" +
+                "/api/v1/user/?name=$testUserName" +
                     "&age=0" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
                     "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
@@ -40,7 +40,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user age is 151`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName" +
+                "/api/v1/user/?name=$testUserName" +
                     "&age=151" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
                     "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
@@ -57,7 +57,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user height is 0`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName" +
+                "/api/v1/user/?name=$testUserName" +
                     "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
                     "&height=0" +
                     "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
@@ -74,7 +74,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when user weight is 0`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName" +
+                "/api/v1/user/?name=$testUserName" +
                     "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
                     "&weight=0"
@@ -91,7 +91,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should accept valid user data`() {
         webTestClient.post()
             .uri(
-                "/user/?name=$testUserName" +
+                "/api/v1/user/?name=$testUserName" +
                     "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
                     "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
@@ -104,7 +104,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     fun `should get user by id`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         webTestClient.get()
-            .uri("/user/$userId")
+            .uri("/api/v1/user/$userId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -116,7 +116,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get all users`() {
         webTestClient.get()
-            .uri("/user/")
+            .uri("/api/v1/user/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

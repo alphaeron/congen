@@ -39,7 +39,7 @@ class ExerciseWorkoutTypeTest {
         val json = objectMapper.writeValueAsString(exerciseWorkoutType)
 
         assertTrue(json.contains("\"exercise_name\":\"Bench Press\""))
-        assertTrue(json.contains("\"movement_type\":\"horizontal push\""))
+        assertTrue(json.contains("\"movement_type\":\"horizontal_push\""))
         assertTrue(json.contains("\"workout_type\":\"dynamic_effort\""))
     }
 
@@ -49,7 +49,7 @@ class ExerciseWorkoutTypeTest {
             """
             {
                 "exercise_name": "Bench Press",
-                "movement_type": "horizontal push",
+                "movement_type": "horizontal_push",
                 "workout_type": "dynamic_effort"
             }
             """.trimIndent()

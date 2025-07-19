@@ -1,8 +1,5 @@
 package com.congen.config
 
-import com.congen.model.Band
-import com.congen.model.MovementType
-import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
@@ -23,15 +20,16 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import java.util.NoSuchElementException
 
 /**
  * Jackson configuration for JSON serialization/deserialization.
  *
  * This configuration sets up custom serializers and deserializers for:
  * - Instant timestamps (handles UTC conversion)
- * - WorkoutStageTypeEnum (handles display names)
  * - Numeric types (handles PostgreSQL SMALLINT to Int conversion)
+ *
+ * Note: Enums like WorkoutStageTypeEnum, MovementType, and Band use @JsonValue annotations
+ * for serialization instead of custom serializers for simplicity.
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -132,110 +130,6 @@ class JacksonConfig {
     }
 
     /**
-     * Custom WorkoutStageTypeEnum serializer that uses the enum name.
-     *
-     * This serializer ensures that WorkoutStageTypeEnum values are serialized as their
-     * enum names (e.g., "WARMUP") instead of their display names (e.g., "Warmup").
-     */
-    class WorkoutStageTypeEnumSerializer : JsonSerializer<WorkoutStageTypeEnum>() {
-        override fun serialize(
-            value: WorkoutStageTypeEnum?,
-            gen: JsonGenerator,
-            serializers: SerializerProvider
-        ) {
-            if (value != null) {
-                gen.writeString(value.displayName)
-            }
-        }
-    }
-
-    /**
-     * Custom deserializer for WorkoutStageTypeEnum.
-     */
-    class WorkoutStageTypeEnumDeserializer : JsonDeserializer<WorkoutStageTypeEnum>() {
-        override fun deserialize(
-            p: JsonParser,
-            ctxt: DeserializationContext
-        ): WorkoutStageTypeEnum {
-            val value = p.text
-            return try {
-                // Try to match ignoring case
-                WorkoutStageTypeEnum.values().first { it.name.equals(value, ignoreCase = true) }
-            } catch (e: NoSuchElementException) {
-                throw JsonMappingException(p, "Invalid WorkoutStageTypeEnum value: $value")
-            }
-        }
-    }
-
-    /**
-     * Custom Band serializer that serializes to the weight value.
-     *
-     * This serializer ensures that Band values are serialized as their weight value
-     * for database storage and API responses.
-     */
-    class BandSerializer : JsonSerializer<Band>() {
-        override fun serialize(
-            value: Band?,
-            gen: JsonGenerator,
-            serializers: SerializerProvider
-        ) {
-            if (value != null) {
-                gen.writeNumber(value.weightLbs)
-            }
-        }
-    }
-
-    /**
-     * Custom deserializer for Band.
-     */
-    class BandDeserializer : JsonDeserializer<Band>() {
-        override fun deserialize(
-            p: JsonParser,
-            ctxt: DeserializationContext
-        ): Band {
-            val weightLbs = p.decimalValue
-            return Band.fromWeight(weightLbs) ?: throw JsonMappingException(p, "Invalid Band weight: $weightLbs")
-        }
-    }
-
-    /**
-     * Custom MovementType serializer that uses the display name.
-     *
-     * This serializer ensures that MovementType values are serialized as their
-     * display names (e.g., "horizontal push") instead of their enum names (e.g., "HORIZONTAL_PUSH").
-     */
-    class MovementTypeSerializer : JsonSerializer<MovementType>() {
-        override fun serialize(
-            value: MovementType?,
-            gen: JsonGenerator,
-            serializers: SerializerProvider
-        ) {
-            if (value != null) {
-                gen.writeString(value.displayName)
-            }
-        }
-    }
-
-    /**
-     * Custom deserializer for MovementType.
-     */
-    class MovementTypeDeserializer : JsonDeserializer<MovementType>() {
-        override fun deserialize(
-            p: JsonParser,
-            ctxt: DeserializationContext
-        ): MovementType {
-            val value = p.text
-            // First try to find by enum name (case-insensitive)
-            return try {
-                MovementType.values().first { it.name.equals(value, ignoreCase = true) }
-            } catch (e: NoSuchElementException) {
-                // If not found by enum name, try by display name
-                MovementType.fromString(value) ?: throw JsonMappingException(p, "Invalid MovementType value: $value")
-            }
-        }
-    }
-
-    /**
      * Creates and configures the primary ObjectMapper bean.
      *
      * @return Configured ObjectMapper with custom serializers and deserializers
@@ -267,23 +161,10 @@ class JacksonConfig {
             javaTimeModule.addSerializer(Instant::class.java, CustomInstantSerializer())
             javaTimeModule.addDeserializer(Instant::class.java, CustomInstantDeserializer())
 
-            // Configure WorkoutStageTypeEnum serialization
-            javaTimeModule.addSerializer(WorkoutStageTypeEnum::class.java, WorkoutStageTypeEnumSerializer())
-            // Configure Band serialization
-            javaTimeModule.addSerializer(Band::class.java, BandSerializer())
-            // Configure MovementType serialization
-            javaTimeModule.addSerializer(MovementType::class.java, MovementTypeSerializer())
-
             mapper.registerModule(javaTimeModule)
 
-            // Register custom module for WorkoutStageTypeEnum, Band, and numeric types
+            // Register custom module for numeric types
             val customModule = SimpleModule()
-            customModule.addDeserializer(WorkoutStageTypeEnum::class.java, WorkoutStageTypeEnumDeserializer())
-            customModule.addSerializer(WorkoutStageTypeEnum::class.java, WorkoutStageTypeEnumSerializer())
-            customModule.addDeserializer(Band::class.java, BandDeserializer())
-            customModule.addSerializer(Band::class.java, BandSerializer())
-            customModule.addDeserializer(MovementType::class.java, MovementTypeDeserializer())
-            customModule.addSerializer(MovementType::class.java, MovementTypeSerializer())
             customModule.addDeserializer(Int::class.java, NumericIntDeserializer())
             customModule.addDeserializer(Int::class.javaObjectType, NumericIntDeserializer())
             mapper.registerModule(customModule)

@@ -25,7 +25,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -35,7 +35,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(programResponse.id == programId)
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
-            .uri("/programmed_workout/program/${programResponse.id}")
+            .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -48,7 +48,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2)
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -58,7 +58,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(programResponse.id == programId)
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
-            .uri("/programmed_workout/program/${programResponse.id}")
+            .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -71,7 +71,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4)
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -81,7 +81,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(programResponse.id == programId)
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
-            .uri("/programmed_workout/program/${programResponse.id}")
+            .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -93,7 +93,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should handle invalid programDaysPerWeek in database`() {
         // Create user program preferences with invalid days per week should fail
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
+            .uri("/api/v1/user_program_preferences/?userId=$userId&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -106,7 +106,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should handle non-existent program`() {
         // When & Then - Try to generate for non-existent program
         webTestClient.post()
-            .uri("/conjugate_workout_generator/999999/generate")
+            .uri("/api/v1/conjugate_workout_generator/999999/generate")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -121,19 +121,19 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Add exercise preferences (different exercises to avoid duplicate key constraint)
         webTestClient.post()
-            .uri("/user_exercise_preference/?userId=$userId&exerciseName=Safety Bar Squat&shouldAvoid=true")
+            .uri("/api/v1/user_exercise_preference/?userId=$userId&exerciseName=Safety Bar Squat&shouldAvoid=true")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/user_exercise_preference/?userId=$userId&exerciseName=Deadlift&shouldAvoid=false")
+            .uri("/api/v1/user_exercise_preference/?userId=$userId&exerciseName=Deadlift&shouldAvoid=false")
             .exchange()
             .expectStatus().isOk()
 
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -159,7 +159,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -186,7 +186,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -202,14 +202,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should generate workout with user program preferences`() {
         // Add program preferences
         webTestClient.post()
-            .uri("/user_program_preferences/?userId=$userId&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/api/v1/user_program_preferences/?userId=$userId&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
             .exchange()
             .expectStatus().isOk()
 
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -236,7 +236,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Generate conjugate program
         val programResponse =
             webTestClient.post()
-                .uri("/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -246,7 +246,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Fetch programmed workouts for the program and get DE workout ID
         val workoutsResponse =
             webTestClient.get()
-                .uri("/programmed_workout/program/${programResponse.id}")
+                .uri("/api/v1/programmed_workout/program/${programResponse.id}")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -261,7 +261,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Fetch workout stages for the workout and find Primary stage (which contains the DE exercise)
         val stagesResponse =
             webTestClient.get()
-                .uri("/workout_stage/workout/$deWorkoutId")
+                .uri("/api/v1/workout_stage/workout/$deWorkoutId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(WorkoutStage::class.java)
@@ -277,7 +277,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Fetch programmed exercises for the Primary stage and get first exercise ID
         val exercisesResponse =
             webTestClient.get()
-                .uri("/programmed_exercise/stage/$primaryStageId")
+                .uri("/api/v1/programmed_exercise/stage/$primaryStageId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -288,7 +288,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Fetch set schemes for the programmed exercise and verify DE fields
         val setSchemesResponse =
             webTestClient.get()
-                .uri("/set_scheme/exercise/$programmedExerciseId")
+                .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -303,7 +303,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         val response =
             webTestClient.get()
-                .uri("/set_scheme/$firstSetSchemeId")
+                .uri("/api/v1/set_scheme/$firstSetSchemeId")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String::class.java)
@@ -314,7 +314,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Verify that the set scheme has band information (indicating it's a DE exercise)
         webTestClient.get()
-            .uri("/set_scheme/$firstSetSchemeId")
+            .uri("/api/v1/set_scheme/$firstSetSchemeId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

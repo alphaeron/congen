@@ -1,0 +1,198 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: migration-service
+  namespace: congen
+  labels:
+    app: migration-service
+spec:
+  replicas: 1  # Singleton - only one instance
+  selector:
+    matchLabels:
+      app: migration-service
+  template:
+    metadata:
+      labels:
+        app: migration-service
+    spec:
+      serviceAccountName: congen-service-account
+      containers:
+      - name: migration-service
+        image: sfat/liquibase:4.11.0
+        env:
+        - name: DB_BASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: DB_BASE_URL
+        - name: PGHOST
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGHOST
+        - name: PGPORT
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGPORT
+        - name: PGDATABASE
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGDATABASE
+        - name: PGUSER
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGUSER
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: congen-secret
+              key: PGPASSWORD
+        - name: MIGRATION_INTERVAL
+          value: "300"  # Check for migrations every 5 minutes
+        - name: MIGRATION_LABELS
+          value: "test"  # Default to test labels
+        volumeMounts:
+        - name: migrations
+          mountPath: /liquibase/changelog
+        - name: tmp
+          mountPath: /tmp
+        command:
+        - bash
+        - -xc
+        - |
+          # Function to run migrations
+          run_migrations() {
+            echo "Starting migration process..."
+            
+            # Create writable directory structure in /tmp
+            mkdir -p /tmp/liquibase/schema /tmp/liquibase/data
+            
+            # Copy files from ConfigMap to writable location
+            echo "Copying Liquibase configuration files..."
+            cp /liquibase/changelog/liquibase.properties /tmp/liquibase/
+            cp /liquibase/changelog/changelog-root.xml /tmp/liquibase/
+            echo "Configuration files copied successfully"
+            
+            # Copy schema files (remove schema_ prefix)
+            echo "Copying schema files..."
+            for file in /liquibase/changelog/schema_*.sql; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                cp "$file" "/tmp/liquibase/schema/${filename#schema_}"
+                echo "Copied schema file: ${filename#schema_}"
+              fi
+            done
+            
+            # Copy data files (remove data_ prefix)
+            echo "Copying data files..."
+            for file in /liquibase/changelog/data_*.sql; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                cp "$file" "/tmp/liquibase/data/${filename#data_}"
+                echo "Copied data file: ${filename#data_}"
+              fi
+            done
+            
+            echo "All files copied. Listing directory structure:"
+            find /tmp/liquibase -type f -name "*.sql" | sort
+            
+            # Construct JDBC URL from secret values
+            export DB="${DB_BASE_URL}${PGHOST}:${PGPORT}/${PGDATABASE}"
+            
+            # Run Liquibase migrations from the writable location
+            cd /tmp/liquibase
+            echo "Running Liquibase validate..."
+            if ! liquibase --changelogFile=changelog-root.xml --url=$DB --username=$PGUSER --password=$PGPASSWORD validate; then
+              echo "Liquibase validation failed!"
+              return 1
+            fi
+            echo "Running Liquibase update..."
+            if ! liquibase --changelogFile=changelog-root.xml --url=$DB --username=$PGUSER --password=$PGPASSWORD --labels="$MIGRATION_LABELS" update; then
+              echo "Liquibase update failed!"
+              return 1
+            fi
+            echo "Liquibase migration completed successfully!"
+            return 0
+          }
+          
+          # Function to check if migrations are needed
+          check_migrations() {
+            echo "Checking if migrations are needed..."
+            
+            # Create writable directory structure in /tmp
+            mkdir -p /tmp/liquibase/schema /tmp/liquibase/data
+            
+            # Copy files from ConfigMap to writable location
+            cp /liquibase/changelog/liquibase.properties /tmp/liquibase/
+            cp /liquibase/changelog/changelog-root.xml /tmp/liquibase/
+            
+            # Copy schema files (remove schema_ prefix)
+            for file in /liquibase/changelog/schema_*.sql; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                cp "$file" "/tmp/liquibase/schema/${filename#schema_}"
+              fi
+            done
+            
+            # Copy data files (remove data_ prefix)
+            for file in /liquibase/changelog/data_*.sql; do
+              if [ -f "$file" ]; then
+                filename=$(basename "$file")
+                cp "$file" "/tmp/liquibase/data/${filename#data_}"
+              fi
+            done
+            
+            # Construct JDBC URL from secret values
+            export DB="${DB_BASE_URL}${PGHOST}:${PGPORT}/${PGDATABASE}"
+            
+            # Check if migrations are needed
+            cd /tmp/liquibase
+            if liquibase --changelogFile=changelog-root.xml --url=$DB --username=$PGUSER --password=$PGPASSWORD status | grep -q "is up to date"; then
+              echo "Database is up to date, no migrations needed"
+              return 1
+            else
+              echo "Migrations are needed"
+              return 0
+            fi
+          }
+          
+          # Wait for PostgreSQL to be ready (simple approach)
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 10
+          echo "Proceeding with migration..."
+          
+          # Run initial migration
+          echo "Running initial migration check..."
+          if check_migrations; then
+            run_migrations
+          fi
+          
+          # Continuous monitoring loop
+          echo "Starting continuous migration monitoring..."
+          while true; do
+            sleep $MIGRATION_INTERVAL
+            
+            echo "Checking for new migrations..."
+            if check_migrations; then
+              echo "New migrations detected, running them..."
+              run_migrations
+            else
+              echo "No new migrations detected"
+            fi
+          done
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
+      volumes:
+      - name: migrations
+        configMap:
+          name: migrations-config
+      - name: tmp
+        emptyDir: {} 

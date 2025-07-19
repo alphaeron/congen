@@ -91,7 +91,7 @@ The conjugate method, developed by Louie Simmons at Westside Barbell, combines:
 ## Program Structure
 
 ### 2-Day Programs
-Condensed conjugate approach (Phil Daru method):
+Condensed conjugate approach
 - Day 1: ME Upper (horizontal push + vertical push)
 - Day 2: DE Lower (squat + hinge)
 
@@ -134,7 +134,7 @@ Secondary exercises are selected to be similar to the primary exercise in terms 
 3. **Muscle Overlap Analysis**: Calculates muscle overlap between primary and potential secondary exercises
 4. **Movement Category Similarity**: Provides partial credit for related movement types:
    - Same category (push/pull): 50 points
-   - Same plane (horizontal/vertical): 25 points  
+   - Same plane (horizontal/vertical): 25 points
    - Same body part focus (upper/lower): 15 points
 5. **Rotation History Bonus**: Gives preference to less recently used exercises
 6. **User Preferences & Equipment**: Applies the same filtering as primary exercises
@@ -163,7 +163,7 @@ The service uses dynamic time calculation to determine the number of accessory e
 - **Exercise time**: `num_sets * (rest_seconds + reps_per_set * 6)`
   - Where 6 seconds is the estimated time per repetition
 - **Primary movement**: Calculated from actual set schemes
-- **Secondary movement**: Calculated from actual set schemes  
+- **Secondary movement**: Calculated from actual set schemes
 - **Each accessory exercise**: 5 minutes
 - **Conditioning**: 10 minutes (for DE days)
 
@@ -214,7 +214,7 @@ The system implements undulating periodization over a 4-week cycle to optimize s
 
 #### Lower Body
 - **Week 1**: 12 sets of 2 reps or 5 sets of 5 reps, 75% intensity
-- **Week 2**: 10 sets of 2 reps or 5 sets of 5 reps, 80% intensity  
+- **Week 2**: 10 sets of 2 reps or 5 sets of 5 reps, 80% intensity
 - **Week 3**: 8 sets of 2 reps or 5 sets of 5 reps, 85% intensity
 - **Week 4**: 12 sets of 2 reps or 5 sets of 5 reps, 50% intensity (deload)
 
@@ -230,7 +230,7 @@ Dynamic Effort exercises use accommodated resistance with bands to provide progr
 
 #### Band Weight Distribution by Week
 - **Week 1**: 25% band weight, 50% bar weight
-- **Week 2**: 25% band weight, 55% bar weight  
+- **Week 2**: 25% band weight, 55% bar weight
 - **Week 3**: 25% band weight, 60% bar weight
 - **Week 4**: 0% band weight, 50% bar weight (deload)
 
@@ -347,7 +347,7 @@ The secondary exercise selection is implemented in the `ExerciseSelectionService
 
 #### `selectSimilarSecondaryExercise()` Method
 - **Input**: Primary exercise, user equipment, preferences, available exercises, rotation history
-- **Process**: 
+- **Process**:
   1. Filters exercises by user preferences and equipment
   2. Fetches muscle data for primary exercise from database
   3. Scores each potential secondary exercise using similarity algorithm
@@ -415,4 +415,4 @@ Potential improvements include:
 - Feature extensions for new workout types or periodization schemes
 - Enhanced reference exercise detection with machine learning
 - Dynamic exercise similarity scoring based on user performance patterns
-- Advanced weight estimation algorithms for specialized exercises 
+- Advanced weight estimation algorithms for specialized exercises

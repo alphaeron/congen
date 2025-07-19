@@ -1,15 +1,17 @@
 package com.congen.model
 
+import com.fasterxml.jackson.annotation.JsonValue
+
 /**
  * Represents different types of movement patterns in strength training.
  *
  * @property displayName Human-readable name for the movement type
  */
-enum class MovementType(val displayName: String) {
-    HORIZONTAL_PUSH("horizontal push"),
-    VERTICAL_PUSH("vertical push"),
-    HORIZONTAL_PULL("horizontal pull"),
-    VERTICAL_PULL("vertical pull"),
+enum class MovementType(@JsonValue val displayName: String) {
+    HORIZONTAL_PUSH("horizontal_push"),
+    VERTICAL_PUSH("vertical_push"),
+    HORIZONTAL_PULL("horizontal_pull"),
+    VERTICAL_PULL("vertical_pull"),
     SQUAT("squat"),
     HINGE("hinge"),
     LUNGE("lunge"),

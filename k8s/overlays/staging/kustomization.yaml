@@ -28,7 +28,7 @@ patches:
   target:
     kind: Ingress
     name: congen-ingress
-- path: staging-patches/liquibase-job-labels-patch.yaml
+- path: staging-patches/migration-service-labels-patch.yaml
   target:
-    kind: Job
-    name: liquibase-migration 
+    kind: Deployment
+    name: migration-service 

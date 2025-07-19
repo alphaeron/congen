@@ -20,7 +20,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
         // Get the stage type by name to get its ID
         val stageTypeResponse =
             webTestClient.get()
-                .uri("/workout_stage_type/name/$stageTypeName")
+                .uri("/api/v1/workout_stage_type/name/$stageTypeName")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStageType::class.java)
@@ -29,7 +29,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
 
         // Then get it by id
         webTestClient.get()
-            .uri("/workout_stage_type/${stageTypeResponse.id}")
+            .uri("/api/v1/workout_stage_type/${stageTypeResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -40,7 +40,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when workout stage type not found by id`() {
         webTestClient.get()
-            .uri("/workout_stage_type/999")
+            .uri("/api/v1/workout_stage_type/999")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -52,7 +52,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
 
         // Then get it by name
         webTestClient.get()
-            .uri("/workout_stage_type/name/$stageTypeName")
+            .uri("/api/v1/workout_stage_type/name/$stageTypeName")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -62,7 +62,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when workout stage type not found by name`() {
         webTestClient.get()
-            .uri("/workout_stage_type/name/NonExistentStageType")
+            .uri("/api/v1/workout_stage_type/name/NonExistentStageType")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -72,7 +72,7 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.WARMUP)
         IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.PRIMARY)
         webTestClient.get()
-            .uri("/workout_stage_type/")
+            .uri("/api/v1/workout_stage_type/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

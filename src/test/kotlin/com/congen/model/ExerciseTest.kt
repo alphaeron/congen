@@ -50,7 +50,7 @@ class ExerciseTest {
 
         assertTrue(json.contains("\"name\":\"Bench Press\""))
         assertTrue(json.contains("\"description\":\"A compound exercise\""))
-        assertTrue(json.contains("\"movement_type\":\"horizontal push\""))
+        assertTrue(json.contains("\"movement_type\":\"horizontal_push\""))
         assertTrue(json.contains("\"is_unilateral\":false"))
         assertTrue(json.contains("\"is_upper\":true"))
         assertTrue(json.contains("\"is_accessory\":true"))
@@ -63,7 +63,7 @@ class ExerciseTest {
             {
                 "name": "Bench Press",
                 "description": "A compound exercise",
-                "movement_type": "horizontal push",
+                "movement_type": "horizontal_push",
                 "is_unilateral": false,
                 "is_upper": true,
                 "is_accessory": true
@@ -87,7 +87,7 @@ class ExerciseTest {
             {
                 "name": "Bench Press",
                 "description": "A compound exercise",
-                "movement_type": "horizontal push",
+                "movement_type": "horizontal_push",
                 "is_unilateral": false,
                 "is_upper": true,
                 "is_accessory": true,

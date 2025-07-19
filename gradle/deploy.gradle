@@ -250,6 +250,9 @@ task confirmProductionDeployment {
 task setupTestPortForward {
     description = 'Setup port forwarding for integration tests'
     group = 'kubernetes'
+    
+    // Ensure deployment is complete before setting up port forwarding
+    dependsOn 'deployToKubernetes'
 
     doLast {
         println "🔌 Setting up port forwarding for integration tests..."
@@ -265,7 +268,6 @@ task setupTestPortForward {
             commandLine 'sh', '-c', 'nohup kubectl port-forward -n congen service/postgres 5432:5432 > /dev/null 2>&1 & echo $! > /tmp/port-forward.pid'
             ignoreExitValue = true
         }
-
 
         println "✅ Port forwarding setup complete (localhost:5432)"
         println "⚠️  Remember to stop port forwarding when done: pkill -f 'kubectl port-forward.*postgres'"
@@ -286,15 +288,6 @@ task deployToKubernetes {
     }
 
     doLast {
-        // Clean up existing liquibase job to ensure fresh migration
-        if (environment == 'local') {
-            println "🧹 Cleaning up existing liquibase job..."
-            exec {
-                commandLine 'kubectl', 'delete', 'job', 'liquibase-migration', '-n', 'congen', '--ignore-not-found=true'
-                ignoreExitValue = true
-            }
-        }
-
         // Deploy to Kubernetes
         println "🚀 Applying Kubernetes manifests..."
         exec {

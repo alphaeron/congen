@@ -1,5 +1,8 @@
 package com.congen.model
 
+import com.fasterxml.jackson.annotation.JsonValue
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.Instant
 
@@ -17,6 +20,7 @@ import java.time.Instant
  * @property serviceId Service identifier.
  * @property description Description of the health check response.
  */
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Top-level health check response object.")
 data class HealthCheckResponse(
     /** Overall health status. */
@@ -71,7 +75,7 @@ enum class HealthStatus(
      *
      * @return The string representation of this health status.
      */
-    @com.fasterxml.jackson.annotation.JsonValue
+    @JsonValue
     fun toValue(): String = value
 }
 
@@ -88,6 +92,7 @@ enum class HealthStatus(
  * @property output Output message.
  * @property links Related links.
  */
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Represents the health check for a specific component.")
 data class HealthCheck(
     /** Component identifier. */
@@ -127,6 +132,7 @@ data class HealthCheck(
  * @property error Error message, if any.
  * @property details Additional details.
  */
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Represents the health check for the database.")
 data class DatabaseHealthCheck(
     /** Status of the database. */

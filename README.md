@@ -211,7 +211,7 @@ For detailed CORS configuration and troubleshooting, see [CORS_SECURITY.md](CORS
 
 ### Base URL
 ```
-http://localhost:8080
+http://localhost:8080/api/v1
 ```
 
 ### Authentication
@@ -271,10 +271,10 @@ Currently, the API does not require authentication. All endpoints are publicly a
 - `DELETE /exercise/{id}` - Delete exercise
 
 #### User Program Preferences
-- `GET /user-program-preferences/{userId}` - Get user's program preferences
-- `POST /user-program-preferences/` - Create user program preferences
-- `PUT /user-program-preferences/{id}` - Update user program preferences
-- `DELETE /user-program-preferences/{id}` - Delete user program preferences
+- `GET /user_program_preferences/{userId}` - Get user's program preferences
+- `POST /user_program_preferences/` - Create user program preferences
+- `PUT /user_program_preferences/{id}` - Update user program preferences
+- `DELETE /user_program_preferences/{id}` - Delete user program preferences
 
 For detailed API documentation, see [api-documentation.md](docs/api-documentation.md).
 

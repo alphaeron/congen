@@ -1,4 +1,30 @@
-use snake_case for api values
+We are using the wrong conventionA for query parameters.
+
+This project users snake_case for query parameter names, not camelCase.
+
+The variables in kotlin are camelCase, but should have the parameter name set using an annotation like @PathVariable("snake_case").
+
+For example, a path variable `@PathVariable("exerciseName") exerciseName: String` should instead be written like `@PathVariable("exercise_name") exerciseName: String`.
+
+We need to first update integration tests to use snake_case for all query parameters found in the urls in the integration tests.
+
+Next, update the PathVariable annotations for parameters in controllers that have them to use snake_case.  If a PathVariable does not have an annotation, add one for the parameter in snake_case.
+
+
+
+
+
+Update CONJUGATE_WORKOUT_GENERATOR.md with latest information.
+
+Put CONJUGATE_WORKOUT_GENERATOR.md in docs/
+
+re-generate openapi docs.
+
+mv api-documentation.md API_DOCUMENTATION.md
+
+Update INTEGRATION_TESTING_KUBERNETES.md with latest information.
+
+Update docs/README.md
 
 separate class to isolate the workout stage generation for different stages?
 
@@ -7,6 +33,10 @@ put generateWorkoutsForWeek in the template itself.
 2 or 3 week conjugate generation
 
 Add the ability for a user to enter their weak muscles, and have the accessories focus on those.
+
+balance vertical push + horizontal pull, vertical pull + horizontal push
+
+double pull volume as push volume
 
 Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
 

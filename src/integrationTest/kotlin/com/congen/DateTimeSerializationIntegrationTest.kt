@@ -21,7 +21,7 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         // Create a user (which has Instant fields)
         val userResponse =
             webTestClient.post()
-                .uri("/user/?name=Test User&age=25&height=175.0&weight=80.0")
+                .uri("/api/v1/user/?name=Test User&age=25&height=175.0&weight=80.0")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -81,7 +81,7 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         // Create a user and immediately retrieve it to test round-trip serialization
         val userResponse =
             webTestClient.post()
-                .uri("/user/?name=Test User 2&age=30&height=180.0&weight=85.0")
+                .uri("/api/v1/user/?name=Test User 2&age=30&height=180.0&weight=85.0")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -91,7 +91,7 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         // Retrieve the same user by ID to test deserialization
         val retrievedUser =
             webTestClient.get()
-                .uri("/user/${userResponse.id}")
+                .uri("/api/v1/user/${userResponse.id}")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -138,7 +138,7 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         // Create a user
         val userResponse =
             webTestClient.post()
-                .uri("/user/?name=Test User 3&age=35&height=170.0&weight=75.0")
+                .uri("/api/v1/user/?name=Test User 3&age=35&height=170.0&weight=75.0")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)

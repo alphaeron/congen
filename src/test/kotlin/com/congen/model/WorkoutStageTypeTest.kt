@@ -204,7 +204,7 @@ class WorkoutStageTypeTest {
             """
             {
                 "id": 1,
-                "name": "WARMUP",
+                "name": "Warmup",
                 "created_at": "2024-07-06T12:00:00Z"
             }
             """.trimIndent()
@@ -222,7 +222,7 @@ class WorkoutStageTypeTest {
             """
             {
                 "id": 1,
-                "name": "WARMUP",
+                "name": "Warmup",
                 "created_at": "2024-07-06T12:00:00Z",
                 "unknown_property": "should be ignored"
             }

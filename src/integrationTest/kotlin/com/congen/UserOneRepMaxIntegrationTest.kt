@@ -30,7 +30,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
     fun `should create user one rep max when it does not exist`() {
         // Create a one rep max record using PUT (upsert)
         webTestClient.put()
-            .uri("/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=100.0&unit=KG")
+            .uri("/api/v1/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=100.0&unit=KG")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -40,7 +40,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Verify it was created
         webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -56,7 +56,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Then update it using PUT (upsert)
         webTestClient.put()
-            .uri("/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=150.0&unit=KG")
+            .uri("/api/v1/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=150.0&unit=KG")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -64,7 +64,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Verify it was updated
         webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -78,7 +78,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Then retrieve it
         webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -94,13 +94,13 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Then delete it
         webTestClient.delete()
-            .uri("/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
             .exchange()
             .expectStatus().isNoContent()
 
         // Verify it's deleted
         webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -108,7 +108,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return not found when user one rep max not found`() {
         webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId1/exercise/NonExistent")
+            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/NonExistent")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -121,7 +121,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Safety Bar Squat", 150.0, "KG")
 
         webTestClient.get()
-            .uri("/user_one_rep_max/user/$userId1")
+            .uri("/api/v1/user_one_rep_max/user/$userId1")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

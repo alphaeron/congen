@@ -30,6 +30,9 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
       - name: congen
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000

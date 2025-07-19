@@ -97,11 +97,11 @@ class OpenApiConfigTest {
         assertEquals(2, servers.size)
 
         val localServer = servers[0]
-        assertEquals("http://localhost:8080", localServer.url)
+        assertEquals("http://localhost:8080/api/v1", localServer.url)
         assertEquals("Local Development Server", localServer.description)
 
         val productionServer = servers[1]
-        assertEquals("https://api.congen.com", productionServer.url)
+        assertEquals("https://api.congen.com/api/v1", productionServer.url)
         assertEquals("Production Server", productionServer.description)
     }
 
@@ -115,7 +115,7 @@ class OpenApiConfigTest {
         val servers = openAPI.servers
 
         // Then
-        assertEquals("http://localhost:9090", servers[0].url)
+        assertEquals("http://localhost:9090/api/v1", servers[0].url)
     }
 
     @Test

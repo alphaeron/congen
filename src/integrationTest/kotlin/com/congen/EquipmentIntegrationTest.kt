@@ -14,7 +14,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should create equipment`() {
         val uniqueName = "testequipmentout_${System.nanoTime()}"
         webTestClient.post()
-            .uri("/equipment/?name=$uniqueName&description=$uniqueName")
+            .uri("/api/v1/equipment/?name=$uniqueName&description=$uniqueName")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -26,7 +26,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should get equipment by name`() {
         // Equipment already exists in migrations
         webTestClient.get()
-            .uri("/equipment/${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}")
+            .uri("/api/v1/equipment/${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -37,7 +37,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when equipment not found`() {
         webTestClient.get()
-            .uri("/equipment/NonExistentEquipment")
+            .uri("/api/v1/equipment/NonExistentEquipment")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -46,7 +46,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should get all equipment`() {
         // Equipment already exists in migrations
         webTestClient.get()
-            .uri("/equipment/")
+            .uri("/api/v1/equipment/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -62,7 +62,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
         // Equipment and exercises already exist in migrations
         // The relationship already exists in migration data, no need to create it
         webTestClient.get()
-            .uri("/equipment/${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}/exercise")
+            .uri("/api/v1/equipment/${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}/exercise")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -75,7 +75,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should return 404 when no exercises found for equipment`() {
         // Equipment exists in migrations but no relationship created
         webTestClient.get()
-            .uri("/equipment/thisdefinitelydoesntexist/exercise")
+            .uri("/api/v1/equipment/thisdefinitelydoesntexist/exercise")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -83,7 +83,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when equipment not found for exercises`() {
         webTestClient.get()
-            .uri("/equipment/NonExistentEquipment/exercise")
+            .uri("/api/v1/equipment/NonExistentEquipment/exercise")
             .exchange()
             .expectStatus().isNotFound()
     }

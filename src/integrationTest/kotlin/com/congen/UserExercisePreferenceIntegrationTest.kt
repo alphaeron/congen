@@ -30,7 +30,7 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     fun `should get all user exercise preferences`() {
         IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId1, "Bench Press", false)
         webTestClient.get()
-            .uri("/user_exercise_preference/$userId1")
+            .uri("/api/v1/user_exercise_preference/$userId1")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -45,7 +45,7 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
 
         // Then retrieve it - the controller only has GET /{userId} endpoint
         webTestClient.get()
-            .uri("/user_exercise_preference/$userId2")
+            .uri("/api/v1/user_exercise_preference/$userId2")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -70,7 +70,7 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
             )
 
         webTestClient.method(HttpMethod.DELETE)
-            .uri("/user_exercise_preference/")
+            .uri("/api/v1/user_exercise_preference/")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(preferenceToDelete)
             .exchange()
@@ -89,7 +89,7 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
 
         // Get all preferences for the user
         webTestClient.get()
-            .uri("/user_exercise_preference/$userId5")
+            .uri("/api/v1/user_exercise_preference/$userId5")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

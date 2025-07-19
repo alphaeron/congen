@@ -53,7 +53,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     private fun getWorkoutStageTypeId(name: String): Int {
         val response =
             webTestClient.get()
-                .uri("/workout_stage_type/name/$name")
+                .uri("/api/v1/workout_stage_type/name/$name")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStageType::class.java)
@@ -65,7 +65,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when set number is 0`() {
         val uri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=0&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=0&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         webTestClient.post()
@@ -79,7 +79,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when set number is negative`() {
         val uri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=-1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=-1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         webTestClient.post()
@@ -93,7 +93,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when target weight is 0`() {
         val uri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=0&targetRepCount=8&restSeconds=120"
         webTestClient.post()
@@ -107,7 +107,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when target rep count is 0`() {
         val uri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=0&restSeconds=120"
         webTestClient.post()
@@ -121,7 +121,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when rest seconds is negative`() {
         val uri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=-1"
         webTestClient.post()
@@ -135,7 +135,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid set scheme data`() {
         val uri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         webTestClient.post()
@@ -154,7 +154,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     fun `should get set scheme by id`() {
         // First create a set scheme
         val createUri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
                 "wasSetPerformed=true&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=150.0&performedWeight=145.0&targetRepCount=5&" +
                 "performedRepCount=4&restSeconds=180"
@@ -169,7 +169,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
         // Then get the set scheme by id
         webTestClient.get()
-            .uri("/set_scheme/${setSchemeResponse.id}")
+            .uri("/api/v1/set_scheme/${setSchemeResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -187,7 +187,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     fun `should get set schemes by programmed exercise id`() {
         // First create multiple set schemes for the same exercise
         val uri1 =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         webTestClient.post()
@@ -196,7 +196,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         val uri2 =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=110.0&targetRepCount=6&restSeconds=180"
         webTestClient.post()
@@ -205,7 +205,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
 
         val uri3 =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=3&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=3&" +
                 "wasSetPerformed=false&isAmrap=true&isEmom=false&useTempo=false&" +
                 "targetWeight=120.0&targetRepCount=10&restSeconds=240"
         webTestClient.post()
@@ -215,7 +215,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
         // Then get all set schemes for the exercise
         webTestClient.get()
-            .uri("/set_scheme/exercise/$programmedExerciseId")
+            .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -230,17 +230,17 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should get all set schemes`() {
         val uri1 =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         val uri2 =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=2&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=110.0&targetRepCount=6&restSeconds=180"
         webTestClient.post().uri(uri1).exchange().expectStatus().isOk()
         webTestClient.post().uri(uri2).exchange().expectStatus().isOk()
         webTestClient.get()
-            .uri("/set_scheme/")
+            .uri("/api/v1/set_scheme/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -252,7 +252,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     fun `should update set scheme`() {
         // First create a set scheme
         val createUri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         val setSchemeResponse =
@@ -266,7 +266,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
         // Then update the set scheme
         val updateUri =
-            "/set_scheme/${setSchemeResponse.id}?programmedExerciseId=$programmedExerciseId&" +
+            "/api/v1/set_scheme/${setSchemeResponse.id}?programmedExerciseId=$programmedExerciseId&" +
                 "setNumber=1&wasSetPerformed=true&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&performedWeight=95.0&targetRepCount=8&performedRepCount=7&restSeconds=120"
         webTestClient.patch()
@@ -283,7 +283,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     fun `should delete set scheme`() {
         // First create a set scheme
         val createUri =
-            "/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
+            "/api/v1/set_scheme/?programmedExerciseId=$programmedExerciseId&setNumber=1&" +
                 "wasSetPerformed=false&isAmrap=false&isEmom=false&useTempo=false&" +
                 "targetWeight=100.0&targetRepCount=8&restSeconds=120"
         val setSchemeResponse =
@@ -297,7 +297,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
         // Then delete the set scheme
         webTestClient.delete()
-            .uri("/set_scheme/${setSchemeResponse.id}")
+            .uri("/api/v1/set_scheme/${setSchemeResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

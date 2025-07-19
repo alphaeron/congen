@@ -1,6 +1,7 @@
 package com.congen.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
 import java.math.BigDecimal
 
 /**
@@ -11,7 +12,7 @@ import java.math.BigDecimal
  */
 data class Band(
     /** The weight of the band in pounds. */
-    val weightLbs: BigDecimal
+    @JsonValue val weightLbs: BigDecimal
 ) {
     /**
      * The color of the band based on its weight.

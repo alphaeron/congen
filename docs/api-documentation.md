@@ -12,6 +12,13 @@ The Congen API provides endpoints for managing workout programs, exercises, user
 - **OpenAPI JSON**: [api-docs.json](api-docs.json)
 - **OpenAPI YAML**: [api-docs.yaml](api-docs.yaml)
 
+## API Base Path
+
+All API endpoints are prefixed with `/api/v1/` for versioning purposes. For example:
+- `/user/` becomes `/api/v1/user/`
+- `/program/` becomes `/api/v1/program/`
+- `/exercise/` becomes `/api/v1/exercise/`
+
 ## API Endpoints
 
 ### User Management

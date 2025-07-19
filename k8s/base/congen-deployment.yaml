@@ -15,7 +15,6 @@ spec:
       labels:
         app: congen
     spec:
-      serviceAccountName: congen-service-account
       containers:
       - name: congen
         image: congen:latest
@@ -41,13 +40,13 @@ spec:
           value: "5432"
         livenessProbe:
           httpGet:
-            path: /actuator/health
+            path: /api/v1/health/
             port: 8080
           initialDelaySeconds: 60
           periodSeconds: 30
         readinessProbe:
           httpGet:
-            path: /actuator/health
+            path: /api/v1/health/
             port: 8080
           initialDelaySeconds: 30
           periodSeconds: 10

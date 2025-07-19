@@ -65,6 +65,12 @@ class OpenApiConfig {
                         - **Preference Management**: Store and retrieve user preferences for programs and exercises
                         - **Equipment Tracking**: Manage available equipment for users
 
+                        ## API Versioning
+
+                        This API uses versioned endpoints with the base path `/api/v1/`. All endpoints
+                        are automatically prefixed with this version path to ensure backward compatibility
+                        and clear API versioning.
+
                         ## Authentication
 
                         Currently, the API does not require authentication. All endpoints are publicly accessible.
@@ -107,10 +113,10 @@ class OpenApiConfig {
             .servers(
                 listOf(
                     Server()
-                        .url("http://localhost:$serverPort")
+                        .url("http://localhost:$serverPort/api/v1")
                         .description("Local Development Server"),
                     Server()
-                        .url("https://api.congen.com")
+                        .url("https://api.congen.com/api/v1")
                         .description("Production Server"),
                 ),
             )

@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * @property name Name of the exercise (e.g., "Bench Press").
  * @property description Description of the exercise and its purpose.
- * @property movementType Type of movement (e.g., "horizontal push").
+ * @property movementType Type of movement (e.g., "horizontal_push").
  * @property isUnilateral Whether the exercise is performed one side at a time.
  * @property isUpper Whether the exercise targets the upper body.
  * @property isAccessory Whether the exercise is considered an accessory movement.
@@ -28,8 +28,8 @@ data class Exercise(
     /** Description of the exercise and its purpose. */
     @Schema(description = "Description of the exercise", example = "A compound upper body exercise.")
     @param:JsonProperty("description") val description: String,
-    /** Type of movement (e.g., "horizontal push"). */
-    @Schema(description = "Type of movement", example = "horizontal push")
+    /** Type of movement (e.g., "horizontal_push"). */
+    @Schema(description = "Type of movement", example = "horizontal_push")
     @param:JsonProperty("movement_type") val movementType: MovementType,
     /** Whether the exercise is performed one side at a time. */
     @Schema(description = "Whether the exercise is unilateral (one side at a time)", example = "false")

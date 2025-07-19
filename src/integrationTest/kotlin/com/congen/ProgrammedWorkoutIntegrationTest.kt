@@ -25,7 +25,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when day number is 0`() {
         webTestClient.post()
-            .uri("/programmed_workout/?programId=$programId&dayNumber=0&name=Test Workout")
+            .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=0&name=Test Workout")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -35,7 +35,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when day number is 366`() {
         webTestClient.post()
-            .uri("/programmed_workout/?programId=$programId&dayNumber=366&name=Test Workout")
+            .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=366&name=Test Workout")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -45,7 +45,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid programmed workout data`() {
         webTestClient.post()
-            .uri("/programmed_workout/?programId=$programId&dayNumber=1&name=Test Workout")
+            .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=1&name=Test Workout")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -59,7 +59,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         // First create a programmed workout
         val workoutResponse =
             webTestClient.post()
-                .uri("/programmed_workout/?programId=$programId&dayNumber=5&name=Integration Test Workout")
+                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=5&name=Integration Test Workout")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -68,7 +68,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
 
         // Then get the workout by id
         webTestClient.get()
-            .uri("/programmed_workout/${workoutResponse.id}")
+            .uri("/api/v1/programmed_workout/${workoutResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -91,7 +91,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
 
         // Then get all workouts for the program
         webTestClient.get()
-            .uri("/programmed_workout/program/$programId2")
+            .uri("/api/v1/programmed_workout/program/$programId2")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -115,7 +115,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         val workout1 = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1")
         val workout2 = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 2, name = "Workout 2")
         webTestClient.get()
-            .uri("/programmed_workout/")
+            .uri("/api/v1/programmed_workout/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -132,7 +132,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         // First create a programmed workout
         val workoutResponse =
             webTestClient.post()
-                .uri("/programmed_workout/?programId=$programId3&dayNumber=10&name=Original Workout")
+                .uri("/api/v1/programmed_workout/?programId=$programId3&dayNumber=10&name=Original Workout")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -141,7 +141,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
 
         // Then update the workout
         webTestClient.patch()
-            .uri("/programmed_workout/${workoutResponse.id}?programId=$programId3&dayNumber=15&name=Updated Workout")
+            .uri("/api/v1/programmed_workout/${workoutResponse.id}?programId=$programId3&dayNumber=15&name=Updated Workout")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -157,7 +157,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
         // First create a programmed workout
         val workoutResponse =
             webTestClient.post()
-                .uri("/programmed_workout/?programId=$programId&dayNumber=20&name=Workout to Delete")
+                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=20&name=Workout to Delete")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -166,7 +166,7 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
 
         // Then delete the workout
         webTestClient.delete()
-            .uri("/programmed_workout/${workoutResponse.id}")
+            .uri("/api/v1/programmed_workout/${workoutResponse.id}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

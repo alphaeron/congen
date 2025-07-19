@@ -1,5 +1,7 @@
 package com.congen.model
 
+import com.fasterxml.jackson.annotation.JsonValue
+
 /**
  * Enum representing the different types of workout stages.
  *
@@ -9,7 +11,7 @@ package com.congen.model
  * @property displayName The human-readable name for this stage type
  * @property position The position order for this stage type in a workout
  */
-enum class WorkoutStageTypeEnum(val displayName: String, val position: Int) {
+enum class WorkoutStageTypeEnum(@JsonValue val displayName: String, val position: Int) {
     WARMUP("Warmup", 1),
     PRIMARY("Primary", 2),
     SECONDARY("Secondary", 3),

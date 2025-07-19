@@ -17,7 +17,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         val unique = System.nanoTime()
         userResponse =
             webTestClient.post()
-                .uri("/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
+                .uri("/api/v1/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -29,7 +29,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when program_days_per_week is 1`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=1" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -45,7 +45,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when program_days_per_week is 5`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=5" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -61,7 +61,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when program_days_per_week is 0`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=0" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -77,7 +77,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when program_days_per_week is 8`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=8" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -93,7 +93,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should accept valid program_days_per_week value 2`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=2" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -105,7 +105,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should accept valid program_days_per_week value 3`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=3" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -117,7 +117,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should accept valid program_days_per_week value 4`() {
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=4" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -136,14 +136,14 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate_workout_generator/$programId")
+            .uri("/api/v1/conjugate_workout_generator/$programId")
             .exchange()
             .expectStatus().isOk()
 
         // Should allow changing session time
         webTestClient.patch()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=3" +
                     "&sessionTimeLengthInMinutes=90"
             )
@@ -162,14 +162,14 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate_workout_generator/$programId")
+            .uri("/api/v1/conjugate_workout_generator/$programId")
             .exchange()
             .expectStatus().isOk()
 
         // Should prevent changing program days per week from 3 to 4
         webTestClient.patch()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=4" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -198,7 +198,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Generate a workout to create existing workouts
         webTestClient.post()
-            .uri("/conjugate_workout_generator/$programId")
+            .uri("/api/v1/conjugate_workout_generator/$programId")
             .exchange()
             .expectStatus().isOk()
 
@@ -211,7 +211,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         val expectedError = errorPart1 + errorPart2 + errorPart3 + errorPart4
         webTestClient.patch()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=3" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -228,7 +228,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Create program preferences with 3 days per week
         webTestClient.post()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=3" +
                     "&sessionTimeLengthInMinutes=60"
             )
@@ -238,7 +238,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Should allow changing program days per week when no workouts exist
         webTestClient.patch()
             .uri(
-                "/user_program_preferences/?userId=${userResponse.id}" +
+                "/api/v1/user_program_preferences/?userId=${userResponse.id}" +
                     "&programDaysPerWeek=4" +
                     "&sessionTimeLengthInMinutes=60"
             )

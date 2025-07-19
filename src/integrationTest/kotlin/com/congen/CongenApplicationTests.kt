@@ -96,7 +96,7 @@ class CongenApplicationTests {
     }
 
     @Test
-    fun `should return 404 for non-existent endpoints`() {
+    fun `should return 404 for non-existent non-prefixed endpoints`() {
         webTestClient.get()
             .uri("/non-existent")
             .exchange()
@@ -104,22 +104,30 @@ class CongenApplicationTests {
     }
 
     @Test
+    fun `should return 404 for non-existent prefixed endpoints`() {
+        webTestClient.get()
+            .uri("/api/v1/non-existent")
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
     fun `should handle health check endpoint`() {
         webTestClient.get()
-            .uri("/health/")
+            .uri("/api/v1/health/")
             .exchange()
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.status").exists()
             .jsonPath("$.version").exists()
-            .jsonPath("$.serviceId").isEqualTo("congen")
+            .jsonPath("$.service_id").isEqualTo("congen")
             .jsonPath("$.checks").exists()
     }
 
     @Test
     fun `should handle invalid JSON gracefully`() {
         webTestClient.post()
-            .uri("/equipment/")
+            .uri("/api/v1/equipment/")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue("invalid json")
             .exchange()
@@ -131,7 +139,7 @@ class CongenApplicationTests {
         val invalidEquipment = mapOf("description" to "Missing name field")
 
         webTestClient.post()
-            .uri("/equipment/")
+            .uri("/api/v1/equipment/")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(invalidEquipment)
             .exchange()

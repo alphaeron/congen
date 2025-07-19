@@ -12,7 +12,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Exercises and equipment already exist in migrations
         val programmedExerciseId = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         webTestClient.post()
-            .uri("/programmed_exercise/?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
+            .uri("/api/v1/programmed_exercise/?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -30,7 +30,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Exercises and equipment already exist in migrations
         val programmedExercise = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         webTestClient.get()
-            .uri("/programmed_exercise/$programmedExercise")
+            .uri("/api/v1/programmed_exercise/$programmedExercise")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -42,7 +42,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when programmed exercise not found`() {
         webTestClient.get()
-            .uri("/programmed_exercise/999")
+            .uri("/api/v1/programmed_exercise/999")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -57,7 +57,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, "Deadlift")
         webTestClient.get()
-            .uri("/programmed_exercise/")
+            .uri("/api/v1/programmed_exercise/")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -78,7 +78,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, "Deadlift")
 
         webTestClient.get()
-            .uri("/programmed_exercise/stage/$stageId")
+            .uri("/api/v1/programmed_exercise/stage/$stageId")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -102,7 +102,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Then update it
         webTestClient.patch()
             .uri(
-                "/programmed_exercise/$exerciseResponse?workoutStageId=$stageId" +
+                "/api/v1/programmed_exercise/$exerciseResponse?workoutStageId=$stageId" +
                     "&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}" +
                     "&position=2"
             )
@@ -118,7 +118,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when updating non-existent programmed exercise`() {
         webTestClient.patch()
-            .uri("/programmed_exercise/999?workoutStageId=1&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
+            .uri("/api/v1/programmed_exercise/999?workoutStageId=1&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -136,7 +136,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
         // Then delete it
         webTestClient.delete()
-            .uri("/programmed_exercise/$exerciseResponse")
+            .uri("/api/v1/programmed_exercise/$exerciseResponse")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -148,7 +148,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when deleting non-existent programmed exercise`() {
         webTestClient.delete()
-            .uri("/programmed_exercise/999")
+            .uri("/api/v1/programmed_exercise/999")
             .exchange()
             .expectStatus().isNotFound()
     }
