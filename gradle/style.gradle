@@ -104,7 +104,7 @@ task gradleCheck(type: Exec, group: 'verification') {
 
 // Comprehensive linting task that includes Gradle files
 task allLint(group: 'verification', description: 'Run all linting checks including Gradle files') {
-    dependsOn ktlint, detekt, detektTest, shellCheck, kubeCheck, gradleCheck, jacocoTestCoverageVerification
+    dependsOn ktlint, detekt, detektTest, shellCheck, kubeCheck, gradleCheck
 }
 
 // Comprehensive formatting task

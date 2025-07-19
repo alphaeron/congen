@@ -7,15 +7,16 @@ package com.congen.model
  * type-safe access to stage types instead of using string literals throughout the codebase.
  *
  * @property displayName The human-readable name for this stage type
+ * @property position The position order for this stage type in a workout
  */
-enum class WorkoutStageTypeEnum(val displayName: String) {
-    WARMUP("Warmup"),
-    PRIMARY("Primary"),
-    SECONDARY("Secondary"),
-    ACCESSORY("Accessory"),
-    COOLDOWN("Cooldown"),
-    MOBILITY("Mobility"),
-    CONDITIONING("Conditioning");
+enum class WorkoutStageTypeEnum(val displayName: String, val position: Int) {
+    WARMUP("Warmup", 1),
+    PRIMARY("Primary", 2),
+    SECONDARY("Secondary", 3),
+    ACCESSORY("Accessory", 4),
+    CONDITIONING("Conditioning", 5),
+    MOBILITY("Mobility", 6),
+    COOLDOWN("Cooldown", 7);
 
     companion object {
         /**

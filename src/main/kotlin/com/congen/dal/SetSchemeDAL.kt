@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.model.Band
 import com.congen.model.SetScheme
 import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
@@ -144,6 +145,7 @@ class SetSchemeDAL(
      * @param targetRepCount Target number of repetitions
      * @param performedRepCount Actual number of repetitions completed
      * @param restSeconds Rest period after the set in seconds
+     * @param band The band information for Dynamic Effort exercises
      * @return Mono containing the inserted set scheme with generated ID
      * @throws ValidationException if set scheme data fails validation
      */
@@ -161,6 +163,7 @@ class SetSchemeDAL(
         targetRepCount: Int?,
         performedRepCount: Int?,
         restSeconds: Int?,
+        band: Band? = null,
     ): Mono<SetScheme> {
         logger.debug("Inserting set scheme for exercise: {}, set: {}", programmedExerciseId, setNumber)
 
@@ -180,9 +183,9 @@ class SetSchemeDAL(
             INSERT INTO set_scheme
                 (programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
                  eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
-                 target_rep_count, performed_rep_count, rest_seconds)
+                 target_rep_count, performed_rep_count, rest_seconds, band_weight_lbs)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             """.trimIndent(),
             programmedExerciseId,
             setNumber,
@@ -197,6 +200,7 @@ class SetSchemeDAL(
             targetRepCount,
             performedRepCount,
             restSeconds,
+            band?.weightLbs,
         )
     }
 
@@ -221,6 +225,7 @@ class SetSchemeDAL(
      * @param targetRepCount Target number of repetitions
      * @param performedRepCount Actual number of repetitions completed
      * @param restSeconds Rest period after the set in seconds
+     * @param band The band information for Dynamic Effort exercises
      * @return Mono containing the updated set scheme
      * @throws ValidationException if set scheme data fails validation
      * @throws NoResultsFoundException if no set scheme exists with the given ID
@@ -240,6 +245,7 @@ class SetSchemeDAL(
         targetRepCount: Int?,
         performedRepCount: Int?,
         restSeconds: Int?,
+        band: Band? = null,
     ): Mono<SetScheme> {
         logger.debug("Updating set scheme: {}", id)
 
@@ -260,11 +266,11 @@ class SetSchemeDAL(
             UPDATE set_scheme
             SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
                 eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
-                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, updated_at=NOW()
+                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, band_weight_lbs=$15, updated_at=NOW()
             WHERE id=$1
             RETURNING id, programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
                       eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
-                      target_rep_count, performed_rep_count, rest_seconds, created_at, updated_at
+                      target_rep_count, performed_rep_count, rest_seconds, band_weight_lbs, created_at, updated_at
             """.trimIndent(),
             SetScheme::class,
             id,
@@ -281,6 +287,7 @@ class SetSchemeDAL(
             targetRepCount,
             performedRepCount,
             restSeconds,
+            band?.weightLbs,
         )
     }
 

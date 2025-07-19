@@ -137,16 +137,16 @@ class WorkoutStageController(
      * @return ResponseEntity containing a list of all workout stages
      */
     @GetMapping("/")
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<WorkoutStage>>> {
         logger.debug("Getting all workout stages")
-        return try {
-            ResponseEntity.ok(
-                workoutStageDAL.selectWorkoutStages(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all workout stages", e)
-            throw e
-        }
+        return workoutStageDAL.selectWorkoutStages()
+            .map { workoutStages ->
+                logger.debug("Found {} workout stages", workoutStages.size)
+                ResponseEntity.ok(workoutStages)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all workout stages", e)
+            }
     }
 
     /**
@@ -161,16 +161,16 @@ class WorkoutStageController(
     @GetMapping("/workout/{programmedWorkoutId}")
     fun getByProgrammedWorkoutId(
         @PathVariable("programmedWorkoutId") programmedWorkoutId: Long,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<List<WorkoutStage>>> {
         logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
-        return try {
-            ResponseEntity.ok(
-                workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting workout stages for programmed workout: {}", programmedWorkoutId, e)
-            throw e
-        }
+        return workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
+            .map { workoutStages ->
+                logger.debug("Found {} workout stages for programmed workout: {}", workoutStages.size, programmedWorkoutId)
+                ResponseEntity.ok(workoutStages)
+            }
+            .doOnError { e ->
+                logger.error("Error getting workout stages for programmed workout: {}", programmedWorkoutId, e)
+            }
     }
 
     /**

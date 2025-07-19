@@ -19,7 +19,7 @@ class ExerciseEquipmentIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for equipment relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
@@ -50,7 +50,7 @@ class ExerciseEquipmentIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for equipment relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()

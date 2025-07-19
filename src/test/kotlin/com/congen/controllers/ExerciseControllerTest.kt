@@ -8,6 +8,7 @@ import com.congen.mockExercise
 import com.congen.mockExerciseEquipment
 import com.congen.mockExerciseMuscle
 import com.congen.model.Exercise
+import com.congen.model.MovementType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -28,7 +29,7 @@ class ExerciseControllerTest {
         private const val EXERCISE_NAME = "Bench Press"
         private const val NON_EXISTENT_EXERCISE = "NonExistent"
         private const val EXERCISE_DESCRIPTION = "A compound exercise"
-        private const val MOVEMENT_TYPE = "push"
+        private val MOVEMENT_TYPE = MovementType.HORIZONTAL_PUSH
         private const val MUSCLE_NAME_1 = "Chest"
         private const val MUSCLE_NAME_2 = "Triceps"
         private const val EQUIPMENT_NAME_1 = "Barbell"

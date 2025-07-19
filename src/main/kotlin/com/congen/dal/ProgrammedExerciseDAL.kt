@@ -186,6 +186,29 @@ class ProgrammedExerciseDAL(
     }
 
     /**
+     * Checks if a programmed exercise exists for a specific workout stage and exercise name.
+     *
+     * This method queries the database to check if a programmed exercise already exists
+     * for the given workout stage ID and exercise name. This is useful for preventing
+     * duplicate exercise creation within a stage.
+     *
+     * @param workoutStageId The ID of the workout stage
+     * @param exerciseName The name of the exercise
+     * @return Mono containing the existing programmed exercise if found, or empty if not found
+     */
+    fun selectProgrammedExerciseByStageIdAndExerciseName(
+        workoutStageId: Long,
+        exerciseName: String
+    ): Mono<ProgrammedExercise> {
+        logger.debug("Checking for existing programmed exercise for stage: {}, exercise: {}", workoutStageId, exerciseName)
+        return postgresClient.selectIndividual(
+            "SELECT * FROM programmed_exercise WHERE workout_stage_id=$1 AND exercise_name=$2",
+            workoutStageId,
+            exerciseName,
+        )
+    }
+
+    /**
      * Gets the user ID for a programmed exercise by tracing the relationship chain.
      *
      * This method follows the relationship chain:

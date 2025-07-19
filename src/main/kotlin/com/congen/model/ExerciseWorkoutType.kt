@@ -24,7 +24,7 @@ data class ExerciseWorkoutType(
     @param:JsonProperty("exercise_name") val exerciseName: String,
     /** Type of movement (e.g., "horizontal push"). */
     @Schema(description = "Type of movement", example = "horizontal push", required = true)
-    @param:JsonProperty("movement_type") val movementType: String,
+    @param:JsonProperty("movement_type") val movementType: MovementType,
     /** Type of workout (e.g., "dynamic_effort"). */
     @Schema(description = "Type of workout", example = "dynamic_effort", required = true)
     @param:JsonProperty("workout_type") val workoutType: String,

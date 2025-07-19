@@ -9,7 +9,6 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -135,10 +134,8 @@ class ProgramControllerTest {
             )
         whenever(programDAL.selectPrograms()).thenReturn(Mono.just(programs))
         val result = programController.getAll()
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<Program>>)
-            .expectNext(programs)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(programs))
             .verifyComplete()
         verify(programDAL).selectPrograms()
     }
@@ -251,10 +248,8 @@ class ProgramControllerTest {
             )
         whenever(programDAL.selectProgramsByUserId(USER_ID, null)).thenReturn(Mono.just(programs))
         val result = programController.getByUserId(USER_ID, null)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<Program>>)
-            .expectNext(programs)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(programs))
             .verifyComplete()
         verify(programDAL).selectProgramsByUserId(USER_ID, null)
     }
@@ -275,10 +270,8 @@ class ProgramControllerTest {
             )
         whenever(programDAL.selectProgramsByUserId(USER_ID, true)).thenReturn(Mono.just(activePrograms))
         val result = programController.getByUserId(USER_ID, true)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<Program>>)
-            .expectNext(activePrograms)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(activePrograms))
             .verifyComplete()
         verify(programDAL).selectProgramsByUserId(USER_ID, true)
     }
@@ -299,10 +292,8 @@ class ProgramControllerTest {
             )
         whenever(programDAL.selectProgramsByUserId(USER_ID, false)).thenReturn(Mono.just(inactivePrograms))
         val result = programController.getByUserId(USER_ID, false)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<Program>>)
-            .expectNext(inactivePrograms)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(inactivePrograms))
             .verifyComplete()
         verify(programDAL).selectProgramsByUserId(USER_ID, false)
     }

@@ -124,16 +124,16 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing a list of all programmed workouts
      */
     @GetMapping("/")
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
         logger.debug("Getting all programmed workouts")
-        return try {
-            ResponseEntity.ok(
-                programmedWorkoutDAL.selectProgrammedWorkouts(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all programmed workouts", e)
-            throw e
-        }
+        return programmedWorkoutDAL.selectProgrammedWorkouts()
+            .map { programmedWorkouts ->
+                logger.debug("Found {} programmed workouts", programmedWorkouts.size)
+                ResponseEntity.ok(programmedWorkouts)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all programmed workouts", e)
+            }
     }
 
     /**
@@ -148,16 +148,16 @@ class ProgrammedWorkoutController(
     @GetMapping("/program/{programId}")
     fun getByProgramId(
         @PathVariable("programId") programId: Long,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
         logger.debug("Getting programmed workouts for program: {}", programId)
-        return try {
-            ResponseEntity.ok(
-                programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting programmed workouts for program: {}", programId, e)
-            throw e
-        }
+        return programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)
+            .map { programmedWorkouts ->
+                logger.debug("Found {} programmed workouts for program: {}", programmedWorkouts.size, programId)
+                ResponseEntity.ok(programmedWorkouts)
+            }
+            .doOnError { e ->
+                logger.error("Error getting programmed workouts for program: {}", programId, e)
+            }
     }
 
     /**

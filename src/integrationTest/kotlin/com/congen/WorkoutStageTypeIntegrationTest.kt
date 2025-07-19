@@ -2,9 +2,16 @@ package com.congen
 
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+        // Additional setup if needed
+    }
+
     @Test
     fun `should get workout stage type by id`() {
         // First create a workout stage type

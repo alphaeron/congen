@@ -46,7 +46,8 @@ class SetSchemeTest {
                 performedRepCount = 5,
                 restSeconds = 180,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         assertEquals(1L, setScheme.id)
@@ -86,7 +87,8 @@ class SetSchemeTest {
                 performedRepCount = null,
                 restSeconds = null,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         assertEquals(1L, setScheme.id)
@@ -118,7 +120,8 @@ class SetSchemeTest {
                 performedRepCount = 5,
                 restSeconds = 180,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         val json = objectMapper.writeValueAsString(setScheme)
@@ -146,7 +149,8 @@ class SetSchemeTest {
                 performedRepCount = 5,
                 restSeconds = 180,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         val setScheme2 =
@@ -166,7 +170,8 @@ class SetSchemeTest {
                 performedRepCount = 5,
                 restSeconds = 180,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         val setScheme3 =
@@ -186,7 +191,8 @@ class SetSchemeTest {
                 performedRepCount = 5,
                 restSeconds = 180,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         assertEquals(setScheme1, setScheme2)
@@ -212,14 +218,16 @@ class SetSchemeTest {
                 performedRepCount = 5,
                 restSeconds = 180,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null
             )
 
         val copy =
             original.copy(
                 id = 2L,
                 setNumber = 2,
-                targetWeight = BigDecimal("250.0")
+                targetWeight = BigDecimal("250.0"),
+                band = null
             )
 
         assertEquals(2L, copy.id)

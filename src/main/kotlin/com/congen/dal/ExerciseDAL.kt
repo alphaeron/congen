@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.model.Exercise
+import com.congen.model.MovementType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -98,12 +99,13 @@ class ExerciseDAL(
     fun insertExercise(
         name: String,
         description: String,
-        movementType: String,
+        movementType: MovementType,
         isUnilateral: Boolean,
         isUpper: Boolean,
         isAccessory: Boolean,
     ): Mono<Exercise> {
         logger.debug("Inserting exercise: {}", name)
+
         return postgresClient.update(
             """
             INSERT INTO exercise
@@ -138,12 +140,13 @@ class ExerciseDAL(
     fun updateExercise(
         name: String,
         description: String,
-        movementType: String,
+        movementType: MovementType,
         isUnilateral: Boolean,
         isUpper: Boolean,
         isAccessory: Boolean,
     ): Mono<Exercise> {
         logger.debug("Updating exercise: {}", name)
+
         return postgresClient.update(
             """
             UPDATE exercise

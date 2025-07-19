@@ -106,33 +106,66 @@ data:
     }
 }
 
+// Task to setup local Kubernetes environment
+task setupLocalKubernetes {
+    description = 'Setup local Kubernetes environment (minikube, etc.)'
+    group = 'kubernetes'
+
+    doFirst {
+        println "🔧 Setting up local Kubernetes environment..."
+
+        // Check if minikube is running, start if not
+        def minikubeStatus = exec {
+            commandLine 'minikube', 'status'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+            errorOutput = new ByteArrayOutputStream()
+        }
+
+        if (minikubeStatus.exitValue != 0) {
+            println "Starting minikube with local Docker daemon..."
+            exec {
+                commandLine 'minikube', 'start', '--driver=docker'
+                ignoreExitValue = false
+            }
+        } else {
+            println "Minikube is already running"
+            println "✅ Minikube is ready for deployment"
+        }
+
+        // Enable required addons
+        println "Enabling minikube addons..."
+        exec {
+            commandLine 'minikube', 'addons', 'enable', 'ingress'
+            ignoreExitValue = true
+        }
+        exec {
+            commandLine 'minikube', 'addons', 'enable', 'metrics-server'
+            ignoreExitValue = true
+        }
+        sleep(15000)
+    }
+}
+
 // Task to build and prepare image for local environment
 task prepareLocalImage {
     dependsOn jibDockerBuild
     description = 'Build and prepare Docker image for local minikube deployment'
     group = 'kubernetes'
 
-    doFirst {
+    doLast {
         println "🚀 Preparing image for local minikube deployment..."
 
-        // Ensure base image is available in minikube
-        println "Ensuring base image is available in minikube Docker daemon..."
+        // Load image into minikube's Docker daemon
+        println "📦 Loading image into minikube's Docker daemon..."
         exec {
-            commandLine 'sh', '-c', "eval \$(minikube docker-env) && docker pull amazoncorretto:17.0.11-alpine3.19"
-            ignoreExitValue = false
+            commandLine 'minikube', 'image', 'load', "congen:${tag}"
         }
+        println "✅ Image loaded into minikube: congen:${tag}"
 
-        // Build image in minikube Docker daemon
-        println "Building image in minikube Docker daemon..."
-        exec {
-            commandLine 'sh', '-c', "eval \$(minikube docker-env) && ./gradlew jibDockerBuild"
-            ignoreExitValue = false
-        }
-    }
-
-    doLast {
-        // Generate image tag patch for local
+        // Generate image tag patch for local with the current tag
         generateImageTagPatchForEnvironment('local', "congen:${tag}")
+        println "✅ Generated image tag patch for local: congen:${tag}"
     }
 }
 
@@ -213,6 +246,32 @@ task confirmProductionDeployment {
     }
 }
 
+// Task to setup port forwarding for integration tests
+task setupTestPortForward {
+    description = 'Setup port forwarding for integration tests'
+    group = 'kubernetes'
+
+    doLast {
+        println "🔌 Setting up port forwarding for integration tests..."
+
+        // Kill any existing port forward
+        exec {
+            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
+            ignoreExitValue = true
+        }
+
+        // Start port forward in background using nohup to ensure it stays detached
+        exec {
+            commandLine 'sh', '-c', 'nohup kubectl port-forward -n congen service/postgres 5432:5432 > /dev/null 2>&1 & echo $! > /tmp/port-forward.pid'
+            ignoreExitValue = true
+        }
+
+
+        println "✅ Port forwarding setup complete (localhost:5432)"
+        println "⚠️  Remember to stop port forwarding when done: pkill -f 'kubectl port-forward.*postgres'"
+    }
+}
+
 // Unified deployment task for all environments
 task deployToKubernetes {
     description = 'Unified deployment task for all environments (requires -Penvironment=local|staging|production)'
@@ -227,27 +286,70 @@ task deployToKubernetes {
     }
 
     doLast {
+        // Clean up existing liquibase job to ensure fresh migration
+        if (environment == 'local') {
+            println "🧹 Cleaning up existing liquibase job..."
+            exec {
+                commandLine 'kubectl', 'delete', 'job', 'liquibase-migration', '-n', 'congen', '--ignore-not-found=true'
+                ignoreExitValue = true
+            }
+        }
+
         // Deploy to Kubernetes
         println "🚀 Applying Kubernetes manifests..."
         exec {
             commandLine 'kubectl', 'apply', '-k', "k8s/overlays/${environment}"
         }
 
+        // Wait for PostgreSQL to be ready (for local environment)
+        if (environment == 'local') {
+            println "⏳ Waiting for PostgreSQL to be ready..."
+            def maxAttempts = 30
+            def attempt = 1
+
+            while (attempt <= maxAttempts) {
+                def pgReady = exec {
+                    commandLine 'kubectl', 'exec', '-n', 'congen', 'deployment/postgres', '--', 'pg_isready', '-U', 'postgres'
+                    ignoreExitValue = true
+                }
+
+                if (pgReady.exitValue == 0) {
+                    println "✅ PostgreSQL is ready"
+                    break
+                }
+
+                println "Attempt ${attempt}/${maxAttempts}: PostgreSQL not ready yet..."
+                sleep(2000) // 2 seconds
+                attempt++
+            }
+
+            if (attempt > maxAttempts) {
+                throw new GradleException("PostgreSQL failed to become ready after ${maxAttempts} attempts")
+            }
+        }
+
         // Wait for deployment to be ready
-        println "⏳ Waiting for deployment to be ready..."
+        println "⏳ Waiting for application deployment to be ready..."
         exec {
             commandLine 'kubectl', 'rollout', 'status', 'deployment/congen', '-n', 'congen', '--timeout=300s'
         }
 
         // Environment-specific post-deployment steps
         if (environment == 'local') {
+            def minikubeIpOutput = new ByteArrayOutputStream()
+            exec {
+                commandLine 'minikube', 'ip'
+                standardOutput = minikubeIpOutput
+            }
+            def ip = minikubeIpOutput.toString().trim()
+
             println "✅ Local deployment complete!"
-            println "🌐 Access the application at: http://\$(minikube ip):30080"
-            println "🔗 For localhost access, run: ./scripts/start-local-access.sh"
+            println "🌐 Access the application at: http://${ip}:30080"
             println "📊 Check status: kubectl get pods -n congen"
+            println "🔍 View logs: kubectl logs -f deployment/congen -n congen"
         } else {
             println "✅ ${environment} deployment complete!"
-            println "📊 Check status: kubectl get pods -n ${environment}"
+            println "📊 Check status: kubectl get pods -n congen"
             println "🔍 View logs: kubectl logs -f deployment/congen -n congen"
         }
     }
@@ -255,20 +357,19 @@ task deployToKubernetes {
 
 // Set up task dependencies based on environment
 project.afterEvaluate {
-    if (project.hasProperty('environment')) {
-        // Always create migrations ConfigMap
-        deployToKubernetes.dependsOn createMigrationsConfigMap
+    // Always create migrations ConfigMap
+    deployToKubernetes.dependsOn createMigrationsConfigMap
 
-        // Environment-specific image preparation
-        if (environment == 'local') {
-            deployToKubernetes.dependsOn prepareLocalImage
-        } else {
-            deployToKubernetes.dependsOn prepareRemoteImage
-        }
+    // Environment-specific setup and image preparation
+    if (environment == 'local') {
+        deployToKubernetes.dependsOn setupLocalKubernetes
+        deployToKubernetes.dependsOn prepareLocalImage
+    } else {
+        deployToKubernetes.dependsOn prepareRemoteImage
+    }
 
-        // Production confirmation
-        if (environment == 'production') {
-            deployToKubernetes.dependsOn confirmProductionDeployment
-        }
+    // Production confirmation
+    if (environment == 'production') {
+        deployToKubernetes.dependsOn confirmProductionDeployment
     }
 }

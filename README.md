@@ -46,27 +46,23 @@ The application follows a layered architecture pattern:
    cd congen
    ```
 
-2. **Set up Kubernetes environment**
+2. **Set up and deploy to Kubernetes**
    ```bash
-   # Run the setup script
-   ./scripts/setup-kubernetes.sh
-   
-   # Or use specific actions:
-   ./scripts/setup-kubernetes.sh setup    # Complete setup (default)
-   ./scripts/setup-kubernetes.sh deploy   # Deploy application only
-   ./scripts/setup-kubernetes.sh status   # Check status
-   ./scripts/setup-kubernetes.sh cleanup  # Clean up test resources
+   # Complete local setup and deployment (includes minikube, namespace, image build, and deployment)
+   ./gradlew deployToKubernetes -Penvironment=local
    
    # For integration testing (includes port forwarding):
-   ./scripts/setup-kubernetes.sh setup --test
+   ./gradlew deployToKubernetes -Penvironment=local
+   ./gradlew setupTestPortForward
    ```
 
-3. **Build and deploy the application**
+3. **Deploy to other environments**
    ```bash
-   # Deploy to any environment using the main deployment task
-   ./gradlew deployToKubernetes -Penvironment=local
-   ./gradlew deployToKubernetes -Penvironment=staging
-   ./gradlew deployToKubernetes -Penvironment=production
+   # Deploy to staging (requires -PremoteRegistry parameter)
+   ./gradlew deployToKubernetes -Penvironment=staging -PremoteRegistry=your-registry.example.com
+   
+   # Deploy to production (requires -PremoteRegistry parameter)
+   ./gradlew deployToKubernetes -Penvironment=production -PremoteRegistry=your-registry.example.com
    
    # Or use Skaffold for development (watches for changes)
    ./gradlew skaffoldDev
@@ -74,20 +70,15 @@ The application follows a layered architecture pattern:
 
 4. **Access the application**
    ```bash
-   # Get Minikube IP
-   minikube ip
-   
-   # For easy localhost access (recommended)
-   ./scripts/access-local-app.sh
-   
-   # Alternative: Access via fixed NodePort (may not work on all systems)
-   curl http://$(minikube ip):30080/actuator/health
+   # The deployment task will show you the access URL
+   # Example: http://192.168.49.2:30080
    
    # Manual port forwarding (if needed)
    kubectl port-forward -n congen service/congen 8080:8080
    
-   # Stop localhost access when done
-   ./scripts/stop-local-access.sh
+   # Check application status
+   kubectl get pods -n congen
+   kubectl logs -f deployment/congen -n congen
    ```
 
 5. **Run tests**
@@ -95,11 +86,21 @@ The application follows a layered architecture pattern:
    # Unit tests
    ./gradlew test
    
-   # Integration tests (requires Kubernetes environment)
-   ./gradlew integrationTest  # Uses setup-kubernetes.sh test action
+   # Integration tests (requires Kubernetes environment and port forwarding)
+   ./gradlew setupTestPortForward  # Run once to setup port forwarding
+   ./gradlew integrationTest
    
    # All tests
    ./gradlew check
+   ```
+
+6. **Cleanup**
+   ```bash
+   # Clean up Kubernetes resources
+   ./gradlew cleanupKubernetes
+   
+   # Stop port forwarding
+   pkill -f 'kubectl port-forward.*postgres'
    ```
 
 ### Alternative: Traditional Local Development
@@ -149,14 +150,15 @@ For detailed Kubernetes deployment instructions, see [KUBERNETES_DEPLOYMENT.md](
 ```bash
 # Deploy to any environment
 ./gradlew deployToKubernetes -Penvironment=local
-./gradlew deployToKubernetes -Penvironment=staging
-./gradlew deployToKubernetes -Penvironment=production
+./gradlew deployToKubernetes -Penvironment=staging -PremoteRegistry=your-registry.example.com
+./gradlew deployToKubernetes -Penvironment=production -PremoteRegistry=your-registry.example.com
 
-# Generate ConfigMap from migrations
+# Setup and cleanup
+./gradlew setupTestPortForward  # For integration tests
+./gradlew cleanupKubernetes     # Clean up all resources
+
+# Generate ConfigMap from migrations (automatically done during deployment)
 ./gradlew createMigrationsConfigMap
-
-# Generate image tag patch
-./gradlew generateImageTagPatch
 
 # Clean up deployments
 ./gradlew skaffoldDelete

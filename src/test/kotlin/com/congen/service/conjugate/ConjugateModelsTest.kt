@@ -68,7 +68,8 @@ class ConjugateModelsTest {
                 isometricTempo = "1",
                 concentricTempo = "1",
                 performedWeight = BigDecimal("100.0"),
-                performedRepCount = 5
+                performedRepCount = 5,
+                band = null
             )
 
         assertEquals(1, params.setNumber)
@@ -93,7 +94,8 @@ class ConjugateModelsTest {
                 performedWeight = null,
                 targetRepCount = null,
                 performedRepCount = null,
-                restSeconds = null
+                restSeconds = null,
+                band = null
             )
 
         assertEquals(1, params.setNumber)
@@ -117,14 +119,16 @@ class ConjugateModelsTest {
                 useTempo = true,
                 eccentricTempo = "3",
                 isometricTempo = "1",
-                concentricTempo = "1"
+                concentricTempo = "1",
+                band = null
             )
         val params2 =
             mockSetSchemeParams(
                 useTempo = true,
                 eccentricTempo = "3",
                 isometricTempo = "1",
-                concentricTempo = "1"
+                concentricTempo = "1",
+                band = null
             )
         val params3 =
             mockSetSchemeParams(
@@ -132,7 +136,8 @@ class ConjugateModelsTest {
                 useTempo = true,
                 eccentricTempo = "3",
                 isometricTempo = "1",
-                concentricTempo = "1"
+                concentricTempo = "1",
+                band = null
             )
 
         assertEquals(params1, params2)
@@ -144,7 +149,6 @@ class ConjugateModelsTest {
     @Test
     fun `ConjugateConstants should have correct default values`() {
         assertEquals(listOf("hamstrings", "glutes", "upper_back", "core"), ConjugateConstants.DEFAULT_WEAK_MUSCLES)
-        assertEquals("50.0", ConjugateConstants.DEFAULT_WEIGHT)
         assertEquals(60, ConjugateConstants.DEFAULT_SESSION_TIME_MINUTES)
     }
 
@@ -163,7 +167,8 @@ class ConjugateModelsTest {
                 isAmrap = true,
                 targetWeight = BigDecimal("80.0"),
                 targetRepCount = null,
-                restSeconds = 0
+                restSeconds = 0,
+                band = null
             )
 
         assertTrue(amrapParams.isAmrap)
@@ -180,7 +185,8 @@ class ConjugateModelsTest {
                 isEmom = true,
                 targetWeight = BigDecimal("60.0"),
                 targetRepCount = null,
-                restSeconds = 0
+                restSeconds = 0,
+                band = null
             )
 
         assertFalse(emomParams.isAmrap)
@@ -197,7 +203,8 @@ class ConjugateModelsTest {
                 useTempo = true,
                 eccentricTempo = "3",
                 isometricTempo = "1",
-                concentricTempo = "1"
+                concentricTempo = "1",
+                band = null
             )
 
         assertTrue(tempoParams.useTempo)

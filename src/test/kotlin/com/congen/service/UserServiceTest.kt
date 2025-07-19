@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
+import kotlin.test.assertEquals
 
 /**
  * Unit tests for UserService.
@@ -128,6 +129,7 @@ class UserServiceTest {
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is ValidationException)
+                assertEquals("User weight must be between 0.01 and 1000 kg, got: -10.0", ex.message)
             }
             .verify()
     }
@@ -167,6 +169,7 @@ class UserServiceTest {
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is DatabaseException)
+                assertEquals("User not found", ex.message)
             }
             .verify()
 
@@ -282,6 +285,7 @@ class UserServiceTest {
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is ValidationException)
+                assertEquals("User weight must be between 0.01 and 1000 kg, got: -10.0", ex.message)
             }
             .verify()
     }
@@ -321,6 +325,7 @@ class UserServiceTest {
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is DatabaseException)
+                assertEquals("User not found", ex.message)
             }
             .verify()
 

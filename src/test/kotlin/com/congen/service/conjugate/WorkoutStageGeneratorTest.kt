@@ -15,6 +15,7 @@ import com.congen.mockUserOneRepMax
 import com.congen.mockUserWeightUnitPreference
 import com.congen.mockWorkoutStage
 import com.congen.mockWorkoutStageType
+import com.congen.model.MovementType
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
@@ -22,11 +23,10 @@ import com.congen.service.UnitConversionService
 import com.congen.service.WeightSelectionService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.ArgumentMatchers.anyString
+import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -48,6 +48,7 @@ class WorkoutStageGeneratorTest {
     private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
     private lateinit var weightSelectionService: WeightSelectionService
+    private lateinit var bandWeightService: BandWeightService
 
     private val workoutId = 1L
     private val workoutStageId = 1L
@@ -65,6 +66,13 @@ class WorkoutStageGeneratorTest {
         setSchemeService = mock()
         prilepinGuidelinesService = mock()
         weightSelectionService = mock()
+        bandWeightService = mock()
+
+        val exerciseDAL = mock<com.congen.dal.ExerciseDAL>()
+        val exerciseEquipmentDAL = mock<com.congen.dal.ExerciseEquipmentDAL>()
+        val exerciseMuscleDAL = mock<com.congen.dal.ExerciseMuscleDAL>()
+        val userOneRepMaxDAL = mock<com.congen.dal.UserOneRepMaxDAL>()
+
         workoutStageGenerator =
             WorkoutStageGenerator(
                 workoutStageDAL = workoutStageDAL,
@@ -75,49 +83,30 @@ class WorkoutStageGeneratorTest {
                 unitConversionService = unitConversionService,
                 setSchemeService = setSchemeService,
                 prilepinGuidelinesService = prilepinGuidelinesService,
-                weightSelectionService = weightSelectionService
+                weightSelectionService = weightSelectionService,
+                bandWeightService = bandWeightService,
+                exerciseMatchingService = ExerciseMatchingService(ReferenceExerciseDetector()),
+                exerciseDAL = exerciseDAL,
+                exerciseEquipmentDAL = exerciseEquipmentDAL,
+                exerciseMuscleDAL = exerciseMuscleDAL,
+                userOneRepMaxDAL = userOneRepMaxDAL
             )
-        val mockSetScheme =
-            mockSetScheme(
-                id = 1L,
-                programmedExerciseId = 1L,
-                setNumber = 1,
-                targetWeight = BigDecimal("100.0"),
-                targetRepCount = 5,
-                restSeconds = 180
-            )
-        whenever(
-            setSchemeService.createSetScheme(
-                // programmedExerciseId: Long
-                anyLong(),
-                // setNumber: Int
-                anyInt(),
-                // isAmrap: Boolean
-                anyBoolean(),
-                // isEmom: Boolean
-                anyBoolean(),
-                // useTempo: Boolean
-                anyBoolean(),
-                // eccentricTempo: String?
-                anyOrNull(),
-                // isometricTempo: String?
-                anyOrNull(),
-                // concentricTempo: String?
-                anyOrNull(),
-                // targetWeight: String?
-                anyOrNull(),
-                // performedWeight: String?
-                anyOrNull(),
-                // targetRepCount: Int?
-                anyOrNull(),
-                // performedRepCount: Int?
-                anyOrNull(),
-                // restSeconds: Int?
-                anyOrNull(),
-                // unit: String?
-                anyOrNull()
-            )
-        ).thenReturn(Mono.just(mockSetScheme()))
+
+        // Mock DAL methods that return null by default
+        whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(anyLong(), anyInt()))
+            .thenReturn(Mono.error(NoResultsFoundException("No workout stage found")))
+        whenever(programmedExerciseDAL.selectProgrammedExerciseByStageIdAndExerciseName(anyLong(), any()))
+            .thenReturn(Mono.error(NoResultsFoundException("No programmed exercise found")))
+        whenever(setSchemeDAL.selectSetSchemesByProgrammedExerciseId(anyLong()))
+            .thenReturn(Mono.just(emptyList()))
+
+        // Mock exercise DAL methods used in getTargetWeight
+        whenever(exerciseDAL.selectExercises())
+            .thenReturn(Mono.just(emptyList()))
+        whenever(exerciseEquipmentDAL.selectAllExerciseEquipment())
+            .thenReturn(Mono.just(emptyList()))
+        whenever(exerciseMuscleDAL.selectAllExerciseMuscle())
+            .thenReturn(Mono.just(emptyList()))
     }
 
     @Test
@@ -296,21 +285,42 @@ class WorkoutStageGeneratorTest {
                 ),
                 mockSetSchemeParams(
                     setNumber = 2,
-                    targetWeight = BigDecimal("110.0"),
+                    targetWeight = BigDecimal("95.0"),
                     targetRepCount = 5,
                     restSeconds = 180
                 )
             )
 
+        // Mock setSchemeService.createSetScheme
         val mockSetScheme =
             mockSetScheme(
                 id = 1L,
-                programmedExerciseId = 1L,
+                programmedExerciseId = programmedExerciseId,
                 setNumber = 1,
                 targetWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
-                restSeconds = 180
+                restSeconds = 180,
+                band = null
             )
+        whenever(
+            setSchemeService.createSetScheme(
+                anyLong(),
+                anyInt(),
+                anyBoolean(),
+                anyBoolean(),
+                anyBoolean(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull()
+            )
+        ).thenReturn(Mono.just(mockSetScheme))
 
         // Mock user weight unit preference (default to KG)
         whenever(
@@ -336,6 +346,7 @@ class WorkoutStageGeneratorTest {
             anyOrNull(),
             anyOrNull(),
             anyOrNull(),
+            anyOrNull(),
             anyOrNull()
         )
     }
@@ -346,7 +357,7 @@ class WorkoutStageGeneratorTest {
             mockExercise(
                 name = "Bench Press",
                 description = "A compound upper body exercise",
-                movementType = "horizontal push"
+                movementType = MovementType.HORIZONTAL_PUSH
             )
         val movementRole = "primary"
         val dayType = "ME_Upper"
@@ -375,8 +386,8 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("Bench Press"), any(), eq(WeightUnit.KG)))
             .thenReturn(Mono.just(BigDecimal("85.00")))
 
         val result =
@@ -406,7 +417,7 @@ class WorkoutStageGeneratorTest {
             mockExercise(
                 name = "Squat",
                 description = "A compound lower body exercise",
-                movementType = "vertical push",
+                movementType = MovementType.SQUAT,
                 isUpper = false
             )
         val oneRepMaxes =
@@ -423,8 +434,8 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Squat"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("Squat"), any(), eq(WeightUnit.KG)))
             .thenReturn(Mono.just(BigDecimal("170.00")))
 
         val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes, userId)
@@ -446,7 +457,7 @@ class WorkoutStageGeneratorTest {
             mockExercise(
                 name = "Burpees",
                 description = "A conditioning exercise",
-                movementType = "compound",
+                movementType = MovementType.PLYOMETRIC,
                 isUpper = false,
                 isAccessory = true
             )
@@ -464,19 +475,19 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Burpees"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("Burpees"), any(), eq(WeightUnit.KG)))
             .thenReturn(Mono.just(BigDecimal("25.00")))
 
         val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes, userId)
 
         StepVerifier.create(result)
             .expectNextMatches { schemes ->
-                schemes.size == 1 && schemes[0].setNumber == 1 &&
+                schemes.size == 1 && schemes[0].setNumber == 3 &&
                     schemes[0].isAmrap.xor(schemes[0].isEmom) &&
                     schemes[0].targetWeight == BigDecimal("25.00") &&
                     schemes[0].targetRepCount == null &&
-                    (schemes[0].restSeconds == 0 || schemes[0].restSeconds == 60)
+                    schemes[0].restSeconds == 60
             }
             .verifyComplete()
     }
@@ -487,7 +498,7 @@ class WorkoutStageGeneratorTest {
             mockExercise(
                 name = "New Exercise",
                 description = "A new exercise",
-                movementType = "compound"
+                movementType = MovementType.HORIZONTAL_PUSH
             )
         val movementRole = "primary"
         val dayType = "ME_Upper"
@@ -509,9 +520,9 @@ class WorkoutStageGeneratorTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
-            .thenReturn(Mono.just(BigDecimal("50.0")))
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("New Exercise"), any(), eq(WeightUnit.KG)))
+            .thenReturn(Mono.just(BigDecimal("50.00")))
 
         val result =
             workoutStageGenerator.generatePrilepinBasedScheme(
@@ -525,7 +536,11 @@ class WorkoutStageGeneratorTest {
 
         StepVerifier.create(result)
             .expectNextMatches { schemes ->
-                schemes.isNotEmpty() && schemes[0].targetWeight == BigDecimal("50.0")
+                schemes.isNotEmpty() && schemes[0].setNumber == 1 &&
+                    !schemes[0].isAmrap && !schemes[0].isEmom &&
+                    schemes[0].targetWeight == BigDecimal("50.00") &&
+                    schemes[0].targetRepCount in 2..4 &&
+                    schemes[0].restSeconds in 180..300
             }
             .verifyComplete()
     }
@@ -534,26 +549,31 @@ class WorkoutStageGeneratorTest {
     fun `generateSecondaryExerciseScheme should use default weight when no 1RM found`() {
         val exercise =
             mockExercise(
-                name = "New Exercise",
-                description = "A new exercise",
-                movementType = "compound"
+                name = "New Secondary Exercise",
+                description = "A new secondary exercise",
+                movementType = MovementType.SQUAT,
+                isUpper = false
             )
         val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
         // Mock weight unit preference
-        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Exercise", WeightUnit.KG)
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Secondary Exercise", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Secondary Exercise"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
-            .thenReturn(Mono.just(BigDecimal("50.0")))
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("New Secondary Exercise"), any(), eq(WeightUnit.KG)))
+            .thenReturn(Mono.just(BigDecimal("50.00")))
 
         val result = workoutStageGenerator.generateSecondaryExerciseScheme(exercise, oneRepMaxes, userId)
 
         StepVerifier.create(result)
             .expectNextMatches { schemes ->
-                schemes.isNotEmpty() && schemes[0].targetWeight == BigDecimal("50.0")
+                schemes.isNotEmpty() && schemes[0].setNumber == 1 &&
+                    !schemes[0].isAmrap && !schemes[0].isEmom &&
+                    schemes[0].targetWeight == BigDecimal("50.00") &&
+                    schemes[0].targetRepCount in 5..8 &&
+                    schemes[0].restSeconds in 180..300
             }
             .verifyComplete()
     }
@@ -562,28 +582,249 @@ class WorkoutStageGeneratorTest {
     fun `generateAmrapOrEmomScheme should use default weight when no 1RM found`() {
         val exercise =
             mockExercise(
-                name = "New Exercise",
-                description = "A new exercise",
-                movementType = "compound",
+                name = "New Conditioning Exercise",
+                description = "A new conditioning exercise",
+                movementType = MovementType.PLYOMETRIC,
                 isUpper = false,
                 isAccessory = true
             )
         val oneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
 
         // Mock weight unit preference
-        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Exercise", WeightUnit.KG)
-        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Exercise"))
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "New Conditioning Exercise", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "New Conditioning Exercise"))
             .thenReturn(Mono.just(weightUnitPreference))
 
-        // Mock weight selection service
-        whenever(weightSelectionService.roundWeightForExercise(anyString(), org.mockito.kotlin.any(), org.mockito.kotlin.any()))
-            .thenReturn(Mono.just(BigDecimal("50.0")))
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("New Conditioning Exercise"), any(), eq(WeightUnit.KG)))
+            .thenReturn(Mono.just(BigDecimal("25.00")))
 
         val result = workoutStageGenerator.generateAmrapOrEmomScheme(exercise, oneRepMaxes, userId)
 
         StepVerifier.create(result)
             .expectNextMatches { schemes ->
-                schemes.size == 1 && schemes[0].targetWeight == BigDecimal("50.0")
+                schemes.size == 1 && schemes[0].setNumber == 3 &&
+                    schemes[0].isAmrap.xor(schemes[0].isEmom) &&
+                    schemes[0].targetWeight == BigDecimal("25.00") &&
+                    schemes[0].targetRepCount == null &&
+                    schemes[0].restSeconds == 60
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `generatePrilepinBasedScheme should use band weight calculations for DE exercises`() {
+        val exercise =
+            mockExercise(
+                name = "Bench Press",
+                description = "A compound upper body exercise",
+                movementType = MovementType.HORIZONTAL_PUSH
+            )
+        val movementRole = "primary"
+        val dayType = "DE_Upper"
+        val oneRepMaxes =
+            listOf(
+                mockUserOneRepMax(
+                    userId = userId,
+                    exerciseName = "Bench Press",
+                    oneRepMax = BigDecimal("100.0")
+                )
+            )
+        val currentWeekNumber = 1
+
+        val guidelines = mockPrilepinGuidelines()
+        val intensity = 0.60
+
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber
+            )
+        ).thenReturn(Pair(guidelines, intensity))
+
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "Bench Press", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
+            .thenReturn(Mono.just(weightUnitPreference))
+
+        // Mock band weight service
+        val bandWeightResult =
+            BandWeightService.Companion.BandWeightResult(
+                band = com.congen.model.Band(BigDecimal("30")),
+                barWeight = BigDecimal("70.0")
+            )
+        whenever(
+            bandWeightService.computeBandAndBarWeights(
+                exerciseName = any(),
+                totalTargetWeight = any(),
+                weightUnit = any(),
+                weekInCycle = any()
+            )
+        ).thenReturn(bandWeightResult)
+
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("Bench Press"), any(), eq(WeightUnit.KG)))
+            .thenReturn(Mono.just(BigDecimal("70.0")))
+
+        val result =
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                exercise,
+                movementRole,
+                dayType,
+                oneRepMaxes,
+                currentWeekNumber,
+                userId
+            )
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() && schemes[0].setNumber == 1 &&
+                    !schemes[0].isAmrap && !schemes[0].isEmom &&
+                    schemes[0].targetWeight == BigDecimal("70.0") &&
+                    schemes[0].targetRepCount in 2..4 &&
+                    schemes[0].restSeconds in 180..300 &&
+                    schemes[0].band == com.congen.model.Band(BigDecimal("30"))
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `generatePrilepinBasedScheme should not use band weight calculations for non-DE exercises`() {
+        val exercise =
+            mockExercise(
+                name = "Bench Press",
+                description = "A compound upper body exercise",
+                movementType = MovementType.HORIZONTAL_PUSH
+            )
+        val movementRole = "primary"
+        val dayType = "ME_Upper"
+        val oneRepMaxes =
+            listOf(
+                mockUserOneRepMax(
+                    userId = userId,
+                    exerciseName = "Bench Press",
+                    oneRepMax = BigDecimal("200.0")
+                )
+            )
+        val currentWeekNumber = 1
+
+        val guidelines = mockPrilepinGuidelines()
+        val intensity = 0.85
+
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber
+            )
+        ).thenReturn(Pair(guidelines, intensity))
+
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "Bench Press", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
+            .thenReturn(Mono.just(weightUnitPreference))
+
+        // Mock weight selection service
+        whenever(weightSelectionService.roundWeightForExercise(any(), any(), any()))
+            .thenReturn(Mono.just(BigDecimal("170.0")))
+
+        val result =
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                exercise,
+                movementRole,
+                dayType,
+                oneRepMaxes,
+                currentWeekNumber,
+                userId
+            )
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() &&
+                    schemes[0].targetWeight == BigDecimal("170.0") &&
+                    schemes[0].band == null
+            }
+            .verifyComplete()
+
+        verify(bandWeightService, times(0)).computeBandAndBarWeights(
+            any(),
+            any(),
+            any(),
+            any()
+        )
+    }
+
+    @Test
+    fun `generatePrilepinBasedScheme should handle DE exercises with no bands in deload week`() {
+        val exercise =
+            mockExercise(
+                name = "Bench Press",
+                description = "A compound upper body exercise",
+                movementType = MovementType.HORIZONTAL_PUSH
+            )
+        val movementRole = "primary"
+        val dayType = "DE_Upper"
+        val oneRepMaxes =
+            listOf(
+                mockUserOneRepMax(
+                    userId = userId,
+                    exerciseName = "Bench Press",
+                    oneRepMax = BigDecimal("100.0")
+                )
+            )
+        val currentWeekNumber = 4 // Deload week
+
+        val guidelines = mockPrilepinGuidelines()
+        val intensity = 0.60
+
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber
+            )
+        ).thenReturn(Pair(guidelines, intensity))
+
+        // Mock weight unit preference
+        val weightUnitPreference = mockUserWeightUnitPreference(userId, "Bench Press", WeightUnit.KG)
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, "Bench Press"))
+            .thenReturn(Mono.just(weightUnitPreference))
+
+        // Mock band weight service for deload week (no bands)
+        val bandWeightResult =
+            BandWeightService.Companion.BandWeightResult(
+                band = null,
+                barWeight = BigDecimal("100.0")
+            )
+        whenever(
+            bandWeightService.computeBandAndBarWeights(
+                exerciseName = any(),
+                totalTargetWeight = any(),
+                weightUnit = any(),
+                weekInCycle = any()
+            )
+        ).thenReturn(bandWeightResult)
+
+        // Mock weight selection service - this is called by getTargetWeight method
+        whenever(weightSelectionService.roundWeightForExercise(eq("Bench Press"), any(), eq(WeightUnit.KG)))
+            .thenReturn(Mono.just(BigDecimal("100.0")))
+
+        val result =
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                exercise,
+                movementRole,
+                dayType,
+                oneRepMaxes,
+                currentWeekNumber,
+                userId
+            )
+
+        StepVerifier.create(result)
+            .expectNextMatches { schemes ->
+                schemes.isNotEmpty() && schemes[0].setNumber == 1 &&
+                    !schemes[0].isAmrap && !schemes[0].isEmom &&
+                    schemes[0].targetWeight == BigDecimal("100.0") &&
+                    schemes[0].targetRepCount in 2..4 &&
+                    schemes[0].restSeconds in 180..300 &&
+                    schemes[0].band == null
             }
             .verifyComplete()
     }

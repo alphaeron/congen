@@ -3,15 +3,19 @@ package com.congen.service.conjugate
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.mockExercise
+import com.congen.mockExerciseMuscle
 import com.congen.mockExerciseRotationHistory
 import com.congen.mockUserEquipment
 import com.congen.mockUserExercisePreference
+import com.congen.model.MovementType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -35,12 +39,15 @@ class ExerciseSelectionServiceTest {
     @Mock
     private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
 
+    @Mock
+    private lateinit var exerciseWorkoutTypeDAL: com.congen.dal.ExerciseWorkoutTypeDAL
+
     private lateinit var exerciseSelectionService: ExerciseSelectionService
 
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        exerciseSelectionService = ExerciseSelectionService(exerciseMuscleDAL)
+        exerciseSelectionService = ExerciseSelectionService(exerciseMuscleDAL, exerciseWorkoutTypeDAL)
     }
 
     @Test
@@ -55,6 +62,10 @@ class ExerciseSelectionServiceTest {
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
 
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = "chest"))))
+
         val result =
             exerciseSelectionService.selectRotatingExercise(
                 targetMuscles,
@@ -65,8 +76,11 @@ class ExerciseSelectionServiceTest {
                 rotationHistory
             )
 
-        assert(result != null)
-        assert(result!!.name in listOf(EXERCISE_NAME, EXERCISE_NAME_4))
+        StepVerifier.create(result)
+            .expectNextMatches { exercise ->
+                exercise != null && exercise.name in listOf(EXERCISE_NAME, EXERCISE_NAME_4)
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -81,6 +95,10 @@ class ExerciseSelectionServiceTest {
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
 
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_6, muscleName = "biceps"))))
+
         val result =
             exerciseSelectionService.selectRotatingExercise(
                 targetMuscles,
@@ -91,8 +109,11 @@ class ExerciseSelectionServiceTest {
                 rotationHistory
             )
 
-        assert(result != null)
-        assert(result!!.isAccessory)
+        StepVerifier.create(result)
+            .expectNextMatches { exercise ->
+                exercise != null && exercise.isAccessory
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -110,6 +131,10 @@ class ExerciseSelectionServiceTest {
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
 
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_4, muscleName = "chest"))))
+
         val result =
             exerciseSelectionService.selectRotatingExercise(
                 targetMuscles,
@@ -120,8 +145,11 @@ class ExerciseSelectionServiceTest {
                 rotationHistory
             )
 
-        assert(result != null)
-        assert(result!!.name == EXERCISE_NAME_4)
+        StepVerifier.create(result)
+            .expectNextMatches { exercise ->
+                exercise != null && exercise.name == EXERCISE_NAME_4
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -139,6 +167,10 @@ class ExerciseSelectionServiceTest {
                 mockExerciseRotationHistory(exerciseName = EXERCISE_NAME, isAccessory = false)
             )
 
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_4, muscleName = "chest"))))
+
         val result =
             exerciseSelectionService.selectRotatingExercise(
                 targetMuscles,
@@ -149,8 +181,11 @@ class ExerciseSelectionServiceTest {
                 rotationHistory
             )
 
-        assert(result != null)
-        assert(result!!.name == EXERCISE_NAME_4)
+        StepVerifier.create(result)
+            .expectNextMatches { exercise ->
+                exercise != null && exercise.name == EXERCISE_NAME_4
+            }
+            .verifyComplete()
     }
 
     @Test
@@ -179,7 +214,8 @@ class ExerciseSelectionServiceTest {
                 rotationHistory
             )
 
-        assert(result == null)
+        StepVerifier.create(result)
+            .verifyComplete()
     }
 
     @Test
@@ -238,7 +274,7 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectSimilarSecondaryExercise returns null if no exercises available`() {
-        val primary = mockExercise(name = EXERCISE_NAME, movementType = "horizontal push")
+        val primary = mockExercise(name = EXERCISE_NAME, movementType = MovementType.HORIZONTAL_PUSH)
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(Mono.just(emptyList()))
         val result =
             exerciseSelectionService.selectSimilarSecondaryExercise(
@@ -253,9 +289,9 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectSimilarSecondaryExercise prefers same movement type`() {
-        val primary = mockExercise(name = EXERCISE_NAME, movementType = "horizontal push")
-        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = "horizontal push")
-        val candidate2 = mockExercise(name = "Overhead Press", movementType = "vertical push")
+        val primary = mockExercise(name = EXERCISE_NAME, movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate2 = mockExercise(name = "Overhead Press", movementType = MovementType.VERTICAL_PUSH)
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Incline Bench Press")).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Overhead Press")).thenReturn(Mono.just(emptyList()))
@@ -273,9 +309,9 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectSimilarSecondaryExercise prefers muscle overlap`() {
-        val primary = mockExercise(name = EXERCISE_NAME, movementType = "horizontal push")
-        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = "horizontal push")
-        val candidate2 = mockExercise(name = "Overhead Press", movementType = "horizontal push")
+        val primary = mockExercise(name = EXERCISE_NAME, movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate2 = mockExercise(name = "Overhead Press", movementType = MovementType.HORIZONTAL_PUSH)
         // Primary targets chest, triceps
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(
             Mono.just(
@@ -312,9 +348,9 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectSimilarSecondaryExercise applies rotation bonus`() {
-        val primary = mockExercise(name = EXERCISE_NAME, movementType = "horizontal push")
-        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = "horizontal push")
-        val candidate2 = mockExercise(name = "Overhead Press", movementType = "horizontal push")
+        val primary = mockExercise(name = EXERCISE_NAME, movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate2 = mockExercise(name = "Overhead Press", movementType = MovementType.HORIZONTAL_PUSH)
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Incline Bench Press")).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Overhead Press")).thenReturn(Mono.just(emptyList()))
@@ -338,9 +374,9 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectSimilarSecondaryExercise respects user preferences`() {
-        val primary = mockExercise(name = EXERCISE_NAME, movementType = "horizontal push")
-        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = "horizontal push")
-        val candidate2 = mockExercise(name = "Overhead Press", movementType = "horizontal push")
+        val primary = mockExercise(name = EXERCISE_NAME, movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate2 = mockExercise(name = "Overhead Press", movementType = MovementType.HORIZONTAL_PUSH)
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Incline Bench Press")).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Overhead Press")).thenReturn(Mono.just(emptyList()))
@@ -359,8 +395,8 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectSimilarSecondaryExercise returns null if all filtered out`() {
-        val primary = mockExercise(name = EXERCISE_NAME, movementType = "horizontal push")
-        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = "horizontal push")
+        val primary = mockExercise(name = EXERCISE_NAME, movementType = MovementType.HORIZONTAL_PUSH)
+        val candidate1 = mockExercise(name = "Incline Bench Press", movementType = MovementType.HORIZONTAL_PUSH)
         val preferences = listOf(mockUserExercisePreference(exerciseName = "Incline Bench Press", shouldAvoid = true))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(Mono.just(emptyList()))
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Incline Bench Press")).thenReturn(Mono.just(emptyList()))

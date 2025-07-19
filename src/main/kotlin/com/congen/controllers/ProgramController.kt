@@ -128,16 +128,16 @@ class ProgramController(
      * @return ResponseEntity containing a list of all programs
      */
     @GetMapping("/")
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<Program>>> {
         logger.debug("Getting all programs")
-        return try {
-            ResponseEntity.ok(
-                programDAL.selectPrograms(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all programs", e)
-            throw e
-        }
+        return programDAL.selectPrograms()
+            .map { programs ->
+                logger.debug("Found {} programs", programs.size)
+                ResponseEntity.ok(programs)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all programs", e)
+            }
     }
 
     /**
@@ -155,16 +155,16 @@ class ProgramController(
     fun getByUserId(
         @PathVariable("userId") userId: Int,
         @RequestParam(required = false) isActive: Boolean?,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<List<Program>>> {
         logger.debug("Getting programs for user: {} with isActive filter: {}", userId, isActive)
-        return try {
-            ResponseEntity.ok(
-                programDAL.selectProgramsByUserId(userId, isActive),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting programs for user: {}", userId, e)
-            throw e
-        }
+        return programDAL.selectProgramsByUserId(userId, isActive)
+            .map { programs ->
+                logger.debug("Found {} programs for user: {}", programs.size, userId)
+                ResponseEntity.ok(programs)
+            }
+            .doOnError { e ->
+                logger.error("Error getting programs for user: {}", userId, e)
+            }
     }
 
     /**

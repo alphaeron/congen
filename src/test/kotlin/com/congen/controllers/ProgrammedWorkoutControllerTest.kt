@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -72,10 +71,8 @@ class ProgrammedWorkoutControllerTest {
             )
         whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.just(programmedWorkouts))
         val result = programmedWorkoutController.getAll()
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
-            .expectNext(programmedWorkouts)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(programmedWorkouts))
             .verifyComplete()
         verify(programmedWorkoutDAL).selectProgrammedWorkouts()
     }
@@ -221,10 +218,8 @@ class ProgrammedWorkoutControllerTest {
             )
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(PROGRAM_ID)).thenReturn(Mono.just(programmedWorkouts))
         val result = programmedWorkoutController.getByProgramId(PROGRAM_ID)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
-            .expectNext(programmedWorkouts)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(programmedWorkouts))
             .verifyComplete()
         verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(PROGRAM_ID)
     }
@@ -233,10 +228,8 @@ class ProgrammedWorkoutControllerTest {
     fun `should return empty list when no programmed workouts for program`() {
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)).thenReturn(Mono.just(emptyList()))
         val result = programmedWorkoutController.getByProgramId(NON_EXISTENT_ID)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
-            .expectNext(emptyList<ProgrammedWorkout>())
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(emptyList<ProgrammedWorkout>()))
             .verifyComplete()
         verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)
     }
@@ -245,9 +238,7 @@ class ProgrammedWorkoutControllerTest {
     fun `should handle DAL error gracefully`() {
         whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = programmedWorkoutController.getAll()
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ProgrammedWorkout>>)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
         verify(programmedWorkoutDAL).selectProgrammedWorkouts()

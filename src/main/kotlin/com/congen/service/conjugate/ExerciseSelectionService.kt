@@ -1,12 +1,15 @@
 package com.congen.service.conjugate
 
 import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
+import com.congen.model.MovementType
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -15,7 +18,8 @@ import reactor.core.publisher.Mono
  */
 @Service
 class ExerciseSelectionService(
-    private val exerciseMuscleDAL: ExerciseMuscleDAL
+    private val exerciseMuscleDAL: ExerciseMuscleDAL,
+    private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseSelectionService::class.java)
@@ -42,7 +46,7 @@ class ExerciseSelectionService(
      * @param exercises List of available exercises
      * @param isAccessory Whether this is for an accessory exercise
      * @param rotationHistory List of exercise rotation history
-     * @return Selected exercise or null if none available
+     * @return Mono containing selected exercise or null if none available
      */
     fun selectRotatingExercise(
         targetMuscles: List<String>,
@@ -51,7 +55,7 @@ class ExerciseSelectionService(
         exercises: List<Exercise>,
         isAccessory: Boolean,
         rotationHistory: List<ExerciseRotationHistory>
-    ): Exercise? {
+    ): Mono<Exercise?> {
         // Filter exercises based on preferences (exercises are already filtered by is_accessory)
         val availableExercises =
             exercises.filter { exercise ->
@@ -60,7 +64,7 @@ class ExerciseSelectionService(
 
         if (availableExercises.isEmpty()) {
             logger.warn("No available exercises found for isAccessory: {}", isAccessory)
-            return null
+            return Mono.justOrEmpty(null)
         }
 
         // Filter by equipment availability
@@ -75,53 +79,79 @@ class ExerciseSelectionService(
 
         if (equipmentFilteredExercises.isEmpty()) {
             logger.warn("No exercises available with user's equipment for isAccessory: {}", isAccessory)
-            return availableExercises.firstOrNull() // Fallback to any available exercise
+            return Mono.justOrEmpty(availableExercises.firstOrNull()) // Fallback to any available exercise
         }
 
-        // Get exercise rotation history for this category
-        val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
-
-        // Get all exercises that have been used in this category
-        val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
-
-        // Get exercises that haven't been used yet in this category
-        val unusedExercises =
-            equipmentFilteredExercises.filter { exercise ->
-                !usedExercises.contains(exercise.name)
+        // Filter exercises by target muscles - this is the key fix!
+        return Flux.fromIterable(equipmentFilteredExercises)
+            .flatMap { exercise ->
+                exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                    .filter { exerciseMuscles ->
+                        val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
+                        val targetMusclesLower = targetMuscles.map { it.lowercase() }
+                        val hasMatchingMuscles =
+                            exerciseMuscleNames.any { muscle ->
+                                targetMusclesLower.any { targetMuscle ->
+                                    muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
+                                }
+                            }
+                        hasMatchingMuscles
+                    }
+                    .map { exercise }
             }
+            .collectList()
+            .flatMap { muscleFilteredExercises ->
+                if (muscleFilteredExercises.isEmpty()) {
+                    logger.warn("No exercises found matching target muscles: {} for isAccessory: {}", targetMuscles, isAccessory)
+                    return@flatMap Mono.justOrEmpty(null)
+                }
 
-        // If we have unused exercises, use them first
-        val exercisesToChooseFrom =
-            if (unusedExercises.isNotEmpty()) {
-                unusedExercises
-            } else {
-                // If all exercises have been used, find the least recently used one
-                val exerciseUsageCount =
-                    equipmentFilteredExercises.associateWith { exercise ->
-                        categoryHistory.count { it.exerciseName == exercise.name }
+                // Get exercise rotation history for this category
+                val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
+
+                // Get all exercises that have been used in this category
+                val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
+
+                // Get exercises that haven't been used yet in this category
+                val unusedExercises =
+                    muscleFilteredExercises.filter { exercise ->
+                        !usedExercises.contains(exercise.name)
                     }
 
-                val minUsageCount = exerciseUsageCount.values.minOrNull() ?: 0
-                equipmentFilteredExercises.filter { exercise ->
-                    exerciseUsageCount[exercise] == minUsageCount
-                }
+                // If we have unused exercises, use them first
+                val exercisesToChooseFrom =
+                    if (unusedExercises.isNotEmpty()) {
+                        unusedExercises
+                    } else {
+                        // If all exercises have been used, find the least recently used one
+                        val exerciseUsageCount =
+                            muscleFilteredExercises.associateWith { exercise ->
+                                categoryHistory.count { it.exerciseName == exercise.name }
+                            }
+
+                        val minUsageCount = exerciseUsageCount.values.minOrNull() ?: 0
+                        muscleFilteredExercises.filter { exercise ->
+                            exerciseUsageCount[exercise] == minUsageCount
+                        }
+                    }
+
+                // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
+                val sortedExercises =
+                    exercisesToChooseFrom.sortedWith(
+                        compareByDescending<Exercise> { exercise ->
+                            // Count equipment options (would need actual implementation)
+                            1
+                        }.thenByDescending { exercise ->
+                            // Count targeted muscles (would need actual implementation)
+                            targetMuscles.size
+                        }.thenBy { exercise ->
+                            exercise.name
+                        }
+                    )
+
+                val selectedExercise = sortedExercises.firstOrNull()
+                return@flatMap Mono.justOrEmpty(selectedExercise)
             }
-
-        // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
-        val sortedExercises =
-            exercisesToChooseFrom.sortedWith(
-                compareByDescending<Exercise> { exercise ->
-                    // Count equipment options (would need actual implementation)
-                    1
-                }.thenByDescending { exercise ->
-                    // Count targeted muscles (would need actual implementation)
-                    targetMuscles.size
-                }.thenBy { exercise ->
-                    exercise.name
-                }
-            )
-
-        return sortedExercises.firstOrNull()
     }
 
     /**
@@ -204,7 +234,7 @@ class ExerciseSelectionService(
      */
     private fun calculateExerciseSimilarityScore(
         exercise: Exercise,
-        primaryMovementType: String,
+        primaryMovementType: MovementType,
         primaryMuscles: Set<String>,
         exerciseMuscles: Set<String>,
         rotationHistory: List<ExerciseRotationHistory>
@@ -238,21 +268,29 @@ class ExerciseSelectionService(
      * @return Similarity score
      */
     private fun calculateMovementTypeSimilarity(
-        movementType1: String,
-        movementType2: String
+        movementType1: MovementType,
+        movementType2: MovementType
     ): Double {
         return when {
             // Same category (push/pull)
-            (movementType1.contains("push") && movementType2.contains("push")) ||
-                (movementType1.contains("pull") && movementType2.contains("pull")) -> 50.0
+            (movementType1 == MovementType.HORIZONTAL_PUSH && movementType2 == MovementType.HORIZONTAL_PUSH) ||
+                (movementType1 == MovementType.VERTICAL_PUSH && movementType2 == MovementType.VERTICAL_PUSH) ||
+                (movementType1 == MovementType.HORIZONTAL_PULL && movementType2 == MovementType.HORIZONTAL_PULL) ||
+                (movementType1 == MovementType.VERTICAL_PULL && movementType2 == MovementType.VERTICAL_PULL) -> 50.0
 
             // Same plane (horizontal/vertical)
-            (movementType1.contains("horizontal") && movementType2.contains("horizontal")) ||
-                (movementType1.contains("vertical") && movementType2.contains("vertical")) -> 25.0
+            (movementType1 == MovementType.HORIZONTAL_PUSH && movementType2 == MovementType.HORIZONTAL_PULL) ||
+                (movementType1 == MovementType.HORIZONTAL_PULL && movementType2 == MovementType.HORIZONTAL_PUSH) ||
+                (movementType1 == MovementType.VERTICAL_PUSH && movementType2 == MovementType.VERTICAL_PULL) ||
+                (movementType1 == MovementType.VERTICAL_PULL && movementType2 == MovementType.VERTICAL_PUSH) -> 25.0
 
             // Same body part focus (upper/lower)
-            (movementType1.contains("upper") && movementType2.contains("upper")) ||
-                (movementType1.contains("lower") && movementType2.contains("lower")) -> 15.0
+            (movementType1 == MovementType.SQUAT && movementType2 == MovementType.HINGE) ||
+                (movementType1 == MovementType.HINGE && movementType2 == MovementType.SQUAT) ||
+                (
+                    movementType1 == MovementType.LUNGE &&
+                        (movementType2 == MovementType.SQUAT || movementType2 == MovementType.HINGE)
+                ) -> 15.0
 
             else -> 0.0
         }
@@ -319,6 +357,34 @@ class ExerciseSelectionService(
         isAccessory: Boolean
     ): List<Exercise> {
         return exercises.filter { it.isAccessory == isAccessory }
+    }
+
+    /**
+     * Filters exercises by workout type (dynamic_effort or maximal_effort).
+     *
+     * @param exercises List of all exercises
+     * @param workoutType The workout type to filter for (dynamic_effort or maximal_effort)
+     * @return Filtered list of exercises suitable for the specified workout type
+     */
+    fun filterExercisesByWorkoutType(
+        exercises: List<Exercise>,
+        workoutType: String
+    ): Mono<List<Exercise>> {
+        return exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()
+            .map { workoutTypes ->
+                val suitableExerciseNames =
+                    workoutTypes
+                        .filter { it.workoutType == workoutType }
+                        .map { it.exerciseName }
+                        .toSet()
+
+                val filteredExercises =
+                    exercises.filter { exercise ->
+                        suitableExerciseNames.contains(exercise.name)
+                    }
+
+                filteredExercises
+            }
     }
 
     /**

@@ -49,7 +49,9 @@ data class SetSchemeParams(
     /** The actual number of repetitions performed for this set. */
     val performedRepCount: Int?,
     /** The rest time in seconds before the next set. */
-    val restSeconds: Int?
+    val restSeconds: Int?,
+    /** The band information for Dynamic Effort exercises. */
+    val band: com.congen.model.Band?
 )
 
 /**
@@ -58,9 +60,6 @@ data class SetSchemeParams(
 object ConjugateConstants {
     /** Default weak muscles for new users */
     val DEFAULT_WEAK_MUSCLES = listOf("hamstrings", "glutes", "upper_back", "core")
-
-    /** Default weight for new users without 1RM data */
-    val DEFAULT_WEIGHT = "50.0"
 
     /** Time allocation for different workout components (in minutes) */
     object TimeAllocation {

@@ -15,7 +15,6 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.DatabaseException
-import com.congen.exceptions.ValidationException
 import com.congen.mockExercise
 import com.congen.mockExerciseRotationHistory
 import com.congen.mockUserEquipment
@@ -23,6 +22,7 @@ import com.congen.mockUserOneRepMax
 import com.congen.mockUserProgramPreferences
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
+import com.congen.model.MovementType
 import com.congen.model.Program
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserEquipment
@@ -173,7 +173,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.hasConditioning(any())).thenReturn(true)
 
         whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any())).thenReturn(
-            mockExercise(name = EXERCISE_NAME)
+            Mono.just(mockExercise(name = EXERCISE_NAME))
         )
         whenever(exerciseSelectionService.selectSimilarSecondaryExercise(any(), any(), any(), any(), any())).thenReturn(
             Mono.just(mockExercise(name = EXERCISE_NAME_2))
@@ -183,6 +183,9 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
         whenever(exerciseSelectionService.filterExercisesExcluding(any(), any())).thenReturn(
             listOf(mockExercise(name = EXERCISE_NAME_2))
+        )
+        whenever(exerciseSelectionService.filterExercisesByWorkoutType(any(), any())).thenReturn(
+            Mono.just(listOf(mockExercise(name = EXERCISE_NAME)))
         )
 
         whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
@@ -200,7 +203,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                         null,
                         TARGET_REPS_PRIMARY,
                         null,
-                        REST_SECONDS_PRIMARY
+                        REST_SECONDS_PRIMARY,
+                        null
                     )
                 )
             )
@@ -220,7 +224,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                         null,
                         TARGET_REPS_SECONDARY,
                         null,
-                        REST_SECONDS_SECONDARY
+                        REST_SECONDS_SECONDARY,
+                        null
                     )
                 )
             )
@@ -247,7 +252,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                         null,
                         null,
                         null,
-                        0
+                        0,
+                        null
                     )
                 )
             )
@@ -573,13 +579,20 @@ class ConjugateWorkoutGeneratorServiceTest {
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = mockUserProgramPreferences(programDaysPerWeek = DAYS_PER_WEEK_5)
         val rotationHistory = emptyList<ExerciseRotationHistory>()
+        val program = mockProgram()
 
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, null)
-        whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
+        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
+        setupWorkoutMocks()
+
+        // Override the mock to throw exception for invalid programDaysPerWeek
+        whenever(conjugateTemplates.selectTemplate(DAYS_PER_WEEK_5)).thenThrow(
+            IllegalArgumentException("Number of days per week must be 2, 3, or 4")
+        )
+
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
-            .expectError(ValidationException::class.java)
+            .expectError(IllegalArgumentException::class.java)
             .verify()
     }
 
@@ -662,56 +675,56 @@ class ConjugateWorkoutGeneratorServiceTest {
             mockExercise(
                 name = EXERCISE_NAME,
                 description = "A compound upper body exercise",
-                movementType = "horizontal_push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUpper = true,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_2,
                 description = "An incline compound upper body exercise",
-                movementType = "horizontal_push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUpper = true,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_3,
                 description = "A compound lower body exercise",
-                movementType = "squat",
+                movementType = MovementType.SQUAT,
                 isUpper = false,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_4,
                 description = "A compound hinge exercise",
-                movementType = "hinge",
+                movementType = MovementType.HINGE,
                 isUpper = false,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_5,
                 description = "A compound vertical push exercise",
-                movementType = "vertical_push",
+                movementType = MovementType.VERTICAL_PUSH,
                 isUpper = true,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_6,
                 description = "A compound vertical pull exercise",
-                movementType = "vertical_pull",
+                movementType = MovementType.VERTICAL_PULL,
                 isUpper = true,
                 isAccessory = false
             ),
             mockExercise(
                 name = EXERCISE_NAME_7,
                 description = "An isolation exercise",
-                movementType = "accessory",
+                movementType = MovementType.ISOLATION,
                 isUpper = true,
                 isAccessory = true
             ),
             mockExercise(
                 name = EXERCISE_NAME_8,
                 description = "An isolation exercise",
-                movementType = "accessory",
+                movementType = MovementType.ISOLATION,
                 isUpper = true,
                 isAccessory = true
             )

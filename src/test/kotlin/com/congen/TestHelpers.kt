@@ -9,6 +9,7 @@ import com.congen.model.ExerciseWorkoutType
 import com.congen.model.HealthCheck
 import com.congen.model.HealthCheckResponse
 import com.congen.model.HealthStatus
+import com.congen.model.MovementType
 import com.congen.model.Muscle
 import com.congen.model.Program
 import com.congen.model.ProgrammedExercise
@@ -65,7 +66,8 @@ fun mockSetScheme(
     performedRepCount: Int? = null,
     restSeconds: Int? = null,
     createdAt: Instant = sampleInstant(),
-    updatedAt: Instant = sampleInstant()
+    updatedAt: Instant = sampleInstant(),
+    band: com.congen.model.Band? = null
 ): SetScheme =
     SetScheme(
         id = id,
@@ -83,7 +85,8 @@ fun mockSetScheme(
         performedRepCount = performedRepCount,
         restSeconds = restSeconds,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        band = band
     )
 
 fun mockProgrammedExercise(
@@ -160,7 +163,7 @@ fun mockUserProgramPreferences(
 fun mockExercise(
     name: String = "Bench Press",
     description: String = "A compound upper body exercise",
-    movementType: String = "horizontal_push",
+    movementType: MovementType = MovementType.HORIZONTAL_PUSH,
     isUnilateral: Boolean = false,
     isUpper: Boolean = true,
     isAccessory: Boolean = false
@@ -306,7 +309,7 @@ fun mockExerciseMuscle(
 // ExerciseWorkoutType helpers
 fun mockExerciseWorkoutType(
     exerciseName: String = "Bench Press",
-    movementType: String = "horizontal push",
+    movementType: MovementType = MovementType.HORIZONTAL_PUSH,
     workoutType: String = "dynamic_effort"
 ): ExerciseWorkoutType =
     ExerciseWorkoutType(
@@ -376,7 +379,8 @@ fun mockSetSchemeParams(
     performedWeight: BigDecimal? = null,
     targetRepCount: Int? = 5,
     performedRepCount: Int? = null,
-    restSeconds: Int? = 180
+    restSeconds: Int? = 180,
+    band: com.congen.model.Band? = null
 ): SetSchemeParams =
     SetSchemeParams(
         setNumber = setNumber,
@@ -390,7 +394,8 @@ fun mockSetSchemeParams(
         performedWeight = performedWeight,
         targetRepCount = targetRepCount,
         performedRepCount = performedRepCount,
-        restSeconds = restSeconds
+        restSeconds = restSeconds,
+        band = band
     )
 
 fun mockDayTemplate(type: String = "ME_Upper"): DayTemplate = DayTemplate(type = type)

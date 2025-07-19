@@ -188,6 +188,29 @@ class WorkoutStageDAL(
     }
 
     /**
+     * Checks if a workout stage exists for a specific workout and position.
+     *
+     * This method queries the database to check if a workout stage already exists
+     * for the given programmed workout ID and position. This is useful for preventing
+     * duplicate stage creation.
+     *
+     * @param programmedWorkoutId The ID of the programmed workout
+     * @param position The position of the stage within the workout
+     * @return Mono containing the existing workout stage if found, or empty if not found
+     */
+    fun selectWorkoutStageByWorkoutIdAndPosition(
+        programmedWorkoutId: Long,
+        position: Int
+    ): Mono<WorkoutStage> {
+        logger.debug("Checking for existing workout stage for workout: {}, position: {}", programmedWorkoutId, position)
+        return postgresClient.selectIndividual(
+            "SELECT * FROM workout_stage WHERE programmed_workout_id=$1 AND position=$2",
+            programmedWorkoutId,
+            position,
+        )
+    }
+
+    /**
      * Deletes a workout stage from the database.
      *
      * This method removes the workout stage record with the specified ID from

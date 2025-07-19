@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -188,10 +187,8 @@ class ProgrammedExerciseControllerTest {
             programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID)
         ).thenReturn(Mono.just(programmedExercises))
         val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ProgrammedExercise>>)
-            .expectNext(programmedExercises)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(programmedExercises))
             .verifyComplete()
         verify(programmedExerciseDAL).selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID)
     }
@@ -201,7 +198,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
-        StepVerifier.create(result.body as Mono<List<ProgrammedExercise>>)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
         verify(programmedExerciseDAL).selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID)
@@ -223,10 +220,8 @@ class ProgrammedExerciseControllerTest {
             )
         whenever(programmedExerciseDAL.selectProgrammedExercises()).thenReturn(Mono.just(programmedExercises))
         val result = programmedExerciseController.getAll()
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<*>
-        StepVerifier.create(body as Mono<List<ProgrammedExercise>>)
-            .expectNext(programmedExercises)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(programmedExercises))
             .verifyComplete()
         verify(programmedExerciseDAL).selectProgrammedExercises()
     }
@@ -236,7 +231,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseDAL.selectProgrammedExercises())
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         val result = programmedExerciseController.getAll()
-        StepVerifier.create(result.body as Mono<List<ProgrammedExercise>>)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
         verify(programmedExerciseDAL).selectProgrammedExercises()

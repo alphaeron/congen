@@ -2,6 +2,7 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.model.ExerciseWorkoutType
+import com.congen.model.MovementType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -62,7 +63,7 @@ class ExerciseWorkoutTypeDAL(
      */
     fun selectExerciseWorkoutType(
         exerciseName: String,
-        movementType: String,
+        movementType: MovementType,
         workoutType: String,
     ): Mono<ExerciseWorkoutType> {
         logger.debug("Selecting exercise workout type: {} - {} - {}", exerciseName, movementType, workoutType)
@@ -118,7 +119,7 @@ class ExerciseWorkoutTypeDAL(
      */
     fun insertExerciseWorkoutType(
         exerciseName: String,
-        movementType: String,
+        movementType: MovementType,
         workoutType: String
     ): Mono<ExerciseWorkoutType> {
         logger.debug(
@@ -154,7 +155,7 @@ class ExerciseWorkoutTypeDAL(
      */
     fun deleteExerciseWorkoutType(
         exerciseName: String,
-        movementType: String,
+        movementType: MovementType,
         workoutType: String,
     ): Mono<ExerciseWorkoutType> {
         logger.debug("Deleting exercise workout type: {} - {} - {}", exerciseName, movementType, workoutType)
@@ -175,7 +176,7 @@ class ExerciseWorkoutTypeDAL(
      * @param movementType The movement type (push, pull, squat, hinge, etc.)
      * @return Mono containing a list of exercise-workout type relationships
      */
-    fun selectExerciseWorkoutTypesByMovementType(movementType: String): Mono<List<ExerciseWorkoutType>> {
+    fun selectExerciseWorkoutTypesByMovementType(movementType: MovementType): Mono<List<ExerciseWorkoutType>> {
         logger.debug("Selecting workout types for movementType: {}", movementType)
         return postgresClient.select(
             "SELECT * FROM exercise_workout_type WHERE movement_type=$1",

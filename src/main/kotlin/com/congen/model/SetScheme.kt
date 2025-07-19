@@ -30,6 +30,7 @@ import java.time.Instant
  * @property restSeconds Rest period after the set in seconds
  * @property createdAt Timestamp when the set scheme was created
  * @property updatedAt Timestamp when the set scheme was last updated
+ * @property band The band information for Dynamic Effort exercises
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -140,15 +141,17 @@ data class SetScheme(
     /** Timestamp when the set scheme was created. */
     @Schema(
         description = "Timestamp when the set scheme was created",
-        example = "2024-07-06T12:00:00Z",
-        required = true,
+        example = "2024-01-01T12:00:00Z",
+        readOnly = true,
     )
     @param:JsonProperty("created_at") val createdAt: Instant,
     /** Timestamp when the set scheme was last updated. */
     @Schema(
         description = "Timestamp when the set scheme was last updated",
-        example = "2024-07-06T12:00:00Z",
-        required = true,
+        example = "2024-01-01T12:00:00Z",
+        readOnly = true,
     )
     @param:JsonProperty("updated_at") val updatedAt: Instant,
+    /** Band information for Dynamic Effort exercises. */
+    @param:JsonProperty("band_weight_lbs") val band: Band?,
 )

@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.ExerciseWorkoutType
+import com.congen.model.MovementType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -170,7 +171,7 @@ class ExerciseWorkoutTypeController(
     )
     fun getByMovementType(
         @Parameter(description = "Movement type", required = true)
-        @PathVariable("movementType") movementType: String,
+        @PathVariable("movementType") movementType: MovementType,
     ): Mono<ResponseEntity<List<ExerciseWorkoutType>>> {
         return exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByMovementType(movementType)
             .map {
@@ -212,7 +213,7 @@ class ExerciseWorkoutTypeController(
         @Parameter(description = "Name of the exercise", required = true)
         @RequestParam exerciseName: String,
         @Parameter(description = "Movement type (push, pull, squat, hinge, etc.)", required = true)
-        @RequestParam movementType: String,
+        @RequestParam movementType: MovementType,
         @Parameter(description = "Workout type (strength, hypertrophy, endurance, etc.)", required = true)
         @RequestParam workoutType: String,
     ): ResponseEntity<*> {

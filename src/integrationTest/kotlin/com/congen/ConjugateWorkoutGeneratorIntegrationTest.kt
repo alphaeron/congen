@@ -1,6 +1,7 @@
 package com.congen
 
 import com.congen.model.Program
+import com.congen.model.WorkoutStage
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -218,5 +219,107 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Then - Verify program was created
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId)
+    }
+
+    @Test
+    fun `should generate DE set scheme with correct band and bar weights`() {
+        // Set up user with 1RM for all three main lifts
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", oneRepMax = 200.0)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat", oneRepMax = 350.0)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Deadlift", oneRepMax = 400.0)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
+
+        // Add additional equipment needed for DE exercises
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands")
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar")
+
+        // Generate conjugate program
+        val programResponse =
+            webTestClient.post()
+                .uri("/conjugate_workout_generator/$programId")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Program::class.java)
+                .returnResult()
+                .responseBody!!
+
+        // Fetch programmed workouts for the program and get DE workout ID
+        val workoutsResponse =
+            webTestClient.get()
+                .uri("/programmed_workout/program/${programResponse.id}")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+        val deWorkout =
+            workoutsResponse.find { workout ->
+                workout["name"]?.toString()?.contains("DE") == true
+            } ?: throw AssertionError("No DE workout found")
+        val deWorkoutId = (deWorkout["id"] as Number).toLong()
+
+        // Fetch workout stages for the workout and find Primary stage (which contains the DE exercise)
+        val stagesResponse =
+            webTestClient.get()
+                .uri("/workout_stage/workout/$deWorkoutId")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(WorkoutStage::class.java)
+                .returnResult()
+                .responseBody!!
+        println("Stages response: $stagesResponse")
+        val primaryStage =
+            stagesResponse.find { stage ->
+                stage.name.toString() == "Primary"
+            } ?: throw AssertionError("No Primary stage found")
+        val primaryStageId = primaryStage.id
+
+        // Fetch programmed exercises for the Primary stage and get first exercise ID
+        val exercisesResponse =
+            webTestClient.get()
+                .uri("/programmed_exercise/stage/$primaryStageId")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+        val programmedExerciseId = (exercisesResponse[0]["id"] as Number).toLong()
+
+        // Fetch set schemes for the programmed exercise and verify DE fields
+        val setSchemesResponse =
+            webTestClient.get()
+                .uri("/set_scheme/exercise/$programmedExerciseId")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(Map::class.java)
+                .returnResult()
+                .responseBody!!
+
+        // Verify we have set schemes
+        assert(setSchemesResponse.isNotEmpty()) { "No set schemes found for exercise" }
+
+        // Get the first set scheme by its ID to verify band information
+        val firstSetSchemeId = setSchemesResponse[0]["id"].toString().toLong()
+
+        val response =
+            webTestClient.get()
+                .uri("/set_scheme/$firstSetSchemeId")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String::class.java)
+                .returnResult()
+                .responseBody!!
+
+        println("Response body: $response")
+
+        // Verify that the set scheme has band information (indicating it's a DE exercise)
+        webTestClient.get()
+            .uri("/set_scheme/$firstSetSchemeId")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.band_weight_lbs").isNumber()
+            .jsonPath("$.target_weight").exists()
+            .jsonPath("$.target_weight").isNumber()
     }
 }

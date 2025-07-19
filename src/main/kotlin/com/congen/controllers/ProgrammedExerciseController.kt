@@ -136,16 +136,16 @@ class ProgrammedExerciseController(
     @GetMapping("/stage/{workoutStageId}")
     fun getByStage(
         @PathVariable("workoutStageId") workoutStageId: Long,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<List<ProgrammedExercise>>> {
         logger.debug("Getting programmed exercises for stage: {}", workoutStageId)
-        return try {
-            ResponseEntity.ok(
-                programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(workoutStageId),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting programmed exercises for stage: {}", workoutStageId, e)
-            throw e
-        }
+        return programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(workoutStageId)
+            .map { programmedExercises ->
+                logger.debug("Found {} programmed exercises for stage: {}", programmedExercises.size, workoutStageId)
+                ResponseEntity.ok(programmedExercises)
+            }
+            .doOnError { e ->
+                logger.error("Error getting programmed exercises for stage: {}", workoutStageId, e)
+            }
     }
 
     /**
@@ -157,16 +157,16 @@ class ProgrammedExerciseController(
      * @return ResponseEntity containing a list of all programmed exercises
      */
     @GetMapping("/")
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<ProgrammedExercise>>> {
         logger.debug("Getting all programmed exercises")
-        return try {
-            ResponseEntity.ok(
-                programmedExerciseDAL.selectProgrammedExercises(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all programmed exercises", e)
-            throw e
-        }
+        return programmedExerciseDAL.selectProgrammedExercises()
+            .map { programmedExercises ->
+                logger.debug("Found {} programmed exercises", programmedExercises.size)
+                ResponseEntity.ok(programmedExercises)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all programmed exercises", e)
+            }
     }
 
     /**

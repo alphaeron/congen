@@ -9,14 +9,14 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExerciseName&description=testexerciseout" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.name").isEqualTo(uniqueExerciseName)
             .jsonPath("$.description").isEqualTo("testexerciseout")
-            .jsonPath("$.movement_type").isEqualTo("horizontal_push")
+            .jsonPath("$.movement_type").isEqualTo("horizontal push")
             .jsonPath("$.is_unilateral").isEqualTo(false)
             .jsonPath("$.is_upper").isEqualTo(true)
             .jsonPath("$.is_accessory").isEqualTo(false)

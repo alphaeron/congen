@@ -25,6 +25,7 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 -- Squat - Dynamic Effort
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Safety Bar Squat', 'squat', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Front Squat', 'squat', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Back Squat', 'squat', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Zercher Squat', 'squat', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Safety Bar Squat', 'squat', 'dynamic_effort');
 
@@ -53,6 +54,7 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 -- Squat - Maximal Effort
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Safety Bar Squat', 'squat', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Front Squat', 'squat', 'maximal_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Back Squat', 'squat', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Zercher Squat', 'squat', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Split Squat', 'squat', 'maximal_effort');
 

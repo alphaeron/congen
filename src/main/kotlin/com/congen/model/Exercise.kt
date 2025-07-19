@@ -30,7 +30,7 @@ data class Exercise(
     @param:JsonProperty("description") val description: String,
     /** Type of movement (e.g., "horizontal push"). */
     @Schema(description = "Type of movement", example = "horizontal push")
-    @param:JsonProperty("movement_type") val movementType: String,
+    @param:JsonProperty("movement_type") val movementType: MovementType,
     /** Whether the exercise is performed one side at a time. */
     @Schema(description = "Whether the exercise is unilateral (one side at a time)", example = "false")
     @param:JsonProperty("is_unilateral")

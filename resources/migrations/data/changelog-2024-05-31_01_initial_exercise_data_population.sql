@@ -190,6 +190,14 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'calves');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'rectus abdominis');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Front Squat', 'power bar');
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Back Squat', 'Start with the bar in a back rack position, and squat from here, keeping the torso upright.', 'squat', false, false, false);
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'quadriceps');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'hamstrings');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'glutes');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'adductors');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'calves');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'rectus abdominis');
+INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Back Squat', 'power bar');
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Zercher Squat', 'Start with the bar in the crooks of the elbows, palms facing you.  Squat from here, keeping the torso upright.', 'squat', false, false, false);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'glutes');

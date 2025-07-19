@@ -1,26 +1,29 @@
 package com.congen.model
 
+import com.congen.config.JacksonConfig
 import com.congen.mockExerciseWorkoutType
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ExerciseWorkoutTypeTest {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper =
+        ObjectMapper().apply {
+            JacksonConfig.configureObjectMapper(this)
+        }
 
     @Test
     fun `should create exercise workout type with all properties`() {
         val exerciseWorkoutType =
             mockExerciseWorkoutType(
                 exerciseName = "Bench Press",
-                movementType = "horizontal push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 workoutType = "dynamic_effort"
             )
 
         assertEquals("Bench Press", exerciseWorkoutType.exerciseName)
-        assertEquals("horizontal push", exerciseWorkoutType.movementType)
+        assertEquals(MovementType.HORIZONTAL_PUSH, exerciseWorkoutType.movementType)
         assertEquals("dynamic_effort", exerciseWorkoutType.workoutType)
     }
 
@@ -29,7 +32,7 @@ class ExerciseWorkoutTypeTest {
         val exerciseWorkoutType =
             mockExerciseWorkoutType(
                 exerciseName = "Bench Press",
-                movementType = "horizontal push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 workoutType = "dynamic_effort"
             )
 
@@ -54,7 +57,7 @@ class ExerciseWorkoutTypeTest {
         val exerciseWorkoutType = objectMapper.readValue(json, ExerciseWorkoutType::class.java)
 
         assertEquals("Bench Press", exerciseWorkoutType.exerciseName)
-        assertEquals("horizontal push", exerciseWorkoutType.movementType)
+        assertEquals(MovementType.HORIZONTAL_PUSH, exerciseWorkoutType.movementType)
         assertEquals("dynamic_effort", exerciseWorkoutType.workoutType)
     }
 }

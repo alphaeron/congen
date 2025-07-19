@@ -110,8 +110,8 @@ task integrationTest(type: Test) {
     // Setup Kubernetes environment before tests
     dependsOn 'setupKubernetesForTesting'
 
-    // Cleanup after tests
-    finalizedBy 'cleanupKubernetesTestEnv'
+    // Cleanup port forwarding after tests
+    finalizedBy 'cleanupPortForward'
 }
 
 // Integration test coverage report
@@ -136,28 +136,51 @@ tasks.named('processIntegrationTestResources') {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
-// Task to setup Kubernetes environment for testing (using shell script)
-task setupKubernetesForTesting(type: Exec) {
+// Task to setup Kubernetes environment for testing
+task setupKubernetesForTesting {
     description = 'Setup Kubernetes environment for integration testing'
     group = 'verification'
 
-    commandLine './scripts/setup-kubernetes.sh', 'setup', '--test'
-}
+    // Set environment property at configuration time
+    project.ext.set('environment', 'local')
 
-// Task to cleanup Kubernetes test environment
-task cleanupKubernetesTestEnv(type: Exec) {
-    description = 'Cleanup Kubernetes test environment'
-    group = 'verification'
-
-    commandLine './scripts/setup-kubernetes.sh', 'cleanup'
+    dependsOn 'deployToKubernetes', 'setupTestPortForward'
 }
 
 // Task to check Kubernetes test environment status
-task checkKubernetesTestEnv(type: Exec) {
+task checkKubernetesTestEnv {
     description = 'Check Kubernetes test environment status'
     group = 'verification'
 
-    commandLine './scripts/setup-kubernetes.sh', 'status'
+    doLast {
+        exec {
+            commandLine 'kubectl', 'get', 'pods', '-n', 'congen'
+        }
+    }
+}
+
+// Task to cleanup port forwarding
+task cleanupPortForward {
+    description = 'Cleanup port forwarding for integration tests'
+    group = 'verification'
+
+    doLast {
+        println "🧹 Cleaning up port forwarding..."
+
+        // Try to kill using PID file first
+        exec {
+            commandLine 'sh', '-c', 'if [ -f /tmp/port-forward.pid ]; then kill $(cat /tmp/port-forward.pid) 2>/dev/null; rm -f /tmp/port-forward.pid; fi'
+            ignoreExitValue = true
+        }
+
+        // Fallback to pkill
+        exec {
+            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
+            ignoreExitValue = true
+        }
+
+        println "✅ Port forwarding cleanup complete"
+    }
 }
 
 // Make check depend on all test types (moved to end after all tasks are defined)

@@ -7,6 +7,7 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
+import com.congen.model.MovementType
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -106,7 +107,7 @@ class ExerciseController(
         @Parameter(description = "Description of the exercise", required = true)
         @RequestParam description: String,
         @Parameter(description = "Type of movement", required = true)
-        @RequestParam movementType: String,
+        @RequestParam movementType: MovementType,
         @Parameter(description = "Whether the exercise is unilateral", required = true)
         @RequestParam isUnilateral: Boolean,
         @Parameter(description = "Whether the exercise targets upper body", required = true)

@@ -18,14 +18,14 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
 
         // Then create the exercise-workout-type relationship
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=dynamic_effort")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -43,19 +43,19 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
 
         // Create the relationships
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=dynamic_effort")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=maximal_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=maximal_effort")
             .exchange()
             .expectStatus().isOk()
 
@@ -79,19 +79,19 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
 
         // Create the relationships
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=dynamic_effort")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=maximal_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=maximal_effort")
             .exchange()
             .expectStatus().isOk()
 
@@ -115,19 +115,19 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
 
         // Create the relationship
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=dynamic_effort")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
-            .uri("/exercise_workout_type/movement_type/horizontal push")
+            .uri("/exercise_workout_type/movement_type/HORIZONTAL_PUSH")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -147,19 +147,19 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movementType=HORIZONTAL_PUSH&isUnilateral=false&isUpper=true&isAccessory=false"
             )
             .exchange()
             .expectStatus().isOk()
 
         // Create multiple relationships for the same exercise
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=dynamic_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=dynamic_effort")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=horizontal push&workoutType=maximal_effort")
+            .uri("/exercise_workout_type/?exerciseName=$uniqueExercise&movementType=HORIZONTAL_PUSH&workoutType=maximal_effort")
             .exchange()
             .expectStatus().isOk()
 

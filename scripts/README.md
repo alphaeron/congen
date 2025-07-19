@@ -6,31 +6,6 @@ This directory contains scripts and utilities for documentation and development 
 
 ### Kubernetes Deployment Scripts
 
-#### setup-kubernetes.sh
-Sets up the local Kubernetes environment for development.
-
-**Usage:**
-```bash
-./scripts/setup-kubernetes.sh
-```
-
-**What it does:**
-- Checks prerequisites (minikube, kubectl, skaffold, docker, kustomize)
-- Starts Minikube if not running
-- Enables required addons (ingress, metrics-server)
-- Configures Docker environment
-- Creates the congen namespace
-
-**Note:** Deployment and integration testing are now handled entirely by Gradle tasks. See the main README for deployment and testing commands.
-
-#### cleanup-kubernetes.sh
-Cleans up the local Kubernetes environment.
-
-**Usage:**
-```bash
-./scripts/cleanup-kubernetes.sh
-```
-
 #### start-local-access.sh / stop-local-access.sh
 Set up or tear down port forwarding to access the application locally.
 
@@ -122,7 +97,3 @@ brew install graphviz
 ## Adding New Scripts
 - Place new scripts in this directory
 - Add a section here describing their purpose and usage
-
----
-
-For more details, see the main project README and docs/DEVELOPMENT.md. 

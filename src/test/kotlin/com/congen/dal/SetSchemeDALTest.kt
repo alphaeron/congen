@@ -93,9 +93,9 @@ class SetSchemeDALTest {
             INSERT INTO set_scheme
                 (programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
                  eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
-                 target_rep_count, performed_rep_count, rest_seconds)
+                 target_rep_count, performed_rep_count, rest_seconds, band_weight_lbs)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
             """.trimIndent()
 
         whenever(
@@ -114,6 +114,7 @@ class SetSchemeDALTest {
                 createdSetScheme.targetRepCount,
                 createdSetScheme.performedRepCount,
                 createdSetScheme.restSeconds,
+                null,
             ),
         ).thenReturn(Mono.just(createdSetScheme))
         val result =
@@ -130,7 +131,8 @@ class SetSchemeDALTest {
                 createdSetScheme.performedWeight,
                 createdSetScheme.targetRepCount,
                 createdSetScheme.performedRepCount,
-                createdSetScheme.restSeconds
+                createdSetScheme.restSeconds,
+                band = null
             )
         StepVerifier.create(result).expectNext(createdSetScheme).verifyComplete()
         verify(postgresClient).update<SetScheme>(
@@ -148,6 +150,7 @@ class SetSchemeDALTest {
             createdSetScheme.targetRepCount,
             createdSetScheme.performedRepCount,
             createdSetScheme.restSeconds,
+            null,
         )
     }
 
@@ -222,11 +225,11 @@ class SetSchemeDALTest {
             UPDATE set_scheme
             SET programmed_exercise_id=$2, set_number=$3, is_amrap=$4, is_emom=$5, use_tempo=$6,
                 eccentric_tempo=$7, isometric_tempo=$8, concentric_tempo=$9, target_weight=$10, performed_weight=$11,
-                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, updated_at=NOW()
+                target_rep_count=$12, performed_rep_count=$13, rest_seconds=$14, band_weight_lbs=$15, updated_at=NOW()
             WHERE id=$1
             RETURNING id, programmed_exercise_id, set_number, is_amrap, is_emom, use_tempo,
                       eccentric_tempo, isometric_tempo, concentric_tempo, target_weight, performed_weight,
-                      target_rep_count, performed_rep_count, rest_seconds, created_at, updated_at
+                      target_rep_count, performed_rep_count, rest_seconds, band_weight_lbs, created_at, updated_at
             """.trimIndent()
 
         whenever(
@@ -247,6 +250,7 @@ class SetSchemeDALTest {
                 updatedSetScheme.targetRepCount,
                 updatedSetScheme.performedRepCount,
                 updatedSetScheme.restSeconds,
+                null,
             ),
         ).thenReturn(Mono.just(updatedSetScheme))
         val result =
@@ -264,7 +268,8 @@ class SetSchemeDALTest {
                 updatedSetScheme.performedWeight,
                 updatedSetScheme.targetRepCount,
                 updatedSetScheme.performedRepCount,
-                updatedSetScheme.restSeconds
+                updatedSetScheme.restSeconds,
+                band = null
             )
         StepVerifier.create(result).expectNext(updatedSetScheme).verifyComplete()
         verify(postgresClient).updateLiteral(
@@ -284,6 +289,7 @@ class SetSchemeDALTest {
             updatedSetScheme.targetRepCount,
             updatedSetScheme.performedRepCount,
             updatedSetScheme.restSeconds,
+            null,
         )
     }
 
@@ -304,7 +310,8 @@ class SetSchemeDALTest {
                 performedWeight = BigDecimal("100.0"),
                 targetRepCount = 5,
                 performedRepCount = 5,
-                restSeconds = 180
+                restSeconds = 180,
+                band = null
             )
         }
     }

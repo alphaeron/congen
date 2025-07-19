@@ -1,47 +1,8 @@
-There is a separate issue for Dynamic Effort (DE) exercises when computing weight.  bands are used for a portion of the dynamic effort weight.
-
-Here is how the band to bar weight distribution should look like based on undulating periodization.
-
-- **Week 1**: 12 sets of 2 reps or 5 sets of 5 reps, 25% band weight, 50% bar weight
-- **Week 2**: 10 sets of 2 reps or 5 sets of 5 reps, 25% band weight, 55% bar weight
-- **Week 3**: 8 sets of 2 reps or 5 sets of 5 reps, 25% band weight, 60% bar weight
-- **Week 4**: 12 sets of 2 reps or 5 sets of 5 reps, 0% band weight, 50% bar weight
-
-2 bands are used per exercise in all cases.
-
-Bands come in these sizes (weight of individual band):
-
-Black: 100lbs
-Green: 65lbs
-Blue: 50lbs
-Red: 30lbs
-Orange: 15lbs
-
-Bands only come in lbs weight, and are reported using the color of the band.
-
-If the unit for the exercise is kg, convert the kg weight to lbs weight, determine how much weight is bars and how much is bands, then select the band weight.  then, subtract the total band weight (2 * the weight of a single band) from the input weight, convert that back to kg, and round as we usually do based on plate size to determine the final bar weight in kg.
-
-If the unit for the exercise is lbs, we can determine how much weight is bars and how much is bands, then select the band weight.  then, just round as we usually do based on plate size to determine the final bar weight in lbs.
-
-Update how weight for an exercise is stored so we can properly store the band weight in the database as well.
-
-Update the documentation with how DE exercise weights are computed as well.
-
-
-
-
-
-
-exercise movement type enum?
-
-use snake_case for api values
-
-band weight for de exercises.
-
-
-
+separate utility for stages, to allow cleaner sharing between templates
 
 put generateWorkoutsForWeek in the template itself.
+
+separate class to isolate the workout stage generation for different stages?
 
 2 or 3 week conjugate generation
 
@@ -49,18 +10,12 @@ Add the ability for a user to enter their weak muscles, and have the accessories
 
 Ensure accommodated resistance taken into account.  Check wenning videos for other laws to include too
 
+
+
+
+video analysis
+
 If muscle imbalance, prefer unilateral accessories
-
-
-
-
-don't hardcode default weight of 50 lbs?
-
-function to estimate default weight if missing based on other user 1rms?
-
-
-
-
 
 how can we further optimize exercise selection to optimize performance?
 
@@ -69,10 +24,12 @@ how can we further optimize exercise selection to optimize performance?
 
 then move hardcoded program templates into database models to add flexability.
 
-then support adding custom movementType s so there is complete flexability with what type of workout you want to generate
-
 then support exerciseAttributes instead of isUnilateral, ... (like tags) for even more flexability.
 
 remove unneeded endpoints
 
-pull values from application.properties from k8s manifest.  This way, we only need 1 application.properties, and the k8s manifests will specify differences.
+tempo enum
+
+use snake_case for api values
+
+WeightSelectionService

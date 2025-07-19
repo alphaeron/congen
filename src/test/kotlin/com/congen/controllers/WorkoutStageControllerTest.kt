@@ -15,13 +15,11 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
 import java.util.stream.Stream
-import kotlin.test.assertEquals
 
 class WorkoutStageControllerTest {
     @Mock
@@ -264,10 +262,8 @@ class WorkoutStageControllerTest {
             )
         whenever(workoutStageDAL.selectWorkoutStages()).thenReturn(Mono.just(workoutStages))
         val result = workoutStageController.getAll()
-        assertEquals(HttpStatus.OK, result.statusCode)
-        val body = result.body as Mono<List<WorkoutStage>>
-        StepVerifier.create(body)
-            .expectNext(workoutStages)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(workoutStages))
             .verifyComplete()
         verify(workoutStageDAL).selectWorkoutStages()
     }
@@ -277,7 +273,7 @@ class WorkoutStageControllerTest {
         whenever(workoutStageDAL.selectWorkoutStages())
             .thenReturn(Mono.error(DatabaseException("Database connection failed")))
         val result = workoutStageController.getAll()
-        StepVerifier.create(result.body as Mono<List<WorkoutStage>>)
+        StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
         verify(workoutStageDAL).selectWorkoutStages()
@@ -309,10 +305,8 @@ class WorkoutStageControllerTest {
             )
         whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(workoutStages))
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
-        assertEquals(HttpStatus.OK, result.statusCode)
-        val body = result.body as Mono<List<WorkoutStage>>
-        StepVerifier.create(body)
-            .expectNext(workoutStages)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(workoutStages))
             .verifyComplete()
         verify(workoutStageDAL).selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
     }
@@ -322,7 +316,7 @@ class WorkoutStageControllerTest {
         whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID))
             .thenReturn(Mono.error(DatabaseException("Database connection failed")))
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
-        StepVerifier.create(result.body as Mono<List<WorkoutStage>>)
+        StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
         verify(workoutStageDAL).selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)

@@ -20,6 +20,7 @@ import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -63,7 +64,16 @@ class SetSchemeServiceTest {
         programDAL = mock()
         userOneRepMaxDAL = mock()
         unitConversionService = mock()
-        setSchemeService = SetSchemeService(setSchemeDAL, programmedExerciseDAL, programDAL, userOneRepMaxDAL, unitConversionService)
+        val oneRepMaxCalculator = OneRepMaxCalculatorService()
+        setSchemeService =
+            SetSchemeService(
+                setSchemeDAL,
+                programmedExerciseDAL,
+                programDAL,
+                userOneRepMaxDAL,
+                unitConversionService,
+                oneRepMaxCalculator
+            )
     }
 
     @Test
@@ -111,7 +121,8 @@ class SetSchemeServiceTest {
                 anyOrNull(),
                 anyOrNull(),
                 anyOrNull(),
-                anyOrNull()
+                anyOrNull(),
+                anyOrNull(),
             )
         ).thenReturn(Mono.just(setScheme))
 
@@ -182,7 +193,8 @@ class SetSchemeServiceTest {
                 eq(performedWeightInKg),
                 eq(null),
                 eq(null),
-                eq(null)
+                eq(null),
+                anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
@@ -206,7 +218,8 @@ class SetSchemeServiceTest {
                 null,
                 null,
                 null,
-                unit
+                unit,
+                null
             )
 
         StepVerifier.create(result)
@@ -239,7 +252,8 @@ class SetSchemeServiceTest {
                 anyOrNull(),
                 anyOrNull(),
                 anyOrNull(),
-                anyOrNull()
+                anyOrNull(),
+                anyOrNull(),
             )
         ).thenReturn(Mono.just(setScheme))
 
@@ -283,20 +297,21 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                id = setSchemeId,
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = null,
-                performedWeight = performedWeight,
-                targetRepCount = null,
-                performedRepCount = null,
-                restSeconds = null,
+                eq(setSchemeId),
+                eq(programmedExerciseId),
+                eq(setNumber),
+                eq(false),
+                eq(false),
+                eq(false),
+                eq(null),
+                eq(null),
+                eq(null),
+                eq(null),
+                eq(performedWeight),
+                eq(null),
+                eq(null),
+                eq(null),
+                anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
@@ -320,6 +335,7 @@ class SetSchemeServiceTest {
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                band = null
             )
 
         StepVerifier.create(result)
@@ -346,27 +362,29 @@ class SetSchemeServiceTest {
                 performedRepCount = null,
                 restSeconds = null,
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                band = null,
             )
         val programmedExercise = mockProgrammedExercise(id = 2L, exerciseName = "Deadlift", createdAt = now, updatedAt = now)
         val newOneRepMax = mockUserOneRepMax(userId = 2, exerciseName = "Deadlift", oneRepMax = BigDecimal("150.0"), updatedAt = now)
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                id = 2L,
-                programmedExerciseId = 2L,
-                setNumber = 1,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = null,
-                performedWeight = BigDecimal("150.0"),
-                targetRepCount = null,
-                performedRepCount = null,
-                restSeconds = null,
+                eq(2L),
+                eq(2L),
+                eq(1),
+                eq(false),
+                eq(false),
+                eq(false),
+                isNull(),
+                isNull(),
+                isNull(),
+                anyOrNull<BigDecimal>(),
+                eq(BigDecimal("150.0")),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(2L)).thenReturn(Mono.just(2))
@@ -390,6 +408,7 @@ class SetSchemeServiceTest {
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                band = null
             )
 
         StepVerifier.create(result)
@@ -403,20 +422,21 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                id = setSchemeId,
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = null,
-                performedWeight = null,
-                targetRepCount = null,
-                performedRepCount = null,
-                restSeconds = null,
+                eq(setSchemeId),
+                eq(programmedExerciseId),
+                eq(setNumber),
+                eq(false),
+                eq(false),
+                eq(false),
+                isNull(),
+                isNull(),
+                isNull(),
+                anyOrNull<BigDecimal>(),
+                anyOrNull<BigDecimal>(),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
 
@@ -436,6 +456,7 @@ class SetSchemeServiceTest {
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                band = null
             )
 
         StepVerifier.create(result)
@@ -454,20 +475,21 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                id = setSchemeId,
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = null,
-                performedWeight = BigDecimal("80.0"),
-                targetRepCount = null,
-                performedRepCount = null,
-                restSeconds = null,
+                eq(setSchemeId),
+                eq(programmedExerciseId),
+                eq(setNumber),
+                eq(false),
+                eq(false),
+                eq(false),
+                isNull(),
+                isNull(),
+                isNull(),
+                anyOrNull<BigDecimal>(),
+                eq(BigDecimal("80.0")),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
@@ -490,6 +512,7 @@ class SetSchemeServiceTest {
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                band = null
             )
 
         StepVerifier.create(result)
@@ -509,20 +532,21 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                id = setSchemeId,
-                programmedExerciseId = programmedExerciseId,
-                setNumber = setNumber,
-                isAmrap = false,
-                isEmom = false,
-                useTempo = false,
-                eccentricTempo = null,
-                isometricTempo = null,
-                concentricTempo = null,
-                targetWeight = null,
-                performedWeight = BigDecimal("120.5"),
-                targetRepCount = null,
-                performedRepCount = null,
-                restSeconds = null,
+                eq(setSchemeId),
+                eq(programmedExerciseId),
+                eq(setNumber),
+                eq(false),
+                eq(false),
+                eq(false),
+                isNull(),
+                isNull(),
+                isNull(),
+                anyOrNull<BigDecimal>(),
+                eq(BigDecimal("120.5")),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull<Int>(),
+                anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(userId))
@@ -546,6 +570,7 @@ class SetSchemeServiceTest {
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                band = null
             )
 
         StepVerifier.create(result)

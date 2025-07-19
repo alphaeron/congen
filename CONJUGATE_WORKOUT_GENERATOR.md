@@ -224,6 +224,45 @@ The system implements undulating periodization over a 4-week cycle to optimize s
 - **Week 3**: 9 sets of 3 reps, 60% intensity + bands
 - **Week 4**: 9 sets of 3 reps, 50% intensity, no bands (deload)
 
+### Dynamic Effort Weight Computation
+
+Dynamic Effort exercises use accommodated resistance with bands to provide progressive resistance during the concentric phase. The weight distribution follows specific undulating periodization guidelines:
+
+#### Band Weight Distribution by Week
+- **Week 1**: 25% band weight, 50% bar weight
+- **Week 2**: 25% band weight, 55% bar weight  
+- **Week 3**: 25% band weight, 60% bar weight
+- **Week 4**: 0% band weight, 50% bar weight (deload)
+
+#### Available Band Weights
+- **Black**: 100 lbs
+- **Green**: 65 lbs
+- **Blue**: 50 lbs
+- **Red**: 30 lbs
+- **Orange**: 15 lbs
+
+#### Weight Computation Process
+1. **Calculate Total Target Weight**: Based on user's 1RM and exercise intensity
+2. **Determine Band Weight Percentage**: Based on week in the 4-week cycle
+3. **Select Appropriate Bands**: Choose the band pair whose total weight (2 × individual band weight) is closest to the target band weight, minimizing the absolute difference
+4. **Calculate Bar Weight**: Subtract total band weight from target weight
+5. **Round Bar Weight**: Round to achievable plate weights using standard gym math
+6. **Store Band Information**: Record band weight and color in the database
+
+#### Unit Handling
+- **Pounds**: Direct calculation and rounding
+- **Kilograms**: Convert to pounds for band calculations, then convert bar weight back to kg for storage
+
+#### Example Calculation
+For a 200 lb bench press in Week 1:
+- Total target weight: 200 lbs
+- Band weight target: 25% × 200 = 50 lbs
+- Selected bands: 2 × Red bands (30 lbs each) = 60 lbs total (closest to 50 lbs target)
+- Bar weight: 200 - 60 = 140 lbs
+- Final setup: 140 lbs on bar + 60 lbs from bands = 200 lbs total resistance
+
+> **Note**: For detailed information about 1RM calculation, exercise matching algorithms, and reference exercise detection, see [Weight Estimation Algorithms](docs/WEIGHT_ESTIMATION_ALGORITHMS.md).
+
 ### Accessory Movements
 - **Week 1**: 55-65% intensity
 - **Week 2-3**: 70-80% intensity
@@ -281,6 +320,8 @@ The service personalizes workouts based on:
 - Uses actual 1RM values when available
 - Falls back to default weights for new users
 - Automatically updates 1RM when users exceed current max
+- Estimates weights for exercises without 1RM data using intelligent exercise matching algorithms
+- Supports multiple 1RM calculation formulas (Epley, Brzycki, Lombardi, O'Conner, Wathan)
 
 ### Weak Muscle Groups
 - Focuses accessory work on user's weak points
@@ -371,4 +412,7 @@ Potential improvements include:
 - Configuration management for different training styles
 - Plugin architecture for new exercise selection algorithms
 - Performance optimization of individual components
-- Feature extensions for new workout types or periodization schemes 
+- Feature extensions for new workout types or periodization schemes
+- Enhanced reference exercise detection with machine learning
+- Dynamic exercise similarity scoring based on user performance patterns
+- Advanced weight estimation algorithms for specialized exercises 

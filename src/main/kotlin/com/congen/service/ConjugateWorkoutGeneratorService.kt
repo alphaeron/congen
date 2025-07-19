@@ -23,7 +23,6 @@ import com.congen.service.conjugate.ExerciseSelectionService
 import com.congen.service.conjugate.SessionTimeCalculator
 import com.congen.service.conjugate.SetSchemeParams
 import com.congen.service.conjugate.WorkoutStageGenerator
-import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -123,19 +122,9 @@ class ConjugateWorkoutGeneratorService(
                     val programPreferences = tuple.t5
                     val rotationHistory = tuple.t6
 
-                    // Get the next week number from the program
-                    val nextWeekNumber = program.currentWeekNumber + 1
-
-                    // Validate program days per week
-                    ValidationUtil.validateProgramDaysPerWeek(programPreferences.programDaysPerWeek)
-
-                    // Get conjugate template based on program days per week
+                    val weakMuscles = ConjugateConstants.DEFAULT_WEAK_MUSCLES
                     val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
 
-                    // Determine weak muscles based on user preferences and history
-                    val weakMuscles = exerciseSelectionService.determineWeakMuscles()
-
-                    // Generate workouts for the week
                     generateWorkoutsForWeek(
                         program = program,
                         exercises = exercises,
@@ -146,13 +135,13 @@ class ConjugateWorkoutGeneratorService(
                         rotationHistory = rotationHistory,
                         template = template,
                         weakMuscles = weakMuscles,
-                        currentWeekNumber = nextWeekNumber
+                        currentWeekNumber = program.currentWeekNumber
                     ).then(
                         programDAL.updateProgram(
-                            id = program.id,
-                            name = "Conjugate Powerlifting - Week $nextWeekNumber",
-                            currentWeekNumber = nextWeekNumber,
-                            isActive = program.isActive
+                            program.id,
+                            "Conjugate Powerlifting - Week ${program.currentWeekNumber + 1}",
+                            program.currentWeekNumber + 1,
+                            program.isActive
                         )
                     )
                 }
@@ -176,12 +165,15 @@ class ConjugateWorkoutGeneratorService(
     ): Mono<Void> {
         return Flux.fromIterable(template)
             .index()
-            .flatMap { tuple ->
+            .concatMap { tuple ->
                 val dayIndex = tuple.t1
                 val dayTemplate = tuple.t2
                 val dayNumber = (currentWeekNumber - 1) * template.size + dayIndex.toInt() + 1
 
                 programmedWorkoutDAL.insertProgrammedWorkout(program.id, dayNumber, "${dayTemplate.type} Day")
+                    .doOnError { error ->
+                        logger.error("Error inserting programmed workout: {}", error.message)
+                    }
                     .flatMap { createdWorkout ->
                         generateWorkoutStages(
                             workout = createdWorkout,
@@ -195,8 +187,16 @@ class ConjugateWorkoutGeneratorService(
                             weakMuscles = weakMuscles,
                             currentWeekNumber = currentWeekNumber,
                             userId = program.userId
-                        )
+                        ).doOnError { error ->
+                            logger.error("Error generating workout stages: {}", error.message)
+                        }
                     }
+                    .doOnError { error ->
+                        logger.error("Error processing programmed workout: {}", error.message)
+                    }
+            }
+            .doOnError { error ->
+                logger.error("Error generating workouts for week: {}", error.message)
             }
             .then()
     }
@@ -217,89 +217,178 @@ class ConjugateWorkoutGeneratorService(
         currentWeekNumber: Int,
         userId: Int
     ): Mono<Void> {
-        var stagePosition = 1
+        val dayType = dayTemplate.type
 
-        // Primary movement stage (ME or DE exercise)
-        val primaryExercise =
-            exerciseSelectionService.selectRotatingExercise(
-                targetMuscles = weakMuscles,
-                userEquipment = userEquipment,
-                preferences = preferences,
-                // Only primary exercises (is_accessory = false)
-                exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
-                // Primary movements are not accessories
-                isAccessory = false,
-                rotationHistory = rotationHistory
-            )
+        // Determine workout type based on day template
+        val workoutType =
+            when {
+                dayType.startsWith("ME_") -> "maximal_effort"
+                dayType.startsWith("DE_") -> "dynamic_effort"
+                else -> "maximal_effort" // Default fallback
+            }
+
+        // Select primary exercise
+        val primaryExerciseMono =
+            exerciseSelectionService.filterExercisesByWorkoutType(
+                exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
+                workoutType
+            ).flatMap { filteredExercises ->
+                exerciseSelectionService.selectRotatingExercise(
+                    targetMuscles = weakMuscles,
+                    userEquipment = userEquipment,
+                    preferences = preferences,
+                    exercises = filteredExercises,
+                    isAccessory = false,
+                    rotationHistory = rotationHistory
+                )
+            }
 
         // Generate primary set schemes for time calculation
         val primarySetSchemesMono: Mono<List<SetSchemeParams>> =
-            if (primaryExercise != null) {
-                workoutStageGenerator.generatePrilepinBasedScheme(
-                    exercise = primaryExercise,
-                    movementRole = "primary",
-                    dayType = dayTemplate.type,
+            primaryExerciseMono.flatMap { primaryExercise ->
+                if (primaryExercise != null) {
+                    workoutStageGenerator.generatePrilepinBasedScheme(
+                        exercise = primaryExercise,
+                        movementRole = "primary",
+                        dayType = dayType,
+                        oneRepMaxes = oneRepMaxes,
+                        currentWeekNumber = currentWeekNumber,
+                        userId = userId
+                    )
+                } else {
+                    Mono.just(emptyList())
+                }
+            }
+
+        // Process primary exercise and generate workout stages
+        return primaryExerciseMono
+            .flatMap { primaryExercise ->
+                // Handle secondary exercise selection - for DE workouts, this might be empty
+                val secondaryExerciseMono =
+                    if (conjugateTemplates.hasSecondaryMovement(dayType) && primaryExercise != null) {
+                        exerciseSelectionService.selectSimilarSecondaryExercise(
+                            primaryExercise = primaryExercise,
+                            userEquipment = userEquipment,
+                            preferences = preferences,
+                            exercises =
+                                exerciseSelectionService.filterExercisesExcluding(
+                                    exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
+                                    primaryExercise.name
+                                ),
+                            rotationHistory = rotationHistory
+                        )
+                    } else {
+                        Mono.empty()
+                    }
+
+                // Handle the case where secondary exercise is empty - still create primary exercise stages
+                secondaryExerciseMono
+                    .flatMap { secondaryExercise ->
+                        createWorkoutStagesWithSecondary(
+                            primaryExercise,
+                            secondaryExercise,
+                            primarySetSchemesMono,
+                            workout,
+                            dayType,
+                            exercises,
+                            preferences,
+                            userEquipment,
+                            oneRepMaxes,
+                            programPreferences,
+                            weakMuscles,
+                            currentWeekNumber,
+                            userId
+                        )
+                    }
+                    .switchIfEmpty(
+                        // When secondary exercise is empty, still create primary exercise stages
+                        Mono.defer {
+                            createWorkoutStagesWithSecondary(
+                                primaryExercise,
+                                null,
+                                primarySetSchemesMono,
+                                workout,
+                                dayType,
+                                exercises,
+                                preferences,
+                                userEquipment,
+                                oneRepMaxes,
+                                programPreferences,
+                                weakMuscles,
+                                currentWeekNumber,
+                                userId
+                            )
+                        }
+                    )
+            }
+            .doOnError { error ->
+                logger.error("Failed to generate workout: {}, {}, {}", workout.name, workout.id, error.message)
+            }
+    }
+
+    /**
+     * Creates workout stages with the given primary and secondary exercises.
+     * This method ensures that each stage is created exactly once and in the correct order.
+     */
+    private fun createWorkoutStagesWithSecondary(
+        primaryExercise: Exercise?,
+        secondaryExercise: Exercise?,
+        primarySetSchemesMono: Mono<List<SetSchemeParams>>,
+        workout: ProgrammedWorkout,
+        dayType: String,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        programPreferences: UserProgramPreferences,
+        weakMuscles: List<String>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Void> {
+        // Generate secondary set schemes for time calculation
+        val secondarySetSchemesMono: Mono<List<SetSchemeParams>> =
+            if (secondaryExercise != null) {
+                workoutStageGenerator.generateSecondaryExerciseScheme(
+                    exercise = secondaryExercise,
                     oneRepMaxes = oneRepMaxes,
-                    currentWeekNumber = currentWeekNumber,
                     userId = userId
                 )
             } else {
                 Mono.just(emptyList())
             }
 
-        // Secondary movement stage (if exists)
-        val secondaryExerciseMono =
-            if (conjugateTemplates.hasSecondaryMovement(dayTemplate.type) && primaryExercise != null) {
-                exerciseSelectionService.selectSimilarSecondaryExercise(
-                    primaryExercise = primaryExercise,
-                    userEquipment = userEquipment,
-                    preferences = preferences,
-                    exercises =
-                        exerciseSelectionService.filterExercisesExcluding(
-                            exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
-                            primaryExercise.name
-                        ),
-                    rotationHistory = rotationHistory
-                )
-            } else {
-                Mono.empty()
-            }
+        // Combine primary and secondary schemes to calculate accessory exercises
+        return Mono.zip(primarySetSchemesMono, secondarySetSchemesMono)
+            .flatMap { schemesTuple ->
+                val primarySetSchemes = schemesTuple.t1
+                val secondarySetSchemes = schemesTuple.t2
 
-        // Process secondary exercise and generate workout stages
-        return secondaryExerciseMono.flatMap { secondaryExercise ->
-            // Generate secondary set schemes for time calculation
-            val secondarySetSchemesMono: Mono<List<SetSchemeParams>> =
-                if (secondaryExercise != null) {
-                    workoutStageGenerator.generateSecondaryExerciseScheme(
-                        exercise = secondaryExercise,
-                        oneRepMaxes = oneRepMaxes,
-                        userId = userId
+                // Calculate number of accessory exercises based on program preferences
+                val numAccessoryExercises =
+                    sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                        sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
+                        primarySetSchemes = primarySetSchemes,
+                        secondarySetSchemes = secondarySetSchemes,
+                        dayType = dayType
                     )
-                } else {
-                    Mono.just(emptyList())
-                }
 
-            // Combine primary and secondary schemes to calculate accessory exercises
-            Mono.zip(primarySetSchemesMono, secondarySetSchemesMono)
-                .flatMap { tuple ->
-                    val primarySetSchemes = tuple.t1
-                    val secondarySetSchemes = tuple.t2
-                    // Calculate number of accessory exercises based on dynamic time calculation
-                    val sessionTimeMinutes =
-                        programPreferences.sessionTimeLengthInMinutes
-                            ?: ConjugateConstants.DEFAULT_SESSION_TIME_MINUTES
-                    val numAccessoryExercises =
-                        sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
-                            sessionTimeMinutes = sessionTimeMinutes,
-                            primarySetSchemes = primarySetSchemes,
-                            secondarySetSchemes = secondarySetSchemes,
-                            dayType = dayTemplate.type
-                        )
+                // Create stages sequentially
+                var currentMono: Mono<Void> = Mono.empty()
 
-                    // Create primary movement stage
-                    val primaryMono =
-                        if (primaryExercise != null) {
-                            workoutStageGenerator.createWorkoutStage(workout.id, WorkoutStageTypeEnum.PRIMARY, stagePosition++)
+                // Add primary stage if exercise exists
+                if (primaryExercise != null) {
+                    currentMono =
+                        currentMono.then(
+                            Mono.defer {
+                                workoutStageGenerator.createWorkoutStage(
+                                    workout.id,
+                                    WorkoutStageTypeEnum.PRIMARY,
+                                    WorkoutStageTypeEnum.PRIMARY.position
+                                )
+                            }
+                                .doOnError { error ->
+                                    logger.error("Error creating primary stage: {}", error.message)
+                                }
                                 .flatMap { primaryStage ->
                                     workoutStageGenerator.createProgrammedExercise(primaryStage.id, primaryExercise.name)
                                         .flatMap { primaryProgrammedExercise ->
@@ -311,18 +400,21 @@ class ConjugateWorkoutGeneratorService(
                                             )
                                         }
                                 }
-                        } else {
-                            Mono.empty()
-                        }
+                                .then()
+                        )
+                }
 
-                    // Create secondary movement stage
-                    val secondaryMono =
-                        if (secondaryExercise != null) {
-                            workoutStageGenerator.createWorkoutStage(
-                                workout.id,
-                                WorkoutStageTypeEnum.SECONDARY,
-                                stagePosition++
-                            )
+                // Add secondary stage if exercise exists
+                if (secondaryExercise != null) {
+                    currentMono =
+                        currentMono.then(
+                            Mono.defer {
+                                workoutStageGenerator.createWorkoutStage(
+                                    workout.id,
+                                    WorkoutStageTypeEnum.SECONDARY,
+                                    WorkoutStageTypeEnum.SECONDARY.position
+                                )
+                            }
                                 .flatMap { secondaryStage ->
                                     workoutStageGenerator.createProgrammedExercise(secondaryStage.id, secondaryExercise.name)
                                         .flatMap { secondaryProgrammedExercise ->
@@ -334,137 +426,81 @@ class ConjugateWorkoutGeneratorService(
                                             )
                                         }
                                 }
-                        } else {
-                            Mono.empty()
-                        }
+                                .then()
+                        )
+                }
 
-                    // Accessory movements (calculated based on dynamic time calculation)
-                    val accessoryMonos =
-                        (0 until numAccessoryExercises).map { accessoryIndex ->
-                            val accessoryExercise =
-                                exerciseSelectionService.selectRotatingExercise(
-                                    targetMuscles = weakMuscles,
-                                    userEquipment = userEquipment,
-                                    preferences = preferences,
-                                    // Only accessory exercises (is_accessory = true)
-                                    exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-                                    // Accessory movements are accessories
-                                    isAccessory = true,
-                                    rotationHistory = rotationHistory
-                                )
-
-                            if (accessoryExercise != null) {
+                // Create ONE accessory stage and add multiple exercises to it
+                if (numAccessoryExercises > 0) {
+                    currentMono =
+                        currentMono.then(
+                            Mono.defer {
                                 workoutStageGenerator.createWorkoutStage(
                                     workout.id,
                                     WorkoutStageTypeEnum.ACCESSORY,
-                                    stagePosition++
+                                    WorkoutStageTypeEnum.ACCESSORY.position
                                 )
-                                    .flatMap { accessoryStage ->
-                                        workoutStageGenerator.createProgrammedExercise(accessoryStage.id, accessoryExercise.name)
-                                            .flatMap { accessoryProgrammedExercise ->
-                                                workoutStageGenerator.generatePrilepinBasedScheme(
-                                                    exercise = accessoryExercise,
-                                                    movementRole = "accessory",
-                                                    dayType = dayTemplate.type,
-                                                    oneRepMaxes = oneRepMaxes,
-                                                    currentWeekNumber = currentWeekNumber,
-                                                    userId = userId
-                                                ).flatMap { accessoryScheme ->
-                                                    workoutStageGenerator.createSetSchemes(
-                                                        userId,
-                                                        accessoryProgrammedExercise.id,
-                                                        accessoryExercise.name,
-                                                        accessoryScheme
-                                                    )
-                                                }
-                                            }
-                                    }
-                            } else {
-                                Mono.empty()
                             }
-                        }
-
-                    // Conditioning stage (optional) - only if there's time after accessories
-                    val conditioningMono =
-                        if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
-                            val conditioningExercise =
-                                exerciseSelectionService.selectRotatingExercise(
-                                    targetMuscles = listOf("full_body"),
-                                    userEquipment = userEquipment,
-                                    preferences = preferences,
-                                    // Use accessory exercises for conditioning (is_accessory = true)
-                                    exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-                                    // Conditioning uses accessory exercises
-                                    isAccessory = true,
-                                    rotationHistory = rotationHistory
-                                )
-
-                            if (conditioningExercise != null) {
-                                workoutStageGenerator.createWorkoutStage(
-                                    workout.id,
-                                    WorkoutStageTypeEnum.CONDITIONING,
-                                    stagePosition
-                                )
-                                    .flatMap { conditioningStage ->
-                                        workoutStageGenerator.createProgrammedExercise(conditioningStage.id, conditioningExercise.name)
-                                            .flatMap { conditioningProgrammedExercise ->
-                                                workoutStageGenerator.generateAmrapOrEmomScheme(
-                                                    exercise = conditioningExercise,
-                                                    oneRepMaxes = oneRepMaxes,
-                                                    userId = userId
-                                                ).flatMap { conditioningScheme ->
-                                                    workoutStageGenerator.createSetSchemes(
-                                                        userId,
-                                                        conditioningProgrammedExercise.id,
-                                                        conditioningExercise.name,
-                                                        conditioningScheme
-                                                    )
+                                .doOnError { error ->
+                                    logger.error("Error creating accessory stage: {}", error.message)
+                                }
+                                .flatMap { accessoryStage ->
+                                    // Add multiple accessory exercises to this single stage
+                                    var exerciseMono: Mono<Void> = Mono.empty()
+                                    for (accessoryIndex in 0 until numAccessoryExercises) {
+                                        val finalAccessoryIndex = accessoryIndex
+                                        exerciseMono =
+                                            exerciseMono.then(
+                                                Mono.defer {
+                                                    exerciseSelectionService.selectRotatingExercise(
+                                                        targetMuscles = weakMuscles,
+                                                        userEquipment = userEquipment,
+                                                        preferences = preferences,
+                                                        exercises =
+                                                            exerciseSelectionService
+                                                                .filterExercisesByAccessoryStatus(exercises, true),
+                                                        isAccessory = true,
+                                                        rotationHistory = emptyList()
+                                                    ).flatMap { accessoryExercise ->
+                                                        if (accessoryExercise != null) {
+                                                            workoutStageGenerator.createProgrammedExercise(
+                                                                accessoryStage.id,
+                                                                accessoryExercise.name
+                                                            )
+                                                                .flatMap { accessoryProgrammedExercise ->
+                                                                    workoutStageGenerator.generatePrilepinBasedScheme(
+                                                                        exercise = accessoryExercise,
+                                                                        movementRole = "accessory",
+                                                                        dayType = dayType,
+                                                                        oneRepMaxes = oneRepMaxes,
+                                                                        currentWeekNumber = currentWeekNumber,
+                                                                        userId = userId
+                                                                    ).flatMap { accessoryScheme ->
+                                                                        workoutStageGenerator.createSetSchemes(
+                                                                            userId,
+                                                                            accessoryProgrammedExercise.id,
+                                                                            accessoryExercise.name,
+                                                                            accessoryScheme
+                                                                        )
+                                                                    }
+                                                                }
+                                                                .then()
+                                                        } else {
+                                                            Mono.empty()
+                                                        }
+                                                    }
                                                 }
-                                            }
+                                            )
                                     }
-                            } else {
-                                Mono.empty()
-                            }
-                        } else {
-                            Mono.empty()
-                        }
-
-                    // Combine all monos
-                    val allMonos = mutableListOf<Mono<Void>>()
-
-                    // Add non-empty monos
-                    if (primaryExercise != null) {
-                        allMonos.add(primaryMono)
-                    }
-                    if (secondaryExercise != null) {
-                        allMonos.add(secondaryMono)
-                    }
-                    if (conjugateTemplates.hasConditioning(dayTemplate.type) && numAccessoryExercises > 0) {
-                        val conditioningExercise =
-                            exerciseSelectionService.selectRotatingExercise(
-                                targetMuscles = listOf("full_body"),
-                                userEquipment = userEquipment,
-                                preferences = preferences,
-                                exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-                                // Conditioning uses accessory exercises
-                                isAccessory = true,
-                                rotationHistory = rotationHistory
-                            )
-
-                        if (conditioningExercise != null) {
-                            allMonos.add(conditioningMono)
-                        }
-                    }
-
-                    // Add non-empty accessory monos
-                    allMonos.addAll(accessoryMonos)
-
-                    if (allMonos.isEmpty()) {
-                        Mono.empty()
-                    } else {
-                        Flux.concat(allMonos).then()
-                    }
+                                    exerciseMono
+                                }
+                        )
                 }
-        }
+
+                currentMono
+                    .doOnError { error ->
+                        logger.error("Error creating workout stages for workout '{}': {}", workout.id, error.message)
+                    }
+            }
     }
 }

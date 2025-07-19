@@ -5,6 +5,7 @@ import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockExerciseWorkoutType
 import com.congen.model.ExerciseWorkoutType
+import com.congen.model.MovementType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -25,13 +26,13 @@ class ExerciseWorkoutTypeControllerTest {
 
     companion object {
         private const val EXERCISE_NAME = "Bench Press"
-        private const val MOVEMENT_TYPE = "horizontal push"
+        private val MOVEMENT_TYPE = MovementType.HORIZONTAL_PUSH
         private const val WORKOUT_TYPE = "dynamic_effort"
         private const val SQUAT_NAME = "Squat"
-        private const val SQUAT_MOVEMENT = "squat"
+        private val SQUAT_MOVEMENT = MovementType.SQUAT
         private const val MAXIMAL_EFFORT = "maximal_effort"
         private const val NON_EXISTENT_EXERCISE = "NonExistent"
-        private const val NON_EXISTENT_MOVEMENT = "NonExistent"
+        private val NON_EXISTENT_MOVEMENT = MovementType.HORIZONTAL_PUSH // Using a valid enum for testing
 
         @JvmStatic
         fun errorScenarios(): Stream<Arguments> =

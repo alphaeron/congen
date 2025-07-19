@@ -22,7 +22,6 @@ bin/
 .kotlin
 
 # Ignore generated documentation
-/docs/
 /build/dokka/
 
 # Ignore database schema documentation generation related files

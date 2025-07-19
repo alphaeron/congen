@@ -1,15 +1,18 @@
 package com.congen.model
 
+import com.congen.config.JacksonConfig
 import com.congen.mockExercise
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ExerciseTest {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
+    private val objectMapper =
+        ObjectMapper().apply {
+            JacksonConfig.configureObjectMapper(this)
+        }
 
     @Test
     fun `should create exercise with all properties`() {
@@ -17,7 +20,7 @@ class ExerciseTest {
             mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
-                movementType = "push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUnilateral = false,
                 isUpper = true,
                 isAccessory = true
@@ -25,7 +28,7 @@ class ExerciseTest {
 
         assertEquals("Bench Press", exercise.name)
         assertEquals("A compound exercise", exercise.description)
-        assertEquals("push", exercise.movementType)
+        assertEquals(MovementType.HORIZONTAL_PUSH, exercise.movementType)
         assertFalse(exercise.isUnilateral)
         assertTrue(exercise.isUpper)
         assertTrue(exercise.isAccessory)
@@ -37,7 +40,7 @@ class ExerciseTest {
             mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
-                movementType = "push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUnilateral = false,
                 isUpper = true,
                 isAccessory = true
@@ -47,7 +50,7 @@ class ExerciseTest {
 
         assertTrue(json.contains("\"name\":\"Bench Press\""))
         assertTrue(json.contains("\"description\":\"A compound exercise\""))
-        assertTrue(json.contains("\"movement_type\":\"push\""))
+        assertTrue(json.contains("\"movement_type\":\"horizontal push\""))
         assertTrue(json.contains("\"is_unilateral\":false"))
         assertTrue(json.contains("\"is_upper\":true"))
         assertTrue(json.contains("\"is_accessory\":true"))
@@ -60,7 +63,7 @@ class ExerciseTest {
             {
                 "name": "Bench Press",
                 "description": "A compound exercise",
-                "movement_type": "push",
+                "movement_type": "horizontal push",
                 "is_unilateral": false,
                 "is_upper": true,
                 "is_accessory": true
@@ -71,7 +74,7 @@ class ExerciseTest {
 
         assertEquals("Bench Press", exercise.name)
         assertEquals("A compound exercise", exercise.description)
-        assertEquals("push", exercise.movementType)
+        assertEquals(MovementType.HORIZONTAL_PUSH, exercise.movementType)
         assertFalse(exercise.isUnilateral)
         assertTrue(exercise.isUpper)
         assertTrue(exercise.isAccessory)
@@ -84,7 +87,7 @@ class ExerciseTest {
             {
                 "name": "Bench Press",
                 "description": "A compound exercise",
-                "movement_type": "push",
+                "movement_type": "horizontal push",
                 "is_unilateral": false,
                 "is_upper": true,
                 "is_accessory": true,
@@ -96,7 +99,7 @@ class ExerciseTest {
 
         assertEquals("Bench Press", exercise.name)
         assertEquals("A compound exercise", exercise.description)
-        assertEquals("push", exercise.movementType)
+        assertEquals(MovementType.HORIZONTAL_PUSH, exercise.movementType)
         assertFalse(exercise.isUnilateral)
         assertTrue(exercise.isUpper)
         assertTrue(exercise.isAccessory)
@@ -108,7 +111,7 @@ class ExerciseTest {
             mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
-                movementType = "push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUnilateral = false,
                 isUpper = true,
                 isAccessory = true
@@ -117,7 +120,7 @@ class ExerciseTest {
             mockExercise(
                 name = "Bench Press",
                 description = "A compound exercise",
-                movementType = "push",
+                movementType = MovementType.HORIZONTAL_PUSH,
                 isUnilateral = false,
                 isUpper = true,
                 isAccessory = true
@@ -126,7 +129,7 @@ class ExerciseTest {
             mockExercise(
                 name = "Squat",
                 description = "A compound exercise",
-                movementType = "push",
+                movementType = MovementType.SQUAT,
                 isUnilateral = false,
                 isUpper = false,
                 isAccessory = true
