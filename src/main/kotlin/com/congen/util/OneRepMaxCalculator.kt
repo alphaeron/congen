@@ -1,13 +1,13 @@
-package com.congen.service
+package com.congen.util
 
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * Service for calculating estimated one rep max (1RM) from submaximal weights and reps.
+ * Utility for calculating estimated one rep max (1RM) from submaximal weights and reps.
  *
- * This service provides multiple formulas for estimating 1RM, allowing for more accurate
+ * This utility provides multiple formulas for estimating 1RM, allowing for more accurate
  * 1RM updates when users perform sets with multiple reps rather than assuming the performed
  * weight is already a 1RM.
  *
@@ -31,8 +31,8 @@ import java.math.RoundingMode
  * @author Congen Development Team
  * @since 1.0.0
  */
-@Service
-class OneRepMaxCalculatorService {
+@Component
+class OneRepMaxCalculator {
     companion object {
         private const val WEIGHT_SCALE = 2
     }

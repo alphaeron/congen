@@ -11,6 +11,8 @@ import com.congen.mockUserOneRepMax
 import com.congen.model.SetScheme
 import com.congen.model.WeightUnit
 import com.congen.sampleInstant
+import com.congen.util.OneRepMaxCalculator
+import com.congen.util.UnitConverter
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -44,7 +46,7 @@ class SetSchemeServiceTest {
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var programDAL: ProgramDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
-    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var unitConversionService: UnitConverter
     private lateinit var setSchemeService: SetSchemeService
 
     private val now = sampleInstant()
@@ -64,7 +66,7 @@ class SetSchemeServiceTest {
         programDAL = mock()
         userOneRepMaxDAL = mock()
         unitConversionService = mock()
-        val oneRepMaxCalculator = OneRepMaxCalculatorService()
+        val oneRepMaxCalculator = OneRepMaxCalculator()
         setSchemeService =
             SetSchemeService(
                 setSchemeDAL,

@@ -2,8 +2,8 @@ package com.congen.controllers
 
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
+import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
-import com.congen.service.ConjugateWorkoutGeneratorService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content

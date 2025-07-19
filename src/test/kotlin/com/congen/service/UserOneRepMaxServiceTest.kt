@@ -12,6 +12,7 @@ import com.congen.mockUserWeightUnitPreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
+import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -31,7 +32,7 @@ class UserOneRepMaxServiceTest {
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
 
     @Mock
-    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var unitConverter: UnitConverter
 
     private lateinit var service: UserOneRepMaxService
 
@@ -59,14 +60,14 @@ class UserOneRepMaxServiceTest {
 
     @BeforeEach
     fun setUp() {
-        service = UserOneRepMaxService(userOneRepMaxDAL, userWeightUnitPreferenceDAL, unitConversionService)
+        service = UserOneRepMaxService(userOneRepMaxDAL, userWeightUnitPreferenceDAL, unitConverter)
     }
 
     @Test
     fun `upsertOneRepMax stores value in kg when unit is kg`() {
         // Given
         val weight = BigDecimal("100.0")
-        whenever(unitConversionService.toKg(weight, WeightUnit.KG)).thenReturn(weight)
+        whenever(unitConverter.toKg(weight, WeightUnit.KG)).thenReturn(weight)
         whenever(userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weight)).thenReturn(createMockMono(oneRepMax))
 
         // When
@@ -82,7 +83,7 @@ class UserOneRepMaxServiceTest {
         // Given
         val weightInLbs = BigDecimal("220.46")
         val weightInKg = BigDecimal("100.0")
-        whenever(unitConversionService.toKg(weightInLbs, WeightUnit.LBS)).thenReturn(weightInKg)
+        whenever(unitConverter.toKg(weightInLbs, WeightUnit.LBS)).thenReturn(weightInKg)
         whenever(userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weightInKg)).thenReturn(createMockMono(oneRepMax))
 
         // When
@@ -104,9 +105,9 @@ class UserOneRepMaxServiceTest {
 
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)).thenReturn(createMockMono(oneRepMaxes))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)).thenReturn(createMockMono(preferences))
-        whenever(unitConversionService.fromKg(eq(oneRepMaxes[0].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight1)
-        whenever(unitConversionService.fromKg(eq(oneRepMaxes[1].oneRepMax), eq(WeightUnit.KG))).thenReturn(convertedWeight2)
-        whenever(unitConversionService.fromKg(eq(oneRepMaxes[2].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight3)
+        whenever(unitConverter.fromKg(eq(oneRepMaxes[0].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight1)
+        whenever(unitConverter.fromKg(eq(oneRepMaxes[1].oneRepMax), eq(WeightUnit.KG))).thenReturn(convertedWeight2)
+        whenever(unitConverter.fromKg(eq(oneRepMaxes[2].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight3)
 
         // When
         val result = service.getAllByUser(userId, null)
@@ -130,7 +131,7 @@ class UserOneRepMaxServiceTest {
 
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(createMockMono(oneRepMax))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)).thenReturn(createMockMono(preference))
-        whenever(unitConversionService.fromKg(oneRepMax.oneRepMax, WeightUnit.LBS)).thenReturn(convertedWeight)
+        whenever(unitConverter.fromKg(oneRepMax.oneRepMax, WeightUnit.LBS)).thenReturn(convertedWeight)
 
         // When
         val result = service.getByUserAndExercise(userId, exerciseName, null)

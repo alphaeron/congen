@@ -4,6 +4,7 @@ import com.congen.dal.UserDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.model.WeightUnit
+import com.congen.util.UnitConverter
 import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -20,7 +21,7 @@ import java.math.BigDecimal
 @Service
 class UserService(
     private val userDAL: UserDAL,
-    private val unitConversionService: UnitConversionService
+    private val unitConverter: UnitConverter
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserService::class.java)
@@ -40,7 +41,7 @@ class UserService(
         logger.info("Creating user: {}", name)
         return Mono.fromCallable {
             val weightUnit = WeightUnit.fromString(unit)
-            ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConversionService)
+            ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
         }
             .flatMap { weightInKg ->
                 userDAL.insertUser(name, age, height, weightInKg)
@@ -81,7 +82,7 @@ class UserService(
         logger.info("Updating user: {}", id)
         return Mono.fromCallable {
             val weightUnit = WeightUnit.fromString(unit)
-            ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConversionService)
+            ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
         }
             .flatMap { weightInKg ->
                 userDAL.updateUser(id, name, age, height, weightInKg)

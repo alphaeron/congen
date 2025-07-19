@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

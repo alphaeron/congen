@@ -5,6 +5,7 @@ import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.ValidationException
 import com.congen.mockUser
 import com.congen.model.WeightUnit
+import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -32,7 +33,7 @@ import kotlin.test.assertEquals
 class UserServiceTest {
     private lateinit var userService: UserService
     private lateinit var userDAL: UserDAL
-    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var unitConverter: UnitConverter
 
     companion object {
         private const val USER_ID = 1
@@ -50,8 +51,8 @@ class UserServiceTest {
     @BeforeEach
     fun setUp() {
         userDAL = mock()
-        unitConversionService = mock()
-        userService = UserService(userDAL, unitConversionService)
+        unitConverter = mock()
+        userService = UserService(userDAL, unitConverter)
     }
 
     @Test
@@ -70,7 +71,7 @@ class UserServiceTest {
         val savedUser = user.copy(id = USER_ID)
 
         // Mock unit conversion for KG (no conversion needed)
-        whenever(unitConversionService.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
+        whenever(unitConverter.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
             .thenReturn(BigDecimal(WEIGHT))
         whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT))))
             .thenReturn(Mono.just(savedUser))
@@ -101,7 +102,7 @@ class UserServiceTest {
             )
         val savedUser = user.copy(id = USER_ID)
 
-        whenever(unitConversionService.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
+        whenever(unitConverter.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
             .thenReturn(weightInKg)
         whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(weightInKg)))
             .thenReturn(Mono.just(savedUser))
@@ -112,7 +113,7 @@ class UserServiceTest {
             .expectNext(savedUser)
             .verifyComplete()
 
-        verify(unitConversionService).toKg(weightInLbs, WeightUnit.LBS)
+        verify(unitConverter).toKg(weightInLbs, WeightUnit.LBS)
         verify(userDAL).insertUser(NAME, AGE, BigDecimal(HEIGHT), weightInKg)
     }
 
@@ -121,7 +122,7 @@ class UserServiceTest {
         val invalidWeight = BigDecimal("-10.0")
         val convertedWeight = BigDecimal("-10.0") // Invalid weight after conversion
 
-        whenever(unitConversionService.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
+        whenever(unitConverter.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
             .thenReturn(convertedWeight)
 
         val result = userService.createUser(NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")
@@ -227,7 +228,7 @@ class UserServiceTest {
             )
 
         // Mock unit conversion for KG (no conversion needed)
-        whenever(unitConversionService.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
+        whenever(unitConverter.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
             .thenReturn(BigDecimal(WEIGHT))
         whenever(userDAL.updateUser(eq(USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT))))
             .thenReturn(Mono.just(user))
@@ -257,7 +258,7 @@ class UserServiceTest {
                 updatedAt = now
             )
 
-        whenever(unitConversionService.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
+        whenever(unitConverter.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
             .thenReturn(weightInKg)
         whenever(userDAL.updateUser(eq(USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(weightInKg)))
             .thenReturn(Mono.just(user))
@@ -268,7 +269,7 @@ class UserServiceTest {
             .expectNext(user)
             .verifyComplete()
 
-        verify(unitConversionService).toKg(weightInLbs, WeightUnit.LBS)
+        verify(unitConverter).toKg(weightInLbs, WeightUnit.LBS)
         verify(userDAL).updateUser(USER_ID, NAME, AGE, BigDecimal(HEIGHT), weightInKg)
     }
 
@@ -277,7 +278,7 @@ class UserServiceTest {
         val invalidWeight = BigDecimal("-10.0")
         val convertedWeight = BigDecimal("-10.0") // Invalid weight after conversion
 
-        whenever(unitConversionService.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
+        whenever(unitConverter.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
             .thenReturn(convertedWeight)
 
         val result = userService.updateUser(USER_ID, NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")

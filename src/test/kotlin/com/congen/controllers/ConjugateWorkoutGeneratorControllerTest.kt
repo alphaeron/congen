@@ -3,8 +3,8 @@ package com.congen.controllers
 import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
+import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
-import com.congen.service.ConjugateWorkoutGeneratorService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

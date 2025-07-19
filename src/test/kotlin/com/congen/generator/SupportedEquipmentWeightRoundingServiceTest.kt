@@ -1,4 +1,4 @@
-package com.congen.service
+package com.congen.generator
 
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.exceptions.DatabaseException
@@ -16,7 +16,7 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * Unit tests for WeightSelectionService.
+ * Unit tests for SupportedEquipmentWeightRoundingService.
  *
  * Tests weight rounding functionality for different equipment types including:
  * - Barbell exercises with plate-based weight selection
@@ -28,15 +28,15 @@ import java.math.RoundingMode
  * @since 1.0.0
  */
 @ExtendWith(MockitoExtension::class)
-class WeightSelectionServiceTest {
+class SupportedEquipmentWeightRoundingServiceTest {
     @Mock
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
 
-    private lateinit var weightSelectionService: WeightSelectionService
+    private lateinit var supportedEquipmentWeightRoundingService: SupportedEquipmentWeightRoundingService
 
     @BeforeEach
     fun setUp() {
-        weightSelectionService = WeightSelectionService(exerciseEquipmentDAL)
+        supportedEquipmentWeightRoundingService = SupportedEquipmentWeightRoundingService(exerciseEquipmentDAL)
     }
 
     @Test
@@ -55,7 +55,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -78,7 +78,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -101,7 +101,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -124,7 +124,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         // 37 is closer to 35 (difference of 2) than to 40 (difference of 3)
@@ -148,7 +148,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -171,7 +171,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -191,7 +191,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -210,7 +210,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.error(DatabaseException("Database error")))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -233,7 +233,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -256,7 +256,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -279,7 +279,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -303,7 +303,7 @@ class WeightSelectionServiceTest {
             .thenReturn(Mono.just(equipment))
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)

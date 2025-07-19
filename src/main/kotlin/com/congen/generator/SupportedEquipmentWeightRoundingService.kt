@@ -1,4 +1,4 @@
-package com.congen.service
+package com.congen.generator
 
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.model.WeightUnit
@@ -38,7 +38,7 @@ import kotlin.math.roundToInt
  * @since 1.0.0
  */
 @Service
-class WeightSelectionService(
+class SupportedEquipmentWeightRoundingService(
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL
 ) {
     companion object {

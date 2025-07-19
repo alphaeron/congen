@@ -1,7 +1,7 @@
-package com.congen.service
+package com.congen
 
-import com.congen.BaseIntegrationTest
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.generator.SupportedEquipmentWeightRoundingService
 import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,7 +10,7 @@ import reactor.test.StepVerifier
 import java.math.BigDecimal
 
 /**
- * Integration tests for WeightSelectionService.
+ * Integration tests for SupportedEquipmentWeightRoundingService.
  *
  * Tests weight rounding functionality with real database interactions,
  * including equipment lookup and weight unit preferences.
@@ -18,9 +18,9 @@ import java.math.BigDecimal
  * @author Congen Development Team
  * @since 1.0.0
  */
-class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
+class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTest() {
     @Autowired
-    private lateinit var weightSelectionService: WeightSelectionService
+    private lateinit var supportedEquipmentWeightRoundingService: SupportedEquipmentWeightRoundingService
 
     @Autowired
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
@@ -39,7 +39,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -55,7 +55,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -71,7 +71,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -87,7 +87,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -103,7 +103,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -119,7 +119,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.KG
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -135,7 +135,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -151,7 +151,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.KG
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -167,7 +167,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.KG
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -183,7 +183,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -199,7 +199,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -215,7 +215,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -231,7 +231,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)
@@ -247,7 +247,7 @@ class WeightSelectionServiceIntegrationTest : BaseIntegrationTest() {
         val weightUnit = WeightUnit.LBS
 
         // When
-        val result = weightSelectionService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
+        val result = supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, targetWeight, weightUnit)
 
         // Then
         StepVerifier.create(result)

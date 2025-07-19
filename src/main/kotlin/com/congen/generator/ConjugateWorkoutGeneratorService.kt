@@ -1,4 +1,4 @@
-package com.congen.service
+package com.congen.generator
 
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
@@ -17,12 +17,6 @@ import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.model.WorkoutStageTypeEnum
-import com.congen.service.conjugate.ConjugateConstants
-import com.congen.service.conjugate.ConjugateTemplates
-import com.congen.service.conjugate.ExerciseSelectionService
-import com.congen.service.conjugate.SessionTimeCalculator
-import com.congen.service.conjugate.SetSchemeParams
-import com.congen.service.conjugate.WorkoutStageGenerator
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -159,7 +153,7 @@ class ConjugateWorkoutGeneratorService(
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
         rotationHistory: List<ExerciseRotationHistory>,
-        template: List<com.congen.service.conjugate.DayTemplate>,
+        template: List<com.congen.generator.DayTemplate>,
         weakMuscles: List<String>,
         currentWeekNumber: Int
     ): Mono<Void> {
@@ -206,7 +200,7 @@ class ConjugateWorkoutGeneratorService(
      */
     private fun generateWorkoutStages(
         workout: ProgrammedWorkout,
-        dayTemplate: com.congen.service.conjugate.DayTemplate,
+        dayTemplate: com.congen.generator.DayTemplate,
         exercises: List<Exercise>,
         preferences: List<UserExercisePreference>,
         userEquipment: List<UserEquipment>,

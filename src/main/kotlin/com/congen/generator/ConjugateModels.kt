@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 /**
  * Data class for day templates.

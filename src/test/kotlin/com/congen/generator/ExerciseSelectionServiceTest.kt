@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseRotationHistoryDAL

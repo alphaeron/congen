@@ -8,6 +8,8 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Band
 import com.congen.model.SetScheme
 import com.congen.model.WeightUnit
+import com.congen.util.OneRepMaxCalculator
+import com.congen.util.UnitConverter
 import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -43,7 +45,7 @@ import java.math.BigDecimal
  * @property programmedExerciseDAL Data access layer for programmed exercise operations
  * @property programDAL Data access layer for program operations
  * @property userOneRepMaxDAL Data access layer for user one rep max operations
- * @property unitConversionService Service for unit conversions
+ * @property unitConverter Service for unit conversions
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -54,8 +56,8 @@ class SetSchemeService(
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val programDAL: ProgramDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
-    private val unitConversionService: UnitConversionService,
-    private val oneRepMaxCalculator: OneRepMaxCalculatorService
+    private val unitConverter: UnitConverter,
+    private val oneRepMaxCalculator: OneRepMaxCalculator
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -108,11 +110,11 @@ class SetSchemeService(
         val weightUnit = WeightUnit.fromString(unit)
         val targetWeightBD =
             targetWeight?.toBigDecimalOrNull()?.let {
-                ValidationUtil.validateTargetWeightWithUnit(it, weightUnit, unitConversionService)
+                ValidationUtil.validateTargetWeightWithUnit(it, weightUnit, unitConverter)
             }
         val performedWeightBD =
             performedWeight?.toBigDecimalOrNull()?.let {
-                ValidationUtil.validatePerformedWeightWithUnit(it, weightUnit, unitConversionService)
+                ValidationUtil.validatePerformedWeightWithUnit(it, weightUnit, unitConverter)
             }
 
         return setSchemeDAL.insertSetScheme(
@@ -136,8 +138,8 @@ class SetSchemeService(
                 // Convert output weights to requested unit (if not kg)
                 if (unit != null && weightUnit != WeightUnit.KG) {
                     savedScheme.copy(
-                        targetWeight = savedScheme.targetWeight?.let { unitConversionService.fromKg(it, weightUnit) },
-                        performedWeight = savedScheme.performedWeight?.let { unitConversionService.fromKg(it, weightUnit) }
+                        targetWeight = savedScheme.targetWeight?.let { unitConverter.fromKg(it, weightUnit) },
+                        performedWeight = savedScheme.performedWeight?.let { unitConverter.fromKg(it, weightUnit) }
                     )
                 } else {
                     savedScheme
@@ -196,11 +198,11 @@ class SetSchemeService(
         val weightUnit = WeightUnit.fromString(unit)
         val targetWeightBD =
             targetWeight?.toBigDecimalOrNull()?.let {
-                ValidationUtil.validateTargetWeightWithUnit(it, weightUnit, unitConversionService)
+                ValidationUtil.validateTargetWeightWithUnit(it, weightUnit, unitConverter)
             }
         val performedWeightBD =
             performedWeight?.toBigDecimalOrNull()?.let {
-                ValidationUtil.validatePerformedWeightWithUnit(it, weightUnit, unitConversionService)
+                ValidationUtil.validatePerformedWeightWithUnit(it, weightUnit, unitConverter)
             }
 
         return setSchemeDAL.updateSetScheme(
@@ -234,8 +236,8 @@ class SetSchemeService(
                 // Convert output weights to requested unit (if not kg)
                 if (unit != null && weightUnit != WeightUnit.KG) {
                     updatedScheme.copy(
-                        targetWeight = updatedScheme.targetWeight?.let { unitConversionService.fromKg(it, weightUnit) },
-                        performedWeight = updatedScheme.performedWeight?.let { unitConversionService.fromKg(it, weightUnit) }
+                        targetWeight = updatedScheme.targetWeight?.let { unitConverter.fromKg(it, weightUnit) },
+                        performedWeight = updatedScheme.performedWeight?.let { unitConverter.fromKg(it, weightUnit) }
                     )
                 } else {
                     updatedScheme

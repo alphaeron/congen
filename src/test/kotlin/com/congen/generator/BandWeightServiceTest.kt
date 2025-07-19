@@ -1,8 +1,8 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.model.Band
 import com.congen.model.WeightUnit
-import com.congen.service.UnitConversionService
+import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
@@ -15,7 +15,7 @@ import kotlin.test.assertNull
 
 class BandWeightServiceTest {
     @Mock
-    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var unitConversionService: UnitConverter
 
     private lateinit var bandWeightService: BandWeightService
 

@@ -1,4 +1,4 @@
-package com.congen.service
+package com.congen.generator
 
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
@@ -30,10 +30,6 @@ import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.model.WorkoutStage
-import com.congen.service.conjugate.ConjugateTemplates
-import com.congen.service.conjugate.ExerciseSelectionService
-import com.congen.service.conjugate.SessionTimeCalculator
-import com.congen.service.conjugate.WorkoutStageGenerator
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
@@ -163,10 +159,10 @@ class ConjugateWorkoutGeneratorServiceTest {
     private fun setupDefaultMocks() {
         whenever(conjugateTemplates.selectTemplate(any())).thenReturn(
             listOf(
-                com.congen.service.conjugate.DayTemplate("ME_Upper"),
-                com.congen.service.conjugate.DayTemplate("DE_Lower"),
-                com.congen.service.conjugate.DayTemplate("ME_Lower"),
-                com.congen.service.conjugate.DayTemplate("DE_Upper")
+                DayTemplate("ME_Upper"),
+                DayTemplate("DE_Lower"),
+                DayTemplate("ME_Lower"),
+                DayTemplate("DE_Upper")
             )
         )
         whenever(conjugateTemplates.hasSecondaryMovement(any())).thenReturn(true)
@@ -191,7 +187,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
             Mono.just(
                 listOf(
-                    com.congen.service.conjugate.SetSchemeParams(
+                    SetSchemeParams(
                         1,
                         false,
                         false,
@@ -212,7 +208,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any(), any())).thenReturn(
             Mono.just(
                 listOf(
-                    com.congen.service.conjugate.SetSchemeParams(
+                    SetSchemeParams(
                         1,
                         false,
                         false,
@@ -240,7 +236,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(workoutStageGenerator.generateAmrapOrEmomScheme(any(), any(), any())).thenReturn(
             Mono.just(
                 listOf(
-                    com.congen.service.conjugate.SetSchemeParams(
+                    SetSchemeParams(
                         1,
                         true,
                         false,

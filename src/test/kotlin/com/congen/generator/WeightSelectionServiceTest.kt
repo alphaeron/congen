@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
@@ -14,8 +14,7 @@ import com.congen.model.MovementType
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
-import com.congen.service.UnitConversionService
-import com.congen.service.WeightSelectionService
+import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -36,10 +35,10 @@ class WeightSelectionServiceTest {
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
 
     @Mock
-    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var unitConverter: UnitConverter
 
     @Mock
-    private lateinit var baseWeightSelectionService: WeightSelectionService
+    private lateinit var supportedEquipmentWeightRoundingService: SupportedEquipmentWeightRoundingService
 
     @Mock
     private lateinit var bandWeightService: BandWeightService
@@ -60,7 +59,7 @@ class WeightSelectionServiceTest {
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
 
     @InjectMocks
-    private lateinit var conjugateWeightSelectionService: ConjugateWeightSelectionService
+    private lateinit var weightSelectionService: WeightSelectionService
 
     private val userId = 1
     private val exerciseName = "Bench Press"
@@ -81,12 +80,12 @@ class WeightSelectionServiceTest {
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
             .thenReturn(Mono.just(UserWeightUnitPreference(userId, exerciseName, WeightUnit.LBS, now, now)))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(roundedWeight))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName,
                 intensity,
                 oneRepMaxes,
@@ -95,7 +94,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(roundedWeight, null))
+            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
             .verifyComplete()
     }
 
@@ -118,12 +117,12 @@ class WeightSelectionServiceTest {
             )
         ).thenReturn(bandWeightResult)
 
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(roundedWeight))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName,
                 intensity,
                 oneRepMaxes,
@@ -134,7 +133,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(roundedWeight, band))
+            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, band))
             .verifyComplete()
     }
 
@@ -179,12 +178,12 @@ class WeightSelectionServiceTest {
                 0.8
             )
         ).thenReturn(BigDecimal("250"))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(roundedWeight))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName,
                 intensity,
                 oneRepMaxes,
@@ -193,7 +192,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(roundedWeight, null))
+            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
             .verifyComplete()
     }
 
@@ -232,12 +231,12 @@ class WeightSelectionServiceTest {
         ).thenReturn(match)
         `when`(exerciseMatchingService.estimateIsolationWeight(targetExercise, BigDecimal("70")))
             .thenReturn(BigDecimal("15"))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("12")))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 "Bicep Curl",
                 intensity,
                 oneRepMaxes,
@@ -246,7 +245,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(BigDecimal("12"), null))
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("12"), null))
             .verifyComplete()
     }
 
@@ -264,12 +263,12 @@ class WeightSelectionServiceTest {
         `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
         `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
         `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("35")))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 "Bicep Curl",
                 intensity,
                 oneRepMaxes,
@@ -278,7 +277,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
             .verifyComplete()
     }
 
@@ -296,12 +295,12 @@ class WeightSelectionServiceTest {
         `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
         `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
         `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq("Lateral Raise"), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Lateral Raise"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("15")))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 "Lateral Raise",
                 intensity,
                 oneRepMaxes,
@@ -310,7 +309,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(BigDecimal("15"), null))
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("15"), null))
             .verifyComplete()
     }
 
@@ -328,12 +327,12 @@ class WeightSelectionServiceTest {
         `when`(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
         `when`(exerciseEquipmentDAL.selectAllExerciseEquipment()).thenReturn(Mono.just(allEquipment))
         `when`(exerciseMuscleDAL.selectAllExerciseMuscle()).thenReturn(Mono.just(allMuscles))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq("Unknown Exercise"), any(), eq(WeightUnit.LBS)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Unknown Exercise"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("35")))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 "Unknown Exercise",
                 intensity,
                 oneRepMaxes,
@@ -342,7 +341,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
+            .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
             .verifyComplete()
     }
 
@@ -353,12 +352,12 @@ class WeightSelectionServiceTest {
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
             .thenReturn(Mono.error(NoResultsFoundException("No preference found")))
-        `when`(baseWeightSelectionService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.KG)))
+        `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.KG)))
             .thenReturn(Mono.just(roundedWeight))
 
         // When
         val result =
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName,
                 intensity,
                 oneRepMaxes,
@@ -367,7 +366,7 @@ class WeightSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ConjugateWeightSelectionService.TargetWeightResult(roundedWeight, null))
+            .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
             .verifyComplete()
     }
 }

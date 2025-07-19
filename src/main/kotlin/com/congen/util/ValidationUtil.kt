@@ -2,7 +2,6 @@ package com.congen.util
 
 import com.congen.exceptions.ValidationException
 import com.congen.model.WeightUnit
-import com.congen.service.UnitConversionService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
@@ -55,7 +54,7 @@ import java.math.BigDecimal
  * ValidationUtil.validateUserWeight(BigDecimal("80.0"))
  *
  * // Validate with unit conversion
- * val weightInKg = ValidationUtil.validateUserWeightWithUnit(BigDecimal("176.0"), WeightUnit.LBS, unitConversionService)
+ * val weightInKg = ValidationUtil.validateUserWeightWithUnit(BigDecimal("176.0"), WeightUnit.LBS, unitConverter)
  *
  * // Validate program preferences
  * ValidationUtil.validateProgramDaysPerWeek(3)
@@ -362,16 +361,16 @@ object ValidationUtil {
      *
      * @param weight Weight value in the specified unit
      * @param unit The unit of the weight value
-     * @param unitConversionService Service for unit conversions
+     * @param unitConverter Utility for unit conversions
      * @return The weight converted to kg if validation passes
      * @throws ValidationException if weight is not in valid range after conversion to kg
      */
     fun validateUserWeightWithUnit(
         weight: BigDecimal,
         unit: WeightUnit,
-        unitConversionService: UnitConversionService
+        unitConverter: UnitConverter
     ): BigDecimal {
-        val weightInKg = unitConversionService.toKg(weight, unit)
+        val weightInKg = unitConverter.toKg(weight, unit)
         validateUserWeight(weightInKg)
         return weightInKg
     }
@@ -381,16 +380,16 @@ object ValidationUtil {
      *
      * @param oneRepMax One rep max value in the specified unit
      * @param unit The unit of the one rep max value
-     * @param unitConversionService Service for unit conversions
+     * @param unitConverter Utility for unit conversions
      * @return The one rep max converted to kg if validation passes
      * @throws ValidationException if not in valid range after conversion to kg
      */
     fun validateOneRepMaxWithUnit(
         oneRepMax: BigDecimal,
         unit: WeightUnit,
-        unitConversionService: UnitConversionService
+        unitConverter: UnitConverter
     ): BigDecimal {
-        val oneRepMaxInKg = unitConversionService.toKg(oneRepMax, unit)
+        val oneRepMaxInKg = unitConverter.toKg(oneRepMax, unit)
         validateOneRepMax(oneRepMaxInKg)
         return oneRepMaxInKg
     }
@@ -400,17 +399,17 @@ object ValidationUtil {
      *
      * @param weight Target weight value in the specified unit, or null
      * @param unit The unit of the weight value
-     * @param unitConversionService Service for unit conversions
+     * @param unitConverter Utility for unit conversions
      * @return The weight converted to kg if validation passes, or null if input was null
      * @throws ValidationException if not > 0 after conversion to kg
      */
     fun validateTargetWeightWithUnit(
         weight: BigDecimal?,
         unit: WeightUnit,
-        unitConversionService: UnitConversionService
+        unitConverter: UnitConverter
     ): BigDecimal? {
         if (weight == null) return null
-        val weightInKg = unitConversionService.toKg(weight, unit)
+        val weightInKg = unitConverter.toKg(weight, unit)
         validateTargetWeight(weightInKg)
         return weightInKg
     }
@@ -420,17 +419,17 @@ object ValidationUtil {
      *
      * @param weight Performed weight value in the specified unit, or null
      * @param unit The unit of the weight value
-     * @param unitConversionService Service for unit conversions
+     * @param unitConverter Utility for unit conversions
      * @return The weight converted to kg if validation passes, or null if input was null
      * @throws ValidationException if not > 0 after conversion to kg
      */
     fun validatePerformedWeightWithUnit(
         weight: BigDecimal?,
         unit: WeightUnit,
-        unitConversionService: UnitConversionService
+        unitConverter: UnitConverter
     ): BigDecimal? {
         if (weight == null) return null
-        val weightInKg = unitConversionService.toKg(weight, unit)
+        val weightInKg = unitConverter.toKg(weight, unit)
         validatePerformedWeight(weightInKg)
         return weightInKg
     }

@@ -1,10 +1,8 @@
 use snake_case for api values
 
-separate utility for stages, to allow cleaner sharing between templates
+separate class to isolate the workout stage generation for different stages?
 
 put generateWorkoutsForWeek in the template itself.
-
-separate class to isolate the workout stage generation for different stages?
 
 2 or 3 week conjugate generation
 

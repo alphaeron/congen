@@ -1,4 +1,4 @@
-package com.congen.service
+package com.congen.util
 
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -6,15 +6,15 @@ import java.math.BigDecimal
 import kotlin.test.assertEquals
 
 /**
- * Unit tests for OneRepMaxCalculatorService.
+ * Unit tests for OneRepMaxCalculator.
  *
  * Tests the various 1RM calculation formulas and edge cases.
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
-class OneRepMaxCalculatorServiceTest {
-    private val calculator = OneRepMaxCalculatorService()
+class OneRepMaxCalculatorTest {
+    private val calculator = OneRepMaxCalculator()
 
     @Test
     fun `should calculate Brzycki formula correctly`() {
@@ -24,7 +24,7 @@ class OneRepMaxCalculatorServiceTest {
             calculator.estimateOneRepMax(
                 BigDecimal("200"),
                 5,
-                OneRepMaxCalculatorService.OneRepMaxFormula.BRZYCKI
+                OneRepMaxCalculator.OneRepMaxFormula.BRZYCKI
             )
         assertEquals(BigDecimal("225.00"), result)
     }
@@ -37,7 +37,7 @@ class OneRepMaxCalculatorServiceTest {
             calculator.estimateOneRepMax(
                 BigDecimal("200"),
                 5,
-                OneRepMaxCalculatorService.OneRepMaxFormula.EPLEY
+                OneRepMaxCalculator.OneRepMaxFormula.EPLEY
             )
         assertEquals(BigDecimal("233.33"), result)
     }
@@ -50,7 +50,7 @@ class OneRepMaxCalculatorServiceTest {
             calculator.estimateOneRepMax(
                 BigDecimal("200"),
                 5,
-                OneRepMaxCalculatorService.OneRepMaxFormula.LOMBARDI
+                OneRepMaxCalculator.OneRepMaxFormula.LOMBARDI
             )
         assertEquals(BigDecimal("300.00"), result)
     }
@@ -63,7 +63,7 @@ class OneRepMaxCalculatorServiceTest {
             calculator.estimateOneRepMax(
                 BigDecimal("200"),
                 5,
-                OneRepMaxCalculatorService.OneRepMaxFormula.OCONNER
+                OneRepMaxCalculator.OneRepMaxFormula.OCONNER
             )
         assertEquals(BigDecimal("225.00"), result)
     }
@@ -72,22 +72,22 @@ class OneRepMaxCalculatorServiceTest {
     fun `should select appropriate formula based on rep range`() {
         // 1-3 reps: Brzycki
         val lowReps = calculator.estimateOneRepMax(BigDecimal("200"), 3)
-        val brzycki = calculator.estimateOneRepMax(BigDecimal("200"), 3, OneRepMaxCalculatorService.OneRepMaxFormula.BRZYCKI)
+        val brzycki = calculator.estimateOneRepMax(BigDecimal("200"), 3, OneRepMaxCalculator.OneRepMaxFormula.BRZYCKI)
         assertEquals(brzycki, lowReps)
 
         // 4-10 reps: Epley
         val mediumReps = calculator.estimateOneRepMax(BigDecimal("200"), 8)
-        val epley = calculator.estimateOneRepMax(BigDecimal("200"), 8, OneRepMaxCalculatorService.OneRepMaxFormula.EPLEY)
+        val epley = calculator.estimateOneRepMax(BigDecimal("200"), 8, OneRepMaxCalculator.OneRepMaxFormula.EPLEY)
         assertEquals(epley, mediumReps)
 
         // 11-15 reps: Lombardi
         val highReps = calculator.estimateOneRepMax(BigDecimal("200"), 12)
-        val lombardi = calculator.estimateOneRepMax(BigDecimal("200"), 12, OneRepMaxCalculatorService.OneRepMaxFormula.LOMBARDI)
+        val lombardi = calculator.estimateOneRepMax(BigDecimal("200"), 12, OneRepMaxCalculator.OneRepMaxFormula.LOMBARDI)
         assertEquals(lombardi, highReps)
 
         // 16+ reps: O'Conner
         val veryHighReps = calculator.estimateOneRepMax(BigDecimal("200"), 20)
-        val oconner = calculator.estimateOneRepMax(BigDecimal("200"), 20, OneRepMaxCalculatorService.OneRepMaxFormula.OCONNER)
+        val oconner = calculator.estimateOneRepMax(BigDecimal("200"), 20, OneRepMaxCalculator.OneRepMaxFormula.OCONNER)
         assertEquals(oconner, veryHighReps)
     }
 

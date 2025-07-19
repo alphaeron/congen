@@ -1,5 +1,8 @@
 package com.congen
 
+import com.congen.generator.DayTemplate
+import com.congen.generator.PrilepinGuidelines
+import com.congen.generator.SetSchemeParams
 import com.congen.model.Equipment
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
@@ -23,9 +26,6 @@ import com.congen.model.UserProgramPreferences
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
-import com.congen.service.conjugate.DayTemplate
-import com.congen.service.conjugate.PrilepinGuidelines
-import com.congen.service.conjugate.SetSchemeParams
 import java.math.BigDecimal
 import java.time.Instant
 

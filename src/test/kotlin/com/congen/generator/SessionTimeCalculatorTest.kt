@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.mockSetSchemeParams
 import org.junit.jupiter.api.Assertions.assertEquals

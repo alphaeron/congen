@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
@@ -19,8 +19,7 @@ import com.congen.model.MovementType
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
-import com.congen.service.UnitConversionService
-import com.congen.service.WeightSelectionService
+import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -44,11 +43,10 @@ class WorkoutStageGeneratorTest {
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
     private lateinit var setSchemeDAL: SetSchemeDAL
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
-    private lateinit var unitConversionService: UnitConversionService
+    private lateinit var unitConversionService: UnitConverter
     private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
     private lateinit var weightSelectionService: WeightSelectionService
-    private lateinit var conjugateWeightSelectionService: ConjugateWeightSelectionService
 
     private val workoutId = 1L
     private val workoutStageId = 1L
@@ -66,7 +64,6 @@ class WorkoutStageGeneratorTest {
         setSchemeService = mock()
         prilepinGuidelinesService = mock()
         weightSelectionService = mock()
-        conjugateWeightSelectionService = mock()
 
         val exerciseDAL = mock<com.congen.dal.ExerciseDAL>()
         val exerciseEquipmentDAL = mock<com.congen.dal.ExerciseEquipmentDAL>()
@@ -82,7 +79,6 @@ class WorkoutStageGeneratorTest {
                 setSchemeService = setSchemeService,
                 prilepinGuidelinesService = prilepinGuidelinesService,
                 weightSelectionService = weightSelectionService,
-                conjugateWeightSelectionService = conjugateWeightSelectionService,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL
             )
 
@@ -382,12 +378,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("85.00"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 eq("Bench Press"),
                 any(),
                 eq(oneRepMaxes),
@@ -443,12 +439,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("170.00"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 eq("Squat"),
                 any(),
                 eq(oneRepMaxes),
@@ -497,12 +493,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("25.00"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 eq("Burpees"),
                 any(),
                 eq(oneRepMaxes),
@@ -555,12 +551,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("50.00"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 eq("New Exercise"),
                 any(),
                 eq(oneRepMaxes),
@@ -609,12 +605,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("50.00"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 eq("New Secondary Exercise"),
                 any(),
                 eq(oneRepMaxes),
@@ -656,12 +652,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("25.00"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 eq("New Conditioning Exercise"),
                 any(),
                 eq(oneRepMaxes),
@@ -721,12 +717,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("70.0"),
                 band = com.congen.model.Band(BigDecimal("30"))
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName = any(),
                 intensity = any(),
                 oneRepMaxes = any(),
@@ -795,12 +791,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("170.0"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName = any(),
                 intensity = any(),
                 oneRepMaxes = any(),
@@ -828,7 +824,7 @@ class WorkoutStageGeneratorTest {
             }
             .verifyComplete()
 
-        verify(conjugateWeightSelectionService, times(1)).getTargetWeight(
+        verify(weightSelectionService, times(1)).getTargetWeight(
             any(),
             any(),
             any(),
@@ -875,12 +871,12 @@ class WorkoutStageGeneratorTest {
 
         // Mock conjugate weight selection service for deload week (no bands)
         val targetWeightResult =
-            ConjugateWeightSelectionService.TargetWeightResult(
+            WeightSelectionService.TargetWeightResult(
                 targetWeight = BigDecimal("100.0"),
                 band = null
             )
         whenever(
-            conjugateWeightSelectionService.getTargetWeight(
+            weightSelectionService.getTargetWeight(
                 exerciseName = any(),
                 intensity = any(),
                 oneRepMaxes = any(),

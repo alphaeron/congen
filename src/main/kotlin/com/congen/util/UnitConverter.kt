@@ -1,14 +1,14 @@
-package com.congen.service
+package com.congen.util
 
 import com.congen.model.WeightUnit
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * Service for converting between different weight units.
+ * Utility for converting between different weight units.
  *
- * This service provides conversion utilities for weight measurements,
+ * This utility provides conversion utilities for weight measurements,
  * primarily between kilograms (kg) and pounds (lbs). All internal
  * calculations are performed in kilograms, but users can input and
  * view weights in their preferred units.
@@ -22,17 +22,17 @@ import java.math.RoundingMode
  *
  * ```kotlin
  * // Convert user input to kg for storage
- * val weightInKg = unitConversionService.toKg(weightInLbs, WeightUnit.LBS)
+ * val weightInKg = unitConverter.toKg(weightInLbs, WeightUnit.LBS)
  *
  * // Convert stored kg to user's preferred units for display
- * val weightInLbs = unitConversionService.fromKg(weightInKg, WeightUnit.LBS)
+ * val weightInLbs = unitConverter.fromKg(weightInKg, WeightUnit.LBS)
  * ```
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
-@Service
-class UnitConversionService {
+@Component
+class UnitConverter {
     companion object {
         /** Conversion factor: 1 kg = 2.20462 lbs */
         private val KG_TO_LBS = BigDecimal("2.20462")

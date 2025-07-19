@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
@@ -9,12 +9,10 @@ import com.congen.model.Exercise
 import com.congen.model.MovementType
 import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
-import com.congen.service.UnitConversionService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
 import java.math.RoundingMode
-import com.congen.service.WeightSelectionService as BaseWeightSelectionService
 
 /**
  * Service for selecting and calculating target weights for exercises in conjugate workouts.
@@ -27,8 +25,7 @@ import com.congen.service.WeightSelectionService as BaseWeightSelectionService
  * - Unit conversion and weight rounding
  *
  * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preference operations
- * @property unitConversionService Service for unit conversions
- * @property baseWeightSelectionService Base weight selection service for rounding
+ * @property supportedEquipmentWeightRoundingService Service to match desired weights to equipment-supported weights
  * @property bandWeightService Service for band weight calculations
  * @property exerciseMatchingService Service for exercise matching
  * @property exerciseDAL Data access layer for exercise operations
@@ -40,10 +37,9 @@ import com.congen.service.WeightSelectionService as BaseWeightSelectionService
  * @since 1.0.0
  */
 @Component
-class ConjugateWeightSelectionService(
+class WeightSelectionService(
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
-    private val unitConversionService: UnitConversionService,
-    private val baseWeightSelectionService: BaseWeightSelectionService,
+    private val supportedEquipmentWeightRoundingService: SupportedEquipmentWeightRoundingService,
     private val bandWeightService: BandWeightService,
     private val exerciseMatchingService: ExerciseMatchingService,
     private val exerciseDAL: ExerciseDAL,
@@ -204,7 +200,11 @@ class ConjugateWeightSelectionService(
                             weightUnit = weightUnit,
                             weekInCycle = currentWeekNumber
                         )
-                    baseWeightSelectionService.roundWeightForExercise(exerciseName, bandWeightResult.barWeight, weightUnit).map {
+                    supportedEquipmentWeightRoundingService.roundWeightForExercise(
+                        exerciseName,
+                        bandWeightResult.barWeight,
+                        weightUnit
+                    ).map {
                             roundedWeight ->
                         TargetWeightResult(
                             targetWeight = roundedWeight,
@@ -212,7 +212,7 @@ class ConjugateWeightSelectionService(
                         )
                     }
                 } else {
-                    baseWeightSelectionService.roundWeightForExercise(exerciseName, calculatedWeight, weightUnit)
+                    supportedEquipmentWeightRoundingService.roundWeightForExercise(exerciseName, calculatedWeight, weightUnit)
                         .map { roundedWeight ->
                             TargetWeightResult(
                                 targetWeight = roundedWeight,

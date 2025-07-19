@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
@@ -13,7 +13,6 @@ import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
-import com.congen.service.WeightSelectionService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -49,8 +48,7 @@ import kotlin.random.Random
  * @property setSchemeDAL Data access layer for set scheme operations
  * @property setSchemeService Service for set scheme operations
  * @property prilepinGuidelinesService Service for Prilepin-based guidelines
- * @property weightSelectionService Service for weight selection operations
- * @property conjugateWeightSelectionService Service for conjugate-specific weight selection
+ * @property weightSelectionService Service for conjugate-specific weight selection
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -64,7 +62,6 @@ class WorkoutStageGenerator(
     private val setSchemeService: SetSchemeService,
     private val prilepinGuidelinesService: PrilepinGuidelinesService,
     private val weightSelectionService: WeightSelectionService,
-    private val conjugateWeightSelectionService: ConjugateWeightSelectionService,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
 ) {
     /**
@@ -209,7 +206,7 @@ class WorkoutStageGenerator(
 
         val isDynamicEffort = dayType.startsWith("DE_")
         // For non-DE exercises, use standard weight calculation
-        return conjugateWeightSelectionService.getTargetWeight(
+        return weightSelectionService.getTargetWeight(
             exercise.name,
             intensity,
             oneRepMaxes,
@@ -277,7 +274,7 @@ class WorkoutStageGenerator(
         val restSeconds = (180..300).random()
 
         // Determine target weight
-        return conjugateWeightSelectionService.getTargetWeight(exercise.name, intensity, oneRepMaxes, userId, isDynamicEffort = false)
+        return weightSelectionService.getTargetWeight(exercise.name, intensity, oneRepMaxes, userId, isDynamicEffort = false)
             .map { result ->
                 // Tempo: vary for secondary exercises
                 val useTempo = Random.nextBoolean()
@@ -329,7 +326,7 @@ class WorkoutStageGenerator(
     ): Mono<List<SetSchemeParams>> {
         val isAmrap = Random.nextBoolean()
 
-        return conjugateWeightSelectionService.getTargetWeight(exercise.name, 0.5, oneRepMaxes, userId, isDynamicEffort = false)
+        return weightSelectionService.getTargetWeight(exercise.name, 0.5, oneRepMaxes, userId, isDynamicEffort = false)
             .map { result ->
                 val useTempo = Random.nextBoolean()
                 val eccentric = if (useTempo) Random.nextInt(2, 4).toString() else "0"

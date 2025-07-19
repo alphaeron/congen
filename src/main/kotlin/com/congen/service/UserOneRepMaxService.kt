@@ -5,6 +5,7 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserOneRepMax
 import com.congen.model.WeightUnit
+import com.congen.util.UnitConverter
 import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -40,7 +41,7 @@ import java.math.BigDecimal
  *
  * @property userOneRepMaxDAL Data access layer for user one rep max operations
  * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
- * @property unitConversionService Service for unit conversions
+ * @property unitConverter Utility for unit conversions
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -49,7 +50,7 @@ import java.math.BigDecimal
 class UserOneRepMaxService(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
-    private val unitConversionService: UnitConversionService
+    private val unitConverter: UnitConverter
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserOneRepMaxService::class.java)
@@ -83,7 +84,7 @@ class UserOneRepMaxService(
         val weightUnit = WeightUnit.fromString(unit)
 
         // Convert to kg for storage and validate
-        val weightInKg = ValidationUtil.validateOneRepMaxWithUnit(oneRepMax, weightUnit, unitConversionService)
+        val weightInKg = ValidationUtil.validateOneRepMaxWithUnit(oneRepMax, weightUnit, unitConverter)
         logger.debug("Converted {} {} to {} kg for storage", oneRepMax, weightUnit, weightInKg)
 
         return userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weightInKg)
@@ -125,7 +126,7 @@ class UserOneRepMaxService(
                                     preferenceMap[oneRepMax.exerciseName]?.preferredUnit ?: WeightUnit.KG
                                 }
 
-                            val convertedWeight = unitConversionService.fromKg(oneRepMax.oneRepMax, preferredUnit)
+                            val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preferredUnit)
                             oneRepMax.copy(oneRepMax = convertedWeight)
                         }
                     }
@@ -186,7 +187,7 @@ class UserOneRepMaxService(
                     }
 
                 preferredUnitMono.map { preferredUnit ->
-                    val convertedWeight = unitConversionService.fromKg(oneRepMax.oneRepMax, preferredUnit)
+                    val convertedWeight = unitConverter.fromKg(oneRepMax.oneRepMax, preferredUnit)
                     val convertedOneRepMax = oneRepMax.copy(oneRepMax = convertedWeight)
 
                     logger.debug(

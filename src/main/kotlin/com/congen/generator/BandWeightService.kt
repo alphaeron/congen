@@ -1,8 +1,8 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.model.Band
 import com.congen.model.WeightUnit
-import com.congen.service.UnitConversionService
+import com.congen.util.UnitConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -34,7 +34,7 @@ import java.math.BigDecimal
  */
 @Service
 class BandWeightService(
-    private val unitConversionService: UnitConversionService,
+    private val unitConverter: UnitConverter,
 ) {
     /**
      * Computes band and bar weights for a Dynamic Effort exercise.
@@ -72,7 +72,7 @@ class BandWeightService(
         // Convert total weight to pounds for band calculations
         val totalWeightLbs =
             if (weightUnit == WeightUnit.KG) {
-                unitConversionService.fromKg(totalTargetWeight, WeightUnit.LBS)
+                unitConverter.fromKg(totalTargetWeight, WeightUnit.LBS)
             } else {
                 totalTargetWeight
             }
@@ -90,7 +90,7 @@ class BandWeightService(
         // Convert bar weight back to original unit and round to achievable weights
         val barWeight =
             if (weightUnit == WeightUnit.KG) {
-                unitConversionService.toKg(barWeightLbs, WeightUnit.LBS)
+                unitConverter.toKg(barWeightLbs, WeightUnit.LBS)
             } else {
                 barWeightLbs
             }

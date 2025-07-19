@@ -1,4 +1,4 @@
-package com.congen.service.conjugate
+package com.congen.generator
 
 import com.congen.mockDayTemplate
 import com.congen.mockPrilepinGuidelines
