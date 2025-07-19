@@ -5,6 +5,8 @@ metadata:
   namespace: congen
   labels:
     app: migration-service
+  annotations:
+    reloader.stakater.com/auto: "true"
 spec:
   replicas: 1  # Singleton - only one instance
   selector:

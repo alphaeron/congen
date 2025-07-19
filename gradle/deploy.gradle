@@ -250,7 +250,7 @@ task confirmProductionDeployment {
 task setupTestPortForward {
     description = 'Setup port forwarding for integration tests'
     group = 'kubernetes'
-    
+
     // Ensure deployment is complete before setting up port forwarding
     dependsOn 'deployToKubernetes'
 

@@ -4,8 +4,10 @@ kind: Kustomization
 resources:
 - namespace.yaml
 - service-account.yaml
+- reloader-rbac.yaml
 - migrations-configmap.yaml
 - migration-service-deployment.yaml
+- reloader-deployment.yaml
 - congen-configmap.yaml
 - congen-deployment.yaml
 - congen-service.yaml
