@@ -93,12 +93,10 @@ class ExerciseMatchingServiceTest {
 
         // Bench Press should match Bench Press with high similarity
         assertEquals(exercise1, match1.referenceExercise)
-        println("Bench Press similarity: ${match1.similarityScore}")
         assertTrue(match1.similarityScore > 0.6, "Bench Press similarity ${match1.similarityScore} should be > 0.6")
 
         // Incline Bench Press should match Bench Press with moderate similarity
         assertEquals(exercise1, match2.referenceExercise)
-        println("Incline Bench Press similarity: ${match2.similarityScore}")
         assertTrue(match2.similarityScore > 0.4, "Incline Bench Press similarity ${match2.similarityScore} should be > 0.4")
     }
 
@@ -119,7 +117,6 @@ class ExerciseMatchingServiceTest {
 
         // Should be approximately 80% of bench press (0.8 * 200 = 160)
         // But adjusted by similarity score, so it could be higher
-        println("Estimated weight: $estimatedWeight")
         assertTrue(estimatedWeight > BigDecimal("150"), "Estimated weight $estimatedWeight should be > 150")
         assertTrue(estimatedWeight < BigDecimal("200"), "Estimated weight $estimatedWeight should be < 200")
     }
@@ -234,9 +231,6 @@ class ExerciseMatchingServiceTest {
             )
 
         // All exercises should have reasonable similarity scores
-        println("Bench Press similarity: ${match1.similarityScore}")
-        println("Incline Bench Press similarity: ${match2.similarityScore}")
-        println("Deadlift similarity: ${match3.similarityScore}")
         assertTrue(match1.similarityScore > 0.5, "Bench Press similarity ${match1.similarityScore} should be > 0.5")
         assertTrue(match2.similarityScore > 0.4, "Incline Bench Press similarity ${match2.similarityScore} should be > 0.4")
         assertTrue(match3.similarityScore > 0.5, "Deadlift similarity ${match3.similarityScore} should be > 0.5")

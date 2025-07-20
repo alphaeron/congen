@@ -34,7 +34,6 @@ class BandWeightServiceTest {
 
         val result =
             bandWeightService.computeBandAndBarWeights(
-                "Bench Press",
                 totalWeight,
                 WeightUnit.LBS,
                 weekInCycle
@@ -51,7 +50,6 @@ class BandWeightServiceTest {
 
         val result =
             bandWeightService.computeBandAndBarWeights(
-                "Bench Press",
                 totalWeight,
                 WeightUnit.LBS,
                 weekInCycle

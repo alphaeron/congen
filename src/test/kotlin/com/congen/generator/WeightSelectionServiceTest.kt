@@ -110,7 +110,6 @@ class WeightSelectionServiceTest {
 
         `when`(
             bandWeightService.computeBandAndBarWeights(
-                eq(exerciseName),
                 any(),
                 eq(WeightUnit.LBS),
                 eq(1)

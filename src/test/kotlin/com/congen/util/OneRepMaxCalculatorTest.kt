@@ -159,11 +159,6 @@ class OneRepMaxCalculatorTest {
         val tenReps = calculator.estimateOneRepMax(weight, 10)
         val fifteenReps = calculator.estimateOneRepMax(weight, 15)
 
-        println("1 rep: $oneRep")
-        println("5 reps: $fiveReps")
-        println("10 reps: $tenReps")
-        println("15 reps: $fifteenReps")
-
         // All estimates should be greater than or equal to the weight used
         assert(oneRep >= weight) { "1 rep estimate $oneRep should be >= $weight" }
         assert(fiveReps > weight) { "5 reps estimate $fiveReps should be > $weight" }

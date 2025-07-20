@@ -155,14 +155,15 @@ class ExerciseSelectionService(
     }
 
     /**
-     * Selects a secondary exercise similar to the primary exercise in terms of movement type and muscles worked.
+     * Selects a similar secondary exercise based on the primary exercise.
+     * This method finds exercises that work similar muscle groups and movement patterns.
      *
      * @param primaryExercise The primary exercise to find a similar secondary exercise for
      * @param userEquipment List of user's available equipment
      * @param preferences List of user's exercise preferences
      * @param exercises List of available exercises (already filtered to exclude primary exercise)
      * @param rotationHistory List of exercise rotation history
-     * @return Selected secondary exercise or null if none available
+     * @return Selected secondary exercise or empty if none available
      */
     fun selectSimilarSecondaryExercise(
         primaryExercise: Exercise,
@@ -170,14 +171,14 @@ class ExerciseSelectionService(
         preferences: List<UserExercisePreference>,
         exercises: List<Exercise>,
         rotationHistory: List<ExerciseRotationHistory>
-    ): Mono<Exercise?> {
+    ): Mono<Exercise> {
         val availableExercises =
             exercises.filter { exercise ->
                 !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
             }
         if (availableExercises.isEmpty()) {
             logger.warn("No available exercises found for secondary movement")
-            return Mono.justOrEmpty(null)
+            return Mono.empty()
         }
         val equipmentFilteredExercises =
             availableExercises.filter { exercise ->
@@ -208,7 +209,7 @@ class ExerciseSelectionService(
                             .onErrorReturn(exercise to 0.0)
                     }
                 if (exerciseScoringMonos.isEmpty()) {
-                    return@flatMap Mono.justOrEmpty(null)
+                    return@flatMap Mono.empty()
                 }
                 @Suppress("UNCHECKED_CAST")
                 return@flatMap Mono.zip(exerciseScoringMonos) { results: Array<Any?> ->
@@ -217,7 +218,13 @@ class ExerciseSelectionService(
                         .sortedByDescending { it.second }
                         .firstOrNull()
                         ?.first
-                } as Mono<Exercise?>
+                }.flatMap { exercise ->
+                    if (exercise != null) {
+                        Mono.just(exercise)
+                    } else {
+                        Mono.empty()
+                    }
+                }
             }
     }
 

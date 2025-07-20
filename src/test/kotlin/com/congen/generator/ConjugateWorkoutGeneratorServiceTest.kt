@@ -17,8 +17,6 @@ import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
-import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -43,7 +41,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var conjugateTemplates: ConjugateTemplates
     private lateinit var exerciseSelectionService: ExerciseSelectionService
-    private lateinit var workoutStageGenerator: WorkoutStageGenerator
+    private lateinit var workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
 
     companion object {
@@ -63,7 +61,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         programmedWorkoutDAL = mock()
         conjugateTemplates = mock()
         exerciseSelectionService = mock()
-        workoutStageGenerator = mock()
+        workoutStageGenerationOrchestrator = mock()
         sessionTimeCalculator = mock()
 
         conjugateWorkoutGeneratorService =
@@ -77,9 +75,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programDAL = programDAL,
                 programmedWorkoutDAL = programmedWorkoutDAL,
                 conjugateTemplates = conjugateTemplates,
-                exerciseSelectionService = exerciseSelectionService,
-                workoutStageGenerator = workoutStageGenerator,
-                sessionTimeCalculator = sessionTimeCalculator
+                workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator
             )
     }
 
@@ -140,9 +136,14 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         ).thenReturn(Mono.just(exercises.first()))
 
-        // Set up workout stage generator mocks
+        // Set up workout stage generation orchestrator mocks
         whenever(
-            workoutStageGenerator.generatePrilepinBasedScheme(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
                 any(),
                 any(),
                 any(),
@@ -150,12 +151,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any()
             )
-        ).thenReturn(Mono.just(emptyList()))
-        whenever(
-            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
-        ).thenReturn(Mono.just(mockWorkoutStage()))
-        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
-        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+        ).thenReturn(Mono.empty())
 
         // Set up session time calculator mocks
         whenever(
@@ -170,6 +166,23 @@ class ConjugateWorkoutGeneratorServiceTest {
         // Set up workout mocks directly
         val createdWorkout = mockProgrammedWorkout()
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
+
+        // Set up workout stage generation orchestrator mocks
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.empty())
 
         // Add missing mock for filterExercisesForDEWorkout
         // whenever(exerciseSelectionService.filterExercisesForDEWorkout(any<List<Exercise>>())).thenReturn(
@@ -257,9 +270,14 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         ).thenReturn(Mono.just(exercises.first()))
 
-        // Set up workout stage generator mocks
+        // Set up workout stage generation orchestrator mocks
         whenever(
-            workoutStageGenerator.generatePrilepinBasedScheme(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
                 any(),
                 any(),
                 any(),
@@ -267,12 +285,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any()
             )
-        ).thenReturn(Mono.just(emptyList()))
-        whenever(
-            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
-        ).thenReturn(Mono.just(mockWorkoutStage()))
-        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
-        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+        ).thenReturn(Mono.empty())
 
         // Set up session time calculator mocks
         whenever(
@@ -357,9 +370,14 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         ).thenReturn(Mono.just(exercises.first()))
 
-        // Set up workout stage generator mocks
+        // Set up workout stage generation orchestrator mocks
         whenever(
-            workoutStageGenerator.generatePrilepinBasedScheme(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
                 any(),
                 any(),
                 any(),
@@ -367,12 +385,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any()
             )
-        ).thenReturn(Mono.just(emptyList()))
-        whenever(
-            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
-        ).thenReturn(Mono.just(mockWorkoutStage()))
-        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
-        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+        ).thenReturn(Mono.empty())
 
         // Set up session time calculator mocks
         whenever(
@@ -469,9 +482,14 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         ).thenReturn(Mono.empty())
 
-        // Set up workout stage generator mocks
+        // Set up workout stage generation orchestrator mocks
         whenever(
-            workoutStageGenerator.generatePrilepinBasedScheme(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
                 any(),
                 any(),
                 any(),
@@ -479,19 +497,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any()
             )
-        ).thenReturn(Mono.just(emptyList()))
-        whenever(
-            workoutStageGenerator.generateSecondaryExerciseScheme(
-                any(),
-                any(),
-                any()
-            )
-        ).thenReturn(Mono.just(emptyList()))
-        whenever(
-            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
-        ).thenReturn(Mono.just(mockWorkoutStage()))
-        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
-        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+        ).thenReturn(Mono.empty())
 
         // Set up session time calculator mocks
         whenever(
@@ -570,30 +576,6 @@ class ConjugateWorkoutGeneratorServiceTest {
             programId = PROGRAM_ID,
             dayNumber = CURRENT_WEEK + 1,
             name = "Test Day",
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
-    }
-
-    private fun mockWorkoutStage(): WorkoutStage {
-        return WorkoutStage(
-            id = 1,
-            programmedWorkoutId = 1,
-            stageTypeId = 1,
-            position = 1,
-            name = "Test Stage",
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
-    }
-
-    private fun mockProgrammedExercise(): com.congen.model.ProgrammedExercise {
-        return com.congen.model.ProgrammedExercise(
-            id = 1,
-            workoutStageId = 1,
-            exerciseName = "Test Exercise",
-            position = 1,
-            notes = null,
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )

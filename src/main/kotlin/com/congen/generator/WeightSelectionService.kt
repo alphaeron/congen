@@ -195,7 +195,6 @@ class WeightSelectionService(
                 if (isDynamicEffort) {
                     val bandWeightResult =
                         bandWeightService.computeBandAndBarWeights(
-                            exerciseName = exerciseName,
                             totalTargetWeight = calculatedWeight,
                             weightUnit = weightUnit,
                             weekInCycle = currentWeekNumber

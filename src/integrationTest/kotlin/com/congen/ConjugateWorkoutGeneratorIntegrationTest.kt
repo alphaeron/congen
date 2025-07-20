@@ -266,7 +266,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .expectBodyList(WorkoutStage::class.java)
                 .returnResult()
                 .responseBody!!
-        println("Stages response: $stagesResponse")
         val primaryStage =
             stagesResponse.find { stage ->
                 stage.name.toString() == "Primary"
@@ -285,11 +284,9 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Check what exercise was actually selected
         val exerciseName = exercisesResponse[0]["exercise_name"] as String
-        println("Selected exercise: $exerciseName")
 
         // Only proceed with band weight validation if a banded exercise was selected
         val isBandedExercise = exerciseName.contains("Banded")
-        println("Is banded exercise: $isBandedExercise")
 
         val programmedExerciseId = (exercisesResponse[0]["id"] as Number).toLong()
 
@@ -317,8 +314,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .expectBody(String::class.java)
                 .returnResult()
                 .responseBody!!
-
-        println("Response body: $response")
 
         // Check if this is week 4 (deload week) - if so, band_weight_lbs should be null
         val isWeek4 = programResponse.currentWeekNumber == 4

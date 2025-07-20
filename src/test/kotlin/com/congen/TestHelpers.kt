@@ -413,6 +413,15 @@ fun mockPrilepinGuidelines(
         restSeconds = restSeconds
     )
 
+fun mockWeightSelectionResult(
+    targetWeight: BigDecimal = BigDecimal("100.0"),
+    band: com.congen.model.Band? = null
+): com.congen.generator.WeightSelectionService.TargetWeightResult =
+    com.congen.generator.WeightSelectionService.TargetWeightResult(
+        targetWeight = targetWeight,
+        band = band
+    )
+
 // Weight unit preference helpers
 fun mockUserWeightUnitPreference(
     userId: Int = 1,

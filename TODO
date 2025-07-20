@@ -1,17 +1,6 @@
-Throughout much of the code to create different workout stages, there is some common logic for the stage creation patterns.  This applies to the 2, 3, and 4 day conjugate templates.
+Are we able to make separate ProgrammedWorkoutStage classes for the different logic for Primary, Secondary, and other stages, and just have the WorkoutStageGeneratorService classes utilize those ProgrammedWorkoutStage classes to separate the concerns for how the stages are organized for different templates, and what is needed to construct different types of workout stages?
 
-We want to try to refactor the code so that as much common logic as possible is put into a separate WorkoutStageGenerationService.  If needed, we can subclass WorkoutStageGenerationService to provide differences needed for the 2, 3, and 4 day workout stage generation algorithms.
-
-Modularize the code as much as possible, the goal is to isolate the workout stage generation for different stages using a common pattern.
-
-Update ConjugateWorkoutGenerationService to use the new classes.  Ensure the stage creation logic is simplified by this change.
-
-Ensure the code is completely covered by unit tests.
-
-Ensure all integration tests pass and if new logic is introduced the changes are also validated by integration tests.
-
-
-
+Maybe we can use something like a builder pattern either through a separate class or inside the zWorkoutStageGeneratorService classes and subclasses in order to improve readability and maintainability of the code.
 
 
 
@@ -25,6 +14,8 @@ We want to now put the workout generation logic itself directly in the templates
 The goal is to be able to provide the ability to add custom templates later on that reuse the functionality provided in the WorkoutStageGenerationService to implement different types of workouts.
 
 Make the code as modular as possible, and update ConjugateWorkoutGenerationService to use the new template classes.
+
+Remove duplication where possible with the WorkoutStageGenerationService classes so there is no overlap in responsibilities between the templates and the workout stage generation.  If possible, combine them so that we only have a single source of truth for how different templates behave.
 
 Ensure the code is completely covered by unit tests.
 
@@ -45,7 +36,7 @@ Add exercises to a warmup meeting the following guidelines:
 
 For 4 day templates:
 
-Select 2 exercises that focus on the main muscles that the primary workout for the day requires.
+Select 2 exercises that focus on the main muscles that the primary workout for the day requires.  These should be accessory exercises that do not target a large number of muscles.
 
 Select 1 exercise whose movement pattern is close to the primary exercise, but requires less.
 
@@ -68,6 +59,8 @@ For the cooldown, generate a data migration of Functional Range Conditioning (FR
 Then, include 3 FRC exercises that target the muscles used during the workout in order to gain additional mobility in those areas.
 
 Ensure the time is taken into account in the SessionTimeCalculator.
+
+
 
 
 
@@ -100,21 +93,6 @@ Still maintain the current invariants of the workout stage generation, just make
 Ensure the changes are covered by unit tests.
 
 Ensure integration tests exist that validate the weak points are targeted as expected.
-
-
-
-
-
-
-
-
-Ensure that workouts generated meet these invariants to optimize training.
-
-accommodated resistance taken into account.
-
-law of accommodation: This law states that anything that is used for too long will not create a greater training effect (1-3 weeks).
-
-law of specificity: This law states that if you want an exercise to help you in something else it must be similar enough or be combined with other stimuli that make it transfer.
 
 
 

@@ -1,0 +1,954 @@
+package com.congen.generator
+
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.SetSchemeDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.exceptions.NoResultsFoundException
+import com.congen.model.Exercise
+import com.congen.model.ExerciseRotationHistory
+import com.congen.model.ProgrammedExercise
+import com.congen.model.ProgrammedWorkout
+import com.congen.model.UserEquipment
+import com.congen.model.UserExercisePreference
+import com.congen.model.UserOneRepMax
+import com.congen.model.UserProgramPreferences
+import com.congen.model.WeightUnit
+import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageTypeEnum
+import com.congen.service.SetSchemeService
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import kotlin.random.Random
+
+/**
+ * Base service for generating workout stages for conjugate powerlifting programs.
+ *
+ * This service provides common functionality for creating workout stages across
+ * different program types (2-day, 3-day, 4-day). It handles the creation of
+ * primary, secondary, accessory, and conditioning stages with proper exercise
+ * selection and set scheme generation.
+ *
+ * ## Stage Types
+ *
+ * - **Primary**: Main compound movements (ME or DE)
+ * - **Secondary**: Supporting compound movements
+ * - **Accessory**: Isolation and weak point training
+ * - **Conditioning**: Cardio and recovery work (for DE days)
+ *
+ * ## Common Patterns
+ *
+ * This service implements common patterns for:
+ * - Exercise selection with rotation history
+ * - Set scheme generation using Prilepin guidelines
+ * - Time-based accessory exercise allocation
+ * - Stage creation and exercise programming
+ *
+ * @property exerciseSelectionService Service for exercise selection logic
+ * @property workoutStageDAL Data access layer for workout stage operations
+ * @property workoutStageTypeDAL Data access layer for workout stage type operations
+ * @property programmedExerciseDAL Data access layer for programmed exercise operations
+ * @property setSchemeDAL Data access layer for set scheme operations
+ * @property setSchemeService Service for set scheme operations
+ * @property prilepinGuidelinesService Service for Prilepin-based guidelines
+ * @property weightSelectionService Service for conjugate-specific weight selection
+ * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
+ * @property sessionTimeCalculator Service for session time calculations
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
+@Service
+abstract class WorkoutStageGenerationService(
+    protected val exerciseSelectionService: ExerciseSelectionService,
+    protected val workoutStageDAL: WorkoutStageDAL,
+    protected val workoutStageTypeDAL: WorkoutStageTypeDAL,
+    protected val programmedExerciseDAL: ProgrammedExerciseDAL,
+    protected val setSchemeDAL: SetSchemeDAL,
+    protected val setSchemeService: SetSchemeService,
+    protected val prilepinGuidelinesService: PrilepinGuidelinesService,
+    protected val weightSelectionService: WeightSelectionService,
+    protected val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
+    protected val sessionTimeCalculator: SessionTimeCalculator,
+) {
+    companion object {
+        /** Logger instance for this class. */
+        private val logger = LoggerFactory.getLogger(WorkoutStageGenerationService::class.java)
+    }
+
+    /**
+     * Generates workout stages for a specific workout.
+     *
+     * This method orchestrates the creation of all workout stages based on the
+     * specific program type implementation.
+     *
+     * @param workout The programmed workout to generate stages for
+     * @param dayType The type of workout day
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param oneRepMaxes User's one rep max values
+     * @param programPreferences User's program preferences
+     * @param rotationHistory Exercise rotation history
+     * @param weakMuscles Target weak muscles
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    fun generateWorkoutStages(
+        workout: ProgrammedWorkout,
+        dayType: String,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        programPreferences: UserProgramPreferences,
+        rotationHistory: List<ExerciseRotationHistory>,
+        weakMuscles: List<String>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Void> {
+        return generateStagesForDayType(
+            workout = workout,
+            dayType = dayType,
+            exercises = exercises,
+            preferences = preferences,
+            userEquipment = userEquipment,
+            oneRepMaxes = oneRepMaxes,
+            programPreferences = programPreferences,
+            rotationHistory = rotationHistory,
+            weakMuscles = weakMuscles,
+            currentWeekNumber = currentWeekNumber,
+            userId = userId
+        ).doOnError { error ->
+            logger.error("Error generating workout stages for workout '{}': {}", workout.id, error.message)
+        }
+    }
+
+    /**
+     * Generates stages for a specific day type.
+     *
+     * This method must be implemented by subclasses to provide specific
+     * stage generation logic for different program types.
+     *
+     * @param workout The programmed workout
+     * @param dayType The type of workout day
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param oneRepMaxes User's one rep max values
+     * @param programPreferences User's program preferences
+     * @param rotationHistory Exercise rotation history
+     * @param weakMuscles Target weak muscles
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected abstract fun generateStagesForDayType(
+        workout: ProgrammedWorkout,
+        dayType: String,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        programPreferences: UserProgramPreferences,
+        rotationHistory: List<ExerciseRotationHistory>,
+        weakMuscles: List<String>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Void>
+
+    /**
+     * Creates a primary stage with the given exercise.
+     *
+     * @param workout The programmed workout
+     * @param exercise The primary exercise
+     * @param setSchemes The set schemes for the exercise
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createPrimaryStage(
+        workout: ProgrammedWorkout,
+        exercise: Exercise,
+        setSchemes: List<SetSchemeParams>,
+        userId: Int
+    ): Mono<Void> {
+        return createWorkoutStage(
+            workout.id,
+            WorkoutStageTypeEnum.PRIMARY,
+            WorkoutStageTypeEnum.PRIMARY.position
+        )
+            .doOnError { error ->
+                logger.error("Error creating primary stage: {}", error.message)
+            }
+            .flatMap { primaryStage ->
+                createProgrammedExercise(primaryStage.id, exercise.name)
+                    .flatMap { primaryProgrammedExercise ->
+                        createSetSchemes(
+                            userId,
+                            primaryProgrammedExercise.id,
+                            setSchemes,
+                            WeightUnit.KG
+                        )
+                    }
+            }
+            .then()
+    }
+
+    /**
+     * Creates a secondary stage with the given exercise.
+     *
+     * @param workout The programmed workout
+     * @param exercise The secondary exercise
+     * @param setSchemes The set schemes for the exercise
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createSecondaryStage(
+        workout: ProgrammedWorkout,
+        exercise: Exercise,
+        setSchemes: List<SetSchemeParams>,
+        userId: Int
+    ): Mono<Void> {
+        return createWorkoutStage(
+            workout.id,
+            WorkoutStageTypeEnum.SECONDARY,
+            WorkoutStageTypeEnum.SECONDARY.position
+        )
+            .flatMap { secondaryStage ->
+                createProgrammedExercise(secondaryStage.id, exercise.name)
+                    .flatMap { secondaryProgrammedExercise ->
+                        createSetSchemes(
+                            userId,
+                            secondaryProgrammedExercise.id,
+                            setSchemes,
+                            WeightUnit.KG
+                        )
+                    }
+            }
+            .then()
+    }
+
+    /**
+     * Creates a primary stage with multiple exercises (for combined ME+DE days).
+     *
+     * @param workout The programmed workout
+     * @param primaryExercise The primary exercise (can be null)
+     * @param secondaryExercise The secondary exercise (can be null)
+     * @param primarySetSchemes The set schemes for the primary exercise
+     * @param secondarySetSchemes The set schemes for the secondary exercise
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createCombinedPrimaryStage(
+        workout: ProgrammedWorkout,
+        primaryExercise: Exercise?,
+        secondaryExercise: Exercise?,
+        primarySetSchemes: List<SetSchemeParams>,
+        secondarySetSchemes: List<SetSchemeParams>,
+        userId: Int
+    ): Mono<Void> {
+        if (primaryExercise == null && secondaryExercise == null) {
+            return Mono.empty()
+        }
+
+        return createWorkoutStage(
+            workout.id,
+            WorkoutStageTypeEnum.PRIMARY,
+            WorkoutStageTypeEnum.PRIMARY.position
+        )
+            .doOnError { error ->
+                logger.error("Error creating combined primary stage: {}", error.message)
+            }
+            .flatMap { primaryStage ->
+                var exerciseMono: Mono<Void> = Mono.empty()
+
+                if (primaryExercise != null) {
+                    exerciseMono =
+                        exerciseMono.then(
+                            createProgrammedExercise(primaryStage.id, primaryExercise.name)
+                                .flatMap { primaryProgrammedExercise ->
+                                    createSetSchemes(
+                                        userId,
+                                        primaryProgrammedExercise.id,
+                                        primarySetSchemes,
+                                        WeightUnit.KG
+                                    )
+                                }
+                        )
+                }
+
+                if (secondaryExercise != null) {
+                    exerciseMono =
+                        exerciseMono.then(
+                            createProgrammedExercise(primaryStage.id, secondaryExercise.name)
+                                .flatMap { secondaryProgrammedExercise ->
+                                    createSetSchemes(
+                                        userId,
+                                        secondaryProgrammedExercise.id,
+                                        secondarySetSchemes,
+                                        WeightUnit.KG
+                                    )
+                                }
+                        )
+                }
+
+                exerciseMono
+            }
+            .then()
+    }
+
+    /**
+     * Creates an accessory stage with multiple exercises.
+     *
+     * @param workout The programmed workout
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param oneRepMaxes User's one rep max values
+     * @param weakMuscles Target weak muscles
+     * @param numAccessoryExercises Number of accessory exercises to create
+     * @param rotationHistory Exercise rotation history
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createAccessoryStage(
+        workout: ProgrammedWorkout,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        dayType: String,
+        weakMuscles: List<String>,
+        numAccessoryExercises: Int,
+        rotationHistory: List<ExerciseRotationHistory>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Void> {
+        if (numAccessoryExercises <= 0) {
+            return Mono.empty()
+        }
+
+        return createWorkoutStage(
+            workout.id,
+            WorkoutStageTypeEnum.ACCESSORY,
+            WorkoutStageTypeEnum.ACCESSORY.position
+        )
+            .flatMap { accessoryStage ->
+                Flux.range(1, numAccessoryExercises)
+                    .flatMap { exerciseNumber ->
+                        selectAccessoryExercise(
+                            exercises = exercises,
+                            preferences = preferences,
+                            userEquipment = userEquipment,
+                            weakMuscles = weakMuscles,
+                            // Assuming rotationHistory is not needed for accessory exercises
+                            rotationHistory = emptyList(),
+                            currentWeekNumber = currentWeekNumber,
+                            userId = userId
+                        ).flatMap { accessoryExercise ->
+                            if (accessoryExercise != null) {
+                                createProgrammedExercise(
+                                    accessoryStage.id,
+                                    accessoryExercise.name
+                                )
+                                    .flatMap { accessoryProgrammedExercise ->
+                                        generatePrilepinBasedScheme(
+                                            exercise = accessoryExercise,
+                                            movementRole = "accessory",
+                                            dayType = dayType,
+                                            oneRepMaxes = oneRepMaxes,
+                                            currentWeekNumber = currentWeekNumber,
+                                            userId = userId
+                                        ).flatMap { accessoryScheme ->
+                                            createSetSchemes(
+                                                userId,
+                                                accessoryProgrammedExercise.id,
+                                                accessoryScheme,
+                                                WeightUnit.KG
+                                            )
+                                        }
+                                    }
+                            } else {
+                                Mono.empty()
+                            }
+                        }
+                    }
+                    .then()
+            }
+            .then()
+    }
+
+    /**
+     * Creates a conditioning stage if applicable.
+     *
+     * @param workout The programmed workout
+     * @param dayType The type of workout day
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param oneRepMaxes User's one rep max values
+     * @param weakMuscles Target weak muscles
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createConditioningStage(
+        workout: ProgrammedWorkout,
+        dayType: String,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        weakMuscles: List<String>,
+        rotationHistory: List<ExerciseRotationHistory>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Void> {
+        if (!hasConditioning(dayType)) {
+            return Mono.empty()
+        }
+
+        return createWorkoutStage(
+            workout.id,
+            WorkoutStageTypeEnum.CONDITIONING,
+            WorkoutStageTypeEnum.CONDITIONING.position
+        )
+            .flatMap { conditioningStage ->
+                selectConditioningExercise(
+                    exercises = exercises,
+                    preferences = preferences,
+                    userEquipment = userEquipment,
+                    weakMuscles = weakMuscles,
+                    // Assuming rotationHistory is not needed for conditioning exercises
+                    rotationHistory = emptyList(),
+                    currentWeekNumber = currentWeekNumber,
+                    userId = userId
+                ).flatMap { conditioningExercise ->
+                    if (conditioningExercise != null) {
+                        createProgrammedExercise(
+                            conditioningStage.id,
+                            conditioningExercise.name
+                        )
+                            .flatMap { conditioningProgrammedExercise ->
+                                generateAmrapOrEmomScheme(
+                                    exercise = conditioningExercise,
+                                    oneRepMaxes = oneRepMaxes,
+                                    userId = userId
+                                ).flatMap { conditioningScheme ->
+                                    createSetSchemes(
+                                        userId,
+                                        conditioningProgrammedExercise.id,
+                                        conditioningScheme,
+                                        WeightUnit.KG
+                                    )
+                                }
+                            }
+                    } else {
+                        Mono.empty()
+                    }
+                }
+            }
+            .then()
+    }
+
+    /**
+     * Determines if a day type includes conditioning.
+     *
+     * @param dayType The type of workout day
+     * @return true if the day includes conditioning, false otherwise
+     */
+    protected fun hasConditioning(dayType: String): Boolean {
+        return dayType.contains("DE")
+    }
+
+    /**
+     * Calculates the number of accessory exercises based on session time and set schemes.
+     *
+     * @param sessionTimeMinutes The desired session time in minutes
+     * @param primarySetSchemes List of set scheme parameters for the primary movement
+     * @param secondarySetSchemes List of set scheme parameters for the secondary movement
+     * @param dayType The type of workout day
+     * @return The number of accessory exercises to include
+     */
+    protected fun calculateNumAccessoryExercises(
+        sessionTimeMinutes: Int,
+        primarySetSchemes: List<SetSchemeParams>,
+        secondarySetSchemes: List<SetSchemeParams>,
+        dayType: String
+    ): Int {
+        return sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+            sessionTimeMinutes = sessionTimeMinutes,
+            primarySetSchemes = primarySetSchemes,
+            secondarySetSchemes = secondarySetSchemes,
+            dayType = dayType
+        )
+    }
+
+    /**
+     * Selects a primary exercise based on workout type and movement type.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param oneRepMaxes User's one rep max values
+     * @param weakMuscles Target weak muscles
+     * @param rotationHistory Exercise rotation history
+     * @param workoutType The type of workout (maximal_effort, dynamic_effort)
+     * @param movementType The specific movement type (e.g., "ME_Upper", "DE_Lower")
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono containing the selected exercise or empty
+     */
+    protected fun selectPrimaryExercise(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        weakMuscles: List<String>,
+        rotationHistory: List<ExerciseRotationHistory>,
+        workoutType: String,
+        movementType: String,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Exercise?> {
+        return if (workoutType == "dynamic_effort") {
+            // For DE workouts, use the special DE filter that includes plyometric exercises
+            exerciseSelectionService.filterExercisesForDEWorkout(exercises)
+                .flatMap { filteredExercises ->
+                    exerciseSelectionService.selectRotatingExercise(
+                        targetMuscles = weakMuscles,
+                        userEquipment = userEquipment,
+                        preferences = preferences,
+                        exercises = filteredExercises,
+                        isAccessory = false,
+                        rotationHistory = rotationHistory
+                    )
+                }
+        } else {
+            // For ME workouts, use the standard filter
+            exerciseSelectionService.filterExercisesByWorkoutType(
+                exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
+                workoutType
+            ).flatMap { filteredExercises ->
+                exerciseSelectionService.selectRotatingExercise(
+                    targetMuscles = weakMuscles,
+                    userEquipment = userEquipment,
+                    preferences = preferences,
+                    exercises = filteredExercises,
+                    isAccessory = false,
+                    rotationHistory = rotationHistory
+                )
+            }
+        }
+    }
+
+    /**
+     * Selects a secondary exercise based on the primary exercise.
+     *
+     * @param primaryExercise The primary exercise to base selection on
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param rotationHistory Exercise rotation history
+     * @return Mono containing the selected exercise or empty
+     */
+    protected fun selectSecondaryExercise(
+        primaryExercise: Exercise,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        rotationHistory: List<ExerciseRotationHistory>
+    ): Mono<Exercise> {
+        return exerciseSelectionService.selectSimilarSecondaryExercise(
+            primaryExercise = primaryExercise,
+            userEquipment = userEquipment,
+            preferences = preferences,
+            exercises =
+                exerciseSelectionService.filterExercisesExcluding(
+                    exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
+                    primaryExercise.name
+                ),
+            rotationHistory = rotationHistory
+        )
+    }
+
+    /**
+     * Selects a DE exercise for combined workouts.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param weakMuscles Target weak muscles
+     * @param rotationHistory Exercise rotation history
+     * @return Mono containing the selected exercise or empty
+     */
+    protected fun selectDEExercise(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        weakMuscles: List<String>,
+        rotationHistory: List<ExerciseRotationHistory>
+    ): Mono<Exercise?> {
+        return exerciseSelectionService.filterExercisesForDEWorkout(exercises)
+            .flatMap { filteredExercises ->
+                exerciseSelectionService.selectRotatingExercise(
+                    targetMuscles = weakMuscles,
+                    userEquipment = userEquipment,
+                    preferences = preferences,
+                    exercises = filteredExercises,
+                    isAccessory = false,
+                    rotationHistory = rotationHistory
+                )
+            }
+    }
+
+    /**
+     * Generates set schemes for an exercise.
+     *
+     * @param exercise The exercise to generate schemes for
+     * @param movementRole The role of the movement (primary, secondary, accessory)
+     * @param dayType The type of workout day
+     * @param oneRepMaxes User's one rep max values
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono containing list of set scheme parameters
+     */
+    protected fun generateSetSchemes(
+        exercise: Exercise,
+        movementRole: String,
+        dayType: String,
+        oneRepMaxes: List<UserOneRepMax>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
+        return generatePrilepinBasedScheme(
+            exercise = exercise,
+            movementRole = movementRole,
+            dayType = dayType,
+            oneRepMaxes = oneRepMaxes,
+            currentWeekNumber = currentWeekNumber,
+            userId = userId
+        )
+    }
+
+    /**
+     * Generates Prilepin-based set schemes for exercises.
+     *
+     * @param exercise The exercise to generate schemes for
+     * @param movementRole The role of the movement (primary, secondary, accessory)
+     * @param dayType The type of workout day
+     * @param oneRepMaxes User's one rep max values
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono containing the generated set schemes
+     */
+    protected fun generatePrilepinBasedScheme(
+        exercise: Exercise,
+        movementRole: String,
+        dayType: String,
+        oneRepMaxes: List<UserOneRepMax>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
+        val (guidelines, intensity) =
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber
+            )
+
+        val repsPerSet = guidelines.repsPerSetRange.random()
+        val numSets = (guidelines.totalReps / repsPerSet).toInt()
+        val restSeconds = guidelines.restSeconds.random()
+
+        val isDynamicEffort = dayType.startsWith("DE_")
+        // For non-DE exercises, use standard weight calculation
+        return weightSelectionService.getTargetWeight(
+            exercise.name,
+            intensity,
+            oneRepMaxes,
+            userId,
+            isDynamicEffort = isDynamicEffort,
+            currentWeekNumber = currentWeekNumber
+        )
+            .map { result ->
+                val useTempo = movementRole != "primary" && !isDynamicEffort && Random.nextBoolean()
+                val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
+                val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
+                val concentric =
+                    if (useTempo) {
+                        if (Random.nextBoolean()) {
+                            "1"
+                        } else {
+                            "X"
+                        }
+                    } else {
+                        "0"
+                    }
+                (1..numSets).map { setNumber ->
+                    SetSchemeParams(
+                        setNumber = setNumber,
+                        isAmrap = false,
+                        isEmom = false,
+                        useTempo = useTempo,
+                        eccentricTempo = eccentric,
+                        isometricTempo = isometric,
+                        concentricTempo = concentric,
+                        targetWeight = result.targetWeight,
+                        performedWeight = null,
+                        targetRepCount = repsPerSet,
+                        performedRepCount = null,
+                        restSeconds = restSeconds,
+                        band = result.band,
+                    )
+                }
+            }
+    }
+
+    /**
+     * Generates secondary exercise set schemes.
+     *
+     * @param exercise The exercise to generate schemes for
+     * @param dayType The type of workout day
+     * @param oneRepMaxes User's one rep max values
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono containing the generated set schemes
+     */
+    protected fun generateSecondaryExerciseScheme(
+        exercise: Exercise,
+        dayType: String,
+        oneRepMaxes: List<UserOneRepMax>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
+        return generatePrilepinBasedScheme(
+            exercise = exercise,
+            movementRole = "secondary",
+            dayType = dayType,
+            oneRepMaxes = oneRepMaxes,
+            currentWeekNumber = currentWeekNumber,
+            userId = userId
+        )
+    }
+
+    /**
+     * Generates AMRAP or EMOM set schemes for conditioning exercises.
+     *
+     * @param exercise The exercise to generate schemes for
+     * @param oneRepMaxes User's one rep max values
+     * @param userId User ID
+     * @return Mono containing the generated set schemes
+     */
+    protected fun generateAmrapOrEmomScheme(
+        exercise: Exercise,
+        oneRepMaxes: List<UserOneRepMax>,
+        userId: Int
+    ): Mono<List<SetSchemeParams>> {
+        // Conditioning exercises: 3-5 sets, 10-15 reps, 60-90 seconds rest
+        val numSets = (3..5).random()
+        val repsPerSet = (10..15).random()
+        val restSeconds = (60..90).random()
+
+        // Use 50-60% intensity for conditioning
+        val intensity = Random.nextDouble(0.5, 0.6)
+
+        return weightSelectionService.getTargetWeight(
+            exercise.name,
+            intensity,
+            oneRepMaxes,
+            userId,
+            isDynamicEffort = false
+        )
+            .map { result ->
+                val isAmrap = Random.nextBoolean() // 50% chance of AMRAP
+                // 50% chance of EMOM if not AMRAP
+                val isEmom = !isAmrap && Random.nextBoolean()
+
+                (1..numSets).map { setNumber ->
+                    SetSchemeParams(
+                        setNumber = setNumber,
+                        isAmrap = isAmrap,
+                        isEmom = isEmom,
+                        // No tempo for conditioning
+                        useTempo = false,
+                        eccentricTempo = "0",
+                        isometricTempo = "0",
+                        concentricTempo = "0",
+                        targetWeight = result.targetWeight,
+                        performedWeight = null,
+                        targetRepCount = repsPerSet,
+                        performedRepCount = null,
+                        restSeconds = restSeconds,
+                        // No bands for conditioning
+                        band = null,
+                    )
+                }
+            }
+    }
+
+    /**
+     * Creates a workout stage using the infrastructure layer.
+     *
+     * @param workoutId The workout ID
+     * @param stageType The stage type
+     * @param position The stage position
+     * @return Mono containing the created workout stage
+     */
+    protected fun createWorkoutStage(
+        workoutId: Long,
+        stageType: WorkoutStageTypeEnum,
+        position: Int
+    ): Mono<WorkoutStage> {
+        return workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(workoutId, position)
+            .onErrorResume(NoResultsFoundException::class.java) {
+                // Stage doesn't exist, create it
+                workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageType)
+                    .flatMap { workoutStageType ->
+                        workoutStageDAL.insertWorkoutStage(workoutId, workoutStageType.id, position, stageType.displayName)
+                    }
+            }
+    }
+
+    /**
+     * Creates a programmed exercise.
+     *
+     * @param stageId The stage ID
+     * @param exerciseName The exercise name
+     * @return Mono containing the created programmed exercise
+     */
+    protected fun createProgrammedExercise(
+        stageId: Long,
+        exerciseName: String
+    ): Mono<ProgrammedExercise> {
+        return programmedExerciseDAL.insertProgrammedExercise(
+            workoutStageId = stageId,
+            exerciseName = exerciseName,
+            position = 1,
+            notes = null
+        )
+    }
+
+    /**
+     * Creates set schemes for a programmed exercise.
+     *
+     * @param userId User ID
+     * @param programmedExerciseId The programmed exercise ID
+     * @param setSchemes The set schemes to create
+     * @param weightUnit The weight unit
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createSetSchemes(
+        userId: Int,
+        programmedExerciseId: Long,
+        setSchemes: List<SetSchemeParams>,
+        weightUnit: WeightUnit
+    ): Mono<Void> {
+        return Flux.fromIterable(setSchemes)
+            .flatMap { scheme ->
+                setSchemeService.createSetScheme(
+                    programmedExerciseId = programmedExerciseId,
+                    setNumber = scheme.setNumber,
+                    isAmrap = scheme.isAmrap,
+                    isEmom = scheme.isEmom,
+                    useTempo = scheme.useTempo,
+                    eccentricTempo = scheme.eccentricTempo,
+                    isometricTempo = scheme.isometricTempo,
+                    concentricTempo = scheme.concentricTempo,
+                    targetWeight = scheme.targetWeight?.toString(),
+                    performedWeight = scheme.performedWeight?.toString(),
+                    targetRepCount = scheme.targetRepCount,
+                    performedRepCount = scheme.performedRepCount,
+                    restSeconds = scheme.restSeconds,
+                    unit = weightUnit.name,
+                    band = scheme.band
+                )
+            }
+            .then()
+    }
+
+    /**
+     * Creates workout stages sequentially using the provided stage creation functions.
+     *
+     * @param workout The programmed workout
+     * @param stageCreators List of stage creation functions to execute sequentially
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createStagesSequentially(
+        workout: ProgrammedWorkout,
+        stageCreators: List<() -> Mono<Void>>
+    ): Mono<Void> {
+        var currentMono: Mono<Void> = Mono.empty()
+
+        for (stageCreator in stageCreators) {
+            currentMono = currentMono.then(stageCreator())
+        }
+
+        return currentMono
+    }
+
+    /**
+     * Selects an accessory exercise for the workout.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param weakMuscles Target weak muscles
+     * @param rotationHistory Exercise rotation history
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono containing the selected accessory exercise
+     */
+    protected fun selectAccessoryExercise(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        weakMuscles: List<String>,
+        rotationHistory: List<ExerciseRotationHistory>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Exercise?> {
+        return exerciseSelectionService.selectRotatingExercise(
+            targetMuscles = weakMuscles,
+            userEquipment = userEquipment,
+            preferences = preferences,
+            exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
+            isAccessory = true,
+            rotationHistory = rotationHistory
+        )
+    }
+
+    /**
+     * Selects a conditioning exercise for the workout.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param weakMuscles Target weak muscles
+     * @param rotationHistory Exercise rotation history
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono containing the selected conditioning exercise
+     */
+    protected fun selectConditioningExercise(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        weakMuscles: List<String>,
+        rotationHistory: List<ExerciseRotationHistory>,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Exercise?> {
+        return exerciseSelectionService.selectRotatingExercise(
+            targetMuscles = weakMuscles,
+            userEquipment = userEquipment,
+            preferences = preferences,
+            exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
+            isAccessory = true,
+            rotationHistory = rotationHistory
+        )
+    }
+}

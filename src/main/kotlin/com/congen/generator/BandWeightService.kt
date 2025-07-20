@@ -39,26 +39,16 @@ class BandWeightService(
     /**
      * Computes band and bar weights for a Dynamic Effort exercise.
      *
-     * @param exerciseName The name of the exercise
      * @param totalTargetWeight The total target weight (bar + bands) in the specified unit
      * @param weightUnit The unit of the total target weight
      * @param weekInCycle The week in the 4-week cycle (1-4)
      * @return BandWeightResult containing band and bar weight information
      */
     fun computeBandAndBarWeights(
-        exerciseName: String,
         totalTargetWeight: BigDecimal,
         weightUnit: WeightUnit,
         weekInCycle: Int
     ): BandWeightResult {
-        logger.debug(
-            "Computing band weights for exercise: {}, total weight: {} {}, week: {}",
-            exerciseName,
-            totalTargetWeight,
-            weightUnit,
-            weekInCycle
-        )
-
         val bandWeightPercentage = BAND_WEIGHT_PERCENTAGES[weekInCycle] ?: 0.0
 
         if (bandWeightPercentage <= 0.0) {
