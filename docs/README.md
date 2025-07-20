@@ -1,41 +1,30 @@
 # Congen API Documentation
 
-Welcome to the Congen API documentation. This directory contains automatically generated documentation for the Conjugate Workout Generator API.
+This directory contains automatically generated API documentation for the Conjugate Workout Generator.
 
-## Files
+## Contents
 
-- **[API Documentation](API_DOCUMENTATION.md)** - Comprehensive API reference
-- **[Weight Estimation Algorithms](WEIGHT_ESTIMATION_ALGORITHMS.md)** - 1RM calculator, exercise matching, and reference exercise detection
-- **[OpenAPI JSON](openapi.json)** - OpenAPI specification in JSON format
-- **[OpenAPI YAML](openapi.yaml)** - OpenAPI specification in YAML format
+- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md)** - Complete API reference with endpoints, models, and examples
+- **[openapi.json](openapi.json)** - OpenAPI 3.0 specification (JSON)
+- **[openapi.yaml](openapi.yaml)** - OpenAPI 3.0 specification (YAML)
+- **[swagger-ui/](swagger-ui/)** - Static Swagger UI files
 
-## Interactive Documentation
+## Quick Access
 
-When the application is running, you can access the interactive Swagger UI at:
-- http://localhost:8080/swagger-ui.html
+- **Interactive API Docs**: http://localhost:8080/api/v1/swagger-ui.html (when running)
+- **OpenAPI JSON**: http://localhost:8080/api/v1/api-docs
+- **OpenAPI YAML**: http://localhost:8080/api/v1/api-docs.yaml
 
-## Regenerating Documentation
-
-To regenerate this documentation, run:
+## Regeneration
 
 ```bash
+# Using Gradle (recommended)
+./gradlew generateApiDocs
+
+# Using script directly
 ./scripts/generate-api-docs.sh
 ```
 
-This script will:
-1. Start the application
-2. Generate OpenAPI specifications
-3. Create markdown documentation
-4. Stop the application
-
-## Manual Generation
-
-If you prefer to generate documentation manually:
-
-1. Start the application: `./gradlew bootRun`
-2. Access the OpenAPI JSON: http://localhost:8080/api-docs
-3. Access the Swagger UI: http://localhost:8080/swagger-ui.html
-
 ---
 
-*Documentation generated on $(date)*
+*Generated: $(date)*

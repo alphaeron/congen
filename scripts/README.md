@@ -35,22 +35,22 @@ Generates API documentation from the running application, including:
 - `docs/API_DOCUMENTATION.md` — Markdown API reference
 - `docs/swagger-ui/` — Swagger UI assets
 
-**Note:** All files in `docs/` are ignored by git (see .gitignore).
+**Note:** Auto-generated files in `docs/` are ignored by git (see .gitignore). Manual documentation files are preserved and version controlled.
 
 ### generate-schema-dot.sh
 
-Automatically generates a Graphviz DOT file from Liquibase migrations by:
-1. Starting a temporary PostgreSQL container
-2. Running all Liquibase migrations
-3. Using SchemaSpy to extract the complete database schema
-4. Converting SchemaSpy output to DOT format with tables, relationships, and domain grouping
-5. Optionally generating a PNG image
+Automatically generates a Graphviz DOT file from the database schema by:
+1. Setting up port-forwarding to Kubernetes PostgreSQL
+2. Using SchemaSpy to extract the complete database schema
+3. Converting SchemaSpy output to DOT format with tables, relationships, and domain grouping
+4. Optionally generating a PNG image
 
 **Prerequisites:**
-- Docker
+- kubectl (for Kubernetes access)
 - PostgreSQL client (psql)
 - Java (for SchemaSpy)
 - Graphviz (optional, for PNG generation)
+- Kubernetes environment with running PostgreSQL
 
 **Installation:**
 ```bash
@@ -58,7 +58,7 @@ Automatically generates a Graphviz DOT file from Liquibase migrations by:
 brew install graphviz
 ```
 
-**Note:** The script will automatically download the latest SchemaSpy JAR file on first run (with user confirmation). Currently detects version 6.2.4.
+**Note:** The script will automatically download the latest SchemaSpy JAR file on first run (with user confirmation).
 
 **Usage:**
 ```bash
@@ -66,8 +66,8 @@ brew install graphviz
 ```
 
 **Output:**
-- `database_schema_auto.dot` — Graphviz DOT file
-- `database_schema_auto.png` — PNG image (if Graphviz is installed)
+- `docs/database_schema.dot` — Graphviz DOT file
+- `docs/database_schema.png` — PNG image (if Graphviz is installed)
 
 **Features:**
 - Uses industry-standard SchemaSpy for reliable schema extraction
@@ -75,24 +75,34 @@ brew install graphviz
 - Color-codes tables by domain
 - Shows all foreign key relationships
 - Organizes tables in subgraphs
-- Extracts actual schema from running migrations
+- Extracts actual schema from the running Kubernetes PostgreSQL
 - Requires minimal script maintenance (leverages SchemaSpy's robust parsing)
+- Integrates with Kubernetes port-forwarding
 
 ## Gradle Documentation Tasks
 
 ### API Documentation
-- `./gradlew generateApiDocs` — Runs the script above and generates all API docs
-- `./gradlew generateOpenApiJson` — Only OpenAPI JSON
-- `./gradlew generateOpenApiYaml` — Only OpenAPI YAML
+- `./gradlew generateApiDocs` — Generates all API documentation (OpenAPI JSON/YAML, markdown, index)
+- `./gradlew cleanDocs` — Remove generated documentation files
+- `./gradlew createDocsStructure` — Create documentation directory structure
 - `./gradlew serveDocs` — Serve docs/ locally at http://localhost:8000
-- `./gradlew cleanDocs` — Remove generated docs
 
 ### Database Schema Documentation
-- `./gradlew generateSchemaDot` — Generate DOT file from Liquibase migrations
+- `./gradlew generateSchemaDot` — Generate DOT file from database schema (requires Kubernetes)
 
 ### KDoc (Dokka) Documentation
 - `./gradlew dokkaHtml` — Generates KDoc HTML documentation for all Kotlin code
+- `./gradlew dokkaGfm` — Generates KDoc in GitHub Flavored Markdown
+- `./gradlew dokkaJavadoc` — Generates Javadoc-style documentation
 - Output is in `build/dokka/` (also ignored by git)
+
+### Documentation Features
+- **Auto-Generated**: Markdown documentation is generated from OpenAPI specification
+- **Manual Documentation Preserved**: Manual documentation files (CONJUGATE_WORKOUT_GENERATOR.md, etc.) are never deleted
+- **Kubernetes Integration**: Uses port-forwarding to access the running application
+- **Up-to-Date**: Always reflects the current API implementation
+- **Interactive**: Links to Swagger UI for interactive exploration
+- **Environment-Aware**: Automatically sets environment to 'local' for documentation tasks
 
 ## Adding New Scripts
 - Place new scripts in this directory

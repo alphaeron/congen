@@ -21,9 +21,6 @@ bin/
 ### Kotlin ###
 .kotlin
 
-# Ignore generated documentation
-/build/dokka/
-
 # Ignore database schema documentation generation related files
 schemaspy.jar
 postgresql-jdbc.jar

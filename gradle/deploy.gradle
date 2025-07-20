@@ -274,6 +274,21 @@ task setupTestPortForward {
     }
 }
 
+// Task to cleanup port forwarding
+task cleanupPortForward {
+    description = 'Cleanup port forwarding for integration tests'
+    group = 'kubernetes'
+
+    doLast {
+        println "🧹 Cleaning up port forwarding..."
+        exec {
+            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
+            ignoreExitValue = true
+        }
+        println "✅ Port forwarding cleaned up"
+    }
+}
+
 // Unified deployment task for all environments
 task deployToKubernetes {
     description = 'Unified deployment task for all environments (requires -Penvironment=local|staging|production)'

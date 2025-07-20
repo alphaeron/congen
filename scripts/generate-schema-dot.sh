@@ -111,9 +111,9 @@ download_schemaspy() {
 check_dependencies() {
     print_status "Checking dependencies..."
     
-    # Check if Docker is available
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker is required but not installed"
+    # Check if kubectl is available
+    if ! command -v kubectl &> /dev/null; then
+        print_error "kubectl is required but not installed"
         exit 1
     fi
     
@@ -147,21 +147,19 @@ check_dependencies() {
     print_success "Dependencies check completed"
 }
 
-# Function to start temporary PostgreSQL container
-start_temp_postgres() {
-    print_status "Starting temporary PostgreSQL container..."
+# Function to setup port forwarding to Kubernetes PostgreSQL
+setup_port_forwarding() {
+    print_status "Setting up port forwarding to Kubernetes PostgreSQL..."
     
-    # Start PostgreSQL container
-    CONTAINER_ID=$(docker run -d \
-        -e POSTGRES_DB=postgres \
-        -e POSTGRES_USER=postgres \
-        -e POSTGRES_PASSWORD=postgres \
-        -p 5433:5432 \
-        postgres:14.7-bullseye)
+    # Kill any existing port forward
+    pkill -f "kubectl port-forward.*postgres" 2>/dev/null || true
     
-    # Wait for PostgreSQL to be ready
-    print_status "Waiting for PostgreSQL to be ready..."
-    sleep 10
+    # Start port forwarding in background
+    kubectl port-forward -n congen service/postgres 5433:5432 > /dev/null 2>&1 &
+    PORT_FORWARD_PID=$!
+    
+    # Wait for port forwarding to be ready
+    sleep 3
     
     # Test connection
     for i in {1..30}; do
@@ -172,36 +170,13 @@ start_temp_postgres() {
     done
     
     if [[ "${i}" -eq 30 ]]; then
-        print_error "PostgreSQL failed to start"
-        docker stop "${CONTAINER_ID}" > /dev/null 2>&1 || true
-        docker rm "${CONTAINER_ID}" > /dev/null 2>&1 || true
+        print_error "Failed to connect to Kubernetes PostgreSQL"
+        kill "${PORT_FORWARD_PID}" 2>/dev/null || true
         exit 1
     fi
     
-    print_success "PostgreSQL container started (ID: ${CONTAINER_ID})"
-    echo "${CONTAINER_ID}" > .temp_postgres_container
-}
-
-# Function to run Liquibase migrations
-run_liquibase_migrations() {
-    print_status "Running Liquibase migrations..."
-    
-    # Run Liquibase using Docker
-    PWD_OUTPUT="$(pwd)"
-    docker run --rm \
-        --platform linux/amd64 \
-        --network host \
-        -v "${PWD_OUTPUT}/resources/migrations:/liquibase/changelog" \
-        -v "${PWD_OUTPUT}/resources/migrations/liquibase.properties:/liquibase/liquibase.properties" \
-        liquibase/liquibase:4.11.0 \
-        --defaultsFile=/liquibase/liquibase.properties \
-        --url="jdbc:postgresql://localhost:5433/postgres" \
-        --username=postgres \
-        --password=postgres \
-        --labels="test" \
-        update
-    
-    print_success "Liquibase migrations completed"
+    print_success "Port forwarding to Kubernetes PostgreSQL established (PID: ${PORT_FORWARD_PID})"
+    echo "${PORT_FORWARD_PID}" > .temp_port_forward_pid
 }
 
 # Function to extract schema and generate DOT using SchemaSpy
@@ -429,13 +404,13 @@ generate_png() {
 cleanup() {
     print_status "Cleaning up..."
     
-    # Stop and remove PostgreSQL container
-    if [[ -f .temp_postgres_container ]]; then
-        local CONTAINER_ID
-        CONTAINER_ID=$(cat .temp_postgres_container)
-        docker stop "${CONTAINER_ID}" > /dev/null 2>&1 || true
-        docker rm "${CONTAINER_ID}" > /dev/null 2>&1 || true
-        rm .temp_postgres_container
+    # Stop port forwarding
+    if [[ -f .temp_port_forward_pid ]]; then
+        local PORT_FORWARD_PID
+        PORT_FORWARD_PID=$(cat .temp_port_forward_pid)
+        kill "${PORT_FORWARD_PID}" 2>/dev/null || true
+        pkill -f "kubectl port-forward.*postgres" 2>/dev/null || true
+        rm .temp_port_forward_pid
     fi
     
     # Remove temporary files
@@ -449,8 +424,7 @@ main() {
     print_status "Starting Liquibase schema to DOT generation..."
     
     check_dependencies
-    start_temp_postgres
-    run_liquibase_migrations
+    setup_port_forwarding
     generate_dot_from_schema
     generate_png
     cleanup

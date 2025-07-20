@@ -278,6 +278,125 @@ Currently, the API does not require authentication. All endpoints are publicly a
 
 For detailed API documentation, see [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
+## 📖 Documentation Generation
+
+### Overview
+
+The project includes comprehensive documentation generation capabilities that automatically create up-to-date API documentation, database schema diagrams, and code documentation.
+
+### Available Documentation
+
+- **API Documentation**: Auto-generated from OpenAPI specification
+- **Database Schema**: Visual diagrams of the database structure
+- **Code Documentation**: KDoc documentation for Kotlin code
+- **Integration Testing**: Kubernetes-based testing documentation
+
+### Generating Documentation
+
+#### Prerequisites
+- Kubernetes environment running (minikube)
+- Application deployed to Kubernetes
+- kubectl configured
+
+#### Quick Start
+```bash
+# Generate all documentation
+./gradlew generateApiDocs
+
+# Generate database schema diagram
+./gradlew generateSchemaDot
+
+# Generate Kotlin code documentation
+./gradlew dokkaHtml
+```
+
+#### Detailed Commands
+
+**API Documentation:**
+```bash
+# Generate complete API documentation
+./gradlew generateApiDocs
+
+# Clean generated documentation
+./gradlew cleanDocs
+
+# Create documentation structure
+./gradlew createDocsStructure
+
+# Serve documentation locally
+./gradlew serveDocs
+```
+
+**Database Schema:**
+```bash
+# Generate database schema diagram (requires Kubernetes)
+./gradlew generateSchemaDot
+```
+
+**Code Documentation:**
+```bash
+# Generate KDoc HTML documentation
+./gradlew dokkaHtml
+
+# Generate KDoc in GitHub Flavored Markdown
+./gradlew dokkaGfm
+
+# Generate Javadoc-style documentation
+./gradlew dokkaJavadoc
+```
+
+### Generated Files
+
+The documentation generation creates the following files in the `docs/` directory:
+
+- **`openapi.json`** - OpenAPI 3.0 specification (JSON)
+- **`openapi.yaml`** - OpenAPI 3.0 specification (YAML)
+- **`API_DOCUMENTATION.md`** - Comprehensive API reference (auto-generated)
+- **`README.md`** - Documentation index with quick access links
+- **`database_schema.dot`** - Graphviz DOT file for database schema
+- **`database_schema.png`** - Visual database schema diagram
+- **`swagger-ui/`** - Static Swagger UI files
+
+### Documentation Features
+
+- **Auto-Generated**: Markdown documentation is generated from OpenAPI specification
+- **Manual Documentation Preserved**: Manual documentation files (CONJUGATE_WORKOUT_GENERATOR.md, etc.) are never deleted during cleanup
+- **Kubernetes Integration**: Uses port-forwarding to access the running application
+- **Up-to-Date**: Always reflects the current API implementation
+- **Interactive**: Links to Swagger UI for interactive exploration
+- **Environment-Aware**: Automatically sets environment to 'local' for documentation tasks
+
+### Accessing Documentation
+
+**Interactive API Documentation:**
+- **Swagger UI**: http://localhost:8080/api/v1/swagger-ui.html (when running)
+- **OpenAPI JSON**: http://localhost:8080/api/v1/api-docs
+- **OpenAPI YAML**: http://localhost:8080/api/v1/api-docs.yaml
+
+**Generated Documentation:**
+- **Local Server**: http://localhost:8000 (when using `./gradlew serveDocs`)
+- **Files**: All generated files are in the `docs/` directory
+
+### Troubleshooting
+
+**Common Issues:**
+```bash
+# If port-forwarding fails
+pkill -f "kubectl port-forward"
+
+# If documentation generation fails
+./gradlew cleanDocs
+./gradlew generateApiDocs
+
+# If database schema generation fails
+kubectl get pods -n congen  # Ensure PostgreSQL is running
+./gradlew generateSchemaDot
+```
+
+**Note:** The `cleanDocs` task only removes auto-generated files (openapi.json, openapi.yaml, API_DOCUMENTATION.md). Manual documentation files like CONJUGATE_WORKOUT_GENERATOR.md are always preserved.
+
+For detailed integration testing and documentation procedures, see [INTEGRATION_TESTING_KUBERNETES.md](docs/INTEGRATION_TESTING_KUBERNETES.md).
+
 ## ⚖️ Weight Selection
 
 The application automatically rounds calculated weights to match available equipment sizes, ensuring users can achieve the target weight using standard weightlifting equipment.

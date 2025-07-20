@@ -1,111 +1,295 @@
 # Integration Testing with Kubernetes
 
-This document describes how to run integration tests for the application using Kubernetes and TestContainers.
+This document describes how to run integration tests and generate documentation using the Kubernetes-based development environment.
 
 ## Overview
 
-There are two main approaches for integration testing:
+The Congen application uses a Kubernetes-based development environment with:
+- **Local Kubernetes**: Minikube for local development
+- **PostgreSQL**: Database running in Kubernetes
+- **Application**: Spring Boot app deployed to Kubernetes
+- **Port-forwarding**: For accessing services locally
+- **Integration Tests**: Full-stack tests against the deployed application
 
-1. **TestContainers (Recommended for local/dev)**
-2. **Kubernetes Cluster (for CI/CD or full-stack validation)**
+## Prerequisites
 
----
+### Required Tools
+- **kubectl**: Kubernetes command-line tool
+- **minikube**: Local Kubernetes cluster
+- **Docker**: For building container images
+- **Gradle**: For running tests and documentation generation
 
-## 1. TestContainers (Recommended)
-
-- **Fastest feedback loop for local development**
-- Runs PostgreSQL and other dependencies in Docker containers
-- No need for a running Kubernetes cluster
-
-### How to Run
+### Installation
 ```bash
-./gradlew integrationTest
+# Install kubectl
+brew install kubectl
+
+# Install minikube
+brew install minikube
+
+# Install Docker Desktop
+# Download from https://www.docker.com/products/docker-desktop
 ```
-- Uses the `test` profile and TestContainers for the database.
-- Cleans up after each test run.
 
----
+## Kubernetes Environment Setup
 
-## 2. Kubernetes Cluster Integration Testing
-
-- Validates the application against a real Kubernetes deployment
-- Useful for CI/CD and pre-deployment checks
-
-### Prerequisites
-- Minikube or other Kubernetes cluster running
-- Application and database deployed to Kubernetes
-- Port-forwarding enabled for database access
-
-### How to Run
+### Starting the Environment
 ```bash
-# Ensure Kubernetes is running and app is deployed
-./scripts/setup-kubernetes.sh
+# Start minikube with Docker driver
+minikube start --driver=docker
+
+# Enable required addons
+minikube addons enable ingress
+minikube addons enable metrics-server
+```
+
+### Deploying the Application
+```bash
+# Deploy to local Kubernetes environment
 ./gradlew deployToKubernetes -Penvironment=local
-
-# Port-forward PostgreSQL
-kubectl port-forward -n congen service/postgres 5432:5432 &
-
-# Run integration tests against Kubernetes
-./gradlew integrationTest -Dspring.profiles.active=kubernetes-test
 ```
-- Uses the `kubernetes-test` profile to connect to the real database.
 
----
+This command will:
+1. Build the Docker image
+2. Load it into minikube
+3. Deploy all Kubernetes resources
+4. Wait for PostgreSQL to be ready
+5. Wait for the application to be ready
 
-## Test Profiles
+### Verifying Deployment
+```bash
+# Check pod status
+kubectl get pods -n congen
 
-- `test`: Default for TestContainers (local/dev)
-- `kubernetes-test`: For connecting to a real PostgreSQL in Kubernetes
+# Check services
+kubectl get services -n congen
 
----
+# View application logs
+kubectl logs -f deployment/congen -n congen
+```
 
-## Gradle Tasks
+## Port-Forwarding
+
+### Automatic Port-Forwarding
+The Gradle tasks automatically handle port-forwarding:
+
+- **Documentation Generation**: Uses `setupTestPortForward` and `cleanupPortForward` tasks
+- **Integration Tests**: Automatically sets up port-forwarding to PostgreSQL (port 5432)
+- **Application Access**: Port-forwarding to application service (port 8080)
+
+### Manual Port-Forwarding
+If you need to access services manually:
 
 ```bash
-# Run unit tests
-./gradlew test
+# Forward PostgreSQL
+kubectl port-forward -n congen service/postgres 5432:5432
 
-# Run integration tests (TestContainers)
-./gradlew integrationTest
+# Forward application
+kubectl port-forward -n congen service/congen 8080:8080
 
-# Run integration tests against Kubernetes
-./gradlew integrationTest -Dspring.profiles.active=kubernetes-test
-
-# Run all tests
-./gradlew check
+# Clean up port-forwarding
+pkill -f "kubectl port-forward"
 ```
 
----
+## Integration Testing
+
+### Running Integration Tests
+```bash
+# Run all integration tests
+./gradlew integrationTest
+
+# Run with specific test
+./gradlew integrationTest --tests "*HealthCheckIntegrationTest*"
+```
+
+### Integration Test Features
+- **Full Stack Testing**: Tests against the actual deployed application
+- **Database Integration**: Uses the real PostgreSQL database
+- **Port-Forwarding**: Automatically manages port-forwarding
+- **Cleanup**: Properly cleans up resources after tests
+
+### Test Configuration
+Integration tests use:
+- **Profile**: `integration-test`
+- **Database**: Kubernetes PostgreSQL instance
+- **Application**: Deployed Spring Boot application
+- **Port-Forwarding**: Automatic setup and cleanup
+
+## Documentation Generation
+
+### Available Documentation Tasks
+```bash
+# Generate all API documentation
+./gradlew generateApiDocs
+
+# Clean documentation files
+./gradlew cleanDocs
+
+# Create documentation structure
+./gradlew createDocsStructure
+
+# Generate database schema diagram
+./gradlew generateSchemaDot
+```
+
+### Generated Documentation
+The documentation generation creates:
+- **OpenAPI JSON**: `docs/openapi.json`
+- **OpenAPI YAML**: `docs/openapi.yaml`
+- **API Documentation**: `docs/API_DOCUMENTATION.md` (auto-generated from OpenAPI)
+- **Documentation Index**: `docs/README.md`
+- **Database Schema**: `docs/database_schema.dot` and `docs/database_schema.png`
+
+### Documentation Features
+- **Auto-Generated**: Markdown documentation is generated from OpenAPI specification
+- **Kubernetes Integration**: Uses port-forwarding to access the running application
+- **Up-to-Date**: Always reflects the current API implementation
+- **Interactive**: Links to Swagger UI for interactive exploration
+
+## Development Workflow
+
+### Typical Development Cycle
+1. **Start Environment**:
+   ```bash
+   minikube start --driver=docker
+   ./gradlew deployToKubernetes -Penvironment=local
+   ```
+
+2. **Run Tests**:
+   ```bash
+   ./gradlew integrationTest
+   ```
+
+3. **Generate Documentation**:
+   ```bash
+   ./gradlew generateApiDocs
+   ```
+
+4. **Access Application**:
+   ```bash
+   # Via port-forwarding
+   kubectl port-forward -n congen service/congen 8080:8080
+   # Then visit http://localhost:8080/api/v1/swagger-ui.html
+   
+   # Via NodePort
+   # Visit http://$(minikube ip):30080
+   ```
+
+### Environment Variables
+The application uses these environment variables in Kubernetes:
+- `SPRING_PROFILES_ACTIVE`: Set to `loc` for local development
+- `PGWRITERHOST`: PostgreSQL service name (`postgres`)
+- `PGREADERHOST`: PostgreSQL service name (`postgres`)
+- `PGPORT`: PostgreSQL port (`5432`)
 
 ## Troubleshooting
 
-- **Database connection issues:**
-  - Ensure PostgreSQL is running in Kubernetes: `kubectl get pods -n congen -l app=postgres`
-  - Check logs: `kubectl logs -n congen -l app=postgres`
-  - Verify port-forward: `kubectl port-forward -n congen service/postgres 5432:5432`
-- **TestContainers issues:**
-  - Ensure Docker is running: `docker ps`
-  - Clean up containers: `docker system prune -f`
-- **Profile issues:**
-  - Check active profile: `./gradlew integrationTest -Dspring.profiles.active=kubernetes-test --info`
+### Common Issues
 
----
+#### Port-Forwarding Problems
+```bash
+# Kill existing port-forward processes
+pkill -f "kubectl port-forward"
+
+# Check if ports are in use
+lsof -i :5432
+lsof -i :8080
+```
+
+#### Database Connection Issues
+```bash
+# Check PostgreSQL pod status
+kubectl get pods -n congen -l app=postgres
+
+# Check PostgreSQL logs
+kubectl logs -n congen deployment/postgres
+
+# Test database connection
+kubectl exec -n congen deployment/postgres -- pg_isready -U postgres
+```
+
+#### Application Issues
+```bash
+# Check application pod status
+kubectl get pods -n congen -l app=congen
+
+# Check application logs
+kubectl logs -f deployment/congen -n congen
+
+# Check application health
+kubectl exec -n congen deployment/congen -- curl -s http://localhost:8080/api/v1/health/
+```
+
+#### Minikube Issues
+```bash
+# Restart minikube
+minikube stop
+minikube start --driver=docker
+
+# Reset minikube (destructive)
+minikube delete
+minikube start --driver=docker
+```
+
+### Debugging Commands
+```bash
+# Get detailed pod information
+kubectl describe pod -n congen <pod-name>
+
+# Check resource usage
+kubectl top pods -n congen
+
+# Check events
+kubectl get events -n congen --sort-by='.lastTimestamp'
+
+# Access pod shell
+kubectl exec -it -n congen <pod-name> -- /bin/bash
+```
 
 ## Best Practices
 
-1. Use TestContainers for fast local feedback
-2. Use Kubernetes integration tests for CI/CD and deployment validation
-3. Clean up test data between runs
-4. Use the correct profile for your environment
+### Development
+1. **Always use port-forwarding** for local development
+2. **Run integration tests** before committing changes
+3. **Generate documentation** after API changes
+4. **Check pod logs** when debugging issues
+
+### Testing
+1. **Use the integration test profile** for full-stack testing
+2. **Clean up resources** after tests complete
+3. **Verify database state** before and after tests
+4. **Use proper test isolation** to avoid conflicts
+
+### Documentation
+1. **Regenerate documentation** after API changes
+2. **Review generated documentation** for accuracy
+3. **Use interactive Swagger UI** for API exploration
+4. **Keep documentation up-to-date** with code changes
+
+## Architecture
+
+### Kubernetes Resources
+- **Namespace**: `congen`
+- **Services**: 
+  - `congen`: Application service (port 8080)
+  - `postgres`: Database service (port 5432)
+- **Deployments**:
+  - `congen`: Main application
+  - `postgres`: PostgreSQL database
+  - `migration-service`: Database migrations
+  - `reloader`: Configuration reloader
+
+### Network Configuration
+- **Ingress**: External access via NodePort (30080)
+- **Port-Forwarding**: Local development access
+- **Network Policies**: Restricted pod-to-pod communication
+- **Service Mesh**: Not currently used
+
+### Data Persistence
+- **PostgreSQL**: Persistent volume claim
+- **Migrations**: ConfigMap with Liquibase changelogs
+- **Configuration**: ConfigMap and Secrets
 
 ---
 
-## Test Reports
-
-- View test results:
-  - `open build/reports/tests/test/index.html`
-  - `open build/reports/tests/integrationTest/index.html`
-- View coverage:
-  - `./gradlew jacocoTestReport jacocoIntegrationTestReport`
-  - `open build/reports/jacoco/test/html/index.html`
-  - `open build/reports/jacoco/integrationTest/html/index.html` 
+*This documentation was last updated on $(date)* 

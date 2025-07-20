@@ -65,21 +65,6 @@ project.afterEvaluate {
     }
 }
 
-// Task to cleanup port forwarding
-tasks.register('cleanupPortForward') {
-    description = 'Cleanup port forwarding for integration tests'
-    group = 'kubernetes'
-
-    doLast {
-        println "🧹 Cleaning up port forwarding..."
-        exec {
-            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
-            ignoreExitValue = true
-        }
-        println "✅ Port forwarding cleaned up"
-    }
-}
-
 // Configure source sets
 sourceSets {
     integrationTest {
