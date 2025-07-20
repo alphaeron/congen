@@ -16,9 +16,18 @@ spec:
         app: reloader
     spec:
       serviceAccountName: congen-service-account
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
       containers:
       - name: reloader
         image: stakater/reloader:v1.0.46
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
         args:
         - --auto-annotation=reloader.stakater.com/auto
         env:

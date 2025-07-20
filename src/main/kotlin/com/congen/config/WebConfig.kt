@@ -68,4 +68,15 @@ class WebConfig : WebFluxConfigurer {
             }
         }
     }
+
+    /**
+     * Configures custom converters for parameter binding.
+     *
+     * This method registers custom converters that allow Spring to automatically
+     * convert URL parameters to complex types like enums.
+     */
+    override fun addFormatters(registry: org.springframework.format.FormatterRegistry) {
+        super.addFormatters(registry)
+        registry.addConverter(MovementTypeConverter())
+    }
 }

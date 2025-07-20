@@ -12,7 +12,9 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Exercises and equipment already exist in migrations
         val programmedExerciseId = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         webTestClient.post()
-            .uri("/api/v1/programmed_exercise/?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
+            .uri(
+                "/api/v1/programmed_exercise/?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1"
+            )
             .exchange()
             .expectStatus().isOk()
             .expectBody()

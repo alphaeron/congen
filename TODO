@@ -1,4 +1,4 @@
-We are using the wrong conventionA for query parameters.
+We are using the wrong convention for query parameters.
 
 This project users snake_case for query parameter names, not camelCase.
 

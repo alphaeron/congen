@@ -1,6 +1,5 @@
 package com.congen.config
 
-import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonToken
@@ -99,8 +98,6 @@ class JacksonConfigTest {
         // Should not throw exception
         serializer.serialize(null, jsonGenerator, serializerProvider)
     }
-
-
 
     @Test
     fun `should deserialize ISO instant string`() {
@@ -273,6 +270,4 @@ class JacksonConfigTest {
             deserializer.deserialize(jsonParser, deserializationContext)
         }
     }
-
-
 }
