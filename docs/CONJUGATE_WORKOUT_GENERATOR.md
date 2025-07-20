@@ -146,22 +146,28 @@ The conjugate method, developed by Louie Simmons at Westside Barbell, combines:
 ## Program Structure
 
 ### 2-Day Programs
-Condensed conjugate approach
-- Day 1: ME Upper (horizontal push + vertical push)
-- Day 2: DE Lower (squat + hinge)
+Condensed conjugate approach with combined ME+DE days:
+- Day 1: ME Upper + DE Lower (combined workout)
+- Day 2: ME Lower + DE Upper (combined workout)
+
+Each day combines both Max Effort and Dynamic Effort movements in a single session, providing a time-efficient approach to conjugate training.
 
 ### 3-Day Programs
-Traditional conjugate with ME/DE/accessory split:
-- Day 1: ME Upper (horizontal push + vertical push)
-- Day 2: DE Lower (squat + hinge)
-- Day 3: ME Lower (squat + hinge)
+Condensed conjugate with combined days plus additional volume on third day:
+- Day 1: ME Upper + DE Lower (combined workout)
+- Day 2: ME Lower + DE Upper (combined workout)
+- Day 3: Full Body Dynamic Effort (DE Upper + DE Lower)
+
+The third day provides additional dynamic effort work with both upper and lower body movements, increasing training frequency while maintaining the conjugate structure.
 
 ### 4-Day Programs
-Extended conjugate with additional volume:
+Extended conjugate with traditional split:
 - Day 1: ME Upper (horizontal push + vertical push)
 - Day 2: DE Lower (squat + hinge)
 - Day 3: ME Lower (squat + hinge)
 - Day 4: DE Upper (horizontal push + vertical pull)
+
+The traditional 4-day split provides maximum volume and specialization for each movement pattern.
 
 ## Exercise Categories
 

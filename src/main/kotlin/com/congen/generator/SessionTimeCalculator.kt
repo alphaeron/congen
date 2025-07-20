@@ -34,7 +34,7 @@ class SessionTimeCalculator {
         var timeAllocated = ConjugateConstants.TimeAllocation.PRIMARY_MOVEMENT_TIME_IN_MINUTES // Primary movement (10 minutes)
 
         // Add secondary movement time if applicable
-        if (dayType in listOf("ME_Upper", "DE_Upper")) {
+        if (hasSecondaryMovement(dayType)) {
             timeAllocated += ConjugateConstants.TimeAllocation.SECONDARY_MOVEMENT_TIME_IN_MINUTES // Secondary movement (8 minutes)
         }
 
@@ -132,7 +132,7 @@ class SessionTimeCalculator {
     fun getNonAccessoryTimeAllocation(dayType: String): Int {
         var timeAllocated = ConjugateConstants.TimeAllocation.PRIMARY_MOVEMENT_TIME_IN_MINUTES
 
-        if (dayType in listOf("ME_Upper", "DE_Upper")) {
+        if (hasSecondaryMovement(dayType)) {
             timeAllocated += ConjugateConstants.TimeAllocation.SECONDARY_MOVEMENT_TIME_IN_MINUTES
         }
 
@@ -156,5 +156,20 @@ class SessionTimeCalculator {
     ): Int {
         val nonAccessoryTime = getNonAccessoryTimeAllocation(dayType)
         return (sessionTimeMinutes - nonAccessoryTime).coerceAtLeast(0)
+    }
+
+    /**
+     * Determines if a day type has a secondary movement.
+     *
+     * @param dayType The type of workout day
+     * @return true if the day includes a secondary movement, false otherwise
+     */
+    private fun hasSecondaryMovement(dayType: String): Boolean {
+        return when (dayType) {
+            "ME_Upper", "DE_Upper" -> true // Traditional 4-day program secondary movements
+            "ME_Upper_DE_Lower", "ME_Lower_DE_Upper" -> true // Combined ME+DE days have both movements
+            "DE_Full_Body" -> true // Full body DE has both upper and lower movements
+            else -> false
+        }
     }
 }

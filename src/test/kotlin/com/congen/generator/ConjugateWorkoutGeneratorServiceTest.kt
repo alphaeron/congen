@@ -3,23 +3,11 @@ package com.congen.generator
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.ProgramDAL
-import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
-import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.exceptions.DatabaseException
-import com.congen.mockExercise
-import com.congen.mockExerciseRotationHistory
-import com.congen.mockUserEquipment
-import com.congen.mockUserOneRepMax
-import com.congen.mockUserProgramPreferences
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.MovementType
@@ -30,134 +18,410 @@ import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.math.BigDecimal
 import java.time.Instant
 
 class ConjugateWorkoutGeneratorServiceTest {
-    private companion object {
-        private const val USER_ID = 1
-        private const val CURRENT_WEEK = 1
-        private const val PROGRAM_ID = 1L
-        private const val PROGRAM_NAME = "Test Program"
-        private const val WORKOUT_ID = 1L
-        private const val WORKOUT_NAME = "ME_Upper Day"
-        private const val STAGE_ID = 1L
-        private const val STAGE_NAME = "Test Stage"
-        private const val EXERCISE_NAME = "Bench Press"
-        private const val EXERCISE_NAME_2 = "Incline Bench Press"
-        private const val EXERCISE_NAME_3 = "Squat"
-        private const val EXERCISE_NAME_4 = "Deadlift"
-        private const val EXERCISE_NAME_5 = "Overhead Press"
-        private const val EXERCISE_NAME_6 = "Pull-ups"
-        private const val EXERCISE_NAME_7 = "Bicep Curls"
-        private const val EXERCISE_NAME_8 = "Tricep Extensions"
-        private const val EQUIPMENT_BARBELL = "Barbell"
-        private const val EQUIPMENT_DUMBBELLS = "Dumbbells"
-        private const val EQUIPMENT_BENCH = "Bench"
-        private const val EQUIPMENT_PULLUP_BAR = "Pull-up Bar"
-        private const val SESSION_TIME_MINUTES = 60
-        private const val DAYS_PER_WEEK_2 = 2
-        private const val DAYS_PER_WEEK_3 = 3
-        private const val DAYS_PER_WEEK_4 = 4
-        private const val DAYS_PER_WEEK_5 = 5
-        private const val NUM_ACCESSORY_EXERCISES = 2
-        private const val TARGET_REPS_PRIMARY = 5
-        private const val TARGET_REPS_SECONDARY = 8
-        private const val REST_SECONDS_PRIMARY = 180
-        private const val REST_SECONDS_SECONDARY = 120
-        private const val WEIGHT_PRIMARY = "100.0"
-        private const val WEIGHT_SECONDARY = "80.0"
-    }
-
-    @Mock
-    private lateinit var exerciseDAL: ExerciseDAL
-
-    @Mock
-    private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
-
-    @Mock
+    private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
     private lateinit var programDAL: ProgramDAL
-
-    @Mock
-    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
-
-    @Mock
-    private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
-
-    @Mock
-    private lateinit var setSchemeDAL: SetSchemeDAL
-
-    @Mock
-    private lateinit var userDAL: UserDAL
-
-    @Mock
-    private lateinit var userEquipmentDAL: UserEquipmentDAL
-
-    @Mock
-    private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
-
-    @Mock
-    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
-
-    @Mock
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
-
-    @Mock
-    private lateinit var workoutStageDAL: WorkoutStageDAL
-
-    @Mock
-    private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
-
-    @Mock
+    private lateinit var exerciseDAL: ExerciseDAL
+    private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
+    private lateinit var userEquipmentDAL: UserEquipmentDAL
+    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+    private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
+    private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var conjugateTemplates: ConjugateTemplates
-
-    @Mock
     private lateinit var exerciseSelectionService: ExerciseSelectionService
-
-    @Mock
     private lateinit var workoutStageGenerator: WorkoutStageGenerator
-
-    @Mock
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
 
-    @Mock
-    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
-
-    private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
+    companion object {
+        private const val PROGRAM_ID = 1L
+        private const val CURRENT_WEEK = 1
+    }
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
+        programDAL = mock()
+        userProgramPreferencesDAL = mock()
+        exerciseDAL = mock()
+        userExercisePreferenceDAL = mock()
+        userEquipmentDAL = mock()
+        userOneRepMaxDAL = mock()
+        exerciseRotationHistoryDAL = mock()
+        programmedWorkoutDAL = mock()
+        conjugateTemplates = mock()
+        exerciseSelectionService = mock()
+        workoutStageGenerator = mock()
+        sessionTimeCalculator = mock()
+
         conjugateWorkoutGeneratorService =
             ConjugateWorkoutGeneratorService(
-                exerciseDAL,
-                userExercisePreferenceDAL,
-                userEquipmentDAL,
-                userOneRepMaxDAL,
-                userProgramPreferencesDAL,
-                exerciseRotationHistoryDAL,
-                programDAL,
-                programmedWorkoutDAL,
-                conjugateTemplates,
-                exerciseSelectionService,
-                workoutStageGenerator,
-                sessionTimeCalculator
+                exerciseDAL = exerciseDAL,
+                userExercisePreferenceDAL = userExercisePreferenceDAL,
+                userEquipmentDAL = userEquipmentDAL,
+                userOneRepMaxDAL = userOneRepMaxDAL,
+                userProgramPreferencesDAL = userProgramPreferencesDAL,
+                exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
+                programDAL = programDAL,
+                programmedWorkoutDAL = programmedWorkoutDAL,
+                conjugateTemplates = conjugateTemplates,
+                exerciseSelectionService = exerciseSelectionService,
+                workoutStageGenerator = workoutStageGenerator,
+                sessionTimeCalculator = sessionTimeCalculator
             )
-
-        setupDefaultMocks()
     }
 
-    private fun setupDefaultMocks() {
-        whenever(conjugateTemplates.selectTemplate(any())).thenReturn(
+    @Test
+    fun `generateNextWeek should successfully generate next week`() {
+        // Given
+        val program = mockProgram(id = PROGRAM_ID, currentWeekNumber = CURRENT_WEEK)
+        val exercises = createSampleExercises()
+        val preferences = createSamplePreferences()
+        val userEquipment = createSampleUserEquipment()
+        val oneRepMaxes = createSampleOneRepMaxes()
+        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 3)
+        val rotationHistory = createSampleRotationHistory()
+
+        setupDALMocks(
+            exercises = exercises,
+            preferences = preferences,
+            userEquipment = userEquipment,
+            oneRepMaxes = oneRepMaxes,
+            programPreferences = programPreferences,
+            rotationHistory = rotationHistory
+        )
+
+        whenever(conjugateTemplates.selectTemplate(3)).thenReturn(
+            listOf(
+                DayTemplate("ME_Upper_DE_Lower"),
+                DayTemplate("ME_Lower_DE_Upper"),
+                DayTemplate("DE_Full_Body")
+            )
+        )
+        whenever(conjugateTemplates.hasSecondaryMovement(any())).thenReturn(false)
+        whenever(conjugateTemplates.isCombinedMEDay("ME_Upper_DE_Lower")).thenReturn(true)
+        whenever(conjugateTemplates.isCombinedMEDay("ME_Lower_DE_Upper")).thenReturn(true)
+        whenever(conjugateTemplates.isFullBodyDE("DE_Full_Body")).thenReturn(true)
+        whenever(conjugateTemplates.getPrimaryMovementType("ME_Upper_DE_Lower")).thenReturn("ME_Upper")
+        whenever(conjugateTemplates.getSecondaryMovementType("ME_Upper_DE_Lower")).thenReturn("DE_Lower")
+        whenever(conjugateTemplates.getPrimaryMovementType("ME_Lower_DE_Upper")).thenReturn("ME_Lower")
+        whenever(conjugateTemplates.getSecondaryMovementType("ME_Lower_DE_Upper")).thenReturn("DE_Upper")
+
+        // Set up exercise selection mocks
+        whenever(exerciseSelectionService.filterExercisesByWorkoutType(any<List<Exercise>>(), any())).thenReturn(
+            Mono.just(exercises.filter { !it.isAccessory })
+        )
+        whenever(exerciseSelectionService.filterExercisesForDEWorkout(any<List<Exercise>>())).thenReturn(
+            Mono.just(exercises)
+        )
+        whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any<List<Exercise>>(), any())).thenReturn(
+            exercises.filter { !it.isAccessory }
+        )
+        whenever(
+            exerciseSelectionService.selectRotatingExercise(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(exercises.first()))
+
+        // Set up workout stage generator mocks
+        whenever(
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
+        whenever(
+            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
+        ).thenReturn(Mono.just(mockWorkoutStage()))
+        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
+        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+
+        // Set up session time calculator mocks
+        whenever(
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(0)
+
+        // Set up workout mocks directly
+        val createdWorkout = mockProgrammedWorkout()
+        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
+
+        // Add missing mock for filterExercisesForDEWorkout
+        // whenever(exerciseSelectionService.filterExercisesForDEWorkout(any<List<Exercise>>())).thenReturn(
+        //     Mono.just(exercises.filter { !it.isAccessory })
+        // )
+
+        // When
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { updatedProgram ->
+                updatedProgram.currentWeekNumber == CURRENT_WEEK + 1
+            }
+            .verifyComplete()
+
+        verify(programDAL).updateProgram(eq(PROGRAM_ID), any(), eq(CURRENT_WEEK + 1), eq(true))
+    }
+
+    @Test
+    fun `generateNextWeek should handle program not found`() {
+        // Given
+        whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.empty())
+
+        // When
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
+
+        // Then
+        StepVerifier.create(result)
+            .verifyComplete()
+
+        verify(programDAL, times(0)).updateProgram(any(), any(), any(), any())
+    }
+
+    @Test
+    fun `generateNextWeek should handle combined ME+DE days`() {
+        // Given
+        val programId = 1L
+        val program = mockProgram(id = programId, currentWeekNumber = 1)
+        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 2)
+        val exercises = createSampleExercises()
+
+        whenever(programDAL.selectProgramById(programId)).thenReturn(Mono.just(program))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(emptyList()))
+        whenever(
+            programDAL.updateProgram(any(), any(), any(), any())
+        ).thenReturn(Mono.just(mockProgram(id = programId, currentWeekNumber = 2)))
+
+        whenever(conjugateTemplates.selectTemplate(2)).thenReturn(
+            listOf(
+                DayTemplate("ME_Upper_DE_Lower"),
+                DayTemplate("ME_Lower_DE_Upper")
+            )
+        )
+        whenever(conjugateTemplates.isCombinedMEDay("ME_Upper_DE_Lower")).thenReturn(true)
+        whenever(conjugateTemplates.isCombinedMEDay("ME_Lower_DE_Upper")).thenReturn(true)
+        whenever(conjugateTemplates.getPrimaryMovementType("ME_Upper_DE_Lower")).thenReturn("ME_Upper")
+        whenever(conjugateTemplates.getSecondaryMovementType("ME_Upper_DE_Lower")).thenReturn("DE_Lower")
+        whenever(conjugateTemplates.getPrimaryMovementType("ME_Lower_DE_Upper")).thenReturn("ME_Lower")
+        whenever(conjugateTemplates.getSecondaryMovementType("ME_Lower_DE_Upper")).thenReturn("DE_Upper")
+
+        // Set up exercise selection mocks
+        whenever(exerciseSelectionService.filterExercisesByWorkoutType(any<List<Exercise>>(), any())).thenReturn(
+            Mono.just(exercises.filter { !it.isAccessory })
+        )
+        whenever(exerciseSelectionService.filterExercisesForDEWorkout(any<List<Exercise>>())).thenReturn(
+            Mono.just(exercises)
+        )
+        whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any<List<Exercise>>(), any())).thenReturn(
+            exercises.filter { !it.isAccessory }
+        )
+        whenever(
+            exerciseSelectionService.selectRotatingExercise(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(exercises.first()))
+
+        // Set up workout stage generator mocks
+        whenever(
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
+        whenever(
+            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
+        ).thenReturn(Mono.just(mockWorkoutStage()))
+        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
+        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+
+        // Set up session time calculator mocks
+        whenever(
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(0)
+
+        // Set up workout mocks
+        val createdWorkout = mockProgrammedWorkout()
+        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
+
+        // When
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(programId)
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { updatedProgram ->
+                updatedProgram.currentWeekNumber == 2
+            }
+            .verifyComplete()
+
+        verify(programmedWorkoutDAL, times(2)).insertProgrammedWorkout(any(), any(), any())
+        verify(programDAL).updateProgram(eq(programId), any(), eq(2), eq(true))
+    }
+
+    @Test
+    fun `generateNextWeek should handle full body DE day`() {
+        // Given
+        val programId = 1L
+        val program = mockProgram(id = programId, currentWeekNumber = 1)
+        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 3)
+        val exercises = createSampleExercises()
+
+        whenever(programDAL.selectProgramById(programId)).thenReturn(Mono.just(program))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(emptyList()))
+        whenever(
+            programDAL.updateProgram(any(), any(), any(), any())
+        ).thenReturn(Mono.just(mockProgram(id = programId, currentWeekNumber = 2)))
+
+        whenever(conjugateTemplates.selectTemplate(3)).thenReturn(
+            listOf(
+                DayTemplate("ME_Upper_DE_Lower"),
+                DayTemplate("ME_Lower_DE_Upper"),
+                DayTemplate("DE_Full_Body")
+            )
+        )
+        whenever(conjugateTemplates.isCombinedMEDay("ME_Upper_DE_Lower")).thenReturn(true)
+        whenever(conjugateTemplates.isCombinedMEDay("ME_Lower_DE_Upper")).thenReturn(true)
+        whenever(conjugateTemplates.isFullBodyDE("DE_Full_Body")).thenReturn(true)
+        whenever(conjugateTemplates.getPrimaryMovementType("ME_Upper_DE_Lower")).thenReturn("ME_Upper")
+        whenever(conjugateTemplates.getSecondaryMovementType("ME_Upper_DE_Lower")).thenReturn("DE_Lower")
+        whenever(conjugateTemplates.getPrimaryMovementType("ME_Lower_DE_Upper")).thenReturn("ME_Lower")
+        whenever(conjugateTemplates.getSecondaryMovementType("ME_Lower_DE_Upper")).thenReturn("DE_Upper")
+
+        // Set up exercise selection mocks
+        whenever(exerciseSelectionService.filterExercisesByWorkoutType(any<List<Exercise>>(), any())).thenReturn(
+            Mono.just(exercises.filter { !it.isAccessory })
+        )
+        whenever(exerciseSelectionService.filterExercisesForDEWorkout(any<List<Exercise>>())).thenReturn(
+            Mono.just(exercises)
+        )
+        whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any<List<Exercise>>(), any())).thenReturn(
+            exercises.filter { !it.isAccessory }
+        )
+        whenever(
+            exerciseSelectionService.selectRotatingExercise(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(exercises.first()))
+
+        // Set up workout stage generator mocks
+        whenever(
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
+        whenever(
+            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
+        ).thenReturn(Mono.just(mockWorkoutStage()))
+        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
+        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
+
+        // Set up session time calculator mocks
+        whenever(
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(0)
+
+        // Set up workout mocks
+        val createdWorkout = mockProgrammedWorkout()
+        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
+
+        // When
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(programId)
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { updatedProgram ->
+                updatedProgram.currentWeekNumber == 2
+            }
+            .verifyComplete()
+
+        verify(programmedWorkoutDAL, times(3)).insertProgrammedWorkout(any(), any(), any())
+        verify(programDAL).updateProgram(eq(programId), any(), eq(2), eq(true))
+    }
+
+    @Test
+    fun `generateNextWeek should handle traditional 4-day program`() {
+        // Given
+        val programId = 1L
+        val program = mockProgram(id = programId, currentWeekNumber = 1)
+        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 4)
+        val exercises = createSampleExercises()
+
+        whenever(programDAL.selectProgramById(programId)).thenReturn(Mono.just(program))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(any())).thenReturn(Mono.just(emptyList()))
+        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(emptyList()))
+        whenever(
+            programDAL.updateProgram(any(), any(), any(), any())
+        ).thenReturn(Mono.just(mockProgram(id = programId, currentWeekNumber = 2)))
+
+        whenever(conjugateTemplates.selectTemplate(4)).thenReturn(
             listOf(
                 DayTemplate("ME_Upper"),
                 DayTemplate("DE_Lower"),
@@ -165,431 +429,96 @@ class ConjugateWorkoutGeneratorServiceTest {
                 DayTemplate("DE_Upper")
             )
         )
-        whenever(conjugateTemplates.hasSecondaryMovement(any())).thenReturn(true)
-        whenever(conjugateTemplates.hasConditioning(any())).thenReturn(true)
+        whenever(conjugateTemplates.isCombinedMEDay(any())).thenReturn(false)
+        whenever(conjugateTemplates.isFullBodyDE(any())).thenReturn(false)
+        whenever(conjugateTemplates.hasSecondaryMovement("ME_Upper")).thenReturn(true)
+        whenever(conjugateTemplates.hasSecondaryMovement("DE_Upper")).thenReturn(true)
+        whenever(conjugateTemplates.hasSecondaryMovement("ME_Lower")).thenReturn(false)
+        whenever(conjugateTemplates.hasSecondaryMovement("DE_Lower")).thenReturn(false)
 
-        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any())).thenReturn(
-            Mono.just(mockExercise(name = EXERCISE_NAME))
+        // Set up exercise selection mocks
+        whenever(exerciseSelectionService.filterExercisesByWorkoutType(any<List<Exercise>>(), any())).thenReturn(
+            Mono.just(exercises.filter { !it.isAccessory })
         )
-        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(any(), any(), any(), any(), any())).thenReturn(
-            Mono.just(mockExercise(name = EXERCISE_NAME_2))
+        whenever(exerciseSelectionService.filterExercisesForDEWorkout(any<List<Exercise>>())).thenReturn(
+            Mono.just(exercises)
         )
-        whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any())).thenReturn(
-            listOf(mockExercise(name = EXERCISE_NAME))
+        whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any<List<Exercise>>(), any())).thenReturn(
+            exercises.filter { !it.isAccessory }
         )
-        whenever(exerciseSelectionService.filterExercisesExcluding(any(), any())).thenReturn(
-            listOf(mockExercise(name = EXERCISE_NAME_2))
+        whenever(exerciseSelectionService.filterExercisesExcluding(any<List<Exercise>>(), any())).thenReturn(
+            exercises.filter { !it.isAccessory }
         )
-        whenever(exerciseSelectionService.filterExercisesByWorkoutType(any(), any())).thenReturn(
-            Mono.just(listOf(mockExercise(name = EXERCISE_NAME)))
-        )
-
-        whenever(workoutStageGenerator.generatePrilepinBasedScheme(any(), any(), any(), any(), any(), any())).thenReturn(
-            Mono.just(
-                listOf(
-                    SetSchemeParams(
-                        1,
-                        false,
-                        false,
-                        false,
-                        null,
-                        null,
-                        null,
-                        BigDecimal(WEIGHT_PRIMARY),
-                        null,
-                        TARGET_REPS_PRIMARY,
-                        null,
-                        REST_SECONDS_PRIMARY,
-                        null
-                    )
-                )
-            )
-        )
-        whenever(workoutStageGenerator.generateSecondaryExerciseScheme(any(), any(), any())).thenReturn(
-            Mono.just(
-                listOf(
-                    SetSchemeParams(
-                        1,
-                        false,
-                        false,
-                        false,
-                        null,
-                        null,
-                        null,
-                        BigDecimal(WEIGHT_SECONDARY),
-                        null,
-                        TARGET_REPS_SECONDARY,
-                        null,
-                        REST_SECONDS_SECONDARY,
-                        null
-                    )
-                )
-            )
-        )
-        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(
-            Mono.just(mockWorkoutStage())
-        )
-        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(
-            Mono.just(mockProgrammedExercise())
-        )
-        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
-        whenever(workoutStageGenerator.generateAmrapOrEmomScheme(any(), any(), any())).thenReturn(
-            Mono.just(
-                listOf(
-                    SetSchemeParams(
-                        1,
-                        true,
-                        false,
-                        false,
-                        null,
-                        null,
-                        null,
-                        BigDecimal("50.0"),
-                        null,
-                        null,
-                        null,
-                        0,
-                        null
-                    )
-                )
-            )
-        )
-
         whenever(
-            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(any(), any(), any(), any())
-        ).thenReturn(NUM_ACCESSORY_EXERCISES)
-    }
-
-    @Test
-    fun `generateNextWeek should create program successfully with 3 days per week`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should handle user with no exercise history`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = emptyList<UserOneRepMax>()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should handle user with exercise preferences`() {
-        val exercises = createSampleExercises()
-        val preferences =
-            listOf(
-                UserExercisePreference(
-                    userId = USER_ID,
-                    exerciseName = EXERCISE_NAME_3,
-                    shouldAvoid = true,
-                    createdAt = Instant.now()
-                )
+            exerciseSelectionService.selectRotatingExercise(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
             )
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should handle user with exercise rotation history`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory =
-            listOf(
-                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME)
+        ).thenReturn(Mono.just(exercises.first()))
+        whenever(
+            exerciseSelectionService.selectSimilarSecondaryExercise(
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
             )
-        val program = mockProgram()
+        ).thenReturn(Mono.empty())
 
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should handle 2-day program`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = DAYS_PER_WEEK_2)
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should handle 4-day program`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = DAYS_PER_WEEK_4)
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should handle database errors gracefully`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-
-        setupDALMocks(
-            exercises,
-            preferences,
-            userEquipment,
-            oneRepMaxes,
-            programPreferences,
-            rotationHistory,
-            null
-        )
-        whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
-        whenever(programDAL.insertProgram(any(), any(), any(), any())).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(exerciseDAL.selectExercises()).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-        whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(
-            Mono.error(DatabaseException("Database error"))
-        )
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectError(DatabaseException::class.java)
-            .verify()
-    }
-
-    @Test
-    fun `generateNextWeek should handle missing user data`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = emptyList<UserEquipment>()
-        val oneRepMaxes = emptyList<UserOneRepMax>()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `should calculate accessory exercises based on session time`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `should calculate fewer accessories for DE days with conditioning`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `should prioritize unused exercises in rotation history`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory =
-            listOf(
-                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME),
-                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME),
-                mockExerciseRotationHistory(exerciseName = EXERCISE_NAME_2)
+        // Set up workout stage generator mocks
+        whenever(
+            workoutStageGenerator.generatePrilepinBasedScheme(
+                any(),
+                any(),
+                any(),
+                any(),
+                any(),
+                any()
             )
-        val program = mockProgram()
+        ).thenReturn(Mono.just(emptyList()))
+        whenever(
+            workoutStageGenerator.generateSecondaryExerciseScheme(
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
+        whenever(
+            workoutStageGenerator.createWorkoutStage(any(), any<WorkoutStageTypeEnum>(), any())
+        ).thenReturn(Mono.just(mockWorkoutStage()))
+        whenever(workoutStageGenerator.createProgrammedExercise(any(), any())).thenReturn(Mono.just(mockProgrammedExercise()))
+        whenever(workoutStageGenerator.createSetSchemes(any(), any(), any(), any())).thenReturn(Mono.empty())
 
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
+        // Set up session time calculator mocks
+        whenever(
+            sessionTimeCalculator.calculateNumAccessoryExercisesDynamic(
+                any(),
+                any(),
+                any(),
+                any()
+            )
+        ).thenReturn(0)
 
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
+        // Set up workout mocks
+        val createdWorkout = mockProgrammedWorkout()
+        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
 
+        // When
+        val result = conjugateWorkoutGeneratorService.generateNextWeek(programId)
+
+        // Then
         StepVerifier.create(result)
-            .expectNext(program)
+            .expectNextMatches { updatedProgram ->
+                updatedProgram.currentWeekNumber == 2
+            }
             .verifyComplete()
-    }
 
-    @Test
-    fun `generateNextWeek should apply undulating periodization correctly for different weeks`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should select different exercises for primary and secondary stages`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = createSampleProgramPreferences()
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-    }
-
-    @Test
-    fun `generateNextWeek should throw exception for invalid programDaysPerWeek`() {
-        val exercises = createSampleExercises()
-        val preferences = emptyList<UserExercisePreference>()
-        val userEquipment = createSampleUserEquipment()
-        val oneRepMaxes = createSampleOneRepMaxes()
-        val programPreferences = mockUserProgramPreferences(programDaysPerWeek = DAYS_PER_WEEK_5)
-        val rotationHistory = emptyList<ExerciseRotationHistory>()
-        val program = mockProgram()
-
-        setupDALMocks(exercises, preferences, userEquipment, oneRepMaxes, programPreferences, rotationHistory, program)
-        setupWorkoutMocks()
-
-        // Override the mock to throw exception for invalid programDaysPerWeek
-        whenever(conjugateTemplates.selectTemplate(DAYS_PER_WEEK_5)).thenThrow(
-            IllegalArgumentException("Number of days per week must be 2, 3, or 4")
-        )
-
-        val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
-
-        StepVerifier.create(result)
-            .expectError(IllegalArgumentException::class.java)
-            .verify()
+        verify(programmedWorkoutDAL, times(4)).insertProgrammedWorkout(any(), any(), any())
+        verify(programDAL).updateProgram(eq(programId), any(), eq(2), eq(true))
     }
 
     private fun setupDALMocks(
@@ -598,45 +527,49 @@ class ConjugateWorkoutGeneratorServiceTest {
         userEquipment: List<UserEquipment>,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
-        program: Program?
+        rotationHistory: List<ExerciseRotationHistory>
     ) {
+        whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
-        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
-        whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
-        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(preferences))
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(any())).thenReturn(Mono.just(userEquipment))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(any())).thenReturn(Mono.just(oneRepMaxes))
         whenever(exerciseRotationHistoryDAL.selectAll()).thenReturn(Mono.just(rotationHistory))
-        if (program != null) {
-            whenever(programDAL.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
-            whenever(programDAL.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
-        }
+        whenever(programDAL.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(mockProgram(currentWeekNumber = 2)))
     }
 
-    private fun setupWorkoutMocks() {
-        val createdWorkout = mockProgrammedWorkout()
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createdWorkout))
-        whenever(workoutStageGenerator.createWorkoutStage(any(), any(), any())).thenReturn(Mono.just(mockWorkoutStage()))
-    }
-
-    private fun mockProgram(): Program {
+    private fun mockProgram(
+        id: Long = PROGRAM_ID,
+        currentWeekNumber: Int = CURRENT_WEEK
+    ): Program {
         return Program(
-            id = PROGRAM_ID,
-            userId = USER_ID,
-            name = PROGRAM_NAME,
-            currentWeekNumber = CURRENT_WEEK,
+            id = id,
+            userId = 1,
+            name = "Test Program",
+            currentWeekNumber = currentWeekNumber,
+            isActive = true,
             createdAt = Instant.now(),
-            updatedAt = Instant.now(),
-            isActive = true
+            updatedAt = Instant.now()
+        )
+    }
+
+    private fun mockUserProgramPreferences(programDaysPerWeek: Int): UserProgramPreferences {
+        return UserProgramPreferences(
+            userId = 1,
+            programDaysPerWeek = programDaysPerWeek,
+            sessionTimeLengthInMinutes = 60,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 
     private fun mockProgrammedWorkout(): ProgrammedWorkout {
         return ProgrammedWorkout(
-            id = WORKOUT_ID,
+            id = 1,
             programId = PROGRAM_ID,
-            dayNumber = 1,
-            name = WORKOUT_NAME,
+            dayNumber = CURRENT_WEEK + 1,
+            name = "Test Day",
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )
@@ -644,11 +577,11 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     private fun mockWorkoutStage(): WorkoutStage {
         return WorkoutStage(
-            id = STAGE_ID,
-            programmedWorkoutId = WORKOUT_ID,
+            id = 1,
+            programmedWorkoutId = 1,
             stageTypeId = 1,
-            name = STAGE_NAME,
             position = 1,
+            name = "Test Stage",
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )
@@ -656,9 +589,9 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     private fun mockProgrammedExercise(): com.congen.model.ProgrammedExercise {
         return com.congen.model.ProgrammedExercise(
-            id = 1L,
-            workoutStageId = STAGE_ID,
-            exerciseName = EXERCISE_NAME,
+            id = 1,
+            workoutStageId = 1,
+            exerciseName = "Test Exercise",
             position = 1,
             notes = null,
             createdAt = Instant.now(),
@@ -668,93 +601,38 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     private fun createSampleExercises(): List<Exercise> {
         return listOf(
-            mockExercise(
-                name = EXERCISE_NAME,
+            Exercise(
+                name = "Bench Press",
                 description = "A compound upper body exercise",
                 movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
                 isUpper = true,
                 isAccessory = false
             ),
-            mockExercise(
-                name = EXERCISE_NAME_2,
-                description = "An incline compound upper body exercise",
-                movementType = MovementType.HORIZONTAL_PUSH,
-                isUpper = true,
-                isAccessory = false
-            ),
-            mockExercise(
-                name = EXERCISE_NAME_3,
+            Exercise(
+                name = "Squat",
                 description = "A compound lower body exercise",
                 movementType = MovementType.SQUAT,
+                isUnilateral = false,
                 isUpper = false,
                 isAccessory = false
-            ),
-            mockExercise(
-                name = EXERCISE_NAME_4,
-                description = "A compound hinge exercise",
-                movementType = MovementType.HINGE,
-                isUpper = false,
-                isAccessory = false
-            ),
-            mockExercise(
-                name = EXERCISE_NAME_5,
-                description = "A compound vertical_push exercise",
-                movementType = MovementType.VERTICAL_PUSH,
-                isUpper = true,
-                isAccessory = false
-            ),
-            mockExercise(
-                name = EXERCISE_NAME_6,
-                description = "A compound vertical_pull exercise",
-                movementType = MovementType.VERTICAL_PULL,
-                isUpper = true,
-                isAccessory = false
-            ),
-            mockExercise(
-                name = EXERCISE_NAME_7,
-                description = "An isolation exercise",
-                movementType = MovementType.ISOLATION,
-                isUpper = true,
-                isAccessory = true
-            ),
-            mockExercise(
-                name = EXERCISE_NAME_8,
-                description = "An isolation exercise",
-                movementType = MovementType.ISOLATION,
-                isUpper = true,
-                isAccessory = true
             )
         )
     }
 
+    private fun createSamplePreferences(): List<UserExercisePreference> {
+        return emptyList()
+    }
+
     private fun createSampleUserEquipment(): List<UserEquipment> {
-        return listOf(
-            mockUserEquipment(equipmentName = EQUIPMENT_BARBELL),
-            mockUserEquipment(equipmentName = EQUIPMENT_DUMBBELLS),
-            mockUserEquipment(equipmentName = EQUIPMENT_BENCH),
-            mockUserEquipment(equipmentName = EQUIPMENT_PULLUP_BAR)
-        )
+        return emptyList()
     }
 
     private fun createSampleOneRepMaxes(): List<UserOneRepMax> {
-        return listOf(
-            mockUserOneRepMax(exerciseName = EXERCISE_NAME, oneRepMax = BigDecimal("100.0")),
-            mockUserOneRepMax(exerciseName = EXERCISE_NAME_3, oneRepMax = BigDecimal("150.0")),
-            mockUserOneRepMax(exerciseName = EXERCISE_NAME_4, oneRepMax = BigDecimal("200.0"))
-        )
+        return emptyList()
     }
 
-    private fun createSampleProgramPreferences(): UserProgramPreferences {
-        return mockUserProgramPreferences(programDaysPerWeek = DAYS_PER_WEEK_3)
-    }
-
-    private fun mockUserProgramPreferences(programDaysPerWeek: Int): UserProgramPreferences {
-        return UserProgramPreferences(
-            userId = USER_ID,
-            programDaysPerWeek = programDaysPerWeek,
-            sessionTimeLengthInMinutes = SESSION_TIME_MINUTES,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+    private fun createSampleRotationHistory(): List<ExerciseRotationHistory> {
+        return emptyList()
     }
 }

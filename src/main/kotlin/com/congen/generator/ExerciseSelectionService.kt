@@ -360,6 +360,37 @@ class ExerciseSelectionService(
     }
 
     /**
+     * Filters exercises for Dynamic Effort workouts.
+     *
+     * For DE workouts, we want exercises that are either:
+     * 1. Marked as dynamic_effort workout type (like banded exercises)
+     * 2. Plyometric exercises (regardless of accessory status)
+     *
+     * @param exercises List of all exercises
+     * @return Mono containing filtered list of exercises suitable for DE workouts
+     */
+    fun filterExercisesForDEWorkout(exercises: List<Exercise>): Mono<List<Exercise>> {
+        return exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()
+            .map { workoutTypes ->
+                val dynamicEffortExerciseNames =
+                    workoutTypes
+                        .filter { it.workoutType == "dynamic_effort" }
+                        .map { it.exerciseName }
+                        .toSet()
+
+                val filteredExercises =
+                    exercises.filter { exercise ->
+                        // Include exercises marked as dynamic_effort
+                        dynamicEffortExerciseNames.contains(exercise.name) ||
+                            // Include plyometric exercises (regardless of accessory status)
+                            exercise.movementType == MovementType.PLYOMETRIC
+                    }
+
+                filteredExercises
+            }
+    }
+
+    /**
      * Filters exercises by workout type (dynamic_effort or maximal_effort).
      *
      * @param exercises List of all exercises
