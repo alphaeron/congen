@@ -75,8 +75,8 @@ class ProgrammedExerciseController(
      */
     @PostMapping("/")
     fun save(
-        @RequestParam workoutStageId: Long,
-        @RequestParam exerciseName: String,
+        @RequestParam("workout_stage_id") workoutStageId: Long,
+        @RequestParam("exercise_name") exerciseName: String,
         @RequestParam position: Int,
         @RequestParam notes: String?,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
@@ -133,9 +133,9 @@ class ProgrammedExerciseController(
      * @param workoutStageId The unique identifier of the workout stage
      * @return ResponseEntity containing a list of programmed exercises for the stage
      */
-    @GetMapping("/stage/{workoutStageId}")
+    @GetMapping("/stage/{workout_stage_id}")
     fun getByStage(
-        @PathVariable("workoutStageId") workoutStageId: Long,
+        @PathVariable("workout_stage_id") workoutStageId: Long,
     ): Mono<ResponseEntity<List<ProgrammedExercise>>> {
         logger.debug("Getting programmed exercises for stage: {}", workoutStageId)
         return programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(workoutStageId)
@@ -187,8 +187,8 @@ class ProgrammedExerciseController(
     @PatchMapping("/{id}")
     fun update(
         @PathVariable("id") id: Long,
-        @RequestParam workoutStageId: Long,
-        @RequestParam exerciseName: String,
+        @RequestParam("workout_stage_id") workoutStageId: Long,
+        @RequestParam("exercise_name") exerciseName: String,
         @RequestParam position: Int,
         @RequestParam notes: String?,
     ): Mono<ResponseEntity<ProgrammedExercise>> {

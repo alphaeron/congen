@@ -43,8 +43,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$encodedExerciseName&preferredUnit=$preferredUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$encodedExerciseName&preferred_unit=$preferredUnit"
             )
             .exchange()
             .expectStatus().isOk()
@@ -64,8 +64,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$encodedExerciseName&preferredUnit=$preferredUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$encodedExerciseName&preferred_unit=$preferredUnit"
             )
             .exchange()
             .expectStatus().isOk()
@@ -85,8 +85,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$encodedExerciseName&preferredUnit=$invalidUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$encodedExerciseName&preferred_unit=$invalidUnit"
             )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -105,8 +105,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         // Create initial preference
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$exerciseName&preferredUnit=$initialUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$exerciseName&preferred_unit=$initialUnit"
             )
             .exchange()
             .expectStatus().isOk()
@@ -114,8 +114,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         // Update preference
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$exerciseName&preferredUnit=$updatedUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$exerciseName&preferred_unit=$updatedUnit"
             )
             .exchange()
             .expectStatus().isOk()
@@ -140,16 +140,16 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$encodedExercise1&preferredUnit=$unit1"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$encodedExercise1&preferred_unit=$unit1"
             )
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$encodedExercise2&preferredUnit=$unit2"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$encodedExercise2&preferred_unit=$unit2"
             )
             .exchange()
             .expectStatus().isOk()
@@ -176,8 +176,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         // Create the preference
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$exerciseName&preferredUnit=$preferredUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$exerciseName&preferred_unit=$preferredUnit"
             )
             .exchange()
             .expectStatus().isOk()
@@ -214,8 +214,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         // Create the preference
         webTestClient.put()
             .uri(
-                "/api/v1/user_weight_unit_preference/?userId=${userResponse.id}" +
-                    "&exerciseName=$exerciseName&preferredUnit=$preferredUnit"
+                "/api/v1/user_weight_unit_preference/?user_id=${userResponse.id}" +
+                    "&exercise_name=$exerciseName&preferred_unit=$preferredUnit"
             )
             .exchange()
             .expectStatus().isOk()

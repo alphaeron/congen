@@ -9,7 +9,7 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/api/v1/exercise/?name=$uniqueExerciseName&description=testexerciseout" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
             .exchange()
             .expectStatus().isOk()

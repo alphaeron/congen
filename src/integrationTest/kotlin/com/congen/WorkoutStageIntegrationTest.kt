@@ -25,7 +25,13 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val unique = System.nanoTime()
         val userResponse =
             webTestClient.post()
-                .uri("/api/v1/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
+                .uri(
+                    "/api/v1/user/" +
+                        "?name=Test%20User%20$unique" +
+                        "&age=30" +
+                        "&height=180.5" +
+                        "&weight=75.0"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -35,7 +41,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         // Then create a program for that user
         val response =
             webTestClient.post()
-                .uri("/api/v1/program/?userId=${userResponse.id}&name=Test Program $unique&currentWeekNumber=1")
+                .uri(
+                    "/api/v1/program/" +
+                        "?user_id=${userResponse.id}" +
+                        "&name=Test Program $unique" +
+                        "&current_week_number=1"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -62,7 +73,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(1)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=101&name=Test Workout for Position 0 Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=101" +
+                        "&name=Test Workout for Position 0 Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -71,7 +87,13 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
         val stageTypeId = getWorkoutStageTypeId("Warmup")
         webTestClient.post()
-            .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=0&name=Test Stage")
+            .uri(
+                "/api/v1/workout_stage/" +
+                    "?programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$stageTypeId" +
+                    "&position=0" +
+                    "&name=Test Stage"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -83,7 +105,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(2)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=102&name=Test Workout for Negative Position Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=102" +
+                        "&name=Test Workout for Negative Position Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -92,7 +119,13 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
         val stageTypeId = getWorkoutStageTypeId("Warmup")
         webTestClient.post()
-            .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=-1&name=Test Stage")
+            .uri(
+                "/api/v1/workout_stage/" +
+                    "?programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$stageTypeId" +
+                    "&position=-1" +
+                    "&name=Test Stage"
+            )
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -104,7 +137,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(1)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=101&name=Test Workout for Valid Stage Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=101" +
+                        "&name=Test Workout for Valid Stage Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -113,7 +151,13 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
         val stageTypeId = getWorkoutStageTypeId("Warmup")
         webTestClient.post()
-            .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=1&name=Test Stage")
+            .uri(
+                "/api/v1/workout_stage/" +
+                    "?programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$stageTypeId" +
+                    "&position=1" +
+                    "&name=Test Stage"
+            )
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -127,7 +171,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(4)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=104&name=Test Workout for Get Stage Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=104" +
+                        "&name=Test Workout for Get Stage Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -137,7 +186,13 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val stageTypeId = getWorkoutStageTypeId("Primary")
         val stageResponse =
             webTestClient.post()
-                .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=5&name=Test Stage")
+                .uri(
+                    "/api/v1/workout_stage/" +
+                        "?programmed_workout_id=${workoutResponse.id}" +
+                        "&stage_type_id=$stageTypeId" +
+                        "&position=5" +
+                        "&name=Test Stage"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStage::class.java)
@@ -160,7 +215,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(5)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=105&name=Test Workout for Multiple Stages Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=105" +
+                        "&name=Test Workout for Multiple Stages Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -172,16 +232,29 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val secondaryId = getWorkoutStageTypeId("Secondary")
 
         webTestClient.post()
-            .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$warmupId&position=1&name=Warmup Stage")
-            .exchange()
-            .expectStatus().isOk()
-        webTestClient.post()
-            .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$primaryId&position=2&name=Primary Stage")
+            .uri(
+                "/api/v1/workout_stage/?programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$warmupId" +
+                    "&position=1" +
+                    "&name=Warmup Stage"
+            )
             .exchange()
             .expectStatus().isOk()
         webTestClient.post()
             .uri(
-                "/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$secondaryId&position=3&name=Secondary Stage"
+                "/api/v1/workout_stage/?programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$primaryId" +
+                    "&position=2" +
+                    "&name=Primary Stage"
+            )
+            .exchange()
+            .expectStatus().isOk()
+        webTestClient.post()
+            .uri(
+                "/api/v1/workout_stage/?programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$secondaryId" +
+                    "&position=3" +
+                    "&name=Secondary Stage"
             )
             .exchange()
             .expectStatus().isOk()
@@ -218,7 +291,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(6)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=106&name=Test Workout for Update Stage Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=106" +
+                        "&name=Test Workout for Update Stage Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -229,7 +307,13 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val primaryId = getWorkoutStageTypeId("Primary")
         val stageResponse =
             webTestClient.post()
-                .uri("/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$warmupId&position=10&name=Test Stage")
+                .uri(
+                    "/api/v1/workout_stage/" +
+                        "?programmed_workout_id=${workoutResponse.id}" +
+                        "&stage_type_id=$warmupId" +
+                        "&position=10" +
+                        "&name=Test Stage"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStage::class.java)
@@ -238,8 +322,8 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.patch()
             .uri(
-                "/api/v1/workout_stage/?id=${stageResponse.id}&programmedWorkoutId=${workoutResponse.id}" +
-                    "&stageTypeId=$primaryId&position=15&name=Updated Stage"
+                "/api/v1/workout_stage/?id=${stageResponse.id}&programmed_workout_id=${workoutResponse.id}" +
+                    "&stage_type_id=$primaryId&position=15&name=Updated Stage"
             )
             .exchange()
             .expectStatus().isOk()
@@ -254,7 +338,12 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val programId = createTestProgram(7)
         val workoutResponse =
             webTestClient.post()
-                .uri("/api/v1/programmed_workout/?programId=$programId&dayNumber=107&name=Test Workout for Delete Stage Test")
+                .uri(
+                    "/api/v1/programmed_workout/" +
+                        "?program_id=$programId" +
+                        "&day_number=107" +
+                        "&name=Test Workout for Delete Stage Test"
+                )
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -265,7 +354,10 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val stageResponse =
             webTestClient.post()
                 .uri(
-                    "/api/v1/workout_stage/?programmedWorkoutId=${workoutResponse.id}&stageTypeId=$stageTypeId&position=20&name=Test Stage"
+                    "/api/v1/workout_stage/?programmed_workout_id=${workoutResponse.id}" +
+                        "&stage_type_id=$stageTypeId" +
+                        "&position=20" +
+                        "&name=Test Stage"
                 )
                 .exchange()
                 .expectStatus().isOk()

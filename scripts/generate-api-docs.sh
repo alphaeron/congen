@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 DOCS_DIR="docs"
-API_DOCS_FILE="${DOCS_DIR}/api-documentation.md"
+API_DOCS_FILE="${DOCS_DIR}/API_DOCUMENTATION.md"
 OPENAPI_JSON_FILE="${DOCS_DIR}/openapi.json"
 OPENAPI_YAML_FILE="${DOCS_DIR}/openapi.yaml"
 SWAGGER_UI_DIR="${DOCS_DIR}/swagger-ui"
@@ -40,67 +40,67 @@ print_error() {
 # Function to check if required tools are installed
 check_dependencies() {
     print_status "Checking dependencies..."
-    
+
     # Check if curl is available
     if ! command -v curl &> /dev/null; then
         print_error "curl is required but not installed"
         exit 1
     fi
-    
+
     # Check if jq is available (for JSON processing)
     if ! command -v jq &> /dev/null; then
         print_warning "jq is not installed. JSON processing will be limited."
     fi
-    
+
     # Check if yq is available (for YAML processing)
     if ! command -v yq &> /dev/null; then
         print_warning "yq is not installed. YAML processing will be limited."
     fi
-    
+
     print_success "Dependencies check completed"
 }
 
 # Function to create docs directory structure
 create_docs_structure() {
     print_status "Creating documentation directory structure..."
-    
+
     mkdir -p "${DOCS_DIR}"
     mkdir -p "${SWAGGER_UI_DIR}"
-    
+
     print_success "Documentation directory structure created"
 }
 
 # Function to start the application in background
 start_application() {
     print_status "Starting application for documentation generation..."
-    
+
     # Build the application
     print_status "Building application..."
     ./gradlew build -x test -x integrationTest
-    
+
     # Start the application in background
     print_status "Starting application..."
     ./gradlew bootRun > /dev/null 2>&1 &
     APP_PID=$!
-    
+
     # Wait for application to start
     print_status "Waiting for application to start..."
     sleep 30
-    
+
     # Check if application is running
     if ! curl -s http://localhost:8080/actuator/health > /dev/null; then
         print_error "Application failed to start"
         kill "${APP_PID}" 2>/dev/null || true
         exit 1
     fi
-    
+
     print_success "Application started successfully (PID: ${APP_PID})"
 }
 
 # Function to generate OpenAPI JSON
 generate_openapi_json() {
     print_status "Generating OpenAPI JSON specification..."
-    
+
     if curl -s http://localhost:8080/api-docs > "${OPENAPI_JSON_FILE}"; then
         print_success "OpenAPI JSON generated: ${OPENAPI_JSON_FILE}"
     else
@@ -112,7 +112,7 @@ generate_openapi_json() {
 # Function to generate OpenAPI YAML
 generate_openapi_yaml() {
     print_status "Generating OpenAPI YAML specification..."
-    
+
     if curl -s http://localhost:8080/api-docs.yaml > "${OPENAPI_YAML_FILE}"; then
         print_success "OpenAPI YAML generated: ${OPENAPI_YAML_FILE}"
     else
@@ -123,7 +123,7 @@ generate_openapi_yaml() {
 # Function to generate markdown documentation
 generate_markdown_docs() {
     print_status "Generating markdown documentation..."
-    
+
     cat > "${API_DOCS_FILE}" << 'EOF'
 # Congen API Documentation
 
@@ -382,7 +382,7 @@ EOF
 # Function to create a simple index file
 create_index_file() {
     print_status "Creating documentation index..."
-    
+
     cat > "${DOCS_DIR}/README.md" << 'EOF'
 # Congen API Documentation
 
@@ -390,7 +390,7 @@ Welcome to the Congen API documentation. This directory contains automatically g
 
 ## Files
 
-- **[API Documentation](api-documentation.md)** - Comprehensive API reference
+- **[API Documentation](API_DOCUMENTATION.md)** - Comprehensive API reference
 - **[OpenAPI JSON](openapi.json)** - OpenAPI specification in JSON format
 - **[OpenAPI YAML](openapi.yaml)** - OpenAPI specification in YAML format
 
@@ -435,13 +435,13 @@ stop_application() {
         print_status "Stopping application (PID: ${APP_PID})..."
         kill "${APP_PID}" 2>/dev/null || true
         sleep 5
-        
+
         # Check if process is still running
         if kill -0 "${APP_PID}" 2>/dev/null; then
             print_warning "Application did not stop gracefully, forcing termination..."
             kill -9 "${APP_PID}" 2>/dev/null || true
         fi
-        
+
         print_success "Application stopped"
     fi
 }
@@ -457,21 +457,21 @@ trap cleanup EXIT
 # Main execution
 main() {
     print_status "Starting API documentation generation..."
-    
+
     check_dependencies
     create_docs_structure
     start_application
-    
+
     # Generate documentation
     generate_openapi_json
     generate_openapi_yaml
     generate_markdown_docs
     create_index_file
-    
+
     print_success "API documentation generation completed!"
     print_status "Documentation files created in: ${DOCS_DIR}"
     print_status "Interactive documentation available at: http://localhost:8080/swagger-ui.html"
 }
 
 # Run main function
-main "$@" 
+main "$@"

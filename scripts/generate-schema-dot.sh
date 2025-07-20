@@ -16,9 +16,10 @@ NC='\033[0m' # No Color
 # Configuration
 # TEMP_DB_NAME="temp_schema_gen_$(date +%s)"  # Unused variable - removed to fix ShellCheck warning
 # LIQUIBASE_CHANGELOG="resources/migrations/changelog-root.xml"  # Unused variable - removed to fix ShellCheck warning
+DOCS_DIR="docs"
 BASE_FILE_NAME="database_schema"
-OUTPUT_DOT_FILE="${BASE_FILE_NAME}.dot"
-OUTPUT_PNG_FILE="${BASE_FILE_NAME}.png"
+OUTPUT_DOT_FILE="${DOCS_DIR}/${BASE_FILE_NAME}.dot"
+OUTPUT_PNG_FILE="${DOCS_DIR}/${BASE_FILE_NAME}.png"
 
 # Set PostgreSQL password environment variable to avoid prompts
 export PGPASSWORD=postgres

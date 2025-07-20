@@ -96,11 +96,11 @@ class UserWeightUnitPreferenceController(
     )
     fun upsert(
         @Parameter(description = "User ID", required = true)
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(description = "Exercise name", required = true)
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Preferred weight unit (KG or LBS)", required = true)
-        @RequestParam preferredUnit: String,
+        @RequestParam("preferred_unit") preferredUnit: String,
     ): ResponseEntity<*> {
         logger.info("Upserting user weight unit preference: {} - {} - {}", userId, exerciseName, preferredUnit)
 
@@ -120,7 +120,7 @@ class UserWeightUnitPreferenceController(
      * @param userId The unique identifier of the user
      * @return Mono containing a list of user weight unit preferences
      */
-    @GetMapping("/{userId}")
+    @GetMapping("/{user_id}")
     @Operation(
         summary = "Get all weight unit preferences for a user",
         description = "Retrieves all weight unit preferences for a given user.",
@@ -136,7 +136,7 @@ class UserWeightUnitPreferenceController(
     )
     fun getAllByUser(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
     ): Mono<ResponseEntity<List<UserWeightUnitPreference>>> {
         return userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
             .map {
@@ -158,7 +158,7 @@ class UserWeightUnitPreferenceController(
      * @param exerciseName The name of the exercise
      * @return Mono containing the user weight unit preference if found, or 404 if not found
      */
-    @GetMapping("/{userId}/{exerciseName}")
+    @GetMapping("/{user_id}/{exercise_name}")
     @Operation(
         summary = "Get weight unit preference for user and exercise",
         description = "Retrieves a specific weight unit preference for a given user and exercise.",
@@ -179,9 +179,9 @@ class UserWeightUnitPreferenceController(
     )
     fun getByUserAndExercise(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
         @Parameter(description = "Exercise name", required = true)
-        @PathVariable("exerciseName") exerciseName: String,
+        @PathVariable("exercise_name") exerciseName: String,
     ): Mono<ResponseEntity<UserWeightUnitPreference>> {
         return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
             .map {
@@ -207,7 +207,7 @@ class UserWeightUnitPreferenceController(
      * @param exerciseName The name of the exercise
      * @return ResponseEntity containing the deleted user weight unit preference
      */
-    @DeleteMapping("/{userId}/{exerciseName}")
+    @DeleteMapping("/{user_id}/{exercise_name}")
     @Operation(
         summary = "Delete user weight unit preference",
         description = "Deletes a user weight unit preference for a given user and exercise.",
@@ -228,9 +228,9 @@ class UserWeightUnitPreferenceController(
     )
     fun delete(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
         @Parameter(description = "Exercise name", required = true)
-        @PathVariable("exerciseName") exerciseName: String,
+        @PathVariable("exercise_name") exerciseName: String,
     ): ResponseEntity<*> {
         logger.info("Deleting user weight unit preference: {} - {}", userId, exerciseName)
         return ResponseEntity.ok(

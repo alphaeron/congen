@@ -76,9 +76,9 @@ class WorkoutStageController(
     @PostMapping("/")
     fun save(
         @Parameter(description = "Programmed workout ID", required = true)
-        @RequestParam programmedWorkoutId: Long,
+        @RequestParam("programmed_workout_id") programmedWorkoutId: Long,
         @Parameter(description = "Stage type ID", required = true)
-        @RequestParam stageTypeId: Int,
+        @RequestParam("stage_type_id") stageTypeId: Int,
         @Parameter(description = "Position within the workout", required = true)
         @RequestParam position: Int,
         @Parameter(description = "Name of the workout stage", required = true)
@@ -158,9 +158,9 @@ class WorkoutStageController(
      * @param programmedWorkoutId The unique identifier of the programmed workout
      * @return ResponseEntity containing a list of workout stages for the workout
      */
-    @GetMapping("/workout/{programmedWorkoutId}")
+    @GetMapping("/workout/{programmed_workout_id}")
     fun getByProgrammedWorkoutId(
-        @PathVariable("programmedWorkoutId") programmedWorkoutId: Long,
+        @PathVariable("programmed_workout_id") programmedWorkoutId: Long,
     ): Mono<ResponseEntity<List<WorkoutStage>>> {
         logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
         return workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
@@ -191,9 +191,9 @@ class WorkoutStageController(
         @Parameter(description = "Workout stage ID", required = true)
         @RequestParam id: Long,
         @Parameter(description = "Programmed workout ID", required = true)
-        @RequestParam programmedWorkoutId: Long,
+        @RequestParam("programmed_workout_id") programmedWorkoutId: Long,
         @Parameter(description = "Stage type ID", required = true)
-        @RequestParam stageTypeId: Int,
+        @RequestParam("stage_type_id") stageTypeId: Int,
         @Parameter(description = "Position within the workout", required = true)
         @RequestParam position: Int,
         @Parameter(description = "Name of the workout stage", required = true)

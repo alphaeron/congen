@@ -13,7 +13,9 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         val programmedExerciseId = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId)
         webTestClient.post()
             .uri(
-                "/api/v1/programmed_exercise/?workoutStageId=$stageId&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1"
+                "/api/v1/programmed_exercise/?workout_stage_id=$stageId" +
+                    "&exercise_name=${IntegrationTestHelpers.TEST_EXERCISE_NAME}" +
+                    "&position=1"
             )
             .exchange()
             .expectStatus().isOk()
@@ -104,8 +106,8 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
         // Then update it
         webTestClient.patch()
             .uri(
-                "/api/v1/programmed_exercise/$exerciseResponse?workoutStageId=$stageId" +
-                    "&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}" +
+                "/api/v1/programmed_exercise/$exerciseResponse?workout_stage_id=$stageId" +
+                    "&exercise_name=${IntegrationTestHelpers.TEST_EXERCISE_NAME}" +
                     "&position=2"
             )
             .exchange()
@@ -120,7 +122,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when updating non-existent programmed exercise`() {
         webTestClient.patch()
-            .uri("/api/v1/programmed_exercise/999?workoutStageId=1&exerciseName=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
+            .uri("/api/v1/programmed_exercise/999?workout_stage_id=1&exercise_name=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
             .exchange()
             .expectStatus().isNotFound()
     }

@@ -11,13 +11,18 @@ The service is built with a modular architecture that provides clear separation 
 ### Package Structure
 
 ```
-src/main/kotlin/com/congen/service/conjugate/
-├── ConjugateModels.kt           # Data classes and constants
-├── ConjugateTemplates.kt        # Workout templates and selection logic
-├── PrilepinGuidelinesService.kt # Prilepin chart and periodization logic
-├── ExerciseSelectionService.kt  # Exercise selection and filtering logic
-├── WorkoutStageGenerator.kt     # Individual stage generation helpers
-└── SessionTimeCalculator.kt     # Session time allocation utilities
+src/main/kotlin/com/congen/generator/
+├── ConjugateModels.kt                           # Data classes and constants
+├── ConjugateTemplates.kt                        # Workout templates and selection logic
+├── PrilepinGuidelinesService.kt                 # Prilepin chart and periodization logic
+├── ExerciseSelectionService.kt                  # Exercise selection and filtering logic
+├── WorkoutStageGenerator.kt                     # Individual stage generation helpers
+├── SessionTimeCalculator.kt                     # Session time allocation utilities
+├── WeightSelectionService.kt                    # Weight calculation and estimation
+├── ExerciseMatchingService.kt                   # Exercise similarity and matching
+├── ReferenceExerciseDetector.kt                 # Dynamic reference exercise detection
+├── SupportedEquipmentWeightRoundingService.kt  # Equipment-based weight rounding
+└── BandWeightService.kt                         # Band weight calculations for DE
 ```
 
 ### Component Responsibilities
@@ -53,6 +58,7 @@ src/main/kotlin/com/congen/service/conjugate/
   - Equipment availability checking
   - Weak muscle determination
   - Exercise filtering utilities
+  - Secondary exercise similarity selection
 - **Benefits**: Separates exercise selection logic from workout generation
 
 #### 5. WorkoutStageGenerator.kt
@@ -61,7 +67,7 @@ src/main/kotlin/com/congen/service/conjugate/
   - Workout stage creation
   - Programmed exercise creation
   - Set scheme generation (Prilepin-based, secondary, AMRAP/EMOM)
-  - Target weight calculation
+  - Target weight calculation integration
 - **Benefits**: Focuses on stage-level generation details
 
 #### 6. SessionTimeCalculator.kt
@@ -72,12 +78,61 @@ src/main/kotlin/com/congen/service/conjugate/
   - Utility methods for time management
 - **Benefits**: Isolates time-related logic for easy modification
 
+#### 7. WeightSelectionService.kt
+- **Purpose**: Handles weight calculation and estimation for exercises
+- **Responsibilities**:
+  - Weight calculation based on user's 1RM and intensity
+  - Weight estimation for exercises without 1RM using similar exercises
+  - Dynamic effort weight calculations with bands
+  - Bodyweight exercise estimations
+  - Unit conversion and weight rounding integration
+- **Benefits**: Centralizes all weight-related logic and provides intelligent fallbacks
+
+#### 8. ExerciseMatchingService.kt
+- **Purpose**: Automatically matches exercises to reference lifts using multiple similarity metrics
+- **Responsibilities**:
+  - Name similarity analysis
+  - Movement pattern classification
+  - Equipment similarity matching
+  - Muscle group overlap analysis
+  - Weight estimation from reference exercises
+- **Benefits**: Provides intelligent weight estimation for exercises without 1RM data
+
+#### 9. ReferenceExerciseDetector.kt
+- **Purpose**: Dynamically identifies the best reference exercises from the database
+- **Responsibilities**:
+  - Equipment preference scoring (barbell > dumbbell > machine)
+  - Movement pattern purity analysis
+  - User 1RM data integration
+  - Exercise popularity/usage tracking
+  - Name clarity assessment
+- **Benefits**: Replaces hardcoded reference exercise names with intelligent detection
+
+#### 10. SupportedEquipmentWeightRoundingService.kt
+- **Purpose**: Rounds weights to match available plate and equipment sizes
+- **Responsibilities**:
+  - Barbell weight rounding using standard plates
+  - Kettlebell weight matching to standard sizes
+  - Dumbbell weight rounding to standard increments
+  - Equipment-specific weight calculations
+- **Benefits**: Ensures calculated weights can be achieved with standard gym equipment
+
+#### 11. BandWeightService.kt
+- **Purpose**: Handles band weight calculations for dynamic effort exercises
+- **Responsibilities**:
+  - Band weight distribution by week
+  - Band selection based on target weight
+  - Bar weight calculation
+  - Unit conversion for band calculations
+- **Benefits**: Provides accurate accommodated resistance for DE movements
+
 ### Main Service (ConjugateWorkoutGeneratorService.kt)
 
 The main service is a lightweight orchestrator that:
 - Coordinates between the modular components
 - Handles the high-level workflow
 - Manages data flow between components
+- Provides program-based generation (works with existing programs)
 
 ## Conjugate Method Principles
 
@@ -121,10 +176,11 @@ The service uses a sophisticated algorithm to select exercises:
 
 ### Primary Exercise Selection
 1. **Filter by Exercise Type**: Select ME/DE exercises (`is_accessory = false`)
-2. **Filter by User Preferences**: Exclude exercises the user wants to avoid
-3. **Filter by Equipment**: Only include exercises the user can perform with available equipment
-4. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
-5. **Sort by Priority**: Sort by equipment options, targeted muscles, and exercise name
+2. **Filter by Workout Type**: Match exercises to specific workout types (ME/DE)
+3. **Filter by User Preferences**: Exclude exercises the user wants to avoid
+4. **Filter by Equipment**: Only include exercises the user can perform with available equipment
+5. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
+6. **Sort by Priority**: Sort by equipment options, targeted muscles, and exercise name
 
 ### Secondary Exercise Selection
 Secondary exercises are selected to be similar to the primary exercise in terms of movement type and muscles worked:
@@ -154,6 +210,36 @@ The exercise with the highest total score is selected as the secondary movement.
 3. **Filter by Equipment**: Only include exercises the user can perform with available equipment
 4. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
 5. **Sort by Priority**: Sort by equipment options, targeted muscles, and exercise name
+
+## Weight Calculation and Estimation
+
+The system provides intelligent weight calculation and estimation through multiple services:
+
+### Weight Selection Service
+- **Direct 1RM Usage**: Uses actual 1RM values when available
+- **Exercise Matching**: Estimates weights for exercises without 1RM using similar exercises
+- **Bodyweight Estimation**: Provides conservative estimates for bodyweight/isolation exercises
+- **Dynamic Effort Integration**: Handles band weight calculations for DE movements
+- **Unit Conversion**: Supports both pounds and kilograms with user preferences
+
+### Exercise Matching Service
+- **Multi-Metric Similarity**: Combines name similarity, movement pattern, equipment, and muscle groups
+- **Reference Exercise Detection**: Dynamically identifies best reference exercises
+- **Weight Estimation**: Calculates estimated weights based on reference exercise and similarity score
+- **Fallback Mechanisms**: Provides conservative estimates when no good matches are found
+
+### Reference Exercise Detector
+- **Equipment Preference**: Prioritizes barbell > dumbbell > machine exercises
+- **Pattern Purity**: Scores exercises based on movement pattern clarity
+- **User Data Integration**: Prioritizes exercises the user has 1RM data for
+- **Usage Tracking**: Considers exercise popularity and usage patterns
+- **Name Clarity**: Prefers clear, standard exercise names
+
+### Supported Equipment Weight Rounding
+- **Barbell Exercises**: Rounds to achievable weights using standard plates (2.5, 5, 10, 25, 35, 45 lbs)
+- **Kettlebell Exercises**: Matches to standard kettlebell weights
+- **Dumbbell Exercises**: Rounds to nearest 5lb/2.5kg increment
+- **Equipment Detection**: Automatically detects required equipment from exercise data
 
 ## Session Time Management
 
@@ -301,7 +387,7 @@ Each exercise generates multiple set schemes with:
 - **AMRAP**: As Many Reps As Possible (for conditioning)
 - **EMOM**: Every Minute On the Minute (for conditioning)
 - **Tempo**: Eccentric, isometric, and concentric timing
-- **Target Weight**: Based on user's 1RM and exercise intensity
+- **Target Weight**: Based on user's 1RM and exercise intensity (with intelligent estimation)
 - **Rest Periods**: Based on Prilepin's guidelines
 
 ## User Personalization
@@ -318,10 +404,16 @@ The service personalizes workouts based on:
 
 ### One Rep Max Data
 - Uses actual 1RM values when available
-- Falls back to default weights for new users
+- Falls back to intelligent weight estimation for exercises without 1RM data
 - Automatically updates 1RM when users exceed current max
-- Estimates weights for exercises without 1RM data using intelligent exercise matching algorithms
+- Estimates weights using advanced exercise matching algorithms
 - Supports multiple 1RM calculation formulas (Epley, Brzycki, Lombardi, O'Conner, Wathan)
+
+### Weight Unit Preferences
+- Supports both pounds and kilograms
+- User-specific preferences per exercise
+- Automatic unit conversion for calculations
+- Equipment-based weight rounding in user's preferred unit
 
 ### Weak Muscle Groups
 - Focuses accessory work on user's weak points
@@ -339,8 +431,17 @@ The service handles various edge cases:
 - **No Available Exercises**: Falls back to any available exercise when equipment constraints are too restrictive
 - **Database Errors**: Proper error propagation and logging
 - **Invalid Parameters**: Validation of input parameters
+- **Weight Estimation Failures**: Conservative fallback estimates for bodyweight exercises
+- **Equipment Lookup Failures**: Returns original weight if equipment data is unavailable
 
 ## Technical Implementation
+
+### Program-Based Generation
+The system now works with existing programs instead of creating new ones:
+- **Input**: Program ID of existing program
+- **Process**: Generates next week based on program's current week number
+- **Output**: Updated program with new workouts
+- **Benefits**: Maintains program continuity and user progress tracking
 
 ### Secondary Exercise Selection Implementation
 The secondary exercise selection is implemented in the `ExerciseSelectionService` with the following key components:
@@ -365,6 +466,17 @@ The secondary exercise selection is implemented in the `ExerciseSelectionService
 - Reactive database queries ensure non-blocking operation
 - Error handling with fallback to null when muscle data is unavailable
 
+### Weight Calculation Pipeline
+The weight calculation follows a sophisticated pipeline:
+
+1. **Direct 1RM Check**: First attempts to use user's actual 1RM for the exercise
+2. **Exercise Matching**: If no 1RM, finds similar exercises using multiple similarity metrics
+3. **Reference Exercise Detection**: Dynamically identifies best reference exercises
+4. **Weight Estimation**: Calculates estimated weight based on reference and similarity
+5. **Equipment Rounding**: Rounds to achievable weights based on required equipment
+6. **Unit Conversion**: Handles user's preferred weight units
+7. **Band Integration**: For DE exercises, calculates bar and band weight distribution
+
 ### Testing
 
 ### Unit Tests
@@ -375,6 +487,10 @@ Comprehensive unit tests cover:
 - Error handling
 - Edge cases with missing data
 - Individual component functionality (templates, periodization, exercise selection, stage generation, time calculations)
+- Weight calculation and estimation
+- Exercise matching algorithms
+- Equipment weight rounding
+- Band weight calculations
 
 ### Integration Tests
 End-to-end tests verify:
@@ -383,23 +499,31 @@ End-to-end tests verify:
 - API endpoint functionality
 - User personalization features
 - Component integration
+- Weight estimation accuracy
+- Equipment-based weight rounding
+
+## API Endpoints
+
+### Generate Next Week
+- **Endpoint**: `POST /conjugate_workout_generator/{program_id}`
+- **Description**: Generates the next week of workouts for an existing program
+- **Parameters**: 
+  - `program_id` (path): ID of the existing program
+- **Response**: Updated program with new workouts
+- **Features**:
+  - Automatic week progression based on program's current week
+  - Program-based generation (works with existing programs)
+  - Comprehensive error handling and validation
 
 ## Usage Examples
 
-### Basic 3-Day Program Generation
+### Basic Program Generation
 ```bash
-curl -X GET "http://localhost:8080/conjugate-workout-generator/1/generate?numDaysPerWeek=3"
+curl -X POST "http://localhost:8080/conjugate_workout_generator/1"
 ```
 
-### 2-Day Program for Week 2
-```bash
-curl -X GET "http://localhost:8080/conjugate-workout-generator/1/generate?currentWeekNumber=2&numDaysPerWeek=2"
-```
-
-### 4-Day Program with Custom Week
-```bash
-curl -X GET "http://localhost:8080/conjugate-workout-generator/1/generate?currentWeekNumber=5&numDaysPerWeek=4"
-```
+### Program with Week Progression
+The system automatically determines the next week number from the program's current week and generates appropriate workouts with the correct periodization phase.
 
 ## Future Enhancements
 
@@ -416,3 +540,8 @@ Potential improvements include:
 - Enhanced reference exercise detection with machine learning
 - Dynamic exercise similarity scoring based on user performance patterns
 - Advanced weight estimation algorithms for specialized exercises
+- Real-time exercise difficulty adjustment based on user feedback
+- Integration with nutrition and recovery tracking
+- Advanced periodization schemes (block periodization, wave loading)
+- Competition peak programming
+- Injury prevention and rehabilitation integration

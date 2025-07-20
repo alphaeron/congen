@@ -110,7 +110,7 @@ class ExerciseMuscleController(
      *
      * @throws DatabaseException if database operation fails
      */
-    @GetMapping("/exercise/{exerciseName}/muscle/{muscleName}")
+    @GetMapping("/exercise/{exercise_name}/muscle/{muscle_name}")
     @Operation(
         summary = "Get exercise muscle relationship",
         description = "Retrieves a specific exercise-muscle relationship by exercise and muscle name.",
@@ -131,9 +131,9 @@ class ExerciseMuscleController(
     )
     fun getExerciseMuscle(
         @Parameter(description = "Name of the exercise", required = true)
-        @PathVariable exerciseName: String,
+        @PathVariable("exercise_name") exerciseName: String,
         @Parameter(description = "Name of the muscle", required = true)
-        @PathVariable muscleName: String,
+        @PathVariable("muscle_name") muscleName: String,
     ): Mono<ResponseEntity<ExerciseMuscle>> {
         return exerciseMuscleDAL.selectExerciseMuscle(exerciseName, muscleName)
             .map {
@@ -176,9 +176,9 @@ class ExerciseMuscleController(
     )
     fun save(
         @Parameter(description = "Name of the exercise", required = true)
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Name of the muscle", required = true)
-        @RequestParam muscleName: String,
+        @RequestParam("muscle_name") muscleName: String,
     ): ResponseEntity<*> {
         logger.info("Saving exercise muscle relationship: {} - {}", exerciseName, muscleName)
         return try {

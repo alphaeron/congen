@@ -4,7 +4,7 @@ Welcome to the Congen API documentation. This directory contains automatically g
 
 ## Files
 
-- **[API Documentation](api-documentation.md)** - Comprehensive API reference
+- **[API Documentation](API_DOCUMENTATION.md)** - Comprehensive API reference
 - **[Weight Estimation Algorithms](WEIGHT_ESTIMATION_ALGORITHMS.md)** - 1RM calculator, exercise matching, and reference exercise detection
 - **[OpenAPI JSON](openapi.json)** - OpenAPI specification in JSON format
 - **[OpenAPI YAML](openapi.yaml)** - OpenAPI specification in YAML format

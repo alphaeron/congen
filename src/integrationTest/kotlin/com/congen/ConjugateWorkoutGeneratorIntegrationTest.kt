@@ -93,7 +93,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should handle invalid programDaysPerWeek in database`() {
         // Create user program preferences with invalid days per week should fail
         webTestClient.post()
-            .uri("/api/v1/user_program_preferences/?userId=$userId&programDaysPerWeek=5&sessionTimeLengthInMinutes=60")
+            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -121,12 +121,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         // Add exercise preferences (different exercises to avoid duplicate key constraint)
         webTestClient.post()
-            .uri("/api/v1/user_exercise_preference/?userId=$userId&exerciseName=Safety Bar Squat&shouldAvoid=true")
+            .uri("/api/v1/user_exercise_preference/?user_id=$userId&exercise_name=Safety Bar Squat&should_avoid=true")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/api/v1/user_exercise_preference/?userId=$userId&exerciseName=Deadlift&shouldAvoid=false")
+            .uri("/api/v1/user_exercise_preference/?user_id=$userId&exercise_name=Deadlift&should_avoid=false")
             .exchange()
             .expectStatus().isOk()
 
@@ -202,7 +202,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should generate workout with user program preferences`() {
         // Add program preferences
         webTestClient.post()
-            .uri("/api/v1/user_program_preferences/?userId=$userId&programDaysPerWeek=3&sessionTimeLengthInMinutes=60")
+            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=3&session_time_length_in_minutes=60")
             .exchange()
             .expectStatus().isOk()
 

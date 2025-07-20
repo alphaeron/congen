@@ -111,22 +111,22 @@ class ExerciseRotationHistoryController(
             required = true,
             example = "1",
         )
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(
             description = "The name of the exercise that was used",
             required = true,
             example = "Bench Press",
         )
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(
             description = "Whether the exercise was used as an accessory movement",
             required = true,
             example = "false",
         )
-        @RequestParam isAccessory: Boolean,
+        @RequestParam("is_accessory") isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         logger.info(
-            "Saving exercise rotation history: userId={}, exercise_name={}, isAccessory={}",
+            "Saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
             userId,
             exerciseName,
             isAccessory,
@@ -138,7 +138,7 @@ class ExerciseRotationHistoryController(
             }
             .doOnError { e ->
                 logger.error(
-                    "Error saving exercise rotation history: userId={}, exercise_name={}, isAccessory={}",
+                    "Error saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
                     userId,
                     exerciseName,
                     isAccessory,
@@ -215,7 +215,7 @@ class ExerciseRotationHistoryController(
      *
      * @throws DatabaseException if database operation fails
      */
-    @GetMapping("/isAccessory/{isAccessory}")
+    @GetMapping("/is_accessory/{is_accessory}")
     @Operation(
         summary = "Get exercise rotation history by accessory type",
         description = "Retrieves exercise rotation history records for a specific accessory type.",
@@ -239,7 +239,7 @@ class ExerciseRotationHistoryController(
             required = true,
             example = "false",
         )
-        @PathVariable("isAccessory") isAccessory: Boolean,
+        @PathVariable("is_accessory") isAccessory: Boolean,
     ): Mono<ResponseEntity<List<ExerciseRotationHistory>>> {
         logger.info("Getting exercise rotation history by isAccessory: {}", isAccessory)
         return exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)
@@ -355,22 +355,22 @@ class ExerciseRotationHistoryController(
             required = true,
             example = "1",
         )
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(
             description = "The name of the exercise that was used",
             required = true,
             example = "Bench Press",
         )
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(
             description = "Whether the exercise was used as an accessory movement",
             required = true,
             example = "true",
         )
-        @RequestParam isAccessory: Boolean,
+        @RequestParam("is_accessory") isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         logger.info(
-            "Updating exercise rotation history: id={}, userId={}, exercise_name={}, isAccessory={}",
+            "Updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
             id,
             userId,
             exerciseName,
@@ -383,7 +383,7 @@ class ExerciseRotationHistoryController(
             }
             .doOnError { e ->
                 logger.error(
-                    "Error updating exercise rotation history: id={}, userId={}, exercise_name={}, isAccessory={}",
+                    "Error updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
                     id,
                     userId,
                     exerciseName,

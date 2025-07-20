@@ -87,11 +87,11 @@ class UserExercisePreferenceController(
     )
     fun save(
         @Parameter(description = "User ID", required = true)
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(description = "Exercise name", required = true)
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Whether the user should avoid this exercise", required = true)
-        @RequestParam shouldAvoid: Boolean,
+        @RequestParam("should_avoid") shouldAvoid: Boolean,
     ): ResponseEntity<*> {
         logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
         return ResponseEntity.ok(
@@ -108,7 +108,7 @@ class UserExercisePreferenceController(
      * @param userId The unique identifier of the user
      * @return Mono containing a list of user exercise preferences
      */
-    @GetMapping("/{userId}")
+    @GetMapping("/{user_id}")
     @Operation(
         summary = "Get user exercise preferences by user ID",
         description = "Retrieves all exercise preferences associated with a given user.",
@@ -124,7 +124,7 @@ class UserExercisePreferenceController(
     )
     fun getByUser(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
     ): Mono<ResponseEntity<List<UserExercisePreference>>> {
         return userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
             .map { preferences ->

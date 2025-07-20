@@ -87,11 +87,11 @@ class UserProgramPreferencesController(
     )
     fun save(
         @Parameter(description = "User ID", required = true)
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(description = "Number of days per week for the program", required = true)
-        @RequestParam programDaysPerWeek: Int,
+        @RequestParam("program_days_per_week") programDaysPerWeek: Int,
         @Parameter(description = "Session time length in minutes", required = true)
-        @RequestParam sessionTimeLengthInMinutes: Int,
+        @RequestParam("session_time_length_in_minutes") sessionTimeLengthInMinutes: Int,
     ): ResponseEntity<*> {
         logger.info("Saving user program preferences: {}", userId)
         return ResponseEntity.ok(
@@ -108,7 +108,7 @@ class UserProgramPreferencesController(
      * @param userId The unique identifier of the user
      * @return Mono containing the user program preferences
      */
-    @GetMapping("/{userId}")
+    @GetMapping("/{user_id}")
     @Operation(
         summary = "Get user program preferences by user ID",
         description = "Retrieves user program preferences for a given user.",
@@ -124,7 +124,7 @@ class UserProgramPreferencesController(
     )
     fun get(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
     ): Mono<ResponseEntity<UserProgramPreferences>> {
         return userProgramPreferencesDAL.selectUserProgramPreferences(userId)
             .map {
@@ -168,11 +168,11 @@ class UserProgramPreferencesController(
     )
     fun update(
         @Parameter(description = "User ID", required = true)
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(description = "Number of days per week for the program", required = true)
-        @RequestParam programDaysPerWeek: Int,
+        @RequestParam("program_days_per_week") programDaysPerWeek: Int,
         @Parameter(description = "Session time length in minutes", required = true)
-        @RequestParam sessionTimeLengthInMinutes: Int,
+        @RequestParam("session_time_length_in_minutes") sessionTimeLengthInMinutes: Int,
     ): ResponseEntity<*> {
         logger.info("Updating user program preferences: {}", userId)
         return ResponseEntity.ok(
@@ -189,7 +189,7 @@ class UserProgramPreferencesController(
      * @param userId The unique identifier of the user
      * @return ResponseEntity containing the deleted user program preferences
      */
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/{user_id}")
     @Operation(
         summary = "Delete user program preferences by user ID",
         description = "Deletes user program preferences for a given user.",
@@ -205,7 +205,7 @@ class UserProgramPreferencesController(
     )
     fun delete(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
     ): ResponseEntity<*> {
         logger.info("Deleting user program preferences: {}", userId)
         return ResponseEntity.ok(

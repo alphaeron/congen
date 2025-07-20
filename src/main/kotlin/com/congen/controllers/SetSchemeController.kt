@@ -84,19 +84,19 @@ class SetSchemeController(
      */
     @PostMapping("/")
     fun save(
-        @RequestParam programmedExerciseId: Long,
-        @RequestParam setNumber: Int,
-        @RequestParam isAmrap: Boolean,
-        @RequestParam isEmom: Boolean,
-        @RequestParam useTempo: Boolean,
-        @RequestParam eccentricTempo: String?,
-        @RequestParam isometricTempo: String?,
-        @RequestParam concentricTempo: String?,
-        @RequestParam targetWeight: String?,
-        @RequestParam performedWeight: String?,
-        @RequestParam targetRepCount: Int?,
-        @RequestParam performedRepCount: Int?,
-        @RequestParam restSeconds: Int?,
+        @RequestParam("programmed_exercise_id") programmedExerciseId: Long,
+        @RequestParam("set_number") setNumber: Int,
+        @RequestParam("is_amrap") isAmrap: Boolean,
+        @RequestParam("is_emom") isEmom: Boolean,
+        @RequestParam("use_tempo") useTempo: Boolean,
+        @RequestParam("eccentric_tempo") eccentricTempo: String?,
+        @RequestParam("isometric_tempo") isometricTempo: String?,
+        @RequestParam("concentric_tempo") concentricTempo: String?,
+        @RequestParam("target_weight") targetWeight: String?,
+        @RequestParam("performed_weight") performedWeight: String?,
+        @RequestParam("target_rep_count") targetRepCount: Int?,
+        @RequestParam("performed_rep_count") performedRepCount: Int?,
+        @RequestParam("rest_seconds") restSeconds: Int?,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<SetScheme>> {
         return setSchemeService.createSetScheme(
@@ -158,9 +158,9 @@ class SetSchemeController(
      * @param programmedExerciseId The unique identifier of the programmed exercise
      * @return ResponseEntity containing a list of set schemes for the exercise
      */
-    @GetMapping("/exercise/{programmedExerciseId}")
+    @GetMapping("/exercise/{programmed_exercise_id}")
     fun getByProgrammedExerciseId(
-        @PathVariable("programmedExerciseId") programmedExerciseId: Long,
+        @PathVariable("programmed_exercise_id") programmedExerciseId: Long,
     ): Mono<ResponseEntity<List<SetScheme>>> {
         return setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
             .map { setSchemes -> ResponseEntity.ok(setSchemes) }
@@ -193,19 +193,19 @@ class SetSchemeController(
     @PatchMapping("/{id}")
     fun update(
         @PathVariable("id") id: Long,
-        @RequestParam programmedExerciseId: Long,
-        @RequestParam setNumber: Int,
-        @RequestParam isAmrap: Boolean,
-        @RequestParam isEmom: Boolean,
-        @RequestParam useTempo: Boolean,
-        @RequestParam eccentricTempo: String?,
-        @RequestParam isometricTempo: String?,
-        @RequestParam concentricTempo: String?,
-        @RequestParam targetWeight: String?,
-        @RequestParam performedWeight: String?,
-        @RequestParam targetRepCount: Int?,
-        @RequestParam performedRepCount: Int?,
-        @RequestParam restSeconds: Int?,
+        @RequestParam("programmed_exercise_id") programmedExerciseId: Long,
+        @RequestParam("set_number") setNumber: Int,
+        @RequestParam("is_amrap") isAmrap: Boolean,
+        @RequestParam("is_emom") isEmom: Boolean,
+        @RequestParam("use_tempo") useTempo: Boolean,
+        @RequestParam("eccentric_tempo") eccentricTempo: String?,
+        @RequestParam("isometric_tempo") isometricTempo: String?,
+        @RequestParam("concentric_tempo") concentricTempo: String?,
+        @RequestParam("target_weight") targetWeight: String?,
+        @RequestParam("performed_weight") performedWeight: String?,
+        @RequestParam("target_rep_count") targetRepCount: Int?,
+        @RequestParam("performed_rep_count") performedRepCount: Int?,
+        @RequestParam("rest_seconds") restSeconds: Int?,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<SetScheme>> {
         return setSchemeService.updateSetSchemeWithUnit(

@@ -107,13 +107,13 @@ class ExerciseController(
         @Parameter(description = "Description of the exercise", required = true)
         @RequestParam description: String,
         @Parameter(description = "Type of movement", required = true)
-        @RequestParam movementType: MovementType,
+        @RequestParam("movement_type") movementType: MovementType,
         @Parameter(description = "Whether the exercise is unilateral", required = true)
-        @RequestParam isUnilateral: Boolean,
+        @RequestParam("is_unilateral") isUnilateral: Boolean,
         @Parameter(description = "Whether the exercise targets upper body", required = true)
-        @RequestParam isUpper: Boolean,
+        @RequestParam("is_upper") isUpper: Boolean,
         @Parameter(description = "Whether the exercise is an accessory movement", required = true)
-        @RequestParam isAccessory: Boolean,
+        @RequestParam("is_accessory") isAccessory: Boolean,
     ): ResponseEntity<*> {
         logger.info("Saving exercise: {}", name)
         return ResponseEntity.ok(

@@ -123,9 +123,9 @@ class ExerciseEquipmentController(
     )
     fun save(
         @Parameter(description = "Name of the exercise", required = true)
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Name of the equipment", required = true)
-        @RequestParam equipmentName: String,
+        @RequestParam("equipment_name") equipmentName: String,
     ): ResponseEntity<*> {
         logger.info("Saving exercise equipment relationship: {} - {}", exerciseName, equipmentName)
         return try {

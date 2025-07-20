@@ -19,7 +19,7 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for muscle relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
             .exchange()
             .expectStatus().isOk()
@@ -32,7 +32,7 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
 
         // Then create the exercise-muscle relationship
         webTestClient.post()
-            .uri("/api/v1/exercise_muscle/?exerciseName=$uniqueExercise&muscleName=$uniqueMuscle")
+            .uri("/api/v1/exercise_muscle/?exercise_name=$uniqueExercise&muscle_name=$uniqueMuscle")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -51,7 +51,7 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
         webTestClient.post()
             .uri(
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for muscle relationship" +
-                    "&movementType=horizontal_push&isUnilateral=false&isUpper=true&isAccessory=false"
+                    "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
             .exchange()
             .expectStatus().isOk()
@@ -69,12 +69,12 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
 
         // Create the relationships
         webTestClient.post()
-            .uri("/api/v1/exercise_muscle/?exerciseName=$uniqueExercise&muscleName=$uniqueMuscle1")
+            .uri("/api/v1/exercise_muscle/?exercise_name=$uniqueExercise&muscle_name=$uniqueMuscle1")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
-            .uri("/api/v1/exercise_muscle/?exerciseName=$uniqueExercise&muscleName=$uniqueMuscle2")
+            .uri("/api/v1/exercise_muscle/?exercise_name=$uniqueExercise&muscle_name=$uniqueMuscle2")
             .exchange()
             .expectStatus().isOk()
 

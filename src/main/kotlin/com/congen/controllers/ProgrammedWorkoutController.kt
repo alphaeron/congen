@@ -73,8 +73,8 @@ class ProgrammedWorkoutController(
      */
     @PostMapping("/")
     fun save(
-        @RequestParam programId: Long,
-        @RequestParam dayNumber: Int,
+        @RequestParam("program_id") programId: Long,
+        @RequestParam("day_number") dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
         logger.info("Saving programmed workout: {} for program {}", name, programId)
@@ -145,9 +145,9 @@ class ProgrammedWorkoutController(
      * @param programId The unique identifier of the program
      * @return ResponseEntity containing a list of programmed workouts for the program
      */
-    @GetMapping("/program/{programId}")
+    @GetMapping("/program/{program_id}")
     fun getByProgramId(
-        @PathVariable("programId") programId: Long,
+        @PathVariable("program_id") programId: Long,
     ): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
         logger.debug("Getting programmed workouts for program: {}", programId)
         return programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)
@@ -176,8 +176,8 @@ class ProgrammedWorkoutController(
     @PatchMapping("/{id}")
     fun update(
         @PathVariable("id") id: Long,
-        @RequestParam programId: Long,
-        @RequestParam dayNumber: Int,
+        @RequestParam("program_id") programId: Long,
+        @RequestParam("day_number") dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
         return programmedWorkoutDAL.updateProgrammedWorkout(id, programId, dayNumber, name)

@@ -34,26 +34,26 @@ All public classes, functions, and properties should be documented using KDoc co
 ```kotlin
 /**
  * Brief description of the class.
- * 
+ *
  * Detailed description explaining the purpose, usage, and important details
  * about the class. This can span multiple paragraphs and include examples.
- * 
+ *
  * ## Usage
- * 
+ *
  * ```kotlin
  * val instance = MyClass()
  * instance.doSomething()
  * ```
- * 
+ *
  * ## Thread Safety
- * 
+ *
  * This class is thread-safe and can be used concurrently.
- * 
+ *
  * @property propertyName Description of the property
  * @param paramName Description of the parameter
  * @return Description of the return value
  * @throws ExceptionType Description of when this exception is thrown
- * 
+ *
  * @author Developer Name
  * @since 1.0.0
  */
@@ -64,14 +64,14 @@ All public classes, functions, and properties should be documented using KDoc co
 ```kotlin
 /**
  * Brief description of what the function does.
- * 
+ *
  * Detailed explanation of the function's behavior, parameters, return values,
  * and any side effects. Include examples for complex functions.
- * 
+ *
  * @param paramName Description of the parameter
  * @return Description of the return value
  * @throws ExceptionType Description of when this exception is thrown
- * 
+ *
  * @example
  * ```kotlin
  * val result = myFunction("input")
@@ -164,7 +164,7 @@ data class MyModel(
         readOnly = true
     )
     val id: Int? = null,
-    
+
     @Schema(
         description = "Resource name",
         example = "Example Name",
@@ -172,7 +172,7 @@ data class MyModel(
         maxLength = 255
     )
     val name: String,
-    
+
     @Schema(
         description = "Creation timestamp",
         example = "2024-01-01T00:00:00Z",
@@ -229,7 +229,7 @@ If you prefer manual generation:
 ```
 docs/
 ├── README.md                 # Documentation index
-├── api-documentation.md      # Generated API reference
+├── API_DOCUMENTATION.md      # Generated API reference
 ├── openapi.json             # OpenAPI specification (JSON)
 ├── openapi.yaml             # OpenAPI specification (YAML)
 ├── swagger-ui/              # Static Swagger UI files
@@ -269,13 +269,13 @@ When adding new validation rules, document them in both the validation function 
 ```kotlin
 /**
  * Validates user input according to business rules.
- * 
+ *
  * ## Validation Rules
- * 
+ *
  * - **Name**: Required, non-empty string, max 255 characters
  * - **Age**: Required, integer between 1 and 150
  * - **Email**: Required, valid email format
- * 
+ *
  * @param user The user data to validate
  * @throws ValidationException if validation fails
  */
@@ -403,4 +403,4 @@ When contributing to documentation:
 - [KDoc Documentation](https://kotlinlang.org/docs/kotlin-doc.html)
 - [SpringDoc OpenAPI](https://springdoc.org/)
 - [OpenAPI Specification](https://swagger.io/specification/)
-- [Swagger UI](https://swagger.io/tools/swagger-ui/) 
+- [Swagger UI](https://swagger.io/tools/swagger-ui/)

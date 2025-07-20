@@ -62,9 +62,9 @@ class UserOneRepMaxController(
      * @param unit Optional unit to convert weights to (kg or lbs)
      * @return Mono containing list of one rep max records
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user/{user_id}")
     fun getOneRepMaxesByUserId(
-        @PathVariable userId: Int,
+        @PathVariable("user_id") userId: Int,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<List<UserOneRepMax>>> {
         return userOneRepMaxService.getAllByUser(userId, unit)
@@ -79,10 +79,10 @@ class UserOneRepMaxController(
      * @param unit Optional unit to convert weight to (kg or lbs)
      * @return Mono containing the one rep max record or empty if not found
      */
-    @GetMapping("/user/{userId}/exercise/{exerciseName}")
+    @GetMapping("/user/{user_id}/exercise/{exercise_name}")
     fun getOneRepMaxByUserAndExercise(
-        @PathVariable userId: Int,
-        @PathVariable exerciseName: String,
+        @PathVariable("user_id") userId: Int,
+        @PathVariable("exercise_name") exerciseName: String,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
         return userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
@@ -101,9 +101,9 @@ class UserOneRepMaxController(
      */
     @PutMapping("/")
     fun upsertOneRepMax(
-        @RequestParam userId: Int,
-        @RequestParam exerciseName: String,
-        @RequestParam oneRepMax: BigDecimal,
+        @RequestParam("user_id") userId: Int,
+        @RequestParam("exercise_name") exerciseName: String,
+        @RequestParam("one_rep_max") oneRepMax: BigDecimal,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
         return userOneRepMaxService.upsertOneRepMax(userId, exerciseName, oneRepMax, unit)
@@ -117,10 +117,10 @@ class UserOneRepMaxController(
      * @param exerciseName The exercise name
      * @return Mono containing ResponseEntity with no content
      */
-    @DeleteMapping("/user/{userId}/exercise/{exerciseName}")
+    @DeleteMapping("/user/{user_id}/exercise/{exercise_name}")
     fun deleteOneRepMax(
-        @PathVariable userId: Int,
-        @PathVariable exerciseName: String
+        @PathVariable("user_id") userId: Int,
+        @PathVariable("exercise_name") exerciseName: String
     ): Mono<ResponseEntity<Void>> {
         return userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
             .map { ResponseEntity.noContent().build<Void>() }

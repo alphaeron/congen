@@ -22,7 +22,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should create exercise rotation history record`() {
         webTestClient.post()
-            .uri("/api/v1/exercise_rotation_history/?userId=$testUserId&exerciseName=Bench Press&isAccessory=false")
+            .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -36,7 +36,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 400 when isAccessory is invalid`() {
         webTestClient.post()
-            .uri("/api/v1/exercise_rotation_history/?userId=$testUserId&exerciseName=Bench Press&isAccessory=invalid")
+            .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=invalid")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
     }
@@ -46,7 +46,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // First create a record
         val response =
             webTestClient.post()
-                .uri("/api/v1/exercise_rotation_history/?userId=$testUserId&exerciseName=Safety Bar Squat&isAccessory=true")
+                .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Safety Bar Squat&is_accessory=true")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -85,7 +85,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
         // Then get records for accessory exercises
         webTestClient.get()
-            .uri("/api/v1/exercise_rotation_history/isAccessory/true")
+            .uri("/api/v1/exercise_rotation_history/is_accessory/true")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -123,7 +123,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // First create a record
         val response =
             webTestClient.post()
-                .uri("/api/v1/exercise_rotation_history/?userId=$testUserId&exerciseName=Bench Press&isAccessory=false")
+                .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=false")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -132,7 +132,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
         // Then update the record
         webTestClient.patch()
-            .uri("/api/v1/exercise_rotation_history/${response.id}?userId=$testUserId&exerciseName=Bench Press&isAccessory=true")
+            .uri("/api/v1/exercise_rotation_history/${response.id}?user_id=$testUserId&exercise_name=Bench Press&is_accessory=true")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -145,7 +145,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // First create a record
         val response =
             webTestClient.post()
-                .uri("/api/v1/exercise_rotation_history/?userId=$testUserId&exerciseName=Bench Press&isAccessory=false")
+                .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=false")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)

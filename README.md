@@ -50,7 +50,7 @@ The application follows a layered architecture pattern:
    ```bash
    # Complete local setup and deployment (includes minikube, namespace, image build, and deployment)
    ./gradlew deployToKubernetes -Penvironment=local
-   
+
    # For integration testing (includes port forwarding):
    ./gradlew deployToKubernetes -Penvironment=local
    ./gradlew setupTestPortForward
@@ -60,10 +60,10 @@ The application follows a layered architecture pattern:
    ```bash
    # Deploy to staging (requires -PremoteRegistry parameter)
    ./gradlew deployToKubernetes -Penvironment=staging -PremoteRegistry=your-registry.example.com
-   
+
    # Deploy to production (requires -PremoteRegistry parameter)
    ./gradlew deployToKubernetes -Penvironment=production -PremoteRegistry=your-registry.example.com
-   
+
    # Or use Skaffold for development (watches for changes)
    ./gradlew skaffoldDev
    ```
@@ -72,10 +72,10 @@ The application follows a layered architecture pattern:
    ```bash
    # The deployment task will show you the access URL
    # Example: http://192.168.49.2:30080
-   
+
    # Manual port forwarding (if needed)
    kubectl port-forward -n congen service/congen 8080:8080
-   
+
    # Check application status
    kubectl get pods -n congen
    kubectl logs -f deployment/congen -n congen
@@ -85,11 +85,11 @@ The application follows a layered architecture pattern:
    ```bash
    # Unit tests
    ./gradlew test
-   
+
    # Integration tests (requires Kubernetes environment and port forwarding)
    ./gradlew setupTestPortForward  # Run once to setup port forwarding
    ./gradlew integrationTest
-   
+
    # All tests
    ./gradlew check
    ```
@@ -98,7 +98,7 @@ The application follows a layered architecture pattern:
    ```bash
    # Clean up Kubernetes resources
    ./gradlew cleanupKubernetes
-   
+
    # Stop port forwarding
    pkill -f 'kubectl port-forward.*postgres'
    ```
@@ -276,7 +276,7 @@ Currently, the API does not require authentication. All endpoints are publicly a
 - `PUT /user_program_preferences/{id}` - Update user program preferences
 - `DELETE /user_program_preferences/{id}` - Delete user program preferences
 
-For detailed API documentation, see [api-documentation.md](docs/api-documentation.md).
+For detailed API documentation, see [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
 ## ⚖️ Weight Selection
 
@@ -316,7 +316,7 @@ The application automatically rounds calculated weights to match available equip
 // Barbell example: 185 lb target
 // Result: 45lb bar + 2x45lb + 2x25lb plates = 185lbs
 
-// Kettlebell example: 37 lb target  
+// Kettlebell example: 37 lb target
 // Result: 40lb kettlebell (closest available)
 
 // Dumbbell example: 27.5 lb target

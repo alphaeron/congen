@@ -87,9 +87,9 @@ class UserEquipmentController(
     )
     fun save(
         @Parameter(description = "User ID", required = true)
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @Parameter(description = "Equipment name", required = true)
-        @RequestParam equipmentName: String,
+        @RequestParam("equipment_name") equipmentName: String,
     ): ResponseEntity<*> {
         logger.info("Saving user equipment: {} - {}", userId, equipmentName)
         return try {
@@ -121,7 +121,7 @@ class UserEquipmentController(
      * @param userId The unique identifier of the user
      * @return Mono containing a list of user equipment relationships
      */
-    @GetMapping("/{userId}")
+    @GetMapping("/{user_id}")
     @Operation(
         summary = "Get user equipment by user ID",
         description = "Retrieves all equipment associated with a given user.",
@@ -137,7 +137,7 @@ class UserEquipmentController(
     )
     fun getByUser(
         @Parameter(description = "User ID", required = true)
-        @PathVariable("userId") userId: Int,
+        @PathVariable("user_id") userId: Int,
     ): Mono<ResponseEntity<List<UserEquipment>>> {
         return userEquipmentDAL.selectUserEquipmentByUser(userId)
             .map {

@@ -64,7 +64,7 @@ class ConjugateWorkoutGeneratorController(
      * @throws NoResultsFoundException if the program is not found
      * @throws ValidationException if the program parameters are invalid
      */
-    @PostMapping("/{programId}")
+    @PostMapping("/{program_id}")
     @Operation(
         summary = "Generate next week of conjugate workout program",
         description =
@@ -90,7 +90,7 @@ class ConjugateWorkoutGeneratorController(
     )
     fun generateNextWeek(
         @Parameter(description = "ID of the program to generate workouts for", required = true)
-        @PathVariable programId: Long
+        @PathVariable("program_id") programId: Long
     ): Mono<ResponseEntity<Program>> {
         logger.info("Generating conjugate workout program for program: {}, next week", programId)
 

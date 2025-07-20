@@ -14,7 +14,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should create program`() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         webTestClient.post()
-            .uri("/api/v1/program/?userId=$userId&name=${IntegrationTestHelpers.TEST_PROGRAM_NAME}")
+            .uri("/api/v1/program/?user_id=$userId&name=${IntegrationTestHelpers.TEST_PROGRAM_NAME}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -61,7 +61,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
         // Create second program as inactive to avoid unique constraint violation
         webTestClient.post()
-            .uri("/api/v1/program/?userId=$userId&name=Another Program&isActive=false")
+            .uri("/api/v1/program/?user_id=$userId&name=Another Program&is_active=false")
             .exchange()
             .expectStatus().isOk()
         webTestClient.get()
@@ -82,7 +82,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Then update it
         webTestClient.patch()
-            .uri("/api/v1/program/$programId?name=Updated Program&currentWeekNumber=3&isActive=false")
+            .uri("/api/v1/program/$programId?name=Updated Program&current_week_number=3&is_active=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -96,7 +96,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when updating non-existent program`() {
         webTestClient.patch()
-            .uri("/api/v1/program/999?name=Updated Program&currentWeekNumber=3&isActive=true")
+            .uri("/api/v1/program/999?name=Updated Program&current_week_number=3&is_active=true")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -135,7 +135,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 1")
         // Create second program as inactive to avoid unique constraint violation
         webTestClient.post()
-            .uri("/api/v1/program/?userId=$userId&name=Test Program 2&isActive=false")
+            .uri("/api/v1/program/?user_id=$userId&name=Test Program 2&is_active=false")
             .exchange()
             .expectStatus().isOk()
 
@@ -154,7 +154,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Active Program")
 
         webTestClient.get()
-            .uri("/api/v1/program/user/$userId?isActive=true")
+            .uri("/api/v1/program/user/$userId?is_active=true")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -170,12 +170,12 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Deactivate the program
         webTestClient.patch()
-            .uri("/api/v1/program/$programId?name=Test Program&currentWeekNumber=1&isActive=false")
+            .uri("/api/v1/program/$programId?name=Test Program&current_week_number=1&is_active=false")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
-            .uri("/api/v1/program/user/$userId?isActive=false")
+            .uri("/api/v1/program/user/$userId?is_active=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -196,7 +196,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Check that only the second program is active
         webTestClient.get()
-            .uri("/api/v1/program/user/$userId?isActive=true")
+            .uri("/api/v1/program/user/$userId?is_active=true")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -207,7 +207,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Check that the first program is now inactive
         webTestClient.get()
-            .uri("/api/v1/program/user/$userId?isActive=false")
+            .uri("/api/v1/program/user/$userId?is_active=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -226,7 +226,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Create second program as inactive
         webTestClient.post()
-            .uri("/api/v1/program/?userId=$userId&name=Second Program&isActive=false")
+            .uri("/api/v1/program/?user_id=$userId&name=Second Program&is_active=false")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -234,7 +234,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Check that the first program is still active
         webTestClient.get()
-            .uri("/api/v1/program/user/$userId?isActive=true")
+            .uri("/api/v1/program/user/$userId?is_active=true")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

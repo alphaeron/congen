@@ -56,7 +56,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Then update them
         webTestClient.patch()
-            .uri("/api/v1/user_program_preferences/?userId=$userId&programDaysPerWeek=4&sessionTimeLengthInMinutes=90")
+            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=4&session_time_length_in_minutes=90")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

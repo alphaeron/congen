@@ -76,9 +76,9 @@ class ProgramController(
      */
     @PostMapping("/")
     fun save(
-        @RequestParam userId: Int,
+        @RequestParam("user_id") userId: Int,
         @RequestParam name: String,
-        @RequestParam(defaultValue = "true") isActive: Boolean,
+        @RequestParam(name = "is_active", defaultValue = "true") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
         logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
         val startingCurrentWeekNumber = 1
@@ -151,10 +151,10 @@ class ProgramController(
      * @param isActive Optional filter for active status. If not provided, returns all programs for the user
      * @return ResponseEntity containing a list of programs for the user
      */
-    @GetMapping("/user/{userId}")
+    @GetMapping("/user/{user_id}")
     fun getByUserId(
-        @PathVariable("userId") userId: Int,
-        @RequestParam(required = false) isActive: Boolean?,
+        @PathVariable("user_id") userId: Int,
+        @RequestParam(name = "is_active", required = false) isActive: Boolean? = null,
     ): Mono<ResponseEntity<List<Program>>> {
         logger.debug("Getting programs for user: {} with isActive filter: {}", userId, isActive)
         return programDAL.selectProgramsByUserId(userId, isActive)
@@ -185,8 +185,8 @@ class ProgramController(
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam name: String,
-        @RequestParam currentWeekNumber: Int,
-        @RequestParam isActive: Boolean,
+        @RequestParam("current_week_number") currentWeekNumber: Int,
+        @RequestParam("is_active") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
         return programDAL.updateProgram(id, name, currentWeekNumber, isActive)
             .map {

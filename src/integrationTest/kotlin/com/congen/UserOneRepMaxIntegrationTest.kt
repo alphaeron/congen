@@ -30,7 +30,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
     fun `should create user one rep max when it does not exist`() {
         // Create a one rep max record using PUT (upsert)
         webTestClient.put()
-            .uri("/api/v1/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=100.0&unit=KG")
+            .uri("/api/v1/user_one_rep_max/?user_id=$userId1&exercise_name=Bench Press&one_rep_max=100.0&unit=KG")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -56,7 +56,7 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Then update it using PUT (upsert)
         webTestClient.put()
-            .uri("/api/v1/user_one_rep_max/?userId=$userId1&exerciseName=Bench Press&oneRepMax=150.0&unit=KG")
+            .uri("/api/v1/user_one_rep_max/?user_id=$userId1&exercise_name=Bench Press&one_rep_max=150.0&unit=KG")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

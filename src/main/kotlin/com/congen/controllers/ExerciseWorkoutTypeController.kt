@@ -115,7 +115,7 @@ class ExerciseWorkoutTypeController(
      *
      * @throws DatabaseException if database operation fails
      */
-    @GetMapping("/exercise/{exerciseName}")
+    @GetMapping("/exercise/{exercise_name}")
     @Operation(
         summary = "Get workout types by exercise name",
         description = "Retrieves all workout types associated with a given exercise.",
@@ -131,7 +131,7 @@ class ExerciseWorkoutTypeController(
     )
     fun getByExercise(
         @Parameter(description = "Name of the exercise", required = true)
-        @PathVariable("exerciseName") exerciseName: String,
+        @PathVariable("exercise_name") exerciseName: String,
     ): Mono<ResponseEntity<List<ExerciseWorkoutType>>> {
         return exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(exerciseName)
             .map {
@@ -155,7 +155,7 @@ class ExerciseWorkoutTypeController(
      *
      * @throws DatabaseException if database operation fails
      */
-    @GetMapping("/movement_type/{movementType}")
+    @GetMapping("/movement_type/{movement_type}")
     @Operation(
         summary = "Get workout types by movement type",
         description = "Retrieves all workout types associated with a given movement type.",
@@ -171,7 +171,7 @@ class ExerciseWorkoutTypeController(
     )
     fun getByMovementType(
         @Parameter(description = "Movement type", required = true)
-        @PathVariable("movementType") movementType: MovementType,
+        @PathVariable("movement_type") movementType: MovementType,
     ): Mono<ResponseEntity<List<ExerciseWorkoutType>>> {
         return exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByMovementType(movementType)
             .map {
@@ -211,11 +211,11 @@ class ExerciseWorkoutTypeController(
     )
     fun save(
         @Parameter(description = "Name of the exercise", required = true)
-        @RequestParam exerciseName: String,
+        @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Movement type (push, pull, squat, hinge, etc.)", required = true)
-        @RequestParam movementType: MovementType,
+        @RequestParam("movement_type") movementType: MovementType,
         @Parameter(description = "Workout type (strength, hypertrophy, endurance, etc.)", required = true)
-        @RequestParam workoutType: String,
+        @RequestParam("workout_type") workoutType: String,
     ): ResponseEntity<*> {
         logger.info(
             "Saving exercise workout type relationship: {} - {} - {}",

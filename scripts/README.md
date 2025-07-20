@@ -32,7 +32,7 @@ Generates API documentation from the running application, including:
 **Output:**
 - `docs/openapi.json` — OpenAPI JSON spec
 - `docs/openapi.yaml` — OpenAPI YAML spec
-- `docs/api-documentation.md` — Markdown API reference
+- `docs/API_DOCUMENTATION.md` — Markdown API reference
 - `docs/swagger-ui/` — Swagger UI assets
 
 **Note:** All files in `docs/` are ignored by git (see .gitignore).

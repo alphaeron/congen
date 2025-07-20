@@ -180,7 +180,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val weight = BigDecimal("225.0")
         val invalidUnit = "INVALID"
 
-        val uri = "/api/v1/user_one_rep_max/?userId=${userResponse.id}&exerciseName=$exerciseName&oneRepMax=$weight&unit=$invalidUnit"
+        val uri = "/api/v1/user_one_rep_max/?user_id=${userResponse.id}&exercise_name=$exerciseName&one_rep_max=$weight&unit=$invalidUnit"
         webTestClient.put()
             .uri(uri)
             .exchange()
