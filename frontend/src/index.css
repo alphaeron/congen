@@ -1,0 +1,17 @@
+.MuiTypography-h1 {
+  font-size: 2rem !important;
+}
+
+.MuiTypography-h2 {
+  font-size: 1.5rem !important;
+}
+
+.MuiTypography-h3 {
+  font-size: 1.25rem !important;
+}
+
+/* Make it so stack rows wrap correct in MUI 6. */
+.MuiStack-root {
+  flex-wrap: wrap !important;
+  row-gap: 16px !important;
+}

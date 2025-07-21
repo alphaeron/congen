@@ -1,0 +1,8 @@
+.formGutter {
+  margin-bottom: 0.5rem !important;
+}
+
+.undecoratedFormLabel {
+  text-decoration: none !important;
+  color: inherit !important;
+}

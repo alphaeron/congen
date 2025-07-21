@@ -1,0 +1,28 @@
+.menuLogoText {
+  color: grey;
+  font-family: monospace !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.15rem !important;
+  margin-right: 0.125rem !important;
+  text-decoration: none !important;
+}
+
+.menuLogoIcon {
+  margin-right: 0.5rem !important;
+}
+
+/* See https://mui.com/material-ui/customization/breakpoints/ for details on pixel values below */
+
+/* 1 px below next size up from xs. */
+@media (max-width: 599px) {
+  .menuLogo {
+    display: none !important;
+  }
+}
+
+/* Any size above xs. */
+@media (min-width: 600px) {
+  .menuLogo {
+    display: flex !important;
+  }
+}
