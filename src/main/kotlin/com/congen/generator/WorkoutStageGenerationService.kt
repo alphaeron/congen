@@ -73,6 +73,7 @@ abstract class WorkoutStageGenerationService(
     protected val weightSelectionService: WeightSelectionService,
     protected val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     protected val sessionTimeCalculator: SessionTimeCalculator,
+    protected val movementBalanceService: MovementBalanceService,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -327,7 +328,8 @@ abstract class WorkoutStageGenerationService(
         numAccessoryExercises: Int,
         rotationHistory: List<ExerciseRotationHistory>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: Int,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
         if (numAccessoryExercises <= 0) {
             return Mono.empty()
@@ -349,7 +351,8 @@ abstract class WorkoutStageGenerationService(
                             // Assuming rotationHistory is not needed for accessory exercises
                             rotationHistory = emptyList(),
                             currentWeekNumber = currentWeekNumber,
-                            userId = userId
+                            userId = userId,
+                            movementBalanceState = movementBalanceState
                         ).flatMap { accessoryExercise ->
                             if (accessoryExercise != null) {
                                 createProgrammedExercise(
@@ -406,7 +409,8 @@ abstract class WorkoutStageGenerationService(
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: Int,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
         if (!hasConditioning(dayType)) {
             return Mono.empty()
@@ -426,7 +430,8 @@ abstract class WorkoutStageGenerationService(
                     // Assuming rotationHistory is not needed for conditioning exercises
                     rotationHistory = emptyList(),
                     currentWeekNumber = currentWeekNumber,
-                    userId = userId
+                    userId = userId,
+                    movementBalanceState = movementBalanceState
                 ).flatMap { conditioningExercise ->
                     if (conditioningExercise != null) {
                         createProgrammedExercise(
@@ -643,7 +648,8 @@ abstract class WorkoutStageGenerationService(
         workoutType: String,
         movementType: String,
         currentWeekNumber: Int,
-        userId: Int
+        userId: Int,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return if (workoutType == "dynamic_effort") {
             // For DE workouts, use the special DE filter that includes plyometric exercises
@@ -655,7 +661,8 @@ abstract class WorkoutStageGenerationService(
                         preferences = preferences,
                         exercises = filteredExercises,
                         isAccessory = false,
-                        rotationHistory = rotationHistory
+                        rotationHistory = rotationHistory,
+                        movementBalanceState = movementBalanceState
                     )
                 }
         } else {
@@ -670,7 +677,8 @@ abstract class WorkoutStageGenerationService(
                     preferences = preferences,
                     exercises = filteredExercises,
                     isAccessory = false,
-                    rotationHistory = rotationHistory
+                    rotationHistory = rotationHistory,
+                    movementBalanceState = movementBalanceState
                 )
             }
         }
@@ -691,7 +699,8 @@ abstract class WorkoutStageGenerationService(
         exercises: List<Exercise>,
         preferences: List<UserExercisePreference>,
         userEquipment: List<UserEquipment>,
-        rotationHistory: List<ExerciseRotationHistory>
+        rotationHistory: List<ExerciseRotationHistory>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectSimilarSecondaryExercise(
             primaryExercise = primaryExercise,
@@ -702,7 +711,8 @@ abstract class WorkoutStageGenerationService(
                     exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
                     primaryExercise.name
                 ),
-            rotationHistory = rotationHistory
+            rotationHistory = rotationHistory,
+            movementBalanceState = movementBalanceState
         )
     }
 
@@ -721,7 +731,8 @@ abstract class WorkoutStageGenerationService(
         preferences: List<UserExercisePreference>,
         userEquipment: List<UserEquipment>,
         weakMuscles: List<String>,
-        rotationHistory: List<ExerciseRotationHistory>
+        rotationHistory: List<ExerciseRotationHistory>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return exerciseSelectionService.filterExercisesForDEWorkout(exercises)
             .flatMap { filteredExercises ->
@@ -731,7 +742,8 @@ abstract class WorkoutStageGenerationService(
                     preferences = preferences,
                     exercises = filteredExercises,
                     isAccessory = false,
-                    rotationHistory = rotationHistory
+                    rotationHistory = rotationHistory,
+                    movementBalanceState = movementBalanceState
                 )
             }
     }
@@ -1039,7 +1051,8 @@ abstract class WorkoutStageGenerationService(
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: Int,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return exerciseSelectionService.selectRotatingExercise(
             targetMuscles = weakMuscles,
@@ -1047,7 +1060,8 @@ abstract class WorkoutStageGenerationService(
             preferences = preferences,
             exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
             isAccessory = true,
-            rotationHistory = rotationHistory
+            rotationHistory = rotationHistory,
+            movementBalanceState = movementBalanceState
         )
     }
 
@@ -1070,7 +1084,8 @@ abstract class WorkoutStageGenerationService(
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: Int,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return exerciseSelectionService.selectRotatingExercise(
             targetMuscles = weakMuscles,
@@ -1078,7 +1093,47 @@ abstract class WorkoutStageGenerationService(
             preferences = preferences,
             exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
             isAccessory = true,
-            rotationHistory = rotationHistory
+            rotationHistory = rotationHistory,
+            movementBalanceState = movementBalanceState
         )
+    }
+
+    /**
+     * Updates movement balance state with a new exercise.
+     *
+     * @param currentState Current movement balance state
+     * @param exercise The exercise to add
+     * @param isAccessory Whether this is an accessory exercise
+     * @return Updated movement balance state
+     */
+    protected fun updateMovementBalanceState(
+        currentState: MovementBalanceService.MovementBalanceState,
+        exercise: Exercise,
+        isAccessory: Boolean
+    ): MovementBalanceService.MovementBalanceState {
+        val estimatedVolume = movementBalanceService.estimateExerciseVolume(exercise, isAccessory)
+        return currentState.addExercise(exercise, estimatedVolume)
+    }
+
+    /**
+     * Creates an initial movement balance state for a workout.
+     *
+     * @return Initial movement balance state
+     */
+    protected fun createInitialMovementBalanceState(): MovementBalanceService.MovementBalanceState {
+        return movementBalanceService.createInitialState()
+    }
+
+    /**
+     * Logs the current movement balance state for debugging.
+     *
+     * @param state Current movement balance state
+     * @param workoutName Name of the workout for logging context
+     */
+    protected fun logMovementBalanceState(
+        state: MovementBalanceService.MovementBalanceState,
+        workoutName: String
+    ) {
+        movementBalanceService.logBalanceState(state, workoutName)
     }
 }

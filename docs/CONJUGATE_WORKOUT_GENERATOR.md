@@ -22,6 +22,7 @@ src/main/kotlin/com/congen/generator/
 ├── ExerciseMatchingService.kt                   # Exercise similarity and matching
 ├── ReferenceExerciseDetector.kt                 # Dynamic reference exercise detection
 ├── SupportedEquipmentWeightRoundingService.kt  # Equipment-based weight rounding
+├── MovementBalanceService.kt                    # Movement balance constraints and scoring
 └── BandWeightService.kt                         # Band weight calculations for DE
 ```
 
@@ -59,6 +60,7 @@ src/main/kotlin/com/congen/generator/
   - Weak muscle determination
   - Exercise filtering utilities
   - Secondary exercise similarity selection
+  - Movement balance state integration
 - **Benefits**: Separates exercise selection logic from workout generation
 
 #### 5. WorkoutStageGenerator.kt
@@ -117,7 +119,17 @@ src/main/kotlin/com/congen/generator/
   - Equipment-specific weight calculations
 - **Benefits**: Ensures calculated weights can be achieved with standard gym equipment
 
-#### 11. BandWeightService.kt
+#### 11. MovementBalanceService.kt
+- **Purpose**: Manages movement balance constraints and scoring for workout generation
+- **Responsibilities**:
+  - Movement balance state tracking across workout stages
+  - Movement type scoring and constraint evaluation
+  - Balance constraint enforcement (vertical_push ↔ horizontal_pull, horizontal_push ↔ vertical_pull)
+  - Pull-to-push volume ratio maintenance (2:1 ratio)
+  - Soft constraint implementation that doesn't block workout generation
+- **Benefits**: Ensures balanced movement patterns and prevents overemphasis on specific movement types
+
+#### 12. BandWeightService.kt
 - **Purpose**: Handles band weight calculations for dynamic effort exercises
 - **Responsibilities**:
   - Band weight distribution by week
@@ -133,6 +145,7 @@ The main service is a lightweight orchestrator that:
 - Handles the high-level workflow
 - Manages data flow between components
 - Provides program-based generation (works with existing programs)
+- Integrates movement balance state tracking across workout generation
 
 ## Conjugate Method Principles
 
@@ -178,18 +191,36 @@ The traditional 4-day split provides maximum volume and specialization for each 
 
 ## Exercise Selection Algorithm
 
-The service uses a sophisticated algorithm to select exercises:
+The service uses a sophisticated algorithm to select exercises with movement balance constraints:
+
+### Movement Balance Constraints
+
+The system implements soft constraints to ensure balanced movement patterns across workouts:
+
+#### Balance Pairs
+- **Vertical Push ↔ Horizontal Pull**: These movements should be balanced to prevent overemphasis on either
+- **Horizontal Push ↔ Vertical Pull**: These movements should be balanced to maintain overall push/pull equilibrium
+
+#### Volume Ratio
+- **Pull-to-Push Ratio**: Pull exercise volume should be approximately twice that of push exercises (2:1 ratio)
+- This ratio helps prevent muscle imbalances and promotes balanced development
+
+#### Soft Constraint Implementation
+- Movement balance constraints are **soft constraints** that influence exercise selection but don't block workout generation
+- If balance constraints cannot be fully met, the system will still generate a complete workout
+- The system tracks movement balance state across workout stages to make informed decisions
 
 ### Primary Exercise Selection
 1. **Filter by Exercise Type**: Select ME/DE exercises (`is_accessory = false`)
 2. **Filter by Workout Type**: Match exercises to specific workout types (ME/DE)
 3. **Filter by User Preferences**: Exclude exercises the user wants to avoid
 4. **Filter by Equipment**: Only include exercises the user can perform with available equipment
-5. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
-6. **Sort by Priority**: Sort by equipment options, targeted muscles, and exercise name
+5. **Movement Balance Scoring**: Score exercises based on current movement balance state
+6. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
+7. **Sort by Priority**: Sort by movement balance score, equipment options, targeted muscles, and exercise name
 
 ### Secondary Exercise Selection
-Secondary exercises are selected to be similar to the primary exercise in terms of movement type and muscles worked:
+Secondary exercises are selected to be similar to the primary exercise in terms of movement type and muscles worked, while considering movement balance:
 
 1. **Similarity-Based Selection**: Uses a scoring algorithm to find exercises most similar to the primary movement
 2. **Movement Type Matching**: Prioritizes exercises with the same movement type (e.g., "horizontal push")
@@ -198,14 +229,16 @@ Secondary exercises are selected to be similar to the primary exercise in terms 
    - Same category (push/pull): 50 points
    - Same plane (horizontal/vertical): 25 points
    - Same body part focus (upper/lower): 15 points
-5. **Rotation History Bonus**: Gives preference to less recently used exercises
-6. **User Preferences & Equipment**: Applies the same filtering as primary exercises
+5. **Movement Balance Scoring**: Scores exercises based on current movement balance state and balance constraints
+6. **Rotation History Bonus**: Gives preference to less recently used exercises
+7. **User Preferences & Equipment**: Applies the same filtering as primary exercises
 
 #### Similarity Scoring Algorithm
 The system calculates a similarity score for each potential secondary exercise:
 
 - **Movement Type Match**: 100 points for exact match
 - **Muscle Overlap**: Up to 50 points based on percentage of primary muscles targeted
+- **Movement Balance Score**: Up to 30 points based on how well the exercise balances current movement patterns
 - **Rotation Bonus**: 0-20 points based on usage frequency (less used = higher bonus)
 
 The exercise with the highest total score is selected as the secondary movement.
@@ -214,8 +247,9 @@ The exercise with the highest total score is selected as the secondary movement.
 1. **Filter by Exercise Type**: Select accessory exercises (`is_accessory = true`)
 2. **Filter by User Preferences**: Exclude exercises the user wants to avoid
 3. **Filter by Equipment**: Only include exercises the user can perform with available equipment
-4. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
-5. **Sort by Priority**: Sort by equipment options, targeted muscles, and exercise name
+4. **Movement Balance Scoring**: Score exercises based on current movement balance state
+5. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
+6. **Sort by Priority**: Sort by movement balance score, equipment options, targeted muscles, and exercise name
 
 ## Weight Calculation and Estimation
 
@@ -442,6 +476,20 @@ The service handles various edge cases:
 
 ## Technical Implementation
 
+### Movement Balance Implementation
+The movement balance system is implemented through several key components:
+
+#### MovementBalanceService
+- **State Tracking**: Maintains `MovementBalanceState` across workout generation stages
+- **Scoring Algorithm**: Calculates movement balance scores for exercise selection
+- **Constraint Evaluation**: Evaluates balance pairs and volume ratios
+- **Soft Constraint Logic**: Ensures constraints influence selection without blocking generation
+
+#### Integration Points
+- **ExerciseSelectionService**: Accepts `MovementBalanceState` parameter for informed exercise selection
+- **WorkoutStageGenerationService**: Propagates movement balance state through stage generation
+- **Program Generation**: Tracks movement balance across entire program generation process
+
 ### Program-Based Generation
 The system now works with existing programs instead of creating new ones:
 - **Input**: Program ID of existing program
@@ -489,6 +537,7 @@ The weight calculation follows a sophisticated pipeline:
 Comprehensive unit tests cover:
 - Exercise selection logic
 - Secondary exercise similarity scoring
+- Movement balance constraints and scoring
 - Set scheme generation
 - Error handling
 - Edge cases with missing data
@@ -507,6 +556,8 @@ End-to-end tests verify:
 - Component integration
 - Weight estimation accuracy
 - Equipment-based weight rounding
+- Movement balance constraint enforcement
+- Movement balance state tracking across workout stages
 
 ## API Endpoints
 
@@ -551,3 +602,7 @@ Potential improvements include:
 - Advanced periodization schemes (block periodization, wave loading)
 - Competition peak programming
 - Injury prevention and rehabilitation integration
+- Advanced movement balance algorithms with machine learning
+- Dynamic movement balance adjustment based on user performance feedback
+- Movement pattern analysis and optimization
+- Personalized movement balance ratios based on individual needs

@@ -1,6 +1,6 @@
 # Conjugate Workout Generator (Congen)
 
-A Kotlin-based Spring Boot application that generates personalized workout programs using the conjugate method. This application provides a RESTful API for managing exercises, programs, users, and their preferences.
+A Kotlin-based Spring Boot application that generates personalized workout programs using the conjugate method with advanced movement balance constraints. This application provides a RESTful API for managing exercises, programs, users, and their preferences, featuring intelligent exercise selection and balanced movement patterns.
 
 ## 🏗️ Architecture
 
@@ -276,6 +276,9 @@ Currently, the API does not require authentication. All endpoints are publicly a
 - `PUT /user_program_preferences/{id}` - Update user program preferences
 - `DELETE /user_program_preferences/{id}` - Delete user program preferences
 
+#### Conjugate Workout Generator
+- `POST /conjugate_workout_generator/{program_id}` - Generate next week of workouts with movement balance constraints
+
 For detailed API documentation, see [API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
 
 ## 📖 Documentation Generation
@@ -396,6 +399,21 @@ kubectl get pods -n congen  # Ensure PostgreSQL is running
 **Note:** The `cleanDocs` task only removes auto-generated files (openapi.json, openapi.yaml, API_DOCUMENTATION.md). Manual documentation files like CONJUGATE_WORKOUT_GENERATOR.md are always preserved.
 
 For detailed integration testing and documentation procedures, see [INTEGRATION_TESTING_KUBERNETES.md](docs/INTEGRATION_TESTING_KUBERNETES.md).
+
+## 🎯 Movement Balance
+
+The application implements intelligent movement balance constraints to ensure balanced workout programs and prevent muscle imbalances:
+
+### Balance Constraints
+- **Vertical Push ↔ Horizontal Pull**: Balanced to prevent overemphasis on either movement pattern
+- **Horizontal Push ↔ Vertical Pull**: Balanced to maintain overall push/pull equilibrium
+- **Pull-to-Push Ratio**: Pull exercise volume is approximately twice that of push exercises (2:1 ratio)
+
+### Implementation
+- **Soft Constraints**: Movement balance influences exercise selection but doesn't block workout generation
+- **State Tracking**: Movement balance state is tracked across workout stages for informed decisions
+- **Scoring Algorithm**: Exercises are scored based on their contribution to movement balance
+- **Integration**: Movement balance is integrated into primary, secondary, and accessory exercise selection
 
 ## ⚖️ Weight Selection
 

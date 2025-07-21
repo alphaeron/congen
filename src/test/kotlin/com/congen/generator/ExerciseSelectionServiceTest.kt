@@ -52,7 +52,7 @@ class ExerciseSelectionServiceTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        exerciseSelectionService = ExerciseSelectionService(exerciseMuscleDAL, exerciseWorkoutTypeDAL, exerciseEquipmentDAL)
+        exerciseSelectionService = ExerciseSelectionService(exerciseMuscleDAL, exerciseWorkoutTypeDAL, exerciseEquipmentDAL, MovementBalanceService())
     }
 
     @Test

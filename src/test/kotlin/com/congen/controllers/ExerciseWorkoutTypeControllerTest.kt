@@ -28,7 +28,7 @@ class ExerciseWorkoutTypeControllerTest {
         private const val EXERCISE_NAME = "Bench Press"
         private val MOVEMENT_TYPE = MovementType.HORIZONTAL_PUSH
         private const val WORKOUT_TYPE = "dynamic_effort"
-        private const val SQUAT_NAME = "Squat"
+        private const val SQUAT_NAME = "Back Squat"
         private val SQUAT_MOVEMENT = MovementType.SQUAT
         private const val MAXIMAL_EFFORT = "maximal_effort"
         private const val NON_EXISTENT_EXERCISE = "NonExistent"

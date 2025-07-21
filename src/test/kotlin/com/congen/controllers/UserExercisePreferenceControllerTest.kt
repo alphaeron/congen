@@ -31,7 +31,7 @@ class UserExercisePreferenceControllerTest {
     companion object {
         private const val USER_ID = 1
         private const val EXERCISE_NAME = "Bench Press"
-        private const val SQUAT = "Squat"
+        private const val SQUAT = "Back Squat"
         private const val SHOULD_AVOID = false
     }
 

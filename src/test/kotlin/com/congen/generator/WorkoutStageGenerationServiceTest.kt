@@ -635,7 +635,7 @@ class WorkoutStageGenerationServiceTest {
         weightSelectionService: WeightSelectionService,
         userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
         sessionTimeCalculator: SessionTimeCalculator,
-    ) : WorkoutStageGenerationService(
+            ) : WorkoutStageGenerationService(
             exerciseSelectionService,
             workoutStageDAL,
             workoutStageTypeDAL,
@@ -645,7 +645,8 @@ class WorkoutStageGenerationServiceTest {
             prilepinGuidelinesService,
             weightSelectionService,
             userWeightUnitPreferenceDAL,
-            sessionTimeCalculator
+            sessionTimeCalculator,
+            MovementBalanceService()
         ) {
         override fun generateStagesForDayType(
             workout: ProgrammedWorkout,

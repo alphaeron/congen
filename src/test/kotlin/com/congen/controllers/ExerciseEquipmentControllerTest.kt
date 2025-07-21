@@ -19,7 +19,7 @@ class ExerciseEquipmentControllerTest {
     companion object {
         private const val EXERCISE_NAME = "Bench Press"
         private const val EQUIPMENT_NAME = "Barbell"
-        private const val SQUAT_NAME = "Squat"
+        private const val SQUAT_NAME = "Back Squat"
     }
 
     @BeforeEach

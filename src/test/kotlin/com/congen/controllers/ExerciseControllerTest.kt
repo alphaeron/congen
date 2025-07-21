@@ -34,7 +34,7 @@ class ExerciseControllerTest {
         private const val MUSCLE_NAME_2 = "Triceps"
         private const val EQUIPMENT_NAME_1 = "Barbell"
         private const val EQUIPMENT_NAME_2 = "Bench"
-        private const val SQUAT_NAME = "Squat"
+        private const val SQUAT_NAME = "Back Squat"
     }
 
     @BeforeEach

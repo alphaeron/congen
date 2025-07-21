@@ -44,7 +44,7 @@ class ProgrammedExerciseControllerTest {
         private const val EXERCISE_ID_2 = 2L
         private const val WORKOUT_STAGE_ID = 5L
         private const val BENCH_PRESS = "Bench Press"
-        private const val SQUAT = "Squat"
+        private const val SQUAT = "Back Squat"
         private const val POSITION_1 = 1
         private const val POSITION_2 = 2
         private const val NOTES = "Focus on controlled descent"

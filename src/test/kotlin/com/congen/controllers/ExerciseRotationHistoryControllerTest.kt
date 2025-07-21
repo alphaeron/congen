@@ -30,8 +30,8 @@ class ExerciseRotationHistoryControllerTest {
         private const val ID_2 = 2L
         private const val USER_ID = 1
         private const val BENCH_PRESS = "Bench Press"
-        private const val SQUAT = "Squat"
-        private const val BARBELL_BENCH_PRESS = "Barbell Bench Press"
+        private const val SQUAT = "Back Squat"
+        private const val BARBELL_BENCH_PRESS = "Bench Press"
         private const val NON_EXISTENT_ID = 999L
     }
 

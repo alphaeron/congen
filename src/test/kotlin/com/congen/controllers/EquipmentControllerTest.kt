@@ -25,7 +25,7 @@ class EquipmentControllerTest {
         private const val EQUIPMENT_NAME = "Barbell"
         private const val NON_EXISTENT_EQUIPMENT = "NonExistent"
         private const val EXERCISE_NAME_1 = "Bench Press"
-        private const val EXERCISE_NAME_2 = "Squat"
+        private const val EXERCISE_NAME_2 = "Back Squat"
         private const val DUMBBELL_NAME = "Dumbbell"
         private const val DUMBBELL_DESCRIPTION = "A dumbbell for weightlifting"
     }

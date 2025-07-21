@@ -61,6 +61,7 @@ class ThreeDayWorkoutStageGenerationService(
     weightSelectionService: WeightSelectionService,
     userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     sessionTimeCalculator: SessionTimeCalculator,
+    movementBalanceService: MovementBalanceService,
     private val conjugateTemplates: ConjugateTemplates,
 ) : WorkoutStageGenerationService(
         exerciseSelectionService,
@@ -72,7 +73,8 @@ class ThreeDayWorkoutStageGenerationService(
         prilepinGuidelinesService,
         weightSelectionService,
         userWeightUnitPreferenceDAL,
-        sessionTimeCalculator
+        sessionTimeCalculator,
+        movementBalanceService
     ) {
     companion object {
         /** Logger instance for this class. */
@@ -145,6 +147,9 @@ class ThreeDayWorkoutStageGenerationService(
         currentWeekNumber: Int,
         userId: Int
     ): Mono<Void> {
+        // Initialize movement balance state for this workout
+        var movementBalanceState = createInitialMovementBalanceState()
+        
         val primaryMovementType = conjugateTemplates.getPrimaryMovementType(dayType)
         val secondaryMovementType = conjugateTemplates.getSecondaryMovementType(dayType)
 
@@ -160,7 +165,8 @@ class ThreeDayWorkoutStageGenerationService(
                 workoutType = "maximal_effort",
                 movementType = primaryMovementType,
                 currentWeekNumber = currentWeekNumber,
-                userId = userId
+                userId = userId,
+                movementBalanceState = movementBalanceState
             )
 
         // Select secondary DE exercise
@@ -170,7 +176,8 @@ class ThreeDayWorkoutStageGenerationService(
                 preferences = preferences,
                 userEquipment = userEquipment,
                 weakMuscles = weakMuscles,
-                rotationHistory = rotationHistory
+                rotationHistory = rotationHistory,
+                movementBalanceState = movementBalanceState
             )
 
         // Generate set schemes for both exercises
@@ -268,7 +275,8 @@ class ThreeDayWorkoutStageGenerationService(
                                         numAccessoryExercises = numAccessoryExercises,
                                         rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
-                                        userId = userId
+                                        userId = userId,
+                                        movementBalanceState = movementBalanceState
                                     )
                                 } else {
                                     Mono.empty()
@@ -287,7 +295,8 @@ class ThreeDayWorkoutStageGenerationService(
                                         weakMuscles = weakMuscles,
                                         rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
-                                        userId = userId
+                                        userId = userId,
+                                        movementBalanceState = movementBalanceState
                                     )
                                 } else {
                                     Mono.empty()
@@ -316,6 +325,9 @@ class ThreeDayWorkoutStageGenerationService(
         currentWeekNumber: Int,
         userId: Int
     ): Mono<Void> {
+        // Initialize movement balance state for this workout
+        var movementBalanceState = createInitialMovementBalanceState()
+        
         // Select upper body DE exercise
         val upperDEExerciseMono =
             selectPrimaryExercise(
@@ -328,7 +340,8 @@ class ThreeDayWorkoutStageGenerationService(
                 workoutType = "dynamic_effort",
                 movementType = "DE_Upper",
                 currentWeekNumber = currentWeekNumber,
-                userId = userId
+                userId = userId,
+                movementBalanceState = movementBalanceState
             )
 
         // Select lower body DE exercise
@@ -343,7 +356,8 @@ class ThreeDayWorkoutStageGenerationService(
                 workoutType = "dynamic_effort",
                 movementType = "DE_Lower",
                 currentWeekNumber = currentWeekNumber,
-                userId = userId
+                userId = userId,
+                movementBalanceState = movementBalanceState
             )
 
         // Generate set schemes for both exercises
@@ -441,7 +455,8 @@ class ThreeDayWorkoutStageGenerationService(
                                         numAccessoryExercises = numAccessoryExercises,
                                         rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
-                                        userId = userId
+                                        userId = userId,
+                                        movementBalanceState = movementBalanceState
                                     )
                                 } else {
                                     Mono.empty()
@@ -459,7 +474,8 @@ class ThreeDayWorkoutStageGenerationService(
                                     weakMuscles = weakMuscles,
                                     rotationHistory = rotationHistory,
                                     currentWeekNumber = currentWeekNumber,
-                                    userId = userId
+                                    userId = userId,
+                                    movementBalanceState = movementBalanceState
                                 )
                             }
                         )

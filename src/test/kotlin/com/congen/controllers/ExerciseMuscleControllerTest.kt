@@ -23,7 +23,7 @@ class ExerciseMuscleControllerTest {
         private const val MUSCLE_NAME = "Chest"
         private const val NON_EXISTENT_EXERCISE = "NonExistent"
         private const val NON_EXISTENT_MUSCLE = "NonExistent"
-        private const val SQUAT_NAME = "Squat"
+        private const val SQUAT_NAME = "Back Squat"
         private const val LEGS_MUSCLE = "Legs"
     }
 

@@ -21,7 +21,8 @@ import reactor.core.publisher.Mono
 class ExerciseSelectionService(
     private val exerciseMuscleDAL: ExerciseMuscleDAL,
     private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
-    private val exerciseEquipmentDAL: ExerciseEquipmentDAL
+    private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
+    private val movementBalanceService: MovementBalanceService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseSelectionService::class.java)
@@ -48,6 +49,7 @@ class ExerciseSelectionService(
      * @param exercises List of available exercises
      * @param isAccessory Whether this is for an accessory exercise
      * @param rotationHistory List of exercise rotation history
+     * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing selected exercise or null if none available
      */
     fun selectRotatingExercise(
@@ -56,7 +58,8 @@ class ExerciseSelectionService(
         preferences: List<UserExercisePreference>,
         exercises: List<Exercise>,
         isAccessory: Boolean,
-        rotationHistory: List<ExerciseRotationHistory>
+        rotationHistory: List<ExerciseRotationHistory>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         // Filter exercises based on preferences (exercises are already filtered by is_accessory)
         val availableExercises =
@@ -182,9 +185,20 @@ class ExerciseSelectionService(
                         }
                     }
 
+                // Apply movement balance constraints if state is provided
+                val exercisesForSelection = if (movementBalanceState != null) {
+                    movementBalanceService.prioritizeExercisesForBalance(
+                        exercisesToChooseFrom,
+                        movementBalanceState,
+                        isAccessory
+                    )
+                } else {
+                    exercisesToChooseFrom
+                }
+
                 // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
                 val sortedExercises =
-                    exercisesToChooseFrom.sortedWith(
+                    exercisesForSelection.sortedWith(
                         compareByDescending<Exercise> { exercise ->
                             // Count equipment options - this would need to be implemented with actual equipment counting
                             // For now, use a simple heuristic based on exercise name
@@ -222,6 +236,7 @@ class ExerciseSelectionService(
      * @param preferences List of user's exercise preferences
      * @param exercises List of available exercises (already filtered to exclude primary exercise)
      * @param rotationHistory List of exercise rotation history
+     * @param movementBalanceState Current movement balance state (optional)
      * @return Selected secondary exercise or empty if none available
      */
     fun selectSimilarSecondaryExercise(
@@ -229,7 +244,8 @@ class ExerciseSelectionService(
         userEquipment: List<UserEquipment>,
         preferences: List<UserExercisePreference>,
         exercises: List<Exercise>,
-        rotationHistory: List<ExerciseRotationHistory>
+        rotationHistory: List<ExerciseRotationHistory>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         val availableExercises =
             exercises.filter { exercise ->
@@ -261,7 +277,8 @@ class ExerciseSelectionService(
                                         primaryMovementType = primaryExercise.movementType,
                                         primaryMuscles = primaryMuscleNames,
                                         exerciseMuscles = exerciseMuscleNames,
-                                        rotationHistory = rotationHistory
+                                        rotationHistory = rotationHistory,
+                                        movementBalanceState = movementBalanceState
                                     )
                                 exercise to exerciseScore
                             }
@@ -296,6 +313,7 @@ class ExerciseSelectionService(
      * @param primaryMuscles The muscles worked by the primary exercise
      * @param exerciseMuscles The muscles worked by the exercise being scored
      * @param rotationHistory List of exercise rotation history
+     * @param movementBalanceState Current movement balance state (optional)
      * @return Similarity score (higher is more similar)
      */
     private fun calculateExerciseSimilarityScore(
@@ -303,7 +321,8 @@ class ExerciseSelectionService(
         primaryMovementType: MovementType,
         primaryMuscles: Set<String>,
         exerciseMuscles: Set<String>,
-        rotationHistory: List<ExerciseRotationHistory>
+        rotationHistory: List<ExerciseRotationHistory>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Double {
         var score = 0.0
 
@@ -322,6 +341,17 @@ class ExerciseSelectionService(
         // Rotation history bonus (prefer less recently used exercises)
         val rotationBonus = calculateRotationBonus(exercise, rotationHistory)
         score += rotationBonus
+
+        // Movement balance bonus (if state is provided)
+        if (movementBalanceState != null) {
+            val balanceScore = movementBalanceService.scoreExerciseForBalance(
+                exercise = exercise,
+                currentState = movementBalanceState,
+                // Secondary exercises are not accessories
+                isAccessory = false
+            )
+            score += balanceScore
+        }
 
         return score
     }

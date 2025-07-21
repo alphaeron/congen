@@ -80,6 +80,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 weightSelectionService,
                 userWeightUnitPreferenceDAL,
                 sessionTimeCalculator,
+                MovementBalanceService(),
                 conjugateTemplates
             )
     }
@@ -154,8 +155,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
             .thenReturn(exercises)
         whenever(exerciseSelectionService.filterExercisesForDEWorkout(any()))
             .thenReturn(Mono.just(exercises))
-        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
-            .thenReturn(Mono.empty())
+        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any(), any()))
+            .thenReturn(Mono.just(primaryExercise))
             .thenReturn(Mono.empty())
         whenever(exerciseSelectionService.selectWarmupExercises(any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(emptyList<Exercise>()))

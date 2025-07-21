@@ -56,6 +56,7 @@ class TwoDayWorkoutStageGenerationService(
     weightSelectionService: WeightSelectionService,
     userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     sessionTimeCalculator: SessionTimeCalculator,
+    movementBalanceService: MovementBalanceService,
     private val conjugateTemplates: ConjugateTemplates,
 ) : WorkoutStageGenerationService(
         exerciseSelectionService,
@@ -67,7 +68,8 @@ class TwoDayWorkoutStageGenerationService(
         prilepinGuidelinesService,
         weightSelectionService,
         userWeightUnitPreferenceDAL,
-        sessionTimeCalculator
+        sessionTimeCalculator,
+        movementBalanceService
     ) {
     companion object {
         /** Logger instance for this class. */
@@ -87,6 +89,9 @@ class TwoDayWorkoutStageGenerationService(
         currentWeekNumber: Int,
         userId: Int
     ): Mono<Void> {
+        // Initialize movement balance state for this workout
+        var movementBalanceState = createInitialMovementBalanceState()
+        
         // Only handle combined ME+DE days for 2-day programs
         if (!conjugateTemplates.isCombinedMEDay(dayType)) {
             logger.warn("TwoDayWorkoutStageGenerationService received non-combined ME day: {}", dayType)
@@ -108,7 +113,8 @@ class TwoDayWorkoutStageGenerationService(
                 workoutType = "maximal_effort",
                 movementType = primaryMovementType,
                 currentWeekNumber = currentWeekNumber,
-                userId = userId
+                userId = userId,
+                movementBalanceState = movementBalanceState
             )
 
         // Select secondary DE exercise
@@ -118,7 +124,8 @@ class TwoDayWorkoutStageGenerationService(
                 preferences = preferences,
                 userEquipment = userEquipment,
                 weakMuscles = weakMuscles,
-                rotationHistory = rotationHistory
+                rotationHistory = rotationHistory,
+                movementBalanceState = movementBalanceState
             )
 
         // Generate set schemes for both exercises
@@ -216,7 +223,8 @@ class TwoDayWorkoutStageGenerationService(
                                         numAccessoryExercises = numAccessoryExercises,
                                         rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
-                                        userId = userId
+                                        userId = userId,
+                                        movementBalanceState = movementBalanceState
                                     )
                                 } else {
                                     Mono.empty()
@@ -235,7 +243,8 @@ class TwoDayWorkoutStageGenerationService(
                                         weakMuscles = weakMuscles,
                                         rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
-                                        userId = userId
+                                        userId = userId,
+                                        movementBalanceState = movementBalanceState
                                     )
                                 } else {
                                     Mono.empty()

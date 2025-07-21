@@ -19,12 +19,12 @@ class ProgrammedExerciseDALTest {
     private val programmedExerciseList =
         listOf(
             programmedExercise,
-            mockProgrammedExercise(id = 2L, exerciseName = "Dumbbell Flyes", position = 2, notes = "Light weight, high reps")
+            mockProgrammedExercise(id = 2L, exerciseName = "Incline Bench Press", position = 2, notes = "Light weight, high reps")
         )
     private val allExercises =
         listOf(
             programmedExercise,
-            mockProgrammedExercise(id = 2L, workoutStageId = 6L, exerciseName = "Squat", position = 2, notes = "Keep chest up")
+            mockProgrammedExercise(id = 2L, workoutStageId = 6L, exerciseName = "Back Squat", position = 2, notes = "Keep chest up")
         )
 
     @BeforeEach
@@ -147,7 +147,7 @@ class ProgrammedExerciseDALTest {
 
     @Test
     fun `updateProgrammedExercise should return updated programmed exercise`() {
-        val updatedExercise = mockProgrammedExercise(exerciseName = "Barbell Bench Press", position = 2, notes = "Updated notes")
+        val updatedExercise = mockProgrammedExercise(exerciseName = "Bench Press", position = 2, notes = "Updated notes")
         val expectedQuery =
             """
             UPDATE programmed_exercise

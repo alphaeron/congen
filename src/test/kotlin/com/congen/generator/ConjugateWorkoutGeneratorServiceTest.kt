@@ -132,6 +132,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any(),
                 any(),
+                any(),
                 any()
             )
         ).thenReturn(Mono.just(exercises.first()))
@@ -266,6 +267,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any(),
                 any(),
+                any(),
                 any()
             )
         ).thenReturn(Mono.just(exercises.first()))
@@ -361,6 +363,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
         whenever(
             exerciseSelectionService.selectRotatingExercise(
+                any(),
                 any(),
                 any(),
                 any(),
@@ -469,11 +472,13 @@ class ConjugateWorkoutGeneratorServiceTest {
                 any(),
                 any(),
                 any(),
+                any(),
                 any()
             )
         ).thenReturn(Mono.just(exercises.first()))
         whenever(
             exerciseSelectionService.selectSimilarSecondaryExercise(
+                any(),
                 any(),
                 any(),
                 any(),

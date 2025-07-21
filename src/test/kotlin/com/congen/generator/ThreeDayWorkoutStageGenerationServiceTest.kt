@@ -80,6 +80,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 weightSelectionService,
                 userWeightUnitPreferenceDAL,
                 sessionTimeCalculator,
+                MovementBalanceService(),
                 conjugateTemplates
             )
     }
@@ -99,7 +100,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             .thenReturn(Mono.just(exercises))
         whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any()))
             .thenReturn(exercises)
-        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
+        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(primaryExercise))
             .thenReturn(Mono.just(secondaryExercise))
         whenever(exerciseSelectionService.selectWarmupExercises(any(), any(), any(), any(), any(), any()))
@@ -169,7 +170,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             .thenReturn(Mono.just(exercises))
         whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any()))
             .thenReturn(exercises)
-        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
+        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(primaryExercise))
         whenever(exerciseSelectionService.selectWarmupExercises(any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(emptyList<Exercise>()))
@@ -273,7 +274,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             .thenReturn(Mono.just(emptyList<Exercise>()))
         whenever(exerciseSelectionService.filterExercisesByAccessoryStatus(any(), any()))
             .thenReturn(emptyList<Exercise>())
-        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
+        whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.empty())
 
         // Mock set scheme generation to prevent null pointer exceptions
