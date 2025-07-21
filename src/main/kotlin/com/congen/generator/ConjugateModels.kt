@@ -63,6 +63,9 @@ object ConjugateConstants {
 
     /** Time allocation for different workout components (in minutes) */
     object TimeAllocation {
+        /** Time allocated for warmup exercises in minutes. */
+        const val WARMUP_TIME_IN_MINUTES = 10
+
         /** Time allocated for primary movement exercises in minutes. */
         const val PRIMARY_MOVEMENT_TIME_IN_MINUTES = 10
 

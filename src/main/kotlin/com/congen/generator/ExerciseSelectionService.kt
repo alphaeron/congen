@@ -1,5 +1,6 @@
 package com.congen.generator
 
+import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.model.Exercise
@@ -19,7 +20,8 @@ import reactor.core.publisher.Mono
 @Service
 class ExerciseSelectionService(
     private val exerciseMuscleDAL: ExerciseMuscleDAL,
-    private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL
+    private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
+    private val exerciseEquipmentDAL: ExerciseEquipmentDAL
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseSelectionService::class.java)
@@ -67,43 +69,88 @@ class ExerciseSelectionService(
             return Mono.justOrEmpty(null)
         }
 
-        // Filter by equipment availability
-        val equipmentFilteredExercises =
-            availableExercises.filter { exercise ->
-                // Check if user has any equipment for this exercise
-                userEquipment.any { userEq ->
-                    // This would need to be implemented with actual equipment checking
-                    true // For now, assume all equipment is available
-                }
-            }
-
-        if (equipmentFilteredExercises.isEmpty()) {
-            logger.warn("No exercises available with user's equipment for isAccessory: {}", isAccessory)
-            return Mono.justOrEmpty(availableExercises.firstOrNull()) // Fallback to any available exercise
-        }
-
-        // Filter exercises by target muscles - this is the key fix!
-        return Flux.fromIterable(equipmentFilteredExercises)
+        // Filter exercises by target muscles and equipment availability
+        return Flux.fromIterable(availableExercises)
             .flatMap { exercise ->
-                exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
-                    .filter { exerciseMuscles ->
-                        val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
-                        val targetMusclesLower = targetMuscles.map { it.lowercase() }
-                        val hasMatchingMuscles =
-                            exerciseMuscleNames.any { muscle ->
-                                targetMusclesLower.any { targetMuscle ->
-                                    muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
-                                }
-                            }
-                        hasMatchingMuscles
+                // Check if user has equipment for this exercise
+                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+                    .filter { exerciseEquipment ->
+                        val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
                     }
-                    .map { exercise }
+                    .flatMap { _ ->
+                        // Check if exercise targets any of the target muscles
+                        exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                            .filter { exerciseMuscles ->
+                                val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
+                                val targetMusclesLower = targetMuscles.map { it.lowercase() }
+                                val hasMatchingMuscles =
+                                    exerciseMuscleNames.any { muscle ->
+                                        targetMusclesLower.any { targetMuscle ->
+                                            muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
+                                        }
+                                    }
+                                hasMatchingMuscles
+                            }
+                            .map { exercise }
+                    }
             }
             .collectList()
             .flatMap { muscleFilteredExercises ->
                 if (muscleFilteredExercises.isEmpty()) {
-                    logger.warn("No exercises found matching target muscles: {} for isAccessory: {}", targetMuscles, isAccessory)
-                    return@flatMap Mono.justOrEmpty(null)
+                    logger.warn(
+                        "No exercises found matching target muscles and equipment: {} for isAccessory: {}",
+                        targetMuscles,
+                        isAccessory
+                    )
+                    // Fallback: try to find exercises that match muscles but don't check equipment
+                    return@flatMap Flux.fromIterable(availableExercises)
+                        .flatMap { exercise ->
+                            exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                                .filter { exerciseMuscles ->
+                                    val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
+                                    val targetMusclesLower = targetMuscles.map { it.lowercase() }
+                                    val hasMatchingMuscles =
+                                        exerciseMuscleNames.any { muscle ->
+                                            targetMusclesLower.any { targetMuscle ->
+                                                muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
+                                            }
+                                        }
+                                    hasMatchingMuscles
+                                }
+                                .map { exercise }
+                        }
+                        .collectList()
+                        .flatMap { fallbackExercises ->
+                            if (fallbackExercises.isEmpty()) {
+                                logger.warn(
+                                    "No exercises found matching target muscles: {} for isAccessory: {}",
+                                    targetMuscles,
+                                    isAccessory
+                                )
+                                Mono.justOrEmpty(null)
+                            } else {
+                                // Select a single exercise from the fallback list using the same logic
+                                val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
+                                val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
+
+                                val unusedFallbackExercises =
+                                    fallbackExercises.filter { exercise ->
+                                        !usedExercises.contains(exercise.name)
+                                    }
+
+                                val exerciseToChooseFrom =
+                                    if (unusedFallbackExercises.isNotEmpty()) {
+                                        unusedFallbackExercises
+                                    } else {
+                                        fallbackExercises
+                                    }
+
+                                val selectedExercise = exerciseToChooseFrom.firstOrNull()
+                                Mono.justOrEmpty(selectedExercise)
+                            }
+                        }
                 }
 
                 // Get exercise rotation history for this category
@@ -139,11 +186,23 @@ class ExerciseSelectionService(
                 val sortedExercises =
                     exercisesToChooseFrom.sortedWith(
                         compareByDescending<Exercise> { exercise ->
-                            // Count equipment options (would need actual implementation)
-                            1
+                            // Count equipment options - this would need to be implemented with actual equipment counting
+                            // For now, use a simple heuristic based on exercise name
+                            when {
+                                exercise.name.contains("barbell") -> 3
+                                exercise.name.contains("dumbbell") -> 2
+                                exercise.name.contains("bodyweight") -> 1
+                                else -> 1
+                            }
                         }.thenByDescending { exercise ->
-                            // Count targeted muscles (would need actual implementation)
-                            targetMuscles.size
+                            // Count targeted muscles - this would need to be implemented with actual muscle counting
+                            // For now, use a simple heuristic
+                            when {
+                                exercise.name.contains("squat") || exercise.name.contains("deadlift") -> 5
+                                exercise.name.contains("bench") || exercise.name.contains("press") -> 4
+                                exercise.name.contains("row") || exercise.name.contains("pull") -> 3
+                                else -> 2
+                            }
                         }.thenBy { exercise ->
                             exercise.name
                         }
@@ -437,5 +496,311 @@ class ExerciseSelectionService(
         excludeExerciseName: String
     ): List<Exercise> {
         return exercises.filter { it.name != excludeExerciseName }
+    }
+
+    /**
+     * Selects warmup exercises based on the workout day type and template guidelines.
+     *
+     * For 4-day templates:
+     * - Select 2 exercises that focus on the main muscles that the primary workout for the day requires
+     * - Select 1 exercise whose movement pattern is close to the primary exercise, but requires less
+     *
+     * For 2 and 3 day templates:
+     * - Select 3 exercises that focus on the common muscles used for the ME and DE exercises that day
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param dayType The type of workout day
+     * @param primaryExercise The primary exercise for the day (if available)
+     * @param isFourDayTemplate Whether this is a 4-day template
+     * @return Mono containing list of selected warmup exercises
+     */
+    fun selectWarmupExercises(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        dayType: String,
+        primaryExercise: Exercise?,
+        isFourDayTemplate: Boolean
+    ): Mono<List<Exercise>> {
+        return if (isFourDayTemplate) {
+            // 4-day template: 2 muscle-focused + 1 movement pattern exercise
+            selectFourDayWarmupExercises(
+                exercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                dayType = dayType,
+                primaryExercise = primaryExercise
+            )
+        } else {
+            // 2 and 3 day templates: 3 exercises for common muscles
+            selectTwoThreeDayWarmupExercises(
+                exercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                dayType = dayType
+            )
+        }
+    }
+
+    /**
+     * Selects warmup exercises for 4-day templates.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param dayType The type of workout day
+     * @param primaryExercise The primary exercise for the day
+     * @return Mono containing list of selected warmup exercises
+     */
+    private fun selectFourDayWarmupExercises(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        dayType: String,
+        primaryExercise: Exercise?
+    ): Mono<List<Exercise>> {
+        val warmupExercises = mutableListOf<Exercise>()
+
+        return if (primaryExercise != null) {
+            // Get muscles for the primary exercise
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
+                .flatMap { primaryMuscles ->
+                    val primaryMuscleNames = primaryMuscles.map { it.muscleName.lowercase() }
+
+                    // Adjust target muscles based on day type for better warmup selection
+                    val adjustedTargetMuscles =
+                        when {
+                            dayType.contains("Upper") -> primaryMuscleNames + listOf("shoulders", "upper_back")
+                            dayType.contains("Lower") -> primaryMuscleNames + listOf("core", "glutes")
+                            else -> primaryMuscleNames
+                        }
+
+                    // Select 2 muscle-focused accessory exercises
+                    val muscleFocusedMono =
+                        selectMuscleFocusedWarmupExercises(
+                            exercises = exercises,
+                            preferences = preferences,
+                            userEquipment = userEquipment,
+                            targetMuscles = adjustedTargetMuscles,
+                            count = 2
+                        )
+
+                    // Select 1 movement pattern exercise
+                    val movementPatternMono =
+                        selectMovementPatternWarmupExercise(
+                            exercises = exercises,
+                            preferences = preferences,
+                            userEquipment = userEquipment,
+                            primaryExercise = primaryExercise
+                        )
+
+                    muscleFocusedMono.flatMap { muscleExercises ->
+                        movementPatternMono
+                            .map { movementExercise ->
+                                warmupExercises.addAll(muscleExercises)
+                                warmupExercises.add(movementExercise)
+                                warmupExercises
+                            }
+                            .switchIfEmpty(
+                                Mono.just(warmupExercises.apply { addAll(muscleExercises) })
+                            )
+                    }
+                }
+        } else {
+            // Fallback: select 3 general warmup exercises
+            selectGeneralWarmupExercises(
+                exercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                count = 3
+            )
+        }
+    }
+
+    /**
+     * Selects warmup exercises for 2 and 3 day templates.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param dayType The type of workout day
+     * @return Mono containing list of selected warmup exercises
+     */
+    private fun selectTwoThreeDayWarmupExercises(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        dayType: String
+    ): Mono<List<Exercise>> {
+        // For 2 and 3 day templates, focus on common muscles used in ME and DE exercises
+        val commonMuscles =
+            when {
+                dayType.contains("Upper") -> listOf("chest", "shoulders", "triceps", "upper_back", "biceps")
+                dayType.contains("Lower") -> listOf("quadriceps", "hamstrings", "glutes", "calves")
+                else -> listOf("core", "shoulders", "upper_back") // Fallback for full body
+            }
+
+        return selectMuscleFocusedWarmupExercises(
+            exercises = exercises,
+            preferences = preferences,
+            userEquipment = userEquipment,
+            targetMuscles = commonMuscles,
+            count = 3
+        )
+    }
+
+    /**
+     * Selects muscle-focused warmup exercises.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param targetMuscles Target muscles to focus on
+     * @param count Number of exercises to select
+     * @return Mono containing list of selected warmup exercises
+     */
+    private fun selectMuscleFocusedWarmupExercises(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        targetMuscles: List<String>,
+        count: Int
+    ): Mono<List<Exercise>> {
+        // Filter for accessory exercises that are good for warmup
+        val warmupCandidates =
+            exercises.filter { exercise ->
+                exercise.isAccessory &&
+                    !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
+            }
+
+        if (warmupCandidates.isEmpty()) {
+            return Mono.just(emptyList())
+        }
+
+        // Filter exercises by equipment availability and target muscles
+        return Flux.fromIterable(warmupCandidates)
+            .flatMap { exercise ->
+                // Check if user has equipment for this exercise
+                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+                    .filter { exerciseEquipment ->
+                        val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                    }
+                    .flatMap { _ ->
+                        // Check if exercise targets any of the target muscles
+                        exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                            .filter { exerciseMuscles ->
+                                val exerciseMuscleNames = exerciseMuscles.map { it.muscleName.lowercase() }
+                                val targetMusclesLower = targetMuscles.map { it.lowercase() }
+                                exerciseMuscleNames.any { muscle ->
+                                    targetMusclesLower.any { targetMuscle ->
+                                        muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
+                                    }
+                                }
+                            }
+                            .map { exercise }
+                    }
+            }
+            .collectList()
+            .map { filteredExercises ->
+                if (filteredExercises.isEmpty()) {
+                    // Fallback to any accessory exercises if no muscle/equipment matches
+                    warmupCandidates.take(count)
+                } else {
+                    filteredExercises.take(count)
+                }
+            }
+    }
+
+    /**
+     * Selects a movement pattern warmup exercise similar to the primary exercise.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param primaryExercise The primary exercise
+     * @return Mono containing the selected warmup exercise or null
+     */
+    private fun selectMovementPatternWarmupExercise(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        primaryExercise: Exercise
+    ): Mono<Exercise> {
+        // Look for accessory exercises with similar movement pattern but lighter
+        val warmupCandidates =
+            exercises.filter { exercise ->
+                exercise.isAccessory &&
+                    exercise.movementType == primaryExercise.movementType &&
+                    !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
+            }
+
+        if (warmupCandidates.isEmpty()) {
+            return Mono.empty()
+        }
+
+        // Filter by equipment availability
+        return Flux.fromIterable(warmupCandidates)
+            .flatMap { exercise ->
+                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+                    .filter { exerciseEquipment ->
+                        val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                    }
+                    .map { exercise }
+            }
+            .next()
+            .switchIfEmpty(Mono.just(warmupCandidates.first())) // Fallback to first candidate if no equipment match
+    }
+
+    /**
+     * Selects general warmup exercises when primary exercise is not available.
+     *
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param count Number of exercises to select
+     * @return Mono containing list of selected warmup exercises
+     */
+    private fun selectGeneralWarmupExercises(
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        count: Int
+    ): Mono<List<Exercise>> {
+        val warmupCandidates =
+            exercises.filter { exercise ->
+                exercise.isAccessory &&
+                    !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
+            }
+
+        if (warmupCandidates.isEmpty()) {
+            return Mono.just(emptyList())
+        }
+
+        // Filter by equipment availability
+        return Flux.fromIterable(warmupCandidates)
+            .flatMap { exercise ->
+                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+                    .filter { exerciseEquipment ->
+                        val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                    }
+                    .map { exercise }
+            }
+            .collectList()
+            .map { filteredExercises ->
+                if (filteredExercises.isEmpty()) {
+                    // Fallback to any accessory exercises if no equipment matches
+                    warmupCandidates.take(count)
+                } else {
+                    filteredExercises.take(count)
+                }
+            }
     }
 }

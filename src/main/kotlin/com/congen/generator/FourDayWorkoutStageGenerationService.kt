@@ -161,6 +161,21 @@ class FourDayWorkoutStageGenerationService(
                                 workout = workout,
                                 stageCreators =
                                     listOf(
+                                        // Warmup stage
+                                        {
+                                            createWarmupStage(
+                                                workout = workout,
+                                                exercises = exercises,
+                                                preferences = preferences,
+                                                userEquipment = userEquipment,
+                                                oneRepMaxes = oneRepMaxes,
+                                                dayType = dayType,
+                                                primaryExercise = primaryExercise,
+                                                isFourDayTemplate = true,
+                                                currentWeekNumber = currentWeekNumber,
+                                                userId = userId
+                                            )
+                                        },
                                         // Primary stage if exercise exists
                                         {
                                             if (primaryExercise != null) {
@@ -243,6 +258,21 @@ class FourDayWorkoutStageGenerationService(
                                         workout = workout,
                                         stageCreators =
                                             listOf(
+                                                // Warmup stage
+                                                {
+                                                    createWarmupStage(
+                                                        workout = workout,
+                                                        exercises = exercises,
+                                                        preferences = preferences,
+                                                        userEquipment = userEquipment,
+                                                        oneRepMaxes = oneRepMaxes,
+                                                        dayType = dayType,
+                                                        primaryExercise = primaryExercise,
+                                                        isFourDayTemplate = true,
+                                                        currentWeekNumber = currentWeekNumber,
+                                                        userId = userId
+                                                    )
+                                                },
                                                 // Primary stage if exercise exists
                                                 {
                                                     if (primaryExercise != null) {
@@ -285,16 +315,16 @@ class FourDayWorkoutStageGenerationService(
                                                         Mono.empty()
                                                     }
                                                 },
-                                                // Conditioning stage for dynamic effort workouts
+                                                // Conditioning stage if needed
                                                 {
                                                     if (hasConditioning(dayType)) {
                                                         createConditioningStage(
                                                             workout = workout,
-                                                            dayType = dayType,
                                                             exercises = exercises,
                                                             preferences = preferences,
                                                             userEquipment = userEquipment,
                                                             oneRepMaxes = oneRepMaxes,
+                                                            dayType = dayType,
                                                             weakMuscles = weakMuscles,
                                                             rotationHistory = rotationHistory,
                                                             currentWeekNumber = currentWeekNumber,

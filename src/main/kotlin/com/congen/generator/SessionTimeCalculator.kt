@@ -17,6 +17,7 @@ class SessionTimeCalculator {
      * Calculates the number of accessory exercises based on session time and workout type.
      *
      * Time allocation:
+     * - Warmup: 10 minutes
      * - Primary movement: 10 minutes
      * - Secondary movement: 8 minutes (if applicable)
      * - Each accessory exercise: 5 minutes
@@ -31,7 +32,8 @@ class SessionTimeCalculator {
         dayType: String
     ): Int {
         // Base time allocation
-        var timeAllocated = ConjugateConstants.TimeAllocation.PRIMARY_MOVEMENT_TIME_IN_MINUTES // Primary movement (10 minutes)
+        var timeAllocated = ConjugateConstants.TimeAllocation.WARMUP_TIME_IN_MINUTES // Warmup (10 minutes)
+        timeAllocated += ConjugateConstants.TimeAllocation.PRIMARY_MOVEMENT_TIME_IN_MINUTES // Primary movement (10 minutes)
 
         // Add secondary movement time if applicable
         if (hasSecondaryMovement(dayType)) {
@@ -82,6 +84,9 @@ class SessionTimeCalculator {
         // Calculate remaining time for accessories
         var remainingTimeSeconds = sessionTimeSeconds - primaryExerciseTimeSeconds - secondaryExerciseTimeSeconds
 
+        // Subtract warmup time (10 minutes = 600 seconds)
+        remainingTimeSeconds -= ConjugateConstants.TimeAllocation.WARMUP_TIME_IN_MINUTES * 60
+
         // If conditioning is included, subtract 10 minutes (600 seconds)
         val hasConditioning = dayType.contains("DE")
         if (hasConditioning) {
@@ -127,17 +132,18 @@ class SessionTimeCalculator {
      * Gets the total time allocated for non-accessory components.
      *
      * @param dayType The type of workout day
-     * @return The total time allocated for primary, secondary, and conditioning components
+     * @return The total time allocated for warmup, primary, secondary, and conditioning components
      */
     fun getNonAccessoryTimeAllocation(dayType: String): Int {
-        var timeAllocated = ConjugateConstants.TimeAllocation.PRIMARY_MOVEMENT_TIME_IN_MINUTES
+        var timeAllocated = ConjugateConstants.TimeAllocation.WARMUP_TIME_IN_MINUTES // Warmup (10 minutes)
+        timeAllocated += ConjugateConstants.TimeAllocation.PRIMARY_MOVEMENT_TIME_IN_MINUTES // Primary movement (10 minutes)
 
         if (hasSecondaryMovement(dayType)) {
-            timeAllocated += ConjugateConstants.TimeAllocation.SECONDARY_MOVEMENT_TIME_IN_MINUTES
+            timeAllocated += ConjugateConstants.TimeAllocation.SECONDARY_MOVEMENT_TIME_IN_MINUTES // Secondary movement (8 minutes)
         }
 
         if (dayType.contains("DE")) {
-            timeAllocated += ConjugateConstants.TimeAllocation.CONDITIONING_TIME_IN_MINUTES
+            timeAllocated += ConjugateConstants.TimeAllocation.CONDITIONING_TIME_IN_MINUTES // Conditioning (10 minutes)
         }
 
         return timeAllocated

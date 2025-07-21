@@ -1,8 +1,10 @@
 package com.congen.generator
 
+import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.mockExercise
+import com.congen.mockExerciseEquipment
 import com.congen.mockExerciseMuscle
 import com.congen.mockExerciseRotationHistory
 import com.congen.mockUserEquipment
@@ -40,6 +42,9 @@ class ExerciseSelectionServiceTest {
     private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
 
     @Mock
+    private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
+
+    @Mock
     private lateinit var exerciseWorkoutTypeDAL: com.congen.dal.ExerciseWorkoutTypeDAL
 
     private lateinit var exerciseSelectionService: ExerciseSelectionService
@@ -47,7 +52,7 @@ class ExerciseSelectionServiceTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        exerciseSelectionService = ExerciseSelectionService(exerciseMuscleDAL, exerciseWorkoutTypeDAL)
+        exerciseSelectionService = ExerciseSelectionService(exerciseMuscleDAL, exerciseWorkoutTypeDAL, exerciseEquipmentDAL)
     }
 
     @Test
@@ -65,6 +70,10 @@ class ExerciseSelectionServiceTest {
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
         ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = "chest"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = EXERCISE_NAME, equipmentName = "Barbell"))))
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
@@ -98,6 +107,10 @@ class ExerciseSelectionServiceTest {
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
         ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_6, muscleName = "biceps"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = EXERCISE_NAME_6, equipmentName = "Dumbbells"))))
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
@@ -135,6 +148,10 @@ class ExerciseSelectionServiceTest {
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
         ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_4, muscleName = "chest"))))
 
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = EXERCISE_NAME_4, equipmentName = "Barbell"))))
+
         val result =
             exerciseSelectionService.selectRotatingExercise(
                 targetMuscles,
@@ -170,6 +187,10 @@ class ExerciseSelectionServiceTest {
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
         ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_4, muscleName = "chest"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = EXERCISE_NAME_4, equipmentName = "Barbell"))))
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
@@ -409,5 +430,136 @@ class ExerciseSelectionServiceTest {
                 rotationHistory = emptyList()
             ).block()
         assertNull(result)
+    }
+
+    @Test
+    fun `selectWarmupExercises should return exercises for 4-day template`() {
+        // Given
+        val exercises =
+            listOf(
+                mockExercise(name = "Bicep Curl", isAccessory = true),
+                mockExercise(name = "Tricep Extension", isAccessory = true),
+                mockExercise(name = "Shoulder Press", isAccessory = true)
+            )
+        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
+        val dayType = "ME_Upper"
+        val primaryExercise = mockExercise(name = "Bench Press", isAccessory = false, movementType = MovementType.HORIZONTAL_PUSH)
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Bench Press", muscleName = "chest"))))
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Bicep Curl")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Bicep Curl", muscleName = "biceps"))))
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Tricep Extension")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Tricep Extension", muscleName = "triceps"))))
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Shoulder Press")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Shoulder Press", muscleName = "shoulders"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = "Bicep Curl", equipmentName = "Dumbbells"))))
+
+        // When
+        val result =
+            exerciseSelectionService.selectWarmupExercises(
+                exercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                dayType = dayType,
+                primaryExercise = primaryExercise,
+                isFourDayTemplate = true
+            )
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { warmupExercises ->
+                warmupExercises.isNotEmpty() && warmupExercises.all { it.isAccessory }
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectWarmupExercises should return exercises for 2-3 day template`() {
+        // Given
+        val exercises =
+            listOf(
+                mockExercise(name = "Bicep Curl", isAccessory = true),
+                mockExercise(name = "Tricep Extension", isAccessory = true),
+                mockExercise(name = "Shoulder Press", isAccessory = true)
+            )
+        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
+        val dayType = "ME_Upper_DE_Lower"
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Bicep Curl")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Bicep Curl", muscleName = "biceps"))))
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Tricep Extension")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Tricep Extension", muscleName = "triceps"))))
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Shoulder Press")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Shoulder Press", muscleName = "shoulders"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = "Bicep Curl", equipmentName = "Dumbbells"))))
+
+        // When
+        val result =
+            exerciseSelectionService.selectWarmupExercises(
+                exercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                dayType = dayType,
+                primaryExercise = null,
+                isFourDayTemplate = false
+            )
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { warmupExercises ->
+                warmupExercises.isNotEmpty() && warmupExercises.all { it.isAccessory }
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectWarmupExercises should return empty list when no exercises available`() {
+        // Given
+        val exercises = emptyList<com.congen.model.Exercise>()
+        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
+        val dayType = "ME_Upper"
+        val primaryExercise = mockExercise(name = "Bench Press", isAccessory = false)
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Bench Press", muscleName = "chest"))))
+
+        // When
+        val result =
+            exerciseSelectionService.selectWarmupExercises(
+                exercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                dayType = dayType,
+                primaryExercise = primaryExercise,
+                isFourDayTemplate = true
+            )
+
+        // Then
+        StepVerifier.create(result)
+            .expectNext(emptyList())
+            .verifyComplete()
     }
 }

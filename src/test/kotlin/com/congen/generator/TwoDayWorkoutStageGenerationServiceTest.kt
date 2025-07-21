@@ -8,6 +8,7 @@ import com.congen.mockUserExercisePreference
 import com.congen.mockUserOneRepMax
 import com.congen.mockUserProgramPreferences
 import com.congen.mockWeightSelectionResult
+import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -156,6 +157,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.empty())
             .thenReturn(Mono.empty())
+        whenever(exerciseSelectionService.selectWarmupExercises(any(), any(), any(), any(), any(), any()))
+            .thenReturn(Mono.just(emptyList<Exercise>()))
 
         // Mock set scheme generation to return empty lists
         whenever(prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any()))

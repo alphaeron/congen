@@ -24,10 +24,10 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // ME_Lower: 10 min primary + 0 min secondary + 0 min conditioning = 10 min allocated
-        // Remaining: 60 - 10 = 50 min
-        // Accessories: 50 / 5 = 10
-        assertEquals(10, result)
+        // ME_Lower: 10 min warmup + 10 min primary + 0 min secondary + 0 min conditioning = 20 min allocated
+        // Remaining: 60 - 20 = 40 min
+        // Accessories: 40 / 5 = 8
+        assertEquals(8, result)
     }
 
     @Test
@@ -37,10 +37,10 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // ME_Upper: 10 min primary + 8 min secondary + 0 min conditioning = 18 min allocated
-        // Remaining: 60 - 18 = 42 min
-        // Accessories: 42 / 5 = 8
-        assertEquals(8, result)
+        // ME_Upper: 10 min warmup + 10 min primary + 8 min secondary + 0 min conditioning = 28 min allocated
+        // Remaining: 60 - 28 = 32 min
+        // Accessories: 32 / 5 = 6
+        assertEquals(6, result)
     }
 
     @Test
@@ -50,10 +50,10 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // DE_Lower: 10 min primary + 0 min secondary + 10 min conditioning = 20 min allocated
-        // Remaining: 60 - 20 = 40 min
-        // Accessories: 40 / 5 = 8
-        assertEquals(8, result)
+        // DE_Lower: 10 min warmup + 10 min primary + 0 min secondary + 10 min conditioning = 30 min allocated
+        // Remaining: 60 - 30 = 30 min
+        // Accessories: 30 / 5 = 6
+        assertEquals(6, result)
     }
 
     @Test
@@ -63,10 +63,10 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // DE_Upper: 10 min primary + 8 min secondary + 10 min conditioning = 28 min allocated
-        // Remaining: 60 - 28 = 32 min
-        // Accessories: 32 / 5 = 6
-        assertEquals(6, result)
+        // DE_Upper: 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning = 38 min allocated
+        // Remaining: 60 - 38 = 22 min
+        // Accessories: 22 / 5 = 4
+        assertEquals(4, result)
     }
 
     @Test
@@ -76,10 +76,10 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // ME_Upper_DE_Lower: 10 min primary + 8 min secondary + 10 min conditioning = 28 min allocated
-        // Remaining: 60 - 28 = 32 min
-        // Accessories: 32 / 5 = 6
-        assertEquals(6, result)
+        // ME_Upper_DE_Lower: 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning = 38 min allocated
+        // Remaining: 60 - 38 = 22 min
+        // Accessories: 22 / 5 = 4
+        assertEquals(4, result)
     }
 
     @Test
@@ -89,10 +89,10 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // ME_Lower_DE_Upper: 10 min primary + 8 min secondary + 10 min conditioning = 28 min allocated
-        // Remaining: 60 - 28 = 32 min
-        // Accessories: 32 / 5 = 6
-        assertEquals(6, result)
+        // ME_Lower_DE_Upper: 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning = 38 min allocated
+        // Remaining: 60 - 38 = 22 min
+        // Accessories: 22 / 5 = 4
+        assertEquals(4, result)
     }
 
     @Test
@@ -102,21 +102,21 @@ class SessionTimeCalculatorTest {
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // DE_Full_Body: 10 min primary + 8 min secondary + 10 min conditioning = 28 min allocated
-        // Remaining: 60 - 28 = 32 min
-        // Accessories: 32 / 5 = 6
-        assertEquals(6, result)
+        // DE_Full_Body: 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning = 38 min allocated
+        // Remaining: 60 - 38 = 22 min
+        // Accessories: 22 / 5 = 4
+        assertEquals(4, result)
     }
 
     @Test
     fun `calculateNumAccessoryExercises should return 0 for short session`() {
         val dayType = "ME_Upper"
-        val sessionTimeMinutes = 15
+        val sessionTimeMinutes = 20
 
         val result = calculator.calculateNumAccessoryExercises(sessionTimeMinutes, dayType)
 
-        // ME_Upper: 10 min primary + 8 min secondary + 0 min conditioning = 18 min allocated
-        // Remaining: 15 - 18 = -3 min (negative, so 0 accessories)
+        // ME_Upper: 10 min warmup + 10 min primary + 8 min secondary + 0 min conditioning = 28 min allocated
+        // Remaining: 20 - 28 = -8 min (negative, so 0 accessories)
         assertEquals(0, result)
     }
 
@@ -144,28 +144,28 @@ class SessionTimeCalculatorTest {
     fun `getNonAccessoryTimeAllocation should return correct time for ME_Lower`() {
         val dayType = "ME_Lower"
         val result = calculator.getNonAccessoryTimeAllocation(dayType)
-        assertEquals(10, result) // 10 min primary only
+        assertEquals(20, result) // 10 min warmup + 10 min primary only
     }
 
     @Test
     fun `getNonAccessoryTimeAllocation should return correct time for ME_Upper`() {
         val dayType = "ME_Upper"
         val result = calculator.getNonAccessoryTimeAllocation(dayType)
-        assertEquals(18, result) // 10 min primary + 8 min secondary
+        assertEquals(28, result) // 10 min warmup + 10 min primary + 8 min secondary
     }
 
     @Test
     fun `getNonAccessoryTimeAllocation should return correct time for DE_Lower`() {
         val dayType = "DE_Lower"
         val result = calculator.getNonAccessoryTimeAllocation(dayType)
-        assertEquals(20, result) // 10 min primary + 10 min conditioning
+        assertEquals(30, result) // 10 min warmup + 10 min primary + 10 min conditioning
     }
 
     @Test
     fun `getNonAccessoryTimeAllocation should return correct time for DE_Upper`() {
         val dayType = "DE_Upper"
         val result = calculator.getNonAccessoryTimeAllocation(dayType)
-        assertEquals(28, result) // 10 min primary + 8 min secondary + 10 min conditioning
+        assertEquals(38, result) // 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning
     }
 
     @Test
@@ -174,9 +174,9 @@ class SessionTimeCalculatorTest {
         val meLowerDeUpper = calculator.getNonAccessoryTimeAllocation("ME_Lower_DE_Upper")
         val deFullBody = calculator.getNonAccessoryTimeAllocation("DE_Full_Body")
 
-        assertEquals(28, meUpperDeLower) // 10 min primary + 8 min secondary + 10 min conditioning
-        assertEquals(28, meLowerDeUpper) // 10 min primary + 8 min secondary + 10 min conditioning
-        assertEquals(28, deFullBody) // 10 min primary + 8 min secondary + 10 min conditioning
+        assertEquals(38, meUpperDeLower) // 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning
+        assertEquals(38, meLowerDeUpper) // 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning
+        assertEquals(38, deFullBody) // 10 min warmup + 10 min primary + 8 min secondary + 10 min conditioning
     }
 
     @Test
@@ -187,10 +187,10 @@ class SessionTimeCalculatorTest {
         val deLowerResult = calculator.getRemainingTimeForAccessories(sessionTimeMinutes, "DE_Lower")
         val deUpperResult = calculator.getRemainingTimeForAccessories(sessionTimeMinutes, "DE_Upper")
 
-        assertEquals(50, meLowerResult) // 60 - 10 = 50
-        assertEquals(42, meUpperResult) // 60 - 18 = 42
-        assertEquals(40, deLowerResult) // 60 - 20 = 40
-        assertEquals(32, deUpperResult) // 60 - 28 = 32
+        assertEquals(40, meLowerResult) // 60 - 20 = 40
+        assertEquals(32, meUpperResult) // 60 - 28 = 32
+        assertEquals(30, deLowerResult) // 60 - 30 = 30
+        assertEquals(22, deUpperResult) // 60 - 38 = 22
     }
 
     @Test
@@ -200,16 +200,16 @@ class SessionTimeCalculatorTest {
         val meLowerDeUpperResult = calculator.getRemainingTimeForAccessories(sessionTimeMinutes, "ME_Lower_DE_Upper")
         val deFullBodyResult = calculator.getRemainingTimeForAccessories(sessionTimeMinutes, "DE_Full_Body")
 
-        assertEquals(32, meUpperDeLowerResult) // 60 - 28 = 32
-        assertEquals(32, meLowerDeUpperResult) // 60 - 28 = 32
-        assertEquals(32, deFullBodyResult) // 60 - 28 = 32
+        assertEquals(22, meUpperDeLowerResult) // 60 - 38 = 22
+        assertEquals(22, meLowerDeUpperResult) // 60 - 38 = 22
+        assertEquals(22, deFullBodyResult) // 60 - 38 = 22
     }
 
     @Test
     fun `getRemainingTimeForAccessories should return 0 for short session`() {
-        val sessionTimeMinutes = 15
+        val sessionTimeMinutes = 20
         val result = calculator.getRemainingTimeForAccessories(sessionTimeMinutes, "ME_Upper")
-        assertEquals(0, result) // 15 - 18 = -3, coerced to 0
+        assertEquals(0, result) // 20 - 28 = -8, coerced to 0
     }
 
     @Test

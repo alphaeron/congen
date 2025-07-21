@@ -102,6 +102,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(primaryExercise))
             .thenReturn(Mono.just(secondaryExercise))
+        whenever(exerciseSelectionService.selectWarmupExercises(any(), any(), any(), any(), any(), any()))
+            .thenReturn(Mono.just(emptyList<Exercise>()))
 
         // Mock set scheme generation to prevent null pointer exceptions
         whenever(prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any()))
@@ -169,7 +171,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             .thenReturn(exercises)
         whenever(exerciseSelectionService.selectRotatingExercise(any(), any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(primaryExercise))
-            .thenReturn(Mono.just(secondaryExercise))
+        whenever(exerciseSelectionService.selectWarmupExercises(any(), any(), any(), any(), any(), any()))
+            .thenReturn(Mono.just(emptyList<Exercise>()))
 
         // Mock set scheme generation to prevent null pointer exceptions
         whenever(prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any()))

@@ -228,6 +228,21 @@ class ThreeDayWorkoutStageGenerationService(
                     workout = workout,
                     stageCreators =
                         listOf(
+                            // Warmup stage
+                            {
+                                createWarmupStage(
+                                    workout = workout,
+                                    exercises = exercises,
+                                    preferences = preferences,
+                                    userEquipment = userEquipment,
+                                    oneRepMaxes = oneRepMaxes,
+                                    dayType = dayType,
+                                    primaryExercise = primaryExercise,
+                                    isFourDayTemplate = false,
+                                    currentWeekNumber = currentWeekNumber,
+                                    userId = userId
+                                )
+                            },
                             // Primary stage with both ME and DE exercises
                             {
                                 createCombinedPrimaryStage(
@@ -259,16 +274,16 @@ class ThreeDayWorkoutStageGenerationService(
                                     Mono.empty()
                                 }
                             },
-                            // Conditioning stage for dynamic effort workouts
+                            // Conditioning stage if needed
                             {
                                 if (hasConditioning(dayType)) {
                                     createConditioningStage(
                                         workout = workout,
-                                        dayType = dayType,
                                         exercises = exercises,
                                         preferences = preferences,
                                         userEquipment = userEquipment,
                                         oneRepMaxes = oneRepMaxes,
+                                        dayType = dayType,
                                         weakMuscles = weakMuscles,
                                         rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
@@ -386,6 +401,21 @@ class ThreeDayWorkoutStageGenerationService(
                     workout = workout,
                     stageCreators =
                         listOf(
+                            // Warmup stage
+                            {
+                                createWarmupStage(
+                                    workout = workout,
+                                    exercises = exercises,
+                                    preferences = preferences,
+                                    userEquipment = userEquipment,
+                                    oneRepMaxes = oneRepMaxes,
+                                    dayType = "DE_Full_Body",
+                                    primaryExercise = upperDEExercise,
+                                    isFourDayTemplate = false,
+                                    currentWeekNumber = currentWeekNumber,
+                                    userId = userId
+                                )
+                            },
                             // Primary stage with both upper and lower DE exercises
                             {
                                 createCombinedPrimaryStage(

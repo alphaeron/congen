@@ -77,16 +77,25 @@ class BandWeightService(
         val actualBandWeightLbs = selectedBand?.weightLbs?.multiply(BigDecimal(BANDS_PER_EXERCISE)) ?: BigDecimal.ZERO
         val barWeightLbs = totalWeightLbs - actualBandWeightLbs
 
-        // Convert bar weight back to original unit and round to achievable weights
-        val barWeight =
-            if (weightUnit == WeightUnit.KG) {
-                unitConverter.toKg(barWeightLbs, WeightUnit.LBS)
+        // Ensure bar weight is never negative - if band weight exceeds total weight, use no bands
+        val finalBarWeightLbs =
+            if (barWeightLbs < BigDecimal.ZERO) {
+                logger.warn("Band weight {} exceeds total weight {} for DE exercise. Using no bands.", actualBandWeightLbs, totalWeightLbs)
+                totalWeightLbs
             } else {
                 barWeightLbs
             }
 
+        // Convert bar weight back to original unit and round to achievable weights
+        val barWeight =
+            if (weightUnit == WeightUnit.KG) {
+                unitConverter.toKg(finalBarWeightLbs, WeightUnit.LBS)
+            } else {
+                finalBarWeightLbs
+            }
+
         return BandWeightResult(
-            band = selectedBand,
+            band = if (barWeightLbs < BigDecimal.ZERO) null else selectedBand,
             barWeight = barWeight,
         )
     }

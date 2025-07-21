@@ -1,75 +1,3 @@
-Are we able to make separate ProgrammedWorkoutStage classes for the different logic for Primary, Secondary, and other stages, and just have the WorkoutStageGeneratorService classes utilize those ProgrammedWorkoutStage classes to separate the concerns for how the stages are organized for different templates, and what is needed to construct different types of workout stages?
-
-Maybe we can use something like a builder pattern either through a separate class or inside the zWorkoutStageGeneratorService classes and subclasses in order to improve readability and maintainability of the code.
-
-
-
-
-
-
-Currently the ConjugateTemplates specify the type of workouts to generate, but we need to follow object oriented programming best practices for the templates.
-
-We want to now put the workout generation logic itself directly in the templates, such as the generateWorkoutsForWeek that is currently in ConjugateWorkoutGeneratorService.
-
-The goal is to be able to provide the ability to add custom templates later on that reuse the functionality provided in the WorkoutStageGenerationService to implement different types of workouts.
-
-Make the code as modular as possible, and update ConjugateWorkoutGenerationService to use the new template classes.
-
-Remove duplication where possible with the WorkoutStageGenerationService classes so there is no overlap in responsibilities between the templates and the workout stage generation.  If possible, combine them so that we only have a single source of truth for how different templates behave.
-
-Ensure the code is completely covered by unit tests.
-
-Ensure all integration tests pass and if new logic is introduced the changes are also validated by integration tests.
-
-
-
-
-
-
-
-
-
-
-We are missing warmup generation as part of our algorithm, include a warmup and time for the warmup as part of the SessionTimeCalculator.
-
-Add exercises to a warmup meeting the following guidelines:
-
-For 4 day templates:
-
-Select 2 exercises that focus on the main muscles that the primary workout for the day requires.  These should be accessory exercises that do not target a large number of muscles.
-
-Select 1 exercise whose movement pattern is close to the primary exercise, but requires less.
-
-For 2 and 3 day tempaltes:
-
-Select 3 exercises that focus on the common muscles used for the ME and DE (or 2 DE full body) exercises that day.
-
-
-
-
-
-
-
-
-
-We are also missing a cooldown.
-
-For the cooldown, generate a data migration of Functional Range Conditioning (FRC) exercises first.
-
-Then, include 3 FRC exercises that target the muscles used during the workout in order to gain additional mobility in those areas.
-
-Ensure the time is taken into account in the SessionTimeCalculator.
-
-
-
-
-
-
-
-
-
-
-
 There is one more constraint that we want to inclue in the workout generation algorithm.  We need to make sure we are balancing the types of movements in a workout using these guidelines.  These are soft constraints we want to try to meet as much as possible, however they should never block workout generation if they cannot be met with 100% accuracy.
 
 The constraints are:
@@ -106,6 +34,61 @@ video analysis
 If muscle imbalance, prefer unilateral accessories
 
 how can we further optimize exercise selection to optimize performance?
+
+
+
+
+
+
+
+
+
+We are also missing a cooldown.
+
+For the cooldown, generate a data migration of Functional Range Conditioning (FRC) exercises first.
+
+Then, include 3 FRC exercises that target the muscles used during the workout in order to gain additional mobility in those areas.
+
+Ensure the time is taken into account in the SessionTimeCalculator.
+
+
+
+
+
+
+
+
+
+
+
+
+Are we able to make separate ProgrammedWorkoutStage classes for the different logic for Primary, Secondary, and other stages, and just have the WorkoutStageGeneratorService classes utilize those ProgrammedWorkoutStage classes to separate the concerns for how the stages are organized for different templates, and what is needed to construct different types of workout stages?
+
+Maybe we can use something like a builder pattern either through a separate class or inside the zWorkoutStageGeneratorService classes and subclasses in order to improve readability and maintainability of the code.
+
+
+
+
+
+
+
+Currently the ConjugateTemplates specify the type of workouts to generate, but we need to follow object oriented programming best practices for the templates.
+
+We want to now put the workout generation logic itself directly in the templates, such as the generateWorkoutsForWeek that is currently in ConjugateWorkoutGeneratorService.
+
+The goal is to be able to provide the ability to add custom templates later on that reuse the functionality provided in the WorkoutStageGenerationService to implement different types of workouts.
+
+Make the code as modular as possible, and update ConjugateWorkoutGenerationService to use the new template classes.
+
+Remove duplication where possible with the WorkoutStageGenerationService classes so there is no overlap in responsibilities between the templates and the workout stage generation.  If possible, combine them so that we only have a single source of truth for how different templates behave.
+
+Ensure the code is completely covered by unit tests.
+
+Ensure all integration tests pass and if new logic is introduced the changes are also validated by integration tests.
+
+
+
+
 
 
 

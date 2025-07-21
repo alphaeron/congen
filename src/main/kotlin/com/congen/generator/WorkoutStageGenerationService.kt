@@ -456,6 +456,136 @@ abstract class WorkoutStageGenerationService(
     }
 
     /**
+     * Creates a warmup stage with multiple exercises.
+     *
+     * @param workout The programmed workout
+     * @param exercises Available exercises
+     * @param preferences User exercise preferences
+     * @param userEquipment User's available equipment
+     * @param oneRepMaxes User's one rep max values
+     * @param dayType The type of workout day
+     * @param primaryExercise The primary exercise for the day (if available)
+     * @param isFourDayTemplate Whether this is a 4-day template
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @return Mono<Void> indicating completion
+     */
+    protected fun createWarmupStage(
+        workout: ProgrammedWorkout,
+        exercises: List<Exercise>,
+        preferences: List<UserExercisePreference>,
+        userEquipment: List<UserEquipment>,
+        oneRepMaxes: List<UserOneRepMax>,
+        dayType: String,
+        primaryExercise: Exercise?,
+        isFourDayTemplate: Boolean,
+        currentWeekNumber: Int,
+        userId: Int
+    ): Mono<Void> {
+        return exerciseSelectionService.selectWarmupExercises(
+            exercises = exercises,
+            preferences = preferences,
+            userEquipment = userEquipment,
+            dayType = dayType,
+            primaryExercise = primaryExercise,
+            isFourDayTemplate = isFourDayTemplate
+        )
+            .flatMap { warmupExercises ->
+                if (warmupExercises.isEmpty()) {
+                    return@flatMap Mono.empty()
+                }
+
+                createWorkoutStage(
+                    workout.id,
+                    WorkoutStageTypeEnum.WARMUP,
+                    WorkoutStageTypeEnum.WARMUP.position
+                )
+                    .flatMap { warmupStage ->
+                        Flux.fromIterable(warmupExercises)
+                            .flatMap { warmupExercise ->
+                                createProgrammedExercise(
+                                    warmupStage.id,
+                                    warmupExercise.name
+                                )
+                                    .flatMap { warmupProgrammedExercise ->
+                                        // Generate simple warmup set schemes (light weight, higher reps)
+                                        generateWarmupSetSchemes(
+                                            exercise = warmupExercise,
+                                            dayType = dayType,
+                                            oneRepMaxes = oneRepMaxes,
+                                            userId = userId,
+                                            currentWeekNumber = currentWeekNumber
+                                        ).flatMap { warmupScheme ->
+                                            createSetSchemes(
+                                                userId,
+                                                warmupProgrammedExercise.id,
+                                                warmupScheme,
+                                                WeightUnit.KG
+                                            )
+                                        }
+                                    }
+                            }
+                            .then()
+                    }
+            }
+            .then()
+    }
+
+    /**
+     * Generates warmup set schemes for exercises.
+     *
+     * Warmup exercises typically use light weight and higher reps to prepare the muscles.
+     *
+     * @param exercise The exercise to generate schemes for
+     * @param dayType The type of workout day
+     * @param oneRepMaxes User's one rep max values
+     * @param userId User ID
+     * @param currentWeekNumber Current week number
+     * @return Mono containing list of set scheme parameters
+     */
+    protected fun generateWarmupSetSchemes(
+        exercise: Exercise,
+        dayType: String,
+        oneRepMaxes: List<UserOneRepMax>,
+        userId: Int,
+        currentWeekNumber: Int
+    ): Mono<List<SetSchemeParams>> {
+        // Warmup exercises: 4 sets of 25 reps at appropriate proportion of weight
+        val numSets = 4
+        val repsPerSet = 25
+        val restSeconds = 60 // Shorter rest for warmup
+
+        return weightSelectionService.getTargetWeight(
+            exerciseName = exercise.name,
+            // 30% of 1RM for warmup
+            intensity = 0.3,
+            oneRepMaxes = oneRepMaxes,
+            userId = userId,
+            isDynamicEffort = dayType.contains("DE"),
+            currentWeekNumber = currentWeekNumber
+        )
+            .map { result ->
+                (1..numSets).map { setNumber ->
+                    SetSchemeParams(
+                        setNumber = setNumber,
+                        isAmrap = false,
+                        isEmom = false,
+                        useTempo = false,
+                        eccentricTempo = "0",
+                        isometricTempo = "0",
+                        concentricTempo = "0",
+                        targetWeight = result.targetWeight,
+                        performedWeight = null,
+                        targetRepCount = repsPerSet,
+                        performedRepCount = null,
+                        restSeconds = restSeconds,
+                        band = null,
+                    )
+                }
+            }
+    }
+
+    /**
      * Determines if a day type includes conditioning.
      *
      * @param dayType The type of workout day
