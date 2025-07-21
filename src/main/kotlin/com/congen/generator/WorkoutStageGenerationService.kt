@@ -1111,7 +1111,7 @@ abstract class WorkoutStageGenerationService(
         exercise: Exercise,
         isAccessory: Boolean
     ): MovementBalanceService.MovementBalanceState {
-        val estimatedVolume = movementBalanceService.estimateExerciseVolume(exercise, isAccessory)
+        val estimatedVolume = movementBalanceService.estimateExerciseVolume(isAccessory)
         return currentState.addExercise(exercise, estimatedVolume)
     }
 

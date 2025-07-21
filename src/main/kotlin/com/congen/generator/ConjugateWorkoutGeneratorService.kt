@@ -8,6 +8,7 @@ import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
@@ -73,6 +74,7 @@ class ConjugateWorkoutGeneratorService(
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
+    private val userWeakMuscleDAL: UserWeakMuscleDAL,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -101,7 +103,8 @@ class ConjugateWorkoutGeneratorService(
                     userEquipmentDAL.selectUserEquipmentByUser(program.userId),
                     userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId),
                     userProgramPreferencesDAL.selectUserProgramPreferences(program.userId),
-                    exerciseRotationHistoryDAL.selectAll()
+                    exerciseRotationHistoryDAL.selectAll(),
+                    userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId)
                 ).flatMap { tuple ->
                     val exercises = tuple.t1
                     val preferences = tuple.t2
@@ -109,8 +112,14 @@ class ConjugateWorkoutGeneratorService(
                     val oneRepMaxes = tuple.t4
                     val programPreferences = tuple.t5
                     val rotationHistory = tuple.t6
+                    val userWeakMuscles = tuple.t7
 
-                    val weakMuscles = ConjugateConstants.DEFAULT_WEAK_MUSCLES
+                    val weakMuscles =
+                        if (userWeakMuscles.isNotEmpty()) {
+                            userWeakMuscles.map { it.muscleName }
+                        } else {
+                            ConjugateConstants.DEFAULT_WEAK_MUSCLES
+                        }
                     val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
 
                     generateWorkoutsForWeek(

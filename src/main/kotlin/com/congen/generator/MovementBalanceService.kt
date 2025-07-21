@@ -32,29 +32,32 @@ import java.math.BigDecimal
 class MovementBalanceService {
     companion object {
         private val logger = LoggerFactory.getLogger(MovementBalanceService::class.java)
-        
+
         /** Target pull-to-push volume ratio */
         const val TARGET_PULL_TO_PUSH_RATIO = 2.0
-        
+
         /** Movement type pairs that should be balanced */
-        private val BALANCED_MOVEMENT_PAIRS = mapOf(
-            MovementType.VERTICAL_PUSH to MovementType.HORIZONTAL_PULL,
-            MovementType.HORIZONTAL_PUSH to MovementType.VERTICAL_PULL
-        )
-        
+        private val BALANCED_MOVEMENT_PAIRS =
+            mapOf(
+                MovementType.VERTICAL_PUSH to MovementType.HORIZONTAL_PULL,
+                MovementType.HORIZONTAL_PUSH to MovementType.VERTICAL_PULL
+            )
+
         /** Push movement types for volume tracking */
-        private val PUSH_MOVEMENT_TYPES = setOf(
-            MovementType.HORIZONTAL_PUSH,
-            MovementType.VERTICAL_PUSH
-        )
-        
+        private val PUSH_MOVEMENT_TYPES =
+            setOf(
+                MovementType.HORIZONTAL_PUSH,
+                MovementType.VERTICAL_PUSH
+            )
+
         /** Pull movement types for volume tracking */
-        private val PULL_MOVEMENT_TYPES = setOf(
-            MovementType.HORIZONTAL_PULL,
-            MovementType.VERTICAL_PULL
-        )
+        private val PULL_MOVEMENT_TYPES =
+            setOf(
+                MovementType.HORIZONTAL_PULL,
+                MovementType.VERTICAL_PULL
+            )
     }
-    
+
     /**
      * Data class representing the current state of movement balance in a workout.
      *
@@ -81,7 +84,7 @@ class MovementBalanceService {
                 0.0
             }
         }
-        
+
         /**
          * Checks if a movement type needs its balancing counterpart.
          *
@@ -92,11 +95,11 @@ class MovementBalanceService {
             val balancingType = BALANCED_MOVEMENT_PAIRS[movementType] ?: return false
             val currentCount = movementTypeCounts[movementType] ?: 0
             val balancingCount = movementTypeCounts[balancingType] ?: 0
-            
+
             // If we have one but not the other, we need balancing
             return currentCount > 0 && balancingCount == 0
         }
-        
+
         /**
          * Checks if pull movements need more volume relative to push movements.
          *
@@ -105,7 +108,7 @@ class MovementBalanceService {
         fun needsMorePullVolume(): Boolean {
             return getPullToPushRatio() < TARGET_PULL_TO_PUSH_RATIO
         }
-        
+
         /**
          * Updates the state with a new exercise and its estimated volume.
          *
@@ -113,23 +116,28 @@ class MovementBalanceService {
          * @param estimatedVolume The estimated volume for this exercise
          * @return Updated MovementBalanceState
          */
-        fun addExercise(exercise: Exercise, estimatedVolume: BigDecimal): MovementBalanceState {
+        fun addExercise(
+            exercise: Exercise,
+            estimatedVolume: BigDecimal
+        ): MovementBalanceState {
             val newMovementTypeCounts = movementTypeCounts.toMutableMap()
-            newMovementTypeCounts[exercise.movementType] = 
+            newMovementTypeCounts[exercise.movementType] =
                 (newMovementTypeCounts[exercise.movementType] ?: 0) + 1
-            
-            val newPushVolume = if (PUSH_MOVEMENT_TYPES.contains(exercise.movementType)) {
-                pushVolume + estimatedVolume
-            } else {
-                pushVolume
-            }
-            
-            val newPullVolume = if (PULL_MOVEMENT_TYPES.contains(exercise.movementType)) {
-                pullVolume + estimatedVolume
-            } else {
-                pullVolume
-            }
-            
+
+            val newPushVolume =
+                if (PUSH_MOVEMENT_TYPES.contains(exercise.movementType)) {
+                    pushVolume + estimatedVolume
+                } else {
+                    pushVolume
+                }
+
+            val newPullVolume =
+                if (PULL_MOVEMENT_TYPES.contains(exercise.movementType)) {
+                    pullVolume + estimatedVolume
+                } else {
+                    pullVolume
+                }
+
             return copy(
                 selectedExercises = selectedExercises + exercise,
                 movementTypeCounts = newMovementTypeCounts,
@@ -138,26 +146,25 @@ class MovementBalanceService {
             )
         }
     }
-    
+
     /**
      * Calculates estimated volume for an exercise based on typical set schemes.
      *
      * This is a rough estimation used for balance calculations. The actual volume
      * will be determined when set schemes are generated.
      *
-     * @param exercise The exercise to estimate volume for
      * @param isAccessory Whether this is an accessory exercise
      * @return Estimated volume (sets * reps * weight)
      */
-    fun estimateExerciseVolume(exercise: Exercise, isAccessory: Boolean): BigDecimal {
+    fun estimateExerciseVolume(isAccessory: Boolean): BigDecimal {
         // Rough estimation based on typical conjugate programming
         val estimatedSets = if (isAccessory) 3 else 4
         val estimatedReps = if (isAccessory) 12 else 6
         val estimatedWeight = if (isAccessory) 50.0 else 100.0 // kg, rough estimate
-        
+
         return BigDecimal(estimatedSets * estimatedReps * estimatedWeight)
     }
-    
+
     /**
      * Scores exercises based on movement balance constraints.
      *
@@ -166,23 +173,21 @@ class MovementBalanceService {
      *
      * @param exercise The exercise to score
      * @param currentState Current movement balance state
-     * @param isAccessory Whether this is an accessory exercise
      * @return Balance score (higher is better for selection)
      */
     fun scoreExerciseForBalance(
         exercise: Exercise,
-        currentState: MovementBalanceState,
-        isAccessory: Boolean
+        currentState: MovementBalanceState
     ): Double {
         var score = 0.0
-        
+
         // Check if this exercise would balance an existing movement type
         // Look for any existing movement type that this exercise would balance
         for ((existingType, balancingType) in BALANCED_MOVEMENT_PAIRS) {
             if (exercise.movementType == balancingType) {
                 val existingCount = currentState.movementTypeCounts[existingType] ?: 0
                 val currentCount = currentState.movementTypeCounts[exercise.movementType] ?: 0
-                
+
                 // If we have the existing type but not this balancing type, this exercise would balance it
                 if (existingCount > 0 && currentCount == 0) {
                     score += 10.0
@@ -190,23 +195,24 @@ class MovementBalanceService {
                 }
             }
         }
-        
+
         // Check if this exercise helps with pull-to-push volume ratio
         if (PULL_MOVEMENT_TYPES.contains(exercise.movementType) && currentState.needsMorePullVolume()) {
             score += 5.0
             logger.debug("Exercise {} helps increase pull volume ratio", exercise.name)
         }
-        
+
         // Small penalty for adding more push volume when we already have too much
-        if (PUSH_MOVEMENT_TYPES.contains(exercise.movementType) && 
-            currentState.getPullToPushRatio() < TARGET_PULL_TO_PUSH_RATIO) {
+        if (PUSH_MOVEMENT_TYPES.contains(exercise.movementType) &&
+            currentState.getPullToPushRatio() < TARGET_PULL_TO_PUSH_RATIO
+        ) {
             score -= 2.0
             logger.debug("Exercise {} adds push volume when pull volume is needed", exercise.name)
         }
-        
+
         return score
     }
-    
+
     /**
      * Filters and sorts exercises based on movement balance constraints.
      *
@@ -216,40 +222,40 @@ class MovementBalanceService {
      *
      * @param exercises List of exercises to filter and sort
      * @param currentState Current movement balance state
-     * @param isAccessory Whether these are accessory exercises
      * @return Sorted list of exercises with balance scores
      */
     fun prioritizeExercisesForBalance(
         exercises: List<Exercise>,
-        currentState: MovementBalanceState,
-        isAccessory: Boolean
+        currentState: MovementBalanceState
     ): List<Exercise> {
         if (exercises.isEmpty()) {
             return exercises
         }
-        
+
         // Calculate balance scores for all exercises
-        val exercisesWithScores = exercises.map { exercise ->
-            exercise to scoreExerciseForBalance(exercise, currentState, isAccessory)
-        }
-        
+        val exercisesWithScores =
+            exercises.map { exercise ->
+                exercise to scoreExerciseForBalance(exercise, currentState)
+            }
+
         // Sort by balance score (descending) and then by exercise name for consistency
-        val sortedExercises = exercisesWithScores
-            .sortedWith(
-                compareByDescending<Pair<Exercise, Double>> { it.second }
-                    .thenBy { it.first.name }
-            )
-            .map { it.first }
-        
+        val sortedExercises =
+            exercisesWithScores
+                .sortedWith(
+                    compareByDescending<Pair<Exercise, Double>> { it.second }
+                        .thenBy { it.first.name }
+                )
+                .map { it.first }
+
         logger.debug(
             "Prioritized {} exercises for balance. Top 3: {}",
             sortedExercises.size,
             sortedExercises.take(3).map { it.name }
         )
-        
+
         return sortedExercises
     }
-    
+
     /**
      * Creates an initial movement balance state.
      *
@@ -258,14 +264,17 @@ class MovementBalanceService {
     fun createInitialState(): MovementBalanceState {
         return MovementBalanceState()
     }
-    
+
     /**
      * Logs the current movement balance state for debugging.
      *
      * @param state The current movement balance state
      * @param workoutName Name of the workout for logging context
      */
-    fun logBalanceState(state: MovementBalanceState, workoutName: String) {
+    fun logBalanceState(
+        state: MovementBalanceState,
+        workoutName: String
+    ) {
         logger.debug(
             "Movement balance for {}: Push volume={}, Pull volume={}, Ratio={:.2f}, Movement counts={}",
             workoutName,
@@ -275,4 +284,4 @@ class MovementBalanceService {
             state.movementTypeCounts
         )
     }
-} 
+}

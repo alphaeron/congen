@@ -30,4 +30,4 @@ The API uses standard HTTP status codes:
 - **500 Internal Server Error**: Server-side errors
 
 ---
-*This documentation was automatically generated from OpenAPI specification on Sun Jul 20 09:21:04 EDT 2025*
+*This documentation was automatically generated from OpenAPI specification on Mon Jul 21 10:33:06 EDT 2025*

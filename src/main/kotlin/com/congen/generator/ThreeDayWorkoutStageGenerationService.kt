@@ -149,7 +149,7 @@ class ThreeDayWorkoutStageGenerationService(
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
-        
+
         val primaryMovementType = conjugateTemplates.getPrimaryMovementType(dayType)
         val secondaryMovementType = conjugateTemplates.getSecondaryMovementType(dayType)
 
@@ -327,7 +327,7 @@ class ThreeDayWorkoutStageGenerationService(
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
-        
+
         // Select upper body DE exercise
         val upperDEExerciseMono =
             selectPrimaryExercise(

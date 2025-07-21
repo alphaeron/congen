@@ -635,7 +635,7 @@ class WorkoutStageGenerationServiceTest {
         weightSelectionService: WeightSelectionService,
         userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
         sessionTimeCalculator: SessionTimeCalculator,
-            ) : WorkoutStageGenerationService(
+    ) : WorkoutStageGenerationService(
             exerciseSelectionService,
             workoutStageDAL,
             workoutStageTypeDAL,

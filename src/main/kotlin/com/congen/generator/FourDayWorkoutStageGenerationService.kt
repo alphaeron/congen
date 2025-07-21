@@ -95,7 +95,7 @@ class FourDayWorkoutStageGenerationService(
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
-        
+
         // Determine workout type based on day template
         val workoutType =
             when {
@@ -122,7 +122,7 @@ class FourDayWorkoutStageGenerationService(
                 // Update movement balance state with primary exercise
                 if (primaryExercise != null) {
                     movementBalanceState = updateMovementBalanceState(movementBalanceState, primaryExercise, false)
-                    logMovementBalanceState(movementBalanceState, "${workout.id} - ${dayType}")
+                    logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
                 }
                 if (primaryExercise != null) {
                     generateSetSchemes(
@@ -153,7 +153,7 @@ class FourDayWorkoutStageGenerationService(
                         ).doOnNext { secondaryExercise ->
                             // Update movement balance state with secondary exercise
                             movementBalanceState = updateMovementBalanceState(movementBalanceState, secondaryExercise, false)
-                            logMovementBalanceState(movementBalanceState, "${workout.id} - ${dayType}")
+                            logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
                         }
                     } else {
                         Mono.empty()

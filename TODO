@@ -1,23 +1,4 @@
-Add the ability for a user to enter their weak muscles, and have the accessories focus on those weak points.
-
-Still maintain the current invariants of the workout stage generation, just make sure that the weak points accessories target match the user's weak points as closley as possible.
-
-Ensure the changes are covered by unit tests.
-
-Ensure integration tests exist that validate the weak points are targeted as expected.
-
-
-
-
-
-
-
-
 video analysis
-
-If muscle imbalance, prefer unilateral accessories
-
-how can we further optimize exercise selection to optimize performance?
 
 
 
@@ -65,6 +46,8 @@ then support exerciseAttributes instead of isUnilateral, ... (like tags) for eve
 remove unneeded endpoints
 
 tempo enum
+
+If muscle imbalance, prefer unilateral accessories
 
 
 

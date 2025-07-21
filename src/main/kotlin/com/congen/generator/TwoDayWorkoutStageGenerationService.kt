@@ -91,7 +91,7 @@ class TwoDayWorkoutStageGenerationService(
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
-        
+
         // Only handle combined ME+DE days for 2-day programs
         if (!conjugateTemplates.isCombinedMEDay(dayType)) {
             logger.warn("TwoDayWorkoutStageGenerationService received non-combined ME day: {}", dayType)

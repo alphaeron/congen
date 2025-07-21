@@ -8,6 +8,7 @@ import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
 import com.congen.model.MovementType
@@ -43,6 +44,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var exerciseSelectionService: ExerciseSelectionService
     private lateinit var workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
+    private lateinit var userWeakMuscleDAL: com.congen.dal.UserWeakMuscleDAL
 
     companion object {
         private const val PROGRAM_ID = 1L
@@ -63,6 +65,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         exerciseSelectionService = mock()
         workoutStageGenerationOrchestrator = mock()
         sessionTimeCalculator = mock()
+        userWeakMuscleDAL = mock()
+        whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(any())).thenReturn(Mono.just(emptyList()))
 
         conjugateWorkoutGeneratorService =
             ConjugateWorkoutGeneratorService(
@@ -75,7 +79,8 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programDAL = programDAL,
                 programmedWorkoutDAL = programmedWorkoutDAL,
                 conjugateTemplates = conjugateTemplates,
-                workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator
+                workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator,
+                userWeakMuscleDAL = userWeakMuscleDAL
             )
     }
 

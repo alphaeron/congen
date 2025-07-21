@@ -1,4 +1,5 @@
 .#*
+.DS_Store
 
 .gradle
 build/
@@ -20,11 +21,6 @@ bin/
 
 ### Kotlin ###
 .kotlin
-
-# Ignore database schema documentation generation related files
-schemaspy.jar
-postgresql-jdbc.jar
-.temp_schemaspy_output/
 
 # Kubernetes generated files
 k8s/base/migrations-configmap.yaml

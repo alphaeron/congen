@@ -186,19 +186,19 @@ class ExerciseSelectionService(
                     }
 
                 // Apply movement balance constraints if state is provided
-                val exercisesForSelection = if (movementBalanceState != null) {
-                    movementBalanceService.prioritizeExercisesForBalance(
-                        exercisesToChooseFrom,
-                        movementBalanceState,
-                        isAccessory
-                    )
-                } else {
-                    exercisesToChooseFrom
-                }
+                val prioritized =
+                    if (movementBalanceState != null) {
+                        movementBalanceService.prioritizeExercisesForBalance(
+                            exercisesToChooseFrom,
+                            movementBalanceState
+                        )
+                    } else {
+                        exercisesToChooseFrom
+                    }
 
                 // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
                 val sortedExercises =
-                    exercisesForSelection.sortedWith(
+                    prioritized.sortedWith(
                         compareByDescending<Exercise> { exercise ->
                             // Count equipment options - this would need to be implemented with actual equipment counting
                             // For now, use a simple heuristic based on exercise name
@@ -344,12 +344,11 @@ class ExerciseSelectionService(
 
         // Movement balance bonus (if state is provided)
         if (movementBalanceState != null) {
-            val balanceScore = movementBalanceService.scoreExerciseForBalance(
-                exercise = exercise,
-                currentState = movementBalanceState,
-                // Secondary exercises are not accessories
-                isAccessory = false
-            )
+            val balanceScore =
+                movementBalanceService.scoreExerciseForBalance(
+                    exercise = exercise,
+                    currentState = movementBalanceState
+                )
             score += balanceScore
         }
 

@@ -115,8 +115,11 @@ task generateSchemaDot(type: Exec) {
     group = 'Documentation'
     description = 'Generate Graphviz DOT file from Liquibase migrations'
 
-    dependsOn 'setupTestPortForward'
-    finalizedBy 'cleanupPortForward'
+    // Ensure the environment is set to local
+    project.ext.environment = 'local'
+
+    // Ensure the cluster is deployed before schema extraction
+    dependsOn 'deployToKubernetes'
 
     commandLine 'bash', 'scripts/generate-schema-dot.sh'
 
@@ -127,7 +130,7 @@ task generateSchemaDot(type: Exec) {
     doLast {
         println "Database schema DOT file generated!"
         println "Files created:"
-        println "  - database_schema_auto.dot"
-        println "  - database_schema_auto.png (if Graphviz is installed)"
+        println "  - database_schema.dot"
+        println "  - database_schema.png (if Graphviz is installed)"
     }
 }
