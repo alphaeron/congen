@@ -8,27 +8,27 @@ resources:
 - staging-secret.yaml
 
 patches:
-- path: staging-patches/congen-configmap-patch.yaml
+- path: patches/migrations-configmap-patch.yaml
   target:
     kind: ConfigMap
-    name: congen-config
-- path: staging-patches/congen-deployment-patch.yaml
+    name: migrations-config
+- path: patches/backend-deployment-patch.yaml
   target:
     kind: Deployment
-    name: congen
-- path: staging-patches/image-tag-patch.yaml
+    name: backend
+- path: patches/backend-image-tag-patch.yaml
   target:
     kind: Deployment
-    name: congen
-- path: staging-patches/congen-service-patch.yaml
+    name: backend
+- path: patches/backend-service-patch.yaml
   target:
     kind: Service
-    name: congen
-- path: staging-patches/ingress-patch.yaml
+    name: backend
+- path: patches/ingress-patch.yaml
   target:
     kind: Ingress
     name: congen-ingress
-- path: staging-patches/migration-service-labels-patch.yaml
+- path: patches/migration-service-labels-patch.yaml
   target:
     kind: Deployment
     name: migration-service 

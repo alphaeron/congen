@@ -1,7 +1,7 @@
 // Skaffold tasks for local development
 
 task skaffoldDev(type: Exec) {
-    dependsOn jibDockerBuild, createMigrationsConfigMap
+    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
     description = 'Run Skaffold in development mode with file watching and hot reload'
     group = 'skaffold'
     commandLine 'skaffold', 'dev', '-f', 'skaffold.yaml'

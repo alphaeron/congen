@@ -39,7 +39,7 @@ jib {
         image = 'docker://amazoncorretto:17.0.11-alpine3.19'
     }
     to {
-        image = 'congen'
+        image = 'backend'
         tags = [tag]
     }
     container {
@@ -67,7 +67,7 @@ task createMigrationsConfigMap {
 
     doLast {
         def migrationsDir = file('resources/migrations')
-        def outputFile = file('k8s/base/migrations-configmap.yaml')
+        def outputFile = file('../k8s/base/migrations-configmap.yaml')
 
         if (!migrationsDir.exists()) {
             throw new GradleException("Migrations directory not found: ${migrationsDir.absolutePath}")
@@ -106,47 +106,6 @@ data:
     }
 }
 
-// Task to setup local Kubernetes environment
-task setupLocalKubernetes {
-    description = 'Setup local Kubernetes environment (minikube, etc.)'
-    group = 'kubernetes'
-
-    doFirst {
-        println "🔧 Setting up local Kubernetes environment..."
-
-        // Check if minikube is running, start if not
-        def minikubeStatus = exec {
-            commandLine 'minikube', 'status'
-            ignoreExitValue = true
-            standardOutput = new ByteArrayOutputStream()
-            errorOutput = new ByteArrayOutputStream()
-        }
-
-        if (minikubeStatus.exitValue != 0) {
-            println "Starting minikube with local Docker daemon..."
-            exec {
-                commandLine 'minikube', 'start', '--driver=docker'
-                ignoreExitValue = false
-            }
-        } else {
-            println "Minikube is already running"
-            println "✅ Minikube is ready for deployment"
-        }
-
-        // Enable required addons
-        println "Enabling minikube addons..."
-        exec {
-            commandLine 'minikube', 'addons', 'enable', 'ingress'
-            ignoreExitValue = true
-        }
-        exec {
-            commandLine 'minikube', 'addons', 'enable', 'metrics-server'
-            ignoreExitValue = true
-        }
-        sleep(15000)
-    }
-}
-
 // Task to build and prepare image for local environment
 task prepareLocalImage {
     dependsOn jibDockerBuild
@@ -159,13 +118,13 @@ task prepareLocalImage {
         // Load image into minikube's Docker daemon
         println "📦 Loading image into minikube's Docker daemon..."
         exec {
-            commandLine 'minikube', 'image', 'load', "congen:${tag}"
+            commandLine 'minikube', 'image', 'load', "backend:${tag}"
         }
-        println "✅ Image loaded into minikube: congen:${tag}"
+        println "✅ Image loaded into minikube: backend:${tag}"
 
         // Generate image tag patch for local with the current tag
-        generateImageTagPatchForEnvironment('local', "congen:${tag}")
-        println "✅ Generated image tag patch for local: congen:${tag}"
+        generateImageTagPatchForEnvironment('local', "backend:${tag}")
+        println "✅ Generated image tag patch for local: backend:${tag}"
     }
 }
 
@@ -186,12 +145,12 @@ task prepareRemoteImage {
     }
 
     doLast {
-        def remoteImageName = "${remoteRegistry}/${remoteRegistryNamespace}/congen:${tag}"
+        def remoteImageName = "${remoteRegistry}/${remoteRegistryNamespace}/backend:${tag}"
 
         // Tag and push to remote registry
         println "Tagging image for remote registry..."
         exec {
-            commandLine 'docker', 'tag', "congen:${tag}", remoteImageName
+            commandLine 'docker', 'tag', "backend:${tag}", remoteImageName
         }
 
         println "Pushing image to remote registry..."
@@ -208,8 +167,8 @@ task prepareRemoteImage {
 
 // Helper function to generate image tag patch
 def generateImageTagPatchForEnvironment(env, imageName) {
-    def overlayDir = "k8s/overlays/${env}"
-    def patchFile = file("${overlayDir}/${env}-patches/image-tag-patch.yaml")
+    def overlayDir = "../k8s/overlays/${env}"
+    def patchFile = file("${overlayDir}/patches/backend-image-tag-patch.yaml")
 
     // Create the patch directory if it doesn't exist
     patchFile.parentFile.mkdirs()
@@ -217,12 +176,12 @@ def generateImageTagPatchForEnvironment(env, imageName) {
     def patchContent = """apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: congen
+  name: backend
 spec:
   template:
     spec:
       containers:
-      - name: congen
+      - name: backend
         image: ${imageName}
 """
 
@@ -230,154 +189,14 @@ spec:
     println "✅ Generated image tag patch for ${env}: ${imageName}"
 }
 
-// Task to confirm production deployment
-task confirmProductionDeployment {
-    description = 'Confirm production deployment with user input'
-    group = 'kubernetes'
-
-    doLast {
-        if (environment == 'production') {
-            def response = System.console()?.readLine("Are you sure you want to deploy to production? (y/N): ")
-            if (response != 'y' && response != 'Y') {
-                throw new GradleException("Production deployment cancelled")
-            }
-            println "✅ Production deployment confirmed"
-        }
-    }
+task prepareDeployment {
+    group = 'deployment'
+    description = 'Prepare backend for deployment (build image, patch manifests, generate configmaps, etc.)'
 }
 
-// Task to setup port forwarding for integration tests
-task setupTestPortForward {
-    description = 'Setup port forwarding for integration tests'
-    group = 'kubernetes'
-
-    // Ensure deployment is complete before setting up port forwarding
-    dependsOn 'deployToKubernetes'
-
-    doLast {
-        println "🔌 Setting up port forwarding for integration tests..."
-
-        // Kill any existing port forward
-        exec {
-            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
-            ignoreExitValue = true
-        }
-
-        // Start port forward in background using nohup to ensure it stays detached
-        exec {
-            commandLine 'sh', '-c', 'nohup kubectl port-forward -n congen service/postgres 5432:5432 > /dev/null 2>&1 & echo $! > /tmp/port-forward.pid'
-            ignoreExitValue = true
-        }
-
-        println "✅ Port forwarding setup complete (localhost:5432)"
-        println "⚠️  Remember to stop port forwarding when done: pkill -f 'kubectl port-forward.*postgres'"
-    }
-}
-
-// Task to cleanup port forwarding
-task cleanupPortForward {
-    description = 'Cleanup port forwarding for integration tests'
-    group = 'kubernetes'
-
-    doLast {
-        println "🧹 Cleaning up port forwarding..."
-        exec {
-            commandLine 'pkill', '-f', 'kubectl port-forward.*postgres'
-            ignoreExitValue = true
-        }
-        println "✅ Port forwarding cleaned up"
-    }
-}
-
-// Unified deployment task for all environments
-task deployToKubernetes {
-    description = 'Unified deployment task for all environments (requires -Penvironment=local|staging|production)'
-    group = 'kubernetes'
-
-    doFirst {
-        if (!project.hasProperty('environment')) {
-            throw new GradleException("environment parameter is required. Use: -Penvironment=local|staging|production")
-        }
-        println "🎯 Deploying to environment: ${environment}"
-        println "📦 Image tag: ${tag}"
-    }
-
-    doLast {
-        // Deploy to Kubernetes
-        println "🚀 Applying Kubernetes manifests..."
-        exec {
-            commandLine 'kubectl', 'apply', '-k', "k8s/overlays/${environment}"
-        }
-
-        // Wait for PostgreSQL to be ready (for local environment)
-        if (environment == 'local') {
-            println "⏳ Waiting for PostgreSQL to be ready..."
-            def maxAttempts = 30
-            def attempt = 1
-
-            while (attempt <= maxAttempts) {
-                def pgReady = exec {
-                    commandLine 'kubectl', 'exec', '-n', 'congen', 'deployment/postgres', '--', 'pg_isready', '-U', 'postgres'
-                    ignoreExitValue = true
-                }
-
-                if (pgReady.exitValue == 0) {
-                    println "✅ PostgreSQL is ready"
-                    break
-                }
-
-                println "Attempt ${attempt}/${maxAttempts}: PostgreSQL not ready yet..."
-                sleep(2000) // 2 seconds
-                attempt++
-            }
-
-            if (attempt > maxAttempts) {
-                throw new GradleException("PostgreSQL failed to become ready after ${maxAttempts} attempts")
-            }
-        }
-
-        // Wait for deployment to be ready
-        println "⏳ Waiting for application deployment to be ready..."
-        exec {
-            commandLine 'kubectl', 'rollout', 'status', 'deployment/congen', '-n', 'congen', '--timeout=300s'
-        }
-
-        // Environment-specific post-deployment steps
-        if (environment == 'local') {
-            def minikubeIpOutput = new ByteArrayOutputStream()
-            exec {
-                commandLine 'minikube', 'ip'
-                standardOutput = minikubeIpOutput
-            }
-            def ip = minikubeIpOutput.toString().trim()
-
-            println "✅ Local deployment complete!"
-            println "🌐 Access the application at: http://${ip}:30080"
-            println "📊 Check status: kubectl get pods -n congen"
-            println "🔍 View logs: kubectl logs -f deployment/congen -n congen"
-        } else {
-            println "✅ ${environment} deployment complete!"
-            println "📊 Check status: kubectl get pods -n congen"
-            println "🔍 View logs: kubectl logs -f deployment/congen -n congen"
-        }
-    }
-}
-
-// Set up task dependencies based on environment
-project.afterEvaluate {
-    // Always create migrations ConfigMap
-    deployToKubernetes.dependsOn createMigrationsConfigMap
-
-    // Environment-specific setup and image preparation
-    if (environment == 'local') {
-        deployToKubernetes.dependsOn setupLocalKubernetes
-        deployToKubernetes.dependsOn prepareLocalImage
-    } else {
-        deployToKubernetes.dependsOn prepareRemoteImage
-    }
-
-    // Production confirmation
-    if (environment == 'production') {
-        deployToKubernetes.dependsOn confirmProductionDeployment
-    }
+prepareDeployment.dependsOn createMigrationsConfigMap
+if (environment == 'local') {
+    prepareDeployment.dependsOn prepareLocalImage
+} else if (environment == 'staging' || environment == 'production') {
+    prepareDeployment.dependsOn prepareRemoteImage
 }

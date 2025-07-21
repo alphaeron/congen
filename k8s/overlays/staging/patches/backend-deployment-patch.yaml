@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: congen
+  name: backend
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: congen
+      app: backend
   template:
     metadata:
       labels:
-        app: congen
+        app: backend
     spec:
       securityContext:
         runAsNonRoot: true
@@ -26,10 +26,10 @@ spec:
                 - key: app
                   operator: In
                   values:
-                  - congen
+                  - backend
               topologyKey: kubernetes.io/hostname
       containers:
-      - name: congen
+      - name: backend
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "stage"

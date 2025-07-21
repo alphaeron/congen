@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: congen
+  name: backend
   namespace: congen
   labels:
-    app: congen
+    app: backend
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: congen
+      app: backend
   template:
     metadata:
       labels:
-        app: congen
+        app: backend
     spec:
       containers:
-      - name: congen
-        image: congen:latest
+      - name: backend
+        image: backend:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -26,9 +26,9 @@ spec:
           mountPath: /tmp
         envFrom:
         - configMapRef:
-            name: congen-config
+            name: backend-config
         - secretRef:
-            name: congen-secret
+            name: backend-secret
         env:
         - name: SERVER_PORT
           value: "8080"

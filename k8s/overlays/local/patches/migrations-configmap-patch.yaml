@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: congen-config
+  name: migrations-config
 data:
   SPRINGDOC_API_DOCS_ENABLED: "true"
   SPRINGDOC_SWAGGER_UI_ENABLED: "true"

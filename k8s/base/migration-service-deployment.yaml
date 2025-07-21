@@ -204,6 +204,6 @@ spec:
       volumes:
       - name: migrations
         configMap:
-          name: migrations-config
+          name: backend-config
       - name: tmp
         emptyDir: {} 

@@ -23,8 +23,8 @@ task generateApiDocs(type: Exec) {
     description = 'Generate complete API documentation including OpenAPI specs and markdown'
 
     dependsOn 'createDocsStructure'
-    dependsOn 'setupTestPortForward'
-    finalizedBy 'cleanupPortForward'
+    dependsOn ':setupTestPortForward'
+    finalizedBy ':cleanupPortForward'
 
     commandLine 'bash', 'scripts/generate-api-docs.sh'
 
@@ -119,7 +119,7 @@ task generateSchemaDot(type: Exec) {
     project.ext.environment = 'local'
 
     // Ensure the cluster is deployed before schema extraction
-    dependsOn 'deployToKubernetes'
+    dependsOn ':deployAll'
 
     commandLine 'bash', 'scripts/generate-schema-dot.sh'
 

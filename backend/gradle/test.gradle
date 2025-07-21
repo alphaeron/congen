@@ -52,8 +52,8 @@ tasks.register('integrationTest', Test) {
     systemProperty 'spring.profiles.active', 'integration-test'
 
     // Setup port forwarding (which depends on deployment)
-    dependsOn 'setupTestPortForward'
-    finalizedBy 'cleanupPortForward'
+    dependsOn ':setupTestPortForward'
+    finalizedBy ':cleanupPortForward'
 }
 
 // Configure the environment for integration tests

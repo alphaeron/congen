@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: congen
+  name: backend
 spec:
   selector:
     matchLabels:
-      app: congen
+      app: backend
   template:
     metadata:
       labels:
-        app: congen
+        app: backend
     spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
         fsGroup: 1000
       containers:
-      - name: congen
+      - name: backend
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "loc"

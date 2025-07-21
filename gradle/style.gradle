@@ -1,0 +1,65 @@
+// Spotless configuration for code formatting
+spotless {
+    format('gradle') {
+        target '*.gradle', 'gradle/*.gradle'
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+task kubeval(type: Exec, group: 'verification') {
+    description = 'Lint Kubernetes manifests with kubeval'
+    commandLine 'sh', '-c', 'kustomize build k8s/overlays/production | kubeval --ignore-missing-schemas'
+}
+
+task kubeLinter(type: Exec, group: 'verification') {
+    description = 'Lint Kubernetes manifests with kube-linter for all environments'
+    commandLine 'sh', '-c', '''
+        echo "=== Linting Production Overlay ===" &&
+        kustomize build k8s/overlays/production | kube-linter lint - &&
+        echo "=== Linting Staging Overlay ===" &&
+        kustomize build k8s/overlays/staging | kube-linter lint - &&
+        echo "=== Linting Local Overlay (Development) ===" &&
+        kustomize build k8s/overlays/local | kube-linter lint --exclude=latest-tag,no-read-only-root-fs -
+    '''
+}
+
+task kubectlDryRun(type: Exec, group: 'verification') {
+    description = 'Validate kustomize output with kubectl dry-run'
+    commandLine 'kubectl', 'apply', '--dry-run=client', '-k', 'k8s/overlays/production'
+}
+
+task shellCheck(type: Exec, group: 'verification') {
+    description = 'Lint all bash scripts with ShellCheck'
+    commandLine 'sh', '-c', 'find scripts -name "*.sh" | xargs shellcheck'
+}
+
+task kubeCheck(group: 'verification', description: 'Comprehensive Kubernetes linting (kubeval, kube-linter, kubectl dry-run)') {
+    dependsOn kubeval, kubeLinter, kubectlDryRun
+}
+
+// Gradle-specific linting tasks
+// Note: Gradle linting is handled by spotlessCheck via gradleCheck task
+
+task gradleFormat(type: Exec, group: 'formatting') {
+    description = 'Format Gradle build files using Spotless'
+    commandLine './gradlew', 'spotlessApply'
+}
+
+task gradleCheck(type: Exec, group: 'verification') {
+    description = 'Check Gradle build files formatting using Spotless'
+    commandLine './gradlew', 'spotlessCheck'
+}
+
+// Comprehensive linting task that includes Gradle files
+// Only depends on shared (non-backend) tasks now
+task allLint(group: 'verification', description: 'Run all shared linting checks including Gradle files') {
+    dependsOn subprojects.collect { it.path + ':allLint' }
+    dependsOn shellCheck, kubeCheck, gradleCheck
+}
+
+task allFormat(group: 'formatting', description: 'Format all shared code including Gradle files') {
+    dependsOn subprojects.collect { it.path + ':allFormat' }
+    dependsOn gradleFormat
+}

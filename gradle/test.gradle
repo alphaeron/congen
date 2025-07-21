@@ -1,0 +1,13 @@
+// Top-level test.gradle for multi-project test orchestration
+
+task test {
+    group = 'verification'
+    description = 'Run all tests in all subprojects.'
+    dependsOn subprojects.collect { it.path + ':test' }
+}
+
+task integrationTest {
+    group = 'verification'
+    description = 'Run all tests in all subprojects.'
+    dependsOn subprojects.collect { it.path + ':integrationTest' }
+}

@@ -65,8 +65,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.12'
 }
 
-apply from: './gradle/test.gradle'
-apply from: './gradle/style.gradle'
-apply from: './gradle/docs.gradle'
-apply from: './gradle/deploy.gradle'
-apply from: './gradle/skaffold.gradle'
+apply from: 'gradle/test.gradle'
+apply from: 'gradle/style.gradle'
+apply from: 'gradle/docs.gradle'
+apply from: 'gradle/deploy.gradle'
