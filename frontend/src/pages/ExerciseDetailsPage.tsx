@@ -1,7 +1,7 @@
-import * as React from "react";
-import { useParams } from "react-router-dom";
+import * as React from 'react';
+import { useParams } from 'react-router-dom';
 
-import { ExerciseDetails } from "../components/ExerciseDetails";
+import { ExerciseDetails } from '../components/ExerciseDetails';
 
 /**
  * The exercise details page.

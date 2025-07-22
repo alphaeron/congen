@@ -18,7 +18,7 @@ export function capitalizeFirstLetter(str: string): string {
  */
 export function capitalizeEachWord(str: string): string {
   return str
-    .split(" ")
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join(" ");
+    .split(' ')
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(' ');
 } // capitalizeEachWord

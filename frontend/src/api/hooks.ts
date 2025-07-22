@@ -4,13 +4,13 @@ import {
   useQuery,
   useMutation,
   useQueryClient,
-} from "@tanstack/react-query";
+} from '@tanstack/react-query';
 
 export const useApiGet = <T>(
   key: string[],
   fn: (...args: any[]) => Promise<T>, // eslint-disable-line @typescript-eslint/no-explicit-any
   options: QueryOptions,
-  params: any[] = [], // eslint-disable-line @typescript-eslint/no-explicit-any
+  params: any[] = [] // eslint-disable-line @typescript-eslint/no-explicit-any
 ) =>
   useQuery<T>({
     queryKey: key, // eslint-disable-line @tanstack/query/exhaustive-deps
@@ -24,7 +24,7 @@ export const useApiSend = <T>(
   error: (...args: any[]) => void, // eslint-disable-line @typescript-eslint/no-explicit-any
   invalidateKey: InvalidateQueryFilters[],
   options: QueryOptions,
-  params: any[] = [], // eslint-disable-line @typescript-eslint/no-explicit-any
+  params: any[] = [] // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   const queryClient = useQueryClient();
 
@@ -32,7 +32,7 @@ export const useApiSend = <T>(
     mutationFn: () => fn(...params),
     onSuccess: (data): void => {
       if (invalidateKey) {
-        invalidateKey.forEach((key) => {
+        invalidateKey.forEach(key => {
           queryClient.invalidateQueries(key);
         });
       }

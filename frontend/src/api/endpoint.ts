@@ -1,13 +1,13 @@
-import axios from "axios";
-import { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios from 'axios';
+import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
-import { DEPLOYMENT_ENVIRONMENT } from "../globals";
+import { DEPLOYMENT_ENVIRONMENT } from '../globals';
 
 /**
  * Mapping of various environments to the correspoinding backend endpoint.
  */
 const _ENVIRONMENT_TO_ENDPOINT_MAPPING = {
-  loc: "http://localhost:8080/",
+  loc: 'http://localhost:8080/',
 };
 
 /**
@@ -19,7 +19,7 @@ export const ENDPOINT = axios.create({
   timeout: 2500,
   headers: {
     common: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   },
 });

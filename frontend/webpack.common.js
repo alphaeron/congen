@@ -1,23 +1,23 @@
-const path = require("path");
-const webpack = require("webpack");
+const path = require('path');
+const webpack = require('webpack');
 
-const TerserPlugin = require("terser-webpack-plugin");
-const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
-const RobotstxtPlugin = require("robotstxt-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
+const RobotstxtPlugin = require('robotstxt-webpack-plugin');
 
 module.exports = {
   entry: {
-    "congen-ui": path.resolve(__dirname, "src/index.tsx"),
+    'congen-ui': path.resolve(__dirname, 'src/index.tsx'),
   },
 
   plugins: [
     new webpack.ProvidePlugin({
-      process: "process/browser.js",
+      process: 'process/browser.js',
     }),
     new webpack.ProgressPlugin(),
-    new FaviconsWebpackPlugin(path.resolve(__dirname, "public/logo.png")),
+    new FaviconsWebpackPlugin(path.resolve(__dirname, 'public/logo.png')),
     new RobotstxtPlugin({
-      filePath: path.resolve(__dirname, "public/robots.txt"),
+      filePath: path.resolve(__dirname, 'public/robots.txt'),
     }),
   ],
 
@@ -27,46 +27,42 @@ module.exports = {
       {
         test: /.(js|jsx|ts|tsx)?$/,
         use: {
-          loader: "babel-loader",
+          loader: 'babel-loader',
           options: {
-            targets: "defaults",
-            presets: [
-              "@babel/preset-env",
-              "@babel/preset-react",
-              "@babel/preset-typescript",
-            ],
+            targets: 'defaults',
+            presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
           },
         },
         exclude: [/node_modules/],
       },
       {
         test: /.html$/,
-        use: "html-loader",
+        use: 'html-loader',
       },
       {
         // write image files under 10k to inline or copy image files over 10k
         test: /\.(jpg|jpeg|gif|png|svg|ico)?$/,
         use: [
           {
-            loader: "url-loader",
+            loader: 'url-loader',
             options: {
               limit: 10000,
-              fallback: "file-loader",
-              name: "img/[name].[ext]",
+              fallback: 'file-loader',
+              name: 'img/[name].[ext]',
             },
           },
         ],
       },
       {
         test: /\.json$/,
-        type: "json",
+        type: 'json',
       },
     ],
   },
 
   resolve: {
-    extensions: [".tsx", ".ts", ".js", ".jsx"],
-    modules: ["src", "node_modules"],
+    extensions: ['.tsx', '.ts', '.js', '.jsx'],
+    modules: ['src', 'node_modules'],
   },
 
   optimization: {
@@ -92,9 +88,9 @@ module.exports = {
   },
 
   output: {
-    filename: "[name].js",
-    chunkFilename: "[name].js",
-    path: path.resolve(__dirname, "dist"),
+    filename: '[name].js',
+    chunkFilename: '[name].js',
+    path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
 };

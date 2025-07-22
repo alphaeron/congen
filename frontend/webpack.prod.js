@@ -1,16 +1,16 @@
-const path = require("path");
-const { merge } = require("webpack-merge");
-const common = require("./webpack.common.js");
+const path = require('path');
+const { merge } = require('webpack-merge');
+const common = require('./webpack.common.js');
 
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const defaultHtmlPluginConfig = {
   inject: true,
-  template: path.resolve(__dirname, "public/index.html"),
-  manifest: path.resolve(__dirname, "public/manifest.json"),
-  filename: "index.html",
+  template: path.resolve(__dirname, 'public/index.html'),
+  manifest: path.resolve(__dirname, 'public/manifest.json'),
+  filename: 'index.html',
 };
 
 const additionalProdHtmlPluginConfig = {
@@ -29,12 +29,12 @@ const additionalProdHtmlPluginConfig = {
 };
 
 module.exports = merge(common, {
-  mode: "production",
-  devtool: "source-map",
+  mode: 'production',
+  devtool: 'source-map',
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "[name].css",
-      chunkFilename: "[id].css",
+      filename: '[name].css',
+      chunkFilename: '[id].css',
     }),
     new HtmlWebpackPlugin({
       ...defaultHtmlPluginConfig,
@@ -45,7 +45,7 @@ module.exports = merge(common, {
     rules: [
       {
         test: /\.css$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader"],
+        use: [MiniCssExtractPlugin.loader, 'css-loader'],
       },
     ],
   },
@@ -54,9 +54,9 @@ module.exports = merge(common, {
     splitChunks: {
       cacheGroups: {
         styles: {
-          name: "styles",
-          type: "css/mini-extract",
-          chunks: "all",
+          name: 'styles',
+          type: 'css/mini-extract',
+          chunks: 'all',
           enforce: true,
         },
       },

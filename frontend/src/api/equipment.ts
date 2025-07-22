@@ -1,5 +1,5 @@
-import { REQUEST } from "./endpoint";
-import { Equipment } from "./types";
+import { REQUEST } from './endpoint';
+import { Equipment } from './types';
 
 /**
  * Get a list of all available equipment.
@@ -8,8 +8,8 @@ import { Equipment } from "./types";
  */
 export const getEquipment = (): Promise<Equipment[]> =>
   REQUEST({
-    url: "/equipment/",
-    method: "GET",
+    url: '/equipment/',
+    method: 'GET',
   });
 
 /**
@@ -19,10 +19,8 @@ export const getEquipment = (): Promise<Equipment[]> =>
  *
  * @return The equipment obtained.
  */
-export const getIndividualEquipment = (
-  equipmentName: string,
-): Promise<Equipment> =>
+export const getIndividualEquipment = (equipmentName: string): Promise<Equipment> =>
   REQUEST({
     url: `/equipment/${equipmentName}`,
-    method: "GET",
+    method: 'GET',
   });

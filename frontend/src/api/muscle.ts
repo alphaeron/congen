@@ -1,5 +1,5 @@
-import { REQUEST } from "./endpoint";
-import { Muscle } from "./types";
+import { REQUEST } from './endpoint';
+import { Muscle } from './types';
 
 /**
  * Get a list of all available muscles.
@@ -8,8 +8,8 @@ import { Muscle } from "./types";
  */
 export const getMuscles = (): Promise<Muscle[]> =>
   REQUEST({
-    url: "/muscle/",
-    method: "GET",
+    url: '/muscle/',
+    method: 'GET',
   });
 
 /**
@@ -22,5 +22,5 @@ export const getMuscles = (): Promise<Muscle[]> =>
 export const getIndividualMuscle = (muscleName: string): Promise<Muscle> =>
   REQUEST({
     url: `/muscle/${muscleName}`,
-    method: "GET",
+    method: 'GET',
   });

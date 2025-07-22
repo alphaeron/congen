@@ -1,5 +1,5 @@
-import { REQUEST } from "./endpoint";
-import { Exercise, ExerciseEquipment, ExerciseMuscle } from "./types";
+import { REQUEST } from './endpoint';
+import { Exercise, ExerciseEquipment, ExerciseMuscle } from './types';
 
 /**
  * Get a list of all available exercises.
@@ -8,8 +8,8 @@ import { Exercise, ExerciseEquipment, ExerciseMuscle } from "./types";
  */
 export const getExercises = (): Promise<Exercise[]> =>
   REQUEST({
-    url: "/exercise/",
-    method: "GET",
+    url: '/exercise/',
+    method: 'GET',
   });
 
 /**
@@ -19,12 +19,10 @@ export const getExercises = (): Promise<Exercise[]> =>
  *
  * @return The exercise obtained.
  */
-export const getIndividualExercise = (
-  exerciseName: string,
-): Promise<Exercise> =>
+export const getIndividualExercise = (exerciseName: string): Promise<Exercise> =>
   REQUEST({
     url: `/exercise/${exerciseName}`,
-    method: "GET",
+    method: 'GET',
   });
 
 /**
@@ -34,12 +32,10 @@ export const getIndividualExercise = (
  *
  * @return A list muscles used for the exercise.
  */
-export const getExerciseMuscles = (
-  exerciseName: string,
-): Promise<ExerciseMuscle[]> =>
+export const getExerciseMuscles = (exerciseName: string): Promise<ExerciseMuscle[]> =>
   REQUEST({
     url: `/exercise/${exerciseName}/muscle`,
-    method: "GET",
+    method: 'GET',
   });
 
 /**
@@ -49,10 +45,8 @@ export const getExerciseMuscles = (
  *
  * @return A list equipment options that can be used to perform the exercise.
  */
-export const getExerciseEquipment = (
-  exerciseName: string,
-): Promise<ExerciseEquipment[]> =>
+export const getExerciseEquipment = (exerciseName: string): Promise<ExerciseEquipment[]> =>
   REQUEST({
     url: `/exercise/${exerciseName}/equipment`,
-    method: "GET",
+    method: 'GET',
   });

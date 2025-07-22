@@ -1,18 +1,18 @@
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
-import Chip from "@mui/material/Chip";
-import Divider from "@mui/material/Divider";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import * as React from "react";
-import { Link } from "react-router-dom";
+import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import * as React from 'react';
+import { Link } from 'react-router-dom';
 
-import { Exercise } from "../api/types";
-import { capitalizeEachWord } from "../common/utils";
-import { BinaryTag } from "./BinaryTag";
+import { Exercise } from '../api/types';
+import { capitalizeEachWord } from '../common/utils';
+import { BinaryTag } from './BinaryTag';
 
-import "../styles/UndecoratedLink.css";
+import '../styles/UndecoratedLink.css';
 
 /**
  * Props for the ExerciseCard component.
@@ -30,48 +30,31 @@ export interface ExerciseCardProps {
  *
  * @return The exercise card component.
  */
-export function ExerciseCard(
-  props: ExerciseCardProps,
-): React.ReactElement<ExerciseCardProps> {
+export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<ExerciseCardProps> {
   return (
     <Box sx={{ minWidth: 275 }}>
       <Card variant="outlined">
         <CardContent>
-          <Link
-            className="undecoratedLink"
-            to={`/exercises/${props.exercise.name}`}
-          >
-            <Typography color="text.secondary">
-              {props.exercise.name}
-            </Typography>
+          <Link className="undecoratedLink" to={`/exercises/${props.exercise.name}`}>
+            <Typography color="text.secondary">{props.exercise.name}</Typography>
           </Link>
-          <Stack direction="row" spacing={2} sx={{ marginBottom: "12px" }}>
-            <Chip
-              label={`${capitalizeEachWord(props.exercise.movementType)} Exercise`}
-            />
-            <BinaryTag
-              isOn={props.exercise.isUpper}
-              onText="Upper Body"
-              offText="Lower Body"
-            />
+          <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
+            <Chip label={`${capitalizeEachWord(props.exercise.movementType)} Exercise`} />
+            <BinaryTag isOn={props.exercise.isUpper} onText="Upper Body" offText="Lower Body" />
             <BinaryTag
               isOn={props.exercise.isAccessory}
               onText="Accessory"
               offText="Primary Movement"
             />
-            <BinaryTag
-              isOn={props.exercise.isUnilateral}
-              onText="Unilateral"
-              offText="Bilateral"
-            />
+            <BinaryTag isOn={props.exercise.isUnilateral} onText="Unilateral" offText="Bilateral" />
           </Stack>
           {props.equipment.length > 0 && (
             <React.Fragment>
-              <Divider textAlign="left" sx={{ marginBottom: "12px" }}>
+              <Divider textAlign="left" sx={{ marginBottom: '12px' }}>
                 <Typography color="text.secondary">Equipment</Typography>
               </Divider>
-              <Stack direction="row" spacing={2} sx={{ marginBottom: "12px" }}>
-                {props.equipment.map((e) => (
+              <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
+                {props.equipment.map(e => (
                   <Chip label={`${capitalizeEachWord(e)}`} key={e} />
                 ))}
               </Stack>
@@ -79,11 +62,11 @@ export function ExerciseCard(
           )}
           {props.muscles.length > 0 && (
             <React.Fragment>
-              <Divider textAlign="left" sx={{ marginBottom: "12px" }}>
+              <Divider textAlign="left" sx={{ marginBottom: '12px' }}>
                 <Typography color="text.secondary">Muscles</Typography>
               </Divider>
-              <Stack direction="row" spacing={2} sx={{ marginBottom: "12px" }}>
-                {props.muscles.map((e) => (
+              <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
+                {props.muscles.map(e => (
                   <Chip label={`${capitalizeEachWord(e)}`} key={e} />
                 ))}
               </Stack>

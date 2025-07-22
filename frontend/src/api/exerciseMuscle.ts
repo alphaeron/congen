@@ -1,5 +1,5 @@
-import { REQUEST } from "./endpoint";
-import { ExerciseMuscle } from "./types";
+import { REQUEST } from './endpoint';
+import { ExerciseMuscle } from './types';
 
 /**
  * Get a list of all available exercises and the muscles they use.
@@ -8,6 +8,6 @@ import { ExerciseMuscle } from "./types";
  */
 export const getExerciseMuscle = (): Promise<ExerciseMuscle[]> =>
   REQUEST({
-    url: "/exercise_muscle/",
-    method: "GET",
+    url: '/exercise_muscle/',
+    method: 'GET',
   });

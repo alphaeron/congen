@@ -1,20 +1,20 @@
-import { render, screen } from "@testing-library/react";
-import * as React from "react";
+import { render, screen } from '@testing-library/react';
+import * as React from 'react';
 
-import { ToggleColorMode } from "./ToggleColorMode";
+import { ToggleColorMode } from './ToggleColorMode';
 
-describe("ToggleColorMode component", () => {
+describe('ToggleColorMode component', () => {
   const toggleColorMode = () => {
-    setMode((prev) => (prev === "dark" ? "light" : "dark"));
+    setMode(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  it("Renders light mode", () => {
+  it('Renders light mode', () => {
     render(<ToggleColorMode mode="light" toggleColorMode={toggleColorMode} />);
-    expect(screen.getByTestId("ModeNightRoundedIcon")).toBeInTheDocument();
+    expect(screen.getByTestId('ModeNightRoundedIcon')).toBeInTheDocument();
   });
 
-  it("Renders dark mode", () => {
+  it('Renders dark mode', () => {
     render(<ToggleColorMode mode="dark" toggleColorMode={toggleColorMode} />);
-    expect(screen.getByTestId("WbSunnyRoundedIcon")).toBeInTheDocument();
+    expect(screen.getByTestId('WbSunnyRoundedIcon')).toBeInTheDocument();
   });
 });

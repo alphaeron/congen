@@ -1,34 +1,34 @@
-import { default as MenuIcon } from "@mui/icons-material/Menu";
-import { PaletteMode } from "@mui/material";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
-import Container from "@mui/material/Container";
-import CssBaseline from "@mui/material/CssBaseline";
-import Divider from "@mui/material/Divider";
-import Drawer from "@mui/material/Drawer";
-import MenuItem from "@mui/material/MenuItem";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import * as React from "react";
-import { BrowserRouter, Link, Routes, Route } from "react-router-dom";
+import { default as MenuIcon } from '@mui/icons-material/Menu';
+import { PaletteMode } from '@mui/material';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Container from '@mui/material/Container';
+import CssBaseline from '@mui/material/CssBaseline';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import MenuItem from '@mui/material/MenuItem';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import * as React from 'react';
+import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
 
-import { ToggleColorMode } from "./components/ToggleColorMode";
-import { ExerciseDetailsPage } from "./pages/ExerciseDetailsPage";
-import { ExerciseOverviewPage } from "./pages/ExerciseOverviewPage";
-import { RootPage } from "./pages/RootPage";
-import { getTheme } from "./theme";
+import { ToggleColorMode } from './components/ToggleColorMode';
+import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
+import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
+import { RootPage } from './pages/RootPage';
+import { getTheme } from './theme';
 
-import "./App.css";
-import "./styles/menuButton.css";
+import './App.css';
+import './styles/menuButton.css';
 
-import ConGenIcon from "./resources/congen-icon.svg";
+import ConGenIcon from './resources/congen-icon.svg';
 
 const logoStyle = {
-  width: "72px",
-  height: "auto",
-  cursor: "pointer",
+  width: '72px',
+  height: 'auto',
+  cursor: 'pointer',
 };
 
 /**
@@ -38,10 +38,10 @@ const logoStyle = {
  */
 export function App(): React.ReactElement {
   const [open, setOpen] = React.useState(false);
-  const [mode, setMode] = React.useState<PaletteMode>("light");
+  const [mode, setMode] = React.useState<PaletteMode>('light');
 
   const toggleColorMode = () => {
-    setMode((prev) => (prev === "dark" ? "light" : "dark"));
+    setMode(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   const toggleDrawer = (newOpen: boolean) => () => {
@@ -59,40 +59,40 @@ export function App(): React.ReactElement {
             position="static"
             sx={{
               boxShadow: 0,
-              bgcolor: "transparent",
-              backgroundImage: "none",
+              bgcolor: 'transparent',
+              backgroundImage: 'none',
               mt: 2,
               mb: 2,
             }}
           >
             <Toolbar
               variant="regular"
-              sx={(theme) => ({
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
+              sx={theme => ({
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 flexShrink: 0,
-                borderRadius: "999px",
+                borderRadius: '999px',
                 bgcolor:
-                  theme.palette.mode === "light"
-                    ? "rgba(255, 255, 255, 0.4)"
-                    : "rgba(0, 0, 0, 0.4)",
-                backdropFilter: "blur(24px)",
+                  theme.palette.mode === 'light'
+                    ? 'rgba(255, 255, 255, 0.4)'
+                    : 'rgba(0, 0, 0, 0.4)',
+                backdropFilter: 'blur(24px)',
                 maxHeight: 40,
-                border: "1px solid",
-                borderColor: "divider",
+                border: '1px solid',
+                borderColor: 'divider',
                 boxShadow:
-                  theme.palette.mode === "light"
+                  theme.palette.mode === 'light'
                     ? `0 0 1px rgba(85, 166, 246, 0.1), 1px 1.5px 2px -1px rgba(85, 166, 246, 0.15), 4px 4px 12px -2.5px rgba(85, 166, 246, 0.15)`
-                    : "0 0 1px rgba(2, 31, 59, 0.7), 1px 1.5px 2px -1px rgba(2, 31, 59, 0.65), 4px 4px 12px -2.5px rgba(2, 31, 59, 0.65)",
+                    : '0 0 1px rgba(2, 31, 59, 0.7), 1px 1.5px 2px -1px rgba(2, 31, 59, 0.65), 4px 4px 12px -2.5px rgba(2, 31, 59, 0.65)',
               })}
             >
               <Box
                 sx={{
                   flexGrow: 1,
-                  display: "flex",
-                  alignItems: "center",
-                  ml: "-18px",
+                  display: 'flex',
+                  alignItems: 'center',
+                  ml: '-18px',
                   px: 0,
                 }}
               >
@@ -106,9 +106,9 @@ export function App(): React.ReactElement {
                 >
                   ConGen
                 </Typography>
-                <Box sx={{ display: { xs: "none", md: "flex" } }}>
+                <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                   <MenuItem
-                    sx={{ py: "6px", px: "12px" }}
+                    sx={{ py: '6px', px: '12px' }}
                     /* eslint-disable-next-line react/display-name */
                     component={React.forwardRef((props, ref) => (
                       <Link to="/exercises" {...props} ref={ref} />
@@ -120,69 +120,47 @@ export function App(): React.ReactElement {
               </Box>
               <Box
                 sx={{
-                  display: { xs: "none", md: "flex" },
+                  display: { xs: 'none', md: 'flex' },
                   gap: 0.5,
-                  alignItems: "center",
+                  alignItems: 'center',
                 }}
               >
-                <ToggleColorMode
-                  mode={mode}
-                  toggleColorMode={toggleColorMode}
-                />
-                <Button
-                  color="primary"
-                  variant="text"
-                  size="small"
-                  component="a"
-                  href="#"
-                >
+                <ToggleColorMode mode={mode} toggleColorMode={toggleColorMode} />
+                <Button color="primary" variant="text" size="small" component="a" href="#">
                   Sign in
                 </Button>
-                <Button
-                  color="primary"
-                  variant="contained"
-                  size="small"
-                  component="a"
-                  href="#"
-                >
+                <Button color="primary" variant="contained" size="small" component="a" href="#">
                   Sign up
                 </Button>
               </Box>
-              <Box sx={{ display: { sm: "", md: "none" } }}>
+              <Box sx={{ display: { sm: '', md: 'none' } }}>
                 <Button
                   variant="text"
                   color="primary"
                   aria-label="menu"
                   onClick={toggleDrawer(true)}
-                  sx={{ minWidth: "30px", p: "4px" }}
+                  sx={{ minWidth: '30px', p: '4px' }}
                 >
                   <MenuIcon />
                 </Button>
-                <Drawer
-                  anchor="right"
-                  open={open}
-                  onClose={toggleDrawer(false)}
-                >
+                <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
                   <Box
                     sx={{
-                      minWidth: "60dvw",
+                      minWidth: '60dvw',
                       p: 2,
-                      backgroundColor: "background.paper",
+                      backgroundColor: 'background.paper',
                       flexGrow: 1,
                     }}
                   >
                     <Box
                       sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "end",
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'end',
                         flexGrow: 1,
                       }}
                     >
-                      <ToggleColorMode
-                        mode={mode}
-                        toggleColorMode={toggleColorMode}
-                      />
+                      <ToggleColorMode mode={mode} toggleColorMode={toggleColorMode} />
                     </Box>
                     <MenuItem
                       /* eslint-disable-next-line react/display-name */
@@ -199,7 +177,7 @@ export function App(): React.ReactElement {
                         variant="contained"
                         component="a"
                         href="#"
-                        sx={{ width: "100%" }}
+                        sx={{ width: '100%' }}
                       >
                         Sign up
                       </Button>
@@ -210,7 +188,7 @@ export function App(): React.ReactElement {
                         variant="outlined"
                         component="a"
                         href="#"
-                        sx={{ width: "100%" }}
+                        sx={{ width: '100%' }}
                       >
                         Sign in
                       </Button>
@@ -223,10 +201,7 @@ export function App(): React.ReactElement {
           <Routes>
             <Route path="/" element={<RootPage />} />
             <Route path="/exercises" element={<ExerciseOverviewPage />} />
-            <Route
-              path="/exercises/:exerciseName"
-              element={<ExerciseDetailsPage />}
-            />
+            <Route path="/exercises/:exerciseName" element={<ExerciseDetailsPage />} />
           </Routes>
         </Container>
       </BrowserRouter>

@@ -21,15 +21,15 @@ Modular Gradle build system for the frontend project using `gradle-node-plugin`.
 
 ## Key Tasks
 
-| Task | Description | Usage |
-|------|-------------|-------|
-| `buildApp` | Environment-aware build | `-Penvironment=local\|staging\|production` |
-| `dockerBuild` | Build Docker image | `-Penvironment=local\|staging\|production` |
-| `prepareDeployment` | Build + patch manifests | `-Penvironment=local\|staging\|production` |
-| `test` | Run tests | `./gradlew :frontend:test` |
-| `lint` | Run linting | `./gradlew :frontend:lint` |
-| `checkApp` | All checks (test + lint + typeCheck) | `./gradlew :frontend:checkApp` |
-| `npm_run_start` | Start dev server | `./gradlew :frontend:npm_run_start` |
+| Task                | Description                          | Usage                                      |
+| ------------------- | ------------------------------------ | ------------------------------------------ |
+| `buildApp`          | Environment-aware build              | `-Penvironment=local\|staging\|production` |
+| `dockerBuild`       | Build Docker image                   | `-Penvironment=local\|staging\|production` |
+| `prepareDeployment` | Build + patch manifests              | `-Penvironment=local\|staging\|production` |
+| `test`              | Run tests                            | `./gradlew :frontend:test`                 |
+| `lint`              | Run linting                          | `./gradlew :frontend:lint`                 |
+| `checkApp`          | All checks (test + lint + typeCheck) | `./gradlew :frontend:checkApp`             |
+| `npm_run_start`     | Start dev server                     | `./gradlew :frontend:npm_run_start`        |
 
 ## Root Project Aliases
 
@@ -43,11 +43,11 @@ From root directory: `./gradlew frontendStart`, `./gradlew frontendBuild`, `./gr
 
 ## Modules
 
-| File | Purpose |
-|------|---------|
-| `node.gradle` | Node.js/npm tasks |
-| `test.gradle` | Testing tasks |
-| `style.gradle` | Code quality tasks |
+| File            | Purpose                 |
+| --------------- | ----------------------- |
+| `node.gradle`   | Node.js/npm tasks       |
+| `test.gradle`   | Testing tasks           |
+| `style.gradle`  | Code quality tasks      |
 | `deploy.gradle` | Docker/deployment tasks |
 
 **Node.js**: 20.11.0, **npm**: 10.2.4 (auto-managed by gradle-node-plugin)
@@ -55,6 +55,7 @@ From root directory: `./gradlew frontendStart`, `./gradlew frontendBuild`, `./gr
 ## Workflows
 
 ### Development
+
 ```bash
 ./gradlew :frontend:npm_run_start     # Start dev server
 ./gradlew :frontend:test              # Run tests
@@ -63,12 +64,14 @@ From root directory: `./gradlew frontendStart`, `./gradlew frontendBuild`, `./gr
 ```
 
 ### Deployment
+
 ```bash
 ./gradlew :frontend:prepareDeployment -Penvironment=production
 kubectl apply -k k8s/overlays/production/
 ```
 
 ### CI/CD
+
 ```bash
 ./gradlew :frontend:checkApp          # Lint + test + typeCheck
 ./gradlew :frontend:buildApp -Penvironment=production
@@ -82,9 +85,9 @@ kubectl apply -k k8s/overlays/production/
 
 ## Migration
 
-| npm script | Gradle task |
-|------------|-------------|
-| `npm start` | `./gradlew :frontend:npm_run_start` |
+| npm script      | Gradle task                                             |
+| --------------- | ------------------------------------------------------- |
+| `npm start`     | `./gradlew :frontend:npm_run_start`                     |
 | `npm run build` | `./gradlew :frontend:buildApp -Penvironment=production` |
-| `npm run test` | `./gradlew :frontend:test` |
-| `npm run lint` | `./gradlew :frontend:lint` | 
+| `npm run test`  | `./gradlew :frontend:test`                              |
+| `npm run lint`  | `./gradlew :frontend:lint`                              |

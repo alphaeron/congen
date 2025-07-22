@@ -1,33 +1,23 @@
-import Alert from "@mui/material/Alert";
-import AlertTitle from "@mui/material/AlertTitle";
-import Chip from "@mui/material/Chip";
-import Divider from "@mui/material/Divider";
-import Skeleton from "@mui/material/Skeleton";
-import Stack from "@mui/material/Stack";
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
-import Grid from "@mui/material/Grid2";
-import * as React from "react";
-import { createEditor } from "slate";
-import { Slate, Editable, withReact } from "slate-react";
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
+import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
+import Skeleton from '@mui/material/Skeleton';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+import Grid from '@mui/material/Grid2';
+import * as React from 'react';
+import { createEditor } from 'slate';
+import { Slate, Editable, withReact } from 'slate-react';
 
-import {
-  getIndividualExercise,
-  getExerciseMuscles,
-  getExerciseEquipment,
-} from "../api/exercise";
-import { getIndividualMuscle } from "../api/muscle";
-import { getIndividualEquipment } from "../api/equipment";
-import { useApiGet } from "../api/hooks";
-import {
-  Exercise,
-  ExerciseEquipment,
-  ExerciseMuscle,
-  Equipment,
-  Muscle,
-} from "../api/types";
-import { capitalizeEachWord } from "../common/utils";
-import { BinaryTag } from "./BinaryTag";
+import { getIndividualExercise, getExerciseMuscles, getExerciseEquipment } from '../api/exercise';
+import { getIndividualMuscle } from '../api/muscle';
+import { getIndividualEquipment } from '../api/equipment';
+import { useApiGet } from '../api/hooks';
+import { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
+import { capitalizeEachWord } from '../common/utils';
+import { BinaryTag } from './BinaryTag';
 
 /**
  * Props for the ExerciseDetails component.
@@ -42,7 +32,7 @@ interface ExerciseDetailsProps {
  * @return The exercise details component.
  */
 export function ExerciseDetails(
-  props: ExerciseDetailsProps,
+  props: ExerciseDetailsProps
 ): React.ReactElement<ExerciseDetailsProps> {
   const {
     data: exercise,
@@ -57,7 +47,7 @@ export function ExerciseDetails(
       refetchOnWindowFocus: true,
       retry: 1,
     },
-    [props.exerciseName],
+    [props.exerciseName]
   );
 
   const {
@@ -73,7 +63,7 @@ export function ExerciseDetails(
       refetchOnWindowFocus: true,
       retry: 1,
     },
-    [props.exerciseName],
+    [props.exerciseName]
   );
 
   const {
@@ -84,17 +74,13 @@ export function ExerciseDetails(
   } = useApiGet<Muscle[]>(
     [`muscles${props.exerciseName}`, exerciseMuscles],
     async (): Promise<Muscle[]> =>
-      Promise.all(
-        exerciseMuscles.map((element) =>
-          getIndividualMuscle(element.muscleName),
-        ),
-      ),
+      Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscleName))),
     {
       enabled: true,
       refetchOnWindowFocus: true,
       retry: 1,
       enabled: exerciseMuscles && exerciseMuscles.length > 0,
-    },
+    }
   );
 
   const {
@@ -110,7 +96,7 @@ export function ExerciseDetails(
       refetchOnWindowFocus: true,
       retry: 1,
     },
-    [props.exerciseName],
+    [props.exerciseName]
   );
 
   const {
@@ -121,17 +107,13 @@ export function ExerciseDetails(
   } = useApiGet<Equipment[]>(
     [`equipment${props.exerciseName}`, exerciseEquipment],
     async (): Promise<Equipment[]> =>
-      Promise.all(
-        exerciseEquipment.map((element) =>
-          getIndividualEquipment(element.equipmentName),
-        ),
-      ),
+      Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipmentName))),
     {
       enabled: true,
       refetchOnWindowFocus: true,
       retry: 1,
       enabled: exerciseEquipment && exerciseEquipment.length > 0,
-    },
+    }
   );
 
   const editor = React.useMemo(() => withReact(createEditor()), []);
@@ -162,12 +144,8 @@ export function ExerciseDetails(
         {exerciseError && <Typography>{exerciseError.toString()}</Typography>}
         {equipmentError && <Typography>{equipmentError.toString()}</Typography>}
         {musclesError && <Typography>{musclesError.toString()}</Typography>}
-        {exerciseMuscleError && (
-          <Typography>{exerciseMuscleError.toString()}</Typography>
-        )}
-        {exerciseEquipmentError && (
-          <Typography>{exerciseEquipmentError.toString()}</Typography>
-        )}
+        {exerciseMuscleError && <Typography>{exerciseMuscleError.toString()}</Typography>}
+        {exerciseEquipmentError && <Typography>{exerciseEquipmentError.toString()}</Typography>}
       </Alert>
     );
   } else {
@@ -179,24 +157,14 @@ export function ExerciseDetails(
         <Grid container={true} spacing={2}>
           <Grid size={12}>
             <Stack direction="row" spacing={2}>
-              <Chip
-                label={`${capitalizeEachWord(exercise.movementType)} Exercise`}
-              />
-              <BinaryTag
-                isOn={exercise.isUpper}
-                onText="Upper Body"
-                offText="Lower Body"
-              />
+              <Chip label={`${capitalizeEachWord(exercise.movementType)} Exercise`} />
+              <BinaryTag isOn={exercise.isUpper} onText="Upper Body" offText="Lower Body" />
               <BinaryTag
                 isOn={exercise.isAccessory}
                 onText="Accessory"
                 offText="Primary Movement"
               />
-              <BinaryTag
-                isOn={exercise.isUnilateral}
-                onText="Unilateral"
-                offText="Bilateral"
-              />
+              <BinaryTag isOn={exercise.isUnilateral} onText="Unilateral" offText="Bilateral" />
             </Stack>
           </Grid>
           <Grid size={9}>
@@ -206,7 +174,7 @@ export function ExerciseDetails(
                 editor={editor}
                 initialValue={[
                   {
-                    type: "paragraph",
+                    type: 'paragraph',
                     children: [
                       {
                         text: exercise.description,
@@ -215,30 +183,23 @@ export function ExerciseDetails(
                   },
                 ]}
               >
-                <Editable
-                  readOnly={true}
-                  placeholder="No description provided."
-                />
+                <Editable readOnly={true} placeholder="No description provided." />
               </Slate>
             </Stack>
           </Grid>
           <Grid size={3}>
             <Grid container={true} spacing={2}>
               <Grid size={12}>
-                <Divider textAlign="left" sx={{ marginBottom: "16px" }}>
+                <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
                   <Typography variant="h3">Muscles Worked</Typography>
                 </Divider>
                 <Grid container={true} spacing={2}>
-                  {exerciseMuscles.map((em) => {
-                    const muscle = muscles.find(
-                      (elem) => elem.name === em.muscleName,
-                    );
+                  {exerciseMuscles.map(em => {
+                    const muscle = muscles.find(elem => elem.name === em.muscleName);
                     return (
                       <Grid size={12} key={em.muscleName}>
                         <Tooltip arrow={true} title={muscle?.description}>
-                          <Chip
-                            label={`${capitalizeEachWord(em.muscleName)}`}
-                          />
+                          <Chip label={`${capitalizeEachWord(em.muscleName)}`} />
                         </Tooltip>
                       </Grid>
                     );
@@ -246,20 +207,16 @@ export function ExerciseDetails(
                 </Grid>
               </Grid>
               <Grid size={12}>
-                <Divider textAlign="left" sx={{ marginBottom: "16px" }}>
+                <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
                   <Typography variant="h3">Equipment Needed</Typography>
                 </Divider>
                 <Grid container={true} spacing={2}>
-                  {exerciseEquipment.map((ee) => {
-                    const equip = equipment.find(
-                      (elem) => elem.name === ee.equipmentName,
-                    );
+                  {exerciseEquipment.map(ee => {
+                    const equip = equipment.find(elem => elem.name === ee.equipmentName);
                     return (
                       <Grid size={12} key={ee.equipmentName}>
                         <Tooltip arrow={true} title={equip?.description}>
-                          <Chip
-                            label={`${capitalizeEachWord(ee.equipmentName)}`}
-                          />
+                          <Chip label={`${capitalizeEachWord(ee.equipmentName)}`} />
                         </Tooltip>
                       </Grid>
                     );

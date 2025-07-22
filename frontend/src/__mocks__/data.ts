@@ -1,26 +1,20 @@
-import {
-  Exercise,
-  ExerciseEquipment,
-  ExerciseMuscle,
-  Muscle,
-  Equipment,
-} from "../api/types";
+import { Exercise, ExerciseEquipment, ExerciseMuscle, Muscle, Equipment } from '../api/types';
 
 /**
  * A piece of exercise equipment.
  */
 export const EQUIPMENT: Equipment = {
-  name: "equipmentName",
-  description: "equipmentDescription",
+  name: 'equipmentName',
+  description: 'equipmentDescription',
 };
 
 /**
  * An individual exercise.
  */
 export const EXERCISE: Exercise = {
-  name: "exerciseName",
-  description: "exerciseDescription",
-  movementType: "movementType",
+  name: 'exerciseName',
+  description: 'exerciseDescription',
+  movementType: 'movementType',
   isUnilateral: false,
   isUpper: true,
   isAccessory: false,
@@ -30,22 +24,22 @@ export const EXERCISE: Exercise = {
  * A piece of equipment that is an option or in some cases required to perform an exercise.
  */
 export const EXERCISE_EQUIPMENT: ExerciseEquipment = {
-  exerciseName: "exerciseName",
-  equipmentName: "equipmentName",
+  exerciseName: 'exerciseName',
+  equipmentName: 'equipmentName',
 };
 
 /**
  * A muscle targeted by an exercise.
  */
 export const EXERCISE_MUSCLE: ExerciseMuscle = {
-  exerciseName: "exerciseName",
-  muscleName: "muscleName",
+  exerciseName: 'exerciseName',
+  muscleName: 'muscleName',
 };
 
 /**
  * A muscle.
  */
 export const MUSCLE: Muscle = {
-  name: "muscleName",
-  description: "muscleDescription",
+  name: 'muscleName',
+  description: 'muscleDescription',
 };
