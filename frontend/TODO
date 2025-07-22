@@ -5,6 +5,8 @@
 
 ### Core Pages
 - frontend has workout generator page, and exercise database
+- enhance the ui for exercise browsing functionality to allow filtering based on all exercise properties, and to make it streamlined and follow ux best practices
+- for "main tables", we need tooltips to show any detailed information and possible join table details
 - add pages for adding equipment
 - add pages for adding muscles
 - add pages for adding exercise

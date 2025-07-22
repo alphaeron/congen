@@ -25,42 +25,42 @@ declare module '@mui/material/styles/createPalette' {
 }
 
 export const brand = {
-  50: '#F0F7FF',
-  100: '#CEE5FD',
-  200: '#9CCCFC',
-  300: '#55A6F6',
-  400: '#0A66C2',
-  500: '#0959AA',
-  600: '#064079',
-  700: '#033363',
-  800: '#02294F',
-  900: '#021F3B',
+  50: '#f0f4ff',
+  100: '#d6e0fa',
+  200: '#b3c6f7',
+  300: '#7a9cf0',
+  400: '#4d6fe0',
+  500: '#2236cc', // main blue
+  600: '#1b2a9e',
+  700: '#16227a',
+  800: '#10195a',
+  900: '#0a113a',
 };
 
 export const secondary = {
-  50: '#F9F0FF',
-  100: '#E9CEFD',
-  200: '#D49CFC',
-  300: '#B355F6',
-  400: '#750AC2',
-  500: '#6709AA',
-  600: '#490679',
-  700: '#3B0363',
-  800: '#2F024F',
-  900: '#23023B',
+  50: '#f3f2fa',
+  100: '#e0def7',
+  200: '#c2bff0',
+  300: '#a39ee0',
+  400: '#7a6fd6',
+  500: '#5a4fc2',
+  600: '#473d9e',
+  700: '#352c7a',
+  800: '#241b5a',
+  900: '#18113a',
 };
 
 export const gray = {
-  50: '#FBFCFE',
-  100: '#EAF0F5',
-  200: '#D6E2EB',
-  300: '#BFCCD9',
-  400: '#94A6B8',
-  500: '#5B6B7C',
-  600: '#4C5967',
-  700: '#364049',
-  800: '#131B20',
-  900: '#090E10',
+  50: '#f9fafc', // off-white for light backgrounds
+  100: '#e3e6ea',
+  200: '#c8ccd2',
+  300: '#a2a6ad',
+  400: '#7a7e87',
+  500: '#55585e',
+  600: '#3a3c40',
+  700: '#28292c',
+  800: '#202020', // graphite grey
+  900: '#141417',
 };
 
 export const green = {
@@ -140,13 +140,12 @@ const getDesignTokens = (mode: PaletteMode) => ({
     },
     divider: mode === 'dark' ? alpha(gray[600], 0.3) : alpha(gray[300], 0.5),
     background: {
-      default: '#fff',
-      paper: gray[50],
-      ...(mode === 'dark' && { default: gray[900], paper: gray[800] }),
+      default: mode === 'dark' ? gray[800] : '#f9fafc',
+      paper: mode === 'dark' ? gray[700] : gray[50],
     },
     text: {
-      primary: gray[800],
-      secondary: gray[600],
+      primary: mode === 'dark' ? '#fff' : gray[800],
+      secondary: mode === 'dark' ? gray[200] : gray[600],
       ...(mode === 'dark' && { primary: '#fff', secondary: gray[400] }),
     },
     action: {
@@ -198,6 +197,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
     body2: {
       fontWeight: 400,
       fontSize: 14,
+      color: (mode === 'dark') ? '#ccc' : undefined,
     },
     caption: {
       fontWeight: 400,

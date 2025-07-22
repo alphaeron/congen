@@ -24,6 +24,7 @@ import './App.css';
 import './styles/menuButton.css';
 
 import ConGenIcon from './resources/congen-icon.svg';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 const logoStyle = {
   width: '72px',
@@ -37,12 +38,15 @@ const logoStyle = {
  * @return A component to render for the main application.
  */
 export function App(): React.ReactElement {
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const [mode, setMode] = React.useState<PaletteMode>('light');
 
-  const toggleColorMode = () => {
-    setMode(prev => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  // Debug: show what the browser reports
+  const [mediaQueryValue, setMediaQueryValue] = React.useState(false);
+  React.useEffect(() => {
+    setMediaQueryValue(window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }, []);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -83,8 +87,8 @@ export function App(): React.ReactElement {
                 borderColor: 'divider',
                 boxShadow:
                   theme.palette.mode === 'light'
-                    ? `0 0 1px rgba(85, 166, 246, 0.1), 1px 1.5px 2px -1px rgba(85, 166, 246, 0.15), 4px 4px 12px -2.5px rgba(85, 166, 246, 0.15)`
-                    : '0 0 1px rgba(2, 31, 59, 0.7), 1px 1.5px 2px -1px rgba(2, 31, 59, 0.65), 4px 4px 12px -2.5px rgba(2, 31, 59, 0.65)',
+                    ? `0 0 1px rgba(34, 54, 204, 0.1), 1px 1.5px 2px -1px rgba(34, 54, 204, 0.15), 4px 4px 12px -2.5px rgba(34, 54, 204, 0.15)`
+                    : '0 0 1px rgba(32, 32, 32, 0.7), 1px 1.5px 2px -1px rgba(32, 32, 32, 0.65), 4px 4px 12px -2.5px rgba(32, 32, 32, 0.65)',
               })}
             >
               <Box
@@ -125,7 +129,6 @@ export function App(): React.ReactElement {
                   alignItems: 'center',
                 }}
               >
-                <ToggleColorMode mode={mode} toggleColorMode={toggleColorMode} />
                 <Button color="primary" variant="text" size="small" component="a" href="#">
                   Sign in
                 </Button>
@@ -152,16 +155,6 @@ export function App(): React.ReactElement {
                       flexGrow: 1,
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'end',
-                        flexGrow: 1,
-                      }}
-                    >
-                      <ToggleColorMode mode={mode} toggleColorMode={toggleColorMode} />
-                    </Box>
                     <MenuItem
                       /* eslint-disable-next-line react/display-name */
                       component={React.forwardRef((props, ref) => (
