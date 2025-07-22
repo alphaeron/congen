@@ -1,18 +1,16 @@
-generation flow
+### Generation Flow
+- Create program in profile
+- When you change days per week preference, ask if you want to start a new program, if not confirm it won't change
+- select equipment -> select weakest muscles (determine which exercises are possible with equipment, then select accessories based on weak muscles and primary movements based on available equipment) -> select training days (2, 3, 4)
 
-Create program in profile
+### Core Pages
+- frontend has workout generator page, and exercise database
+- add pages for adding equipment
+- add pages for adding muscles
+- add pages for adding exercise
 
-When you change days per week preference, ask if you want to start a new program, if not confirm it won’t change
-
-select equipment -> select weakest muscles (determine which exercises are possible with equipment, then select accessories based on weak muscles and primary movements based on availabile equipment) -> select training days (2, 3, 4)
-
-frontend has workout generator page, and exercise database.
-
-add pages for adding equipment
-add pages for adding muscles
-add pages for adding exercise
-
-keycloak for account management
-assets for exercises/muscles images.
-custom snackbar format instead of the default
-fix landing page styling, and add screenshots for landing page.
+### Authentication & UI
+- keycloak for account management
+- assets for exercises/muscles images
+- custom snackbar format instead of the default
+- fix landing page styling, and add screenshots for landing page

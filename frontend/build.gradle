@@ -1,0 +1,62 @@
+plugins {
+    id 'base'
+    id 'com.github.node-gradle.node' version '4.0.0'
+}
+
+description = 'Conjugate Workout Generator Frontend'
+
+// Environment-aware build task using built-in npm_run tasks
+task buildApp {
+    group = 'build'
+    description = 'Build the application (uses environment to determine build type)'
+
+    def environment = project.hasProperty('environment') ? project.environment : 'local'
+    def buildType = (environment == 'production') ? 'production' : 'debug'
+
+    doLast {
+        if (buildType == 'production') {
+            npm_run_build.execute()
+        } else {
+            npm_run_dev_build.execute()
+        }
+    }
+
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('webpack.common.js')
+    if (buildType == 'production') {
+        inputs.file('webpack.prod.js')
+    } else {
+        inputs.file('webpack.dev.js')
+    }
+    inputs.file('tsconfig.json')
+    outputs.dir('dist')
+}
+
+// Disable the default assemble task since we use buildApp directly
+tasks.named('assemble').configure {
+    enabled = false
+}
+
+tasks.named('build').configure {
+    dependsOn buildApp, check
+}
+
+// Clean-related tasks
+
+task cleanDist(type: Delete) {
+    group = 'build'
+    description = 'Clean the dist directory'
+    delete 'dist'
+    delete 'coverage'
+}
+
+tasks.named('clean').configure {
+    dependsOn cleanDist
+}
+
+// Apply modular gradle configurations
+apply from: "${projectDir}/gradle/node.gradle"
+apply from: "${projectDir}/gradle/test.gradle"
+apply from: "${projectDir}/gradle/style.gradle"
+apply from: "${projectDir}/gradle/deploy.gradle" 

@@ -1,0 +1,43 @@
+// Testing-related tasks
+
+// Testing tasks using built-in npm_run tasks
+task test {
+    group = 'verification'
+    description = 'Run unit tests'
+    dependsOn npm_run_test
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('jest.config.js')
+    outputs.dir('coverage')
+}
+
+task testCoverage {
+    group = 'verification'
+    description = 'Run unit tests with coverage'
+    dependsOn npm_run_coverage
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('jest.config.js')
+    outputs.dir('coverage')
+}
+
+// TypeScript compilation check
+task typeCheck {
+    group = 'verification'
+    description = 'Check TypeScript compilation without emitting files'
+    dependsOn npm_run_type_check
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('tsconfig.json')
+}
+
+// Configure test task to generate coverage reports
+npm_run_test.doLast {
+    // Ensure coverage directory exists
+    file('coverage').mkdirs()
+}
+
+// Configure tasks to be skipped if no changes
+npm_run_test.onlyIf {
+    fileTree(dir: 'src', include: '**/*.{js,jsx,ts,tsx}').any { it.lastModified() > project.buildDir.lastModified() }
+}

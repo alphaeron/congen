@@ -11,5 +11,7 @@ resources:
 - congen-configmap.yaml
 - congen-deployment.yaml
 - congen-service.yaml
+- frontend-deployment.yaml
+- frontend-service.yaml
 - ingress.yaml
 - network-policy.yaml 

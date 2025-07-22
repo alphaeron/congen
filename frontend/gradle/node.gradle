@@ -1,0 +1,123 @@
+// Node.js and npm configuration and tasks
+
+node {
+    version = '20.11.0'
+    npmVersion = '10.2.4'
+    download = true
+    workDir = file("${project.buildDir}/nodejs")
+    npmWorkDir = file("${project.buildDir}/npm")
+    nodeProjectDir = file("${project.projectDir}")
+}
+
+// Configure npm_install task with proper inputs/outputs
+tasks.named('npm_install') {
+    inputs.file('package.json')
+    inputs.file('package-lock.json')
+    outputs.dir('node_modules')
+}
+
+// The gradle-node-plugin provides these built-in tasks:
+// - npm_install: Installs dependencies
+// - npm_run_<script>: Runs npm scripts (e.g., npm_run_build, npm_run_test)
+// - npm_audit: Audits dependencies
+// - npm_update: Updates dependencies
+
+// Configure built-in npm tasks
+tasks.named('npm_audit') {
+    group = 'verification'
+    description = 'Audit npm dependencies for security vulnerabilities'
+    dependsOn npm_install
+}
+
+tasks.named('npm_update') {
+    group = 'build'
+    description = 'Update npm dependencies'
+}
+
+// Configure built-in npm_run tasks
+tasks.named('npm_run_build') {
+    group = 'build'
+    description = 'Build the application for production'
+}
+
+tasks.named('npm_run_dev_build') {
+    group = 'build'
+    description = 'Build the application for development'
+}
+
+// Configure build task to ensure proper output
+npm_run_build.doLast {
+    // Verify build output exists
+    if (!file('dist').exists()) {
+        throw new GradleException('Build failed: dist directory not found')
+    }
+    
+    // Check for main output files
+    def requiredFiles = ['index.html', 'congen-ui.js']
+    requiredFiles.each { fileName ->
+        if (!file("dist/${fileName}").exists()) {
+            throw new GradleException("Build failed: required file ${fileName} not found in dist directory")
+        }
+    }
+}
+
+tasks.named('npm_run_test') {
+    group = 'verification'
+    description = 'Run unit tests'
+}
+
+tasks.named('npm_run_coverage') {
+    group = 'verification'
+    description = 'Run unit tests with coverage'
+}
+
+tasks.named('npm_run_type_check') {
+    group = 'verification'
+    description = 'Check TypeScript compilation'
+}
+
+tasks.named('npm_run_lint') {
+    group = 'verification'
+    description = 'Run ESLint'
+}
+
+tasks.named('npm_run_format') {
+    group = 'formatting'
+    description = 'Format code with Prettier'
+}
+
+tasks.named('npm_run_format_check') {
+    group = 'verification'
+    description = 'Check code formatting with Prettier'
+}
+
+tasks.named('npm_run_start') {
+    group = 'application'
+    description = 'Start development server'
+}
+
+// Create convenience tasks that use the built-in ones
+task installDependencies {
+    group = 'build'
+    description = 'Install npm dependencies'
+    dependsOn npm_install
+}
+
+task updateDependencies {
+    group = 'build'
+    description = 'Update npm dependencies'
+    dependsOn npm_update
+}
+
+task auditDependencies {
+    group = 'verification'
+    description = 'Audit npm dependencies for security vulnerabilities'
+    dependsOn npm_audit
+}
+
+task auditFix(type: NpmTask) {
+    group = 'verification'
+    description = 'Fix npm audit issues automatically'
+    dependsOn npm_install
+    args = ['audit', 'fix']
+} 

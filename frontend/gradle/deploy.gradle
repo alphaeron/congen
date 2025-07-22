@@ -1,0 +1,90 @@
+// Docker-related tasks
+
+import groovy.json.JsonSlurper
+
+task dockerBuild {
+    group = 'build'
+    description = 'Build Docker image for the frontend (uses environment to determine build type)'
+    doLast {
+        def environment = project.hasProperty('environment') ? project.environment : 'local'
+        def buildType = (environment == 'production') ? 'production' : 'debug'
+        
+        // Build the appropriate npm build first
+        buildApp.execute()
+        
+        def packageJson = file('package.json')
+        def version = new JsonSlurper().parse(packageJson).version
+        def hash = 'git rev-parse --short HEAD'.execute(null, projectDir).text.trim()
+        def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-debug"
+        def image = "congen-ui:${tag}"
+        
+        if (!file('dist').exists()) {
+            throw new GradleException('Build failed: dist directory not found')
+        }
+        
+        println "Building ${buildType} Docker image: ${image}"
+        exec {
+            workingDir projectDir
+            commandLine 'docker', 'build', '-t', image, '.'
+        }
+        project.ext.frontendImageTag = image
+        println "${buildType.capitalize()} Docker image built: ${image}"
+    }
+}
+
+task printImageTag {
+    group = 'deployment'
+    description = 'Print the Docker image tag for the frontend.'
+    doLast {
+        if (!project.ext.has('frontendImageTag')) {
+            throw new GradleException('No frontend image tag found. Run dockerBuild first.')
+        }
+        println "Frontend Docker image tag: ${project.ext.frontendImageTag}"
+    }
+}
+
+// Centralized patch task that can be used with any environment
+// Usage: ./gradlew :frontend:patchFrontendImage -Penvironment=local -PimageTag=congen-ui:mytag
+// If -PimageTag is not provided, uses project.ext.frontendImageTag
+// If -Penvironment is not provided, defaults to 'local'
+task patchFrontendImage {
+    group = 'deployment'
+    description = 'Patch the specified environment overlay with the image tag.'
+    doLast {
+        def environment = project.hasProperty('environment') ? project.environment : 'local'
+        def imageTag = project.hasProperty('imageTag') ? project.imageTag : project.ext.frontendImageTag
+        if (!imageTag) throw new GradleException('No image tag provided or built. Run dockerBuild first.')
+
+        def patchFile = "../../k8s/overlays/${environment}/patches/frontend-image-tag-patch.yaml"
+        def lines = file(patchFile).readLines()
+        def newLines = lines.collect { line ->
+            if (line.trim().startsWith('image:')) {
+                return "        image: ${imageTag}"
+            } else {
+                return line
+            }
+        }
+        file(patchFile).text = newLines.join('\n') + '\n'
+        println "Patched ${patchFile} with image: ${imageTag}"
+    }
+}
+
+// Prepare deployment task that builds the image and generates manifest patches
+task prepareDeployment {
+    group = 'deployment'
+    description = 'Build the frontend image and prepare deployment patches for the specified environment.'
+    doLast {
+        def environment = project.hasProperty('environment') ? project.environment : 'local'
+        def buildType = (environment == 'production') ? 'production' : 'debug'
+        
+        // Build the appropriate Docker image
+        dockerBuild.execute()
+        
+        // Use the patchFrontendImage task to handle the patching
+        patchFrontendImage.execute()
+        
+        println "Deployment prepared for ${environment} environment with ${buildType} build"
+        println "Image tag: ${project.ext.frontendImageTag}"
+        println "Manifest patch generated: k8s/overlays/${environment}/patches/frontend-image-tag-patch.yaml"
+    }
+} 

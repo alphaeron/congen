@@ -4,7 +4,6 @@ subprojects {
     // Common configuration for all subprojects can go here if needed
 }
 
-
 apply from: 'gradle/skaffold.gradle'
 apply from: 'gradle/deploy.gradle'
 
@@ -12,4 +11,16 @@ task check {
     group = 'verification'
     description = 'Run all checks in all subprojects.'
     dependsOn subprojects.collect { it.path + ':check' }
+}
+
+task build {
+    group = 'build'
+    description = 'Build all subprojects.'
+    dependsOn subprojects.collect { it.path + ':build' }
+}
+
+task clean {
+    group = 'build'
+    description = 'Clean all subprojects.'
+    dependsOn subprojects.collect { it.path + ':clean' }
 }
