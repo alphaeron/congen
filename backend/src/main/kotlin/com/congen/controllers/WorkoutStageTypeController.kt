@@ -131,9 +131,13 @@ class WorkoutStageTypeController(
     )
     fun getByName(
         @Parameter(description = "Name of the workout stage type", required = true)
-        @PathVariable("name") name: WorkoutStageTypeEnum,
+        @PathVariable("name") name: String,
     ): Mono<ResponseEntity<WorkoutStageType>> {
-        return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(name)
+        val workoutStageTypeEnum =
+            WorkoutStageTypeEnum.fromDisplayName(name)
+                ?: return Mono.just(ResponseEntity.notFound().build())
+
+        return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(workoutStageTypeEnum)
             .map { workoutStageType ->
                 logger.debug("Found workout stage type: {}", name)
                 ResponseEntity.ok(workoutStageType)

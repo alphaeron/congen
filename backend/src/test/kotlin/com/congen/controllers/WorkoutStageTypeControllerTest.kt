@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
@@ -80,7 +81,7 @@ class WorkoutStageTypeControllerTest {
                 createdAt = now
             )
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)).thenReturn(Mono.just(workoutStageType))
-        val result = workoutStageTypeController.getByName(WorkoutStageTypeEnum.WARMUP)
+        val result = workoutStageTypeController.getByName(WARMUP_NAME)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStageType))
             .verifyComplete()
@@ -91,11 +92,20 @@ class WorkoutStageTypeControllerTest {
     fun `getByName should return not found when workout stage type not found`() {
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        val result = workoutStageTypeController.getByName(WorkoutStageTypeEnum.WARMUP)
+        val result = workoutStageTypeController.getByName(WARMUP_NAME)
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
         verify(workoutStageTypeDAL).selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)
+    }
+
+    @Test
+    fun `getByName should return not found when invalid enum name provided`() {
+        val result = workoutStageTypeController.getByName("NonExistentStageType")
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.notFound().build())
+            .verifyComplete()
+        verifyNoInteractions(workoutStageTypeDAL)
     }
 
     @Test
