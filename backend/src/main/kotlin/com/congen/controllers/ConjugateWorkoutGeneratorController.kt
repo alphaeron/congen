@@ -4,6 +4,7 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
+import com.congen.service.ProgramService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -47,6 +49,7 @@ import reactor.core.publisher.Mono
 @Tag(name = "Conjugate Workout Generator", description = "Endpoints for generating conjugate powerlifting workout programs")
 class ConjugateWorkoutGeneratorController(
     private val conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService,
+    private val programService: ProgramService,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -65,6 +68,7 @@ class ConjugateWorkoutGeneratorController(
      * @throws ValidationException if the program parameters are invalid
      */
     @PostMapping("/{program_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
     @Operation(
         summary = "Generate next week of conjugate workout program",
         description =

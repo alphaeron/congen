@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseWorkoutTypeDAL
-import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
 import io.swagger.v3.oas.annotations.Operation
@@ -11,8 +10,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -78,6 +77,7 @@ class ExerciseWorkoutTypeController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all exercise workout type relationships",
         description = "Retrieves all exercise-workout type relationships.",
@@ -91,16 +91,16 @@ class ExerciseWorkoutTypeController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<ExerciseWorkoutType>>> {
         logger.debug("Getting all exercise workout type relationships")
-        return try {
-            ResponseEntity.ok(
-                exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes(),
-            )
-        } catch (e: Exception) {
-            logger.error("Error getting all exercise workout type relationships", e)
-            throw e
-        }
+        return exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()
+            .map {
+                logger.debug("Found {} exercise workout type relationships", it.size)
+                ResponseEntity.ok(it)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all exercise workout type relationships", e)
+            }
     }
 
     /**
@@ -116,6 +116,7 @@ class ExerciseWorkoutTypeController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/exercise/{exercise_name}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get workout types by exercise name",
         description = "Retrieves all workout types associated with a given exercise.",
@@ -156,6 +157,7 @@ class ExerciseWorkoutTypeController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/movement_type/{movement_type}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get workout types by movement type",
         description = "Retrieves all workout types associated with a given movement type.",
@@ -190,12 +192,15 @@ class ExerciseWorkoutTypeController(
      * This relationship defines how the exercise can be used in different training
      * contexts and movement patterns.
      *
-     * @param exerciseWorkoutType The exercise-workout type relationship to create
-     * @return The created relationship with assigned ID
+     * @param exerciseName The name of the exercise
+     * @param movementType The movement type
+     * @param workoutType The workout type
+     * @return Mono containing the created relationship with assigned ID
      *
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Create exercise workout type relationship",
         description = "Creates a new exercise-workout type relationship.",
@@ -204,42 +209,34 @@ class ExerciseWorkoutTypeController(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Exercise-workout type relationship created successfully",
+                description = "Exercise workout type relationship created successfully",
                 content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "409",
+                description = "Relationship already exists",
+                content = [Content(mediaType = "text/plain")],
+            ),
+            ApiResponse(
+                responseCode = "422",
+                description = "Exercise, movement type, or workout type does not exist",
+                content = [Content(mediaType = "text/plain")],
             ),
         ],
     )
     fun save(
         @Parameter(description = "Name of the exercise", required = true)
         @RequestParam("exercise_name") exerciseName: String,
-        @Parameter(description = "Movement type (push, pull, squat, hinge, etc.)", required = true)
+        @Parameter(description = "Movement type", required = true)
         @RequestParam("movement_type") movementType: MovementType,
-        @Parameter(description = "Workout type (strength, hypertrophy, endurance, etc.)", required = true)
+        @Parameter(description = "Workout type", required = true)
         @RequestParam("workout_type") workoutType: String,
-    ): ResponseEntity<*> {
-        logger.info(
-            "Saving exercise workout type relationship: {} - {} - {}",
-            exerciseName,
-            movementType,
-            workoutType,
-        )
-        return try {
-            ResponseEntity.ok(
-                exerciseWorkoutTypeDAL.insertExerciseWorkoutType(exerciseName, movementType, workoutType),
-            )
-        } catch (e: DatabaseQueryException) {
-            val msg = e.cause?.message ?: e.message ?: "Database error"
-            return when {
-                msg.contains(
-                    "duplicate key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
-                msg.contains(
-                    "violates foreign key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise, movement type, or workout type does not exist")
-                else -> throw e
+    ): Mono<ResponseEntity<ExerciseWorkoutType>> {
+        logger.info("Saving exercise workout type relationship: {} - {} - {}", exerciseName, movementType, workoutType)
+        return exerciseWorkoutTypeDAL.insertExerciseWorkoutType(exerciseName, movementType, workoutType)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error saving exercise workout type relationship: {} - {} - {}", exerciseName, movementType, workoutType, e)
             }
-        }
     }
 }

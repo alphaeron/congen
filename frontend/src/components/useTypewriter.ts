@@ -24,4 +24,4 @@ export function useTypewriter(text: string, speed: number = 50): string {
   }, [text, speed]);
 
   return displayed;
-} 
+}

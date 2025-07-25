@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:5 labels:prod,test
+--changeset John Matty:8 labels:prod,test
 --comment: Add is_active column to program table to track active programs per user
 
 ALTER TABLE program ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;

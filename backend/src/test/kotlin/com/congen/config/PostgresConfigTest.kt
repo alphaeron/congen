@@ -22,16 +22,17 @@ class PostgresConfigTest {
 
     @BeforeEach
     fun setUp() {
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "localhost",
-                readerHost = "localhost",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("localhost"),
+                reader = PostgresProperties.Host("localhost"),
                 port = 5432,
-                usernameV = "testuser",
-                passwordV = "testpass",
+                username = "testuser",
+                password = "testpass",
                 dbName = "testdb",
                 sslMode = false
             )
+        postgresConfig = PostgresConfig(props)
     }
 
     @Test
@@ -55,19 +56,20 @@ class PostgresConfigTest {
     @Test
     fun `should create writer connection with SSL enabled`() {
         // Given
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "localhost",
-                readerHost = "localhost",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("localhost"),
+                reader = PostgresProperties.Host("localhost"),
                 port = 5432,
-                usernameV = "testuser",
-                passwordV = "testpass",
+                username = "testuser",
+                password = "testpass",
                 dbName = "testdb",
                 sslMode = true
             )
+        val sslConfig = PostgresConfig(props)
 
         // When
-        val writer = postgresConfig.postgresDBWriter()
+        val writer = sslConfig.postgresDBWriter()
 
         // Then
         assertNotNull(writer)
@@ -76,19 +78,20 @@ class PostgresConfigTest {
     @Test
     fun `should create reader connection with SSL enabled`() {
         // Given
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "localhost",
-                readerHost = "localhost",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("localhost"),
+                reader = PostgresProperties.Host("localhost"),
                 port = 5432,
-                usernameV = "testuser",
-                passwordV = "testpass",
+                username = "testuser",
+                password = "testpass",
                 dbName = "testdb",
                 sslMode = true
             )
+        val sslConfig = PostgresConfig(props)
 
         // When
-        val reader = postgresConfig.postgresDBReader()
+        val reader = sslConfig.postgresDBReader()
 
         // Then
         assertNotNull(reader)
@@ -97,20 +100,21 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different hosts`() {
         // Given
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "writer.example.com",
-                readerHost = "reader.example.com",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("writer.example.com"),
+                reader = PostgresProperties.Host("reader.example.com"),
                 port = 5432,
-                usernameV = "testuser",
-                passwordV = "testpass",
+                username = "testuser",
+                password = "testpass",
                 dbName = "testdb",
                 sslMode = false
             )
+        val differentHostsConfig = PostgresConfig(props)
 
         // When
-        val writer = postgresConfig.postgresDBWriter()
-        val reader = postgresConfig.postgresDBReader()
+        val writer = differentHostsConfig.postgresDBWriter()
+        val reader = differentHostsConfig.postgresDBReader()
 
         // Then
         assertNotNull(writer)
@@ -120,20 +124,21 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different ports`() {
         // Given
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "localhost",
-                readerHost = "localhost",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("localhost"),
+                reader = PostgresProperties.Host("localhost"),
                 port = 5433,
-                usernameV = "testuser",
-                passwordV = "testpass",
+                username = "testuser",
+                password = "testpass",
                 dbName = "testdb",
                 sslMode = false
             )
+        val differentPortConfig = PostgresConfig(props)
 
         // When
-        val writer = postgresConfig.postgresDBWriter()
-        val reader = postgresConfig.postgresDBReader()
+        val writer = differentPortConfig.postgresDBWriter()
+        val reader = differentPortConfig.postgresDBReader()
 
         // Then
         assertNotNull(writer)
@@ -143,20 +148,21 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different database names`() {
         // Given
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "localhost",
-                readerHost = "localhost",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("localhost"),
+                reader = PostgresProperties.Host("localhost"),
                 port = 5432,
-                usernameV = "testuser",
-                passwordV = "testpass",
+                username = "testuser",
+                password = "testpass",
                 dbName = "productiondb",
                 sslMode = false
             )
+        val differentDbConfig = PostgresConfig(props)
 
         // When
-        val writer = postgresConfig.postgresDBWriter()
-        val reader = postgresConfig.postgresDBReader()
+        val writer = differentDbConfig.postgresDBWriter()
+        val reader = differentDbConfig.postgresDBReader()
 
         // Then
         assertNotNull(writer)
@@ -166,20 +172,21 @@ class PostgresConfigTest {
     @Test
     fun `should create connections with different credentials`() {
         // Given
-        postgresConfig =
-            PostgresConfig(
-                writerHost = "localhost",
-                readerHost = "localhost",
+        val props =
+            PostgresProperties(
+                writer = PostgresProperties.Host("localhost"),
+                reader = PostgresProperties.Host("localhost"),
                 port = 5432,
-                usernameV = "produser",
-                passwordV = "prodpass",
+                username = "produser",
+                password = "prodpass",
                 dbName = "testdb",
                 sslMode = false
             )
+        val differentCredsConfig = PostgresConfig(props)
 
         // When
-        val writer = postgresConfig.postgresDBWriter()
-        val reader = postgresConfig.postgresDBReader()
+        val writer = differentCredsConfig.postgresDBWriter()
+        val reader = differentCredsConfig.postgresDBReader()
 
         // Then
         assertNotNull(writer)

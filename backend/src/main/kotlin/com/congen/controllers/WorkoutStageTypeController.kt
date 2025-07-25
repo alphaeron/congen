@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import io.swagger.v3.oas.annotations.Operation
@@ -11,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -67,6 +67,7 @@ class WorkoutStageTypeController(
      * @return Mono containing the workout stage type if found, or 404 if not found
      */
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get workout stage type by ID",
         description = "Retrieves a workout stage type by its unique identifier.",
@@ -94,13 +95,8 @@ class WorkoutStageTypeController(
                 logger.debug("Found workout stage type: {}", id)
                 ResponseEntity.ok(it)
             }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Workout stage type not found: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
-            }
-            .onErrorResume { e ->
+            .doOnError { e ->
                 logger.error("Error getting workout stage type: {}", id, e)
-                Mono.error(e)
             }
     }
 
@@ -114,6 +110,7 @@ class WorkoutStageTypeController(
      * @return Mono containing the workout stage type if found, or 404 if not found
      */
     @GetMapping("/name/{name}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get workout stage type by name",
         description = "Retrieves a workout stage type by its name.",
@@ -134,26 +131,15 @@ class WorkoutStageTypeController(
     )
     fun getByName(
         @Parameter(description = "Name of the workout stage type", required = true)
-        @PathVariable("name") name: String,
+        @PathVariable("name") name: WorkoutStageTypeEnum,
     ): Mono<ResponseEntity<WorkoutStageType>> {
-        // Find the enum by display name for backward compatibility
-        val stageType = WorkoutStageTypeEnum.fromDisplayName(name)
-        if (stageType == null) {
-            return Mono.just(ResponseEntity.notFound().build())
-        }
-
-        return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageType)
+        return workoutStageTypeDAL.selectWorkoutStageTypeByEnum(name)
             .map { workoutStageType ->
                 logger.debug("Found workout stage type: {}", name)
                 ResponseEntity.ok(workoutStageType)
             }
-            .onErrorResume(NoResultsFoundException::class.java) { exception ->
-                logger.warn("Workout stage type not found: {}", name)
-                Mono.just(ResponseEntity.notFound().build())
-            }
-            .onErrorResume { exception ->
+            .doOnError { exception ->
                 logger.error("Error getting workout stage type: {}", name, exception)
-                Mono.error(exception)
             }
     }
 
@@ -166,6 +152,7 @@ class WorkoutStageTypeController(
      * @return ResponseEntity containing a list of all workout stage types
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all workout stage types",
         description = "Retrieves a list of all workout stage types.",
@@ -174,7 +161,7 @@ class WorkoutStageTypeController(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Workout stage type list retrieved successfully",
+                description = "Workout stage types retrieved successfully",
                 content = [Content(mediaType = "application/json")],
             ),
         ],

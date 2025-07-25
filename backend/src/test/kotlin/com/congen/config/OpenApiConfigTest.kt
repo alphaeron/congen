@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.test.util.ReflectionTestUtils
 
 /**
  * Unit tests for [OpenApiConfig].
@@ -24,9 +23,12 @@ class OpenApiConfigTest {
 
     @BeforeEach
     fun setUp() {
-        openApiConfig = OpenApiConfig()
-        ReflectionTestUtils.setField(openApiConfig, "serverPort", "8080")
-        ReflectionTestUtils.setField(openApiConfig, "activeProfile", "test")
+        val openApiProps =
+            OpenApiProperties(
+                serverPort = "8080",
+                activeProfile = "test"
+            )
+        openApiConfig = OpenApiConfig(openApiProps)
     }
 
     @Test
@@ -108,10 +110,15 @@ class OpenApiConfigTest {
     @Test
     fun `should handle different server ports`() {
         // Given
-        ReflectionTestUtils.setField(openApiConfig, "serverPort", "9090")
+        val openApiProps =
+            OpenApiProperties(
+                serverPort = "9090",
+                activeProfile = "test"
+            )
+        val configWithDifferentPort = OpenApiConfig(openApiProps)
 
         // When
-        val openAPI = openApiConfig.openAPI()
+        val openAPI = configWithDifferentPort.openAPI()
         val servers = openAPI.servers
 
         // Then

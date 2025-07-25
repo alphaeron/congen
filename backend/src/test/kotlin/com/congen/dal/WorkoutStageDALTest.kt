@@ -135,4 +135,113 @@ class WorkoutStageDALTest {
         StepVerifier.create(result).expectNext(workoutStage).verifyComplete()
         verify(postgresClient).update<WorkoutStage>("DELETE FROM workout_stage WHERE id=$1", workoutStage.id)
     }
+
+    @Test
+    fun `selectWorkoutStagesByUserId should return list of user owned workout stages`() {
+        val userId = 1
+        val userWorkoutStages =
+            listOf(
+                mockWorkoutStage(id = 1L, programmedWorkoutId = 1L, position = 1, name = "User Stage 1"),
+                mockWorkoutStage(id = 2L, programmedWorkoutId = 1L, position = 2, name = "User Stage 2")
+            )
+
+        whenever(
+            postgresClient.select<WorkoutStage>(
+                """
+                SELECT ws.*
+                FROM workout_stage ws
+                JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY ws.programmed_workout_id, ws.position
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.just(userWorkoutStages))
+
+        val result = workoutStageDAL.selectWorkoutStagesByUserId(userId)
+
+        StepVerifier.create(result).expectNext(userWorkoutStages).verifyComplete()
+        verify(postgresClient).select<WorkoutStage>(
+            """
+            SELECT ws.*
+            FROM workout_stage ws
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ws.programmed_workout_id, ws.position
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    @Test
+    fun `selectWorkoutStagesByUserId should return empty list when user has no workout stages`() {
+        val userId = 1
+        val emptyList = emptyList<WorkoutStage>()
+
+        whenever(
+            postgresClient.select<WorkoutStage>(
+                """
+                SELECT ws.*
+                FROM workout_stage ws
+                JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY ws.programmed_workout_id, ws.position
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.just(emptyList))
+
+        val result = workoutStageDAL.selectWorkoutStagesByUserId(userId)
+
+        StepVerifier.create(result).expectNext(emptyList).verifyComplete()
+        verify(postgresClient).select<WorkoutStage>(
+            """
+            SELECT ws.*
+            FROM workout_stage ws
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ws.programmed_workout_id, ws.position
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    @Test
+    fun `selectWorkoutStagesByUserId should propagate database errors`() {
+        val userId = 1
+        val databaseError = RuntimeException("Database connection failed")
+
+        whenever(
+            postgresClient.select<WorkoutStage>(
+                """
+                SELECT ws.*
+                FROM workout_stage ws
+                JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY ws.programmed_workout_id, ws.position
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.error(databaseError))
+
+        val result = workoutStageDAL.selectWorkoutStagesByUserId(userId)
+
+        StepVerifier.create(result).expectError(databaseError::class.java).verify()
+        verify(postgresClient).select<WorkoutStage>(
+            """
+            SELECT ws.*
+            FROM workout_stage ws
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ws.programmed_workout_id, ws.position
+            """.trimIndent(),
+            userId
+        )
+    }
 }

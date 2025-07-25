@@ -67,7 +67,7 @@ object IntegrationTestHelpers {
         height: Double = TEST_USER_HEIGHT,
         weight: Double = TEST_USER_WEIGHT
     ): Int {
-        val response =
+        val result =
             webTestClient.post()
                 .uri(
                     "/api/v1/user/?name=$name" +
@@ -79,7 +79,14 @@ object IntegrationTestHelpers {
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
                 .returnResult()
-                .responseBody!!
+
+        val response = result.responseBody
+        if (response == null) {
+            println("ERROR: User creation failed - response body is null")
+            println("Response status: ${result.status}")
+            throw RuntimeException("User creation failed - response body is null")
+        }
+
         return response.id
     }
 
@@ -126,7 +133,7 @@ object IntegrationTestHelpers {
         name: String = TEST_PROGRAM_NAME,
         isActive: Boolean = true
     ): Long {
-        val response =
+        val result =
             webTestClient.post()
                 .uri(
                     "/api/v1/program/?user_id=$userId" +
@@ -137,7 +144,14 @@ object IntegrationTestHelpers {
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
                 .returnResult()
-                .responseBody!!
+
+        val response = result.responseBody
+        if (response == null) {
+            println("ERROR: Program creation failed - response body is null")
+            println("Response status: ${result.status}")
+            throw RuntimeException("Program creation failed - response body is null")
+        }
+
         return response.id
     }
 

@@ -1,11 +1,13 @@
 package com.congen.controllers
 
-import com.congen.exceptions.InvalidResultException
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.InvalidWeightUnitException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.AuthenticationException
 import kotlin.test.assertEquals
 
 class ExceptionHandlingControllerTest {
@@ -13,9 +15,6 @@ class ExceptionHandlingControllerTest {
 
     @Test
     fun `conflict method should handle InvalidResultException`() {
-        // Given
-        val exception = InvalidResultException("Test query")
-
         // When & Then
         // The method should not throw any exception
         exceptionHandlingController.conflict()
@@ -42,7 +41,7 @@ class ExceptionHandlingControllerTest {
 
         // Then
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
-        assertEquals("Resource not found", response.body)
+        assertEquals("Resource not found", response.body!!["error"])
     }
 
     @Test
@@ -56,7 +55,7 @@ class ExceptionHandlingControllerTest {
 
         // Then
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode)
-        assertEquals(mapOf("error" to errorMessage), response.body)
+        assertEquals(errorMessage, response.body!!["error"])
     }
 
     @Test
@@ -73,6 +72,64 @@ class ExceptionHandlingControllerTest {
         val exception = InvalidWeightUnitException(errorMessage)
         val response = exceptionHandlingController.handleInvalidWeightUnitException(exception)
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode)
-        assertEquals(mapOf("error" to errorMessage), response.body)
+        assertEquals(errorMessage, response.body!!["error"])
+    }
+
+    @Test
+    fun `handleAccessDeniedException should return 403 status with error message`() {
+        val errorMessage = "User not authorized to access this program"
+        val exception = AccessDeniedException(errorMessage)
+        val response = exceptionHandlingController.handleAccessDeniedException(exception)
+        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        assertEquals("Access denied: insufficient permissions", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleAccessDeniedException should handle null message`() {
+        val exception = AccessDeniedException(null)
+        val response = exceptionHandlingController.handleAccessDeniedException(exception)
+        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        assertEquals("Access denied: insufficient permissions", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleAuthenticationException should return 401 status with error message`() {
+        val errorMessage = "Invalid JWT token"
+        val exception = object : AuthenticationException(errorMessage) {}
+        val response = exceptionHandlingController.handleAuthenticationException(exception)
+        assertEquals(HttpStatus.UNAUTHORIZED, response.statusCode)
+        assertEquals("Authentication failed: invalid or missing credentials", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleAuthenticationException should handle null message`() {
+        val exception = object : AuthenticationException(null) {}
+        val response = exceptionHandlingController.handleAuthenticationException(exception)
+        assertEquals(HttpStatus.UNAUTHORIZED, response.statusCode)
+        assertEquals("Authentication failed: invalid or missing credentials", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleDatabaseQueryException should return 409 for duplicate key`() {
+        val exception = DatabaseQueryException("duplicate key value violates unique constraint")
+        val response = exceptionHandlingController.handleDatabaseQueryException(exception)
+        assertEquals(HttpStatus.CONFLICT, response.statusCode)
+        assertEquals("Relationship already exists", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleDatabaseQueryException should return 422 for foreign key violation`() {
+        val exception = DatabaseQueryException("violates foreign key constraint")
+        val response = exceptionHandlingController.handleDatabaseQueryException(exception)
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode)
+        assertEquals("Input does not exist", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleDatabaseQueryException should return 500 for other errors`() {
+        val exception = DatabaseQueryException("some other db error")
+        val response = exceptionHandlingController.handleDatabaseQueryException(exception)
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode)
+        assertEquals("Database error: some other db error", response.body!!["error"])
     }
 }

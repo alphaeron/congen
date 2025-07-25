@@ -1,9 +1,12 @@
 package com.congen.controllers
 
-import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.model.ProgrammedWorkout
+import com.congen.service.ProgramService
+import com.congen.service.ProgrammedWorkoutService
+import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -52,7 +55,9 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/programmed_workout")
 class ProgrammedWorkoutController(
-    private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
+    private val programmedWorkoutService: ProgrammedWorkoutService,
+    private val programService: ProgramService,
+    private val keycloakUtil: KeycloakUtil
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -72,13 +77,14 @@ class ProgrammedWorkoutController(
      * @return Mono containing the created programmed workout with generated ID
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
     fun save(
         @RequestParam("program_id") programId: Long,
         @RequestParam("day_number") dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
         logger.info("Saving programmed workout: {} for program {}", name, programId)
-        return programmedWorkoutDAL.insertProgrammedWorkout(programId, dayNumber, name)
+        return programmedWorkoutService.insertProgrammedWorkout(programId, dayNumber, name)
             .map { savedWorkout ->
                 logger.debug("Saved programmed workout with id: {}", savedWorkout.id)
                 ResponseEntity.ok(savedWorkout)
@@ -98,17 +104,14 @@ class ProgrammedWorkoutController(
      * @return Mono containing the programmed workout if found
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#id, principal.subject)")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return programmedWorkoutDAL.selectProgrammedWorkoutById(id)
+        return programmedWorkoutService.selectProgrammedWorkoutById(id)
             .map {
                 logger.debug("Found programmed workout: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume { e ->
-                logger.warn("Programmed workout not found: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error getting programmed workout: {}", id, e)
@@ -124,16 +127,20 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing a list of all programmed workouts
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     fun getAll(): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
-        logger.debug("Getting all programmed workouts")
-        return programmedWorkoutDAL.selectProgrammedWorkouts()
-            .map { programmedWorkouts ->
-                logger.debug("Found {} programmed workouts", programmedWorkouts.size)
-                ResponseEntity.ok(programmedWorkouts)
-            }
-            .doOnError { e ->
-                logger.error("Error getting all programmed workouts", e)
-            }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()).flatMap { tuple ->
+            val userId = tuple.t1
+            val roles = tuple.t2
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedWorkoutMono =
+                if (isAdminOrService) {
+                    programmedWorkoutService.selectProgrammedWorkouts()
+                } else {
+                    programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId.toInt())
+                }
+            programmedWorkoutMono.map { ResponseEntity.ok(it) }
+        }
     }
 
     /**
@@ -146,11 +153,12 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing a list of programmed workouts for the program
      */
     @GetMapping("/program/{program_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
     fun getByProgramId(
         @PathVariable("program_id") programId: Long,
     ): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
         logger.debug("Getting programmed workouts for program: {}", programId)
-        return programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)
+        return programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
             .map { programmedWorkouts ->
                 logger.debug("Found {} programmed workouts for program: {}", programmedWorkouts.size, programId)
                 ResponseEntity.ok(programmedWorkouts)
@@ -174,20 +182,19 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing the updated programmed workout
      */
     @PatchMapping("/{id}")
+    @PreAuthorize(
+        "hasRole('admin') or hasRole('service') or (@programService.isOwner(#programId, principal.subject) and @programmedWorkoutService.isOwner(#id, principal.subject))"
+    )
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam("program_id") programId: Long,
         @RequestParam("day_number") dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return programmedWorkoutDAL.updateProgrammedWorkout(id, programId, dayNumber, name)
+        return programmedWorkoutService.updateProgrammedWorkout(id, programId, dayNumber, name)
             .map {
                 logger.debug("Updated programmed workout: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume { e ->
-                logger.warn("Programmed workout not found for update: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error updating programmed workout: {}", id, e)
@@ -204,17 +211,14 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing the deleted programmed workout
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#id, principal.subject)")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return programmedWorkoutDAL.deleteProgrammedWorkout(id)
+        return programmedWorkoutService.deleteProgrammedWorkout(id)
             .map {
                 logger.debug("Deleted programmed workout: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume { e ->
-                logger.warn("Programmed workout not found for deletion: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error deleting programmed workout: {}", id, e)

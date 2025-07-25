@@ -78,7 +78,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 400 for invalid weight unit`() {
+    fun `should return 422 for invalid weight unit`() {
         val exerciseName = "Bench Press"
         val invalidUnit = "INVALID"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")

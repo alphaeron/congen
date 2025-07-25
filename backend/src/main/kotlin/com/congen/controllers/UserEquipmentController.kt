@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.dal.UserEquipmentDAL
-import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.UserEquipment
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -9,16 +8,16 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -69,9 +68,10 @@ class UserEquipmentController(
      *
      * @param userId The unique identifier of the user
      * @param equipmentName The name of the equipment
-     * @return ResponseEntity containing the created user-equipment relationship
+     * @return Mono containing the created user-equipment relationship
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Create user equipment relationship",
         description = "Creates a new user-equipment relationship.",
@@ -83,6 +83,16 @@ class UserEquipmentController(
                 description = "User-equipment relationship created successfully",
                 content = [Content(mediaType = "application/json")],
             ),
+            ApiResponse(
+                responseCode = "409",
+                description = "Relationship already exists",
+                content = [Content(mediaType = "text/plain")],
+            ),
+            ApiResponse(
+                responseCode = "422",
+                description = "User or equipment does not exist",
+                content = [Content(mediaType = "text/plain")],
+            ),
         ],
     )
     fun save(
@@ -90,26 +100,13 @@ class UserEquipmentController(
         @RequestParam("user_id") userId: Int,
         @Parameter(description = "Equipment name", required = true)
         @RequestParam("equipment_name") equipmentName: String,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<UserEquipment>> {
         logger.info("Saving user equipment: {} - {}", userId, equipmentName)
-        return try {
-            ResponseEntity.ok(
-                userEquipmentDAL.insertUserEquipment(userId, equipmentName),
-            )
-        } catch (e: DatabaseQueryException) {
-            val msg = e.cause?.message ?: e.message ?: "Database error"
-            return when {
-                msg.contains(
-                    "duplicate key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
-                msg.contains(
-                    "violates foreign key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("User or equipment does not exist")
-                else -> throw e
+        return userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error saving user equipment: {} - {}", userId, equipmentName, e)
             }
-        }
     }
 
     /**
@@ -122,6 +119,7 @@ class UserEquipmentController(
      * @return Mono containing a list of user equipment relationships
      */
     @GetMapping("/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Get user equipment by user ID",
         description = "Retrieves all equipment associated with a given user.",
@@ -140,9 +138,9 @@ class UserEquipmentController(
         @PathVariable("user_id") userId: Int,
     ): Mono<ResponseEntity<List<UserEquipment>>> {
         return userEquipmentDAL.selectUserEquipmentByUser(userId)
-            .map {
-                logger.debug("Found equipment for user: {}", userId)
-                ResponseEntity.ok(it)
+            .map { equipment ->
+                logger.debug("Found {} equipment items for user: {}", equipment.size, userId)
+                ResponseEntity.ok(equipment)
             }
             .doOnError { e ->
                 logger.error("Error getting user equipment for user: {}", userId, e)
@@ -155,10 +153,12 @@ class UserEquipmentController(
      * This endpoint removes the association between a user and a piece of equipment,
      * indicating that the user no longer has access to that equipment.
      *
-     * @param userEquipment The user-equipment relationship to delete
-     * @return ResponseEntity containing the deleted user-equipment relationship
+     * @param userId The unique identifier of the user
+     * @param equipmentName The name of the equipment
+     * @return Mono containing the deleted user-equipment relationship
      */
     @DeleteMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Delete user equipment relationship",
         description = "Deletes a user-equipment relationship.",
@@ -170,15 +170,82 @@ class UserEquipmentController(
                 description = "User-equipment relationship deleted successfully",
                 content = [Content(mediaType = "application/json")],
             ),
+            ApiResponse(
+                responseCode = "409",
+                description = "Relationship already exists",
+                content = [Content(mediaType = "text/plain")],
+            ),
+            ApiResponse(
+                responseCode = "422",
+                description = "User or equipment does not exist",
+                content = [Content(mediaType = "text/plain")],
+            ),
         ],
     )
     fun delete(
-        @Parameter(description = "User-equipment relationship to delete", required = true)
-        @RequestBody userEquipment: UserEquipment,
-    ): ResponseEntity<*> {
-        logger.info("Deleting user equipment: {} - {}", userEquipment.userId, userEquipment.equipmentName)
-        return ResponseEntity.ok(
-            userEquipmentDAL.deleteUserEquipment(userEquipment.userId, userEquipment.equipmentName),
-        )
+        @Parameter(description = "User ID", required = true)
+        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Equipment name", required = true)
+        @RequestParam("equipment_name") equipmentName: String,
+    ): Mono<ResponseEntity<UserEquipment>> {
+        logger.info("Deleting user equipment: {} - {}", userId, equipmentName)
+        return userEquipmentDAL.deleteUserEquipment(userId, equipmentName)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error deleting user equipment: {} - {}", userId, equipmentName, e)
+            }
+    }
+
+    /**
+     * Creates multiple user-equipment relationships from a list.
+     *
+     * This endpoint creates multiple equipment associations for a user in a single request,
+     * which is useful for bulk operations when setting up a user's available equipment.
+     *
+     * @param userId The unique identifier of the user
+     * @param equipmentNames List of equipment names to associate with the user
+     * @return Mono containing a list of created user-equipment relationships
+     */
+    @PostMapping("/bulk")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @Operation(
+        summary = "Create multiple user equipment relationships",
+        description = "Creates multiple user-equipment relationships in a single request.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "User-equipment relationships created successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "409",
+                description = "Relationship already exists",
+                content = [Content(mediaType = "text/plain")],
+            ),
+            ApiResponse(
+                responseCode = "422",
+                description = "User or equipment does not exist",
+                content = [Content(mediaType = "text/plain")],
+            ),
+        ],
+    )
+    fun saveBulk(
+        @Parameter(description = "User ID", required = true)
+        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Equipment names", required = true)
+        @RequestParam("equipment_names") equipmentNames: List<String>,
+    ): Mono<ResponseEntity<List<UserEquipment>>> {
+        logger.info("Saving bulk user equipment: {} - {}", userId, equipmentNames)
+        return Flux.fromIterable(equipmentNames)
+            .flatMap { equipmentName ->
+                userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+            }
+            .collectList()
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
+            }
     }
 }

@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -81,6 +82,7 @@ class UserWeightUnitPreferenceController(
      * @return ResponseEntity containing the created or updated user weight unit preference
      */
     @PutMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Create or update user weight unit preference",
         description = "Creates a new user weight unit preference or updates an existing one (upsert operation).",
@@ -100,15 +102,14 @@ class UserWeightUnitPreferenceController(
         @Parameter(description = "Exercise name", required = true)
         @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Preferred weight unit (KG or LBS)", required = true)
-        @RequestParam("preferred_unit") preferredUnit: String,
-    ): ResponseEntity<*> {
+        @RequestParam("preferred_unit") preferredUnit: WeightUnit,
+    ): Mono<ResponseEntity<UserWeightUnitPreference>> {
         logger.info("Upserting user weight unit preference: {} - {} - {}", userId, exerciseName, preferredUnit)
-
-        val weightUnit = WeightUnit.fromString(preferredUnit)
-
-        return ResponseEntity.ok(
-            userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(userId, exerciseName, weightUnit),
-        )
+        return userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(userId, exerciseName, preferredUnit)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error upserting user weight unit preference: {} - {} - {}", userId, exerciseName, preferredUnit, e)
+            }
     }
 
     /**
@@ -121,6 +122,7 @@ class UserWeightUnitPreferenceController(
      * @return Mono containing a list of user weight unit preferences
      */
     @GetMapping("/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Get all weight unit preferences for a user",
         description = "Retrieves all weight unit preferences for a given user.",
@@ -129,7 +131,7 @@ class UserWeightUnitPreferenceController(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Weight unit preferences retrieved successfully",
+                description = "User weight unit preferences found",
                 content = [Content(mediaType = "application/json")],
             ),
         ],
@@ -139,12 +141,12 @@ class UserWeightUnitPreferenceController(
         @PathVariable("user_id") userId: Int,
     ): Mono<ResponseEntity<List<UserWeightUnitPreference>>> {
         return userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
-            .map {
-                logger.debug("Found {} weight unit preferences for user: {}", it.size, userId)
-                ResponseEntity.ok(it)
+            .map { preferences ->
+                logger.debug("Found {} weight unit preferences for user: {}", preferences.size, userId)
+                ResponseEntity.ok(preferences)
             }
             .doOnError { e ->
-                logger.error("Error getting weight unit preferences for user: {}", userId, e)
+                logger.error("Error getting user weight unit preferences for user: {}", userId, e)
             }
     }
 
@@ -159,6 +161,7 @@ class UserWeightUnitPreferenceController(
      * @return Mono containing the user weight unit preference if found, or 404 if not found
      */
     @GetMapping("/{user_id}/{exercise_name}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Get weight unit preference for user and exercise",
         description = "Retrieves a specific weight unit preference for a given user and exercise.",
@@ -167,12 +170,12 @@ class UserWeightUnitPreferenceController(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Weight unit preference found",
+                description = "User weight unit preference found",
                 content = [Content(mediaType = "application/json")],
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "Weight unit preference not found",
+                description = "User weight unit preference not found",
                 content = [Content(mediaType = "application/json")],
             ),
         ],
@@ -184,9 +187,9 @@ class UserWeightUnitPreferenceController(
         @PathVariable("exercise_name") exerciseName: String,
     ): Mono<ResponseEntity<UserWeightUnitPreference>> {
         return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
-            .map {
+            .map { preference ->
                 logger.debug("Found weight unit preference for user: {} and exercise: {}", userId, exerciseName)
-                ResponseEntity.ok(it)
+                ResponseEntity.ok(preference)
             }
             .onErrorResume(NoResultsFoundException::class.java) {
                 logger.warn("Weight unit preference not found for user: {} and exercise: {}", userId, exerciseName)
@@ -205,9 +208,10 @@ class UserWeightUnitPreferenceController(
      *
      * @param userId The unique identifier of the user
      * @param exerciseName The name of the exercise
-     * @return ResponseEntity containing the deleted user weight unit preference
+     * @return Mono containing the deleted user weight unit preference or empty if not found
      */
     @DeleteMapping("/{user_id}/{exercise_name}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Delete user weight unit preference",
         description = "Deletes a user weight unit preference for a given user and exercise.",
@@ -221,7 +225,7 @@ class UserWeightUnitPreferenceController(
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "Weight unit preference not found",
+                description = "User weight unit preference not found",
                 content = [Content(mediaType = "application/json")],
             ),
         ],
@@ -231,10 +235,15 @@ class UserWeightUnitPreferenceController(
         @PathVariable("user_id") userId: Int,
         @Parameter(description = "Exercise name", required = true)
         @PathVariable("exercise_name") exerciseName: String,
-    ): ResponseEntity<*> {
-        logger.info("Deleting user weight unit preference: {} - {}", userId, exerciseName)
-        return ResponseEntity.ok(
-            userWeightUnitPreferenceDAL.deleteUserWeightUnitPreference(userId, exerciseName),
-        )
+    ): Mono<ResponseEntity<UserWeightUnitPreference>> {
+        logger.info("Deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName)
+        return userWeightUnitPreferenceDAL.deleteUserWeightUnitPreference(userId, exerciseName)
+            .map { preference ->
+                logger.debug("Deleted weight unit preference for user: {} and exercise: {}", userId, exerciseName)
+                ResponseEntity.ok(preference)
+            }
+            .doOnError { e ->
+                logger.error("Error deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
+            }
     }
 }

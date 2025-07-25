@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -47,6 +48,7 @@ class UserWeakMuscleController(
      * @return ResponseEntity containing the created UserWeakMuscle
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(summary = "Add user weak muscle", description = "Adds a weak muscle group for a user.")
     @ApiResponses(
         value = [
@@ -62,9 +64,13 @@ class UserWeakMuscleController(
         @RequestParam("user_id") userId: Int,
         @Parameter(description = "Muscle name", required = true)
         @RequestParam("muscle_name") muscleName: String,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<UserWeakMuscle>> {
         logger.info("Adding user weak muscle: {} - {}", userId, muscleName)
-        return ResponseEntity.ok(userWeakMuscleDAL.insertUserWeakMuscle(userId, muscleName))
+        return userWeakMuscleDAL.insertUserWeakMuscle(userId, muscleName)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error adding user weak muscle: {} - {}", userId, muscleName, e)
+            }
     }
 
     /**
@@ -74,6 +80,7 @@ class UserWeakMuscleController(
      * @return Mono containing a list of UserWeakMuscle
      */
     @GetMapping("/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(summary = "Get user weak muscles", description = "Retrieves all weak muscle groups for a user.")
     @ApiResponses(
         value = [
@@ -96,6 +103,7 @@ class UserWeakMuscleController(
      * @return ResponseEntity containing the deleted UserWeakMuscle
      */
     @DeleteMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(summary = "Delete user weak muscle", description = "Deletes a weak muscle group for a user.")
     @ApiResponses(
         value = [
@@ -111,8 +119,12 @@ class UserWeakMuscleController(
         @RequestParam("user_id") userId: Int,
         @Parameter(description = "Muscle name", required = true)
         @RequestParam("muscle_name") muscleName: String,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<UserWeakMuscle>> {
         logger.info("Deleting user weak muscle: {} - {}", userId, muscleName)
-        return ResponseEntity.ok(userWeakMuscleDAL.deleteUserWeakMuscle(userId, muscleName))
+        return userWeakMuscleDAL.deleteUserWeakMuscle(userId, muscleName)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error deleting user weak muscle: {} - {}", userId, muscleName, e)
+            }
     }
 }

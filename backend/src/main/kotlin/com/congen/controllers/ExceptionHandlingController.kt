@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.InvalidResultException
 import com.congen.exceptions.InvalidWeightUnitException
 import com.congen.exceptions.NoResultsFoundException
@@ -7,6 +8,8 @@ import com.congen.exceptions.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.AuthenticationException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
@@ -77,9 +80,9 @@ public class ExceptionHandlingController {
      * @return ResponseEntity with HTTP 404 status and error message
      */
     @ExceptionHandler(NoResultsFoundException::class)
-    fun handleNoResultsFound(exception: NoResultsFoundException): ResponseEntity<String> {
+    fun handleNoResultsFound(exception: NoResultsFoundException): ResponseEntity<Map<String, String>> {
         logger.warn("No results found: {}", exception.message ?: "Unknown error")
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Resource not found")
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "Resource not found"))
     }
 
     /**
@@ -113,5 +116,69 @@ public class ExceptionHandlingController {
         logger.error("Invalid weight unit: {}", exception.message)
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
             .body(mapOf("error" to (exception.message ?: "Invalid weight unit")))
+    }
+
+    /**
+     * Handles AccessDeniedException by returning HTTP 403 Forbidden.
+     *
+     * This method handles authorization failures when a user attempts to access
+     * a resource they don't have permission to access.
+     *
+     * @param exception The AccessDeniedException that was thrown
+     * @return ResponseEntity with HTTP 403 status and error message
+     */
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDeniedException(exception: AccessDeniedException): ResponseEntity<Map<String, String>> {
+        logger.warn("Access denied: {}", exception.message ?: "Insufficient permissions")
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+            .body(mapOf("error" to "Access denied: insufficient permissions"))
+    }
+
+    /**
+     * Handles AuthenticationException by returning HTTP 401 Unauthorized.
+     *
+     * This method handles authentication failures when a user provides invalid
+     * or missing credentials.
+     *
+     * @param exception The AuthenticationException that was thrown
+     * @return ResponseEntity with HTTP 401 status and error message
+     */
+    @ExceptionHandler(AuthenticationException::class)
+    fun handleAuthenticationException(exception: AuthenticationException): ResponseEntity<Map<String, String>> {
+        logger.warn("Authentication failed: {}", exception.message ?: "Invalid credentials")
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .body(mapOf("error" to "Authentication failed: invalid or missing credentials"))
+    }
+
+    /**
+     * Handles DatabaseQueryException with custom status and message mapping.
+     *
+     * - Duplicate key: 409 Conflict
+     * - Foreign key violation: 422 Unprocessable Entity
+     * - Other: 500 Internal Server Error
+     *
+     * @param exception The DatabaseQueryException that was thrown
+     * @return ResponseEntity with appropriate status and error message
+     */
+    @ExceptionHandler(DatabaseQueryException::class)
+    fun handleDatabaseQueryException(exception: DatabaseQueryException): ResponseEntity<Map<String, String>> {
+        val msg = exception.cause?.message ?: exception.message ?: "Database error"
+        return when {
+            msg.contains("duplicate key", ignoreCase = true) -> {
+                logger.warn("Duplicate key error: {}", msg)
+                ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(mapOf("error" to "Relationship already exists"))
+            }
+            msg.contains("violates foreign key", ignoreCase = true) -> {
+                logger.warn("Foreign key violation: {}", msg)
+                ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                    .body(mapOf("error" to "Input does not exist"))
+            }
+            else -> {
+                logger.error("Unhandled database error: {}", msg)
+                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(mapOf("error" to "Database error: $msg"))
+            }
+        }
     }
 }

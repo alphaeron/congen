@@ -20,8 +20,11 @@ import org.junit.jupiter.api.Test
 class VersionConfigTest {
     @Test
     fun `should create VersionConfig with default values`() {
+        // Given
+        val versionProperties = VersionProperties()
+
         // When
-        val versionConfig = VersionConfig()
+        val versionConfig = VersionConfig(versionProperties)
 
         // Then
         assertNotNull(versionConfig)
@@ -39,9 +42,12 @@ class VersionConfigTest {
 
     @Test
     fun `should create multiple VersionConfig instances`() {
+        // Given
+        val versionProperties = VersionProperties()
+
         // When
-        val versionConfig1 = VersionConfig()
-        val versionConfig2 = VersionConfig()
+        val versionConfig1 = VersionConfig(versionProperties)
+        val versionConfig2 = VersionConfig(versionProperties)
 
         // Then
         assertNotNull(versionConfig1)
@@ -56,8 +62,11 @@ class VersionConfigTest {
 
     @Test
     fun `should handle missing version properties file gracefully`() {
+        // Given
+        val versionProperties = VersionProperties()
+
         // When
-        val versionConfig = VersionConfig()
+        val versionConfig = VersionConfig(versionProperties)
 
         // Then
         assertNotNull(versionConfig)
@@ -74,8 +83,11 @@ class VersionConfigTest {
 
     @Test
     fun `should have consistent default values`() {
+        // Given
+        val versionProperties = VersionProperties()
+
         // When
-        val versionConfig = VersionConfig()
+        val versionConfig = VersionConfig(versionProperties)
 
         // Then
         // Verify all properties have expected default values
@@ -89,8 +101,11 @@ class VersionConfigTest {
 
     @Test
     fun `should handle gitDirty property parsing`() {
+        // Given
+        val versionProperties = VersionProperties()
+
         // When
-        val versionConfig = VersionConfig()
+        val versionConfig = VersionConfig(versionProperties)
 
         // Then
         // gitDirty should be a valid boolean value

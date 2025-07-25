@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:4 labels:prod,test
+--changeset John Matty:6 labels:prod,test
 --comment: Add workout program tables for storing generated workout programs and their components.
 
 CREATE TABLE program (

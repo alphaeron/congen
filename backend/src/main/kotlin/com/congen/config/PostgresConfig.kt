@@ -7,7 +7,8 @@ import io.vertx.sqlclient.PoolOptions
 import io.vertx.sqlclient.SqlClient
 import jakarta.annotation.PreDestroy
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -33,15 +34,52 @@ import org.springframework.context.annotation.Configuration
  * @author Congen Development Team
  * @since 1.0.0
  */
+@ConfigurationProperties(prefix = "congen.postgres")
+data class PostgresProperties(
+    var writer: Host = Host(),
+    var reader: Host = Host(),
+    var port: Int = 5432,
+    var username: String = "",
+    var password: String = "",
+    var dbName: String = "",
+    var sslMode: Boolean = false
+) {
+    /**
+     * Data class representing a database host configuration.
+     *
+     * @property host The hostname or IP address of the database server.
+     */
+    data class Host(
+        /**
+         * The hostname or IP address of the database server.
+         */
+        var host: String = ""
+    )
+}
+
+/**
+ * Configuration class for PostgreSQL database connections.
+ *
+ * This class manages the configuration and creation of PostgreSQL database connections
+ * for both read and write operations. It uses Vert.x PostgreSQL client for reactive
+ * database operations and supports connection pooling with separate configurations
+ * for reader and writer connections.
+ *
+ * The configuration supports SSL connections and includes connection pooling,
+ * prepared statement caching, and automatic reconnection capabilities.
+ *
+ * @property props The properties for configuring PostgreSQL connections.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Configuration
+@EnableConfigurationProperties(PostgresProperties::class)
 class PostgresConfig(
-    @Value("\${congen.postgres.writer.host}") private val writerHost: String,
-    @Value("\${congen.postgres.reader.host}") private val readerHost: String,
-    @Value("\${congen.postgres.port}") private val port: Int,
-    @Value("\${congen.postgres.username}") private val usernameV: String,
-    @Value("\${congen.postgres.password}") private val passwordV: String,
-    @Value("\${congen.postgres.db-name}") private val dbName: String,
-    @Value("\${congen.postgres.ssl-mode}") private val sslMode: Boolean,
+    /**
+     * The properties for configuring PostgreSQL connections.
+     */
+    private val props: PostgresProperties
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -68,9 +106,9 @@ class PostgresConfig(
      */
     @Bean("postgresDBWriter")
     fun postgresDBWriter(): SqlClient {
-        logger.info("Initializing PostgreSQL writer connection on port {}", port)
+        logger.info("Initializing PostgreSQL writer connection on port {}", props.port)
         return try {
-            buildSqlClient(writerHost, CONNECTION_POOL_COUNT_WRITER)
+            buildSqlClient(props.writer.host, CONNECTION_POOL_COUNT_WRITER)
         } catch (e: Exception) {
             logger.error("Failed to initialize PostgreSQL writer connection", e)
             throw e
@@ -88,9 +126,9 @@ class PostgresConfig(
      */
     @Bean("postgresDBReader")
     fun postgresDBReader(): SqlClient {
-        logger.info("Initializing PostgreSQL reader connection on port {}", port)
+        logger.info("Initializing PostgreSQL reader connection on port {}", props.port)
         return try {
-            buildSqlClient(readerHost, CONNECTION_POOL_COUNT_READER)
+            buildSqlClient(props.reader.host, CONNECTION_POOL_COUNT_READER)
         } catch (e: Exception) {
             logger.error("Failed to initialize PostgreSQL reader connection", e)
             throw e
@@ -115,24 +153,24 @@ class PostgresConfig(
 
         val connectionOptions: PgConnectOptions =
             PgConnectOptions()
-                .setPort(port)
+                .setPort(props.port)
                 .setHost(host)
-                .setDatabase(dbName)
-                .setUser(usernameV)
-                .setPassword(passwordV)
+                .setDatabase(props.dbName)
+                .setUser(props.username)
+                .setPassword(props.password)
                 .setCachePreparedStatements(true)
                 .setPipeliningLimit(256)
                 .setIdleTimeout(10000)
                 .setReconnectAttempts(2)
                 .setReconnectInterval(1000)
-                .setSsl(sslMode) // TODO True?
+                .setSsl(props.sslMode) // TODO True?
 
         val poolOptions: PoolOptions =
             PoolOptions()
                 .setMaxSize(poolSize)
                 .setMaxLifetime(60000)
 
-        logger.debug("PostgreSQL connection configured - SSL Mode: {}", sslMode)
+        logger.debug("PostgreSQL connection configured - SSL Mode: {}", props.sslMode)
 
         return PgBuilder
             .client()

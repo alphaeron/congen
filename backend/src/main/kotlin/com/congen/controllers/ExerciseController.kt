@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -83,11 +84,12 @@ class ExerciseController(
      * @param isUnilateral Whether the exercise is unilateral
      * @param isUpper Whether the exercise targets upper body
      * @param isAccessory Whether the exercise is an accessory movement
-     * @return The created exercise with assigned ID
+     * @return Mono containing the created exercise with assigned ID
      *
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Create exercise",
         description = "Creates a new exercise entry.",
@@ -114,11 +116,13 @@ class ExerciseController(
         @RequestParam("is_upper") isUpper: Boolean,
         @Parameter(description = "Whether the exercise is an accessory movement", required = true)
         @RequestParam("is_accessory") isAccessory: Boolean,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<Exercise>> {
         logger.info("Saving exercise: {}", name)
-        return ResponseEntity.ok(
-            exerciseDAL.insertExercise(name, description, movementType, isUnilateral, isUpper, isAccessory),
-        )
+        return exerciseDAL.insertExercise(name, description, movementType, isUnilateral, isUpper, isAccessory)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error saving exercise: {}", name, e)
+            }
     }
 
     /**
@@ -133,6 +137,7 @@ class ExerciseController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{name}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get exercise by name",
         description = "Retrieves exercise details by name.",
@@ -182,6 +187,7 @@ class ExerciseController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{name}/muscle")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get muscles for exercise",
         description = "Retrieves all muscles associated with a given exercise.",
@@ -239,6 +245,7 @@ class ExerciseController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{name}/equipment")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get equipment for exercise",
         description = "Retrieves all equipment associated with a given exercise.",
@@ -289,11 +296,12 @@ class ExerciseController(
      * This endpoint returns a list of all exercises available in the system.
      * The response includes basic exercise information for each exercise.
      *
-     * @return List of all exercises
+     * @return Mono containing a list of all exercises
      *
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all exercises",
         description = "Retrieves a list of all exercises.",
@@ -307,10 +315,15 @@ class ExerciseController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<Exercise>>> {
         logger.debug("Getting all exercises")
-        return ResponseEntity.ok(
-            exerciseDAL.selectExercises(),
-        )
+        return exerciseDAL.selectExercises()
+            .map { exercises ->
+                logger.debug("Found {} exercises", exercises.size)
+                ResponseEntity.ok(exercises)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all exercises", e)
+            }
     }
 }

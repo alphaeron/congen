@@ -13,12 +13,16 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
+@TestPropertySource(
+    properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
+)
 class UserOneRepMaxControllerTest {
     @Mock
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
@@ -110,8 +114,8 @@ class UserOneRepMaxControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(DatabaseException::class.java)
+            .verify()
 
         verify(userOneRepMaxService).getByUserAndExercise(testUserId, testExerciseName, null)
     }
@@ -170,7 +174,7 @@ class UserOneRepMaxControllerTest {
     }
 
     @Test
-    fun `deleteOneRepMax should return no content when deleted`() {
+    fun `deleteOneRepMax should return deleted one rep max when deleted`() {
         // Given
         whenever(userOneRepMaxService.deleteOneRepMax(testUserId, testExerciseName))
             .thenReturn(Mono.just(testOneRepMax))
@@ -180,7 +184,7 @@ class UserOneRepMaxControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.noContent().build<Void>())
+            .expectNext(ResponseEntity.ok(testOneRepMax))
             .verifyComplete()
 
         verify(userOneRepMaxService).deleteOneRepMax(testUserId, testExerciseName)
@@ -197,8 +201,8 @@ class UserOneRepMaxControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(DatabaseException::class.java)
+            .verify()
 
         verify(userOneRepMaxService).deleteOneRepMax(testUserId, testExerciseName)
     }

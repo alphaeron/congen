@@ -1,8 +1,10 @@
 package com.congen.controllers
 
-import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.ProgrammedWorkout
+import com.congen.service.ProgramService
+import com.congen.service.ProgrammedWorkoutService
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -23,7 +25,9 @@ import java.time.Instant
  * @since 1.0.0
  */
 class ProgrammedWorkoutControllerTest {
-    private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
+    private lateinit var programmedWorkoutService: ProgrammedWorkoutService
+    private lateinit var programService: ProgramService
+    private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var programmedWorkoutController: ProgrammedWorkoutController
 
     companion object {
@@ -43,12 +47,14 @@ class ProgrammedWorkoutControllerTest {
 
     @BeforeEach
     fun setUp() {
-        programmedWorkoutDAL = mock()
-        programmedWorkoutController = ProgrammedWorkoutController(programmedWorkoutDAL)
+        programmedWorkoutService = mock()
+        programService = mock()
+        keycloakUtil = mock()
+        programmedWorkoutController = ProgrammedWorkoutController(programmedWorkoutService, programService, keycloakUtil)
     }
 
     @Test
-    fun `should get all programmed workouts`() {
+    fun `should get all programmed workouts for admin user`() {
         val now = Instant.now()
         val programmedWorkouts =
             listOf(
@@ -69,12 +75,116 @@ class ProgrammedWorkoutControllerTest {
                     updatedAt = now
                 )
             )
-        whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.just(programmedWorkouts))
+        val userId = "123"
+        val roles = setOf("admin")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(programmedWorkoutService.selectProgrammedWorkouts()).thenReturn(Mono.just(programmedWorkouts))
+
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkouts))
             .verifyComplete()
-        verify(programmedWorkoutDAL).selectProgrammedWorkouts()
+        verify(programmedWorkoutService).selectProgrammedWorkouts()
+    }
+
+    @Test
+    fun `should get user owned programmed workouts for regular user`() {
+        val now = Instant.now()
+        val userWorkouts =
+            listOf(
+                ProgrammedWorkout(
+                    id = WORKOUT_ID_1,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_1,
+                    name = WORKOUT_NAME_1,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        val userId = "123"
+        val roles = setOf("user")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId.toInt())).thenReturn(Mono.just(userWorkouts))
+
+        val result = programmedWorkoutController.getAll()
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userWorkouts))
+            .verifyComplete()
+        verify(programmedWorkoutService).selectProgrammedWorkoutsByUserId(userId.toInt())
+    }
+
+    @Test
+    fun `should get user owned programmed workouts for service user`() {
+        val now = Instant.now()
+        val allWorkouts =
+            listOf(
+                ProgrammedWorkout(
+                    id = WORKOUT_ID_1,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_1,
+                    name = WORKOUT_NAME_1,
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                ProgrammedWorkout(
+                    id = WORKOUT_ID_2,
+                    programId = PROGRAM_ID,
+                    dayNumber = DAY_NUMBER_2,
+                    name = WORKOUT_NAME_2,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        val userId = "123"
+        val roles = setOf("service")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(programmedWorkoutService.selectProgrammedWorkouts()).thenReturn(Mono.just(allWorkouts))
+
+        val result = programmedWorkoutController.getAll()
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(allWorkouts))
+            .verifyComplete()
+        verify(programmedWorkoutService).selectProgrammedWorkouts()
+    }
+
+    @Test
+    fun `should return empty list when regular user has no owned workouts`() {
+        val emptyList = emptyList<ProgrammedWorkout>()
+        val userId = "123"
+        val roles = setOf("user")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId.toInt())).thenReturn(Mono.just(emptyList))
+
+        val result = programmedWorkoutController.getAll()
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(emptyList))
+            .verifyComplete()
+        verify(programmedWorkoutService).selectProgrammedWorkoutsByUserId(userId.toInt())
+    }
+
+    @Test
+    fun `should propagate errors from getAll`() {
+        val userId = "123"
+        val roles = setOf("user")
+        val databaseError = RuntimeException("Database error")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId.toInt())).thenReturn(Mono.error(databaseError))
+
+        val result = programmedWorkoutController.getAll()
+        StepVerifier.create(result)
+            .expectError(databaseError::class.java)
+            .verify()
+        verify(programmedWorkoutService).selectProgrammedWorkoutsByUserId(userId.toInt())
     }
 
     @Test
@@ -89,22 +199,24 @@ class ProgrammedWorkoutControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
         val result = programmedWorkoutController.get(WORKOUT_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
             .verifyComplete()
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(WORKOUT_ID_1)
+        verify(programmedWorkoutService).selectProgrammedWorkoutById(WORKOUT_ID_1)
     }
 
     @Test
     fun `should return not found when programmed workout not found`() {
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(NON_EXISTENT_ID)).thenReturn(Mono.error(RuntimeException("Not found")))
+        whenever(
+            programmedWorkoutService.selectProgrammedWorkoutById(NON_EXISTENT_ID)
+        ).thenReturn(Mono.error(RuntimeException("Not found")))
         val result = programmedWorkoutController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(NON_EXISTENT_ID)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(programmedWorkoutService).selectProgrammedWorkoutById(NON_EXISTENT_ID)
     }
 
     @Test
@@ -121,13 +233,13 @@ class ProgrammedWorkoutControllerTest {
             )
         val savedProgrammedWorkout = programmedWorkout.copy(id = WORKOUT_ID_1)
         whenever(
-            programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
+            programmedWorkoutService.insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
         ).thenReturn(Mono.just(savedProgrammedWorkout))
         val result = programmedWorkoutController.save(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgrammedWorkout))
             .verifyComplete()
-        verify(programmedWorkoutDAL).insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
+        verify(programmedWorkoutService).insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, NEW_WORKOUT)
     }
 
     @Test
@@ -143,25 +255,25 @@ class ProgrammedWorkoutControllerTest {
                 updatedAt = now
             )
         whenever(
-            programmedWorkoutDAL.updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
+            programmedWorkoutService.updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
         ).thenReturn(Mono.just(programmedWorkout))
         val result = programmedWorkoutController.update(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
             .verifyComplete()
-        verify(programmedWorkoutDAL).updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
+        verify(programmedWorkoutService).updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, UPDATED_WORKOUT)
     }
 
     @Test
     fun `should return not found when updating non-existent programmed workout`() {
         whenever(
-            programmedWorkoutDAL.updateProgrammedWorkout(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
+            programmedWorkoutService.updateProgrammedWorkout(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
         ).thenReturn(Mono.error(RuntimeException("Not found")))
         val result = programmedWorkoutController.update(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
-        verify(programmedWorkoutDAL).updateProgrammedWorkout(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(programmedWorkoutService).updateProgrammedWorkout(NON_EXISTENT_ID, PROGRAM_ID, DAY_NUMBER_1, TEST_NAME)
     }
 
     @Test
@@ -176,22 +288,22 @@ class ProgrammedWorkoutControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(programmedWorkoutDAL.deleteProgrammedWorkout(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
+        whenever(programmedWorkoutService.deleteProgrammedWorkout(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
         val result = programmedWorkoutController.delete(WORKOUT_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
             .verifyComplete()
-        verify(programmedWorkoutDAL).deleteProgrammedWorkout(WORKOUT_ID_1)
+        verify(programmedWorkoutService).deleteProgrammedWorkout(WORKOUT_ID_1)
     }
 
     @Test
     fun `should return not found when deleting non-existent programmed workout`() {
-        whenever(programmedWorkoutDAL.deleteProgrammedWorkout(NON_EXISTENT_ID)).thenReturn(Mono.error(RuntimeException("Not found")))
+        whenever(programmedWorkoutService.deleteProgrammedWorkout(NON_EXISTENT_ID)).thenReturn(Mono.error(RuntimeException("Not found")))
         val result = programmedWorkoutController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
-        verify(programmedWorkoutDAL).deleteProgrammedWorkout(NON_EXISTENT_ID)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(programmedWorkoutService).deleteProgrammedWorkout(NON_EXISTENT_ID)
     }
 
     @Test
@@ -216,31 +328,36 @@ class ProgrammedWorkoutControllerTest {
                     updatedAt = now
                 )
             )
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(PROGRAM_ID)).thenReturn(Mono.just(programmedWorkouts))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutsByProgramId(PROGRAM_ID)).thenReturn(Mono.just(programmedWorkouts))
         val result = programmedWorkoutController.getByProgramId(PROGRAM_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkouts))
             .verifyComplete()
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(PROGRAM_ID)
+        verify(programmedWorkoutService).selectProgrammedWorkoutsByProgramId(PROGRAM_ID)
     }
 
     @Test
     fun `should return empty list when no programmed workouts for program`() {
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)).thenReturn(Mono.just(emptyList()))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)).thenReturn(Mono.just(emptyList()))
         val result = programmedWorkoutController.getByProgramId(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(emptyList<ProgrammedWorkout>()))
             .verifyComplete()
-        verify(programmedWorkoutDAL).selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)
+        verify(programmedWorkoutService).selectProgrammedWorkoutsByProgramId(NON_EXISTENT_ID)
     }
 
     @Test
-    fun `should handle DAL error gracefully`() {
-        whenever(programmedWorkoutDAL.selectProgrammedWorkouts()).thenReturn(Mono.error(DatabaseQueryException("Database error")))
+    fun `should handle service error gracefully`() {
+        val userId = "123"
+        val roles = setOf("admin")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(programmedWorkoutService.selectProgrammedWorkouts()).thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
-        verify(programmedWorkoutDAL).selectProgrammedWorkouts()
+        verify(programmedWorkoutService).selectProgrammedWorkouts()
     }
 }

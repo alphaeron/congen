@@ -1,10 +1,17 @@
 package com.congen.controllers
 
-import com.congen.dal.ProgramDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
+import com.congen.service.ProgramService
+import com.congen.util.KeycloakUtil
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -52,7 +59,8 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/program")
 class ProgramController(
-    private val programDAL: ProgramDAL,
+    private val programService: ProgramService,
+    private val keycloakUtil: KeycloakUtil,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -75,21 +83,43 @@ class ProgramController(
      * @return Mono containing the created program with generated ID
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @Operation(
+        summary = "Create program",
+        description = "Creates a new program for a user.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Program created successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun save(
         @RequestParam("user_id") userId: Int,
         @RequestParam name: String,
         @RequestParam(name = "is_active", defaultValue = "true") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
-        logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
-        val startingCurrentWeekNumber = 1
-        return programDAL.insertProgram(userId, name, startingCurrentWeekNumber, isActive)
-            .map { savedProgram ->
-                logger.debug("Saved program with id: {}", savedProgram.id)
-                ResponseEntity.ok(savedProgram)
+        return keycloakUtil.getCurrentUserId().flatMap { keycloakId ->
+            keycloakUtil.getCurrentUserRoles().flatMap { roles ->
+                if (roles.contains("admin") || roles.contains("service") || userId.toString() == keycloakId) {
+                    logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
+                    val startingCurrentWeekNumber = 1
+                    programService.createProgram(userId, name, startingCurrentWeekNumber, isActive)
+                        .map { savedProgram ->
+                            logger.debug("Saved program with id: {}", savedProgram.id)
+                            ResponseEntity.ok(savedProgram)
+                        }
+                        .doOnError { e ->
+                            logger.error("Error saving program: {} for user {}", name, userId, e)
+                        }
+                } else {
+                    Mono.error(AccessDeniedException("User not authorized to create programs for other users"))
+                }
             }
-            .doOnError { e ->
-                logger.error("Error saving program: {} for user {}", name, userId, e)
-            }
+        }
     }
 
     /**
@@ -102,17 +132,37 @@ class ProgramController(
      * @return Mono containing the program if found, or 404 if not found
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#id, principal.subject)")
+    @Operation(
+        summary = "Get program by ID",
+        description = "Retrieves a specific program by its unique identifier.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Program found successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Program not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun get(
+        @Parameter(
+            description = "Unique identifier of the program",
+            required = true,
+            example = "1",
+        )
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<Program>> {
-        return programDAL.selectProgramById(id)
+        return programService.getProgramById(id)
             .map {
                 logger.debug("Found program: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Program not found: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error getting program: {}", id, e)
@@ -128,16 +178,35 @@ class ProgramController(
      * @return ResponseEntity containing a list of all programs
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get all programs",
+        description = "Retrieves a list of all programs.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Programs retrieved successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getAll(): Mono<ResponseEntity<List<Program>>> {
-        logger.debug("Getting all programs")
-        return programDAL.selectPrograms()
-            .map { programs ->
-                logger.debug("Found {} programs", programs.size)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programMono =
+                if (isAdminOrService) {
+                    programService.getAllPrograms()
+                } else {
+                    programService.getProgramsByUserId(userId.toInt(), null)
+                }
+            programMono.map { programs ->
                 ResponseEntity.ok(programs)
             }
-            .doOnError { e ->
-                logger.error("Error getting all programs", e)
-            }
+        }
     }
 
     /**
@@ -152,12 +221,36 @@ class ProgramController(
      * @return ResponseEntity containing a list of programs for the user
      */
     @GetMapping("/user/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @Operation(
+        summary = "Get programs by user ID",
+        description = "Retrieves programs for a specific user, optionally filtered by active status.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Programs retrieved successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun getByUserId(
+        @Parameter(
+            description = "User ID to filter programs by",
+            required = true,
+            example = "1",
+        )
         @PathVariable("user_id") userId: Int,
+        @Parameter(
+            description = "Optional filter for active status",
+            required = false,
+            example = "true",
+        )
         @RequestParam(name = "is_active", required = false) isActive: Boolean? = null,
     ): Mono<ResponseEntity<List<Program>>> {
         logger.debug("Getting programs for user: {} with isActive filter: {}", userId, isActive)
-        return programDAL.selectProgramsByUserId(userId, isActive)
+        return programService.getProgramsByUserId(userId, isActive)
             .map { programs ->
                 logger.debug("Found {} programs for user: {}", programs.size, userId)
                 ResponseEntity.ok(programs)
@@ -182,20 +275,55 @@ class ProgramController(
      * @return Mono containing the updated program, or 404 if not found
      */
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#id, principal.subject)")
+    @Operation(
+        summary = "Update program",
+        description = "Updates an existing program with the specified ID.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Program updated successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Program not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun update(
+        @Parameter(
+            description = "Unique identifier of the program to update",
+            required = true,
+            example = "1",
+        )
         @PathVariable("id") id: Long,
+        @Parameter(
+            description = "Updated name of the program",
+            required = true,
+            example = "Updated Program Name",
+        )
         @RequestParam name: String,
+        @Parameter(
+            description = "Updated current week number",
+            required = true,
+            example = "2",
+        )
         @RequestParam("current_week_number") currentWeekNumber: Int,
+        @Parameter(
+            description = "Whether the program should be active",
+            required = true,
+            example = "true",
+        )
         @RequestParam("is_active") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
-        return programDAL.updateProgram(id, name, currentWeekNumber, isActive)
+        return programService.updateProgram(id, name, currentWeekNumber, isActive)
             .map {
                 logger.debug("Updated program: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Program not found for update: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error updating program: {}", id, e)
@@ -213,17 +341,37 @@ class ProgramController(
      * @return Mono containing the deleted program, or 404 if not found
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#id, principal.subject)")
+    @Operation(
+        summary = "Delete program",
+        description = "Deletes a program by its unique identifier.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Program deleted successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Program not found",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
     fun delete(
+        @Parameter(
+            description = "Unique identifier of the program to delete",
+            required = true,
+            example = "1",
+        )
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<Program>> {
-        return programDAL.deleteProgram(id)
+        return programService.deleteProgram(id)
             .map {
                 logger.debug("Deleted program: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Program not found for deletion: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error deleting program: {}", id, e)

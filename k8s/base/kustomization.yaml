@@ -15,3 +15,5 @@ resources:
 - frontend-service.yaml
 - ingress.yaml
 - network-policy.yaml 
+- keycloak-deployment.yaml
+- keycloak-service.yaml 

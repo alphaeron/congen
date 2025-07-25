@@ -23,7 +23,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
             .expectBody()
-            .jsonPath("$").isEqualTo("Resource not found")
+            .jsonPath("$.error").isEqualTo("Resource not found")
     }
 
     @Test

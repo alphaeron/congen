@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset AI:1 labels:prod,test
+--changeset John Matty:12 labels:prod,test
 --comment: Add user_weak_muscle table for tracking user weak muscle groups.
 
 CREATE TABLE user_weak_muscle (

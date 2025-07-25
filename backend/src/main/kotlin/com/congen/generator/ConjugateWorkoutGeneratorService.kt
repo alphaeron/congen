@@ -2,7 +2,6 @@ package com.congen.generator
 
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
-import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
@@ -16,6 +15,7 @@ import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
+import com.congen.service.ProgramService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono
  * @property userOneRepMaxDAL Data access layer for user one rep max values
  * @property userProgramPreferencesDAL Data access layer for user program preferences
  * @property exerciseRotationHistoryDAL Data access layer for exercise rotation history
- * @property programDAL Data access layer for program operations
+ * @property programService Service for program operations
  * @property programmedWorkoutDAL Data access layer for programmed workout operations
  * @property conjugateTemplates Service for managing workout templates
  * @property workoutStageGenerationServiceFactory Factory for selecting appropriate workout stage generation services
@@ -70,7 +70,7 @@ class ConjugateWorkoutGeneratorService(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
     private val exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL,
-    private val programDAL: ProgramDAL,
+    private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
@@ -95,7 +95,7 @@ class ConjugateWorkoutGeneratorService(
     fun generateNextWeek(programId: Long): Mono<Program> {
         logger.info("Generating next week for program {}", programId)
 
-        return programDAL.selectProgramById(programId)
+        return programService.getProgramById(programId)
             .flatMap { program ->
                 Mono.zip(
                     exerciseDAL.selectExercises(),
@@ -134,7 +134,7 @@ class ConjugateWorkoutGeneratorService(
                         weakMuscles = weakMuscles,
                         currentWeekNumber = program.currentWeekNumber
                     ).then(
-                        programDAL.updateProgram(
+                        programService.updateProgram(
                             program.id,
                             "Conjugate Powerlifting - Week ${program.currentWeekNumber + 1}",
                             program.currentWeekNumber + 1,

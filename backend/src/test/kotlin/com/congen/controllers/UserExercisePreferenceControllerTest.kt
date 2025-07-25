@@ -3,14 +3,13 @@ package com.congen.controllers
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserExercisePreference
-import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
@@ -24,6 +23,9 @@ import java.time.Instant
  * @author Congen Development Team
  * @since 1.0.0
  */
+@TestPropertySource(
+    properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
+)
 class UserExercisePreferenceControllerTest {
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
     private lateinit var userExercisePreferenceController: UserExercisePreferenceController
@@ -31,8 +33,8 @@ class UserExercisePreferenceControllerTest {
     companion object {
         private const val USER_ID = 1
         private const val EXERCISE_NAME = "Bench Press"
-        private const val SQUAT = "Back Squat"
-        private const val SHOULD_AVOID = false
+        private const val SHOULD_AVOID = true
+        private const val SQUAT = "Squat"
     }
 
     @BeforeEach
@@ -54,9 +56,8 @@ class UserExercisePreferenceControllerTest {
         whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
             .thenReturn(Mono.just(userExercisePreference))
         val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<UserExercisePreference>)
-            .expectNext(userExercisePreference)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userExercisePreference))
             .verifyComplete()
         verify(userExercisePreferenceDAL).insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
     }
@@ -102,10 +103,9 @@ class UserExercisePreferenceControllerTest {
             )
         whenever(userExercisePreferenceDAL.deleteUserExercisePreference(USER_ID, EXERCISE_NAME))
             .thenReturn(Mono.just(userExercisePreference))
-        val result = userExercisePreferenceController.delete(userExercisePreference)
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<UserExercisePreference>)
-            .expectNext(userExercisePreference)
+        val result = userExercisePreferenceController.delete(USER_ID, EXERCISE_NAME)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userExercisePreference))
             .verifyComplete()
         verify(userExercisePreferenceDAL).deleteUserExercisePreference(USER_ID, EXERCISE_NAME)
     }
@@ -115,8 +115,7 @@ class UserExercisePreferenceControllerTest {
         whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<UserExercisePreference>)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
     }
@@ -133,19 +132,10 @@ class UserExercisePreferenceControllerTest {
 
     @Test
     fun `should handle DAL error gracefully for delete`() {
-        val now = Instant.now()
-        val userExercisePreference =
-            mockUserExercisePreference(
-                userId = USER_ID,
-                exerciseName = EXERCISE_NAME,
-                shouldAvoid = SHOULD_AVOID,
-                createdAt = now
-            )
         whenever(userExercisePreferenceDAL.deleteUserExercisePreference(USER_ID, EXERCISE_NAME))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
-        val result = userExercisePreferenceController.delete(userExercisePreference)
-        assert(result.statusCode == HttpStatus.OK)
-        StepVerifier.create(result.body as Mono<UserExercisePreference>)
+        val result = userExercisePreferenceController.delete(USER_ID, EXERCISE_NAME)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
     }

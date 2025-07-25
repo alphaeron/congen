@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -72,6 +73,7 @@ class UserProgramPreferencesController(
      * @return ResponseEntity containing the created user program preferences
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Create user program preferences",
         description = "Creates new user program preferences.",
@@ -92,11 +94,13 @@ class UserProgramPreferencesController(
         @RequestParam("program_days_per_week") programDaysPerWeek: Int,
         @Parameter(description = "Session time length in minutes", required = true)
         @RequestParam("session_time_length_in_minutes") sessionTimeLengthInMinutes: Int,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<UserProgramPreferences>> {
         logger.info("Saving user program preferences: {}", userId)
-        return ResponseEntity.ok(
-            userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes),
-        )
+        return userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error saving user program preferences: {} - {}", userId, programDaysPerWeek, e)
+            }
     }
 
     /**
@@ -109,6 +113,7 @@ class UserProgramPreferencesController(
      * @return Mono containing the user program preferences
      */
     @GetMapping("/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Get user program preferences by user ID",
         description = "Retrieves user program preferences for a given user.",
@@ -153,6 +158,7 @@ class UserProgramPreferencesController(
      * @throws DatabaseException if database operation fails
      */
     @PatchMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Update user program preferences",
         description = "Updates existing user program preferences.",
@@ -173,11 +179,13 @@ class UserProgramPreferencesController(
         @RequestParam("program_days_per_week") programDaysPerWeek: Int,
         @Parameter(description = "Session time length in minutes", required = true)
         @RequestParam("session_time_length_in_minutes") sessionTimeLengthInMinutes: Int,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<UserProgramPreferences>> {
         logger.info("Updating user program preferences: {}", userId)
-        return ResponseEntity.ok(
-            userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes),
-        )
+        return userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error updating user program preferences: {} - {}", userId, programDaysPerWeek, e)
+            }
     }
 
     /**
@@ -190,6 +198,7 @@ class UserProgramPreferencesController(
      * @return ResponseEntity containing the deleted user program preferences
      */
     @DeleteMapping("/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Delete user program preferences by user ID",
         description = "Deletes user program preferences for a given user.",
@@ -206,10 +215,12 @@ class UserProgramPreferencesController(
     fun delete(
         @Parameter(description = "User ID", required = true)
         @PathVariable("user_id") userId: Int,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<UserProgramPreferences>> {
         logger.info("Deleting user program preferences: {}", userId)
-        return ResponseEntity.ok(
-            userProgramPreferencesDAL.deleteUserProgramPreferences(userId),
-        )
+        return userProgramPreferencesDAL.deleteUserProgramPreferences(userId)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e ->
+                logger.error("Error deleting user program preferences: {}", userId, e)
+            }
     }
 }

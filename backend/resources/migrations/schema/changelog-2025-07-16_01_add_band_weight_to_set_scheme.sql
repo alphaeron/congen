@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:5 labels:prod,test
+--changeset John Matty:10 labels:prod,test
 --comment: Add band weight field to set_scheme table for Dynamic Effort exercises.
 
 -- Add band weight field to set_scheme table

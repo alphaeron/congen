@@ -197,7 +197,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
     body2: {
       fontWeight: 400,
       fontSize: 14,
-      color: (mode === 'dark') ? '#ccc' : undefined,
+      color: mode === 'dark' ? '#ccc' : undefined,
     },
     caption: {
       fontWeight: 400,

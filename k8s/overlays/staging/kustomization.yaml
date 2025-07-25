@@ -6,6 +6,7 @@ namespace: congen
 resources:
 - ../../base
 - staging-secret.yaml
+- keycloak-secret.yaml
 
 patches:
 - path: patches/migrations-configmap-patch.yaml
@@ -36,3 +37,7 @@ patches:
   target:
     kind: Deployment
     name: migration-service 
+- path: patches/keycloak-deployment-patch.yaml
+  target:
+    kind: Deployment
+    name: backend 

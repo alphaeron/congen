@@ -1,10 +1,13 @@
 package com.congen.controllers
 
-import com.congen.dal.WorkoutStageDAL
 import com.congen.model.WorkoutStage
+import com.congen.service.ProgramService
+import com.congen.service.WorkoutStageService
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Parameter
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -53,7 +56,9 @@ import reactor.core.publisher.Mono
 @RestController
 @RequestMapping("/workout_stage")
 class WorkoutStageController(
-    private val workoutStageDAL: WorkoutStageDAL,
+    private val workoutStageService: WorkoutStageService,
+    private val programService: ProgramService,
+    private val keycloakUtil: KeycloakUtil
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -74,6 +79,7 @@ class WorkoutStageController(
      * @return Mono containing the created workout stage with generated ID
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject)")
     fun save(
         @Parameter(description = "Programmed workout ID", required = true)
         @RequestParam("programmed_workout_id") programmedWorkoutId: Long,
@@ -85,7 +91,7 @@ class WorkoutStageController(
         @RequestParam name: String,
     ): Mono<ResponseEntity<WorkoutStage>> {
         logger.info("Saving workout stage for workout {} with name {}", programmedWorkoutId, name)
-        return workoutStageDAL.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
+        return workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
             .map { savedStage ->
                 logger.debug("Saved workout stage with id: {}", savedStage.id)
                 ResponseEntity.ok(savedStage)
@@ -111,17 +117,14 @@ class WorkoutStageController(
      * @return Mono containing the workout stage if found
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @workoutStageService.isOwner(#id, principal.subject)")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageDAL.selectWorkoutStageById(id)
+        return workoutStageService.selectWorkoutStageById(id)
             .map {
                 logger.debug("Found workout stage: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume { e ->
-                logger.warn("Workout stage not found: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error getting workout stage: {}", id, e)
@@ -137,16 +140,20 @@ class WorkoutStageController(
      * @return ResponseEntity containing a list of all workout stages
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     fun getAll(): Mono<ResponseEntity<List<WorkoutStage>>> {
-        logger.debug("Getting all workout stages")
-        return workoutStageDAL.selectWorkoutStages()
-            .map { workoutStages ->
-                logger.debug("Found {} workout stages", workoutStages.size)
-                ResponseEntity.ok(workoutStages)
-            }
-            .doOnError { e ->
-                logger.error("Error getting all workout stages", e)
-            }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()).flatMap { tuple ->
+            val userId = tuple.t1
+            val roles = tuple.t2
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val workoutStageMono =
+                if (isAdminOrService) {
+                    workoutStageService.selectWorkoutStages()
+                } else {
+                    workoutStageService.selectWorkoutStagesByUserId(userId.toInt())
+                }
+            workoutStageMono.map { ResponseEntity.ok(it) }
+        }
     }
 
     /**
@@ -159,11 +166,12 @@ class WorkoutStageController(
      * @return ResponseEntity containing a list of workout stages for the workout
      */
     @GetMapping("/workout/{programmed_workout_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject)")
     fun getByProgrammedWorkoutId(
         @PathVariable("programmed_workout_id") programmedWorkoutId: Long,
     ): Mono<ResponseEntity<List<WorkoutStage>>> {
         logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
-        return workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
+        return workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
             .map { workoutStages ->
                 logger.debug("Found {} workout stages for programmed workout: {}", workoutStages.size, programmedWorkoutId)
                 ResponseEntity.ok(workoutStages)
@@ -187,6 +195,9 @@ class WorkoutStageController(
      * @return ResponseEntity containing the updated workout stage
      */
     @PatchMapping("/")
+    @PreAuthorize(
+        "hasRole('admin') or hasRole('service') or (@workoutStageService.isOwner(#id, principal.subject) and @programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject))"
+    )
     fun update(
         @Parameter(description = "Workout stage ID", required = true)
         @RequestParam id: Long,
@@ -199,14 +210,10 @@ class WorkoutStageController(
         @Parameter(description = "Name of the workout stage", required = true)
         @RequestParam name: String,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageDAL.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
+        return workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
             .map {
                 logger.debug("Updated workout stage: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume { e ->
-                logger.warn("Workout stage not found for update: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error updating workout stage: {}", id, e)
@@ -223,17 +230,14 @@ class WorkoutStageController(
      * @return ResponseEntity containing the deleted workout stage
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @workoutStageService.isOwner(#id, principal.subject)")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageDAL.deleteWorkoutStage(id)
+        return workoutStageService.deleteWorkoutStage(id)
             .map {
                 logger.debug("Deleted workout stage: {}", id)
                 ResponseEntity.ok(it)
-            }
-            .onErrorResume { e ->
-                logger.warn("Workout stage not found for deletion: {}", id)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error deleting workout stage: {}", id, e)

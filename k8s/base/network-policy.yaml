@@ -18,6 +18,13 @@ spec:
     ports:
     - protocol: TCP
       port: 8080
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: congen
+    ports:
+    - protocol: TCP
+      port: 8080
   egress:
   - to:
     - podSelector:

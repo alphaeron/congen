@@ -98,6 +98,30 @@ class ProgrammedWorkoutDAL(
     }
 
     /**
+     * Retrieves all programmed workouts owned by a specific user.
+     *
+     * This method efficiently fetches all programmed workouts that belong to programs
+     * owned by the specified user by joining with the program table.
+     * If no programmed workouts exist for the user, an empty list is returned.
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing a list of programmed workouts owned by the user
+     */
+    fun selectProgrammedWorkoutsByUserId(userId: Int): Mono<List<ProgrammedWorkout>> {
+        logger.debug("Selecting programmed workouts by user id: {}", userId)
+        return postgresClient.select(
+            """
+            SELECT pw.*
+            FROM programmed_workout pw
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pw.program_id, pw.day_number
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    /**
      * Creates a new programmed workout record in the database.
      *
      * This method inserts a new programmed workout record with the provided properties.

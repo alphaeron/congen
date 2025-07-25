@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:5 labels:prod,test
+--changeset John Matty:9 labels:prod,test
 --comment: Add user_weight_unit_preference table for tracking user weight unit preferences per exercise.
 
 CREATE TABLE user_weight_unit_preference (

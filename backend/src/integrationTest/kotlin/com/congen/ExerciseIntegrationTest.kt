@@ -69,7 +69,10 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$").isArray()
             .jsonPath("$[0].exercise_name").isEqualTo(IntegrationTestHelpers.TEST_EXERCISE_NAME)
-            .jsonPath("$[0].muscle_name").isEqualTo(IntegrationTestHelpers.TEST_MUSCLE_NAME)
+            .jsonPath("$[0].muscle_name").isEqualTo("anterior deltoid") // First alphabetically
+            .jsonPath("$[1].muscle_name").isEqualTo("pec major") // Second alphabetically
+            .jsonPath("$[2].muscle_name").isEqualTo("serratus anterior") // Third alphabetically
+            .jsonPath("$[3].muscle_name").isEqualTo("triceps") // Fourth alphabetically
     }
 
     @Test

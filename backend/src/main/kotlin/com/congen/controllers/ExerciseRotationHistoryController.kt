@@ -1,7 +1,8 @@
 package com.congen.controllers
 
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.model.ExerciseRotationHistory
+import com.congen.service.ExerciseRotationHistoryService
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -56,7 +58,8 @@ import reactor.core.publisher.Mono
     description = "Operations for managing exercise rotation history records",
 )
 class ExerciseRotationHistoryController(
-    private val exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL,
+    private val exerciseRotationHistoryService: ExerciseRotationHistoryService,
+    private val keycloakUtil: KeycloakUtil
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseRotationHistoryController::class.java)
@@ -77,6 +80,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     @Operation(
         summary = "Create a new exercise rotation history record",
         description =
@@ -131,7 +135,7 @@ class ExerciseRotationHistoryController(
             exerciseName,
             isAccessory,
         )
-        return exerciseRotationHistoryDAL.insert(userId, exerciseName, isAccessory)
+        return exerciseRotationHistoryService.insert(userId, exerciseName, isAccessory)
             .map { savedRecord ->
                 logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
                 ResponseEntity.ok(savedRecord)
@@ -159,6 +163,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @exerciseRotationHistoryService.isOwner(#id, principal.subject)")
     @Operation(
         summary = "Get exercise rotation history record by ID",
         description = "Retrieves a specific exercise rotation history record by its unique identifier.",
@@ -194,7 +199,7 @@ class ExerciseRotationHistoryController(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         logger.info("Getting exercise rotation history by id: {}", id)
-        return exerciseRotationHistoryDAL.selectById(id)
+        return exerciseRotationHistoryService.selectById(id)
             .map { record ->
                 logger.debug("Found exercise rotation history record: {}", record.id)
                 ResponseEntity.ok(record)
@@ -216,6 +221,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/is_accessory/{is_accessory}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get exercise rotation history by accessory type",
         description = "Retrieves exercise rotation history records for a specific accessory type.",
@@ -239,17 +245,22 @@ class ExerciseRotationHistoryController(
             required = true,
             example = "false",
         )
-        @PathVariable("is_accessory") isAccessory: Boolean,
+        @PathVariable("is_accessory") isAccessory: Boolean
     ): Mono<ResponseEntity<List<ExerciseRotationHistory>>> {
-        logger.info("Getting exercise rotation history by isAccessory: {}", isAccessory)
-        return exerciseRotationHistoryDAL.selectByIsAccessory(isAccessory)
-            .map { records ->
-                logger.debug("Found {} exercise rotation history records for isAccessory: {}", records.size, isAccessory)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val exerciseRotationHistoryMono =
+                if (isAdminOrService) {
+                    exerciseRotationHistoryService.selectByIsAccessory(isAccessory)
+                } else {
+                    exerciseRotationHistoryService.selectByUserId(userId.toInt(), isAccessory)
+                }
+            exerciseRotationHistoryMono.map { records ->
                 ResponseEntity.ok(records)
             }
-            .doOnError { e ->
-                logger.error("Error getting exercise rotation history by isAccessory: {}", isAccessory, e)
-            }
+        }
     }
 
     /**
@@ -263,6 +274,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all exercise rotation history records",
         description = "Retrieves all exercise rotation history records from the database.",
@@ -281,15 +293,20 @@ class ExerciseRotationHistoryController(
         ],
     )
     fun getAll(): Mono<ResponseEntity<List<ExerciseRotationHistory>>> {
-        logger.info("Getting all exercise rotation history records")
-        return exerciseRotationHistoryDAL.selectAll()
-            .map { records ->
-                logger.debug("Found {} exercise rotation history records", records.size)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val exerciseRotationHistoryMono =
+                if (isAdminOrService) {
+                    exerciseRotationHistoryService.selectAll()
+                } else {
+                    exerciseRotationHistoryService.selectByUserId(userId.toInt())
+                }
+            exerciseRotationHistoryMono.map { records ->
                 ResponseEntity.ok(records)
             }
-            .doOnError { e ->
-                logger.error("Error getting all exercise rotation history records", e)
-            }
+        }
     }
 
     /**
@@ -308,6 +325,9 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @PatchMapping("/{id}")
+    @PreAuthorize(
+        "hasRole('admin') or hasRole('service') or (#userId == principal.subject and @exerciseRotationHistoryService.isOwner(#id, principal.subject))"
+    )
     @Operation(
         summary = "Update an exercise rotation history record",
         description = "Updates an existing exercise rotation history record with the provided information.",
@@ -376,7 +396,7 @@ class ExerciseRotationHistoryController(
             exerciseName,
             isAccessory,
         )
-        return exerciseRotationHistoryDAL.update(id, userId, exerciseName, isAccessory)
+        return exerciseRotationHistoryService.update(id, userId, exerciseName, isAccessory)
             .map { updatedRecord ->
                 logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
                 ResponseEntity.ok(updatedRecord)
@@ -405,6 +425,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @exerciseRotationHistoryService.isOwner(#id, principal.subject)")
     @Operation(
         summary = "Delete an exercise rotation history record",
         description = "Deletes an exercise rotation history record by its unique identifier.",
@@ -440,7 +461,7 @@ class ExerciseRotationHistoryController(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
         logger.info("Deleting exercise rotation history: {}", id)
-        return exerciseRotationHistoryDAL.deleteById(id)
+        return exerciseRotationHistoryService.deleteById(id)
             .map { deletedRecord ->
                 logger.debug("Deleted exercise rotation history record: {}", deletedRecord.id)
                 ResponseEntity.ok(deletedRecord)

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -79,6 +80,7 @@ class UserController(
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Create a new user",
         description =
@@ -151,10 +153,9 @@ class UserController(
      *
      * @param id The unique identifier of the user to retrieve
      * @return The user profile if found, or 404 if not found
-     *
-     * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #id == principal.subject")
     @Operation(
         summary = "Get user by ID",
         description = "Retrieves a specific user's profile information by their unique identifier.",
@@ -190,10 +191,7 @@ class UserController(
         @PathVariable("id") id: Int,
     ): Mono<ResponseEntity<User>> {
         return userService.getUserById(id)
-            .map {
-                logger.debug("Found user: {}", id)
-                ResponseEntity.ok(it)
-            }
+            .map { ResponseEntity.ok(it) }
     }
 
     /**
@@ -207,6 +205,7 @@ class UserController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Get all users",
         description = "Retrieves a list of all user profiles in the system.",
@@ -247,6 +246,7 @@ class UserController(
      * @throws DatabaseException if database operation fails
      */
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #id == principal.subject")
     @Operation(
         summary = "Update user",
         description =
@@ -308,7 +308,6 @@ class UserController(
         @RequestParam weight: BigDecimal,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<User>> {
-        logger.info("Updating user: {}", id)
         return userService.updateUser(id, name, age, height, weight, unit)
             .map { ResponseEntity.ok(it) }
     }
@@ -325,6 +324,7 @@ class UserController(
      * @throws DatabaseException if database operation fails
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #id == principal.subject")
     @Operation(
         summary = "Delete user",
         description =
@@ -361,7 +361,6 @@ class UserController(
         )
         @PathVariable("id") id: Int,
     ): Mono<ResponseEntity<User>> {
-        logger.info("Deleting user: {}", id)
         return userService.deleteUser(id)
             .map { ResponseEntity.ok(it) }
     }

@@ -96,7 +96,11 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         webTestClient.delete()
             .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
             .exchange()
-            .expectStatus().isNoContent()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.exercise_name").isEqualTo("Bench Press")
+            .jsonPath("$.one_rep_max").isEqualTo(100.0)
 
         // Verify it's deleted
         webTestClient.get()

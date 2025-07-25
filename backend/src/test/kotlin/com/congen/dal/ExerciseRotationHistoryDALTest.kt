@@ -102,4 +102,66 @@ class ExerciseRotationHistoryDALTest {
             updated.isAccessory,
         )
     }
+
+    @Test
+    fun `selectByUserId returns records for user only`() {
+        val userId = 42
+        val expected = listOf(history)
+        whenever(
+            postgresClient.select<ExerciseRotationHistory>(
+                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY created_at DESC",
+                userId,
+                null
+            )
+        ).thenReturn(Mono.just(expected))
+        val result = dal.selectByUserId(userId)
+        StepVerifier.create(result).expectNext(expected).verifyComplete()
+        verify(postgresClient).select<ExerciseRotationHistory>(
+            "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY created_at DESC",
+            userId,
+            null
+        )
+    }
+
+    @Test
+    fun `selectByUserId returns records for user and isAccessory true`() {
+        val userId = 42
+        val isAccessory = true
+        val expected = listOf(history)
+        whenever(
+            postgresClient.select<ExerciseRotationHistory>(
+                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND is_accessory=$2 ORDER BY created_at DESC",
+                userId,
+                isAccessory
+            )
+        ).thenReturn(Mono.just(expected))
+        val result = dal.selectByUserId(userId, isAccessory)
+        StepVerifier.create(result).expectNext(expected).verifyComplete()
+        verify(postgresClient).select<ExerciseRotationHistory>(
+            "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND is_accessory=$2 ORDER BY created_at DESC",
+            userId,
+            isAccessory
+        )
+    }
+
+    @Test
+    fun `selectByUserId returns records for user and isAccessory false`() {
+        val userId = 42
+        val isAccessory = false
+        val expected = listOf(history)
+        whenever(
+            postgresClient.select<ExerciseRotationHistory>(
+                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND is_accessory=$2 ORDER BY created_at DESC",
+                userId,
+                isAccessory
+            )
+        ).thenReturn(Mono.just(expected))
+        val result = dal.selectByUserId(userId, isAccessory)
+        StepVerifier.create(result).expectNext(expected).verifyComplete()
+        verify(postgresClient).select<ExerciseRotationHistory>(
+            "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND is_accessory=$2 ORDER BY created_at DESC",
+            userId,
+            isAccessory
+        )
+    }
 }

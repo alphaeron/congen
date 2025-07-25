@@ -1,32 +1,28 @@
 package com.congen.controllers
 
-import com.congen.exceptions.DatabaseQueryException
-import com.congen.mockUser
+import com.congen.exceptions.NoResultsFoundException
+import com.congen.model.User
 import com.congen.service.UserService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
 
-/**
- * Unit tests for UserController.
- *
- * These tests verify the REST API endpoints for user operations,
- * including HTTP response construction and delegation to UserService.
- *
- * @author Congen Development Team
- * @since 1.0.0
- */
+@TestPropertySource(
+    properties = [
+        "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration"
+    ]
+)
 class UserControllerTest {
-    private lateinit var userController: UserController
     private lateinit var userService: UserService
+    private lateinit var userController: UserController
 
     companion object {
         private const val USER_ID = 1
@@ -52,7 +48,7 @@ class UserControllerTest {
     fun `save should return created user`() {
         val now = Instant.now()
         val user =
-            mockUser(
+            User(
                 id = 0,
                 name = NAME,
                 age = AGE,
@@ -63,7 +59,7 @@ class UserControllerTest {
             )
         val savedUser = user.copy(id = USER_ID)
 
-        whenever(userService.createUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT)), eq("KG")))
+        whenever(userService.createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
             .thenReturn(Mono.just(savedUser))
 
         val result = userController.save(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
@@ -79,7 +75,7 @@ class UserControllerTest {
     fun `get should return user when found`() {
         val now = Instant.now()
         val user =
-            mockUser(
+            User(
                 id = USER_ID,
                 name = NAME,
                 age = AGE,
@@ -105,7 +101,7 @@ class UserControllerTest {
         val now = Instant.now()
         val users =
             listOf(
-                mockUser(
+                User(
                     id = USER_ID,
                     name = NAME,
                     age = AGE,
@@ -114,7 +110,7 @@ class UserControllerTest {
                     createdAt = now,
                     updatedAt = now
                 ),
-                mockUser(
+                User(
                     id = USER_ID_2,
                     name = JANE_NAME,
                     age = JANE_AGE,
@@ -140,7 +136,7 @@ class UserControllerTest {
     fun `update should return updated user`() {
         val now = Instant.now()
         val user =
-            mockUser(
+            User(
                 id = USER_ID,
                 name = NAME,
                 age = AGE,
@@ -150,7 +146,7 @@ class UserControllerTest {
                 updatedAt = now
             )
 
-        whenever(userService.updateUser(eq(USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT)), eq("KG")))
+        whenever(userService.updateUser(USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
             .thenReturn(Mono.just(user))
 
         val result = userController.update(USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
@@ -166,7 +162,7 @@ class UserControllerTest {
     fun `delete should return deleted user`() {
         val now = Instant.now()
         val user =
-            mockUser(
+            User(
                 id = USER_ID,
                 name = NAME,
                 age = AGE,
@@ -188,61 +184,45 @@ class UserControllerTest {
     }
 
     @Test
-    fun `should propagate error when user not found`() {
-        val error = DatabaseQueryException("Not found")
+    fun `should return 404 when user not found`() {
+        val error = NoResultsFoundException("Not found")
         whenever(userService.getUserById(NON_EXISTENT_USER_ID)).thenReturn(Mono.error(error))
 
         val result = userController.get(NON_EXISTENT_USER_ID)
 
         StepVerifier.create(result)
-            .expectError(DatabaseQueryException::class.java)
+            .expectError(NoResultsFoundException::class.java)
             .verify()
 
         verify(userService).getUserById(NON_EXISTENT_USER_ID)
     }
 
     @Test
-    fun `should propagate error when updating non-existent user`() {
-        val error = DatabaseQueryException("Not found")
-        whenever(
-            userService.updateUser(eq(NON_EXISTENT_USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT)), eq("KG"))
-        )
+    fun `should return 404 when updating non-existent user`() {
+        val error = NoResultsFoundException("Not found")
+        whenever(userService.updateUser(NON_EXISTENT_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
             .thenReturn(Mono.error(error))
 
         val result = userController.update(NON_EXISTENT_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
 
         StepVerifier.create(result)
-            .expectError(DatabaseQueryException::class.java)
+            .expectError(NoResultsFoundException::class.java)
             .verify()
 
         verify(userService).updateUser(NON_EXISTENT_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
     }
 
     @Test
-    fun `should propagate error when deleting non-existent user`() {
-        val error = DatabaseQueryException("Not found")
+    fun `should return 404 when deleting non-existent user`() {
+        val error = NoResultsFoundException("Not found")
         whenever(userService.deleteUser(NON_EXISTENT_USER_ID)).thenReturn(Mono.error(error))
 
         val result = userController.delete(NON_EXISTENT_USER_ID)
 
         StepVerifier.create(result)
-            .expectError(DatabaseQueryException::class.java)
+            .expectError(NoResultsFoundException::class.java)
             .verify()
 
         verify(userService).deleteUser(NON_EXISTENT_USER_ID)
-    }
-
-    @Test
-    fun `should propagate service error gracefully for getAll`() {
-        val error = DatabaseQueryException("Database error")
-        whenever(userService.getAllUsers()).thenReturn(Mono.error(error))
-
-        val result = userController.getAll()
-
-        StepVerifier.create(result)
-            .expectError(DatabaseQueryException::class.java)
-            .verify()
-
-        verify(userService).getAllUsers()
     }
 }

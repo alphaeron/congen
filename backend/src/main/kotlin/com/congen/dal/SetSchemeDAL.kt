@@ -126,6 +126,34 @@ class SetSchemeDAL(
     }
 
     /**
+     * Retrieves all set schemes owned by a specific user.
+     *
+     * This method efficiently fetches all set schemes that belong to programmed exercises
+     * owned by the specified user by joining through the relationship chain:
+     * SetScheme → ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
+     * If no set schemes exist for the user, an empty list is returned.
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing a list of set schemes owned by the user
+     */
+    fun selectSetSchemesByUserId(userId: Int): Mono<List<SetScheme>> {
+        logger.debug("Selecting set schemes by user id: {}", userId)
+        return postgresClient.select(
+            """
+            SELECT ss.*
+            FROM set_scheme ss
+            JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ss.programmed_exercise_id, ss.set_number
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    /**
      * Inserts a new set scheme into the database.
      *
      * This method validates the set scheme data and inserts a new set scheme

@@ -14,9 +14,13 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
 
+import { AuthProvider, useAuth } from './auth/AuthContext';
+import { ProtectedRoute } from './auth/ProtectedRoute';
 import { ToggleColorMode } from './components/ToggleColorMode';
+import { UserProfile } from './components/UserProfile';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
+import { LoginPage } from './pages/LoginPage';
 import { RootPage } from './pages/RootPage';
 import { getTheme } from './theme';
 
@@ -33,14 +37,15 @@ const logoStyle = {
 };
 
 /**
- * The main application.
+ * The main application content.
  *
- * @return A component to render for the main application.
+ * @return A component to render for the main application content.
  */
-export function App(): React.ReactElement {
+function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
+  const { authenticated, loading } = useAuth();
 
   // Debug: show what the browser reports
   const [mediaQueryValue, setMediaQueryValue] = React.useState(false);
@@ -129,12 +134,18 @@ export function App(): React.ReactElement {
                   alignItems: 'center',
                 }}
               >
-                <Button color="primary" variant="text" size="small" component="a" href="#">
-                  Sign in
-                </Button>
-                <Button color="primary" variant="contained" size="small" component="a" href="#">
-                  Sign up
-                </Button>
+                {authenticated ? (
+                  <UserProfile />
+                ) : (
+                  <>
+                    <Button color="primary" variant="text" size="small" component={Link} to="/login">
+                      Sign in
+                    </Button>
+                    <Button color="primary" variant="contained" size="small" component={Link} to="/login">
+                      Sign up
+                    </Button>
+                  </>
+                )}
               </Box>
               <Box sx={{ display: { sm: '', md: 'none' } }}>
                 <Button
@@ -164,28 +175,36 @@ export function App(): React.ReactElement {
                       Exercises
                     </MenuItem>
                     <Divider />
-                    <MenuItem>
-                      <Button
-                        color="primary"
-                        variant="contained"
-                        component="a"
-                        href="#"
-                        sx={{ width: '100%' }}
-                      >
-                        Sign up
-                      </Button>
-                    </MenuItem>
-                    <MenuItem>
-                      <Button
-                        color="primary"
-                        variant="outlined"
-                        component="a"
-                        href="#"
-                        sx={{ width: '100%' }}
-                      >
-                        Sign in
-                      </Button>
-                    </MenuItem>
+                    {authenticated ? (
+                      <MenuItem>
+                        <UserProfile />
+                      </MenuItem>
+                    ) : (
+                      <>
+                        <MenuItem>
+                          <Button
+                            color="primary"
+                            variant="contained"
+                            component={Link}
+                            to="/login"
+                            sx={{ width: '100%' }}
+                          >
+                            Sign up
+                          </Button>
+                        </MenuItem>
+                        <MenuItem>
+                          <Button
+                            color="primary"
+                            variant="outlined"
+                            component={Link}
+                            to="/login"
+                            sx={{ width: '100%' }}
+                          >
+                            Sign in
+                          </Button>
+                        </MenuItem>
+                      </>
+                    )}
                   </Box>
                 </Drawer>
               </Box>
@@ -193,11 +212,25 @@ export function App(): React.ReactElement {
           </AppBar>
           <Routes>
             <Route path="/" element={<RootPage />} />
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/exercises" element={<ExerciseOverviewPage />} />
             <Route path="/exercises/:exerciseName" element={<ExerciseDetailsPage />} />
           </Routes>
         </Container>
       </BrowserRouter>
     </ThemeProvider>
+  );
+} // end component AppContent
+
+/**
+ * The main application wrapper with authentication provider.
+ *
+ * @return A component to render for the main application.
+ */
+export function App(): React.ReactElement {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 } // end component App

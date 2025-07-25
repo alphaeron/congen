@@ -265,4 +265,62 @@ class ProgrammedExerciseDALTest {
             programmedExercise.id
         )
     }
+
+    @Test
+    fun `selectProgrammedExercisesByUserId should return list of programmed exercises`() {
+        val userId = 42
+        val expectedQuery =
+            """
+            SELECT pe.*
+            FROM programmed_exercise pe
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pe.position
+            """.trimIndent()
+        whenever(postgresClient.select<ProgrammedExercise>(expectedQuery, userId)).thenReturn(Mono.just(programmedExerciseList))
+        val result = programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
+        StepVerifier.create(result).expectNext(programmedExerciseList).verifyComplete()
+        verify(postgresClient).select<ProgrammedExercise>(expectedQuery, userId)
+    }
+
+    @Test
+    fun `selectProgrammedExercisesByUserId should return empty list`() {
+        val userId = 99
+        val expectedQuery =
+            """
+            SELECT pe.*
+            FROM programmed_exercise pe
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pe.position
+            """.trimIndent()
+        whenever(postgresClient.select<ProgrammedExercise>(expectedQuery, userId)).thenReturn(Mono.just(emptyList()))
+        val result = programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
+        StepVerifier.create(result).expectNext(emptyList<ProgrammedExercise>()).verifyComplete()
+        verify(postgresClient).select<ProgrammedExercise>(expectedQuery, userId)
+    }
+
+    @Test
+    fun `selectProgrammedExercisesByUserId should propagate error`() {
+        val userId = 42
+        val expectedQuery =
+            """
+            SELECT pe.*
+            FROM programmed_exercise pe
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pe.position
+            """.trimIndent()
+        val ex = RuntimeException("db error")
+        whenever(postgresClient.select<ProgrammedExercise>(expectedQuery, userId)).thenReturn(Mono.error(ex))
+        val result = programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
+        StepVerifier.create(result).expectError(RuntimeException::class.java).verify()
+        verify(postgresClient).select<ProgrammedExercise>(expectedQuery, userId)
+    }
 }

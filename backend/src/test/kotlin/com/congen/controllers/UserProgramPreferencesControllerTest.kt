@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
@@ -24,6 +24,9 @@ import java.time.Instant
  * @author Congen Development Team
  * @since 1.0.0
  */
+@TestPropertySource(
+    properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
+)
 class UserProgramPreferencesControllerTest {
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
     private lateinit var userProgramPreferencesController: UserProgramPreferencesController
@@ -43,29 +46,32 @@ class UserProgramPreferencesControllerTest {
     }
 
     @Test
-    fun `save should return created user program preferences`() {
+    fun `save should return saved user program preferences`() {
         val now = Instant.now()
         val userProgramPreferences =
-            UserProgramPreferences(
+            mockUserProgramPreferences(
                 userId = USER_ID,
                 programDaysPerWeek = PROGRAM_DAYS_PER_WEEK_4,
-                sessionTimeLengthInMinutes = SESSION_TIME_60,
-                createdAt = now,
-                updatedAt = now
+                sessionTimeLengthInMinutes = SESSION_TIME_60
             )
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60))
+        whenever(
+            userProgramPreferencesDAL.insertUserProgramPreferences(
+                USER_ID,
+                PROGRAM_DAYS_PER_WEEK_4,
+                SESSION_TIME_60
+            )
+        )
             .thenReturn(Mono.just(userProgramPreferences))
         val result = userProgramPreferencesController.save(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserProgramPreferences>
-        StepVerifier.create(body)
-            .expectNext(userProgramPreferences)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userProgramPreferences))
             .verifyComplete()
         verify(userProgramPreferencesDAL).insertUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
     }
 
     @Test
-    fun `get should return user program preferences when found`() {
+    fun `getByUser should return user program preferences when found`() {
+        val now = Instant.now()
         val userProgramPreferences =
             mockUserProgramPreferences(
                 userId = USER_ID,
@@ -94,10 +100,8 @@ class UserProgramPreferencesControllerTest {
         whenever(userProgramPreferencesDAL.updateUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75))
             .thenReturn(Mono.just(userProgramPreferences))
         val result = userProgramPreferencesController.update(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserProgramPreferences>
-        StepVerifier.create(body)
-            .expectNext(userProgramPreferences)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userProgramPreferences))
             .verifyComplete()
         verify(userProgramPreferencesDAL).updateUserProgramPreferences(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
     }
@@ -115,10 +119,8 @@ class UserProgramPreferencesControllerTest {
             )
         whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(USER_ID)).thenReturn(Mono.just(userProgramPreferences))
         val result = userProgramPreferencesController.delete(USER_ID)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserProgramPreferences>
-        StepVerifier.create(body)
-            .expectNext(userProgramPreferences)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userProgramPreferences))
             .verifyComplete()
         verify(userProgramPreferencesDAL).deleteUserProgramPreferences(USER_ID)
     }
@@ -134,15 +136,13 @@ class UserProgramPreferencesControllerTest {
         )
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.save(USER_ID, PROGRAM_DAYS_PER_WEEK_4, SESSION_TIME_60)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserProgramPreferences>
-        StepVerifier.create(body)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
     }
 
     @Test
-    fun `should handle DAL error gracefully for get`() {
+    fun `should handle DAL error gracefully for getByUser`() {
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.get(USER_ID)
@@ -162,9 +162,7 @@ class UserProgramPreferencesControllerTest {
         )
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.update(USER_ID, PROGRAM_DAYS_PER_WEEK_5, SESSION_TIME_75)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserProgramPreferences>
-        StepVerifier.create(body)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
     }
@@ -174,9 +172,7 @@ class UserProgramPreferencesControllerTest {
         whenever(userProgramPreferencesDAL.deleteUserProgramPreferences(USER_ID))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = userProgramPreferencesController.delete(USER_ID)
-        assert(result.statusCode == HttpStatus.OK)
-        val body = result.body as Mono<UserProgramPreferences>
-        StepVerifier.create(body)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
     }

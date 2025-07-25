@@ -92,6 +92,27 @@ class ExerciseRotationHistoryDAL(
     }
 
     /**
+     * Retrieves all exercise rotation history records for a specific user, optionally filtered by accessory type.
+     *
+     * @param userId The user ID
+     * @param isAccessory Optional filter for accessory exercises
+     * @return Mono containing a list of exercise rotation history records for the user
+     */
+    fun selectByUserId(
+        userId: Int,
+        isAccessory: Boolean? = null
+    ): Mono<List<ExerciseRotationHistory>> {
+        logger.debug("Selecting exercise rotation history by user id: {} and isAccessory: {}", userId, isAccessory)
+        val query =
+            if (isAccessory == null) {
+                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY created_at DESC"
+            } else {
+                "SELECT * FROM exercise_rotation_history WHERE user_id=$1 AND is_accessory=$2 ORDER BY created_at DESC"
+            }
+        return postgresClient.select(query, userId, isAccessory)
+    }
+
+    /**
      * Inserts a new exercise rotation history record into the database.
      *
      * This method validates the exercise rotation history data and inserts a new record.

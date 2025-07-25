@@ -342,4 +342,125 @@ class SetSchemeDALTest {
             deletedSetScheme.id
         )
     }
+
+    @Test
+    fun `selectSetSchemesByUserId should return list of user owned set schemes`() {
+        val userId = 1
+        val userSetSchemes =
+            listOf(
+                mockSetScheme(id = 1L, programmedExerciseId = 1L, setNumber = 1),
+                mockSetScheme(id = 2L, programmedExerciseId = 1L, setNumber = 2)
+            )
+
+        whenever(
+            postgresClient.select<SetScheme>(
+                """
+                SELECT ss.*
+                FROM set_scheme ss
+                JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+                JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+                JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY ss.programmed_exercise_id, ss.set_number
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.just(userSetSchemes))
+
+        val result = setSchemeDAL.selectSetSchemesByUserId(userId)
+
+        StepVerifier.create(result).expectNext(userSetSchemes).verifyComplete()
+        verify(postgresClient).select<SetScheme>(
+            """
+            SELECT ss.*
+            FROM set_scheme ss
+            JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ss.programmed_exercise_id, ss.set_number
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    @Test
+    fun `selectSetSchemesByUserId should return empty list when user has no set schemes`() {
+        val userId = 1
+        val emptyList = emptyList<SetScheme>()
+
+        whenever(
+            postgresClient.select<SetScheme>(
+                """
+                SELECT ss.*
+                FROM set_scheme ss
+                JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+                JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+                JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY ss.programmed_exercise_id, ss.set_number
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.just(emptyList))
+
+        val result = setSchemeDAL.selectSetSchemesByUserId(userId)
+
+        StepVerifier.create(result).expectNext(emptyList).verifyComplete()
+        verify(postgresClient).select<SetScheme>(
+            """
+            SELECT ss.*
+            FROM set_scheme ss
+            JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ss.programmed_exercise_id, ss.set_number
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    @Test
+    fun `selectSetSchemesByUserId should propagate database errors`() {
+        val userId = 1
+        val databaseError = RuntimeException("Database connection failed")
+
+        whenever(
+            postgresClient.select<SetScheme>(
+                """
+                SELECT ss.*
+                FROM set_scheme ss
+                JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+                JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+                JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY ss.programmed_exercise_id, ss.set_number
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.error(databaseError))
+
+        val result = setSchemeDAL.selectSetSchemesByUserId(userId)
+
+        StepVerifier.create(result).expectError(databaseError::class.java).verify()
+        verify(postgresClient).select<SetScheme>(
+            """
+            SELECT ss.*
+            FROM set_scheme ss
+            JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ss.programmed_exercise_id, ss.set_number
+            """.trimIndent(),
+            userId
+        )
+    }
 }

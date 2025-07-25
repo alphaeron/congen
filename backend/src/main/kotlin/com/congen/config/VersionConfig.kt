@@ -1,8 +1,8 @@
 package com.congen.config
 
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.ClassPathResource
-import java.util.Properties
 
 /**
  * Configuration class for application version information.
@@ -24,45 +24,54 @@ import java.util.Properties
  * @author Congen Development Team
  * @since 1.0.0
  */
+@ConfigurationProperties(prefix = "app")
+data class VersionProperties(
+    var version: String = "0.0.1-SNAPSHOT",
+    var releaseId: String = "dev-release",
+    var buildTime: String = "unknown",
+    var gitHash: String = "unknown",
+    var gitBranch: String = "unknown",
+    var gitDirty: Boolean = false
+)
+
+/**
+ * Configuration class for application version information.
+ *
+ * This class loads and provides access to version-related information about the application,
+ * including version number, release ID, build time, and Git information. The version data
+ * is loaded from a `version.properties` file on the classpath, with fallback default values
+ * if the file is not available.
+ *
+ * This information is used for health checks, API documentation, and debugging purposes.
+ *
+ * @property versionProperties The version-related properties loaded from configuration.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @Configuration
-class VersionConfig {
+@EnableConfigurationProperties(VersionProperties::class)
+class VersionConfig(
+    /**
+     * The version-related properties loaded from configuration.
+     */
+    val versionProperties: VersionProperties
+) {
     /** Application version number. */
-    val version: String
+    val version: String = versionProperties.version
 
     /** Release identifier. */
-    val releaseId: String
+    val releaseId: String = versionProperties.releaseId
 
     /** Build timestamp. */
-    val buildTime: String
+    val buildTime: String = versionProperties.buildTime
 
     /** Git commit hash. */
-    val gitHash: String
+    val gitHash: String = versionProperties.gitHash
 
     /** Git branch name. */
-    val gitBranch: String
+    val gitBranch: String = versionProperties.gitBranch
 
     /** Whether the Git working directory is dirty (has uncommitted changes). */
-    val gitDirty: Boolean
-
-    init {
-        // Load version properties from classpath if available
-        val props = Properties()
-        try {
-            val resource = ClassPathResource("version.properties")
-            if (resource.exists()) {
-                resource.inputStream.use { props.load(it) }
-            }
-        } catch (e: Exception) {
-            // If version.properties is not available, use default values
-            // This can happen during development or if the build process hasn't run
-        }
-
-        // Set values with defaults if not found in properties
-        version = props.getProperty("app.version", "0.0.1-SNAPSHOT")
-        releaseId = props.getProperty("app.releaseId", "dev-release")
-        buildTime = props.getProperty("app.buildTime", "unknown")
-        gitHash = props.getProperty("app.gitHash", "unknown")
-        gitBranch = props.getProperty("app.gitBranch", "unknown")
-        gitDirty = props.getProperty("app.gitDirty", "false").toBoolean()
-    }
+    val gitDirty: Boolean = versionProperties.gitDirty
 }

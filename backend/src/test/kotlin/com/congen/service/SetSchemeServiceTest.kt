@@ -1,6 +1,5 @@
 package com.congen.service
 
-import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
@@ -44,7 +43,6 @@ import java.math.BigDecimal
 class SetSchemeServiceTest {
     private lateinit var setSchemeDAL: SetSchemeDAL
     private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
-    private lateinit var programDAL: ProgramDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var unitConversionService: UnitConverter
     private lateinit var setSchemeService: SetSchemeService
@@ -63,7 +61,6 @@ class SetSchemeServiceTest {
     fun setUp() {
         setSchemeDAL = mock()
         programmedExerciseDAL = mock()
-        programDAL = mock()
         userOneRepMaxDAL = mock()
         unitConversionService = mock()
         val oneRepMaxCalculator = OneRepMaxCalculator()
@@ -71,7 +68,6 @@ class SetSchemeServiceTest {
             SetSchemeService(
                 setSchemeDAL,
                 programmedExerciseDAL,
-                programDAL,
                 userOneRepMaxDAL,
                 unitConversionService,
                 oneRepMaxCalculator
@@ -626,5 +622,99 @@ class SetSchemeServiceTest {
         StepVerifier.create(result)
             .expectNext(setScheme)
             .verifyComplete()
+    }
+
+    @Test
+    fun `isOwner returns true when user is owner`() {
+        val setScheme = mockSetScheme(id = setSchemeId, programmedExerciseId = programmedExerciseId)
+        val ownerUserId = 42
+        val userId = "42"
+        whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.just(setScheme))
+        whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
+
+        val result = setSchemeService.isOwner(setSchemeId, userId)
+        StepVerifier.create(result)
+            .expectNext(true)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `isOwner returns false when user is not owner`() {
+        val setScheme = mockSetScheme(id = setSchemeId, programmedExerciseId = programmedExerciseId)
+        val ownerUserId = 42
+        val userId = "99"
+        whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.just(setScheme))
+        whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
+
+        val result = setSchemeService.isOwner(setSchemeId, userId)
+        StepVerifier.create(result)
+            .expectNext(false)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `isOwner returns false when set scheme not found`() {
+        val userId = "42"
+        whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.error(NoResultsFoundException("not found")))
+
+        val result = setSchemeService.isOwner(setSchemeId, userId)
+        StepVerifier.create(result)
+            .expectNext(false)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `isOwner returns false when programmed exercise not found`() {
+        val setScheme = mockSetScheme(id = setSchemeId, programmedExerciseId = programmedExerciseId)
+        val userId = "42"
+        whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.just(setScheme))
+        whenever(
+            programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)
+        ).thenReturn(Mono.error(NoResultsFoundException("not found")))
+
+        val result = setSchemeService.isOwner(setSchemeId, userId)
+        StepVerifier.create(result)
+            .expectNext(false)
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectSetSchemesByUserId returns list of user owned set schemes`() {
+        val userId = 1
+        val userSetSchemes =
+            listOf(
+                mockSetScheme(id = 1L, programmedExerciseId = 1L, setNumber = 1),
+                mockSetScheme(id = 2L, programmedExerciseId = 1L, setNumber = 2)
+            )
+        whenever(setSchemeDAL.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(userSetSchemes))
+
+        val result = setSchemeService.selectSetSchemesByUserId(userId)
+
+        StepVerifier.create(result).expectNext(userSetSchemes).verifyComplete()
+        verify(setSchemeDAL).selectSetSchemesByUserId(userId)
+    }
+
+    @Test
+    fun `selectSetSchemesByUserId returns empty list when user has no set schemes`() {
+        val userId = 1
+        val emptyList = emptyList<SetScheme>()
+        whenever(setSchemeDAL.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(emptyList))
+
+        val result = setSchemeService.selectSetSchemesByUserId(userId)
+
+        StepVerifier.create(result).expectNext(emptyList).verifyComplete()
+        verify(setSchemeDAL).selectSetSchemesByUserId(userId)
+    }
+
+    @Test
+    fun `selectSetSchemesByUserId propagates database errors`() {
+        val userId = 1
+        val databaseError = RuntimeException("Database connection failed")
+        whenever(setSchemeDAL.selectSetSchemesByUserId(userId)).thenReturn(Mono.error(databaseError))
+
+        val result = setSchemeService.selectSetSchemesByUserId(userId)
+
+        StepVerifier.create(result).expectError(databaseError::class.java).verify()
+        verify(setSchemeDAL).selectSetSchemesByUserId(userId)
     }
 }

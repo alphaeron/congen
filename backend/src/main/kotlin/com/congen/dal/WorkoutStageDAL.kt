@@ -107,6 +107,32 @@ class WorkoutStageDAL(
     }
 
     /**
+     * Retrieves all workout stages owned by a specific user.
+     *
+     * This method efficiently fetches all workout stages that belong to programmed workouts
+     * owned by the specified user by joining through the relationship chain:
+     * WorkoutStage → ProgrammedWorkout → Program → User
+     * If no workout stages exist for the user, an empty list is returned.
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing a list of workout stages owned by the user
+     */
+    fun selectWorkoutStagesByUserId(userId: Int): Mono<List<WorkoutStage>> {
+        logger.debug("Selecting workout stages by user id: {}", userId)
+        return postgresClient.select(
+            """
+            SELECT ws.*
+            FROM workout_stage ws
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY ws.programmed_workout_id, ws.position
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    /**
      * Inserts a new workout stage into the database.
      *
      * This method validates the workout stage data and inserts a new workout stage

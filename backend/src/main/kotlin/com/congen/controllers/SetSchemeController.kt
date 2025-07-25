@@ -1,9 +1,12 @@
 package com.congen.controllers
 
 import com.congen.model.SetScheme
+import com.congen.service.ProgrammedExerciseService
 import com.congen.service.SetSchemeService
+import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -53,6 +56,8 @@ import reactor.core.publisher.Mono
 @RequestMapping("/set_scheme")
 class SetSchemeController(
     private val setSchemeService: SetSchemeService,
+    private val keycloakUtil: KeycloakUtil,
+    private val programmedExerciseService: ProgrammedExerciseService,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -83,6 +88,7 @@ class SetSchemeController(
      * @return Mono containing the created set scheme with generated ID
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedExerciseService.isOwner(#programmedExerciseId, principal.subject)")
     fun save(
         @RequestParam("programmed_exercise_id") programmedExerciseId: Long,
         @RequestParam("set_number") setNumber: Int,
@@ -128,6 +134,7 @@ class SetSchemeController(
      * @return Mono containing the set scheme if found
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @setSchemeService.isOwner(#id, principal.subject)")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {
@@ -144,9 +151,20 @@ class SetSchemeController(
      * @return ResponseEntity containing a list of all set schemes
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     fun getAll(): Mono<ResponseEntity<List<SetScheme>>> {
-        return setSchemeService.selectSetSchemes()
-            .map { setSchemes -> ResponseEntity.ok(setSchemes) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()).flatMap { tuple ->
+            val userId = tuple.t1
+            val roles = tuple.t2
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val setSchemeMono =
+                if (isAdminOrService) {
+                    setSchemeService.selectSetSchemes()
+                } else {
+                    setSchemeService.selectSetSchemesByUserId(userId.toInt())
+                }
+            setSchemeMono.map { ResponseEntity.ok(it) }
+        }
     }
 
     /**
@@ -159,6 +177,7 @@ class SetSchemeController(
      * @return ResponseEntity containing a list of set schemes for the exercise
      */
     @GetMapping("/exercise/{programmed_exercise_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedExerciseService.isOwner(#programmedExerciseId, principal.subject)")
     fun getByProgrammedExerciseId(
         @PathVariable("programmed_exercise_id") programmedExerciseId: Long,
     ): Mono<ResponseEntity<List<SetScheme>>> {
@@ -191,6 +210,9 @@ class SetSchemeController(
      * @return ResponseEntity containing the updated set scheme
      */
     @PatchMapping("/{id}")
+    @PreAuthorize(
+        "hasRole('admin') or hasRole('service') or (@setSchemeService.isOwner(#id, principal.subject) and @programmedExerciseService.isOwner(#programmedExerciseId, principal.subject))"
+    )
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam("programmed_exercise_id") programmedExerciseId: Long,
@@ -238,6 +260,7 @@ class SetSchemeController(
      * @return ResponseEntity containing the deleted set scheme
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or @setSchemeService.isOwner(#id, principal.subject)")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {

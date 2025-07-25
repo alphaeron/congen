@@ -1,11 +1,5 @@
 package com.congen
 
-import com.congen.controllers.EquipmentController
-import com.congen.controllers.ExerciseController
-import com.congen.controllers.ExerciseEquipmentController
-import com.congen.controllers.ExerciseMuscleController
-import com.congen.controllers.HealthController
-import com.congen.controllers.MuscleController
 import com.congen.dal.EquipmentDAL
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
@@ -18,28 +12,12 @@ import com.congen.service.HealthCheckService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
-import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
 import java.time.Instant
 
-@WebFluxTest(
-    controllers = [
-        EquipmentController::class,
-        ExerciseController::class,
-        MuscleController::class,
-        ExerciseEquipmentController::class,
-        ExerciseMuscleController::class,
-        HealthController::class,
-    ],
-)
-class CongenApplicationTests {
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
-
+class CongenApplicationTests : BaseIntegrationTest() {
     @MockBean
     private lateinit var equipmentDAL: EquipmentDAL
 
@@ -59,7 +37,9 @@ class CongenApplicationTests {
     private lateinit var healthCheckService: HealthCheckService
 
     @BeforeEach
-    fun setUp() {
+    override fun setUp() {
+        super.setUp()
+
         val mockHealthResponse =
             HealthCheckResponse(
                 status = HealthStatus.PASS,

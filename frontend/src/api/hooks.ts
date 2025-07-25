@@ -9,27 +9,30 @@ import {
 export const useApiGet = <T>(
   key: string[],
   fn: (...args: any[]) => Promise<T>, // eslint-disable-line @typescript-eslint/no-explicit-any
-  options: QueryOptions,
+  options: QueryOptions<T, Error, T, string[]>,
   params: any[] = [] // eslint-disable-line @typescript-eslint/no-explicit-any
-) =>
-  useQuery<T>({
-    queryKey: key, // eslint-disable-line @tanstack/query/exhaustive-deps
-    queryFn: () => fn(...params),
+) => {
+  // Just call the provided fn, which should use REQUEST from endpoint.ts internally,
+  // which already handles authentication
+  return useQuery<T, Error, T, string[]>({
+    queryKey: key,
+    queryFn: async (): Promise<T> => fn(...params),
     ...options,
   });
+};
 
 export const useApiSend = <T>(
   fn: (...args: any[]) => Promise<T>, // eslint-disable-line @typescript-eslint/no-explicit-any
   success: (arg: T) => void,
   error: (...args: any[]) => void, // eslint-disable-line @typescript-eslint/no-explicit-any
   invalidateKey: InvalidateQueryFilters[],
-  options: QueryOptions,
+  options: QueryOptions<T, Error, T, string[]> = {},
   params: any[] = [] // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   const queryClient = useQueryClient();
 
-  return useMutation<T>({
-    mutationFn: () => fn(...params),
+  return useMutation<T, Error>({
+    mutationFn: async (): Promise<T> => fn(...params),
     onSuccess: (data): void => {
       if (invalidateKey) {
         invalidateKey.forEach(key => {

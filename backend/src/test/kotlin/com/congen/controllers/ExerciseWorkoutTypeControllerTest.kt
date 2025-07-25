@@ -15,11 +15,14 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.util.stream.Stream
-import kotlin.test.assertEquals
 
+@TestPropertySource(
+    properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
+)
 class ExerciseWorkoutTypeControllerTest {
     private lateinit var dal: ExerciseWorkoutTypeDAL
     private lateinit var controller: ExerciseWorkoutTypeController
@@ -76,20 +79,18 @@ class ExerciseWorkoutTypeControllerTest {
                 mockExerciseWorkoutType(exerciseName = SQUAT_NAME, movementType = SQUAT_MOVEMENT, workoutType = MAXIMAL_EFFORT)
             )
         whenever(dal.selectAllExerciseWorkoutTypes()).thenReturn(Mono.just(exerciseWorkoutTypes))
-        val response = controller.getAll()
+        val result = controller.getAll()
 
-        @Suppress("UNCHECKED_CAST")
-        val body = (response.body as Mono<List<ExerciseWorkoutType>>)
-        StepVerifier.create(body)
-            .expectNext(exerciseWorkoutTypes)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(exerciseWorkoutTypes))
             .verifyComplete()
     }
 
     @Test
     fun `getAll should handle database errors`() {
         whenever(dal.selectAllExerciseWorkoutTypes()).thenReturn(Mono.error(DatabaseException("Database error")))
-        val response = controller.getAll()
-        StepVerifier.create(response.body as Mono<*>)
+        val result = controller.getAll()
+        StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
     }
@@ -104,9 +105,7 @@ class ExerciseWorkoutTypeControllerTest {
         whenever(dal.selectExerciseWorkoutTypesByExercise(EXERCISE_NAME)).thenReturn(Mono.just(exerciseWorkoutTypes))
         val result = controller.getByExercise(EXERCISE_NAME)
         StepVerifier.create(result)
-            .assertNext {
-                assertEquals(ResponseEntity.ok(exerciseWorkoutTypes), it)
-            }
+            .expectNext(ResponseEntity.ok(exerciseWorkoutTypes))
             .verifyComplete()
     }
 
@@ -115,9 +114,7 @@ class ExerciseWorkoutTypeControllerTest {
         whenever(dal.selectExerciseWorkoutTypesByExercise(NON_EXISTENT_EXERCISE)).thenReturn(Mono.just(emptyList()))
         val result = controller.getByExercise(NON_EXISTENT_EXERCISE)
         StepVerifier.create(result)
-            .assertNext {
-                assertEquals(ResponseEntity.ok(emptyList<ExerciseWorkoutType>()), it)
-            }
+            .expectNext(ResponseEntity.ok(emptyList<ExerciseWorkoutType>()))
             .verifyComplete()
     }
 
@@ -131,25 +128,45 @@ class ExerciseWorkoutTypeControllerTest {
             )
         whenever(dal.insertExerciseWorkoutType(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE))
             .thenReturn(Mono.just(input))
-        val response = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
+        val result = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
 
-        @Suppress("UNCHECKED_CAST")
-        val body = (response.body as Mono<ExerciseWorkoutType>)
-        StepVerifier.create(body)
-            .expectNext(input)
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(input))
             .verifyComplete()
     }
 
     @Test
-    fun `save should handle database errors`() {
+    fun `save should handle duplicate key error with 409 status`() {
+        val databaseException = DatabaseQueryException("duplicate key value violates unique constraint")
+        whenever(dal.insertExerciseWorkoutType(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE))
+            .thenReturn(Mono.error(databaseException))
+        val result = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
+
+        StepVerifier.create(result)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `save should handle foreign key violation error with 422 status`() {
+        val databaseException = DatabaseQueryException("violates foreign key constraint")
+        whenever(dal.insertExerciseWorkoutType(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE))
+            .thenReturn(Mono.error(databaseException))
+        val result = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
+
+        StepVerifier.create(result)
+            .expectError(DatabaseQueryException::class.java)
+            .verify()
+    }
+
+    @Test
+    fun `save should propagate other database errors`() {
         val databaseException = DatabaseQueryException("Database connection failed")
         whenever(dal.insertExerciseWorkoutType(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE))
             .thenReturn(Mono.error(databaseException))
-        val response = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
+        val result = controller.save(EXERCISE_NAME, MOVEMENT_TYPE, WORKOUT_TYPE)
 
-        @Suppress("UNCHECKED_CAST")
-        val body = (response.body as Mono<*>)
-        StepVerifier.create(body)
+        StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()
     }
@@ -164,9 +181,7 @@ class ExerciseWorkoutTypeControllerTest {
         whenever(dal.selectExerciseWorkoutTypesByMovementType(MOVEMENT_TYPE)).thenReturn(Mono.just(exerciseWorkoutTypes))
         val result = controller.getByMovementType(MOVEMENT_TYPE)
         StepVerifier.create(result)
-            .assertNext {
-                assertEquals(ResponseEntity.ok(exerciseWorkoutTypes), it)
-            }
+            .expectNext(ResponseEntity.ok(exerciseWorkoutTypes))
             .verifyComplete()
     }
 
@@ -175,9 +190,7 @@ class ExerciseWorkoutTypeControllerTest {
         whenever(dal.selectExerciseWorkoutTypesByMovementType(NON_EXISTENT_MOVEMENT)).thenReturn(Mono.just(emptyList()))
         val result = controller.getByMovementType(NON_EXISTENT_MOVEMENT)
         StepVerifier.create(result)
-            .assertNext {
-                assertEquals(ResponseEntity.ok(emptyList<ExerciseWorkoutType>()), it)
-            }
+            .expectNext(ResponseEntity.ok(emptyList<ExerciseWorkoutType>()))
             .verifyComplete()
     }
 

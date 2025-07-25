@@ -209,6 +209,30 @@ class ProgrammedExerciseDAL(
     }
 
     /**
+     * Retrieves all programmed exercises for a specific user by tracing the relationship chain.
+     *
+     * This method fetches all programmed exercises that are owned by the specified user.
+     *
+     * @param userId The user ID
+     * @return Mono containing a list of programmed exercises for the user
+     */
+    fun selectProgrammedExercisesByUserId(userId: Int): Mono<List<ProgrammedExercise>> {
+        logger.debug("Selecting programmed exercises by user id: {}", userId)
+        return postgresClient.select(
+            """
+            SELECT pe.*
+            FROM programmed_exercise pe
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pe.position
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    /**
      * Gets the user ID for a programmed exercise by tracing the relationship chain.
      *
      * This method follows the relationship chain:

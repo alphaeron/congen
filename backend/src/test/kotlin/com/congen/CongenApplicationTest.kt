@@ -21,7 +21,11 @@ import org.springframework.test.context.TestPropertySource
         "CORS_ALLOWED_HEADERS=Content-Type,Authorization",
         "CORS_EXPOSED_HEADERS=X-Total-Count",
         "CORS_MAX_AGE=3600",
-        "spring.profiles.active=test"
+        "spring.profiles.active=test",
+        "KEYCLOAK_AUTH_URL=http://localhost:8080",
+        "KEYCLOAK_REALM=congen",
+        "KEYCLOAK_CLIENT_ID=congen-client",
+        "KEYCLOAK_CLIENT_SECRET=test-secret"
     ]
 )
 class CongenApplicationTest {

@@ -5,6 +5,7 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
+import com.congen.service.ProgramService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -15,14 +16,21 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
+import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
+@TestPropertySource(
+    properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
+)
 class ConjugateWorkoutGeneratorControllerTest {
     @Mock
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
+
+    @Mock
+    private lateinit var programService: ProgramService
 
     @InjectMocks
     private lateinit var conjugateWorkoutGeneratorController: ConjugateWorkoutGeneratorController

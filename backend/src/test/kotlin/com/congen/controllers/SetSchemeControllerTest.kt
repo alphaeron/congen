@@ -1,7 +1,9 @@
 package com.congen.controllers
 
 import com.congen.mockSetScheme
+import com.congen.service.ProgrammedExerciseService
 import com.congen.service.SetSchemeService
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
@@ -28,6 +30,12 @@ class SetSchemeControllerTest {
     @Mock
     private lateinit var setSchemeService: SetSchemeService
 
+    @Mock
+    private lateinit var keycloakUtil: KeycloakUtil
+
+    @Mock
+    private lateinit var programmedExerciseService: ProgrammedExerciseService
+
     private lateinit var setSchemeController: SetSchemeController
 
     companion object {
@@ -47,11 +55,11 @@ class SetSchemeControllerTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        setSchemeController = SetSchemeController(setSchemeService)
+        setSchemeController = SetSchemeController(setSchemeService, keycloakUtil, programmedExerciseService)
     }
 
     @Test
-    fun `should get all set schemes`() {
+    fun `should get all set schemes for admin user`() {
         val now = Instant.now()
         val setSchemes =
             listOf(
@@ -76,7 +84,13 @@ class SetSchemeControllerTest {
                     updatedAt = now
                 )
             )
+        val userId = "123"
+        val roles = setOf("admin")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.just(setSchemes))
+
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
             .assertNext { resp ->
@@ -84,6 +98,120 @@ class SetSchemeControllerTest {
                 assert(resp.body == setSchemes)
             }
             .verifyComplete()
+        verify(setSchemeService).selectSetSchemes()
+    }
+
+    @Test
+    fun `should get user owned set schemes for regular user`() {
+        val now = Instant.now()
+        val userSetSchemes =
+            listOf(
+                mockSetScheme(
+                    id = SCHEME_ID_1,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_1,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    targetRepCount = TARGET_REP_COUNT,
+                    restSeconds = REST_SECONDS_90,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        val userId = "123"
+        val roles = setOf("user")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(setSchemeService.selectSetSchemesByUserId(userId.toInt())).thenReturn(Mono.just(userSetSchemes))
+
+        val result = setSchemeController.getAll()
+        StepVerifier.create(result)
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.OK)
+                assert(resp.body == userSetSchemes)
+            }
+            .verifyComplete()
+        verify(setSchemeService).selectSetSchemesByUserId(userId.toInt())
+    }
+
+    @Test
+    fun `should get all set schemes for service user`() {
+        val now = Instant.now()
+        val allSetSchemes =
+            listOf(
+                mockSetScheme(
+                    id = SCHEME_ID_1,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_1,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    targetRepCount = TARGET_REP_COUNT,
+                    restSeconds = REST_SECONDS_90,
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                mockSetScheme(
+                    id = SCHEME_ID_2,
+                    programmedExerciseId = PROGRAMMED_EXERCISE_ID,
+                    setNumber = SET_NUMBER_2,
+                    isAmrap = true,
+                    targetWeight = BigDecimal(TARGET_WEIGHT_100),
+                    restSeconds = REST_SECONDS_90,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        val userId = "123"
+        val roles = setOf("service")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.just(allSetSchemes))
+
+        val result = setSchemeController.getAll()
+        StepVerifier.create(result)
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.OK)
+                assert(resp.body == allSetSchemes)
+            }
+            .verifyComplete()
+        verify(setSchemeService).selectSetSchemes()
+    }
+
+    @Test
+    fun `should return empty list when regular user has no owned set schemes`() {
+        val emptyList = emptyList<com.congen.model.SetScheme>()
+        val userId = "123"
+        val roles = setOf("user")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(setSchemeService.selectSetSchemesByUserId(userId.toInt())).thenReturn(Mono.just(emptyList))
+
+        val result = setSchemeController.getAll()
+        StepVerifier.create(result)
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.OK)
+                assert(resp.body == emptyList)
+            }
+            .verifyComplete()
+        verify(setSchemeService).selectSetSchemesByUserId(userId.toInt())
+    }
+
+    @Test
+    fun `should propagate errors from getAll`() {
+        val userId = "123"
+        val roles = setOf("user")
+        val databaseError = RuntimeException("Database error")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(setSchemeService.selectSetSchemesByUserId(userId.toInt())).thenReturn(Mono.error(databaseError))
+
+        val result = setSchemeController.getAll()
+        StepVerifier.create(result)
+            .expectError(databaseError::class.java)
+            .verify()
+        verify(setSchemeService).selectSetSchemesByUserId(userId.toInt())
     }
 
     @Test

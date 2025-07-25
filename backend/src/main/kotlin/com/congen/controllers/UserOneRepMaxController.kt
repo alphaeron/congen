@@ -5,6 +5,7 @@ import com.congen.model.UserOneRepMax
 import com.congen.service.UserOneRepMaxService
 import com.congen.util.ValidationUtil
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -63,6 +64,7 @@ class UserOneRepMaxController(
      * @return Mono containing list of one rep max records
      */
     @GetMapping("/user/{user_id}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     fun getOneRepMaxesByUserId(
         @PathVariable("user_id") userId: Int,
         @RequestParam(required = false) unit: String?
@@ -80,6 +82,7 @@ class UserOneRepMaxController(
      * @return Mono containing the one rep max record or empty if not found
      */
     @GetMapping("/user/{user_id}/exercise/{exercise_name}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     fun getOneRepMaxByUserAndExercise(
         @PathVariable("user_id") userId: Int,
         @PathVariable("exercise_name") exerciseName: String,
@@ -87,7 +90,6 @@ class UserOneRepMaxController(
     ): Mono<ResponseEntity<UserOneRepMax>> {
         return userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
             .map { ResponseEntity.ok(it) }
-            .onErrorResume { Mono.just(ResponseEntity.notFound().build()) }
     }
 
     /**
@@ -100,11 +102,12 @@ class UserOneRepMaxController(
      * @return Mono containing the created or updated one rep max record
      */
     @PutMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     fun upsertOneRepMax(
         @RequestParam("user_id") userId: Int,
         @RequestParam("exercise_name") exerciseName: String,
         @RequestParam("one_rep_max") oneRepMax: BigDecimal,
-        @RequestParam(required = false) unit: String?
+        @RequestParam(required = false, defaultValue = "KG") unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
         return userOneRepMaxService.upsertOneRepMax(userId, exerciseName, oneRepMax, unit)
             .map { ResponseEntity.ok(it) }
@@ -115,15 +118,15 @@ class UserOneRepMaxController(
      *
      * @param userId The user ID
      * @param exerciseName The exercise name
-     * @return Mono containing ResponseEntity with no content
+     * @return Mono containing confirmation of deletion
      */
     @DeleteMapping("/user/{user_id}/exercise/{exercise_name}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
     fun deleteOneRepMax(
         @PathVariable("user_id") userId: Int,
         @PathVariable("exercise_name") exerciseName: String
-    ): Mono<ResponseEntity<Void>> {
+    ): Mono<ResponseEntity<UserOneRepMax>> {
         return userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
-            .map { ResponseEntity.noContent().build<Void>() }
-            .onErrorResume { Mono.just(ResponseEntity.notFound().build()) }
+            .map { ResponseEntity.ok(it) }
     }
 }

@@ -7,8 +7,7 @@ configurations {
 // Test dependencies
 dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
-    //testImplementation 'org.springframework.security:spring-security-test:6.2.4'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
+    testImplementation 'org.springframework.security:spring-security-test:6.2.5'
     testImplementation 'io.projectreactor:reactor-test:3.6.5'
     testImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
     testImplementation 'org.mockito:mockito-core:5.18.0'
@@ -16,11 +15,19 @@ dependencies {
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
 
     integrationTestImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.5'
+    integrationTestImplementation 'org.springframework.security:spring-security-test:6.2.5'
     integrationTestImplementation 'io.projectreactor:reactor-test:3.6.5'
     integrationTestImplementation 'org.jetbrains.kotlin:kotlin-test:1.9.23'
     integrationTestImplementation 'org.mockito:mockito-core:5.18.0'
     integrationTestImplementation 'org.mockito:mockito-junit-jupiter:5.18.0'
     integrationTestImplementation 'org.mockito.kotlin:mockito-kotlin:5.4.0'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.19.7'
+    integrationTestImplementation 'org.testcontainers:postgresql:1.19.7'
+    
+    // Liquibase dependencies for database migrations
+    integrationTestImplementation 'org.liquibase:liquibase-core:4.26.0'
+    integrationTestImplementation 'org.postgresql:postgresql:42.7.3'
+    integrationTestImplementation 'org.springframework.boot:spring-boot-starter-jdbc:3.2.5'
 }
 
 // Configure test tasks
@@ -72,7 +79,7 @@ sourceSets {
             srcDir 'src/integrationTest/kotlin'
         }
         resources {
-            srcDir 'src/integrationTest/resources'
+            srcDirs 'src/integrationTest/resources', "resources"
         }
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output

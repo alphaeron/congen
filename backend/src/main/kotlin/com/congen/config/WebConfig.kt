@@ -78,5 +78,7 @@ class WebConfig : WebFluxConfigurer {
     override fun addFormatters(registry: org.springframework.format.FormatterRegistry) {
         super.addFormatters(registry)
         registry.addConverter(MovementTypeConverter())
+        registry.addConverter(WeightUnitConverter())
+        registry.addConverter(WorkoutStageTypeEnumConverter())
     }
 }

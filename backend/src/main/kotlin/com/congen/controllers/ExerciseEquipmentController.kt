@@ -1,7 +1,7 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.exceptions.DatabaseQueryException
+import com.congen.model.ExerciseEquipment
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -9,13 +9,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Mono
 
 /**
  * REST controller for managing exercise-equipment relationships.
@@ -75,6 +76,7 @@ class ExerciseEquipmentController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all exercise equipment relationships",
         description = "Retrieves all exercise-equipment relationships.",
@@ -88,11 +90,11 @@ class ExerciseEquipmentController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<ExerciseEquipment>>> {
         logger.debug("Getting all exercise equipment relationships")
-        return ResponseEntity.ok(
-            exerciseEquipmentDAL.selectAllExerciseEquipment(),
-        )
+        return exerciseEquipmentDAL.selectAllExerciseEquipment()
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e -> logger.error("Error getting all exercise equipment relationships", e) }
     }
 
     /**
@@ -102,12 +104,14 @@ class ExerciseEquipmentController(
      * This relationship defines what equipment is required or can be used for
      * the specific exercise.
      *
-     * @param exerciseEquipment The exercise-equipment relationship to create
-     * @return The created relationship with assigned ID
+     * @param exerciseName The name of the exercise
+     * @param equipmentName The name of the equipment
+     * @return The created exercise-equipment relationship
      *
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Create exercise equipment relationship",
         description = "Creates a new exercise-equipment relationship.",
@@ -126,25 +130,10 @@ class ExerciseEquipmentController(
         @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Name of the equipment", required = true)
         @RequestParam("equipment_name") equipmentName: String,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<ExerciseEquipment>> {
         logger.info("Saving exercise equipment relationship: {} - {}", exerciseName, equipmentName)
-        return try {
-            ResponseEntity.ok(
-                exerciseEquipmentDAL.insertExerciseEquipment(exerciseName, equipmentName),
-            )
-        } catch (e: DatabaseQueryException) {
-            val msg = e.cause?.message ?: e.message ?: "Database error"
-            return when {
-                msg.contains(
-                    "duplicate key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
-                msg.contains(
-                    "violates foreign key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise or equipment does not exist")
-                else -> throw e
-            }
-        }
+        return exerciseEquipmentDAL.insertExerciseEquipment(exerciseName, equipmentName)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e -> logger.error("Error saving exercise equipment relationship: {} - {}", exerciseName, equipmentName, e) }
     }
 }

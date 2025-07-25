@@ -2,8 +2,6 @@ package com.congen
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpMethod
-import org.springframework.http.MediaType
 
 class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     private var userId: Int = 0
@@ -46,13 +44,9 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should delete user equipment`() {
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
 
-        // Delete the user equipment using the correct endpoint format
-        val createdAt = java.time.Instant.now().toString()
-        val jsonBody = """{"user_id":$userId,"equipment_name":"${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}","created_at":"$createdAt"}"""
-        webTestClient.method(HttpMethod.DELETE)
-            .uri("/api/v1/user_equipment/")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(jsonBody)
+        // Delete the user equipment using query parameters
+        webTestClient.delete()
+            .uri("/api/v1/user_equipment/?user_id=$userId&equipment_name=${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

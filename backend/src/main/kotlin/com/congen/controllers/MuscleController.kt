@@ -2,7 +2,6 @@ package com.congen.controllers
 
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.MuscleDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.ExerciseMuscle
 import com.congen.model.Muscle
 import io.swagger.v3.oas.annotations.Operation
@@ -13,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -77,6 +77,7 @@ class MuscleController(
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Create muscle",
         description = "Creates a new muscle entry.",
@@ -95,11 +96,11 @@ class MuscleController(
         @RequestParam name: String,
         @Parameter(description = "Description of the muscle", required = true)
         @RequestParam description: String,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<Muscle>> {
         logger.info("Saving muscle: {}", name)
-        return ResponseEntity.ok(
-            muscleDAL.insertMuscle(name, description),
-        )
+        return muscleDAL.insertMuscle(name, description)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e -> logger.error("Error saving muscle: {}", name, e) }
     }
 
     /**
@@ -114,6 +115,7 @@ class MuscleController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{name}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get muscle by name",
         description = "Retrieves muscle details by name.",
@@ -137,13 +139,9 @@ class MuscleController(
         @PathVariable("name") name: String,
     ): Mono<ResponseEntity<Muscle>> {
         return muscleDAL.selectMuscleByName(name)
-            .map {
+            .map { muscle ->
                 logger.debug("Found muscle: {}", name)
-                ResponseEntity.ok(it)
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Muscle not found: {}", name)
-                Mono.just(ResponseEntity.notFound().build())
+                ResponseEntity.ok(muscle)
             }
             .doOnError { e ->
                 logger.error("Error getting muscle: {}", name, e)
@@ -151,68 +149,9 @@ class MuscleController(
     }
 
     /**
-     * Retrieves all exercises associated with a specific muscle.
-     *
-     * This endpoint finds all exercises that target the specified muscle.
-     * The response includes exercise-muscle relationship data showing how
-     * each exercise targets the muscle.
-     *
-     * @param name The name of the muscle to find exercises for
-     * @return List of exercise-muscle relationships, or 404 if muscle not found or no exercises
-     *
-     * @throws DatabaseException if database operation fails
-     */
-    @GetMapping("/{name}/exercise")
-    @Operation(
-        summary = "Get exercises for muscle",
-        description = "Retrieves all exercises associated with a given muscle.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Exercises found",
-                content = [Content(mediaType = "application/json")],
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "No exercises found or muscle not found",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun getExercise(
-        @Parameter(description = "Name of the muscle", required = true)
-        @PathVariable("name") name: String,
-    ): Mono<ResponseEntity<List<ExerciseMuscle>>> {
-        // First check if the muscle exists
-        return muscleDAL.selectMuscleByName(name)
-            .flatMap {
-                // Muscle exists, now get its exercises
-                exerciseMuscleDAL.selectExerciseMuscleByMuscle(name)
-                    .flatMap { exercises ->
-                        if (exercises.isEmpty()) {
-                            logger.warn("No exercises found for muscle: {}", name)
-                            Mono.just(ResponseEntity.notFound().build())
-                        } else {
-                            logger.debug("Found {} exercises for muscle: {}", exercises.size, name)
-                            Mono.just(ResponseEntity.ok(exercises))
-                        }
-                    }
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Muscle not found: {}", name)
-                Mono.just(ResponseEntity.notFound().build())
-            }
-            .doOnError { e ->
-                logger.error("Error getting exercises for muscle: {}", name, e)
-            }
-    }
-
-    /**
      * Retrieves all muscles in the system.
      *
-     * This endpoint returns a list of all muscle groups available in the system.
+     * This endpoint returns a list of all muscles available in the system.
      * The response includes basic muscle information for each muscle group.
      *
      * @return List of all muscles
@@ -220,6 +159,7 @@ class MuscleController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all muscles",
         description = "Retrieves a list of all muscles.",
@@ -233,10 +173,65 @@ class MuscleController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<Muscle>>> {
         logger.debug("Getting all muscles")
-        return ResponseEntity.ok(
-            muscleDAL.selectMuscles(),
-        )
+        return muscleDAL.selectMuscles()
+            .map { muscles ->
+                logger.debug("Found {} muscles", muscles.size)
+                ResponseEntity.ok(muscles)
+            }
+            .doOnError { e ->
+                logger.error("Error getting all muscles", e)
+            }
+    }
+
+    /**
+     * Retrieves exercises associated with a specific muscle.
+     *
+     * This endpoint fetches all exercises that target the specified muscle.
+     * The response includes exercise information and the relationship details.
+     *
+     * @param muscleName The name of the muscle to find exercises for
+     * @return List of exercises associated with the muscle
+     *
+     * @throws DatabaseException if database operation fails
+     */
+    @GetMapping("/{muscle_name}/exercise")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get exercises by muscle",
+        description = "Retrieves all exercises that target a specific muscle.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Exercises found successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Muscle not found or no exercises associated",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
+    fun getExercisesByMuscle(
+        @Parameter(description = "Name of the muscle", required = true)
+        @PathVariable("muscle_name") muscleName: String,
+    ): Mono<ResponseEntity<List<ExerciseMuscle>>> {
+        return exerciseMuscleDAL.selectExerciseMuscleByMuscle(muscleName)
+            .map { exercises ->
+                if (exercises.isEmpty()) {
+                    logger.warn("No exercises found for muscle: {}", muscleName)
+                    ResponseEntity.notFound().build()
+                } else {
+                    logger.debug("Found {} exercises for muscle: {}", exercises.size, muscleName)
+                    ResponseEntity.ok(exercises)
+                }
+            }
+            .doOnError { e ->
+                logger.error("Error getting exercises for muscle: {}", muscleName, e)
+            }
     }
 }

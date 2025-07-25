@@ -13,15 +13,20 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        // Create a unique user for each test
+        // User and program creation will be done in individual test methods
+        // to ensure Spring context is fully initialized first
+    }
+
+    private fun createTestUserAndProgram(): Pair<Int, Long> {
         val unique = System.nanoTime()
-        userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
-        // Always create a program for the user for each test
-        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique")
+        val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique")
+        return Pair(userId, programId)
     }
 
     @Test
     fun `should generate 3-day conjugate workout program successfully`() {
+        val (userId, programId) = createTestUserAndProgram()
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
         val programResponse =
             webTestClient.post()
@@ -45,6 +50,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate 2-day conjugate workout program successfully`() {
+        val (userId, programId) = createTestUserAndProgram()
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2)
         val programResponse =
             webTestClient.post()
@@ -68,6 +74,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate 4-day conjugate workout program successfully`() {
+        val (userId, programId) = createTestUserAndProgram()
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4)
         val programResponse =
             webTestClient.post()
@@ -91,6 +98,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle invalid programDaysPerWeek in database`() {
+        val (userId, programId) = createTestUserAndProgram()
         // Create user program preferences with invalid days per week should fail
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
@@ -113,7 +121,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user exercise preferences`() {
-        // Already created in setUp or not needed here
+        val (userId, programId) = createTestUserAndProgram()
         // Create user program preferences (required for workout generation)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
 
@@ -147,7 +155,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user equipment`() {
-        // Already created in setUp or not needed here
+        val (userId, programId) = createTestUserAndProgram()
         // Create user program preferences (required for workout generation)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
 
@@ -173,7 +181,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user one rep max data`() {
-        // Already created in setUp or not needed here
+        val (userId, programId) = createTestUserAndProgram()
         // Create user program preferences (required for workout generation)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3)
 
@@ -200,6 +208,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user program preferences`() {
+        val (userId, programId) = createTestUserAndProgram()
         // Add program preferences
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=3&session_time_length_in_minutes=60")
@@ -223,6 +232,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate DE set scheme with correct band and bar weights`() {
+        val (userId, programId) = createTestUserAndProgram()
         // Set up user with 1RM for banded exercises specifically
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0)
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Safety Bar Squat", oneRepMax = 350.0)
@@ -360,6 +370,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 2-day template invariants`() {
+        val (userId, programId) = createTestUserAndProgram()
         // Given - Set up user with 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2)
 
@@ -408,6 +419,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 3-day template invariants`() {
+        val (userId, programId) = createTestUserAndProgram()
         // Given - Set up user with 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
 
@@ -456,6 +468,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 4-day template invariants`() {
+        val (userId, programId) = createTestUserAndProgram()
         // Given - Set up user with 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4)
 

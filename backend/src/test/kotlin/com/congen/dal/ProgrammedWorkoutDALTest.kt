@@ -245,4 +245,107 @@ class ProgrammedWorkoutDALTest {
             userId
         )
     }
+
+    @Test
+    fun `selectProgrammedWorkoutsByUserId should return list of user owned workouts`() {
+        val userId = 1
+        val userWorkouts =
+            listOf(
+                mockProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "User Workout 1"),
+                mockProgrammedWorkout(id = 2L, programId = 1L, dayNumber = 2, name = "User Workout 2")
+            )
+
+        whenever(
+            postgresClient.select<ProgrammedWorkout>(
+                """
+                SELECT pw.*
+                FROM programmed_workout pw
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY pw.program_id, pw.day_number
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.just(userWorkouts))
+
+        val result = programmedWorkoutDAL.selectProgrammedWorkoutsByUserId(userId)
+
+        StepVerifier.create(result).expectNext(userWorkouts).verifyComplete()
+        verify(postgresClient).select<ProgrammedWorkout>(
+            """
+            SELECT pw.*
+            FROM programmed_workout pw
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pw.program_id, pw.day_number
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    @Test
+    fun `selectProgrammedWorkoutsByUserId should return empty list when user has no workouts`() {
+        val userId = 1
+        val emptyList = emptyList<ProgrammedWorkout>()
+
+        whenever(
+            postgresClient.select<ProgrammedWorkout>(
+                """
+                SELECT pw.*
+                FROM programmed_workout pw
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY pw.program_id, pw.day_number
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.just(emptyList))
+
+        val result = programmedWorkoutDAL.selectProgrammedWorkoutsByUserId(userId)
+
+        StepVerifier.create(result).expectNext(emptyList).verifyComplete()
+        verify(postgresClient).select<ProgrammedWorkout>(
+            """
+            SELECT pw.*
+            FROM programmed_workout pw
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pw.program_id, pw.day_number
+            """.trimIndent(),
+            userId
+        )
+    }
+
+    @Test
+    fun `selectProgrammedWorkoutsByUserId should propagate database errors`() {
+        val userId = 1
+        val databaseError = RuntimeException("Database connection failed")
+
+        whenever(
+            postgresClient.select<ProgrammedWorkout>(
+                """
+                SELECT pw.*
+                FROM programmed_workout pw
+                JOIN program p ON pw.program_id = p.id
+                WHERE p.user_id = $1
+                ORDER BY pw.program_id, pw.day_number
+                """.trimIndent(),
+                userId
+            )
+        ).thenReturn(Mono.error(databaseError))
+
+        val result = programmedWorkoutDAL.selectProgrammedWorkoutsByUserId(userId)
+
+        StepVerifier.create(result).expectError(databaseError::class.java).verify()
+        verify(postgresClient).select<ProgrammedWorkout>(
+            """
+            SELECT pw.*
+            FROM programmed_workout pw
+            JOIN program p ON pw.program_id = p.id
+            WHERE p.user_id = $1
+            ORDER BY pw.program_id, pw.day_number
+            """.trimIndent(),
+            userId
+        )
+    }
 }

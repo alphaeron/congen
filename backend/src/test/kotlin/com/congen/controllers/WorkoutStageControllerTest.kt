@@ -6,6 +6,9 @@ import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockWorkoutStage
 import com.congen.model.WorkoutStage
+import com.congen.service.ProgramService
+import com.congen.service.WorkoutStageService
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -13,6 +16,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
@@ -25,7 +29,12 @@ class WorkoutStageControllerTest {
     @Mock
     private lateinit var workoutStageDAL: WorkoutStageDAL
 
+    @Mock
+    private lateinit var programService: ProgramService
+
     private lateinit var workoutStageController: WorkoutStageController
+    private lateinit var workoutStageService: WorkoutStageService
+    private lateinit var keycloakUtil: KeycloakUtil
 
     companion object {
         private const val WORKOUT_STAGE_ID_1 = 1L
@@ -44,22 +53,22 @@ class WorkoutStageControllerTest {
             Stream.of(
                 Arguments.of(
                     "GET by ID should handle database errors",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
-                        whenever(dal.selectWorkoutStageById(WORKOUT_STAGE_ID_1))
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
+                        whenever(service.selectWorkoutStageById(WORKOUT_STAGE_ID_1))
                             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
                         controller.get(WORKOUT_STAGE_ID_1)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).selectWorkoutStageById(WORKOUT_STAGE_ID_1)
+                    { service: WorkoutStageService ->
+                        verify(service).selectWorkoutStageById(WORKOUT_STAGE_ID_1)
                     },
-                    // expect 404 response
-                    false
+                    // expect error to propagate
+                    true
                 ),
                 Arguments.of(
                     "POST should handle database errors",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
                         whenever(
-                            dal.insertWorkoutStage(
+                            service.insertWorkoutStage(
                                 programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                                 stageTypeId = STAGE_TYPE_ID_1,
                                 position = POSITION_1,
@@ -68,8 +77,8 @@ class WorkoutStageControllerTest {
                         ).thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
                         controller.save(PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_1, POSITION_1, WARMUP_NAME)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).insertWorkoutStage(
+                    { service: WorkoutStageService ->
+                        verify(service).insertWorkoutStage(
                             programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                             stageTypeId = STAGE_TYPE_ID_1,
                             position = POSITION_1,
@@ -81,9 +90,9 @@ class WorkoutStageControllerTest {
                 ),
                 Arguments.of(
                     "UPDATE should handle database errors",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
                         whenever(
-                            dal.updateWorkoutStage(
+                            service.updateWorkoutStage(
                                 id = WORKOUT_STAGE_ID_1,
                                 programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                                 stageTypeId = STAGE_TYPE_ID_2,
@@ -93,8 +102,8 @@ class WorkoutStageControllerTest {
                         ).thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
                         controller.update(WORKOUT_STAGE_ID_1, PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_2, POSITION_2, MAIN_WORK_NAME)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).updateWorkoutStage(
+                    { service: WorkoutStageService ->
+                        verify(service).updateWorkoutStage(
                             id = WORKOUT_STAGE_ID_1,
                             programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                             stageTypeId = STAGE_TYPE_ID_2,
@@ -102,21 +111,21 @@ class WorkoutStageControllerTest {
                             name = MAIN_WORK_NAME
                         )
                     },
-                    // expect 404 response
-                    false
+                    // expect error to propagate
+                    true
                 ),
                 Arguments.of(
                     "DELETE should handle database errors",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
-                        whenever(dal.deleteWorkoutStage(WORKOUT_STAGE_ID_1))
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
+                        whenever(service.deleteWorkoutStage(WORKOUT_STAGE_ID_1))
                             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
                         controller.delete(WORKOUT_STAGE_ID_1)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).deleteWorkoutStage(WORKOUT_STAGE_ID_1)
+                    { service: WorkoutStageService ->
+                        verify(service).deleteWorkoutStage(WORKOUT_STAGE_ID_1)
                     },
-                    // expect 404 response
-                    false
+                    // expect error to propagate
+                    true
                 )
             )
 
@@ -125,20 +134,20 @@ class WorkoutStageControllerTest {
             Stream.of(
                 Arguments.of(
                     "GET by ID should return not found when workout stage not found",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
-                        whenever(dal.selectWorkoutStageById(NON_EXISTENT_ID))
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
+                        whenever(service.selectWorkoutStageById(NON_EXISTENT_ID))
                             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
                         controller.get(NON_EXISTENT_ID)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).selectWorkoutStageById(NON_EXISTENT_ID)
+                    { service: WorkoutStageService ->
+                        verify(service).selectWorkoutStageById(NON_EXISTENT_ID)
                     }
                 ),
                 Arguments.of(
                     "UPDATE should return not found when workout stage not found",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
                         whenever(
-                            dal.updateWorkoutStage(
+                            service.updateWorkoutStage(
                                 id = NON_EXISTENT_ID,
                                 programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                                 stageTypeId = STAGE_TYPE_ID_2,
@@ -148,8 +157,8 @@ class WorkoutStageControllerTest {
                         ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
                         controller.update(NON_EXISTENT_ID, PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_2, POSITION_2, MAIN_WORK_NAME)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).updateWorkoutStage(
+                    { service: WorkoutStageService ->
+                        verify(service).updateWorkoutStage(
                             id = NON_EXISTENT_ID,
                             programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                             stageTypeId = STAGE_TYPE_ID_2,
@@ -160,13 +169,13 @@ class WorkoutStageControllerTest {
                 ),
                 Arguments.of(
                     "DELETE should return not found when workout stage not found",
-                    { controller: WorkoutStageController, dal: WorkoutStageDAL ->
-                        whenever(dal.deleteWorkoutStage(NON_EXISTENT_ID))
+                    { controller: WorkoutStageController, service: WorkoutStageService ->
+                        whenever(service.deleteWorkoutStage(NON_EXISTENT_ID))
                             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
                         controller.delete(NON_EXISTENT_ID)
                     },
-                    { dal: WorkoutStageDAL ->
-                        verify(dal).deleteWorkoutStage(NON_EXISTENT_ID)
+                    { service: WorkoutStageService ->
+                        verify(service).deleteWorkoutStage(NON_EXISTENT_ID)
                     }
                 )
             )
@@ -175,11 +184,13 @@ class WorkoutStageControllerTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        workoutStageController = WorkoutStageController(workoutStageDAL)
+        workoutStageService = mock()
+        keycloakUtil = mock()
+        workoutStageController = WorkoutStageController(workoutStageService, programService, keycloakUtil)
     }
 
     @Test
-    fun `GET by ID should return workout stage`() {
+    fun `GET by ID should return workout stage when found`() {
         val now = Instant.now()
         val workoutStage =
             mockWorkoutStage(
@@ -191,12 +202,12 @@ class WorkoutStageControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(workoutStageDAL.selectWorkoutStageById(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(workoutStage))
+        whenever(workoutStageService.selectWorkoutStageById(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(workoutStage))
         val result = workoutStageController.get(WORKOUT_STAGE_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStage))
             .verifyComplete()
-        verify(workoutStageDAL).selectWorkoutStageById(WORKOUT_STAGE_ID_1)
+        verify(workoutStageService).selectWorkoutStageById(WORKOUT_STAGE_ID_1)
     }
 
     @ParameterizedTest(name = "{0}")
@@ -204,14 +215,14 @@ class WorkoutStageControllerTest {
     @Suppress("UnusedParameter")
     fun `should handle not found scenarios`(
         _testName: String,
-        testAction: (WorkoutStageController, WorkoutStageDAL) -> Mono<ResponseEntity<WorkoutStage>>,
-        verification: (WorkoutStageDAL) -> Unit
+        testAction: (WorkoutStageController, WorkoutStageService) -> Mono<ResponseEntity<WorkoutStage>>,
+        verification: (WorkoutStageService) -> Unit
     ) {
-        val result = testAction(workoutStageController, workoutStageDAL)
+        val result = testAction(workoutStageController, workoutStageService)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
-        verification(workoutStageDAL)
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
+        verification(workoutStageService)
     }
 
     @ParameterizedTest(name = "{0}")
@@ -219,11 +230,11 @@ class WorkoutStageControllerTest {
     @Suppress("UnusedParameter")
     fun `should handle database errors`(
         _testName: String,
-        testAction: (WorkoutStageController, WorkoutStageDAL) -> Mono<ResponseEntity<WorkoutStage>>,
-        verification: (WorkoutStageDAL) -> Unit,
+        testAction: (WorkoutStageController, WorkoutStageService) -> Mono<ResponseEntity<WorkoutStage>>,
+        verification: (WorkoutStageService) -> Unit,
         expectError: Boolean
     ) {
-        val result = testAction(workoutStageController, workoutStageDAL)
+        val result = testAction(workoutStageController, workoutStageService)
         if (expectError) {
             StepVerifier.create(result)
                 .expectError(DatabaseQueryException::class.java)
@@ -233,11 +244,11 @@ class WorkoutStageControllerTest {
                 .expectNext(ResponseEntity.notFound().build())
                 .verifyComplete()
         }
-        verification(workoutStageDAL)
+        verification(workoutStageService)
     }
 
     @Test
-    fun `GET all should return all workout stages`() {
+    fun `GET all should return all workout stages for admin user`() {
         val now = Instant.now()
         val workoutStages =
             listOf(
@@ -260,23 +271,134 @@ class WorkoutStageControllerTest {
                     updatedAt = now
                 )
             )
-        whenever(workoutStageDAL.selectWorkoutStages()).thenReturn(Mono.just(workoutStages))
+        val userId = "123"
+        val roles = setOf("admin")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(workoutStages))
+
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStages))
             .verifyComplete()
-        verify(workoutStageDAL).selectWorkoutStages()
+        verify(workoutStageService).selectWorkoutStages()
+    }
+
+    @Test
+    fun `GET all should return user owned workout stages for regular user`() {
+        val now = Instant.now()
+        val userWorkoutStages =
+            listOf(
+                mockWorkoutStage(
+                    id = WORKOUT_STAGE_ID_1,
+                    programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
+                    stageTypeId = STAGE_TYPE_ID_1,
+                    position = POSITION_1,
+                    name = WARMUP_NAME,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        val userId = "123"
+        val roles = setOf("user")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(userWorkoutStages))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(userWorkoutStages))
+            .verifyComplete()
+        verify(workoutStageService).selectWorkoutStagesByUserId(userId.toInt())
+    }
+
+    @Test
+    fun `GET all should return all workout stages for service user`() {
+        val now = Instant.now()
+        val allWorkoutStages =
+            listOf(
+                mockWorkoutStage(
+                    id = WORKOUT_STAGE_ID_1,
+                    programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
+                    stageTypeId = STAGE_TYPE_ID_1,
+                    position = POSITION_1,
+                    name = WARMUP_NAME,
+                    createdAt = now,
+                    updatedAt = now
+                ),
+                mockWorkoutStage(
+                    id = WORKOUT_STAGE_ID_2,
+                    programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
+                    stageTypeId = STAGE_TYPE_ID_2,
+                    position = POSITION_2,
+                    name = MAIN_WORK_NAME,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            )
+        val userId = "123"
+        val roles = setOf("service")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(allWorkoutStages))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(allWorkoutStages))
+            .verifyComplete()
+        verify(workoutStageService).selectWorkoutStages()
+    }
+
+    @Test
+    fun `GET all should return empty list when regular user has no owned workout stages`() {
+        val emptyList = emptyList<WorkoutStage>()
+        val userId = "123"
+        val roles = setOf("user")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(emptyList))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(emptyList))
+            .verifyComplete()
+        verify(workoutStageService).selectWorkoutStagesByUserId(userId.toInt())
+    }
+
+    @Test
+    fun `GET all should propagate errors from getAll`() {
+        val userId = "123"
+        val roles = setOf("user")
+        val databaseError = RuntimeException("Database error")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.error(databaseError))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .expectError(databaseError::class.java)
+            .verify()
+        verify(workoutStageService).selectWorkoutStagesByUserId(userId.toInt())
     }
 
     @Test
     fun `GET all should handle database errors`() {
-        whenever(workoutStageDAL.selectWorkoutStages())
+        val userId = "1"
+        val roles = setOf("admin")
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStages())
             .thenReturn(Mono.error(DatabaseException("Database connection failed")))
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
-        verify(workoutStageDAL).selectWorkoutStages()
+        verify(workoutStageService).selectWorkoutStages()
     }
 
     @Test
@@ -303,23 +425,23 @@ class WorkoutStageControllerTest {
                     updatedAt = now
                 )
             )
-        whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(workoutStages))
+        whenever(workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(workoutStages))
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStages))
             .verifyComplete()
-        verify(workoutStageDAL).selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
+        verify(workoutStageService).selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
     }
 
     @Test
     fun `GET by programmed workout ID should handle database errors`() {
-        whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID))
+        whenever(workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID))
             .thenReturn(Mono.error(DatabaseException("Database connection failed")))
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
-        verify(workoutStageDAL).selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
+        verify(workoutStageService).selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
     }
 
     @Test
@@ -336,7 +458,7 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
         whenever(
-            workoutStageDAL.insertWorkoutStage(
+            workoutStageService.insertWorkoutStage(
                 programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                 stageTypeId = STAGE_TYPE_ID_1,
                 position = POSITION_1,
@@ -347,7 +469,7 @@ class WorkoutStageControllerTest {
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(createdStage))
             .verifyComplete()
-        verify(workoutStageDAL).insertWorkoutStage(
+        verify(workoutStageService).insertWorkoutStage(
             programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
             stageTypeId = STAGE_TYPE_ID_1,
             position = POSITION_1,
@@ -369,7 +491,7 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
         whenever(
-            workoutStageDAL.updateWorkoutStage(
+            workoutStageService.updateWorkoutStage(
                 id = WORKOUT_STAGE_ID_1,
                 programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
                 stageTypeId = STAGE_TYPE_ID_2,
@@ -381,7 +503,7 @@ class WorkoutStageControllerTest {
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedStage))
             .verifyComplete()
-        verify(workoutStageDAL).updateWorkoutStage(
+        verify(workoutStageService).updateWorkoutStage(
             id = WORKOUT_STAGE_ID_1,
             programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
             stageTypeId = STAGE_TYPE_ID_2,
@@ -403,11 +525,94 @@ class WorkoutStageControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(workoutStageDAL.deleteWorkoutStage(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(deletedStage))
+        whenever(workoutStageService.deleteWorkoutStage(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(deletedStage))
         val result = workoutStageController.delete(WORKOUT_STAGE_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(deletedStage))
             .verifyComplete()
-        verify(workoutStageDAL).deleteWorkoutStage(WORKOUT_STAGE_ID_1)
+        verify(workoutStageService).deleteWorkoutStage(WORKOUT_STAGE_ID_1)
+    }
+
+    @Test
+    fun `getAll returns all items for admin`() {
+        val userId = "1"
+        val roles = setOf("admin")
+        val stages =
+            listOf(
+                mockWorkoutStage(id = 1L),
+                mockWorkoutStage(id = 2L)
+            )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(stages))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.body!!.size == 2)
+                assert(response.body!!.containsAll(stages))
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getAll returns all items for service`() {
+        val userId = "1"
+        val roles = setOf("service")
+        val stages =
+            listOf(
+                mockWorkoutStage(id = 1L),
+                mockWorkoutStage(id = 2L)
+            )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(stages))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.body!!.size == 2)
+                assert(response.body!!.containsAll(stages))
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getAll returns only owned items for regular user`() {
+        val userId = "1"
+        val roles = setOf("user")
+        val stages =
+            listOf(
+                mockWorkoutStage(id = 1L),
+                mockWorkoutStage(id = 2L)
+            )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(stages))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.body!!.size == 2)
+                assert(response.body!!.containsAll(stages))
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `getAll returns empty for regular user with no owned items`() {
+        val userId = "3"
+        val roles = setOf("user")
+        val stages = emptyList<WorkoutStage>()
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(stages))
+
+        val result = workoutStageController.getAll()
+        StepVerifier.create(result)
+            .assertNext { response ->
+                assert(response.body!!.isEmpty())
+            }
+            .verifyComplete()
     }
 }

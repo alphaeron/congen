@@ -12,7 +12,6 @@
 - add pages for adding exercise
 
 ### Authentication & UI
-- keycloak for account management
 - assets for exercises/muscles images
 - custom snackbar format instead of the default
 - fix landing page styling, and add screenshots for landing page

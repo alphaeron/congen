@@ -5,9 +5,39 @@ import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.info.License
 import io.swagger.v3.oas.models.servers.Server
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+
+/**
+ * OpenAPI configuration for automatic API documentation generation.
+ *
+ * This configuration sets up Swagger/OpenAPI documentation that is automatically
+ * generated from the Spring Boot controllers and models. The documentation
+ * includes:
+ *
+ * - API endpoints with request/response schemas
+ * - Model definitions with validation rules
+ * - Interactive API testing interface
+ * - Server information and contact details
+ *
+ * @property openApiProps The OpenAPI properties loaded from configuration.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
+@ConfigurationProperties(prefix = "openapi")
+data class OpenApiProperties(
+    /**
+     * The port on which the server is running.
+     */
+    var serverPort: String = "8080",
+    /**
+     * The active Spring profile (e.g., dev, test, prod).
+     */
+    var activeProfile: String = "default"
+)
 
 /**
  * OpenAPI configuration for automatic API documentation generation.
@@ -25,13 +55,10 @@ import org.springframework.context.annotation.Configuration
  * @since 1.0.0
  */
 @Configuration
-class OpenApiConfig {
-    @Value("\${server.port}")
-    private lateinit var serverPort: String
-
-    @Value("\${spring.profiles.active}")
-    private lateinit var activeProfile: String
-
+@EnableConfigurationProperties(OpenApiProperties::class)
+class OpenApiConfig(
+    private val openApiProps: OpenApiProperties
+) {
     /**
      * Configures the OpenAPI specification for the application.
      *
@@ -113,7 +140,7 @@ class OpenApiConfig {
             .servers(
                 listOf(
                     Server()
-                        .url("http://localhost:$serverPort/api/v1")
+                        .url("http://localhost:${openApiProps.serverPort}/api/v1")
                         .description("Local Development Server"),
                     Server()
                         .url("https://api.congen.com/api/v1")

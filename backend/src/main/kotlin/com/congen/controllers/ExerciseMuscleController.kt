@@ -1,8 +1,6 @@
 package com.congen.controllers
 
 import com.congen.dal.ExerciseMuscleDAL
-import com.congen.exceptions.DatabaseQueryException
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.ExerciseMuscle
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -11,10 +9,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -78,6 +75,7 @@ class ExerciseMuscleController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get all exercise muscle relationships",
         description = "Retrieves all exercise-muscle relationships.",
@@ -91,76 +89,27 @@ class ExerciseMuscleController(
             ),
         ],
     )
-    fun getAll(): ResponseEntity<*> {
+    fun getAll(): Mono<ResponseEntity<List<ExerciseMuscle>>> {
         logger.debug("Getting all exercise muscle relationships")
-        return ResponseEntity.ok(
-            exerciseMuscleDAL.selectAllExerciseMuscle(),
-        )
-    }
-
-    /**
-     * Retrieves a specific exercise-muscle relationship.
-     *
-     * This endpoint finds the relationship between a specific exercise and muscle.
-     * This helps understand how a particular exercise targets a specific muscle group.
-     *
-     * @param exerciseName The name of the exercise
-     * @param muscleName The name of the muscle
-     * @return The exercise-muscle relationship if found, or 404 if not found
-     *
-     * @throws DatabaseException if database operation fails
-     */
-    @GetMapping("/exercise/{exercise_name}/muscle/{muscle_name}")
-    @Operation(
-        summary = "Get exercise muscle relationship",
-        description = "Retrieves a specific exercise-muscle relationship by exercise and muscle name.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Exercise-muscle relationship found",
-                content = [Content(mediaType = "application/json")],
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "Exercise-muscle relationship not found",
-                content = [Content(mediaType = "application/json")],
-            ),
-        ],
-    )
-    fun getExerciseMuscle(
-        @Parameter(description = "Name of the exercise", required = true)
-        @PathVariable("exercise_name") exerciseName: String,
-        @Parameter(description = "Name of the muscle", required = true)
-        @PathVariable("muscle_name") muscleName: String,
-    ): Mono<ResponseEntity<ExerciseMuscle>> {
-        return exerciseMuscleDAL.selectExerciseMuscle(exerciseName, muscleName)
-            .map {
-                logger.debug("Found exercise muscle relationship: {} - {}", exerciseName, muscleName)
-                ResponseEntity.ok(it)
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Exercise muscle relationship not found: {} - {}", exerciseName, muscleName)
-                Mono.just(ResponseEntity.notFound().build())
-            }
-            .doOnError { e ->
-                logger.error("Error getting exercise muscle relationship: {} - {}", exerciseName, muscleName, e)
-            }
+        return exerciseMuscleDAL.selectAllExerciseMuscle()
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e -> logger.error("Error getting all exercise muscle relationships", e) }
     }
 
     /**
      * Creates a new exercise-muscle relationship.
      *
-     * This endpoint creates a new relationship between an exercise and a muscle.
-     * This relationship defines how the exercise targets the specific muscle group.
+     * This endpoint creates a relationship between an exercise and a muscle,
+     * defining which muscle group is targeted by the exercise.
      *
-     * @param exerciseMuscle The exercise-muscle relationship to create
-     * @return The created relationship with assigned ID
+     * @param exerciseName The name of the exercise
+     * @param muscleName The name of the muscle
+     * @return The created exercise-muscle relationship
      *
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Create exercise muscle relationship",
         description = "Creates a new exercise-muscle relationship.",
@@ -179,25 +128,10 @@ class ExerciseMuscleController(
         @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Name of the muscle", required = true)
         @RequestParam("muscle_name") muscleName: String,
-    ): ResponseEntity<*> {
+    ): Mono<ResponseEntity<ExerciseMuscle>> {
         logger.info("Saving exercise muscle relationship: {} - {}", exerciseName, muscleName)
-        return try {
-            ResponseEntity.ok(
-                exerciseMuscleDAL.insertExerciseMuscle(exerciseName, muscleName),
-            )
-        } catch (e: DatabaseQueryException) {
-            val msg = e.cause?.message ?: e.message ?: "Database error"
-            return when {
-                msg.contains(
-                    "duplicate key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.CONFLICT).body("Relationship already exists")
-                msg.contains(
-                    "violates foreign key",
-                    ignoreCase = true
-                ) -> ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("Exercise or muscle does not exist")
-                else -> throw e
-            }
-        }
+        return exerciseMuscleDAL.insertExerciseMuscle(exerciseName, muscleName)
+            .map { ResponseEntity.ok(it) }
+            .doOnError { e -> logger.error("Error saving exercise muscle relationship: {} - {}", exerciseName, muscleName, e) }
     }
 }

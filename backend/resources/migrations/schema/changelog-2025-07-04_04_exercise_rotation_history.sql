@@ -1,6 +1,6 @@
 --liquibase formatted sql
 
---changeset John Matty:4 labels:prod,test
+--changeset John Matty:7 labels:prod,test
 --comment: Add exercise_rotation_history table for tracking exercise usage in workout programs.
 
 CREATE TABLE exercise_rotation_history (

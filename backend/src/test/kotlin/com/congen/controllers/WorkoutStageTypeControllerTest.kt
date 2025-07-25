@@ -65,8 +65,8 @@ class WorkoutStageTypeControllerTest {
         ).thenReturn(Mono.error(NoResultsFoundException("Not found")))
         val result = workoutStageTypeController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
         verify(workoutStageTypeDAL).selectWorkoutStageTypeById(NON_EXISTENT_ID)
     }
 
@@ -80,7 +80,7 @@ class WorkoutStageTypeControllerTest {
                 createdAt = now
             )
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)).thenReturn(Mono.just(workoutStageType))
-        val result = workoutStageTypeController.getByName(WARMUP_NAME)
+        val result = workoutStageTypeController.getByName(WorkoutStageTypeEnum.WARMUP)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStageType))
             .verifyComplete()
@@ -91,10 +91,10 @@ class WorkoutStageTypeControllerTest {
     fun `getByName should return not found when workout stage type not found`() {
         whenever(workoutStageTypeDAL.selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        val result = workoutStageTypeController.getByName(WARMUP_NAME)
+        val result = workoutStageTypeController.getByName(WorkoutStageTypeEnum.WARMUP)
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
         verify(workoutStageTypeDAL).selectWorkoutStageTypeByEnum(WorkoutStageTypeEnum.WARMUP)
     }
 

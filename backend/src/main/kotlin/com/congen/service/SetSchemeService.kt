@@ -1,6 +1,5 @@
 package com.congen.service
 
-import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
@@ -43,7 +42,6 @@ import java.math.BigDecimal
  *
  * @property setSchemeDAL Data access layer for set scheme operations
  * @property programmedExerciseDAL Data access layer for programmed exercise operations
- * @property programDAL Data access layer for program operations
  * @property userOneRepMaxDAL Data access layer for user one rep max operations
  * @property unitConverter Service for unit conversions
  *
@@ -54,7 +52,6 @@ import java.math.BigDecimal
 class SetSchemeService(
     private val setSchemeDAL: SetSchemeDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
-    private val programDAL: ProgramDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val unitConverter: UnitConverter,
     private val oneRepMaxCalculator: OneRepMaxCalculator
@@ -365,6 +362,24 @@ class SetSchemeService(
     }
 
     /**
+     * Retrieves all set schemes owned by a specific user.
+     *
+     * This method efficiently fetches all set schemes that belong to programmed exercises
+     * owned by the specified user by joining through the relationship chain:
+     * SetScheme → ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
+     *
+     * @param userId The unique identifier of the user
+     * @return Mono containing a list of set schemes owned by the user
+     */
+    fun selectSetSchemesByUserId(userId: Int): Mono<List<SetScheme>> {
+        logger.debug("Getting set schemes for user: {}", userId)
+        return setSchemeDAL.selectSetSchemesByUserId(userId)
+            .doOnError { e ->
+                logger.error("Error getting set schemes for user: {}", userId, e)
+            }
+    }
+
+    /**
      * Deletes a set scheme from the database.
      *
      * This method delegates to the DAL for delete operations, which don't affect 1RM values.
@@ -478,5 +493,27 @@ class SetSchemeService(
      */
     private fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<Int> {
         return programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)
+    }
+
+    /**
+     * Checks if the given user is the owner of the set scheme.
+     *
+     * This traces the relationship chain:
+     * SetScheme → ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
+     *
+     * @param setSchemeId The ID of the set scheme
+     * @param userId The Keycloak user ID to check ownership against (as String)
+     * @return Mono<Boolean> true if the user owns the set scheme, false otherwise
+     */
+    fun isOwner(
+        setSchemeId: Long,
+        userId: String
+    ): Mono<Boolean> {
+        return setSchemeDAL.selectSetSchemeById(setSchemeId)
+            .flatMap { setScheme ->
+                programmedExerciseDAL.getUserIdFromProgrammedExercise(setScheme.programmedExerciseId)
+            }
+            .map { ownerUserId -> ownerUserId.toString() == userId }
+            .onErrorReturn(false)
     }
 }
