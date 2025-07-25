@@ -15,7 +15,10 @@ const _ENVIRONMENT_TO_ENDPOINT_MAPPING = {
 /**
  * The base URL for the backend API.
  */
-const _BASE_URL = _ENVIRONMENT_TO_ENDPOINT_MAPPING[DEPLOYMENT_ENVIRONMENT as keyof typeof _ENVIRONMENT_TO_ENDPOINT_MAPPING] || 'http://localhost:8080/';
+const _BASE_URL =
+  _ENVIRONMENT_TO_ENDPOINT_MAPPING[
+    DEPLOYMENT_ENVIRONMENT as keyof typeof _ENVIRONMENT_TO_ENDPOINT_MAPPING
+  ] || 'http://localhost:8080/';
 
 /**
  * Congen backend endpoint.
@@ -35,7 +38,7 @@ export const setKeycloakGetter = (getter: () => any) => {
 };
 
 // Add interceptor to inject JWT if available
-ENDPOINT.interceptors.request.use(async (config) => {
+ENDPOINT.interceptors.request.use(async config => {
   if (getKeycloak) {
     const keycloak = getKeycloak();
     if (keycloak && keycloak.authenticated && keycloak.token) {

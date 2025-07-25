@@ -1,5 +1,6 @@
 package com.congen.generator
 
+import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
@@ -36,6 +37,9 @@ class ExerciseSelectionServiceTest {
     }
 
     @Mock
+    private lateinit var exerciseDAL: ExerciseDAL
+
+    @Mock
     private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
 
     @Mock
@@ -54,6 +58,7 @@ class ExerciseSelectionServiceTest {
         MockitoAnnotations.openMocks(this)
         exerciseSelectionService =
             ExerciseSelectionService(
+                exerciseDAL,
                 exerciseMuscleDAL,
                 exerciseWorkoutTypeDAL,
                 exerciseEquipmentDAL,
@@ -72,6 +77,8 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
@@ -109,6 +116,8 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = EXERCISE_NAME_7, isAccessory = true)
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
@@ -150,6 +159,8 @@ class ExerciseSelectionServiceTest {
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
 
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
+
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
         ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME_4, muscleName = "chest"))))
@@ -189,6 +200,8 @@ class ExerciseSelectionServiceTest {
             listOf(
                 mockExerciseRotationHistory(exerciseName = EXERCISE_NAME, isAccessory = false)
             )
+
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
         whenever(
             exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
@@ -230,6 +243,8 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
         val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
         val result =
             exerciseSelectionService.selectRotatingExercise(
@@ -566,6 +581,61 @@ class ExerciseSelectionServiceTest {
         // Then
         StepVerifier.create(result)
             .expectNext(emptyList())
+            .verifyComplete()
+    }
+
+    @Test
+    fun `selectRotatingExercise should include preferred exercises not in original list`() {
+        val targetMuscles = listOf("chest", "triceps")
+        val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
+        val preferences =
+            listOf(
+                mockUserExercisePreference(exerciseName = "Preferred Exercise", shouldAvoid = false)
+            )
+        val exercises =
+            listOf(
+                mockExercise(name = EXERCISE_NAME, isAccessory = false)
+            )
+        val allExercises =
+            listOf(
+                mockExercise(name = EXERCISE_NAME, isAccessory = false),
+                mockExercise(name = "Preferred Exercise", isAccessory = false)
+            )
+        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+
+        whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
+
+        // Mock that both exercises have muscle and equipment data
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = EXERCISE_NAME, muscleName = "chest"))))
+
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise("Preferred Exercise")
+        ).thenReturn(Mono.just(listOf(mockExerciseMuscle(exerciseName = "Preferred Exercise", muscleName = "chest"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(EXERCISE_NAME)
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = EXERCISE_NAME, equipmentName = "Barbell"))))
+
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Preferred Exercise")
+        ).thenReturn(Mono.just(listOf(mockExerciseEquipment(exerciseName = "Preferred Exercise", equipmentName = "Barbell"))))
+
+        val result =
+            exerciseSelectionService.selectRotatingExercise(
+                targetMuscles,
+                userEquipment,
+                preferences,
+                exercises,
+                false,
+                rotationHistory
+            )
+
+        StepVerifier.create(result)
+            .expectNextMatches { exercise ->
+                exercise != null && (exercise.name == EXERCISE_NAME || exercise.name == "Preferred Exercise")
+            }
             .verifyComplete()
     }
 }

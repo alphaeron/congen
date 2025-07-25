@@ -1,5 +1,6 @@
 package com.congen.generator
 
+import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
@@ -19,6 +20,7 @@ import reactor.core.publisher.Mono
  */
 @Service
 class ExerciseSelectionService(
+    private val exerciseDAL: ExerciseDAL,
     private val exerciseMuscleDAL: ExerciseMuscleDAL,
     private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
@@ -61,169 +63,187 @@ class ExerciseSelectionService(
         rotationHistory: List<ExerciseRotationHistory>,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
-        // Filter exercises based on preferences (exercises are already filtered by is_accessory)
-        val availableExercises =
-            exercises.filter { exercise ->
-                !preferences.any { pref -> pref.exerciseName == exercise.name && pref.shouldAvoid }
-            }
+        // Get all exercises from the database to ensure we can include user preferences
+        return exerciseDAL.selectExercises()
+            .flatMap { allExercises ->
+                // Filter exercises based on preferences and ensure preferred exercises are included
+                val exercisesToAvoid = preferences.filter { it.shouldAvoid }.map { it.exerciseName }.toSet()
+                val preferredExercises = preferences.filter { !it.shouldAvoid }.map { it.exerciseName }.toSet()
 
-        if (availableExercises.isEmpty()) {
-            logger.warn("No available exercises found for isAccessory: {}", isAccessory)
-            return Mono.justOrEmpty(null)
-        }
-
-        // Filter exercises by target muscles and equipment availability
-        return Flux.fromIterable(availableExercises)
-            .flatMap { exercise ->
-                // Check if user has equipment for this exercise
-                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
-                    .filter { exerciseEquipment ->
-                        val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
-                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
-                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                // Start with the provided exercises (already filtered by workout type, accessory status, etc.)
+                val baseExercises =
+                    exercises.filter { exercise ->
+                        !exercisesToAvoid.contains(exercise.name)
                     }
-                    .flatMap { _ ->
-                        // Check if exercise targets any of the target muscles
-                        exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
-                            .filter { exerciseMuscles ->
-                                val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
-                                val targetMusclesLower = targetMuscles.map { it.lowercase() }
-                                val hasMatchingMuscles =
-                                    exerciseMuscleNames.any { muscle ->
-                                        targetMusclesLower.any { targetMuscle ->
-                                            muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
-                                        }
-                                    }
-                                hasMatchingMuscles
-                            }
-                            .map { exercise }
+
+                // Add any preferred exercises that aren't already in the list
+                val additionalPreferredExercises =
+                    allExercises.filter { exercise ->
+                        preferredExercises.contains(exercise.name) &&
+                            !baseExercises.any { it.name == exercise.name } &&
+                            exercise.isAccessory == isAccessory
                     }
-            }
-            .collectList()
-            .flatMap { muscleFilteredExercises ->
-                if (muscleFilteredExercises.isEmpty()) {
-                    logger.warn(
-                        "No exercises found matching target muscles and equipment: {} for isAccessory: {}",
-                        targetMuscles,
-                        isAccessory
-                    )
-                    // Fallback: try to find exercises that match muscles but don't check equipment
-                    return@flatMap Flux.fromIterable(availableExercises)
-                        .flatMap { exercise ->
-                            exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
-                                .filter { exerciseMuscles ->
-                                    val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
-                                    val targetMusclesLower = targetMuscles.map { it.lowercase() }
-                                    val hasMatchingMuscles =
-                                        exerciseMuscleNames.any { muscle ->
-                                            targetMusclesLower.any { targetMuscle ->
-                                                muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
-                                            }
-                                        }
-                                    hasMatchingMuscles
-                                }
-                                .map { exercise }
-                        }
-                        .collectList()
-                        .flatMap { fallbackExercises ->
-                            if (fallbackExercises.isEmpty()) {
-                                logger.warn(
-                                    "No exercises found matching target muscles: {} for isAccessory: {}",
-                                    targetMuscles,
-                                    isAccessory
-                                )
-                                Mono.justOrEmpty(null)
-                            } else {
-                                // Select a single exercise from the fallback list using the same logic
-                                val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
-                                val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
 
-                                val unusedFallbackExercises =
-                                    fallbackExercises.filter { exercise ->
-                                        !usedExercises.contains(exercise.name)
-                                    }
+                val availableExercises = baseExercises + additionalPreferredExercises
 
-                                val exerciseToChooseFrom =
-                                    if (unusedFallbackExercises.isNotEmpty()) {
-                                        unusedFallbackExercises
-                                    } else {
-                                        fallbackExercises
-                                    }
-
-                                val selectedExercise = exerciseToChooseFrom.firstOrNull()
-                                Mono.justOrEmpty(selectedExercise)
-                            }
-                        }
+                if (availableExercises.isEmpty()) {
+                    logger.warn("No available exercises found for isAccessory: {}", isAccessory)
+                    return@flatMap Mono.justOrEmpty(null)
                 }
 
-                // Get exercise rotation history for this category
-                val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
-
-                // Get all exercises that have been used in this category
-                val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
-
-                // Get exercises that haven't been used yet in this category
-                val unusedExercises =
-                    muscleFilteredExercises.filter { exercise ->
-                        !usedExercises.contains(exercise.name)
-                    }
-
-                // If we have unused exercises, use them first
-                val exercisesToChooseFrom =
-                    if (unusedExercises.isNotEmpty()) {
-                        unusedExercises
-                    } else {
-                        // If all exercises have been used, find the least recently used one
-                        val exerciseUsageCount =
-                            muscleFilteredExercises.associateWith { exercise ->
-                                categoryHistory.count { it.exerciseName == exercise.name }
+                // Filter exercises by target muscles and equipment availability
+                Flux.fromIterable(availableExercises)
+                    .flatMap { exercise ->
+                        // Check if user has equipment for this exercise
+                        exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+                            .filter { exerciseEquipment ->
+                                val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
+                                val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                                userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
                             }
+                            .flatMap { _ ->
+                                // Check if exercise targets any of the target muscles
+                                exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                                    .filter { exerciseMuscles ->
+                                        val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
+                                        val targetMusclesLower = targetMuscles.map { it.lowercase() }
+                                        val hasMatchingMuscles =
+                                            exerciseMuscleNames.any { muscle ->
+                                                targetMusclesLower.any { targetMuscle ->
+                                                    muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
+                                                }
+                                            }
+                                        hasMatchingMuscles
+                                    }
+                                    .map { exercise }
+                            }
+                    }
+                    .collectList()
+                    .flatMap { muscleFilteredExercises ->
+                        if (muscleFilteredExercises.isEmpty()) {
+                            logger.warn(
+                                "No exercises found matching target muscles and equipment: {} for isAccessory: {}",
+                                targetMuscles,
+                                isAccessory
+                            )
+                            // Fallback: try to find exercises that match muscles but don't check equipment
+                            return@flatMap Flux.fromIterable(availableExercises)
+                                .flatMap { exercise ->
+                                    exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                                        .filter { exerciseMuscles ->
+                                            val exerciseMuscleNames = exerciseMuscles?.map { it.muscleName.lowercase() } ?: emptyList()
+                                            val targetMusclesLower = targetMuscles.map { it.lowercase() }
+                                            val hasMatchingMuscles =
+                                                exerciseMuscleNames.any { muscle ->
+                                                    targetMusclesLower.any { targetMuscle ->
+                                                        muscle.contains(targetMuscle) || targetMuscle.contains(muscle)
+                                                    }
+                                                }
+                                            hasMatchingMuscles
+                                        }
+                                        .map { exercise }
+                                }
+                                .collectList()
+                                .flatMap { fallbackExercises ->
+                                    if (fallbackExercises.isEmpty()) {
+                                        logger.warn(
+                                            "No exercises found matching target muscles: {} for isAccessory: {}",
+                                            targetMuscles,
+                                            isAccessory
+                                        )
+                                        Mono.justOrEmpty(null)
+                                    } else {
+                                        // Select a single exercise from the fallback list using the same logic
+                                        val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
+                                        val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
 
-                        val minUsageCount = exerciseUsageCount.values.minOrNull() ?: 0
-                        muscleFilteredExercises.filter { exercise ->
-                            exerciseUsageCount[exercise] == minUsageCount
+                                        val unusedFallbackExercises =
+                                            fallbackExercises.filter { exercise ->
+                                                !usedExercises.contains(exercise.name)
+                                            }
+
+                                        val exerciseToChooseFrom =
+                                            if (unusedFallbackExercises.isNotEmpty()) {
+                                                unusedFallbackExercises
+                                            } else {
+                                                fallbackExercises
+                                            }
+
+                                        val selectedExercise = exerciseToChooseFrom.firstOrNull()
+                                        Mono.justOrEmpty(selectedExercise)
+                                    }
+                                }
                         }
-                    }
 
-                // Apply movement balance constraints if state is provided
-                val prioritized =
-                    if (movementBalanceState != null) {
-                        movementBalanceService.prioritizeExercisesForBalance(
-                            exercisesToChooseFrom,
-                            movementBalanceState
-                        )
-                    } else {
-                        exercisesToChooseFrom
-                    }
+                        // Get exercise rotation history for this category
+                        val categoryHistory = rotationHistory.filter { it.isAccessory == isAccessory }
 
-                // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
-                val sortedExercises =
-                    prioritized.sortedWith(
-                        compareByDescending<Exercise> { exercise ->
-                            // Count equipment options - this would need to be implemented with actual equipment counting
-                            // For now, use a simple heuristic based on exercise name
-                            when {
-                                exercise.name.contains("barbell") -> 3
-                                exercise.name.contains("dumbbell") -> 2
-                                exercise.name.contains("bodyweight") -> 1
-                                else -> 1
+                        // Get all exercises that have been used in this category
+                        val usedExercises = categoryHistory.map { it.exerciseName }.toSet()
+
+                        // Get exercises that haven't been used yet in this category
+                        val unusedExercises =
+                            muscleFilteredExercises.filter { exercise ->
+                                !usedExercises.contains(exercise.name)
                             }
-                        }.thenByDescending { exercise ->
-                            // Count targeted muscles - this would need to be implemented with actual muscle counting
-                            // For now, use a simple heuristic
-                            when {
-                                exercise.name.contains("squat") || exercise.name.contains("deadlift") -> 5
-                                exercise.name.contains("bench") || exercise.name.contains("press") -> 4
-                                exercise.name.contains("row") || exercise.name.contains("pull") -> 3
-                                else -> 2
-                            }
-                        }.thenBy { exercise ->
-                            exercise.name
-                        }
-                    )
 
-                val selectedExercise = sortedExercises.firstOrNull()
-                return@flatMap Mono.justOrEmpty(selectedExercise)
+                        // If we have unused exercises, use them first
+                        val exercisesToChooseFrom =
+                            if (unusedExercises.isNotEmpty()) {
+                                unusedExercises
+                            } else {
+                                // If all exercises have been used, find the least recently used one
+                                val exerciseUsageCount =
+                                    muscleFilteredExercises.associateWith { exercise ->
+                                        categoryHistory.count { it.exerciseName == exercise.name }
+                                    }
+
+                                val minUsageCount = exerciseUsageCount.values.minOrNull() ?: 0
+                                muscleFilteredExercises.filter { exercise ->
+                                    exerciseUsageCount[exercise] == minUsageCount
+                                }
+                            }
+
+                        // Apply movement balance constraints if state is provided
+                        val prioritized =
+                            if (movementBalanceState != null) {
+                                movementBalanceService.prioritizeExercisesForBalance(
+                                    exercisesToChooseFrom,
+                                    movementBalanceState
+                                )
+                            } else {
+                                exercisesToChooseFrom
+                            }
+
+                        // Sort by number of equipment options (desc), targeted muscles (desc), exercise name
+                        val sortedExercises =
+                            prioritized.sortedWith(
+                                compareByDescending<Exercise> { exercise ->
+                                    // Count equipment options - this would need to be implemented with actual equipment counting
+                                    // For now, use a simple heuristic based on exercise name
+                                    when {
+                                        exercise.name.contains("barbell") -> 3
+                                        exercise.name.contains("dumbbell") -> 2
+                                        exercise.name.contains("bodyweight") -> 1
+                                        else -> 1
+                                    }
+                                }.thenByDescending { exercise ->
+                                    // Count targeted muscles - this would need to be implemented with actual muscle counting
+                                    // For now, use a simple heuristic
+                                    when {
+                                        exercise.name.contains("squat") || exercise.name.contains("deadlift") -> 5
+                                        exercise.name.contains("bench") || exercise.name.contains("press") -> 4
+                                        exercise.name.contains("row") || exercise.name.contains("pull") -> 3
+                                        else -> 2
+                                    }
+                                }.thenBy { exercise ->
+                                    exercise.name
+                                }
+                            )
+
+                        val selectedExercise = sortedExercises.firstOrNull()
+                        return@flatMap Mono.justOrEmpty(selectedExercise)
+                    }
             }
     }
 

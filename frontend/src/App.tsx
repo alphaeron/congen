@@ -138,10 +138,22 @@ function AppContent(): React.ReactElement {
                   <UserProfile />
                 ) : (
                   <>
-                    <Button color="primary" variant="text" size="small" component={Link} to="/login">
+                    <Button
+                      color="primary"
+                      variant="text"
+                      size="small"
+                      component={Link}
+                      to="/login"
+                    >
                       Sign in
                     </Button>
-                    <Button color="primary" variant="contained" size="small" component={Link} to="/login">
+                    <Button
+                      color="primary"
+                      variant="contained"
+                      size="small"
+                      component={Link}
+                      to="/login"
+                    >
                       Sign up
                     </Button>
                   </>

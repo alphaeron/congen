@@ -69,15 +69,10 @@ export const LoginPage: React.FC = () => {
         <Typography component="h2" variant="h6" color="text.secondary" gutterBottom>
           Sign in to access your workout programs
         </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleLogin}
-          sx={{ mt: 3, mb: 2 }}
-        >
+        <Button variant="contained" size="large" onClick={handleLogin} sx={{ mt: 3, mb: 2 }}>
           Sign In
         </Button>
       </Box>
     </Container>
   );
-}; 
+};

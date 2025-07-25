@@ -30,11 +30,11 @@ const KEYCLOAK_CONFIG = {
  */
 export const getKeycloakConfig = () => {
   const config = KEYCLOAK_CONFIG[DEPLOYMENT_ENVIRONMENT as keyof typeof KEYCLOAK_CONFIG];
-  
+
   if (!config) {
     throw new Error(`No Keycloak configuration found for environment: ${DEPLOYMENT_ENVIRONMENT}`);
   }
-  
+
   return config;
 };
 
@@ -45,7 +45,7 @@ export const getKeycloakConfig = () => {
  */
 export const initKeycloak = async (): Promise<Keycloak> => {
   const config = getKeycloakConfig();
-  
+
   const keycloak = new Keycloak({
     url: config.url,
     realm: config.realm,
@@ -59,4 +59,4 @@ export const initKeycloak = async (): Promise<Keycloak> => {
   });
 
   return keycloak;
-}; 
+};

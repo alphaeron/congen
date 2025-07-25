@@ -61,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const kc = await initKeycloak();
         setKeycloak(kc);
         setAuthenticated(kc.authenticated || false);
-        
+
         // Set up token refresh
         kc.onTokenExpired = () => {
           kc.updateToken(70).catch(() => {
@@ -69,28 +69,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             kc.logout();
           });
         };
-        
+
         // Set up authentication state changes
         kc.onAuthSuccess = () => {
           setAuthenticated(true);
         };
-        
+
         kc.onAuthLogout = () => {
           setAuthenticated(false);
         };
-        
+
         kc.onAuthError = () => {
           setAuthenticated(false);
         };
-        
+
         kc.onAuthRefreshSuccess = () => {
           setAuthenticated(true);
         };
-        
+
         kc.onAuthRefreshError = () => {
           setAuthenticated(false);
         };
-        
       } catch (error) {
         console.error('Failed to initialize authentication:', error);
       } finally {
@@ -140,4 +139,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}; 
+};
