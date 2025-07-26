@@ -1,0 +1,45 @@
+Security linting
+
+Frontend tests
+
+If ProtectedRoute in frontend is unused, remove it
+
+Integrate Keycloak with backend: configure Spring Security, secure endpoints, map roles, and connect user model.
+Integrate Keycloak with frontend: update login flow, use Keycloak tokens for API calls, and support account management.
+
+Need to include visualization page to track exercise history, tooltip if estimated from 1rm to show set scheme for it.
+
+Backups for keycloak
+
+Need an application status page
+
+Generate database
+
+Do user pages first
+
+User profile
+Progress
+Graph for 1rm
+Trends over time
+Statistics for progress
+Program creation
+Program preferences
+Current program
+
+Workout generation flow
+Users enter preferences
+
+Program page and viewing this day /week’s workouts,
+Calendar view to place workout days?
+View past workouts
+
+prompt GPT/Copilot to encrypt data and make sure you have GDPR level restrictions on whatever data you have, but it won’t do it by default which is a huge problem.
+
+Fluxionary (whoop data ingestion)
+“Fluxionary" (invented)
+* From "flux" (flow of data) + "revolutionary" — a playful, futuristic mashup.
+* Suggests dynamic fun, innovation, and constant movement.
+
+Liftalizer (video analysis) service
+
+Health metric visualization impact on performance page.B

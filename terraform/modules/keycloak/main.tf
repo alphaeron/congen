@@ -49,6 +49,21 @@ resource "keycloak_openid_client" "backend_client" {
   web_origins                  = ["*"]
 }
 
+# Assign realm-management client roles to backend client for user account creation
+resource "keycloak_openid_client_service_account_role" "backend_client_realm_management_roles" {
+  realm_id                = keycloak_realm.congen.id
+  service_account_user_id = keycloak_openid_client.backend_client.service_account_user_id
+  client_id               = "realm-management"
+  role                    = "manage-users"
+}
+
+resource "keycloak_openid_client_service_account_role" "backend_client_view_realm_role" {
+  realm_id                = keycloak_realm.congen.id
+  service_account_user_id = keycloak_openid_client.backend_client.service_account_user_id
+  client_id               = "realm-management"
+  role                    = "view-realm"
+}
+
 # Create frontend client
 resource "keycloak_openid_client" "frontend_client" {
   realm_id                     = keycloak_realm.congen.id

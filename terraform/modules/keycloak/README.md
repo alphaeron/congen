@@ -85,6 +85,9 @@ module "keycloak" {
 - **Service Account**: `congen-backend-service` (assigned `service` role)
 - **Admin User**: Configurable admin user (assigned `admin` and `user` roles)
 
+### Client Service Account Roles
+- **Backend Client**: Assigned `realm-management/manage-users` and `realm-management/view-realm` roles for user account creation
+
 ## Security Features
 
 ### Service Account Authentication
@@ -92,11 +95,14 @@ module "keycloak" {
 - Principle of least privilege
 - Separate from admin credentials
 - Secure credential management
+- **User Account Creation**: Backend client service account has realm-management roles to create and manage user accounts
 
 ### Role-Based Access Control
 - **user**: Regular user with access to personal data
 - **admin**: Administrator with full access
 - **service**: Service account for automated operations
+- **realm-management/manage-users**: Allows the backend client service account to create and manage user accounts
+- **realm-management/view-realm**: Allows the backend client service account to view realm information
 
 ### Client Configuration
 - **Backend Client**: Confidential client with service accounts
