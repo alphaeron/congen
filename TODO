@@ -1,10 +1,7 @@
-Security linting
-
 Frontend tests
 
 If ProtectedRoute in frontend is unused, remove it
 
-Integrate Keycloak with backend: configure Spring Security, secure endpoints, map roles, and connect user model.
 Integrate Keycloak with frontend: update login flow, use Keycloak tokens for API calls, and support account management.
 
 Need to include visualization page to track exercise history, tooltip if estimated from 1rm to show set scheme for it.

@@ -265,11 +265,11 @@ task checkLicenses(group: 'verification', description: 'Check for forbidden lice
     dependsOn checkFrontendLicenses
 }
 
-// Comprehensive linting task that includes Gradle files
+// Comprehensive linting task that includes Gradle files and security audit
 // Only depends on shared (non-backend) tasks now
-task allLint(group: 'verification', description: 'Run all shared linting checks including Gradle files') {
+task allLint(group: 'verification', description: 'Run all shared linting checks including Gradle files and security audit') {
     dependsOn subprojects.collect { it.path + ':allLint' }
-    dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck, jsonCheck, checkLicenses
+    dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck, jsonCheck, checkLicenses, securityAudit
 }
 
 task allFormat(group: 'formatting', description: 'Format all shared code including Gradle files') {

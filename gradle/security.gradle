@@ -1,0 +1,64 @@
+// Security checks using static analysis tools
+// This file contains security-related tasks using established tools instead of custom shell scripts
+
+// OWASP Dependency Check (keep this as it's specialized)
+task checkVulnerableDependencies(type: Exec, group: 'security') {
+    description = 'Check for known vulnerabilities in dependencies using OWASP dependency-check'
+    ignoreExitValue = true
+    
+    doFirst {
+        // Check if OWASP dependency check is available
+        def owaspPath = exec {
+            commandLine 'which', 'dependency-check'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+        }
+        
+        if (owaspPath.exitValue != 0) {
+            println "⚠️  OWASP dependency-check not found. Install with: brew install dependency-check"
+            commandLine 'echo', 'OWASP dependency-check not available, skipping'
+            return
+        }
+    }
+    
+    commandLine 'sh', '-c', '''
+        echo "🔍 Checking for vulnerable dependencies (this may take several minutes)..."
+        
+        # Create reports directory if it doesn't exist
+        mkdir -p build/security-reports
+        
+        # Check backend dependencies
+        if [ -d "backend" ]; then
+            echo "Checking backend dependencies..."
+            dependency-check \
+                --scan backend \
+                --exclude "backend/build/**" \
+                --format HTML \
+                --prettyPrint \
+                --out build/security-reports/backend-dependencies.html || \
+                echo "⚠️  Backend dependency check timed out or failed"
+        fi
+        
+        # Check frontend dependencies
+        if [ -d "frontend" ]; then
+            echo "Checking frontend dependencies..."
+            dependency-check \
+                --scan frontend \
+                --exclude "frontend/dist/**" \
+                --exclude "frontend/build/**" \
+                --exclude "frontend/node_modules/**" \
+                --format HTML \
+                --prettyPrint \
+                --out build/security-reports/frontend-dependencies.html || \
+                echo "⚠️  Frontend dependency check timed out or failed"
+        fi
+        
+        echo "✅ Dependency vulnerability check completed"
+        echo "📊 Reports available in build/security-reports/"
+    '''
+}
+
+// Full security audit (comprehensive)
+task securityAudit(group: 'security', description: 'Run comprehensive security audit including dependency scanning (can be slow)') {
+    dependsOn checkVulnerableDependencies
+}

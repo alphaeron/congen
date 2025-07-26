@@ -12,13 +12,15 @@ subprojects {
 
 apply from: 'gradle/skaffold.gradle'
 apply from: 'gradle/deploy.gradle'
+apply from: 'gradle/security.gradle'
 apply from: 'gradle/style.gradle'
 apply from: 'gradle/test.gradle'
 
 task check {
     group = 'verification'
-    description = 'Run all checks in all subprojects.'
+    description = 'Run all checks in all subprojects including security audit.'
     dependsOn subprojects.collect { it.path + ':check' }
+    dependsOn securityAudit
 }
 
 task build {
