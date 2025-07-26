@@ -1,3 +1,17 @@
+// Configure source sets
+sourceSets {
+    integrationTest {
+        kotlin {
+            srcDir 'src/integrationTest/kotlin'
+        }
+        resources {
+            srcDirs 'src/integrationTest/resources', "resources"
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
 // Configure integration test dependencies
 // Note: Gradle automatically creates configurations for sourceSets, but we need to configure them before using them
 configurations {
@@ -70,20 +84,6 @@ project.afterEvaluate {
     integrationTest.doFirst {
         project.ext.environment = 'local'
         println "🎯 Integration test deployment environment: ${project.ext.environment}"
-    }
-}
-
-// Configure source sets
-sourceSets {
-    integrationTest {
-        kotlin {
-            srcDir 'src/integrationTest/kotlin'
-        }
-        resources {
-            srcDirs 'src/integrationTest/resources', "resources"
-        }
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
     }
 }
 

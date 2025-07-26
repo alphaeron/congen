@@ -197,11 +197,79 @@ task terraformCheck(group: 'verification', description: 'Comprehensive Terraform
     dependsOn terraformFormatCheck, terraformValidate, terraformLint
 }
 
+// License checking configuration using Gradle License Report plugin
+// This configuration applies to all subprojects
+
+subprojects {
+    if (file('build.gradle').exists()) {
+        apply plugin: 'com.github.jk1.dependency-license-report'
+
+        afterEvaluate {
+            licenseReport {
+                configurations = ALL
+                allowedLicensesFile = new File("$rootProject.projectDir/gradle/config/allowed-licenses.json")
+                // Use string-based configuration to avoid compilation-time class resolution
+                filters = [Class.forName('com.github.jk1.license.filter.LicenseBundleNormalizer', true, buildscript.classLoader)
+                    .getConstructor(Map)
+                    .newInstance([bundlePath: "$rootProject.projectDir/gradle/config/license-normalizer-bundle.json"])]
+                // Skip renderers to avoid Gradle validation warnings
+            }
+        }
+
+        tasks.matching { it.name == 'check' }.all {
+            dependsOn 'checkLicense'
+        }
+    }
+}
+
+// Frontend license checking task using license-checker
+task checkFrontendLicenses(type: Exec, group: 'verification', description: 'Check for forbidden licenses in frontend dependencies') {
+    workingDir = file('frontend')
+    
+    doFirst {
+        // Check if license-checker is available
+        def licenseCheckerPath = exec {
+            commandLine 'which', 'license-checker'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+        }
+        
+        if (licenseCheckerPath.exitValue != 0) {
+            throw new GradleException("license-checker not found. Please install with: npm install -g license-checker")
+        }
+        
+        // Read allowed licenses from the single source of truth JSON file
+        def allowedLicensesFile = new File("$rootProject.projectDir/gradle/config/allowed-licenses.json")
+        def allowedLicensesJson = new groovy.json.JsonSlurper().parse(allowedLicensesFile)
+        def allowedLicenses = allowedLicensesJson.allowedLicenses.collect { it.moduleLicense }.findAll { it != null }
+        
+        def allowedLicensesString = allowedLicenses.join(';')
+        
+        commandLine 'sh', '-c', """
+            if [ -f "package.json" ]; then
+                if license-checker --onlyAllow "${allowedLicensesString}" --summary; then
+                    echo "✅ No forbidden licenses found in frontend dependencies"
+                else
+                    echo "❌ Forbidden licenses found in frontend dependencies"
+                    exit 1
+                fi
+            else
+                echo "No package.json found in frontend directory"
+            fi
+        """
+    }
+}
+
+task checkLicenses(group: 'verification', description: 'Check for forbidden licenses in all subprojects') {
+    dependsOn subprojects.collect { it.path + ':checkLicense' }
+    dependsOn checkFrontendLicenses
+}
+
 // Comprehensive linting task that includes Gradle files
 // Only depends on shared (non-backend) tasks now
 task allLint(group: 'verification', description: 'Run all shared linting checks including Gradle files') {
     dependsOn subprojects.collect { it.path + ':allLint' }
-    dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck, jsonCheck
+    dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck, jsonCheck, checkLicenses
 }
 
 task allFormat(group: 'formatting', description: 'Format all shared code including Gradle files') {

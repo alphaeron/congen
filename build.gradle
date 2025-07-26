@@ -1,5 +1,11 @@
 // Top-level build.gradle for multi-project build
 
+// The following line is required to make the dependency-license-report plugin available for use in gradle/style.gradle.
+// This does NOT configure the plugin; all configuration remains in style.gradle.
+plugins {
+    id 'com.github.jk1.dependency-license-report' version '1.16' apply false
+}
+
 subprojects {
     // Common configuration for all subprojects can go here if needed
 }
