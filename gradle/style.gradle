@@ -45,6 +45,83 @@ task gradleCheck(type: Exec, group: 'verification') {
     commandLine './gradlew', 'spotlessCheck'
 }
 
+// JSON formatting and linting tasks
+task jsonFormat(type: Exec, group: 'formatting') {
+    description = 'Format JSON files using jq'
+    doFirst {
+        def jqPath = exec {
+            commandLine 'which', 'jq'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+        }
+        if (jqPath.exitValue != 0) {
+            throw new GradleException("jq not found. Please install jq: https://stedolan.github.io/jq/download/")
+        }
+    }
+    commandLine 'sh', '-c', '''
+        find . -name "*.json" -type f | grep -v node_modules | grep -v .terraform | while read file; do
+            echo "Formatting: $file"
+            jq . "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+        done
+    '''
+}
+
+task jsonFormatCheck(type: Exec, group: 'verification') {
+    description = 'Check JSON files formatting using jq'
+    doFirst {
+        def jqPath = exec {
+            commandLine 'which', 'jq'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+        }
+        if (jqPath.exitValue != 0) {
+            throw new GradleException("jq not found. Please install jq: https://stedolan.github.io/jq/download/")
+        }
+    }
+    commandLine 'sh', '-c', '''
+        find . -name "*.json" -type f | grep -v node_modules | grep -v .terraform | while read file; do
+            echo "Checking: $file"
+            if ! jq . "$file" > /dev/null 2>&1; then
+                echo "❌ Invalid JSON: $file"
+                exit 1
+            fi
+            if ! jq . "$file" | diff "$file" - > /dev/null; then
+                echo "❌ JSON not properly formatted: $file"
+                exit 1
+            fi
+        done
+        echo "✅ All JSON files are valid and properly formatted"
+    '''
+}
+
+task jsonValidate(type: Exec, group: 'verification') {
+    description = 'Validate JSON files syntax'
+    doFirst {
+        def jqPath = exec {
+            commandLine 'which', 'jq'
+            ignoreExitValue = true
+            standardOutput = new ByteArrayOutputStream()
+        }
+        if (jqPath.exitValue != 0) {
+            throw new GradleException("jq not found. Please install jq: https://stedolan.github.io/jq/download/")
+        }
+    }
+    commandLine 'sh', '-c', '''
+        find . -name "*.json" -type f | grep -v node_modules | grep -v .terraform | while read file; do
+            echo "Validating: $file"
+            if ! jq . "$file" > /dev/null 2>&1; then
+                echo "❌ Invalid JSON syntax: $file"
+                exit 1
+            fi
+        done
+        echo "✅ All JSON files have valid syntax"
+    '''
+}
+
+task jsonCheck(group: 'verification', description: 'Comprehensive JSON validation (format check, syntax validation)') {
+    dependsOn jsonFormatCheck, jsonValidate
+}
+
 // Terraform formatting and linting tasks
 task terraformFormat(type: Exec, group: 'formatting') {
     description = 'Format Terraform files using terraform fmt'
@@ -124,10 +201,10 @@ task terraformCheck(group: 'verification', description: 'Comprehensive Terraform
 // Only depends on shared (non-backend) tasks now
 task allLint(group: 'verification', description: 'Run all shared linting checks including Gradle files') {
     dependsOn subprojects.collect { it.path + ':allLint' }
-    dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck
+    dependsOn shellCheck, kubeCheck, gradleCheck, terraformCheck, jsonCheck
 }
 
 task allFormat(group: 'formatting', description: 'Format all shared code including Gradle files') {
     dependsOn subprojects.collect { it.path + ':allFormat' }
-    dependsOn gradleFormat, terraformFormat
+    dependsOn gradleFormat, terraformFormat, jsonFormat
 }
