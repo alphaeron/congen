@@ -57,18 +57,19 @@ class UserDALTest {
             postgresClient.update<User>(
                 """
                 INSERT INTO "user"
-                    (name, age, height, weight)
+                    (name, age, height, weight, keycloak_user_id)
                 VALUES
-                    ($1, $2, $3, $4)
+                    ($1, $2, $3, $4, $5)
                 """.trimIndent(),
                 insertUser.name,
                 insertUser.age,
                 insertUser.height,
                 insertUser.weight,
+                insertUser.keycloakUserId,
             ),
         ).thenReturn(Mono.just(insertUser))
 
-        val result = userDAL.insertUser(insertUser.name, insertUser.age, insertUser.height, insertUser.weight)
+        val result = userDAL.insertUser(insertUser.name, insertUser.age, insertUser.height, insertUser.weight, insertUser.keycloakUserId)
 
         StepVerifier.create(result)
             .expectNext(insertUser)
@@ -76,14 +77,15 @@ class UserDALTest {
         verify(postgresClient).update<User>(
             """
             INSERT INTO "user"
-                (name, age, height, weight)
+                (name, age, height, weight, keycloak_user_id)
             VALUES
-                ($1, $2, $3, $4)
+                ($1, $2, $3, $4, $5)
             """.trimIndent(),
             insertUser.name,
             insertUser.age,
             insertUser.height,
             insertUser.weight,
+            insertUser.keycloakUserId,
         )
     }
 

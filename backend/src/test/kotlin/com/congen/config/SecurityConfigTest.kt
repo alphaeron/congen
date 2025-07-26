@@ -12,8 +12,8 @@ import kotlin.test.assertTrue
 @ExtendWith(MockitoExtension::class)
 @TestPropertySource(
     properties = [
-        "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8081/auth/realms/test",
-        "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8081/auth/realms/test/protocol/openid-connect/certs",
+        "spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8080/auth/realms/test",
+        "spring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://localhost:8080/auth/realms/test/protocol/openid-connect/certs",
         "spring.security.oauth2.resourceserver.jwt.audiences=test-client"
     ]
 )

@@ -1,0 +1,16 @@
+# Keycloak Admin Credentials
+# IMPORTANT: Use strong, unique passwords for production
+keycloak_admin_password = "your-production-keycloak-admin-password"
+
+# Backend Service Account Password
+# IMPORTANT: Use strong, unique password for production
+backend_service_password = "your-production-backend-service-password"
+
+# Default Admin User Password
+# IMPORTANT: Use strong, unique password for production
+admin_password = "your-production-admin-password"
+
+# Optional: Override defaults for production
+# keycloak_url = "https://keycloak.your-production-domain.com"
+# admin_username = "your-production-admin-username"
+# admin_email = "admin@your-production-domain.com" 

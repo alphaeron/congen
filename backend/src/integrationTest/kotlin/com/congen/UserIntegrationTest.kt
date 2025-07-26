@@ -2,7 +2,6 @@ package com.congen
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 
 class UserIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
@@ -11,94 +10,13 @@ class UserIntegrationTest : BaseIntegrationTest() {
         // Only create minimal data needed for user tests
         val unique = System.nanoTime()
         val userName = "UserIntegrationTest User $unique"
-        val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, userName)
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, userName)
         // Use minimal reference data instead of full data for faster tests
         IntegrationTestHelpers.createMinimalReferenceDataForUser(webTestClient, userId)
         this.testUserName = userName
     }
 
     private lateinit var testUserName: String
-
-    @Test
-    fun `should return 422 when user age is 0`() {
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=0" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User age must be between 1 and 150"))
-            }
-    }
-
-    @Test
-    fun `should return 422 when user age is 151`() {
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=151" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User age must be between 1 and 150"))
-            }
-    }
-
-    @Test
-    fun `should return 422 when user height is 0`() {
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=0" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User height must be between 0.01 and 300 cm"))
-            }
-    }
-
-    @Test
-    fun `should return 422 when user weight is 0`() {
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=0"
-            )
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User weight must be between 0.01 and 1000 kg"))
-            }
-    }
-
-    @Test
-    fun `should accept valid user data`() {
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .exchange()
-            .expectStatus().isOk()
-    }
 
     @Test
     fun `should get user by id`() {

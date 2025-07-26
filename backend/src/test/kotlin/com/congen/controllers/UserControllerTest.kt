@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.User
 import com.congen.service.UserService
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -22,6 +23,7 @@ import java.time.Instant
 )
 class UserControllerTest {
     private lateinit var userService: UserService
+    private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var userController: UserController
 
     companion object {
@@ -41,7 +43,8 @@ class UserControllerTest {
     @BeforeEach
     fun setUp() {
         userService = mock()
-        userController = UserController(userService)
+        keycloakUtil = mock()
+        userController = UserController(userService, keycloakUtil)
     }
 
     @Test
@@ -55,20 +58,21 @@ class UserControllerTest {
                 height = BigDecimal(HEIGHT),
                 weight = BigDecimal(WEIGHT),
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                keycloakUserId = null
             )
         val savedUser = user.copy(id = USER_ID)
 
-        whenever(userService.createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
+        whenever(userService.createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123"))
             .thenReturn(Mono.just(savedUser))
 
-        val result = userController.save(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
+        val result = userController.save(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123")
 
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedUser))
             .verifyComplete()
 
-        verify(userService).createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
+        verify(userService).createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123")
     }
 
     @Test
@@ -82,7 +86,8 @@ class UserControllerTest {
                 height = BigDecimal(HEIGHT),
                 weight = BigDecimal(WEIGHT),
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                keycloakUserId = null
             )
 
         whenever(userService.getUserById(USER_ID)).thenReturn(Mono.just(user))
@@ -108,7 +113,8 @@ class UserControllerTest {
                     height = BigDecimal(HEIGHT),
                     weight = BigDecimal(WEIGHT),
                     createdAt = now,
-                    updatedAt = now
+                    updatedAt = now,
+                    keycloakUserId = null
                 ),
                 User(
                     id = USER_ID_2,
@@ -117,7 +123,8 @@ class UserControllerTest {
                     height = BigDecimal(JANE_HEIGHT),
                     weight = BigDecimal(JANE_WEIGHT),
                     createdAt = now,
-                    updatedAt = now
+                    updatedAt = now,
+                    keycloakUserId = null
                 )
             )
 
@@ -143,7 +150,8 @@ class UserControllerTest {
                 height = BigDecimal(HEIGHT),
                 weight = BigDecimal(WEIGHT),
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                keycloakUserId = null
             )
 
         whenever(userService.updateUser(USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
@@ -169,7 +177,8 @@ class UserControllerTest {
                 height = BigDecimal(HEIGHT),
                 weight = BigDecimal(WEIGHT),
                 createdAt = now,
-                updatedAt = now
+                updatedAt = now,
+                keycloakUserId = null
             )
 
         whenever(userService.deleteUser(USER_ID)).thenReturn(Mono.just(user))

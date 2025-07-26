@@ -85,7 +85,7 @@ task deployAll {
         // Wait for deployments to be ready (example for backend, can be extended for frontend)
         println "⏳ Waiting for backend deployment to be ready..."
         exec {
-            commandLine 'kubectl', 'rollout', 'status', 'deployment/congen', '-n', 'congen', '--timeout=300s'
+            commandLine 'kubectl', 'rollout', 'status', 'deployment/backend', '-n', 'congen', '--timeout=300s'
         }
         println "✅ All deployments complete!"
         println "📊 Check status: kubectl get pods -n congen"

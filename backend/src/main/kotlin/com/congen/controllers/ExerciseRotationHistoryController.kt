@@ -326,7 +326,8 @@ class ExerciseRotationHistoryController(
      */
     @PatchMapping("/{id}")
     @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or (#userId == principal.subject and @exerciseRotationHistoryService.isOwner(#id, principal.subject))"
+        "hasRole('admin') or hasRole('service') or " +
+            "(#userId == principal.subject and @exerciseRotationHistoryService.isOwner(#id, principal.subject))"
     )
     @Operation(
         summary = "Update an exercise rotation history record",

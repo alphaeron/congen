@@ -15,10 +15,10 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
     override fun setUp() {
         super.setUp()
         val unique = System.nanoTime()
-        userId1 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "WeakMuscle User 1 $unique")
-        userId2 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "WeakMuscle User 2 $unique")
-        userId3 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "WeakMuscle User 3 $unique")
-        userId4 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "WeakMuscle User 4 $unique")
+        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, "WeakMuscle User 1 $unique")
+        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, "WeakMuscle User 2 $unique")
+        userId3 = IntegrationTestHelpers.createTestUser(webTestClient, "WeakMuscle User 3 $unique")
+        userId4 = IntegrationTestHelpers.createTestUser(webTestClient, "WeakMuscle User 4 $unique")
     }
 
     @Test

@@ -41,6 +41,7 @@ class SecurityConfig {
             .authorizeExchange { exchanges ->
                 exchanges
                     .pathMatchers("/api/v1/health/**").permitAll()
+                    .pathMatchers("/api/v1/user/").permitAll()
                     .anyExchange().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->

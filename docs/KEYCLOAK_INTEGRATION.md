@@ -33,24 +33,28 @@ The Congen application uses Keycloak for authentication and authorization. Keycl
 ### Prerequisites
 
 - Docker and Kubernetes (for local development)
-- `jq` command-line tool (for setup script)
-- `curl` command-line tool
+- Terraform 1.12.2 (for infrastructure provisioning)
 
 ### Local Development Setup
 
-1. **Deploy Keycloak to Kubernetes**:
+1. **Deploy application and Keycloak to Kubernetes**:
    ```bash
-   kubectl apply -k k8s/overlays/local
+   ./gradlew deployAll -Penvironment=local
    ```
 
 2. **Wait for Keycloak to be ready**:
    ```bash
    kubectl wait --for=condition=ready pod -l app=keycloak -n congen --timeout=300s
    ```
+   Note: This step is automatically handled by the `deployAll` task.
 
-3. **Run the Keycloak setup script**:
+3. **Provision Keycloak infrastructure with Terraform**:
    ```bash
-   ./scripts/setup-keycloak.sh
+   cd terraform/environments/local
+   cp terraform.tfvars.example terraform.tfvars
+   # Edit terraform.tfvars with your passwords
+   terraform init
+   terraform apply
    ```
 
 4. **Start the backend application**:
@@ -234,7 +238,7 @@ jest.mock('../auth/AuthContext', () => ({
 ### Common Issues
 
 1. **Keycloak Connection Failed**
-   - Check if Keycloak is running: `kubectl get pods -n congen`
+   - Check if Keycloak is running: `kubectl get pods -n congen` (or use the `deployAll` task which handles this automatically)
    - Verify Keycloak URL in configuration
    - Check network connectivity
 
@@ -324,6 +328,6 @@ Access the Keycloak admin console at:
 For issues related to Keycloak integration:
 
 1. Check the troubleshooting section
-2. Review Keycloak logs: `kubectl logs -n congen -l app=keycloak`
+2. Review Keycloak logs: `kubectl logs -n congen -l app=keycloak` (for debugging only)
 3. Check application logs for authentication errors
 4. Verify configuration in Keycloak admin console 

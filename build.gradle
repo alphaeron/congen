@@ -6,6 +6,8 @@ subprojects {
 
 apply from: 'gradle/skaffold.gradle'
 apply from: 'gradle/deploy.gradle'
+apply from: 'gradle/style.gradle'
+apply from: 'gradle/test.gradle'
 
 task check {
     group = 'verification'

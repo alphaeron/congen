@@ -183,7 +183,8 @@ class ProgrammedWorkoutController(
      */
     @PatchMapping("/{id}")
     @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or (@programService.isOwner(#programId, principal.subject) and @programmedWorkoutService.isOwner(#id, principal.subject))"
+        "hasRole('admin') or hasRole('service') or " +
+            "(@programService.isOwner(#programId, principal.subject) and @programmedWorkoutService.isOwner(#id, principal.subject))"
     )
     fun update(
         @PathVariable("id") id: Long,

@@ -196,7 +196,9 @@ class WorkoutStageController(
      */
     @PatchMapping("/")
     @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or (@workoutStageService.isOwner(#id, principal.subject) and @programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject))"
+        "hasRole('admin') or hasRole('service') or " +
+            "(@workoutStageService.isOwner(#id, principal.subject) and " +
+            "@programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject))"
     )
     fun update(
         @Parameter(description = "Workout stage ID", required = true)

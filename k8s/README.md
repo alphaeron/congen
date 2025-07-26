@@ -129,18 +129,21 @@ minikube ip
 # Access the application (NodePort 30080)
 curl http://$(minikube ip):30080/actuator/health
 
-# Or use port forwarding
-kubectl port-forward -n congen service/congen 8080:8080
+# Or use port forwarding (automated via Gradle task)
+./gradlew setupTestPortForward
 ```
 
 ### 4. Database Access
 
 ```bash
-# Port forward PostgreSQL
-kubectl port-forward -n congen service/postgres 5432:5432
+# Port forward PostgreSQL (automated via Gradle task)
+./gradlew setupTestPortForward
 
 # Connect to database
 psql -h localhost -p 5432 -U postgres -d postgres
+
+# Clean up port forwarding when done
+./gradlew cleanupPortForward
 ```
 
 ## Environment-Specific Deployments
@@ -149,30 +152,38 @@ psql -h localhost -p 5432 -U postgres -d postgres
 
 ```bash
 # Deploy local configuration
-kubectl apply -k k8s/overlays/local
+./gradlew deployAll -Penvironment=local
 
-# Delete local deployment
-kubectl delete -k k8s/overlays/local
+# The deployAll task automatically handles:
+# - Building and preparing images
+# - Setting up local Kubernetes environment
+# - Deploying to Kubernetes
+# - Waiting for deployments to be ready
 ```
 
 ### Staging Environment
 
 ```bash
 # Deploy staging configuration
-kubectl apply -k k8s/overlays/staging
+./gradlew deployAll -Penvironment=staging -PremoteRegistry=your-registry.example.com
 
-# Delete staging deployment
-kubectl delete -k k8s/overlays/staging
+# The deployAll task automatically handles:
+# - Building and pushing images to remote registry
+# - Deploying to Kubernetes
+# - Waiting for deployments to be ready
 ```
 
 ### Production Environment
 
 ```bash
 # Deploy production configuration
-kubectl apply -k k8s/overlays/production
+./gradlew deployAll -Penvironment=production -PremoteRegistry=your-registry.example.com
 
-# Delete production deployment
-kubectl delete -k k8s/overlays/production
+# The deployAll task automatically handles:
+# - Building and pushing images to remote registry
+# - User confirmation for production deployment
+# - Deploying to Kubernetes
+# - Waiting for deployments to be ready
 ```
 
 ## Build System Integration
@@ -291,9 +302,9 @@ To update database credentials in staging or production:
 
 3. **Apply the changes**:
    ```bash
-   kubectl apply -k k8s/overlays/staging
+   ./gradlew deployAll -Penvironment=staging -PremoteRegistry=your-registry.example.com
    # or
-   kubectl apply -k k8s/overlays/production
+   ./gradlew deployAll -Penvironment=production -PremoteRegistry=your-registry.example.com
    ```
 
 ### Database Migrations
@@ -416,8 +427,11 @@ For comprehensive information about the database migration system, see [resource
    lsof -i :8080
    lsof -i :5432
    
-   # Use different ports if needed
-   kubectl port-forward -n congen service/congen 8081:8080
+   # Use Gradle task for port forwarding
+   ./gradlew setupTestPortForward
+   
+   # Clean up when done
+   ./gradlew cleanupPortForward
    ```
 
 3. **Database Connection Issues**
@@ -427,6 +441,9 @@ For comprehensive information about the database migration system, see [resource
    
    # Check PostgreSQL logs
    kubectl logs -n congen -l app=postgres
+   
+   # Use Gradle task for database access
+   ./gradlew setupTestPortForward
    ```
 
 4. **Resource Issues**
@@ -442,7 +459,7 @@ For comprehensive information about the database migration system, see [resource
 ### Clean Up
 
 ```bash
-# Delete all resources
+# Delete all resources (manual cleanup)
 kubectl delete namespace congen
 
 # Stop Minikube

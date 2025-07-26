@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.model.User
 import com.congen.service.UserService
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -61,16 +62,18 @@ import java.math.BigDecimal
 )
 class UserController(
     private val userService: UserService,
+    private val keycloakUtil: KeycloakUtil,
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserController::class.java)
     }
 
     /**
-     * Creates a new user profile.
+     * Creates a new user profile (public registration endpoint).
      *
-     * This endpoint creates a new user with the provided information. The user
-     * will be assigned a unique ID and can immediately start using the system
+     * This endpoint allows public user registration. It creates both a Keycloak
+     * user account and a corresponding user profile in the application database.
+     * The user will be assigned a unique ID and can immediately start using the system
      * to create workout preferences and programs.
      *
      * @param user The user data to create. Must include valid name, age, height, and weight.
@@ -80,11 +83,11 @@ class UserController(
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
-        summary = "Create a new user",
+        summary = "Register a new user",
         description =
-            "Creates a new user profile with the provided information. " +
+            "Public endpoint for user registration. Creates both a Keycloak " +
+                "user account and a corresponding user profile in the application database. " +
                 "The user will be assigned a unique ID and can immediately start " +
                 "using the system to create workout preferences and programs.",
     )
@@ -136,9 +139,21 @@ class UserController(
         )
         @RequestParam weight: BigDecimal,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
+        @Parameter(
+            description = "User's email address (required for Keycloak integration)",
+            required = true,
+            example = "john.doe@example.com",
+        )
+        @RequestParam(required = true) email: String,
+        @Parameter(
+            description = "User's password (required for Keycloak integration)",
+            required = true,
+            example = "securePassword123",
+        )
+        @RequestParam(required = true) password: String,
     ): Mono<ResponseEntity<User>> {
         logger.info("Saving user: {}", name)
-        return userService.createUser(name, age, height, weight, unit)
+        return userService.createUser(name, age, height, weight, unit, email, password)
             .map { savedUser ->
                 logger.debug("Saved user with id: {}", savedUser.id)
                 ResponseEntity.ok(savedUser)

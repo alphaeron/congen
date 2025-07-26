@@ -7,6 +7,7 @@ import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
 import com.congen.model.User
 import com.congen.model.UserOneRepMax
+import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -65,16 +66,34 @@ object IntegrationTestHelpers {
         name: String = TEST_USER_NAME,
         age: Int = TEST_USER_AGE,
         height: Double = TEST_USER_HEIGHT,
-        weight: Double = TEST_USER_WEIGHT
+        weight: Double = TEST_USER_WEIGHT,
+        email: String? = "test@example.com",
+        password: String? = "notarealpassword",
+        unit: WeightUnit? = null
     ): Int {
+        val baseUri =
+            "/api/v1/user/?name=$name" +
+                "&age=$age" +
+                "&height=$height" +
+                "&weight=$weight"
+
+        val withAuth =
+            if (email != null && password != null) {
+                "$baseUri&email=$email&password=$password"
+            } else {
+                baseUri
+            }
+
+        val finalUri =
+            if (unit != null) {
+                "$withAuth&unit=${unit.name}"
+            } else {
+                withAuth
+            }
+
         val result =
             webTestClient.post()
-                .uri(
-                    "/api/v1/user/?name=$name" +
-                        "&age=$age" +
-                        "&height=$height" +
-                        "&weight=$weight"
-                )
+                .uri(finalUri)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(User::class.java)
@@ -82,22 +101,10 @@ object IntegrationTestHelpers {
 
         val response = result.responseBody
         if (response == null) {
-            println("ERROR: User creation failed - response body is null")
-            println("Response status: ${result.status}")
             throw RuntimeException("User creation failed - response body is null")
         }
 
         return response.id
-    }
-
-    /**
-     * Creates a test user with a unique name and returns the user ID.
-     */
-    fun createTestUserWithId(
-        webTestClient: WebTestClient,
-        name: String = TEST_USER_NAME
-    ): Int {
-        return createTestUser(webTestClient, name)
     }
 
     /**
@@ -147,8 +154,6 @@ object IntegrationTestHelpers {
 
         val response = result.responseBody
         if (response == null) {
-            println("ERROR: Program creation failed - response body is null")
-            println("Response status: ${result.status}")
             throw RuntimeException("Program creation failed - response body is null")
         }
 

@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.InvalidResultException
 import com.congen.exceptions.InvalidWeightUnitException
+import com.congen.exceptions.KeycloakException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import org.slf4j.LoggerFactory
@@ -130,6 +131,7 @@ public class ExceptionHandlingController {
     @ExceptionHandler(AccessDeniedException::class)
     fun handleAccessDeniedException(exception: AccessDeniedException): ResponseEntity<Map<String, String>> {
         logger.warn("Access denied: {}", exception.message ?: "Insufficient permissions")
+        logger.warn("Debug message\n\n\n{}\n\n\n", exception.stackTrace)
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
             .body(mapOf("error" to "Access denied: insufficient permissions"))
     }
@@ -148,6 +150,26 @@ public class ExceptionHandlingController {
         logger.warn("Authentication failed: {}", exception.message ?: "Invalid credentials")
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(mapOf("error" to "Authentication failed: invalid or missing credentials"))
+    }
+
+    /**
+     * Handles KeycloakException by returning appropriate HTTP status codes.
+     *
+     * Maps Keycloak errors to appropriate HTTP status codes:
+     * - 400 Bad Request: Invalid user data (email, password)
+     * - 409 Conflict: User already exists
+     * - 401 Unauthorized: Authentication failed
+     * - 403 Forbidden: Insufficient permissions
+     * - 500 Internal Server Error: Other Keycloak errors
+     *
+     * @param exception The KeycloakException that was thrown
+     * @return ResponseEntity with appropriate status and error message
+     */
+    @ExceptionHandler(KeycloakException::class)
+    fun handleKeycloakException(exception: KeycloakException): ResponseEntity<Map<String, String>> {
+        logger.warn("Keycloak error ({}): {}", exception.httpStatus.value(), exception.message)
+        return ResponseEntity.status(exception.httpStatus)
+            .body(mapOf("error" to (exception.message ?: "Keycloak operation failed")))
     }
 
     /**

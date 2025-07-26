@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.InvalidWeightUnitException
+import com.congen.exceptions.KeycloakException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import org.junit.jupiter.api.Test
@@ -131,5 +132,53 @@ class ExceptionHandlingControllerTest {
         val response = exceptionHandlingController.handleDatabaseQueryException(exception)
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode)
         assertEquals("Database error: some other db error", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleKeycloakException should return 400 for bad request`() {
+        val exception = KeycloakException("Invalid email format", HttpStatus.BAD_REQUEST)
+        val response = exceptionHandlingController.handleKeycloakException(exception)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        assertEquals("Invalid email format", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleKeycloakException should return 409 for conflict`() {
+        val exception = KeycloakException("User already exists", HttpStatus.CONFLICT)
+        val response = exceptionHandlingController.handleKeycloakException(exception)
+        assertEquals(HttpStatus.CONFLICT, response.statusCode)
+        assertEquals("User already exists", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleKeycloakException should return 401 for unauthorized`() {
+        val exception = KeycloakException("Authentication failed", HttpStatus.UNAUTHORIZED)
+        val response = exceptionHandlingController.handleKeycloakException(exception)
+        assertEquals(HttpStatus.UNAUTHORIZED, response.statusCode)
+        assertEquals("Authentication failed", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleKeycloakException should return 403 for forbidden`() {
+        val exception = KeycloakException("Insufficient permissions", HttpStatus.FORBIDDEN)
+        val response = exceptionHandlingController.handleKeycloakException(exception)
+        assertEquals(HttpStatus.FORBIDDEN, response.statusCode)
+        assertEquals("Insufficient permissions", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleKeycloakException should return 500 for other status codes`() {
+        val exception = KeycloakException("Internal server error", HttpStatus.INTERNAL_SERVER_ERROR)
+        val response = exceptionHandlingController.handleKeycloakException(exception)
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.statusCode)
+        assertEquals("Internal server error", response.body!!["error"])
+    }
+
+    @Test
+    fun `handleKeycloakException should handle null message`() {
+        val exception = KeycloakException(null, HttpStatus.BAD_REQUEST)
+        val response = exceptionHandlingController.handleKeycloakException(exception)
+        assertEquals(HttpStatus.BAD_REQUEST, response.statusCode)
+        assertEquals("Keycloak operation failed", response.body!!["error"])
     }
 }

@@ -21,8 +21,8 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         val unique = System.nanoTime()
         // Create test users with unique names using helpers
-        userId1 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 1 $unique")
-        userId2 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 2 $unique")
+        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 1 $unique")
+        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 2 $unique")
         // Exercises already exist in migrations
     }
 

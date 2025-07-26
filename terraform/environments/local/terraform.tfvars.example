@@ -1,0 +1,8 @@
+# Keycloak Admin Credentials
+keycloak_admin_password = "admin"
+
+# Backend Service Account Password
+backend_service_password = "congen-backend-service"
+
+# Default Admin User Password
+admin_password = "admin" 

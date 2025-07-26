@@ -318,16 +318,7 @@ class MovementBalanceServiceTest {
                 Exercise("Back Squat", "Start with the bar in a back rack position", MovementType.SQUAT, false, false, false)
             )
 
-        // Debug: Print scores for each exercise
-        exercises.forEach { exercise ->
-            val score = movementBalanceService.scoreExerciseForBalance(exercise, state)
-            println("${exercise.name}: score = $score")
-        }
-
         val prioritized = movementBalanceService.prioritizeExercisesForBalance(exercises, state)
-
-        // Debug: Print prioritized order
-        println("Prioritized order: ${prioritized.map { it.name }}")
 
         // Bent-Over Row should be first (balances vertical push + helps pull volume)
         // Chin-Up should be second (helps pull volume)

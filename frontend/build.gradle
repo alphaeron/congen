@@ -5,20 +5,19 @@ plugins {
 
 description = 'Conjugate Workout Generator Frontend'
 
-// Environment-aware build task using built-in npm_run tasks
+// Environment-aware build task using gradle-node-plugin built-in tasks
 task buildApp {
     group = 'build'
     description = 'Build the application (uses environment to determine build type)'
+    dependsOn npm_install
 
     def environment = project.hasProperty('environment') ? project.environment : 'local'
     def buildType = (environment == 'production') ? 'production' : 'debug'
 
-    doLast {
-        if (buildType == 'production') {
-            npm_run_build.execute()
-        } else {
-            npm_run_dev_build.execute()
-        }
+    if (buildType == 'production') {
+        dependsOn npm_run_build
+    } else {
+        dependsOn npm_run_devbuild
     }
 
     inputs.dir('src')

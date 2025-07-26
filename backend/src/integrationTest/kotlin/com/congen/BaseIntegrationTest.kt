@@ -1,5 +1,6 @@
 package com.congen
 
+import dasniko.testcontainers.keycloak.KeycloakContainer
 import io.vertx.sqlclient.SqlClient
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
@@ -15,6 +16,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Testcontainers
+import org.testcontainers.utility.MountableFile
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -58,15 +60,25 @@ abstract class BaseIntegrationTest {
                 withPassword("postgres")
             }
 
+        private val keycloak =
+            KeycloakContainer()
+                .withRealmImportFile("/realm_configuration.json")
+                .withCopyFileToContainer(
+                    MountableFile.forClasspathResource("realm_configuration.json"),
+                    "/realm_configuration.json"
+                )
+
         @JvmStatic
         @BeforeAll
-        fun startContainer() {
+        fun startContainers() {
             postgres.start()
+            keycloak.start()
         }
 
         @JvmStatic
         @AfterAll
-        fun stopContainer() {
+        fun stopContainers() {
+            keycloak.stop()
             postgres.stop()
         }
 
@@ -87,6 +99,13 @@ abstract class BaseIntegrationTest {
             ) { "jdbc:postgresql://${postgres.host}:${postgres.firstMappedPort}/${postgres.databaseName}" }
             registry.add("spring.datasource.username") { postgres.username }
             registry.add("spring.datasource.password") { postgres.password }
+
+            // Keycloak properties
+            registry.add("KEYCLOAK_URL") { keycloak.authServerUrl }
+            registry.add("KEYCLOAK_REALM") { "congen" }
+            registry.add("KEYCLOAK_CLIENT_SECRET") { "congen-backend-secret" }
+            registry.add("congen.keycloak.service_account.username") { "service-account-congen-backend" }
+            registry.add("congen.keycloak.service_account.password") { "service-account-password" }
         }
     }
 

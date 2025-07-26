@@ -11,7 +11,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         // Create a unique user for each test
         val unique = System.nanoTime()
-        userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique")
     }
 
     @Test

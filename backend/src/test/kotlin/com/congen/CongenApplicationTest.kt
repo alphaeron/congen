@@ -25,7 +25,10 @@ import org.springframework.test.context.TestPropertySource
         "KEYCLOAK_AUTH_URL=http://localhost:8080",
         "KEYCLOAK_REALM=congen",
         "KEYCLOAK_CLIENT_ID=congen-client",
-        "KEYCLOAK_CLIENT_SECRET=test-secret"
+        "KEYCLOAK_CLIENT_SECRET=test-secret",
+        "KEYCLOAK_URL=http://localhost:8080",
+        "KEYCLOAK_SERVICE_ACCOUNT_USERNAME=admin",
+        "KEYCLOAK_SERVICE_ACCOUNT_PASSWORD=admin"
     ]
 )
 class CongenApplicationTest {

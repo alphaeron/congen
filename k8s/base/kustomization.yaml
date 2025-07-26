@@ -8,9 +8,9 @@ resources:
 - migrations-configmap.yaml
 - migration-service-deployment.yaml
 - reloader-deployment.yaml
-- congen-configmap.yaml
-- congen-deployment.yaml
-- congen-service.yaml
+- backend-configmap.yaml
+- backend-deployment.yaml
+- backend-service.yaml
 - frontend-deployment.yaml
 - frontend-service.yaml
 - ingress.yaml

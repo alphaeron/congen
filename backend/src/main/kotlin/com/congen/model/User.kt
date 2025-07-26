@@ -91,4 +91,11 @@ data class User(
         required = true,
     )
     @param:JsonProperty("updated_at") val updatedAt: Instant,
+    /** Keycloak user ID for authentication integration. */
+    @Schema(
+        description = "Keycloak user ID for authentication integration",
+        example = "123e4567-e89b-12d3-a456-426614174000",
+        required = false,
+    )
+    @param:JsonProperty("keycloak_user_id") val keycloakUserId: String?,
 )

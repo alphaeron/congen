@@ -13,9 +13,9 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         // Create unique users for each test
         val unique = System.nanoTime()
-        userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
-        userId1 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 1 $unique")
-        userId2 = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User 2 $unique")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique")
+        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 1 $unique")
+        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 2 $unique")
     }
 
     @Test

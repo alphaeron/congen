@@ -86,6 +86,7 @@ class UserDAL(
      * @param age The user's age in years
      * @param height The user's height in centimeters
      * @param weight The user's weight in kilograms
+     * @param keycloakUserId Optional Keycloak user ID for authentication integration
      * @return Mono containing the inserted user with generated ID
      * @throws ValidationException if user data fails validation
      */
@@ -93,7 +94,8 @@ class UserDAL(
         name: String,
         age: Int,
         height: BigDecimal,
-        weight: BigDecimal
+        weight: BigDecimal,
+        keycloakUserId: String? = null
     ): Mono<User> {
         logger.debug("Inserting user: {}", name)
 
@@ -105,14 +107,15 @@ class UserDAL(
         return postgresClient.update(
             """
             INSERT INTO "user"
-                (name, age, height, weight)
+                (name, age, height, weight, keycloak_user_id)
             VALUES
-                ($1, $2, $3, $4)
+                ($1, $2, $3, $4, $5)
             """.trimIndent(),
             name,
             age,
             height,
             weight,
+            keycloakUserId,
         )
     }
 

@@ -38,7 +38,8 @@ fun mockUser(
     height: BigDecimal = BigDecimal("180.5"),
     weight: BigDecimal = BigDecimal("75.0"),
     createdAt: Instant = sampleInstant(),
-    updatedAt: Instant = sampleInstant()
+    updatedAt: Instant = sampleInstant(),
+    keycloakUserId: String? = null
 ): User =
     User(
         id = id,
@@ -47,7 +48,8 @@ fun mockUser(
         height = height,
         weight = weight,
         createdAt = createdAt,
-        updatedAt = updatedAt
+        updatedAt = updatedAt,
+        keycloakUserId = keycloakUserId
     )
 
 fun mockSetScheme(

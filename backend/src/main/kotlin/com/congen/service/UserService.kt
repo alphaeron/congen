@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.client.KeycloakClient
 import com.congen.dal.UserDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
@@ -21,7 +22,8 @@ import java.math.BigDecimal
 @Service
 class UserService(
     private val userDAL: UserDAL,
-    private val unitConverter: UnitConverter
+    private val unitConverter: UnitConverter,
+    private val keycloakClient: KeycloakClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserService::class.java)
@@ -36,7 +38,9 @@ class UserService(
         age: Int,
         height: BigDecimal,
         weight: BigDecimal,
-        unit: String?
+        unit: String?,
+        email: String,
+        password: String
     ): Mono<User> {
         logger.info("Creating user: {}", name)
         return Mono.fromCallable {
@@ -44,7 +48,18 @@ class UserService(
             ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
         }
             .flatMap { weightInKg ->
-                userDAL.insertUser(name, age, height, weightInKg)
+                val nameParts = name.split(" ", limit = 2)
+                val firstName = nameParts.firstOrNull() ?: name
+                val lastName = nameParts.getOrNull(1) ?: ""
+                keycloakClient.createUser(
+                    username = email,
+                    email = email,
+                    firstName = firstName,
+                    lastName = lastName,
+                    password = password
+                ).flatMap { keycloakUserId ->
+                    userDAL.insertUser(name, age, height, weightInKg, keycloakUserId)
+                }
             }
             .doOnSuccess { logger.debug("Created user with id: {}", it.id) }
             .doOnError { e -> logger.error("Error creating user: {}", name, e) }
@@ -96,7 +111,14 @@ class UserService(
      */
     fun deleteUser(id: Int): Mono<User> {
         logger.info("Deleting user: {}", id)
-        return userDAL.deleteUser(id)
+        return userDAL.selectUserById(id)
+            .flatMap { user ->
+                user.keycloakUserId?.let { keycloakUserId ->
+                    // Delete from Keycloak first, then from database
+                    keycloakClient.deleteUser(keycloakUserId)
+                        .then(userDAL.deleteUser(id))
+                } ?: userDAL.deleteUser(id)
+            }
             .doOnSuccess { logger.debug("Deleted user: {}", id) }
             .doOnError { e -> logger.error("Error deleting user: {}", id, e) }
     }

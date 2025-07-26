@@ -19,7 +19,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     private fun createTestUserAndProgram(): Pair<Int, Long> {
         val unique = System.nanoTime()
-        val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "Test User $unique")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique")
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique")
         return Pair(userId, programId)
     }

@@ -211,7 +211,9 @@ class SetSchemeController(
      */
     @PatchMapping("/{id}")
     @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or (@setSchemeService.isOwner(#id, principal.subject) and @programmedExerciseService.isOwner(#programmedExerciseId, principal.subject))"
+        "hasRole('admin') or hasRole('service') or " +
+            "(@setSchemeService.isOwner(#id, principal.subject) and " +
+            "@programmedExerciseService.isOwner(#programmedExerciseId, principal.subject))"
     )
     fun update(
         @PathVariable("id") id: Long,

@@ -34,7 +34,7 @@ The backend follows a layered architecture pattern:
 - Java 17 or higher
 - Gradle 8.0 or higher
 - Minikube (for local Kubernetes development)
-- kubectl (Kubernetes command-line tool)
+- kubectl (Kubernetes command-line tool, automatically used by Gradle tasks)
 - Skaffold (for streamlined development)
 - Docker (for containerization)
 
@@ -74,11 +74,14 @@ The backend follows a layered architecture pattern:
    # Example: http://192.168.49.2:30080
 
    # Manual port forwarding (if needed)
-   kubectl port-forward -n congen service/congen 8080:8080
+   ./gradlew setupTestPortForward
 
    # Check application status
    kubectl get pods -n congen
    kubectl logs -f deployment/congen -n congen
+
+   # Clean up port forwarding when done
+   ./gradlew cleanupPortForward
    ```
 
 5. **Run tests**
@@ -100,7 +103,7 @@ The backend follows a layered architecture pattern:
    ./gradlew :backend:cleanupKubernetes
 
    # Stop port forwarding
-   pkill -f 'kubectl port-forward.*postgres'
+   ./gradlew cleanupPortForward
    ```
 
 ### Alternative: Traditional Local Development
@@ -366,7 +369,7 @@ The documentation generation creates the following files in the `docs/` director
 **Common Issues:**
 ```bash
 # If port-forwarding fails
-pkill -f "kubectl port-forward"
+./gradlew cleanupPortForward
 
 # If documentation generation fails
 ./gradlew :backend:cleanDocs

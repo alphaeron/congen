@@ -27,7 +27,7 @@ congen/
 - Node.js 18+ and npm (for frontend)
 - Gradle 8+
 - Docker
-- Minikube and kubectl (for local Kubernetes deployment/testing)
+- Minikube and kubectl (for local Kubernetes deployment/testing, automatically used by Gradle tasks)
 
 ### Backend
 See [backend/README.md](backend/README.md) for full instructions.
@@ -41,7 +41,7 @@ Common backend Gradle tasks (run from the project root):
 ./gradlew :backend:test
 
 # Deploy backend to Kubernetes (local)
-./gradlew :backend:deployToKubernetes -Penvironment=local
+./gradlew deployAll -Penvironment=local
 ```
 
 ### Frontend

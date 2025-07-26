@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
       - name: keycloak
-        image: quay.io/keycloak/keycloak:24.0.3
-        args: ["start-dev"]
+        image: quay.io/keycloak/keycloak:26.3.2
+        args: ["start-dev"]  # TODO different for prod? put in patch?
         ports:
         - containerPort: 8080
         env:

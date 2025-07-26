@@ -5,12 +5,11 @@ import groovy.json.JsonSlurper
 task dockerBuild {
     group = 'build'
     description = 'Build Docker image for the frontend (uses environment to determine build type)'
+    dependsOn buildApp
+    
     doLast {
         def environment = project.hasProperty('environment') ? project.environment : 'local'
         def buildType = (environment == 'production') ? 'production' : 'debug'
-        
-        // Build the appropriate npm build first
-        buildApp.execute()
         
         def packageJson = file('package.json')
         def version = new JsonSlurper().parse(packageJson).version
@@ -43,29 +42,87 @@ task printImageTag {
     }
 }
 
-// Centralized patch task that can be used with any environment
-// Usage: ./gradlew :frontend:patchFrontendImage -Penvironment=local -PimageTag=congen-ui:mytag
-// If -PimageTag is not provided, uses project.ext.frontendImageTag
-// If -Penvironment is not provided, defaults to 'local'
-task patchFrontendImage {
-    group = 'deployment'
-    description = 'Patch the specified environment overlay with the image tag.'
-    doLast {
-        def environment = project.hasProperty('environment') ? project.environment : 'local'
-        def imageTag = project.hasProperty('imageTag') ? project.imageTag : project.ext.frontendImageTag
-        if (!imageTag) throw new GradleException('No image tag provided or built. Run dockerBuild first.')
+// Helper function to generate frontend image tag patch
+def generateFrontendImageTagPatchForEnvironment(env, imageName) {
+    def overlayDir = "../k8s/overlays/${env}"
+    def patchFile = file("${overlayDir}/patches/frontend-image-tag-patch.yaml")
 
-        def patchFile = "../../k8s/overlays/${environment}/patches/frontend-image-tag-patch.yaml"
-        def lines = file(patchFile).readLines()
-        def newLines = lines.collect { line ->
-            if (line.trim().startsWith('image:')) {
-                return "        image: ${imageTag}"
-            } else {
-                return line
-            }
+    // Create the patch directory if it doesn't exist
+    patchFile.parentFile.mkdirs()
+
+    def patchContent = """apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        image: ${imageName}
+"""
+
+    patchFile.text = patchContent
+    println "✅ Generated frontend image tag patch for ${env}: ${imageName}"
+}
+
+// Task to build and prepare image for local environment
+task prepareLocalImage {
+    dependsOn dockerBuild
+    description = 'Build and prepare Docker image for local minikube deployment'
+    group = 'kubernetes'
+
+    doLast {
+        println "🚀 Preparing frontend image for local minikube deployment..."
+
+        // Load image into minikube's Docker daemon
+        println "📦 Loading image into minikube's Docker daemon..."
+        exec {
+            commandLine 'minikube', 'image', 'load', project.ext.frontendImageTag
         }
-        file(patchFile).text = newLines.join('\n') + '\n'
-        println "Patched ${patchFile} with image: ${imageTag}"
+        println "✅ Image loaded into minikube: ${project.ext.frontendImageTag}"
+
+        // Generate image tag patch for local with the current tag
+        generateFrontendImageTagPatchForEnvironment('local', project.ext.frontendImageTag)
+        println "✅ Generated frontend image tag patch for local: ${project.ext.frontendImageTag}"
+    }
+}
+
+// Task to build and push image for remote environments (staging/production)
+task prepareRemoteImage {
+    dependsOn dockerBuild
+    description = 'Build and push Docker image for remote registry deployment'
+    group = 'kubernetes'
+
+    doFirst {
+        if (!project.hasProperty('remoteRegistry')) {
+            throw new GradleException("remoteRegistry parameter is required for staging/production. Use: -PremoteRegistry=your-registry.example.com")
+        }
+
+        println "🚀 Preparing frontend image for remote registry deployment..."
+        println "Remote registry: ${remoteRegistry}"
+        println "Image tag: ${project.ext.frontendImageTag}"
+    }
+
+    doLast {
+        def environment = project.hasProperty('environment') ? project.environment : 'staging'
+        def remoteImageName = "${remoteRegistry}/${remoteRegistryNamespace}/frontend:${project.ext.frontendImageTag.split(':')[1]}"
+
+        // Tag and push to remote registry
+        println "Tagging image for remote registry..."
+        exec {
+            commandLine 'docker', 'tag', project.ext.frontendImageTag, remoteImageName
+        }
+
+        println "Pushing image to remote registry..."
+        exec {
+            commandLine 'docker', 'push', remoteImageName
+        }
+
+        println "✅ Image pushed to remote registry: ${remoteImageName}"
+
+        // Generate image tag patch for remote environment
+        generateFrontendImageTagPatchForEnvironment(environment, remoteImageName)
     }
 }
 
@@ -73,18 +130,15 @@ task patchFrontendImage {
 task prepareDeployment {
     group = 'deployment'
     description = 'Build the frontend image and prepare deployment patches for the specified environment.'
-    doLast {
-        def environment = project.hasProperty('environment') ? project.environment : 'local'
-        def buildType = (environment == 'production') ? 'production' : 'debug'
-        
-        // Build the appropriate Docker image
-        dockerBuild.execute()
-        
-        // Use the patchFrontendImage task to handle the patching
-        patchFrontendImage.execute()
-        
-        println "Deployment prepared for ${environment} environment with ${buildType} build"
-        println "Image tag: ${project.ext.frontendImageTag}"
-        println "Manifest patch generated: k8s/overlays/${environment}/patches/frontend-image-tag-patch.yaml"
+    dependsOn dockerBuild
+}
+
+// Configure prepareDeployment dependencies based on environment
+prepareDeployment.configure {
+    def environment = project.hasProperty('environment') ? project.environment : 'local'
+    if (environment == 'local') {
+        dependsOn prepareLocalImage
+    } else if (environment == 'staging' || environment == 'production') {
+        dependsOn prepareRemoteImage
     }
 } 

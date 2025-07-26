@@ -20,7 +20,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     }
 
     private fun setupTestEntities() {
-        val userId = IntegrationTestHelpers.createTestUserWithId(webTestClient, "SetScheme User" + System.nanoTime())
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "SetScheme User" + System.nanoTime())
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId)
         programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program" + System.nanoTime())
         // Create a programmed workout

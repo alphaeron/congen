@@ -14,7 +14,7 @@ The Congen application uses a Kubernetes-based development environment with:
 ## Prerequisites
 
 ### Required Tools
-- **kubectl**: Kubernetes command-line tool
+- **kubectl**: Kubernetes command-line tool (automatically used by Gradle tasks)
 - **minikube**: Local Kubernetes cluster
 - **Docker**: For building container images
 - **Gradle**: For running tests and documentation generation
@@ -81,14 +81,11 @@ The Gradle tasks automatically handle port-forwarding:
 If you need to access services manually:
 
 ```bash
-# Forward PostgreSQL
-kubectl port-forward -n congen service/postgres 5432:5432
-
-# Forward application
-kubectl port-forward -n congen service/congen 8080:8080
+# Forward PostgreSQL and application (automated via Gradle task)
+./gradlew setupTestPortForward
 
 # Clean up port-forwarding
-pkill -f "kubectl port-forward"
+./gradlew cleanupPortForward
 ```
 
 ## Integration Testing
