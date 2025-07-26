@@ -43,8 +43,10 @@ resource "keycloak_openid_client" "backend_client" {
   enabled                      = true
   access_type                  = "CONFIDENTIAL"
   service_accounts_enabled     = true
-  standard_flow_enabled        = false
-  direct_access_grants_enabled = false
+  standard_flow_enabled        = true
+  direct_access_grants_enabled = true
+  valid_redirect_uris          = ["http://localhost:8080/"]
+  web_origins                  = ["*"]
 }
 
 # Create frontend client

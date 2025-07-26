@@ -18,8 +18,8 @@ import reactor.core.publisher.Mono
  *
  * @property keycloakUrl Base URL for Keycloak server
  * @property realm Keycloak realm name
+ * @property clientId Client ID for authentication
  * @property serviceAccountUsername Service account username
- * @property serviceAccountPassword Service account password
  * @property clientSecret Client secret for authentication
  * @property keycloakWebClient WebClient for HTTP requests
  *
@@ -28,15 +28,15 @@ import reactor.core.publisher.Mono
  */
 @Component
 class KeycloakClient(
-    @Value("\${KEYCLOAK_URL}")
+    @Value("\${congen.keycloak.url}")
     private val keycloakUrl: String,
-    @Value("\${KEYCLOAK_REALM}")
+    @Value("\${congen.keycloak.realm}")
     private val realm: String,
+    @Value("\${congen.keycloak.client.id}")
+    private val clientId: String,
     @Value("\${congen.keycloak.service_account.username}")
     private val serviceAccountUsername: String,
-    @Value("\${congen.keycloak.service_account.password}")
-    private val serviceAccountPassword: String,
-    @Value("\${KEYCLOAK_CLIENT_SECRET}")
+    @Value("\${congen.keycloak.client.secret}")
     private val clientSecret: String,
     private val keycloakWebClient: WebClient
 ) {
@@ -126,8 +126,7 @@ class KeycloakClient(
             .header("Content-Type", "application/x-www-form-urlencoded")
             .bodyValue(
                 "grant_type=client_credentials&" +
-                    // TODO this should be a config value
-                    "client_id=congen-backend&" +
+                    "client_id=$clientId&" +
                     "client_secret=$clientSecret"
             )
             .retrieve()

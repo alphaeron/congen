@@ -141,6 +141,8 @@ class ProgramDAL(
      * before inserting the new one. If no existing programs are found, it inserts the new program directly.
      * If the new program is not active, it is inserted without deactivating others.
      *
+     * This method handles race conditions by catching constraint violations and retrying the operation.
+     *
      * @param userId The user ID to associate with the new program
      * @param name The name of the new program
      * @param currentWeekNumber The current week number for the new program
@@ -156,39 +158,36 @@ class ProgramDAL(
     ): Mono<Program> {
         logger.debug("Inserting program: {} for user {} with week number {} and isActive: {}", name, userId, currentWeekNumber, isActive)
 
+        val insertQuery =
+            """
+            INSERT INTO program
+                (user_id, name, current_week_number, is_active)
+            VALUES
+                ($1, $2, $3, $4)
+            """.trimIndent()
         return if (isActive) {
-            val insertQuery =
-                """
-                INSERT INTO program
-                    (user_id, name, current_week_number, is_active)
-                VALUES
-                    ($1, $2, $3, $4)
-                """.trimIndent()
-
-            // First check if there are any existing programs for this user
-            selectProgramsByUserId(userId).flatMap { existingPrograms ->
-                logger.debug("Found {} existing programs for user {}", existingPrograms.size, userId)
-                if (existingPrograms.isNotEmpty()) {
-                    logger.debug("Deactivating {} existing programs for user {}", existingPrograms.size, userId)
-                    // If programs exist, deactivate them first, then insert the new one
-                    deactivateProgramsForUser(userId).then(
-                        postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
-                    )
-                } else {
-                    logger.debug("No existing programs found for user {}, inserting new program directly", userId)
-                    // If no programs exist, just insert the new one
-                    postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
+            // Try to insert directly first, and if it fails due to constraint violation, deactivate and retry
+            postgresClient.update<Program>(insertQuery, userId, name, currentWeekNumber, isActive)
+                .onErrorResume { error: Throwable ->
+                    val errorMessage = error.message ?: ""
+                    val causeMessage = error.cause?.message ?: ""
+                    if (errorMessage.contains("duplicate key value violates unique constraint \"idx_program_user_active_unique\"") ||
+                        causeMessage.contains("duplicate key value violates unique constraint \"idx_program_user_active_unique\"")
+                    ) {
+                        logger.debug("Constraint violation detected for user {}, deactivating existing programs and retrying", userId)
+                        // Deactivate existing programs and retry the insert
+                        deactivateProgramsForUser(userId).then(
+                            postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
+                        )
+                    } else {
+                        // Re-throw the error if it's not a constraint violation
+                        Mono.error(error)
+                    }
                 }
-            }
         } else {
             // If not active, just insert the program without deactivating others
             postgresClient.update(
-                """
-                INSERT INTO program
-                    (user_id, name, current_week_number, is_active)
-                VALUES
-                    ($1, $2, $3, $4)
-                """.trimIndent(),
+                insertQuery,
                 userId,
                 name,
                 currentWeekNumber,

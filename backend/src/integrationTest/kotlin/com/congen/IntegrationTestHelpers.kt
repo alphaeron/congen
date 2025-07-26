@@ -67,7 +67,7 @@ object IntegrationTestHelpers {
         age: Int = TEST_USER_AGE,
         height: Double = TEST_USER_HEIGHT,
         weight: Double = TEST_USER_WEIGHT,
-        email: String? = "test@example.com",
+        email: String? = "test.${System.nanoTime()}@example.com",
         password: String? = "notarealpassword",
         unit: WeightUnit? = null
     ): Int {
@@ -105,6 +105,29 @@ object IntegrationTestHelpers {
         }
 
         return response.id
+    }
+
+    /**
+     * Retrieves a test user by ID via the API.
+     */
+    fun getTestUser(
+        webTestClient: WebTestClient,
+        userId: Int
+    ): User {
+        val result =
+            webTestClient.get()
+                .uri("/api/v1/user/$userId")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User::class.java)
+                .returnResult()
+
+        val response = result.responseBody
+        if (response == null) {
+            throw RuntimeException("User retrieval failed - response body is null")
+        }
+
+        return response
     }
 
     /**

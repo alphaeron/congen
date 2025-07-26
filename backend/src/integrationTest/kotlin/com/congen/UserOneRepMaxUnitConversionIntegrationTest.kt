@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.model.User
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
@@ -19,20 +18,12 @@ import java.math.BigDecimal
  */
 class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
-    private lateinit var userResponse: User
+    private var userId: Int = 0
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        val unique = System.nanoTime()
-        userResponse =
-            webTestClient.post()
-                .uri("/api/v1/user/?name=Test%20User%20$unique&age=30&height=180.5&weight=75.0")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
+        userId = IntegrationTestHelpers.createTestUser(webTestClient)
     }
 
     @Test
@@ -44,12 +35,12 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val oneRepMax =
             IntegrationTestHelpers.putUserOneRepMax(
                 webTestClient,
-                userResponse.id,
+                userId,
                 exerciseName,
                 weightInLbs,
                 unit = "LBS"
             )
-        assert(oneRepMax.userId == userResponse.id)
+        assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
         assert(oneRepMax.oneRepMax.compareTo(expectedWeightInKg) == 0)
     }
@@ -62,12 +53,12 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val oneRepMax =
             IntegrationTestHelpers.putUserOneRepMax(
                 webTestClient,
-                userResponse.id,
+                userId,
                 exerciseName,
                 weightInKg,
                 unit = "KG"
             )
-        assert(oneRepMax.userId == userResponse.id)
+        assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
         assert(oneRepMax.oneRepMax.compareTo(weightInKg) == 0)
     }
@@ -80,19 +71,19 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
         IntegrationTestHelpers.setUserWeightUnitPreference(
             webTestClient,
-            userResponse.id,
+            userId,
             exerciseName,
             "LBS"
         )
         val oneRepMax =
             IntegrationTestHelpers.putUserOneRepMax(
                 webTestClient,
-                userResponse.id,
+                userId,
                 exerciseName,
                 weightInLbs,
                 unit = "LBS"
             )
-        assert(oneRepMax.userId == userResponse.id)
+        assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
         assert(oneRepMax.oneRepMax.compareTo(expectedWeightInKg) == 0)
     }
@@ -105,12 +96,12 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val oneRepMax =
             IntegrationTestHelpers.putUserOneRepMax(
                 webTestClient,
-                userResponse.id,
+                userId,
                 exerciseName,
                 weightInKg,
                 unit = "KG"
             )
-        assert(oneRepMax.userId == userResponse.id)
+        assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
         assert(oneRepMax.oneRepMax.compareTo(weightInKg) == 0)
     }
@@ -123,13 +114,13 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
         IntegrationTestHelpers.setUserWeightUnitPreference(
             webTestClient,
-            userResponse.id,
+            userId,
             exerciseName,
             "LBS"
         )
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
-            userResponse.id,
+            userId,
             exerciseName,
             weightInLbs,
             unit = "LBS"
@@ -139,10 +130,10 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val oneRepMax =
             IntegrationTestHelpers.getUserOneRepMax(
                 webTestClient,
-                userResponse.id,
+                userId,
                 exerciseName
             )
-        assert(oneRepMax.userId == userResponse.id)
+        assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
         assert(oneRepMax.oneRepMax.compareTo(expectedWeightInLbs) == 0)
     }
@@ -155,7 +146,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
-            userResponse.id,
+            userId,
             exerciseName,
             weightInKg,
             unit = "KG"
@@ -165,11 +156,11 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val oneRepMax =
             IntegrationTestHelpers.getUserOneRepMax(
                 webTestClient,
-                userResponse.id,
+                userId,
                 exerciseName,
                 unit = "LBS"
             )
-        assert(oneRepMax.userId == userResponse.id)
+        assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
         assert(oneRepMax.oneRepMax.compareTo(expectedWeightInLbs) == 0)
     }
@@ -180,7 +171,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val weight = BigDecimal("225.0")
         val invalidUnit = "INVALID"
 
-        val uri = "/api/v1/user_one_rep_max/?user_id=${userResponse.id}&exercise_name=$exerciseName&one_rep_max=$weight&unit=$invalidUnit"
+        val uri = "/api/v1/user_one_rep_max/?user_id=$userId&exercise_name=$exerciseName&one_rep_max=$weight&unit=$invalidUnit"
         webTestClient.put()
             .uri(uri)
             .exchange()
@@ -200,26 +191,26 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
         IntegrationTestHelpers.setUserWeightUnitPreference(
             webTestClient,
-            userResponse.id,
+            userId,
             exercise1,
             "LBS"
         )
         IntegrationTestHelpers.setUserWeightUnitPreference(
             webTestClient,
-            userResponse.id,
+            userId,
             exercise2,
             "KG"
         )
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
-            userResponse.id,
+            userId,
             exercise1,
             weight1,
             unit = "LBS"
         )
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
-            userResponse.id,
+            userId,
             exercise2,
             weight2,
             unit = "KG"
@@ -227,7 +218,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val oneRepMaxes =
             IntegrationTestHelpers.getAllUserOneRepMaxes(
                 webTestClient,
-                userResponse.id
+                userId
             )
         assert(oneRepMaxes.size == 2)
         val benchPress = oneRepMaxes.find { it.exerciseName == exercise1 }

@@ -25,4 +25,3 @@ data:
   KEYCLOAK_AUTH_URL: "http://keycloak:8081/auth/"
   KEYCLOAK_CLIENT_ID: "congen-backend"
   KEYCLOAK_SERVICE_ACCOUNT_USERNAME: "service-account-congen-backend"
-  KEYCLOAK_CLIENT_SECRET: "default-client-secret"

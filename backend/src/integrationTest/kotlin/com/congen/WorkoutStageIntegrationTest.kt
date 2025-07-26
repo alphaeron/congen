@@ -2,7 +2,6 @@ package com.congen
 
 import com.congen.model.Program
 import com.congen.model.ProgrammedWorkout
-import com.congen.model.User
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageType
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -22,28 +21,14 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     private fun createTestProgram(id: Long): Long {
         // First create a user
-        val unique = System.nanoTime()
-        val userResponse =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/user/" +
-                        "?name=Test%20User%20$unique" +
-                        "&age=30" +
-                        "&height=180.5" +
-                        "&weight=75.0"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
-                .responseBody!!
-
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
         // Then create a program for that user
+        val unique = System.nanoTime()
         val response =
             webTestClient.post()
                 .uri(
                     "/api/v1/program/" +
-                        "?user_id=${userResponse.id}" +
+                        "?user_id=$userId" +
                         "&name=Test Program $unique" +
                         "&current_week_number=1"
                 )
@@ -52,7 +37,6 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                 .expectBody(Program::class.java)
                 .returnResult()
                 .responseBody!!
-
         return response.id
     }
 

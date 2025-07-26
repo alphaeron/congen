@@ -22,13 +22,11 @@ import org.springframework.test.context.TestPropertySource
         "CORS_EXPOSED_HEADERS=X-Total-Count",
         "CORS_MAX_AGE=3600",
         "spring.profiles.active=test",
-        "KEYCLOAK_AUTH_URL=http://localhost:8080",
-        "KEYCLOAK_REALM=congen",
-        "KEYCLOAK_CLIENT_ID=congen-client",
-        "KEYCLOAK_CLIENT_SECRET=test-secret",
+        "congen.keycloak.client.id=congen-client",
+        "congen.keycloak.client.secret=test-secret",
+        "congen.keycloak.service_account.username=service-account-congen-backend",
         "KEYCLOAK_URL=http://localhost:8080",
-        "KEYCLOAK_SERVICE_ACCOUNT_USERNAME=admin",
-        "KEYCLOAK_SERVICE_ACCOUNT_PASSWORD=admin"
+        "KEYCLOAK_REALM=congen",
     ]
 )
 class CongenApplicationTest {

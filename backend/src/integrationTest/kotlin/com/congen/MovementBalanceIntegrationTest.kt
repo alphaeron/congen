@@ -24,19 +24,12 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
     private fun setupTestUsers() {
         // Create test users and capture their IDs
-        testUser1 = createUser("Test User 1")
-        testUser2 = createUser("Test User 2")
-        testUser3 = createUser("Test User 3")
-    }
-
-    private fun createUser(name: String): User {
-        return webTestClient.post()
-            .uri("/api/v1/user/?name=${name.replace(" ", "%20")}&age=30&height=175.5&weight=80.0")
-            .exchange()
-            .expectStatus().isOk
-            .expectBody(User::class.java)
-            .returnResult()
-            .responseBody!!
+        val testUser1Id = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 1")
+        val testUser2Id = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 2")
+        val testUser3Id = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 3")
+        testUser1 = IntegrationTestHelpers.getTestUser(webTestClient, testUser1Id)
+        testUser2 = IntegrationTestHelpers.getTestUser(webTestClient, testUser2Id)
+        testUser3 = IntegrationTestHelpers.getTestUser(webTestClient, testUser3Id)
     }
 
     private fun setupUserEquipment(userId: Int) {

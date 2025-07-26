@@ -14,6 +14,10 @@ patches:
   target:
     kind: ConfigMap
     name: migrations-config
+- path: patches/backend-configmap-patch.yaml
+  target:
+    kind: ConfigMap
+    name: backend-config
 - path: patches/backend-deployment-patch.yaml
   target:
     kind: Deployment

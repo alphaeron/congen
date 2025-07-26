@@ -163,7 +163,7 @@ class PostgresConfig(
                 .setIdleTimeout(10000)
                 .setReconnectAttempts(2)
                 .setReconnectInterval(1000)
-                .setSsl(props.sslMode) // TODO True?
+                .setSsl(props.sslMode)
 
         val poolOptions: PoolOptions =
             PoolOptions()
