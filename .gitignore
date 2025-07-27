@@ -1,5 +1,6 @@
 .#*
 .DS_Store
+.vscode
 
 .gradle
 build/
@@ -9,6 +10,10 @@ build/
 
 .terraform.lock.hcl
 .terraform/
+terraform.tfstate*
+.terraform.tfstate*
+# May contain secrets
+terraform.tfvars
 
 ### STS ###
 .apt_generated

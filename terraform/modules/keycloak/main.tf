@@ -78,26 +78,10 @@ resource "keycloak_openid_client" "frontend_client" {
   web_origins                  = var.frontend_web_origins
 }
 
-# Create service account user for backend
-resource "keycloak_user" "backend_service_account" {
-  realm_id = keycloak_realm.congen.id
-  username = var.backend_service_username
-  enabled  = true
-
-  email      = var.backend_service_email
-  first_name = var.backend_service_first_name
-  last_name  = var.backend_service_last_name
-
-  initial_password {
-    value     = var.backend_service_password
-    temporary = false
-  }
-}
-
 # Assign service role to backend service account
 resource "keycloak_user_roles" "backend_service_roles" {
   realm_id = keycloak_realm.congen.id
-  user_id  = keycloak_user.backend_service_account.id
+  user_id  = keycloak_openid_client.backend_client.service_account_user_id
 
   role_ids = [
     keycloak_role.service_role.id

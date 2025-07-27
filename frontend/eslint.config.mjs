@@ -13,6 +13,12 @@ export default [
   pluginReact.configs.flat.recommended,
   ...pluginQuery.configs['flat/recommended'],
   {
+    rules: {
+      'react/jsx-no-useless-fragment': ['error', { allowExpressions: true }],
+      'react/jsx-fragments': ['error', 'element'],
+    },
+  },
+  {
     settings: {
       react: {
         createClass: 'createReactClass', // Regex for Component Factory to use,

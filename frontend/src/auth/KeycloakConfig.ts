@@ -7,7 +7,7 @@ import { DEPLOYMENT_ENVIRONMENT } from '../globals';
  */
 const KEYCLOAK_CONFIG = {
   loc: {
-    url: 'http://localhost:8081/auth',
+    url: 'http://localhost:8080/auth',
     realm: 'congen',
     clientId: 'congen-frontend',
   },

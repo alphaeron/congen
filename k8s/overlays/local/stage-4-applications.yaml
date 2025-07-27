@@ -5,9 +5,7 @@ namespace: congen
 
 resources:
 - ../../base
-- production-secret.yaml
-- hpa.yaml
-- keycloak-secret.yaml
+- ../../base/ingress.yaml
 
 patches:
 - path: patches/migrations-configmap-patch.yaml
@@ -34,15 +32,7 @@ patches:
   target:
     kind: Service
     name: backend
-- path: patches/ingress-patch.yaml
-  target:
-    kind: Ingress
-    name: congen-ingress
 - path: patches/migration-service-labels-patch.yaml
   target:
     kind: Deployment
     name: migration-service 
-- path: patches/keycloak-deployment-patch.yaml
-  target:
-    kind: Deployment
-    name: keycloak 

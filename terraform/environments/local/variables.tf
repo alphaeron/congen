@@ -1,17 +1,11 @@
 variable "keycloak_url" {
   description = "Keycloak server URL"
   type        = string
-  default     = "http://localhost:8081"
+  default     = "http://localhost:8080"
 }
 
-variable "keycloak_admin_username" {
-  description = "Keycloak admin username"
-  type        = string
-  default     = "admin"
-}
-
-variable "keycloak_admin_password" {
-  description = "Keycloak admin password"
+variable "keycloak_client_secret" {
+  description = "Keycloak client secret for Terraform provider"
   type        = string
   sensitive   = true
 }
@@ -73,36 +67,6 @@ variable "frontend_web_origins" {
   default = [
     "http://localhost:3000"
   ]
-}
-
-variable "backend_service_email" {
-  description = "Backend service account email"
-  type        = string
-  default     = "backend-service@congen.com"
-}
-
-variable "backend_service_username" {
-  description = "Backend service account username"
-  type        = string
-  default     = "service-account-congen-backend"
-}
-
-variable "backend_service_password" {
-  description = "Backend service account password"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_service_first_name" {
-  description = "Backend service account first name"
-  type        = string
-  default     = "Congen"
-}
-
-variable "backend_service_last_name" {
-  description = "Backend service account last name"
-  type        = string
-  default     = "Backend Service"
 }
 
 variable "admin_username" {

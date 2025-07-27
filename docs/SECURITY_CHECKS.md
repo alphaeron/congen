@@ -78,21 +78,7 @@ sudo apt-get install dependency-check
 ## Security Check Details
 
 ### Detekt Security Rules
-Security rules have been added to your existing `backend/detekt.yml`:
-
-```yaml
-# Security rules
-security:
-  active: true
-  UnsafeCallOnNullableType:
-    active: true
-  UnsafeCast:
-    active: true
-  UnsafeImplicitCast:
-    active: true
-```
-
-
+Security rules are included in [`backend/detekt.yml`](../backend/detekt.yml) under the `potential-bugs` rule set.
 
 ### OWASP Dependency Check
 Scans for known vulnerabilities in:

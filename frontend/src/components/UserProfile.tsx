@@ -12,25 +12,23 @@ import Typography from '@mui/material/Typography';
 import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
 import { default as LogoutIcon } from '@mui/icons-material/Logout';
 import { default as PersonIcon } from '@mui/icons-material/Person';
+import { default as SettingsIcon } from '@mui/icons-material/Settings';
 
 import { useAuth } from '../auth/AuthContext';
+import { AuthenticatedOnly } from './AuthenticatedOnly';
 
 /**
  * User profile component.
  *
  * Displays user information and provides logout functionality.
- * Shows a menu with user details and logout option.
+ * Shows a menu with user details, account management, and logout option.
  *
  * @return User profile component
  */
 export const UserProfile: React.FC = () => {
-  const { keycloak, logout, authenticated } = useAuth();
+  const { keycloak, logout } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
-  if (!authenticated || !keycloak) {
-    return null;
-  }
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -45,14 +43,22 @@ export const UserProfile: React.FC = () => {
     logout();
   };
 
+  const handleAccountManagement = () => {
+    handleClose();
+    // Open Keycloak account management page
+    if (keycloak?.accountManagement) {
+      keycloak.accountManagement();
+    }
+  };
+
   // Extract user information from Keycloak token
-  const userInfo = keycloak.tokenParsed as any;
+  const userInfo = keycloak?.tokenParsed as any;
   const username = userInfo?.preferred_username || userInfo?.email || 'User';
   const email = userInfo?.email || '';
   const name = userInfo?.name || username;
 
   return (
-    <>
+    <AuthenticatedOnly>
       <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
         <Tooltip title="Account settings">
           <IconButton
@@ -120,6 +126,14 @@ export const UserProfile: React.FC = () => {
           </Box>
         </MenuItem>
         <Divider />
+        {typeof keycloak?.accountManagement === 'function' && (
+          <MenuItem onClick={handleAccountManagement}>
+            <ListItemIcon>
+              <SettingsIcon fontSize="small" />
+            </ListItemIcon>
+            Account Settings
+          </MenuItem>
+        )}
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
             <LogoutIcon fontSize="small" />
@@ -127,6 +141,6 @@ export const UserProfile: React.FC = () => {
           Logout
         </MenuItem>
       </Menu>
-    </>
+    </AuthenticatedOnly>
   );
 };

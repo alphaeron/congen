@@ -18,12 +18,13 @@ output "frontend_client_id" {
   value       = module.keycloak.frontend_client_id
 }
 
-output "backend_service_username" {
-  description = "Backend service account username"
-  value       = module.keycloak.backend_service_username
-}
-
 output "admin_username" {
   description = "Admin username"
   value       = module.keycloak.admin_username
+}
+
+output "backend_client_secret" {
+  description = "Backend client secret"
+  value       = module.keycloak.backend_client_secret
+  sensitive   = true
 } 

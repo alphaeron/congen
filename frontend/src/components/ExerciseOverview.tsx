@@ -228,132 +228,130 @@ export function ExerciseOverview(): React.ReactElement {
     );
   } else {
     return (
-      <React.Fragment>
-        <Container maxWidth="lg">
-          <Grid container={true} spacing={2}>
-            <Grid size={4}>
-              <Typography variant="h2" gutterBottom={true}>
-                Filter By
-              </Typography>
-              <Autocomplete
-                disablePortal={true}
-                options={movementTypes}
-                sx={{ marginBottom: '16px' }}
-                renderInput={params => <TextField {...params} label="Movement Type" />}
-                onChange={(event, newInputValue, reason) => {
-                  if (reason === 'clear') {
-                    setMovementTypeFilter(null);
-                  } else {
-                    setMovementTypeFilter((event.target as HTMLInputElement).textContent);
-                  }
-                }}
-              />
-              <Autocomplete
-                disablePortal={true}
-                options={equipment.map(e => e.name)}
-                sx={{ marginBottom: '16px' }}
-                renderInput={params => <TextField {...params} label="Equipment" />}
-                onChange={(event, newInputValue, reason) => {
-                  if (reason === 'clear') {
-                    setExerciseEquipmentFilter(null);
-                  } else {
-                    setExerciseEquipmentFilter((event.target as HTMLInputElement).textContent);
-                  }
-                }}
-              />
-              <Autocomplete
-                disablePortal={true}
-                options={muscles.map(e => e.name)}
-                sx={{ marginBottom: '16px' }}
-                renderInput={params => <TextField {...params} label="Muscle" />}
-                onChange={(event, newInputValue, reason) => {
-                  if (reason === 'clear') {
-                    setExerciseMuscleFilter(null);
-                  } else {
-                    setExerciseMuscleFilter((event.target as HTMLInputElement).textContent);
-                  }
-                }}
-              />
-              <Stack spacing={2}>
-                <FormControl component="fieldset" variant="standard" className="formGutter">
-                  <FormLabel component="legend" className="undecoratedFormLabel">
-                    Unilateral/Bilateral Exercises
-                  </FormLabel>
-                  <RadioGroup
-                    aria-labelledby="exercise-property-filters"
-                    name="exercisePropertyFilters"
-                    value={isUnilateralFilter}
-                    onChange={handleIsUnilateralFilterChange}
-                  >
-                    <FormControlLabel control={<Radio />} label="Unilateral" value="Unilateral" />
-                    <FormControlLabel control={<Radio />} label="Bilateral" value="Bilateral" />
-                    <FormControlLabel control={<Radio />} label="Both" value="Both" />
-                  </RadioGroup>
-                </FormControl>
-                <FormControl component="fieldset" variant="standard" className="formGutter">
-                  <FormLabel component="legend" className="undecoratedFormLabel">
-                    Accessory/Primary Exercise
-                  </FormLabel>
-                  <RadioGroup
-                    aria-labelledby="exercise-property-filters"
-                    name="exercisePropertyFilters"
-                    value={isAccessoryFilter}
-                    onChange={handleIsAccessoryFilterChange}
-                  >
-                    <FormControlLabel control={<Radio />} label="Accessory" value="Accessory" />
-                    <FormControlLabel control={<Radio />} label="Primary" value="Primary" />
-                    <FormControlLabel control={<Radio />} label="Both" value="Both" />
-                  </RadioGroup>
-                </FormControl>
-                <FormControl component="fieldset" variant="standard" className="formGutter">
-                  <FormLabel component="legend" className="undecoratedFormLabel">
-                    Upper/Lower Body Exercise
-                  </FormLabel>
-                  <RadioGroup
-                    aria-labelledby="exercise-property-filters"
-                    name="exercisePropertyFilters"
-                    value={isUpperFilter}
-                    onChange={handleIsUpperFilterChange}
-                  >
-                    <FormControlLabel control={<Radio />} label="Upper" value="Upper" />
-                    <FormControlLabel control={<Radio />} label="Lower" value="Lower" />
-                    <FormControlLabel control={<Radio />} label="Both" value="Both" />
-                  </RadioGroup>
-                </FormControl>
-              </Stack>
-            </Grid>
-            <Grid justifyContent="center" alignItems="center">
-              <Divider orientation="vertical" style={{ height: '100%', width: '1px' }} />
-            </Grid>
-            <Grid size="grow">
-              <Typography variant="h1" gutterBottom={true} data-testid="exerciseHeader">
-                Exercises
-              </Typography>
-              <Grid container={true} spacing={2}>
-                {exercisesToDisplay.map((e: Exercise): React.ReactElement => {
-                  return (
-                    <Grid size={12} key={e.name}>
-                      <ExerciseCard
-                        exercise={e}
-                        equipment={
-                          exerciseEquipmentMap.has(e.name)
-                            ? Array.from(exerciseEquipmentMap.get(e.name))
-                            : []
-                        }
-                        muscles={
-                          exerciseMuscleMap.has(e.name)
-                            ? Array.from(exerciseMuscleMap.get(e.name))
-                            : []
-                        }
-                      />
-                    </Grid>
-                  );
-                })}
-              </Grid>
+      <Container maxWidth="lg">
+        <Grid container={true} spacing={2}>
+          <Grid size={4}>
+            <Typography variant="h2" gutterBottom={true}>
+              Filter By
+            </Typography>
+            <Autocomplete
+              disablePortal={true}
+              options={movementTypes}
+              sx={{ marginBottom: '16px' }}
+              renderInput={params => <TextField {...params} label="Movement Type" />}
+              onChange={(event, newInputValue, reason) => {
+                if (reason === 'clear') {
+                  setMovementTypeFilter(null);
+                } else {
+                  setMovementTypeFilter((event.target as HTMLInputElement).textContent);
+                }
+              }}
+            />
+            <Autocomplete
+              disablePortal={true}
+              options={equipment.map(e => e.name)}
+              sx={{ marginBottom: '16px' }}
+              renderInput={params => <TextField {...params} label="Equipment" />}
+              onChange={(event, newInputValue, reason) => {
+                if (reason === 'clear') {
+                  setExerciseEquipmentFilter(null);
+                } else {
+                  setExerciseEquipmentFilter((event.target as HTMLInputElement).textContent);
+                }
+              }}
+            />
+            <Autocomplete
+              disablePortal={true}
+              options={muscles.map(e => e.name)}
+              sx={{ marginBottom: '16px' }}
+              renderInput={params => <TextField {...params} label="Muscle" />}
+              onChange={(event, newInputValue, reason) => {
+                if (reason === 'clear') {
+                  setExerciseMuscleFilter(null);
+                } else {
+                  setExerciseMuscleFilter((event.target as HTMLInputElement).textContent);
+                }
+              }}
+            />
+            <Stack spacing={2}>
+              <FormControl component="fieldset" variant="standard" className="formGutter">
+                <FormLabel component="legend" className="undecoratedFormLabel">
+                  Unilateral/Bilateral Exercises
+                </FormLabel>
+                <RadioGroup
+                  aria-labelledby="exercise-property-filters"
+                  name="exercisePropertyFilters"
+                  value={isUnilateralFilter}
+                  onChange={handleIsUnilateralFilterChange}
+                >
+                  <FormControlLabel control={<Radio />} label="Unilateral" value="Unilateral" />
+                  <FormControlLabel control={<Radio />} label="Bilateral" value="Bilateral" />
+                  <FormControlLabel control={<Radio />} label="Both" value="Both" />
+                </RadioGroup>
+              </FormControl>
+              <FormControl component="fieldset" variant="standard" className="formGutter">
+                <FormLabel component="legend" className="undecoratedFormLabel">
+                  Accessory/Primary Exercise
+                </FormLabel>
+                <RadioGroup
+                  aria-labelledby="exercise-property-filters"
+                  name="exercisePropertyFilters"
+                  value={isAccessoryFilter}
+                  onChange={handleIsAccessoryFilterChange}
+                >
+                  <FormControlLabel control={<Radio />} label="Accessory" value="Accessory" />
+                  <FormControlLabel control={<Radio />} label="Primary" value="Primary" />
+                  <FormControlLabel control={<Radio />} label="Both" value="Both" />
+                </RadioGroup>
+              </FormControl>
+              <FormControl component="fieldset" variant="standard" className="formGutter">
+                <FormLabel component="legend" className="undecoratedFormLabel">
+                  Upper/Lower Body Exercise
+                </FormLabel>
+                <RadioGroup
+                  aria-labelledby="exercise-property-filters"
+                  name="exercisePropertyFilters"
+                  value={isUpperFilter}
+                  onChange={handleIsUpperFilterChange}
+                >
+                  <FormControlLabel control={<Radio />} label="Upper" value="Upper" />
+                  <FormControlLabel control={<Radio />} label="Lower" value="Lower" />
+                  <FormControlLabel control={<Radio />} label="Both" value="Both" />
+                </RadioGroup>
+              </FormControl>
+            </Stack>
+          </Grid>
+          <Grid justifyContent="center" alignItems="center">
+            <Divider orientation="vertical" style={{ height: '100%', width: '1px' }} />
+          </Grid>
+          <Grid size="grow">
+            <Typography variant="h1" gutterBottom={true} data-testid="exerciseHeader">
+              Exercises
+            </Typography>
+            <Grid container={true} spacing={2}>
+              {exercisesToDisplay.map((e: Exercise): React.ReactElement => {
+                return (
+                  <Grid size={12} key={e.name}>
+                    <ExerciseCard
+                      exercise={e}
+                      equipment={
+                        exerciseEquipmentMap.has(e.name)
+                          ? Array.from(exerciseEquipmentMap.get(e.name))
+                          : []
+                      }
+                      muscles={
+                        exerciseMuscleMap.has(e.name)
+                          ? Array.from(exerciseMuscleMap.get(e.name))
+                          : []
+                      }
+                    />
+                  </Grid>
+                );
+              })}
             </Grid>
           </Grid>
-        </Container>
-      </React.Fragment>
+        </Grid>
+      </Container>
     );
   }
 } // end component ExerciseOverview

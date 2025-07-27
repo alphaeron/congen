@@ -12,11 +12,10 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Link, Routes, Route, Navigate } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from './auth/AuthContext';
-import { ProtectedRoute } from './auth/ProtectedRoute';
-import { ToggleColorMode } from './components/ToggleColorMode';
+import { AuthenticatedOnly } from './components/AuthenticatedOnly';
 import { UserProfile } from './components/UserProfile';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
@@ -47,17 +46,34 @@ function AppContent(): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const { authenticated, loading } = useAuth();
 
-  // Debug: show what the browser reports
-  const [mediaQueryValue, setMediaQueryValue] = React.useState(false);
-  React.useEffect(() => {
-    setMediaQueryValue(window.matchMedia('(prefers-color-scheme: dark)').matches);
-  }, []);
-
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
 
   const theme = createTheme(getTheme(mode));
+
+  // Show loading state while authentication is being determined
+  if (loading) {
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Container maxWidth="xl">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100vh',
+            }}
+          >
+            <Typography component="h1" variant="h5">
+              Loading...
+            </Typography>
+          </Box>
+        </Container>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -115,17 +131,19 @@ function AppContent(): React.ReactElement {
                 >
                   ConGen
                 </Typography>
-                <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-                  <MenuItem
-                    sx={{ py: '6px', px: '12px' }}
-                    /* eslint-disable-next-line react/display-name */
-                    component={React.forwardRef((props, ref) => (
-                      <Link to="/exercises" {...props} ref={ref} />
-                    ))}
-                  >
-                    Exercises
-                  </MenuItem>
-                </Box>
+                <AuthenticatedOnly>
+                  <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                    <MenuItem
+                      sx={{ py: '6px', px: '12px' }}
+                      /* eslint-disable-next-line react/display-name */
+                      component={React.forwardRef((props, ref) => (
+                        <Link to="/exercises" {...props} ref={ref} />
+                      ))}
+                    >
+                      Exercises
+                    </MenuItem>
+                  </Box>
+                </AuthenticatedOnly>
               </Box>
               <Box
                 sx={{
@@ -134,30 +152,32 @@ function AppContent(): React.ReactElement {
                   alignItems: 'center',
                 }}
               >
-                {authenticated ? (
+                <AuthenticatedOnly
+                  fallback={
+                    <React.Fragment>
+                      <Button
+                        color="primary"
+                        variant="text"
+                        size="small"
+                        component={Link}
+                        to="/login"
+                      >
+                        Sign in
+                      </Button>
+                      <Button
+                        color="primary"
+                        variant="contained"
+                        size="small"
+                        component={Link}
+                        to="/login"
+                      >
+                        Sign up
+                      </Button>
+                    </React.Fragment>
+                  }
+                >
                   <UserProfile />
-                ) : (
-                  <>
-                    <Button
-                      color="primary"
-                      variant="text"
-                      size="small"
-                      component={Link}
-                      to="/login"
-                    >
-                      Sign in
-                    </Button>
-                    <Button
-                      color="primary"
-                      variant="contained"
-                      size="small"
-                      component={Link}
-                      to="/login"
-                    >
-                      Sign up
-                    </Button>
-                  </>
-                )}
+                </AuthenticatedOnly>
               </Box>
               <Box sx={{ display: { sm: '', md: 'none' } }}>
                 <Button
@@ -178,55 +198,79 @@ function AppContent(): React.ReactElement {
                       flexGrow: 1,
                     }}
                   >
-                    <MenuItem
-                      /* eslint-disable-next-line react/display-name */
-                      component={React.forwardRef((props, ref) => (
-                        <Link to="/exercises" {...props} ref={ref} />
-                      ))}
-                    >
-                      Exercises
-                    </MenuItem>
+                    <AuthenticatedOnly>
+                      <MenuItem
+                        /* eslint-disable-next-line react/display-name */
+                        component={React.forwardRef((props, ref) => (
+                          <Link to="/exercises" {...props} ref={ref} />
+                        ))}
+                      >
+                        Exercises
+                      </MenuItem>
+                    </AuthenticatedOnly>
                     <Divider />
-                    {authenticated ? (
+                    <AuthenticatedOnly
+                      fallback={
+                        <React.Fragment>
+                          <MenuItem>
+                            <Button
+                              color="primary"
+                              variant="contained"
+                              component={Link}
+                              to="/login"
+                              sx={{ width: '100%' }}
+                            >
+                              Sign up
+                            </Button>
+                          </MenuItem>
+                          <MenuItem>
+                            <Button
+                              color="primary"
+                              variant="outlined"
+                              component={Link}
+                              to="/login"
+                              sx={{ width: '100%' }}
+                            >
+                              Sign in
+                            </Button>
+                          </MenuItem>
+                        </React.Fragment>
+                      }
+                    >
                       <MenuItem>
                         <UserProfile />
                       </MenuItem>
-                    ) : (
-                      <>
-                        <MenuItem>
-                          <Button
-                            color="primary"
-                            variant="contained"
-                            component={Link}
-                            to="/login"
-                            sx={{ width: '100%' }}
-                          >
-                            Sign up
-                          </Button>
-                        </MenuItem>
-                        <MenuItem>
-                          <Button
-                            color="primary"
-                            variant="outlined"
-                            component={Link}
-                            to="/login"
-                            sx={{ width: '100%' }}
-                          >
-                            Sign in
-                          </Button>
-                        </MenuItem>
-                      </>
-                    )}
+                    </AuthenticatedOnly>
                   </Box>
                 </Drawer>
               </Box>
             </Toolbar>
           </AppBar>
           <Routes>
-            <Route path="/" element={<RootPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/exercises" element={<ExerciseOverviewPage />} />
-            <Route path="/exercises/:exerciseName" element={<ExerciseDetailsPage />} />
+            <Route
+              path="/"
+              element={authenticated ? <Navigate to="/exercises" replace /> : <RootPage />}
+            />
+            <Route
+              path="/login"
+              element={authenticated ? <Navigate to="/exercises" replace /> : <LoginPage />}
+            />
+            <Route
+              path="/exercises"
+              element={
+                <AuthenticatedOnly fallback={<Navigate to="/" replace />}>
+                  <ExerciseOverviewPage />
+                </AuthenticatedOnly>
+              }
+            />
+            <Route
+              path="/exercises/:exerciseName"
+              element={
+                <AuthenticatedOnly fallback={<Navigate to="/" replace />}>
+                  <ExerciseDetailsPage />
+                </AuthenticatedOnly>
+              }
+            />
           </Routes>
         </Container>
       </BrowserRouter>

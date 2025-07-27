@@ -44,16 +44,10 @@ performance:
 
 potential-bugs:
   active: true
-
-complexity:
-  active: true
-
-# Security rules
-security:
-  active: true
   UnsafeCallOnNullableType:
     active: true
   UnsafeCast:
     active: true
-  UnsafeImplicitCast:
-    active: true 
+
+complexity:
+  active: true 

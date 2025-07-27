@@ -15,7 +15,14 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: congen
+            name: frontend
+            port:
+              number: 80
+      - path: /api/
+        pathType: Prefix
+        backend:
+          service:
+            name: backend
             port:
               number: 8080
       - path: /auth/
@@ -24,4 +31,4 @@ spec:
           service:
             name: keycloak
             port:
-              number: 8081 
+              number: 8080 

@@ -61,36 +61,6 @@ variable "frontend_web_origins" {
   ]
 }
 
-variable "backend_service_email" {
-  description = "Backend service account email"
-  type        = string
-  default     = "backend-service@congen.com"
-}
-
-variable "backend_service_username" {
-  description = "Backend service account username"
-  type        = string
-  default     = "service-account-congen-backend"
-}
-
-variable "backend_service_password" {
-  description = "Backend service account password"
-  type        = string
-  sensitive   = true
-}
-
-variable "backend_service_first_name" {
-  description = "Backend service account first name"
-  type        = string
-  default     = "Congen"
-}
-
-variable "backend_service_last_name" {
-  description = "Backend service account last name"
-  type        = string
-  default     = "Backend Service"
-}
-
 variable "admin_username" {
   description = "Admin username"
   type        = string

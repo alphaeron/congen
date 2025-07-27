@@ -1,8 +1,19 @@
-// Unified deployment task for all subprojects.
-// This will call the prepareDeployment task in each subproject that defines it to prepare for deployment.
-// Afterwards, it performs the deployment to Kubernetes.
+// Unified deployment task for all subprojects using staged deployment.
+// This integrates with the deploy-staged.sh script for consistent deployment across environments.
 
 def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+
+// Helper function to build command line arguments for deploy-staged.sh
+def buildDeployStagedArgs(stage = null) {
+    def args = ['-e', environment]
+    
+    // Add stage-specific arguments if provided
+    if (stage) {
+        args += ['--stage', stage]
+    }
+    
+    return args
+}
 
 task setupLocalKubernetes {
     description = 'Setup local Kubernetes environment (minikube, etc.)'
@@ -69,26 +80,83 @@ task cleanupPortForward {
     }
 }
 
+// Unified stage deployment task
+task deployStage {
+    group = 'deployment'
+    description = 'Deploy a specific stage (1-6)'
+    
+    // Validate stage parameter
+    doFirst {
+        if (!project.hasProperty('stage')) {
+            throw new GradleException("Stage parameter is required. Use: -Pstage=<1-6>")
+        }
+        
+        def stageNum = project.getProperty('stage') as Integer
+        if (stageNum < 1 || stageNum > 6) {
+            throw new GradleException("Invalid stage: ${stageNum}. Must be 1, 2, 3, 4, 5, or 6.")
+        }
+        
+        // Check if Stage 6 is being deployed to local environment
+        if (stageNum == 6 && environment == 'local') {
+            throw new GradleException("Stage 6 (Ingress) is not applicable for local environment")
+        }
+    }
+    
+    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
+    if (environment == 'local') {
+        dependsOn setupLocalKubernetes
+    }
+    
+    doLast {
+        def stageNum = project.getProperty('stage') as Integer
+        def stageDescriptions = [
+            1: "Infrastructure",
+            2: "Secrets Bootstrapping",
+            3: "Keycloak Infrastructure", 
+            4: "Terraform and Secrets Update",
+            5: "Application Components",
+            6: "Ingress"
+        ]
+        
+        println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${environment}"
+        def args = buildDeployStagedArgs(stageNum.toString())
+        def cmdLine = ['scripts/deploy-staged.sh'] + args
+        exec {
+            commandLine cmdLine
+        }
+        println "✅ Stage ${stageNum} deployment complete!"
+    }
+}
+
+// Main deployment task using staged deployment
 task deployAll {
     group = 'deployment'
-    description = 'Prepare and deploy all subprojects to Kubernetes'
+    description = 'Prepare and deploy all subprojects to Kubernetes using staged deployment'
     dependsOn subprojects.collect { it.path + ':prepareDeployment' }
     dependsOn ':confirmDeployment'
     if (environment == 'local') {
         dependsOn setupLocalKubernetes
     }
     doLast {
-        println "🚀 Deploying all services to Kubernetes..."
-        exec {
-            commandLine 'kubectl', 'apply', '-k', "k8s/overlays/${environment}"
+        println "🚀 Starting staged deployment for environment: ${environment}"
+        
+        // Deploy all stages in sequence
+        def stages = [1, 2, 3, 4, 5]
+        if (environment != 'local') {
+            stages << 6  // Add Stage 6 for staging/production
         }
-        // Wait for deployments to be ready (example for backend, can be extended for frontend)
-        println "⏳ Waiting for backend deployment to be ready..."
-        exec {
-            commandLine 'kubectl', 'rollout', 'status', 'deployment/backend', '-n', 'congen', '--timeout=300s'
+        
+        stages.each { stageNum ->
+            println "📋 Deploying Stage ${stageNum}..."
+            def stageArgs = buildDeployStagedArgs(stageNum.toString())
+            def stageCmdLine = ['scripts/deploy-staged.sh'] + stageArgs
+            exec {
+                commandLine stageCmdLine
+            }
+            println "✅ Stage ${stageNum} complete!"
         }
-        println "✅ All deployments complete!"
-        println "📊 Check status: kubectl get pods -n congen"
+        
+        println "🎉 All stages deployed successfully!"
     }
 }
 

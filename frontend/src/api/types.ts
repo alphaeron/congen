@@ -12,26 +12,26 @@ export interface Equipment {
 export interface Exercise {
   name: string;
   description: string;
-  movementType: string;
-  isUnilateral: boolean;
-  isUpper: boolean;
-  isAccessory: boolean;
+  movement_type: string;
+  is_unilateral: boolean;
+  is_upper: boolean;
+  is_accessory: boolean;
 } // end interface Exercise
 
 /**
  * A piece of equipment that is an option or in some cases required to perform an exercise.
  */
 export interface ExerciseEquipment {
-  exerciseName: string;
-  equipmentName: string;
+  exercise_name: string;
+  equipment_name: string;
 } // end interface ExerciseEquipment
 
 /**
  * A muscle targeted by an exercise.
  */
 export interface ExerciseMuscle {
-  exerciseName: string;
-  muscleName: string;
+  exercise_name: string;
+  muscle_name: string;
 } // end interface ExerciseMuscle
 
 /**
@@ -40,4 +40,18 @@ export interface ExerciseMuscle {
 export interface Muscle {
   name: string;
   description: string;
-}
+} // end interface Muscle
+
+/**
+ * User profile information for workout generation.
+ */
+export interface User {
+  id: number;
+  name: string;
+  age: number;
+  height: number;
+  weight: number;
+  created_at: string;
+  updated_at: string;
+  keycloak_user_id?: string;
+} // end interface User
