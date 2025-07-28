@@ -31,7 +31,7 @@ Perform staged deployment of Congen application.
 OPTIONS:
     -e, --environment ENV   Environment name (REQUIRED: local, staging, production)
     -u, --keycloak-url URL  Keycloak URL for bootstrap (default: http://localhost:8080)
-    --stage STAGE           Deploy specific stage only (1, 2, 3, 4, 5, 6)
+    --stage STAGE           Deploy specific stage only (1, 2, 3, 4, 5, 6, 7, 8, 9)
     -h, --help              Show this help message
 
 EXAMPLES:
@@ -126,12 +126,38 @@ check_terraform() {
     print_success "terraform is available"
 }
 
+# Function to deploy namespace
+deploy_namespace() {
+    print_step "1" "Deploying Namespace"
+    
+    print_status "Deploying namespace..."
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-1"; then
+        print_success "Namespace deployed"
+    else
+        print_error "Failed to deploy namespace"
+        exit 1
+    fi
+}
+
+# Function to deploy service account
+deploy_service_account() {
+    print_step "2" "Deploying Service Account"
+    
+    print_status "Deploying service account..."
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-2"; then
+        print_success "Service account deployed"
+    else
+        print_error "Failed to deploy service account"
+        exit 1
+    fi
+}
+
 # Function to deploy infrastructure
 deploy_infrastructure() {
-    print_step "1" "Deploying Infrastructure"
+    print_step "3" "Deploying Infrastructure"
     
     print_status "Deploying infrastructure components..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-1"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-3"; then
         print_success "Infrastructure deployed"
     else
         print_error "Failed to deploy infrastructure"
@@ -152,10 +178,10 @@ deploy_infrastructure() {
 
 # Function to deploy secrets
 deploy_secrets() {
-    print_step "2" "Deploying Secrets"
+    print_step "4" "Deploying Secrets"
     
     print_status "Deploying secrets to Kubernetes..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-2"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-4"; then
         print_success "Secrets deployed"
     else
         print_error "Failed to deploy secrets"
@@ -165,10 +191,10 @@ deploy_secrets() {
 
 # Function to deploy Keycloak infrastructure
 deploy_keycloak_infrastructure() {
-    print_step "3" "Deploying Keycloak Infrastructure"
+    print_step "5" "Deploying Keycloak Infrastructure"
     
     print_status "Deploying Keycloak to Kubernetes..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-3"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
         print_success "Keycloak infrastructure deployed"
     else
         print_error "Failed to deploy Keycloak infrastructure"
@@ -209,7 +235,7 @@ bootstrap_keycloak() {
 
 # Function to apply Terraform
 apply_terraform() {
-    print_step "4" "Bootstrapping Keycloak and Applying Terraform Configuration"
+    print_step "6" "Bootstrapping Keycloak and Applying Terraform Configuration"
     
     # Bootstrap Keycloak first
     print_status "Bootstrapping Keycloak for Terraform..."
@@ -266,7 +292,7 @@ apply_terraform() {
 
 # Function to update Kubernetes secrets
 update_secrets() {
-    print_step "5" "Updating Kubernetes Secrets"
+    print_step "6" "Updating Kubernetes Secrets"
     
     # Check if Terraform was up to date (no changes applied)
     if [[ "${TERRAFORM_NO_CHANGES:-false}" == "true" ]]; then
@@ -286,10 +312,10 @@ update_secrets() {
 
 # Function to deploy application components
 deploy_applications() {
-    print_step "5" "Deploying Application Components"
+    print_step "7" "Deploying Application Components"
     
     print_status "Deploying Congen application components..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-4"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-6"; then
         print_success "Application components deployed"
     else
         print_error "Failed to deploy application components"
@@ -310,39 +336,39 @@ deploy_applications() {
     fi
 }
 
-# Function to deploy ingress
-deploy_ingress() {
-    print_step "6" "Deploying Ingress"
+# Function to deploy networking
+deploy_networking() {
+    print_step "8" "Deploying Networking"
     
-    # Check if stage-5 directory exists for this environment
-    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-5" ]]; then
-        print_status "Deploying ingress with environment-specific configuration..."
-        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
-            print_success "Ingress deployed"
+    # Check if stage-7 directory exists for this environment
+    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-7" ]]; then
+        print_status "Deploying networking with environment-specific configuration..."
+        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-7"; then
+            print_success "Networking deployed"
         else
-            print_error "Failed to deploy ingress"
+            print_error "Failed to deploy networking"
             exit 1
         fi
     else
-        print_status "No stage-5 directory found for ${ENVIRONMENT}, skipping ingress deployment"
+        print_status "No stage-7 directory found for ${ENVIRONMENT}, skipping networking deployment"
     fi
 }
 
 # Function to deploy Horizontal Pod Autoscaler
 deploy_hpa() {
-    print_step "6" "Deploying Horizontal Pod Autoscaler"
+    print_step "9" "Deploying Horizontal Pod Autoscaler"
     
-    # Check if stage-6 directory exists for this environment
-    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-6" ]]; then
+    # Check if stage-8 directory exists for this environment
+    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-8" ]]; then
         print_status "Deploying HPA with environment-specific configuration..."
-        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-6"; then
+        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-8"; then
             print_success "HPA deployed"
         else
             print_error "Failed to deploy HPA"
             exit 1
         fi
     else
-        print_status "No stage-6 directory found for ${ENVIRONMENT}, skipping HPA deployment"
+        print_status "No stage-8 directory found for ${ENVIRONMENT}, skipping HPA deployment"
     fi
 }
 
@@ -393,43 +419,58 @@ main() {
     if [[ -n "${STAGE}" ]]; then
         case "${STAGE}" in
             1)
-                print_status "Deploying Stage 1: Infrastructure only"
-                deploy_infrastructure
+                print_status "Deploying Stage 1: Namespace only"
+                deploy_namespace
                 ;;
             2)
-                print_status "Deploying Stage 2: Secrets only"
-                deploy_secrets
+                print_status "Deploying Stage 2: Service Account only"
+                deploy_service_account
                 ;;
             3)
-                print_status "Deploying Stage 3: Keycloak Infrastructure only"
-                deploy_keycloak_infrastructure
+                print_status "Deploying Stage 3: Infrastructure only"
+                deploy_infrastructure
                 ;;
             4)
-                print_status "Deploying Stage 4: Terraform and Secrets Update only"
+                print_status "Deploying Stage 4: Secrets only"
+                deploy_secrets
+                ;;
+            5)
+                print_status "Deploying Stage 5: Keycloak Infrastructure only"
+                deploy_keycloak_infrastructure
+                ;;
+            6)
+                print_status "Deploying Stage 6: Terraform and Secrets Update only"
                 apply_terraform
                 update_secrets
                 ;;
-            5)
-                print_status "Deploying Stage 5: Application Components only"
+            7)
+                print_status "Deploying Stage 7: Application Components only"
                 deploy_applications
                 ;;
-            6)
-                print_status "Deploying Stage 6: Horizontal Pod Autoscaler only"
+            8)
+                print_status "Deploying Stage 8: Networking only"
+                deploy_networking
+                ;;
+            9)
+                print_status "Deploying Stage 9: Horizontal Pod Autoscaler only"
                 deploy_hpa
                 ;;
             *)
-                print_error "Invalid stage: ${STAGE}. Must be 1, 2, 3, 4, 5, or 6."
+                print_error "Invalid stage: ${STAGE}. Must be 1, 2, 3, 4, 5, 6, 7, 8, or 9."
                 exit 1
                 ;;
         esac
     else
         # Full deployment (all stages)
+        deploy_namespace
+        deploy_service_account
         deploy_infrastructure
         deploy_secrets
         deploy_keycloak_infrastructure
         apply_terraform
         update_secrets
         deploy_applications
+        deploy_networking
         deploy_hpa
     fi
     

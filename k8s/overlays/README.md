@@ -14,11 +14,11 @@ Overlays provide environment-specific customization through:
 
 Each environment (`local`, `staging`, `production`) contains:
 
-- `stage-1-infrastructure.yaml` - **Stage 1**: Infrastructure components
-- `stage-2-secrets.yaml` - **Stage 2**: Secrets bootstrapping (dummy values from base)
-- `stage-3-keycloak.yaml` - **Stage 3**: Keycloak infrastructure
-- `stage-4-applications.yaml` - **Stage 4**: Application components
-- `stage-5-ingress.yaml` - **Stage 5**: Ingress configuration (staging/production only)
+- `stage-3-infrastructure.yaml` - **Stage 3**: Infrastructure components
+- `stage-4-secrets.yaml` - **Stage 4**: Secrets bootstrapping (dummy values from base)
+- `stage-5-keycloak.yaml` - **Stage 5**: Keycloak infrastructure
+- `stage-6-applications.yaml` - **Stage 6**: Application components
+- `stage-7-ingress.yaml` - **Stage 7**: Ingress configuration (staging/production only)
 - `patches/` - Environment-specific patches
 
 ## Staged Deployment
@@ -143,23 +143,23 @@ Each environment has patches for:
 
 ```bash
 # Stage 1: Infrastructure
-kubectl apply -k k8s/overlays/local/stage-1-infrastructure.yaml
+kubectl apply -k k8s/overlays/local/stage-3-infrastructure.yaml
 
 # Stage 2: Secrets bootstrapping
-kubectl apply -k k8s/overlays/local/stage-2-secrets.yaml
+kubectl apply -k k8s/overlays/local/stage-4-secrets.yaml
 
 # Stage 3: Keycloak infrastructure (after secrets are ready)
-kubectl apply -k k8s/overlays/local/stage-3-keycloak.yaml
+kubectl apply -k k8s/overlays/local/stage-5-keycloak.yaml
 
 # Stage 4: Terraform and secrets update (after Keycloak is ready)
 # Note: This requires Stage 2 to be deployed first (secrets must exist)
 ./scripts/update-k8s-secrets.sh -e local
 
 # Stage 5: Applications (after secrets are updated)
-kubectl apply -k k8s/overlays/local/stage-4-applications.yaml
+kubectl apply -k k8s/overlays/local/stage-6-applications.yaml
 
 # Stage 6: Ingress (staging/production only)
-kubectl apply -k k8s/overlays/staging/stage-5-ingress.yaml
+kubectl apply -k k8s/overlays/staging/stage-7-ingress.yaml
 ```
 
 ### Automated Staged Deployment

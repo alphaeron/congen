@@ -4,5 +4,5 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- keycloak-deployment.yaml
-- keycloak-service.yaml 
+- reloader-rbac.yaml
+- reloader-deployment.yaml

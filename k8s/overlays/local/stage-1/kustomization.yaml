@@ -5,7 +5,3 @@ namespace: congen
 
 resources:
 - ../../../base/stage-1
-- postgres-deployment.yaml
-- postgres-service.yaml
-- postgres-configmap.yaml
-- postgres-pvc.yaml

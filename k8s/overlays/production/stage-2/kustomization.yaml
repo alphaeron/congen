@@ -4,4 +4,4 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- ../../../base/stage-2 
+- ../../../base/stage-2

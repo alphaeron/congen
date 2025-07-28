@@ -92,12 +92,12 @@ task deployStage {
         }
         
         def stageNum = project.getProperty('stage') as Integer
-        if (stageNum < 1 || stageNum > 6) {
-            throw new GradleException("Invalid stage: ${stageNum}. Must be 1, 2, 3, 4, 5, or 6.")
+        if (stageNum < 1 || stageNum > 9) {
+            throw new GradleException("Invalid stage: ${stageNum}. Must be 1, 2, 3, 4, 5, 6, 7, 8, or 9.")
         }
         
-        // Check if Stage 6 is being deployed to local environment
-        if (stageNum == 6 && environment == 'local') {
+        // Check if Stage 9 is being deployed to local environment
+        if (stageNum == 9 && environment == 'local') {
             throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
@@ -110,12 +110,15 @@ task deployStage {
     doLast {
         def stageNum = project.getProperty('stage') as Integer
         def stageDescriptions = [
-            1: "Infrastructure",
-            2: "Secrets Bootstrapping",
-            3: "Keycloak Infrastructure", 
-            4: "Terraform and Secrets Update",
-            5: "Application Components",
-            6: "Horizontal Pod Autoscaler"
+            1: "Namespace",
+            2: "Service Account",
+            3: "Infrastructure",
+            4: "Secrets",
+            5: "Keycloak",
+            6: "Terraform and Secrets Update",
+            7: "Application",
+            8: "Networking",
+            9: "Horizontal Pod Autoscaler"
         ]
         
         println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${environment}"
@@ -141,9 +144,9 @@ task deployAll {
         println "🚀 Starting staged deployment for environment: ${environment}"
         
         // Deploy all stages in sequence
-        def stages = [1, 2, 3, 4, 5]
+        def stages = [1, 2, 3, 4, 5, 6, 7, 8]
         if (environment != 'local') {
-            stages << 6  // Add Stage 6 for staging/production
+            stages << 9  // Add Stage 9 for staging/production
         }
         
         stages.each { stageNum ->

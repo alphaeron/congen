@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: congen
+
+resources:
+- ../../../base/stage-7
+
+patches:
+- path: patches/network-policy-patch.yaml
+  target:
+    kind: NetworkPolicy
+    name: congen-network-policy
+- path: patches/ingress-patch.yaml
+  target:
+    kind: Ingress
+    name: congen-ingress

@@ -76,11 +76,11 @@ kubectl apply -k k8s/base
 ### With Environment Overlay
 ```bash
 # Apply with environment-specific overlay
-kubectl apply -k k8s/overlays/local/stage-1-infrastructure.yaml
-kubectl apply -k k8s/overlays/local/stage-2-secrets.yaml
-kubectl apply -k k8s/overlays/local/stage-3-keycloak.yaml
-kubectl apply -k k8s/overlays/local/stage-4-applications.yaml
-# For staging/production: also apply stage-5-ingress.yaml
+kubectl apply -k k8s/overlays/local/stage-3-infrastructure.yaml
+kubectl apply -k k8s/overlays/local/stage-4-secrets.yaml
+kubectl apply -k k8s/overlays/local/stage-5-keycloak.yaml
+kubectl apply -k k8s/overlays/local/stage-6-applications.yaml
+# For staging/production: also apply stage-7-ingress.yaml
 ```
 
 ## Resource Details

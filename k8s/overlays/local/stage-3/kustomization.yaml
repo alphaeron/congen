@@ -5,9 +5,7 @@ namespace: congen
 
 resources:
 - ../../../base/stage-3
-
-patches:
-- path: patches/keycloak-deployment-patch.yaml
-  target:
-    kind: Deployment
-    name: keycloak 
+- postgres-deployment.yaml
+- postgres-service.yaml
+- postgres-configmap.yaml
+- postgres-pvc.yaml
