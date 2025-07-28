@@ -9,5 +9,5 @@ resources:
 patches:
 - path: patches/keycloak-deployment-patch.yaml
   target:
-    kind: Deployment
+    kind: StatefulSet
     name: keycloak 

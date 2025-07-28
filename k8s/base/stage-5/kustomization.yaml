@@ -5,4 +5,5 @@ namespace: congen
 
 resources:
 - keycloak-deployment.yaml
-- keycloak-service.yaml 
+- keycloak-service.yaml
+- keycloak-discovery-service.yaml

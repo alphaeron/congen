@@ -43,7 +43,7 @@ Edit `terraform.tfvars` with your values:
 
 ```hcl
 # Keycloak Admin Credentials
-keycloak_admin_password = "your-keycloak-admin-password"
+admin_password = "your-admin-password"
 
 # Backend Service Account Password
 backend_service_password = "your-backend-service-password"
@@ -148,8 +148,8 @@ If you're migrating from admin credentials:
 
 #### Before (Admin Credentials)
 ```properties
-KEYCLOAK_ADMIN_USERNAME=admin
-KEYCLOAK_ADMIN_PASSWORD=admin-password
+KC_BOOTSTRAP_ADMIN_USERNAME=admin
+KC_BOOTSTRAP_ADMIN_PASSWORD=admin-password
 ```
 
 #### After (Service Account)

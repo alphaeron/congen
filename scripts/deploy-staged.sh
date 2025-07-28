@@ -1,13 +1,7 @@
 #!/bin/bash
 
 # Staged Deployment Script
-# This script handles the complete staged deployment process:
-# 1. Deploy Keycloak infrastructure
-# 2. Bootstrap Keycloak with Terraform
-# 3. Update Kubernetes secrets with Terraform outputs
-# 4. Deploy Congen application components
-
-set -e
+# This script handles the complete staged deployment process.
 
 # Colors for output
 RED='\033[0;31m'
@@ -201,36 +195,61 @@ deploy_keycloak_infrastructure() {
         exit 1
     fi
     
-    print_status "Waiting for Keycloak to be ready..."
+    print_status "Waiting for PostgreSQL to be ready..."
+    if kubectl wait --for=condition=ready pod -l app=postgres -n congen --timeout=300s; then
+        print_success "PostgreSQL is ready"
+    else
+        print_error "PostgreSQL failed to become ready"
+        kubectl get pods -n congen
+        kubectl describe pods -n congen -l app=postgres
+        exit 1
+    fi
+    
+    print_status "Waiting for Keycloak pods to be created and ready..."
+    
+    # First wait for pods to be created
+    local max_attempts=60
+    local attempt=0
+    while [[ ${attempt} -lt ${max_attempts} ]]; do
+        local pod_count
+        pod_count=$(kubectl get pods -n congen -l app=keycloak --no-headers 2>/dev/null | wc -l)
+        
+        if [[ ${pod_count} -gt 0 ]]; then
+            print_status "Keycloak pods found, waiting for them to be ready..."
+            break
+        fi
+        
+        attempt=$((attempt + 1))
+        print_status "Waiting for Keycloak pods to be created (attempt ${attempt}/${max_attempts})..."
+        sleep 5
+    done
+    
+    if [[ ${attempt} -eq ${max_attempts} ]]; then
+        print_error "Keycloak pods failed to be created"
+        kubectl get pods -n congen
+        exit 1
+    fi
+    
+    # Now wait for pods to be ready
     if kubectl wait --for=condition=ready pod -l app=keycloak -n congen --timeout=300s; then
         print_success "Keycloak is ready"
     else
         print_error "Keycloak failed to become ready"
+        kubectl get pods -n congen
+        kubectl describe pods -n congen -l app=keycloak
         exit 1
     fi
 }
 
 # Function to bootstrap Keycloak
 bootstrap_keycloak() {
-    print_status "Setting up port forwarding for Keycloak..."
-    # Start port forwarding in background
-    kubectl port-forward -n congen service/keycloak 8080:8080 &
-    local port_forward_pid=$!
-    
-    # Wait a moment for port forwarding to establish
-    sleep 5
-    
     print_status "Bootstrapping Keycloak (will skip if Terraform client already exists)..."
     if ./scripts/setup-keycloak-terraform.sh -u "${KEYCLOAK_URL}" -e "${ENVIRONMENT}"; then
         print_success "Keycloak bootstrap completed"
     else
         print_error "Keycloak bootstrap failed"
-        kill "${port_forward_pid}" 2>/dev/null || true
         exit 1
     fi
-    
-    # Stop port forwarding
-    kill "${port_forward_pid}" 2>/dev/null || true
 }
 
 # Function to apply Terraform
@@ -255,8 +274,13 @@ apply_terraform() {
     
     print_status "Checking for Terraform changes..."
     local plan_output
+    print_status "Running terraform plan..."
+    
     plan_output=$(terraform plan -detailed-exitcode 2>&1)
     local plan_exit_code=$?
+    
+    print_status "Terraform plan completed with exit code: ${plan_exit_code}"
+    print_status "Plan output length: ${#plan_output} characters"
     
     if [[ ${plan_exit_code} -eq 0 ]]; then
         print_success "No Terraform changes detected - infrastructure is up to date"
@@ -271,6 +295,11 @@ apply_terraform() {
         exit 1
     elif [[ ${plan_exit_code} -eq 2 ]]; then
         print_status "Terraform changes detected, applying configuration..."
+        print_status "This may take several minutes. Please wait..."
+        
+        # Run terraform apply with progress indication
+        print_status "Running terraform apply..."
+
         if terraform apply -auto-approve; then
             print_success "Terraform applied successfully"
             # Set a flag to indicate Terraform changes were applied
@@ -372,6 +401,55 @@ deploy_hpa() {
     fi
 }
 
+# Function to set up port forwarding
+setup_port_forwarding() {
+    print_status "Setting up port forwarding for Keycloak..."
+    
+    # Kill any existing port-forward processes
+    pkill -f "kubectl port-forward.*keycloak.*8080" 2>/dev/null || true
+    sleep 2
+    
+    # Start port forwarding in background
+    kubectl port-forward -n congen service/keycloak 8080:8080 > /dev/null 2>&1 &
+    export PORT_FORWARD_PID=$!
+    
+    # Wait a moment for the port forwarding to start
+    sleep 3
+    
+    # Wait for port forwarding to establish and verify it's working
+    local max_attempts=60
+    local attempt=0
+    while [[ ${attempt} -lt ${max_attempts} ]]; do
+        if curl -s --connect-timeout 5 "http://localhost:8080/realms/master/" > /dev/null 2>&1; then
+            print_success "Port forwarding established and Keycloak is accessible"
+            break
+        fi
+        attempt=$((attempt + 1))
+        if [[ $((attempt % 10)) -eq 0 ]]; then
+            print_status "Waiting for port forwarding to establish (attempt ${attempt}/${max_attempts})..."
+        fi
+        sleep 2
+    done
+    
+    if [[ ${attempt} -eq ${max_attempts} ]]; then
+        print_error "Failed to establish port forwarding after ${max_attempts} attempts"
+        kill "${PORT_FORWARD_PID}" 2>/dev/null || true
+        exit 1
+    fi
+}
+
+# Function to cleanup resources
+cleanup() {
+    # Clean up port forwarding if it's still running
+    if [[ -n "${PORT_FORWARD_PID}" ]]; then
+        print_status "Cleaning up port forwarding..."
+        kill "${PORT_FORWARD_PID}" 2>/dev/null || true
+    fi
+    
+    # Kill any remaining port-forward processes
+    pkill -f "kubectl port-forward.*keycloak.*8080" 2>/dev/null || true
+}
+
 # Function to display final status
 show_final_status() {
     print_step "7" "Deployment Summary"
@@ -415,6 +493,16 @@ main() {
     check_kubectl
     check_terraform
     
+    # Set up port forwarding for stages that need it
+    if [[ -n "${STAGE}" ]]; then
+        case "${STAGE}" in
+            6)
+                print_status "Setting up port forwarding for Terraform operations..."
+                setup_port_forwarding
+                ;;
+        esac
+    fi
+    
     # Execute deployment steps based on stage
     if [[ -n "${STAGE}" ]]; then
         case "${STAGE}" in
@@ -457,9 +545,11 @@ main() {
                 ;;
             *)
                 print_error "Invalid stage: ${STAGE}. Must be 1, 2, 3, 4, 5, 6, 7, 8, or 9."
+                cleanup
                 exit 1
                 ;;
         esac
+        show_final_status
     else
         # Full deployment (all stages)
         deploy_namespace
@@ -467,6 +557,11 @@ main() {
         deploy_infrastructure
         deploy_secrets
         deploy_keycloak_infrastructure
+        
+        # Set up port forwarding before Terraform operations
+        print_status "Setting up port forwarding for Terraform operations..."
+        setup_port_forwarding
+        
         apply_terraform
         update_secrets
         deploy_applications
@@ -475,6 +570,7 @@ main() {
     fi
     
     show_final_status
+    cleanup
 }
 
 # Run main function

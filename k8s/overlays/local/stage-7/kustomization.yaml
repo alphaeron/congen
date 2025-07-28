@@ -5,6 +5,8 @@ namespace: congen
 
 resources:
 - ../../../base/stage-7
+
+patches:
 - path: patches/network-policy-patch.yaml
   target:
     kind: NetworkPolicy

@@ -176,7 +176,7 @@ main() {
     fi
     
     # Check if terraform has been initialized
-    if [[ ! -f "${TERRAFORM_DIR}/.terraform/terraform.tfstate" ]]; then
+    if [[ ! -f "${TERRAFORM_DIR}/terraform.tfstate" ]]; then
         print_error "Terraform has not been applied in ${TERRAFORM_DIR}"
         print_error "Run 'terraform init' and 'terraform apply' first"
         exit 1
@@ -187,10 +187,16 @@ main() {
     local backend_client_secret
     backend_client_secret=$(set -e; get_terraform_output "backend_client_secret" "${TERRAFORM_DIR}")
     
+    local admin_username
+    admin_username=$(set -e; get_terraform_output "admin_username" "${TERRAFORM_DIR}")
+    
+    local admin_password
+    admin_password=$(set -e; get_terraform_output "admin_password" "${TERRAFORM_DIR}")
+    
     # Get service account password from Terraform (if available)
     local service_account_password=""
     
-    if terraform output -raw service_account_password 2>/dev/null; then
+    if cd "${TERRAFORM_DIR}" && terraform output -raw service_account_password 2>/dev/null; then
         service_account_password=$(set -e; get_terraform_output "service_account_password" "${TERRAFORM_DIR}")
     fi
     
@@ -206,8 +212,10 @@ main() {
     print_status "Updating Kubernetes secrets..."
     update_k8s_secret "congen-secret" "KEYCLOAK_CLIENT_SECRET" "${backend_client_secret}" "congen"
     
-    # Update keycloak-secret with backend client secret
+    # Update keycloak-secret with backend client secret and admin credentials
     update_k8s_secret "keycloak-secret" "CONGEN_BACKEND_CLIENT_SECRET" "${backend_client_secret}" "congen"
+    update_k8s_secret "keycloak-secret" "KC_BOOTSTRAP_ADMIN_USERNAME" "${admin_username}" "congen"
+    update_k8s_secret "keycloak-secret" "KC_BOOTSTRAP_ADMIN_PASSWORD" "${admin_password}" "congen"
     
     # Update service account password if we have the value
     if [[ -n "${service_account_password}" ]]; then

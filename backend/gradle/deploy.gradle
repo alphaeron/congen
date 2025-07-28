@@ -168,7 +168,7 @@ task prepareRemoteImage {
 // Helper function to generate image tag patch
 def generateImageTagPatchForEnvironment(env, imageName) {
     def overlayDir = "../k8s/overlays/${env}"
-    def patchFile = file("${overlayDir}/patches/backend-image-tag-patch.yaml")
+    def patchFile = file("${overlayDir}/stage-6/patches/backend-image-tag-patch.yaml")
 
     // Create the patch directory if it doesn't exist
     patchFile.parentFile.mkdirs()

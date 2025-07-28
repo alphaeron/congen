@@ -3,8 +3,6 @@
 # Keycloak Terraform Bootstrap Script
 # This script sets up the necessary client credentials grant for Terraform to manage Keycloak
 
-set -e
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -150,8 +148,7 @@ fi
 
 # Function to get admin token
 get_admin_token() {
-    print_status "Getting admin token..."
-    
+    # Get token using direct curl command
     local token_response
     token_response=$(curl -s -X POST \
         -H "Content-Type: application/x-www-form-urlencoded" \
@@ -161,13 +158,13 @@ get_admin_token() {
     local access_token
     access_token=$(echo "${token_response}" | jq -r '.access_token')
     
+    # Validate token
     if [[ "${access_token}" == "null" || -z "${access_token}" ]]; then
         print_error "Failed to get admin token"
         echo "Response: ${token_response}"
         exit 1
     fi
-    
-    print_success "Admin token obtained"
+
     echo "${access_token}"
 }
 
@@ -181,7 +178,7 @@ check_terraform_client_exists() {
     check_response=$(curl -s -w "\nHTTP_STATUS:%{http_code}" -X GET \
         -H "Authorization: Bearer ${admin_token}" \
         -H "Content-Type: application/json" \
-        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/clients?clientId=${TERRAFORM_CLIENT_ID}")
+        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/clients")
     
     local http_status
     http_status=$(echo "${check_response}" | grep "HTTP_STATUS:" | cut -d: -f2 || true)
@@ -189,9 +186,9 @@ check_terraform_client_exists() {
     response_body=$(echo "${check_response}" | grep -v "HTTP_STATUS:")
     
     if [[ "${http_status}" == "200" ]]; then
-        local client_count
-        client_count=$(echo "${response_body}" | jq 'length')
-        if [[ "${client_count}" -gt 0 ]]; then
+        local client_exists
+        client_exists=$(echo "${response_body}" | jq -r ".[] | select(.clientId == \"${TERRAFORM_CLIENT_ID}\") | .clientId")
+        if [[ "${client_exists}" == "${TERRAFORM_CLIENT_ID}" ]]; then
             print_success "Terraform client already exists"
             return 0
         else
@@ -202,7 +199,7 @@ check_terraform_client_exists() {
         print_error "Failed to check Terraform client existence"
         echo "HTTP Status: ${http_status}"
         echo "Response: ${response_body}"
-        exit 1
+        return 1
     fi
 }
 
@@ -265,19 +262,13 @@ get_client_id() {
     local admin_token="$1"
     local client_id="$2"
     
-    print_status "Getting client ID for ${client_id}..."
-    
     local clients_response
     clients_response=$(curl -s -X GET \
         -H "Authorization: Bearer ${admin_token}" \
         "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/clients")
     
-    print_status "Clients response: ${clients_response}"
-    
     local client_uuid
     client_uuid=$(echo "${clients_response}" | jq -r ".[] | select(.clientId == \"${client_id}\") | .id")
-    
-    print_status "Client UUID: ${client_uuid}"
     
     if [[ "${client_uuid}" == "null" || -z "${client_uuid}" ]]; then
         print_error "Failed to get client ID for ${client_id}"
@@ -285,8 +276,7 @@ get_client_id() {
         echo "${clients_response}" | jq -r '.[].clientId'
         exit 1
     fi
-    
-    print_success "Client ID obtained: ${client_uuid}"
+
     echo "${client_uuid}"
 }
 
@@ -294,8 +284,6 @@ get_client_id() {
 get_client_secret() {
     local admin_token="$1"
     local client_uuid="$2"
-    
-    print_status "Getting client secret..."
     
     local secret_response
     secret_response=$(curl -s -X GET \
@@ -310,8 +298,7 @@ get_client_secret() {
         echo "Response: ${secret_response}"
         exit 1
     fi
-    
-    print_success "Client secret obtained"
+
     echo "${client_secret}"
 }
 
@@ -322,54 +309,95 @@ assign_realm_management_roles() {
     
     print_status "Assigning realm management roles..."
     
-    # Get service account user ID
-    local service_account_response
-    service_account_response=$(curl -s -X GET \
-        -H "Authorization: Bearer ${admin_token}" \
-        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/clients/${client_uuid}/service-account-user")
+    # Get service account user ID with retry
+    local service_account_id=""
+    local max_retries=5
+    local retry_count=0
     
-    local service_account_id
-    service_account_id=$(echo "${service_account_response}" | jq -r '.id')
+    while [[ -z "${service_account_id}" || "${service_account_id}" == "null" ]] && [[ ${retry_count} -lt ${max_retries} ]]; do
+        local attempt_num=$((retry_count + 1))
+        print_status "Getting service account user ID (attempt ${attempt_num}/${max_retries})..."
+        
+        # Get fresh token for each attempt to avoid expiration issues
+        local fresh_token
+        fresh_token=$(curl -s -X POST \
+            -H "Content-Type: application/x-www-form-urlencoded" \
+            -d "username=${ADMIN_USERNAME}&password=${ADMIN_PASSWORD}&grant_type=password&client_id=admin-cli" \
+            "${KEYCLOAK_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" | jq -r '.access_token')
+        
+        local service_account_response
+        service_account_response=$(curl -s -X GET \
+            -H "Authorization: Bearer ${fresh_token}" \
+            "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/clients/${client_uuid}/service-account-user")
+        
+        print_status "Service account response: ${service_account_response}"
+        
+        service_account_id=$(echo "${service_account_response}" | jq -r '.id')
+        
+        print_status "Service account ID: ${service_account_id}"
+        
+        if [[ "${service_account_id}" == "null" || -z "${service_account_id}" ]]; then
+            retry_count=$((retry_count + 1))
+            if [[ ${retry_count} -lt ${max_retries} ]]; then
+                print_status "Service account not ready yet, waiting 2 seconds before retry..."
+                sleep 2
+            fi
+        fi
+    done
     
     if [[ "${service_account_id}" == "null" || -z "${service_account_id}" ]]; then
-        print_error "Failed to get service account user ID"
+        print_error "Failed to get service account user ID after ${max_retries} attempts"
         echo "Response: ${service_account_response}"
         exit 1
     fi
     
-    # Get realm-management client ID
-    local realm_management_id
-    realm_management_id=$(set -e; get_client_id "${admin_token}" "realm-management")
+        # The Terraform client only needs admin and create-realm roles in the master realm
+    # It doesn't need realm-management client roles since it will create the congen realm
+    # and then have full access to manage resources within that realm
+    print_status "Terraform client only needs admin and create-realm roles in master realm"
+    print_status "No realm-management client roles needed for realm creation"
     
-    # Get available roles
-    local roles_response
-    roles_response=$(curl -s -X GET \
+    # Also assign admin role to ensure full privileges
+    print_status "Assigning admin role to service account..."
+    local admin_role_id
+    admin_role_id=$(curl -s -X GET \
         -H "Authorization: Bearer ${admin_token}" \
-        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/clients/${realm_management_id}/roles")
+        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/roles" | jq -r '.[] | select(.name == "admin") | .id')
     
-    # Assign required roles
-    local required_roles=("view-realm" "manage-users" "view-users" "view-clients" "manage-clients")
-    
-    for role in "${required_roles[@]}"; do
-        print_status "Assigning role: ${role}"
-        
-        local role_id
-        role_id=$(echo "${roles_response}" | jq -r ".[] | select(.name == \"${role}\") | .id")
-        
-        if [[ "${role_id}" != "null" && -n "${role_id}" ]]; then
-            if curl -s -X POST \
-                -H "Authorization: Bearer ${admin_token}" \
-                -H "Content-Type: application/json" \
-                -d "[{\"id\":\"${role_id}\",\"name\":\"${role}\"}]" \
-                "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/users/${service_account_id}/role-mappings/clients/${realm_management_id}" > /dev/null; then
-                print_success "Role ${role} assigned"
-            else
-                print_warning "Failed to assign role ${role} (may already be assigned)"
-            fi
+    if [[ "${admin_role_id}" != "null" && -n "${admin_role_id}" ]]; then
+        if curl -s -X POST \
+            -H "Authorization: Bearer ${admin_token}" \
+            -H "Content-Type: application/json" \
+            -d "[{\"id\":\"${admin_role_id}\",\"name\":\"admin\"}]" \
+            "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/users/${service_account_id}/role-mappings/realm" > /dev/null; then
+            print_success "Admin role assigned to service account"
         else
-            print_warning "Role ${role} not found"
+            print_warning "Failed to assign admin role (may already be assigned)"
         fi
-    done
+    else
+        print_warning "Admin role not found"
+    fi
+    
+    # Assign create-realm role for full admin privileges
+    print_status "Assigning create-realm role to service account..."
+    local create_realm_role_id
+    create_realm_role_id=$(curl -s -X GET \
+        -H "Authorization: Bearer ${admin_token}" \
+        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/roles" | jq -r '.[] | select(.name == "create-realm") | .id')
+    
+    if [[ "${create_realm_role_id}" != "null" && -n "${create_realm_role_id}" ]]; then
+        if curl -s -X POST \
+            -H "Authorization: Bearer ${admin_token}" \
+            -H "Content-Type: application/json" \
+            -d "[{\"id\":\"${create_realm_role_id}\",\"name\":\"create-realm\"}]" \
+            "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/users/${service_account_id}/role-mappings/realm" > /dev/null; then
+            print_success "Create-realm role assigned to service account"
+        else
+            print_warning "Failed to assign create-realm role (may already be assigned)"
+        fi
+    else
+        print_warning "Create-realm role not found"
+    fi
 }
 
 # Function to generate Terraform provider configuration
@@ -384,8 +412,12 @@ generate_terraform_config() {
     if grep -q "^keycloak_client_secret" "${tfvars_file}" 2>/dev/null; then
         # Replace existing value
         print_status "Replacing existing keycloak_client_secret value..."
-        sed -i.bak "s/^keycloak_client_secret = \".*\"/keycloak_client_secret = \"${client_secret}\"/" "${tfvars_file}"
-        rm -f "${tfvars_file}.bak"
+        # Use awk instead of sed to avoid newline issues
+        awk -v secret="${client_secret}" '/^keycloak_client_secret = / {print "keycloak_client_secret = \"" secret "\""; next} {print}' "${tfvars_file}" > "${tfvars_file}.tmp" 2>/dev/null && mv "${tfvars_file}.tmp" "${tfvars_file}" || {
+            # Fallback to simple replacement if awk fails
+            print_status "Using fallback method to update client secret..."
+            grep -v "^keycloak_client_secret" "${tfvars_file}" > "${tfvars_file}.tmp" && echo "keycloak_client_secret = \"${client_secret}\"" >> "${tfvars_file}.tmp" && mv "${tfvars_file}.tmp" "${tfvars_file}"
+        }
         print_success "Updated existing keycloak_client_secret in ${tfvars_file}"
     else
         # Append new line at the end of the file
@@ -428,7 +460,11 @@ main() {
     
     # Get admin token
     local admin_token
-    admin_token=$(set -e; get_admin_token)
+    admin_token=$(get_admin_token)
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to get admin token"
+        exit 1
+    fi
     
     # Check if Terraform client already exists
     local client_check_result
@@ -445,11 +481,23 @@ main() {
     
     # Get client UUID
     local client_uuid
-    client_uuid=$(set -e; get_client_id "${admin_token}" "${TERRAFORM_CLIENT_ID}")
+    print_status "About to get client ID for ${TERRAFORM_CLIENT_ID}..."
+    client_uuid=$(get_client_id "${admin_token}" "${TERRAFORM_CLIENT_ID}")
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to get client UUID"
+        exit 1
+    fi
+    
+    print_status "Got client UUID: ${client_uuid}"
     
     # Get client secret
     local client_secret
-    client_secret=$(set -e; get_client_secret "${admin_token}" "${client_uuid}")
+    print_status "About to get client secret for UUID: ${client_uuid}..."
+    client_secret=$(get_client_secret "${admin_token}" "${client_uuid}")
+    if [[ $? -ne 0 ]]; then
+        print_error "Failed to get client secret"
+        exit 1
+    fi
     
     # Assign realm management roles
     assign_realm_management_roles "${admin_token}" "${client_uuid}"

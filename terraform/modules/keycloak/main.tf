@@ -49,19 +49,37 @@ resource "keycloak_openid_client" "backend_client" {
   web_origins                  = ["*"]
 }
 
-# Assign realm-management client roles to backend client for user account creation
-resource "keycloak_openid_client_service_account_role" "backend_client_realm_management_roles" {
-  realm_id                = keycloak_realm.congen.id
-  service_account_user_id = keycloak_openid_client.backend_client.service_account_user_id
-  client_id               = "realm-management"
-  role                    = "manage-users"
+# Assign backend service account roles for user account creation
+# These roles allow the backend service account to manage users in the congen realm
+resource "keycloak_user_roles" "backend_client_realm_management_roles" {
+  realm_id = keycloak_realm.congen.id
+  user_id  = keycloak_openid_client.backend_client.service_account_user_id
+
+  role_ids = [
+    # These are the realm-management client roles that provide user management permissions
+    data.keycloak_role.realm_management_manage_users.id,
+    data.keycloak_role.realm_management_view_users.id
+  ]
 }
 
-resource "keycloak_openid_client_service_account_role" "backend_client_view_realm_role" {
-  realm_id                = keycloak_realm.congen.id
-  service_account_user_id = keycloak_openid_client.backend_client.service_account_user_id
-  client_id               = "realm-management"
-  role                    = "view-realm"
+# Get the realm-management client
+data "keycloak_openid_client" "realm_management" {
+  realm_id  = keycloak_realm.congen.id
+  client_id = "realm-management"
+}
+
+# Get the manage-users role from the realm-management client
+data "keycloak_role" "realm_management_manage_users" {
+  realm_id  = keycloak_realm.congen.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "manage-users"
+}
+
+# Get the view-users role from the realm-management client
+data "keycloak_role" "realm_management_view_users" {
+  realm_id  = keycloak_realm.congen.id
+  client_id = data.keycloak_openid_client.realm_management.id
+  name      = "view-users"
 }
 
 # Create frontend client

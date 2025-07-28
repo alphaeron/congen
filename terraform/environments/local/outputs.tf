@@ -23,6 +23,12 @@ output "admin_username" {
   value       = module.keycloak.admin_username
 }
 
+output "admin_password" {
+  description = "Admin password"
+  value       = module.keycloak.admin_password
+  sensitive   = true
+}
+
 output "backend_client_secret" {
   description = "Backend client secret"
   value       = module.keycloak.backend_client_secret

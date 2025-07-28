@@ -28,6 +28,12 @@ output "admin_username" {
   value       = keycloak_user.admin_user.username
 }
 
+output "admin_password" {
+  description = "Admin password"
+  value       = var.admin_password
+  sensitive   = true
+}
+
 output "backend_client_secret" {
   description = "Backend client secret"
   value       = keycloak_openid_client.backend_client.client_secret

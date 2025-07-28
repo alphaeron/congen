@@ -83,12 +83,12 @@ task cleanupPortForward {
 // Unified stage deployment task
 task deployStage {
     group = 'deployment'
-    description = 'Deploy a specific stage (1-6)'
+    description = 'Deploy a specific stage (1-9)'
     
     // Validate stage parameter
     doFirst {
         if (!project.hasProperty('stage')) {
-            throw new GradleException("Stage parameter is required. Use: -Pstage=<1-6>")
+            throw new GradleException("Stage parameter is required. Use: -Pstage=<1-9>")
         }
         
         def stageNum = project.getProperty('stage') as Integer
@@ -105,6 +105,11 @@ task deployStage {
     dependsOn subprojects.collect { it.path + ':prepareDeployment' }
     if (environment == 'local') {
         dependsOn setupLocalKubernetes
+        dependsOn ':backend:prepareLocalImage'
+        dependsOn ':frontend:prepareLocalImage'
+    } else {
+        dependsOn ':backend:prepareRemoteImage'
+        dependsOn ':frontend:prepareRemoteImage'
     }
     
     doLast {
@@ -139,6 +144,11 @@ task deployAll {
     dependsOn ':confirmDeployment'
     if (environment == 'local') {
         dependsOn setupLocalKubernetes
+        dependsOn ':backend:prepareLocalImage'
+        dependsOn ':frontend:prepareLocalImage'
+    } else {
+        dependsOn ':backend:prepareRemoteImage'
+        dependsOn ':frontend:prepareRemoteImage'
     }
     doLast {
         println "🚀 Starting staged deployment for environment: ${environment}"

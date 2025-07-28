@@ -1,12 +1,14 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: keycloak
 spec:
+  replicas: 1
   template:
     spec:
       containers:
       - name: keycloak
         envFrom:
         - secretRef:
-            name: keycloak-secret 
+            name: keycloak-secret
+        args: ["start-dev"] 
