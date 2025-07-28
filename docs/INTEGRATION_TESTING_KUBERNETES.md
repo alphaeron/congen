@@ -75,7 +75,7 @@ The Gradle tasks automatically handle port-forwarding:
 
 - **Documentation Generation**: Uses `setupTestPortForward` and `cleanupPortForward` tasks
 - **Integration Tests**: Automatically sets up port-forwarding to PostgreSQL (port 5432)
-- **Application Access**: Port-forwarding to application service (port 8080)
+- **Application Access**: Port-forwarding to application service (port 8888)
 
 ### Manual Port-Forwarding
 If you need to access services manually:
@@ -165,8 +165,8 @@ The documentation generation creates:
 4. **Access Application**:
    ```bash
    # Via port-forwarding
-   kubectl port-forward -n congen service/congen 8080:8080
-   # Then visit http://localhost:8080/api/v1/swagger-ui.html
+   kubectl port-forward -n congen service/congen 8888:8888
+# Then visit http://localhost:8888/api/v1/swagger-ui.html
    
    # Via NodePort
    # Visit http://$(minikube ip):30080
@@ -190,7 +190,7 @@ pkill -f "kubectl port-forward"
 
 # Check if ports are in use
 lsof -i :5432
-lsof -i :8080
+lsof -i :8888
 ```
 
 #### Database Connection Issues
@@ -214,7 +214,7 @@ kubectl get pods -n congen -l app=congen
 kubectl logs -f deployment/congen -n congen
 
 # Check application health
-kubectl exec -n congen deployment/congen -- curl -s http://localhost:8080/api/v1/health/
+kubectl exec -n congen deployment/congen -- curl -s http://localhost:8888/api/v1/health/
 ```
 
 #### Minikube Issues
@@ -268,7 +268,7 @@ kubectl exec -it -n congen <pod-name> -- /bin/bash
 ### Kubernetes Resources
 - **Namespace**: `congen`
 - **Services**: 
-  - `congen`: Application service (port 8080)
+  - `congen`: Application service (port 8888)
   - `postgres`: Database service (port 5432)
 - **Deployments**:
   - `congen`: Main application

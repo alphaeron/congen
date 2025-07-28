@@ -131,7 +131,7 @@ deploy_infrastructure() {
     print_step "1" "Deploying Infrastructure"
     
     print_status "Deploying infrastructure components..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-1-infrastructure.yaml"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-1"; then
         print_success "Infrastructure deployed"
     else
         print_error "Failed to deploy infrastructure"
@@ -155,7 +155,7 @@ deploy_secrets() {
     print_step "2" "Deploying Secrets"
     
     print_status "Deploying secrets to Kubernetes..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-2-secrets.yaml"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-2"; then
         print_success "Secrets deployed"
     else
         print_error "Failed to deploy secrets"
@@ -168,7 +168,7 @@ deploy_keycloak_infrastructure() {
     print_step "3" "Deploying Keycloak Infrastructure"
     
     print_status "Deploying Keycloak to Kubernetes..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-3-keycloak.yaml"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-3"; then
         print_success "Keycloak infrastructure deployed"
     else
         print_error "Failed to deploy Keycloak infrastructure"
@@ -188,7 +188,7 @@ deploy_keycloak_infrastructure() {
 bootstrap_keycloak() {
     print_status "Setting up port forwarding for Keycloak..."
     # Start port forwarding in background
-    kubectl port-forward -n congen service/keycloak 8080:8081 &
+    kubectl port-forward -n congen service/keycloak 8080:8080 &
     local port_forward_pid=$!
     
     # Wait a moment for port forwarding to establish
@@ -286,10 +286,10 @@ update_secrets() {
 
 # Function to deploy application components
 deploy_applications() {
-    print_step "6" "Deploying Application Components"
+    print_step "5" "Deploying Application Components"
     
     print_status "Deploying Congen application components..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-4-applications.yaml"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-4"; then
         print_success "Application components deployed"
     else
         print_error "Failed to deploy application components"
@@ -312,25 +312,43 @@ deploy_applications() {
 
 # Function to deploy ingress
 deploy_ingress() {
-    print_step "7" "Deploying Ingress"
+    print_step "6" "Deploying Ingress"
     
-    # Check if stage-5-ingress.yaml exists for this environment
-    if [[ -f "k8s/overlays/${ENVIRONMENT}/stage-5-ingress.yaml" ]]; then
+    # Check if stage-5 directory exists for this environment
+    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-5" ]]; then
         print_status "Deploying ingress with environment-specific configuration..."
-        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5-ingress.yaml"; then
+        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
             print_success "Ingress deployed"
         else
             print_error "Failed to deploy ingress"
             exit 1
         fi
     else
-        print_status "No stage-5-ingress.yaml found for ${ENVIRONMENT}, skipping ingress deployment"
+        print_status "No stage-5 directory found for ${ENVIRONMENT}, skipping ingress deployment"
+    fi
+}
+
+# Function to deploy Horizontal Pod Autoscaler
+deploy_hpa() {
+    print_step "6" "Deploying Horizontal Pod Autoscaler"
+    
+    # Check if stage-6 directory exists for this environment
+    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-6" ]]; then
+        print_status "Deploying HPA with environment-specific configuration..."
+        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-6"; then
+            print_success "HPA deployed"
+        else
+            print_error "Failed to deploy HPA"
+            exit 1
+        fi
+    else
+        print_status "No stage-6 directory found for ${ENVIRONMENT}, skipping HPA deployment"
     fi
 }
 
 # Function to display final status
 show_final_status() {
-    print_step "8" "Deployment Summary"
+    print_step "7" "Deployment Summary"
     
     print_status "Deployment completed successfully!"
     print_status "Environment: ${ENVIRONMENT}"
@@ -396,8 +414,8 @@ main() {
                 deploy_applications
                 ;;
             6)
-                print_status "Deploying Stage 6: Ingress only"
-                deploy_ingress
+                print_status "Deploying Stage 6: Horizontal Pod Autoscaler only"
+                deploy_hpa
                 ;;
             *)
                 print_error "Invalid stage: ${STAGE}. Must be 1, 2, 3, 4, 5, or 6."
@@ -412,7 +430,7 @@ main() {
         apply_terraform
         update_secrets
         deploy_applications
-        deploy_ingress
+        deploy_hpa
     fi
     
     show_final_status

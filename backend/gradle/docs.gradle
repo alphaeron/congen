@@ -31,7 +31,7 @@ task generateApiDocs(type: Exec) {
     doLast {
         println "API documentation generation completed!"
         println "Documentation files created in: docs/"
-        println "Interactive documentation available at: http://localhost:8080/api/v1/swagger-ui.html"
+        println "Interactive documentation available at: http://localhost:8888/api/v1/swagger-ui.html"
     }
 }
 

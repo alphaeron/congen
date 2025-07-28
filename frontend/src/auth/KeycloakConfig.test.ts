@@ -12,7 +12,7 @@ describe('KeycloakConfig', () => {
       const config = getKeycloakConfig();
 
       expect(config).toEqual({
-        url: 'http://localhost:8081/auth',
+        url: 'http://localhost:8080/auth',
         realm: 'congen',
         clientId: 'congen-frontend',
       });

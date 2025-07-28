@@ -25,7 +25,7 @@ class OpenApiConfigTest {
     fun setUp() {
         val openApiProps =
             OpenApiProperties(
-                serverPort = "8080",
+                serverPort = "8888",
                 activeProfile = "test"
             )
         openApiConfig = OpenApiConfig(openApiProps)
@@ -99,7 +99,7 @@ class OpenApiConfigTest {
         assertEquals(2, servers.size)
 
         val localServer = servers[0]
-        assertEquals("http://localhost:8080/api/v1", localServer.url)
+        assertEquals("http://localhost:8888/api/v1", localServer.url)
         assertEquals("Local Development Server", localServer.description)
 
         val productionServer = servers[1]

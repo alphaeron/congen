@@ -32,7 +32,7 @@ data class OpenApiProperties(
     /**
      * The port on which the server is running.
      */
-    var serverPort: String = "8080",
+    var serverPort: String = "8888",
     /**
      * The active Spring profile (e.g., dev, test, prod).
      */

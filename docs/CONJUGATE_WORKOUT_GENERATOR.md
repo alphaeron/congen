@@ -576,7 +576,7 @@ End-to-end tests verify:
 
 ### Basic Program Generation
 ```bash
-curl -X POST "http://localhost:8080/conjugate_workout_generator/1"
+curl -X POST "http://localhost:8888/conjugate_workout_generator/1"
 ```
 
 ### Program with Week Progression

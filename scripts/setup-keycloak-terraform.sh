@@ -84,27 +84,9 @@ fi
 
 # Validate environment value
 if [[ "${ENVIRONMENT}" != "local" && "${ENVIRONMENT}" != "staging" && "${ENVIRONMENT}" != "production" ]]; then
-    print_error "Invalid environment: ${ENVIRONMENT}. Must be one of: local, staging, production"
+    echo -e "${RED}[ERROR]${NC} Invalid environment: ${ENVIRONMENT}. Must be one of: local, staging, production"
     usage
     exit 1
-fi
-
-# Prompt for admin credentials if not provided
-if [[ -z "${ADMIN_USERNAME}" ]]; then
-    read -r -p "Enter Keycloak admin username: " ADMIN_USERNAME
-    if [[ -z "${ADMIN_USERNAME}" ]]; then
-        print_error "Admin username is required."
-        exit 1
-    fi
-fi
-
-if [[ -z "${ADMIN_PASSWORD}" ]]; then
-    read -r -s -p "Enter Keycloak admin password: " ADMIN_PASSWORD
-    echo
-    if [[ -z "${ADMIN_PASSWORD}" ]]; then
-        print_error "Admin password is required."
-        exit 1
-    fi
 fi
 
 print_status() {
@@ -122,6 +104,49 @@ print_warning() {
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1" >&2
 }
+
+# Get admin credentials from terraform.tfvars if not provided
+if [[ -z "${ADMIN_USERNAME}" ]]; then
+    # Try to get from terraform.tfvars
+    tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    if [[ -f "${tfvars_file}" ]]; then
+        # Check if admin_username is defined in tfvars
+        tfvars_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "')
+        if [[ -n "${tfvars_username}" ]]; then
+            ADMIN_USERNAME="${tfvars_username}"
+            print_status "Using admin username from terraform.tfvars: ${ADMIN_USERNAME}"
+        else
+            # Use default from variables.tf
+            ADMIN_USERNAME="admin"
+            print_status "Using default admin username: ${ADMIN_USERNAME}"
+        fi
+    else
+        # Use default from variables.tf
+        ADMIN_USERNAME="admin"
+        print_status "Using default admin username: ${ADMIN_USERNAME}"
+    fi
+fi
+
+if [[ -z "${ADMIN_PASSWORD}" ]]; then
+    # Try to get from terraform.tfvars
+    tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
+    if [[ -f "${tfvars_file}" ]]; then
+        # Check if admin_password is defined in tfvars
+        tfvars_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "')
+        if [[ -n "${tfvars_password}" ]]; then
+            ADMIN_PASSWORD="${tfvars_password}"
+            print_status "Using admin password from terraform.tfvars"
+        else
+            print_error "Admin password not found in terraform.tfvars and not provided via command line"
+            print_error "Please set admin_password in ${tfvars_file} or provide via -p option"
+            exit 1
+        fi
+    else
+        print_error "terraform.tfvars file not found at ${tfvars_file}"
+        print_error "Please provide admin password via -p option"
+        exit 1
+    fi
+fi
 
 # Function to get admin token
 get_admin_token() {

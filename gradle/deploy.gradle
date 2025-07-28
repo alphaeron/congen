@@ -98,7 +98,7 @@ task deployStage {
         
         // Check if Stage 6 is being deployed to local environment
         if (stageNum == 6 && environment == 'local') {
-            throw new GradleException("Stage 6 (Ingress) is not applicable for local environment")
+            throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
     
@@ -115,7 +115,7 @@ task deployStage {
             3: "Keycloak Infrastructure", 
             4: "Terraform and Secrets Update",
             5: "Application Components",
-            6: "Ingress"
+            6: "Horizontal Pod Autoscaler"
         ]
         
         println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${environment}"

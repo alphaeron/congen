@@ -1,0 +1,1006 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: migrations-config
+  namespace: congen
+data:
+  changelog-root.xml: |-
+    <?xml version="1.0" encoding="utf-8" ?>
+    <databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+            http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+            http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+      <includeAll
+          errorIfMissingOrEmpty="false"
+          path="schema/"
+          relativeToChangelogFile="true"
+      />
+      <includeAll
+          errorIfMissingOrEmpty="false"
+          path="data/"
+          relativeToChangelogFile="true"
+      />
+    </databaseChangeLog>
+  liquibase.properties: |-
+    #  The liquibase.properties file stores properties which do not change often,
+    #  such as database connection information. Properties stored here save time
+    #  and reduce risk of mistyped command line arguments.
+    #  Learn more: https://docs.liquibase.com/concepts/connections/creating-config-properties.html
+    
+    # NOTE This is the path the file is mounted under, relative to the mounted location,
+    #      NOT relative to the current working directory where you are editing this file!
+    changelogFile: changelog-root.xml
+    
+    # Disable because se need to be able to fetch the schemas for the changelog xml.
+    liquibase.secureParsing: false
+    
+    # Logging Configuration
+    # logLevel controls the amount of logging information generated. If not set, the default logLevel is INFO.
+    # Valid values, from least amount of logging to most, are:
+    #   OFF, ERROR, WARN, INFO, DEBUG, TRACE, ALL
+    # If you are having problems, setting the logLevel to DEBUG and re-running the command can be helpful.
+    logLevel: INFO
+  schema_changelog-2025-07-12_01_add_is_active_to_program.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:8 labels:prod,test
+    --comment: Add is_active column to program table to track active programs per user
+    
+    ALTER TABLE program ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    
+    -- Add index for better performance when querying active programs
+    CREATE INDEX idx_program_user_active ON program(user_id, is_active);
+    
+    -- Add unique constraint to ensure only one active program per user
+    CREATE UNIQUE INDEX idx_program_user_active_unique ON program(user_id) WHERE is_active = TRUE; 
+  schema_changelog-2025-07-04_03_workout_program_tables.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:6 labels:prod,test
+    --comment: Add workout program tables for storing generated workout programs and their components.
+    
+    CREATE TABLE program (
+      id BIGSERIAL PRIMARY KEY NOT NULL,
+      user_id INTEGER NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      current_week_number INTEGER NOT NULL DEFAULT 1,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_program_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE programmed_workout (
+      id BIGSERIAL PRIMARY KEY NOT NULL,
+      program_id BIGINT NOT NULL,
+      day_number INTEGER NOT NULL CHECK (day_number > 0 AND day_number <= 365),  -- e.g., Day 1, Day 2...,
+      name VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_programmed_workout_program FOREIGN KEY(program_id) REFERENCES program(id) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE workout_stage_type (
+      id SERIAL PRIMARY KEY NOT NULL,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE TABLE workout_stage (
+      id BIGSERIAL PRIMARY KEY NOT NULL,
+      programmed_workout_id BIGINT NOT NULL,
+      stage_type_id INTEGER NOT NULL,
+      position SMALLINT NOT NULL CHECK (position > 0), -- ordering of stages in the workout
+      name VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_workout_stage_programmed_workout FOREIGN KEY(programmed_workout_id) REFERENCES programmed_workout(id) ON DELETE CASCADE,
+      CONSTRAINT fk_workout_stage_stage_type FOREIGN KEY(stage_type_id) REFERENCES workout_stage_type(id) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE programmed_exercise (
+      id BIGSERIAL PRIMARY KEY NOT NULL,
+      workout_stage_id BIGINT NOT NULL,
+      exercise_name VARCHAR(255) NOT NULL,
+      position INTEGER NOT NULL,
+      notes TEXT,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_programmed_exercise_workout_stage FOREIGN KEY(workout_stage_id) REFERENCES workout_stage(id) ON DELETE CASCADE,
+      CONSTRAINT fk_programmed_exercise_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE set_scheme (
+      id BIGSERIAL PRIMARY KEY NOT NULL,
+      programmed_exercise_id BIGINT NOT NULL,
+      set_number SMALLINT NOT NULL CHECK (set_number > 0),
+      is_amrap BOOLEAN DEFAULT FALSE,
+      is_emom BOOLEAN DEFAULT FALSE,
+      use_tempo BOOLEAN DEFAULT FALSE,
+      eccentric_tempo CHAR(1) CHECK (eccentric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', 'X')),
+      isometric_tempo CHAR(1) CHECK (isometric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', 'X')),
+      concentric_tempo CHAR(1) CHECK (concentric_tempo IN ('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'x', 'X')),
+      target_weight NUMERIC(6,2) CHECK (target_weight > 0),
+      performed_weight NUMERIC(6,2) CHECK (performed_weight > 0),
+      target_rep_count SMALLINT CHECK (target_rep_count > 0 AND target_rep_count <= 1000),
+      performed_rep_count SMALLINT CHECK (performed_rep_count > 0 AND performed_rep_count <= 1000),
+      rest_seconds SMALLINT CHECK (rest_seconds >= 0 AND rest_seconds <= 3600),
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_set_scheme_programmed_exercise FOREIGN KEY(programmed_exercise_id) REFERENCES programmed_exercise(id) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_program_user_id ON program(user_id);
+    CREATE INDEX idx_programmed_workout_program_id ON programmed_workout(program_id);
+    CREATE INDEX idx_workout_stage_programmed_workout_id ON workout_stage(programmed_workout_id);
+    CREATE INDEX idx_programmed_exercise_workout_stage_id ON programmed_exercise(workout_stage_id);
+    CREATE INDEX idx_programmed_exercise_exercise_name ON programmed_exercise(exercise_name);
+    CREATE INDEX idx_set_scheme_programmed_exercise_id ON set_scheme(programmed_exercise_id);
+    CREATE INDEX idx_set_scheme_set_number ON set_scheme(set_number);
+    CREATE INDEX idx_set_scheme_exercise_set ON set_scheme(programmed_exercise_id, set_number);
+    CREATE INDEX idx_set_scheme_amrap ON set_scheme(is_amrap);
+    CREATE INDEX idx_set_scheme_emom ON set_scheme(is_emom);
+    
+    -- Add unique constraints to prevent duplicates
+    CREATE UNIQUE INDEX idx_programmed_workout_program_day_unique ON programmed_workout(program_id, day_number);
+    CREATE UNIQUE INDEX idx_workout_stage_position_unique ON workout_stage(programmed_workout_id, position);
+    CREATE UNIQUE INDEX idx_set_scheme_exercise_set_unique ON set_scheme(programmed_exercise_id, set_number); 
+  schema_changelog-2024-05-31_01_initial_migration.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:1 labels:prod,test
+    --comment: Initial changeset for browsing exercise data.
+    -- Fake rollback - the initial changelog does not make sense to roll back
+    --rollback SELECT 1
+    
+    CREATE TABLE exercise (
+      name VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      movement_type VARCHAR(50) NOT NULL,
+      is_unilateral BOOLEAN NOT NULL DEFAULT FALSE,
+      is_upper BOOLEAN NOT NULL DEFAULT FALSE,
+      is_accessory BOOLEAN NOT NULL DEFAULT FALSE,
+      PRIMARY KEY (name)
+    );
+    
+    CREATE TABLE muscle (
+      name VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      PRIMARY KEY (name)
+    );
+    
+    CREATE TABLE equipment (
+      name VARCHAR(255) NOT NULL,
+      description TEXT NOT NULL,
+      PRIMARY KEY (name)
+    );
+    
+    CREATE TABLE exercise_muscle (
+      exercise_name VARCHAR(255) NOT NULL,
+      muscle_name VARCHAR(255) NOT NULL,
+      PRIMARY KEY (exercise_name, muscle_name),
+      CONSTRAINT fk_exercise_muscle_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE,
+      CONSTRAINT fk_exercise_muscle_muscle FOREIGN KEY(muscle_name) REFERENCES muscle(name) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE exercise_equipment (
+      exercise_name VARCHAR(255) NOT NULL,
+      equipment_name VARCHAR(255) NOT NULL,
+      PRIMARY KEY (exercise_name, equipment_name),
+      CONSTRAINT fk_exercise_equipment_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE,
+      CONSTRAINT fk_exercise_equipment_equipment FOREIGN KEY(equipment_name) REFERENCES equipment(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_exercise_movement_type ON exercise(movement_type);
+    CREATE INDEX idx_exercise_is_unilateral ON exercise(is_unilateral);
+    CREATE INDEX idx_exercise_is_upper ON exercise(is_upper);
+    CREATE INDEX idx_exercise_is_accessory ON exercise(is_accessory);
+    CREATE INDEX idx_exercise_muscle_muscle_name ON exercise_muscle(muscle_name);
+    CREATE INDEX idx_exercise_equipment_equipment_name ON exercise_equipment(equipment_name);
+    
+    -- Add composite indexes for common query patterns
+    CREATE INDEX idx_exercise_movement_accessory ON exercise(movement_type, is_accessory);
+    CREATE INDEX idx_exercise_upper_unilateral ON exercise(is_upper, is_unilateral);
+  schema_changelog-2025-07-17_01_user_weak_muscle.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:12 labels:prod,test
+    --comment: Add user_weak_muscle table for tracking user weak muscle groups.
+    
+    CREATE TABLE user_weak_muscle (
+      user_id INTEGER NOT NULL,
+      muscle_name VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, muscle_name),
+      CONSTRAINT fk_user_weak_muscle_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user_weak_muscle_muscle FOREIGN KEY(muscle_name) REFERENCES muscle(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_user_weak_muscle_user_id ON user_weak_muscle(user_id);
+    CREATE INDEX idx_user_weak_muscle_muscle_name ON user_weak_muscle(muscle_name); 
+  schema_changelog-2025-07-25_01_add_keycloak_user_id.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:13 labels:prod,test
+    --comment: Add keycloak_user_id column to user table for Keycloak integration.
+    
+    ALTER TABLE "user" ADD COLUMN keycloak_user_id VARCHAR(255) NOT NULL;
+    
+    -- Add unique constraint to ensure one-to-one mapping between Keycloak users and application users
+    CREATE UNIQUE INDEX idx_user_keycloak_user_id ON "user"(keycloak_user_id) WHERE keycloak_user_id IS NOT NULL;
+    
+    -- Add index for better performance when querying by Keycloak user ID
+    CREATE INDEX idx_user_keycloak_user_id_lookup ON "user"(keycloak_user_id);
+  schema_changelog-2025-07-16_01_add_band_weight_to_set_scheme.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:10 labels:prod,test
+    --comment: Add band weight field to set_scheme table for Dynamic Effort exercises.
+    
+    -- Add band weight field to set_scheme table
+    ALTER TABLE set_scheme 
+    ADD COLUMN band_weight_lbs NUMERIC(6,2) CHECK (band_weight_lbs >= 0);
+    
+    -- Add index for band-related queries
+    CREATE INDEX idx_set_scheme_band_weight_lbs ON set_scheme(band_weight_lbs); 
+  schema_changelog-2025-07-04_01_exercise_workout_type.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:2 labels:prod,test
+    --comment: Add exercise_workout_type relationship for dynamic_effort and maximal_effort workouts, with movement_type.
+    
+    CREATE TABLE exercise_workout_type (
+      exercise_name VARCHAR(255) NOT NULL,
+      movement_type VARCHAR(50) NOT NULL,
+      workout_type VARCHAR(20) NOT NULL CHECK (workout_type IN ('dynamic_effort', 'maximal_effort')),
+      PRIMARY KEY (exercise_name, movement_type, workout_type),
+      CONSTRAINT fk_exercise_workout_type_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_exercise_workout_type_workout_type ON exercise_workout_type(workout_type);
+    CREATE INDEX idx_exercise_workout_type_movement_type ON exercise_workout_type(movement_type);
+    CREATE INDEX idx_exercise_workout_type_movement_workout ON exercise_workout_type(movement_type, workout_type); 
+  schema_changelog-2025-07-12_02_user_weight_unit_preferences.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:9 labels:prod,test
+    --comment: Add user_weight_unit_preference table for tracking user weight unit preferences per exercise.
+    
+    CREATE TABLE user_weight_unit_preference (
+      user_id INTEGER NOT NULL,
+      exercise_name VARCHAR(255) NOT NULL,
+      preferred_unit VARCHAR(10) NOT NULL CHECK (preferred_unit IN ('KG', 'LBS')),
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, exercise_name),
+      CONSTRAINT fk_user_weight_unit_preference_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user_weight_unit_preference_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_user_weight_unit_preference_user_id ON user_weight_unit_preference(user_id);
+    CREATE INDEX idx_user_weight_unit_preference_exercise_name ON user_weight_unit_preference(exercise_name);
+    CREATE INDEX idx_user_weight_unit_preference_unit ON user_weight_unit_preference(preferred_unit);
+    
+    -- Add composite indexes for common query patterns
+    CREATE INDEX idx_user_weight_unit_preference_user_unit ON user_weight_unit_preference(user_id, preferred_unit); 
+  schema_changelog-2025-07-04_02_user_tables.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:3 labels:prod,test
+    --comment: Add user, user_equipment, user_program_preferences, and user_exercise_preference tables for user-specific workout generation.
+    
+    CREATE TABLE "user" (
+      id SERIAL PRIMARY KEY NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      age INTEGER NOT NULL CHECK (age >= 0 AND age <= 150),
+      height NUMERIC(5,2) NOT NULL, -- in cm
+      weight NUMERIC(6,2) NOT NULL, -- in kg
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    CREATE TABLE user_equipment (
+      user_id INTEGER NOT NULL,
+      equipment_name VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, equipment_name),
+      CONSTRAINT fk_user_equipment_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user_equipment_equipment FOREIGN KEY(equipment_name) REFERENCES equipment(name) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE user_program_preferences (
+      user_id INTEGER PRIMARY KEY,
+      program_days_per_week INTEGER NOT NULL CHECK (program_days_per_week >= 1 AND program_days_per_week <= 7),
+      session_time_length_in_minutes INTEGER NOT NULL CHECK (session_time_length_in_minutes >= 15 AND session_time_length_in_minutes <= 300),
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_user_program_preferences_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE
+    );
+    
+    CREATE TABLE user_exercise_preference (
+      user_id INTEGER NOT NULL,
+      exercise_name VARCHAR(255) NOT NULL,
+      should_avoid BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, exercise_name),
+      CONSTRAINT fk_user_exercise_preference_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user_exercise_preference_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_user_name ON "user"(name);
+    CREATE INDEX idx_user_equipment_user_id ON user_equipment(user_id);
+    CREATE INDEX idx_user_equipment_equipment_name ON user_equipment(equipment_name);
+    CREATE INDEX idx_user_exercise_preference_user_id ON user_exercise_preference(user_id);
+    CREATE INDEX idx_user_exercise_preference_exercise_name ON user_exercise_preference(exercise_name);
+    CREATE INDEX idx_user_exercise_preference_should_avoid ON user_exercise_preference(should_avoid);
+    
+    -- Add composite indexes for common query patterns
+    CREATE INDEX idx_user_exercise_preference_user_avoid ON user_exercise_preference(user_id, should_avoid);
+    
+    CREATE TABLE user_one_rep_max (
+      user_id INTEGER NOT NULL,
+      exercise_name VARCHAR(255) NOT NULL,
+      one_rep_max NUMERIC(6,2) NOT NULL CHECK (one_rep_max > 0 AND one_rep_max <= 1000), -- in kg
+      updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, exercise_name),
+      CONSTRAINT fk_user_one_rep_max_user FOREIGN KEY(user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+      CONSTRAINT fk_user_one_rep_max_exercise FOREIGN KEY(exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_user_one_rep_max_user_id ON user_one_rep_max(user_id);
+    CREATE INDEX idx_user_one_rep_max_exercise_name ON user_one_rep_max(exercise_name);
+  schema_changelog-2025-07-04_04_exercise_rotation_history.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:7 labels:prod,test
+    --comment: Add exercise_rotation_history table for tracking exercise usage in workout programs.
+    
+    CREATE TABLE exercise_rotation_history (
+      id BIGSERIAL PRIMARY KEY NOT NULL,
+      user_id BIGINT NOT NULL,
+      exercise_name VARCHAR(255) NOT NULL,
+      is_accessory BOOLEAN NOT NULL,
+      created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT fk_exercise_rotation_history_user FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+      CONSTRAINT fk_exercise_rotation_history_exercise FOREIGN KEY (exercise_name) REFERENCES exercise(name) ON DELETE CASCADE
+    );
+    
+    -- Add indexes for better performance
+    CREATE INDEX idx_exercise_rotation_history_user_id ON exercise_rotation_history(user_id);
+    CREATE INDEX idx_exercise_rotation_history_exercise_name ON exercise_rotation_history(exercise_name);
+    
+    -- Add composite indexes for common query patterns
+    CREATE INDEX idx_exercise_rotation_history_user_exercise ON exercise_rotation_history(user_id, exercise_name);
+  data_changelog-2025-01-27_01_workout_stage_type_data.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:11 labels:prod,test
+    --comment: Populate workout_stage_type table with common stage types for conjugate powerlifting programs.
+    
+    INSERT INTO workout_stage_type (name) VALUES
+      ('Warmup'),
+      ('Primary'),
+      ('Secondary'),
+      ('Accessory'),
+      ('Cooldown'),
+      ('Mobility'),
+      ('Conditioning'); 
+  data_changelog-2024-05-31_01_initial_exercise_data_population.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:1 labels:prod,test
+    --comment: Populate initial exercise data into the database.
+    -- Fake rollback - the initial changelog does not make sense to roll back
+    --rollback SELECT 1
+    
+    -- Muscles
+    INSERT INTO muscle (name, description) VALUES ('adductors', 'The function of the adductor muscles is to pull the thighs together and rotate the upper leg inwards, as well as stabilizing the hip.');
+    INSERT INTO muscle (name, description) VALUES ('anterior deltoid', 'The anterior deltoid helps move your arm forward. They connect to your clavicle.');
+    INSERT INTO muscle (name, description) VALUES ('biceps', 'The main functions of the biceps are the flexion and supination (outward rotation) of the forearm.');
+    INSERT INTO muscle (name, description) VALUES ('calves', 'Your calf muscle supports you when you stand and enables you to move your foot and your lower leg. It propels (pushes) you forward when you walk or run. It also allows you to jump, rotate your ankle, flex your foot and "lock" your knee.');
+    INSERT INTO muscle (name, description) VALUES ('erector spinae', 'The main actions of the erector spinae muscles are to extend the back, laterally flex the back, and maintain correct posture and curvature of the spinal column.');
+    INSERT INTO muscle (name, description) VALUES ('glutes', 'Gluteus maximus is the primary hip extensor muscle, and also the largest of the three gluteals. Their biggest job is in keeping us upright and pushing our bodies forward.');
+    INSERT INTO muscle (name, description) VALUES ('hamstrings', 'Your hamstring muscles serve a variety of functions, including: Bending the knee joint. Extending the hip joint. Rotating the hip joint.');
+    INSERT INTO muscle (name, description) VALUES ('hip flexors', 'Hip flexors are a group of muscles responsible for flexing the hip and raising the legs. These muscles are essential in movement as you use this muscle group every time you stand or take a step; they also help maintain your stability and posture.');
+    INSERT INTO muscle (name, description) VALUES ('lateral deltoid', 'The lateral deltoid helps move your arm to the side, as well as up and down. They connect to your acromion, a bony nob on your shoulder blade.');
+    INSERT INTO muscle (name, description) VALUES ('lats', 'Functionally, the latissimus dorsi muscle belongs to the muscles of the scapular motion. This muscle is able to pull the inferior angle of the scapula in various directions, producing movements on the shoulder joint (internal rotation, adduction and extension of the arm).');
+    INSERT INTO muscle (name, description) VALUES ('neck', 'You have more than 20 neck muscles, extending from the base of your skull and jaw down to your shoulder blades and collarbone. These muscles support and stabilize your head, neck and the upper part of your spine.');
+    INSERT INTO muscle (name, description) VALUES ('obliques', 'Rotating and twisting the trunk of the body. Stabilizing the core of the body. Moving the spine in any direction possible. Assisting in bending the trunk from side to side.');
+    INSERT INTO muscle (name, description) VALUES ('pec major', 'The primary functions are flexion, adduction, and internal rotation of the humerus. The pectoral major may colloquially be referred to as "pecs", "pectoral muscle", or "chest muscle", because it is the largest and most superficial muscle in the chest area.');
+    INSERT INTO muscle (name, description) VALUES ('pec minor', 'The primary actions of this muscle include the stabilization, depression, abduction or protraction, internal rotation and downward rotation of the scapula.');
+    INSERT INTO muscle (name, description) VALUES ('quadriceps', 'The main functions of the quadriceps are to extend the leg at the knee joint and flex the thigh at the hip joint. They also help stabilize the knee by holding the patella inside a groove in the femur, or thigh bone.');
+    INSERT INTO muscle (name, description) VALUES ('rear deltoid', 'The rear deltoid helps move your arm backwards. They connect to the flat surface of your shoulder blade.');
+    INSERT INTO muscle (name, description) VALUES ('rectus abdominis', 'The main actions of the rectus abdominis are flexion of the trunk (thoratic and lumbar spine), tensing the anterior abdominal wall and compression the contents of the abdomen, and also plays a role in core stability.');
+    INSERT INTO muscle (name, description) VALUES ('rhomboids', 'Functionally, the rhomboid muscles retract, elevate and rotate the scapula. They also protract the medial border of the scapula, keeping it in position at the posterior thoracic wall.');
+    INSERT INTO muscle (name, description) VALUES ('rotator cuff', 'During arm movements, the rotator muscles contract and prevent the sliding of the head of the humerus, allowing full range of motion and providing stability. Additionally, rotator cuff muscles help in the mobility of the shoulder joint by facilitating abduction, medial rotation, and lateral rotation.');
+    INSERT INTO muscle (name, description) VALUES ('serratus anterior', 'When the shoulder girdle is fixed, all three parts of the serratus anterior muscle work together to lift the ribs, assisting with respiration. The serratus anterior, also known as the "boxers muscle", is largely responsible for the protraction of the scapula, a movement that occurs when throwing a punch');
+    INSERT INTO muscle (name, description) VALUES ('teres major', 'The teres major functions synergistically with the latissimus dorsi to extend, adduct, and internally rotate the humerus.');
+    INSERT INTO muscle (name, description) VALUES ('teres minor', 'As a rotator cuff muscle, the teres minor stabilizes the ball-and-socket glenohumeral joint by helping hold the humeral head (ball) into the shallow glenoid cavity of the scapula (socket). The teres minor also laterally or externally rotates the arm at the shoulder joint.');
+    INSERT INTO muscle (name, description) VALUES ('traps', 'The function of the trapezius is to stabilize and move the scapula. The upper fibers can elevate and upwardly rotate the scapula and extend the neck. The middle fibers adduct (medially retract) the scapula. The lower fibers depress and aid the upper fibers in upwardly rotating the scapula.');
+    INSERT INTO muscle (name, description) VALUES ('triceps', 'The triceps brachii is a large, thick muscle on the dorsal part of the upper arm. It often appears in the shape of a horseshoe on the posterior aspect of the arm. The primary function of the triceps is the extension of the elbow joint.');
+    INSERT INTO muscle (name, description) VALUES ('upper back', 'The intrinsic muscles of the scapula include the rotator cuff muscles, teres major, subscapularis, teres minor, and infraspinatus. These muscles attach the scapular surface and assist with abduction and external and internal rotation of the glenohumeral joint.');
+    
+    -- Equipment
+    
+    INSERT INTO equipment (name, description) VALUES ('ab wheel', 'A wheel device with handles on either side.');
+    INSERT INTO equipment (name, description) VALUES ('adjustable bench', 'A bench whose back pad (and sometimes seat) allows you to change the angle of elevation.');
+    INSERT INTO equipment (name, description) VALUES ('airex pad', 'An active therapy and training device made out of soft foam.');
+    INSERT INTO equipment (name, description) VALUES ('bands', 'An elastic band that provides varying levels of resistance, depending on the band itself.');
+    INSERT INTO equipment (name, description) VALUES ('bench', 'A bench with a foam pad, commonly used for the bench press or other similar exercises.');
+    INSERT INTO equipment (name, description) VALUES ('box', 'a piece of training equipment used for plyometric exercises requiring jumping or dropping off at certain heights.');
+    INSERT INTO equipment (name, description) VALUES ('dumbbells', 'Dumbbells are small bars that fit in your hand and have equal weights on either side.');
+    INSERT INTO equipment (name, description) VALUES ('ghr', 'A specialized piece of equipment used primarily to strengthen the glutes and hamstrings.');
+    INSERT INTO equipment (name, description) VALUES ('hurdle', 'An upright frame to jump over.');
+    INSERT INTO equipment (name, description) VALUES ('iron neck', 'A specialized device used to improve strength and mobility in the head, neck, and spine.');
+    INSERT INTO equipment (name, description) VALUES ('kettlebell', 'A cast-iron or cast-steel ball with a handle attached to the top.');
+    INSERT INTO equipment (name, description) VALUES ('landmine', 'A barbell anchored to the floor with a weight on the other end.');
+    INSERT INTO equipment (name, description) VALUES ('med ball', 'A medicine ball is a weighted ball often used for rehabilitation and strength training.');
+    INSERT INTO equipment (name, description) VALUES ('physioball', 'A ball constructed of soft elastic, and filled with air.');
+    INSERT INTO equipment (name, description) VALUES ('power bar', 'A universal weightlifting bar that can be used to perform a variety of exercises.');
+    INSERT INTO equipment (name, description) VALUES ('power rack', 'A piece of weight training equipment that functions as a mechanical spotter for free weight barbell exercises without the movement restrictions imposed by equipment.');
+    INSERT INTO equipment (name, description) VALUES ('pull-up bar', 'A bar anchored above your head-level that allows you to hang without your feet touching the ground, which can be used to perform a variety of exercises such as pull-ups, chin-ups, and muscle-ups.');
+    INSERT INTO equipment (name, description) VALUES ('reverse hyper', 'The Reverse Hyper is used for prehab, and rehab, to strengthen the lower back and perform many other exercise variations on it to avoid accommodation.');
+    INSERT INTO equipment (name, description) VALUES ('safety squat bar', 'A steel-cambered bar with padding in the middle and handles on both sides. The padding makes it comfortable to rest the bar on your neck and shoulders during squats.');
+    INSERT INTO equipment (name, description) VALUES ('sliders', 'A pair of disks or carpet sliders that provide an unstable training surface, allowing you to simulate many different slideboard exercises');
+    INSERT INTO equipment (name, description) VALUES ('trap bar', 'A hexagonally-shaped bar with handles inside the hexagon.');
+    INSERT INTO equipment (name, description) VALUES ('trx', 'The TRX System, also known as Total Resistance Exercises, refers to a specialized form of suspension training.');
+    
+    -- Exercises and join tables.
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Chin-Up', 'Standard chin-up.', 'vertical_pull', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'rear deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'rhomboids');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'teres major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chin-Up', 'lats');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Chin-Up', 'pull-up bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Overhead Kettlebell Snatch', 'Start with a kettlebell in one hand, feet spread about 1.5 times shoulder distance with the kettlebell between your legs, bent over slightly.  Swing the kettlebell up with an explosive hip extension and snatch it above your head.  Swing the kettlebell back between your legs down and repeat.', 'hinge', true, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'hip flexors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Kettlebell Snatch', 'lateral deltoid');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Overhead Kettlebell Snatch', 'kettlebell');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Ab Wheel', 'Ab wheel tool.', 'core', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'teres major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'serratus anterior');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'hip flexors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Wheel', 'obliques');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Ab Wheel', 'ab wheel');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Airex pad RDL reach-out', 'Perform a single leg RDL on an Airex pad, reaching both arms out straight overhead as you do the RDL for added challenge.', 'core', true, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'obliques');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Airex pad RDL reach-out', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Airex pad RDL reach-out', 'airex pad');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('TRX Push-Up', 'Perform a push-up while supporting yourself with TRX straps.', 'horizontal_push', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('TRX Push-Up', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('TRX Push-Up', 'pec minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('TRX Push-Up', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('TRX Push-Up', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('TRX Push-Up', 'serratus anterior');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('TRX Push-Up', 'rectus abdominis');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('TRX Push-Up', 'trx');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('GHR', 'Glute/Ham Raise machine.', 'core', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('GHR', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('GHR', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('GHR', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('GHR', 'erector spinae');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('GHR', 'ghr');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Iron Neck', 'Iron neck tool.', 'core', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Iron Neck', 'neck');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Iron Neck', 'iron neck');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('1-Arm Contralateral Stability Row', 'Start with your knees on a bosu ball or airex pad.  Place one arm on a physioball in front of you, and the other grabbing a dumbbell by your side.  Do a 1-arm dumbbell row as you keep yourself balanced with the other arm.  This challenges the stability in the shoulder of the arm keeping you balanced.', 'horizontal_pull', true, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('1-Arm Contralateral Stability Row', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('1-Arm Contralateral Stability Row', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('1-Arm Contralateral Stability Row', 'rear deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('1-Arm Contralateral Stability Row', 'hip flexors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('1-Arm Contralateral Stability Row', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('1-Arm Contralateral Stability Row', 'lateral deltoid');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('1-Arm Contralateral Stability Row', 'physioball');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('1-Arm Contralateral Stability Row', 'airex pad');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('1-Arm Contralateral Stability Row', 'dumbbells');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Banded Safety Bar Squat', 'Squat with a safety bar.', 'squat', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Safety Bar Squat', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Safety Bar Squat', 'safety squat bar');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Safety Bar Squat', 'bands');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Romanian Deadlift', 'Start with the bar in both hands at shin level, with the knees slightly bent.  From there, finish the deadlift, however when lowering the bar return to the RDL starting position rather than letting the bar touch the ground.', 'hinge', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Romanian Deadlift', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Romanian Deadlift', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Romanian Deadlift', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Romanian Deadlift', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Romanian Deadlift', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Romanian Deadlift', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Romanian Deadlift', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Deadlift', 'Classical deadlift.', 'hinge', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Deadlift', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Deadlift', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Deadlift', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Deadlift', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Deadlift', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Deadlift', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Sumo Deadlift', 'Start with the feed about twice shoulders distance apart.  Grab the bar with both hands closer to the center of the bar about shoulders distance apart, and deadlift from here.', 'hinge', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sumo Deadlift', 'erector spinae');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Sumo Deadlift', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Trap Bar Deadlift', 'Deadlift with a Trap/Hex bar.', 'hinge', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Trap Bar Deadlift', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Trap Bar Deadlift', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Trap Bar Deadlift', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Trap Bar Deadlift', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Trap Bar Deadlift', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Trap Bar Deadlift', 'trap bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Split Squat', 'Start with the weight on the back, and then reach one foot behind you and place it on the toe.  Squat from here, using the front leg primarily, and the rear leg for balance.', 'squat', true, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Squat', 'hip flexors');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Split Squat', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Safety Bar Squat', 'Squat with a safety bar.', 'squat', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Safety Bar Squat', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Safety Bar Squat', 'safety squat bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Front Squat', 'Start with the bar in a front rack position, and squat from here, keeping the torso upright.', 'squat', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Squat', 'rectus abdominis');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Front Squat', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Back Squat', 'Start with the bar in a back rack position, and squat from here, keeping the torso upright.', 'squat', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Back Squat', 'rectus abdominis');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Back Squat', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Zercher Squat', 'Start with the bar in the crooks of the elbows, palms facing you.  Squat from here, keeping the torso upright.', 'squat', false, false, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'obliques');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'upper back');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'biceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Zercher Squat', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Landmine Row', 'Start with the landmine between your legs, and hinge your hips and lean forward.  Grab the landmine in front of you, and row it up to your chest. Lower it back to the ground in a controlled fashion.', 'horizontal_pull', true, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'rear deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'teres major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'teres minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'pec major');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Landmine Row', 'power bar');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Landmine Row', 'landmine');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Chest-Supported Dumbbell Row', 'Start with your chest on an inclined bench and 2 dumbbells in either hand off to the side.  Squeeze your shoulderblades together as you pull the dumbbells straight up, keeping a neutral spine.', 'horizontal_pull', true, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'teres minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'teres major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'rhomboids');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'rear deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Chest-Supported Dumbbell Row', 'biceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Chest-Supported Dumbbell Row', 'adjustable bench');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Chest-Supported Dumbbell Row', 'dumbbells');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Inverted Row', 'Start by grabbing a handle in front of you, and hang off it with your feet on a box in front of you.  Pull your chest up to the handle, and control your descent back down.', 'horizontal_pull', true, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'rhomboids');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'teres minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'rear deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Inverted Row', 'biceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Inverted Row', 'trx');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Upright Row', 'Start with the bar in an overhand grip in front of you. Lift the bar up along your body to your shoulders keeping the elbows up and back. Lower the bar to the starting position.', 'vertical_pull', true, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'teres minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Upright Row', 'serratus anterior');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Upright Row', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Bent-Over Row', 'Hinge your hips and lean forward, grabbing the bar in front of you. Pull the bar straight up to your solar plexus. Lower the bar to the ground in a controlled fashion and repeat.', 'vertical_pull', true, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'rear deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'teres minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'teres major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bent-Over Row', 'rhomboids');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Bent-Over Row', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('SL RDL', 'Single leg romanian deadlift.', 'hinge', true, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'obliques');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('SL RDL', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('SL RDL', 'power bar');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('SL RDL', 'dumbbells');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('SL RDL', 'kettlebell');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Reverse Hyper', 'Reverse hyperextension machine.', 'hinge', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reverse Hyper', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reverse Hyper', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reverse Hyper', 'hamstrings');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Reverse Hyper', 'reverse hyper');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Cossack Squat', 'Start with your feet together.  Step one foot off to the side a foots distance offset forward from the other in a wide stance.  Squat down on that leg as you keep the other leg straight.  As you raise yourself back up, step the feet together, then repeat on the other side.', 'lunge', true, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Cossack Squat', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Cossack Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Cossack Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Cossack Squat', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Cossack Squat', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Cossack Squat', 'erector spinae');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Cossack Squat', 'dumbbells');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Cossack Squat', 'kettlebell');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Cossack Squat', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Step-Up', 'Start with the right foot.  Step the right foot up on a box in front of you.  Try to keep the left foot up on the heel to avoid cheating.  Use the right leg to raise yourself off the ground.  Once the right leg is straight, bring the left knee up.  Return the left foot back.  Use your right foot to lower yourself to the ground, touching the left heel to the ground.', 'lunge', true, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Step-Up', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Step-Up', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Step-Up', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Step-Up', 'glutes');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Step-Up', 'box');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Banded Bench Press', 'Standard bench press', 'horizontal_push', false, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Bench Press', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Bench Press', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Bench Press', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Bench Press', 'serratus anterior');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Bench Press', 'power bar');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Bench Press', 'bands');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Bench Press', 'Standard bench press', 'horizontal_push', false, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bench Press', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bench Press', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bench Press', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Bench Press', 'serratus anterior');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Bench Press', 'bench');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Bench Press', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Incline Bench Press', 'Bench press with an upward incline.', 'horizontal_push', false, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Incline Bench Press', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Incline Bench Press', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Incline Bench Press', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Incline Bench Press', 'serratus anterior');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Incline Bench Press', 'adjustable bench');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Incline Bench Press', 'power bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Floor Press', 'Bench press laying with your back on the ground.', 'horizontal_push', false, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Floor Press', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Floor Press', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Floor Press', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Floor Press', 'serratus anterior');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Floor Press', 'power bar');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Floor Press', 'power rack');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Overhead Press', 'Standard overhead press.', 'vertical_push', false, true, false);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'serratus anterior');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'obliques');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead Press', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Overhead Press', 'power bar');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Overhead Press', 'power rack');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('MB Chest Pass (concentric only)', 'Start with a med ball against your chest.  Throw the med ball from there.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Chest Pass (concentric only)', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Chest Pass (concentric only)', 'pec minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Chest Pass (concentric only)', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Chest Pass (concentric only)', 'triceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('MB Chest Pass (concentric only)', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Scoop Toss', 'Stand with your feet 6-12 inches wider then shoulder width apart and bend slightly at the knees, with a med ball in your hands. Raise the ball up over your head and then bring it down between your legs and scoop throw it at the wall in front of you. Step forward as you throw the ball.  Catch and repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Scoop Toss', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Scoop Toss', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Scoop Toss', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Scoop Toss', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Scoop Toss', 'pec minor');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Scoop Toss', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('MB Shot Put (concentric only)', 'Start with a med ball in one hand against your shoulder, you can use the other hand to support it.  Throw the med ball from there in a shot put motion.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put (concentric only)', 'quadriceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('MB Shot Put (concentric only)', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('I Position MB Slam (concentric only)', 'Start with a med ball in both hands raised overhead.  Slam the med ball to the ground from the overhead position.  Gather the med ball and then repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam (concentric only)', 'quadriceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position MB Slam (concentric only)', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Overhead MB Throw w/ Catch', 'Start with a med ball in both hands.  Pull the med ball into your chest, and then throw it overhead against the wall in front of you.  Catch it as it falls back down.  Repeat', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch', 'traps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Overhead MB Throw w/ Catch', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('I/Y/T Sliders', 'Perform the I/Y/T exercise using sliders while kneeling on the ground.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T Sliders', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T Sliders', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T Sliders', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T Sliders', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T Sliders', 'rhomboids');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I/Y/T Sliders', 'sliders');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Overhead MB Throw w/ Catch & Squat', 'Start with a med ball in both hands.  Pull the med ball into your chest, and then throw it overhead against the wall in front of you.  Catch it as it falls back down.  Perform a squat as you catch the med ball.  Repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'quadriceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Overhead MB Throw w/ Catch & Squat', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('I/Y/T TRX', 'Perform the I/Y/T exercise using a TRX.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T TRX', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T TRX', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T TRX', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T TRX', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I/Y/T TRX', 'rhomboids');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I/Y/T TRX', 'trx');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('MB Shot Put', 'Start with a med ball in one hand, you can use the other hand to support it.  Quickly pull the med ball to your shoulder, then throw the med ball from there in a shot put motion.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'adductors');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'quadriceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('MB Shot Put', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('I Position MB Slam', 'Start with a med ball in both hands.  Raise the ball overhead as you extend your legs and raise up on your toes. Slam the med ball to the ground from the overhead position.  Gather the med ball and then repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'lateral deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'rectus abdominis');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'biceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'quadriceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position MB Slam', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Plyo Push-Up', 'Perform a push-up, except at the top of the motion throw yourself off the ground and clap your hands.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plyo Push-Up', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plyo Push-Up', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plyo Push-Up', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plyo Push-Up', 'serratus anterior');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Supine Med Ball Draw and Throw', 'Laying on your back, do a med ball chest pass, then catch the ball as it falls down and repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Supine Med Ball Draw and Throw', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Supine Med Ball Draw and Throw', 'pec minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Supine Med Ball Draw and Throw', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Supine Med Ball Draw and Throw', 'triceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Supine Med Ball Draw and Throw', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Continuous Med Ball Chest Pass', 'Perform med ball chest passes continuously close to a wall so you can catch the ball and repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Med Ball Chest Pass', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Med Ball Chest Pass', 'pec minor');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Med Ball Chest Pass', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Med Ball Chest Pass', 'triceps');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Continuous Med Ball Chest Pass', 'med ball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Physioball IYT Position Dribbles', 'With your arms on a stability ball, dribble your arms going from the I, to Y, to T position one each quickly, and repeat.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Physioball IYT Position Dribbles', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Physioball IYT Position Dribbles', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Physioball IYT Position Dribbles', 'lats');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Physioball IYT Position Dribbles', 'rotator cuff');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Physioball IYT Position Dribbles', 'rhomboids');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Physioball IYT Position Dribbles', 'physioball');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Continuous Banded Bench Press', 'Perform a banded bench press as quickly as posssible.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Banded Bench Press', 'pec major');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Banded Bench Press', 'anterior deltoid');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Banded Bench Press', 'triceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Continuous Banded Bench Press', 'serratus anterior');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Continuous Banded Bench Press', 'bench');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Continuous Banded Bench Press', 'bands');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('I Position Banded Tantrum', 'With your arms on a band in front of you in an I position as you lay on your stomach, hit the band as hard as you can, throwing your arms in the I position against the band.', 'plyometric', false, true, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position Banded Tantrum', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position Banded Tantrum', 'rotator cuff');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position Banded Tantrum', 'power rack');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position Banded Tantrum', 'bands');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Pogo', 'Begin the drill in an athletic posture with the feet hip/shoulder-width apart. Raise heels up and stand on the balls of your feet. Quickly bounce up and down on the balls of your feet. Don’t let your heels touch the ground.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Pogo', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Pogo', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Pogo', 'hamstrings');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Drop - Tall to Short (hands on hips)', 'Begin the drill standing in an athletic posture.  Lift your arms overhead as you raise heels up and stand on the balls of your feet.  Quickly drop down into a squat position throwing the arms back and landing on your heels.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Drop - Tall to Short (hands on hips)', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Drop - Tall to Short (hands on hips)', 'hamstrings');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Trap Bar Tall to Short', 'Begin the drill in an athletic posture with the feet hip/shoulder-width apart with a trap bar in hands. Raise heels up and stand on the balls of your feet. Quickly drop down into a squat position landing on your heels.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar Tall to Short', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar Tall to Short', 'hamstrings');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Trap Bar Tall to Short', 'trap bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Drop - SL Trap Bar Tall to Short (hands on hips)', 'Begin the drill standing with a trap bar in hands on one leg.  Raise your heel up and stand on the ball of your foot.  Quickly drop down into a squat position landing on your heel.', 'plyometric', true, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Drop - SL Trap Bar Tall to Short (hands on hips)', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Drop - SL Trap Bar Tall to Short (hands on hips)', 'hamstrings');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Drop - SL Trap Bar Tall to Short (hands on hips)', 'trap bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Box', 'Facing the box with your feet shoulder width apart, bend your knees and push your hips back in a hinge motion. Jump off the balls of your feet, swinging your arms forward to launch yourself onto the top of the box. Land on the box gently, with your body and feet in their original position (knees bent, hips back). Jump or step off the box, returning to the starting position.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Box', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Box', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Box', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Box', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Box', 'box');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Seated to Box', 'Start seated in front of a box.  Quickly stand up and then perform a box jump.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Seated to Box', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Seated to Box', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Seated to Box', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Seated to Box', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Seated to Box', 'box');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Hop - Box', 'This movement is the same as a box jump, except performed with a quicker, hopping motion.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Box', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Box', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Box', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Box', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Hop - Box', 'box');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Lateral + Medial Hurdle', 'Start standing sideways by a hurdle.  Raise heels up and stand on the balls of your feet. Squat down, then explode up and to the side, jumping sideways over the hurdle.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Lateral + Medial Hurdle', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Lateral + Medial Hurdle', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Lateral + Medial Hurdle', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Lateral + Medial Hurdle', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Lateral + Medial Hurdle', 'hurdle');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Hop - Pogo', 'This movement is the same as a pogo jump, except performed with a quicker, hopping motion.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Pogo', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Pogo', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Pogo', 'hamstrings');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Hurdle', 'Stand facing collapsible hurdles or barriers. Squat down and jump over hurdle with feet together using a double arm swing. Upon landing, immediately jump over next hurdle.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle', 'hip flexors');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Hurdle', 'hurdle');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Trap Bar', 'Begin squatting down feet shoulders width apart grabbing a trap bar (like you are about to start a deadlift).  Explosively lift the bar up like doing a deadlift, but instead of stopping at lockout jump upwards with the weight.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar', 'erector spinae');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar', 'traps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Trap Bar', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Trap Bar', 'trap bar');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Concentric', 'This is a jumping motion with just the concentric phase.  Squat down, and pause unlike you would for a regular jump.  Then, from that position, swing the arms backa and then jump.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric', 'calves');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Concentric (tuck)', 'This is the same as a concentric jump, except as you jump tuck your knees to your chest.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric (tuck)', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric (tuck)', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric (tuck)', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric (tuck)', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Concentric (tuck)', 'hip flexors');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Hurdle Concentric', 'This is the same as a hurdle jump, except pause after squatting down, and then jump using only the concentric portion of the movement.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle Concentric', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle Concentric', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle Concentric', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Hurdle Concentric', 'calves');
+    INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Jump - Hurdle Concentric', 'hurdle');
+    INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Hop - Concentric (tuck)', 'This is the same as a concentric jump, except tuck your knees to your chest in the air.', 'plyometric', false, false, true);
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'glutes');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'hamstrings');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'quadriceps');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'calves');
+    INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'hip flexors');
+  data_changelog-2025-07-04_01_exercise_workout_type_data_population.sql: |-
+    --liquibase formatted sql
+    
+    --changeset John Matty:2 labels:prod,test
+    --comment: Populate exercise_workout_type table with relationships based on movement_type and is_accessory.
+    -- Fake rollback - data population does not make sense to roll back
+    --rollback SELECT 1
+    
+    -- Dynamic Effort exercises (typically compound movements that are not accessories)
+    -- Horizontal Push - Dynamic Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bench Press', 'horizontal_push', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Incline Bench Press', 'horizontal_push', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Floor Press', 'horizontal_push', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Bench Press', 'horizontal_push', 'dynamic_effort');
+    
+    -- Vertical Push - Dynamic Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Overhead Press', 'vertical_push', 'dynamic_effort');
+    
+    -- Horizontal Pull - Dynamic Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bent-Over Row', 'vertical_pull', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Landmine Row', 'horizontal_pull', 'dynamic_effort');
+    
+    -- Vertical Pull - Dynamic Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Chin-Up', 'vertical_pull', 'dynamic_effort');
+    
+    -- Squat - Dynamic Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Safety Bar Squat', 'squat', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Front Squat', 'squat', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Back Squat', 'squat', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Zercher Squat', 'squat', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Safety Bar Squat', 'squat', 'dynamic_effort');
+    
+    -- Hinge - Dynamic Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Deadlift', 'hinge', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Sumo Deadlift', 'hinge', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Trap Bar Deadlift', 'hinge', 'dynamic_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Romanian Deadlift', 'hinge', 'dynamic_effort');
+    
+    -- Maximal Effort exercises (typically compound movements that are not accessories)
+    -- Horizontal Push - Maximal Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bench Press', 'horizontal_push', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Incline Bench Press', 'horizontal_push', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Floor Press', 'horizontal_push', 'maximal_effort');
+    
+    -- Vertical Push - Maximal Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Overhead Press', 'vertical_push', 'maximal_effort');
+    
+    -- Horizontal Pull - Maximal Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Bent-Over Row', 'vertical_pull', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Landmine Row', 'horizontal_pull', 'maximal_effort');
+    
+    -- Vertical Pull - Maximal Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Chin-Up', 'vertical_pull', 'maximal_effort');
+    
+    -- Squat - Maximal Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Safety Bar Squat', 'squat', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Front Squat', 'squat', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Back Squat', 'squat', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Zercher Squat', 'squat', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Split Squat', 'squat', 'maximal_effort');
+    
+    -- Hinge - Maximal Effort
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Deadlift', 'hinge', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Sumo Deadlift', 'hinge', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Trap Bar Deadlift', 'hinge', 'maximal_effort');
+    INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Romanian Deadlift', 'hinge', 'maximal_effort');

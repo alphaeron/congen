@@ -7,7 +7,7 @@ import { DEPLOYMENT_ENVIRONMENT } from '../globals';
  * Mapping of various environments to the correspoinding backend endpoint.
  */
 const _ENVIRONMENT_TO_ENDPOINT_MAPPING = {
-  loc: 'http://localhost:8080/',
+  loc: 'http://localhost:8888/',
   staging: 'https://staging.congen.com/',
   production: 'https://congen.com/',
 };
@@ -18,7 +18,7 @@ const _ENVIRONMENT_TO_ENDPOINT_MAPPING = {
 const _BASE_URL =
   _ENVIRONMENT_TO_ENDPOINT_MAPPING[
     DEPLOYMENT_ENVIRONMENT as keyof typeof _ENVIRONMENT_TO_ENDPOINT_MAPPING
-  ] || 'http://localhost:8080/';
+  ] || 'http://localhost:8888/';
 
 /**
  * Congen backend endpoint.

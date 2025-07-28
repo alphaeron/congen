@@ -710,16 +710,16 @@
       "clientId": "congen-backend",
       "name": "congen-backend",
       "description": "Congen backend service account",
-      "rootUrl": "http://localhost:8080/",
-      "adminUrl": "http://localhost:8080/",
-      "baseUrl": "http://localhost:8080/",
+      "rootUrl": "http://localhost:8888/",
+      "adminUrl": "http://localhost:8888/",
+      "baseUrl": "http://localhost:8888/",
       "surrogateAuthRequired": false,
       "enabled": true,
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "congen-backend-secret",
       "redirectUris": [
-        "http://localhost:8080/"
+        "http://localhost:8888/"
       ],
       "webOrigins": [
         "*"
@@ -739,7 +739,7 @@
         "oidc.ciba.grant.enabled": "false",
         "client.secret.creation.time": "1753495994",
         "backchannel.logout.session.required": "true",
-        "post.logout.redirect.uris": "http://localhost:8080/",
+        "post.logout.redirect.uris": "http://localhost:8888/",
         "oauth2.device.authorization.grant.enabled": "false",
         "backchannel.logout.revoke.offline.tokens": "false"
       },

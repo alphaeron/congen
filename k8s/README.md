@@ -4,14 +4,9 @@ This directory contains the Kubernetes manifests for deploying the Congen applic
 
 ## Overview
 
-The staged deployment approach addresses the chicken-and-egg problem of deploying applications that depend on Keycloak secrets that are only available after Keycloak is provisioned. The deployment is split into six main stages:
+The staged deployment approach addresses the chicken-and-egg problem of deploying applications that depend on Keycloak secrets that are only available after Keycloak is provisioned. The deployment is split into stages as described below.
 
-1. **Stage 1**: Deploy infrastructure components (namespace, PostgreSQL for local, network policies)
-2. **Stage 2**: Deploy secrets with dummy values (bootstrapping)
-3. **Stage 3**: Deploy Keycloak infrastructure
-4. **Stage 4**: Apply Terraform and update secrets with real values
-5. **Stage 5**: Deploy Congen application components with proper secrets
-6. **Stage 6**: Deploy ingress with environment-specific configuration (staging/production)
+This allows the keycloak terraform to be applied before application components (which depend on it) are created.
 
 ## Architecture
 
@@ -35,59 +30,18 @@ The staged deployment approach addresses the chicken-and-egg problem of deployin
 │  ├── Bootstrap Keycloak with Terraform client               │
 │  └── Wait for Keycloak to be ready                          │
 ├─────────────────────────────────────────────────────────────┤
-│  Stage 4: Terraform & Secrets Update                        │
-│  ├── Apply Terraform to create realm, clients, users        │
-│  ├── Update Kubernetes secrets with Terraform outputs       │
-│  ├── Skip secrets update if Terraform was up to date        │
-│  └── Replace dummy values with real credentials             │
-├─────────────────────────────────────────────────────────────┤
-│  Stage 5: Application Components                            │
+│  Stage 4: Application Components                            │
 │  ├── Deploy backend, frontend, and supporting services      │
 │  └── Verify all components are running                      │
 ├─────────────────────────────────────────────────────────────┤
-│  Stage 6: Ingress Configuration                             │
+│  Stage 5: Ingress Configuration                             │
 │  ├── Deploy ingress with environment-specific patches       │
 │  ├── Configure SSL/TLS for staging/production               │
 │  └── Set up proper routing for all services                 │
+├─────────────────────────────────────────────────────────────┤
+│  Stage 6: HPA (staging/production only)                     │
+│  └── Provision HPA after creating all other resources       │
 └─────────────────────────────────────────────────────────────┘
-```
-
-## Directory Structure
-
-```
-k8s/
-├── base/                          # Base Kubernetes resources (shared across environments)
-│   ├── namespace.yaml
-│   ├── keycloak-deployment.yaml
-│   ├── keycloak-service.yaml
-│   ├── backend-deployment.yaml
-│   ├── frontend-deployment.yaml
-│   ├── congen-secret.yaml         # Base secret with dummy values
-│   ├── keycloak-secret.yaml       # Keycloak secret with dummy values
-│   └── ... (other shared resources)
-└── overlays/                      # Environment-specific overlays
-    ├── local/                     # Local environment
-    │   ├── stage-1-infrastructure.yaml  # Stage 1: Infrastructure + PostgreSQL
-    │   ├── stage-2-secrets.yaml         # Stage 2: Secrets bootstrapping
-    │   ├── stage-3-keycloak.yaml        # Stage 3: Keycloak infrastructure
-    │   ├── stage-4-applications.yaml    # Stage 4: Applications (includes ingress)
-    │   ├── patches/               # Environment-specific patches
-    │   └── postgres-*.yaml        # PostgreSQL resources (local only)
-    ├── staging/                   # Staging environment
-    │   ├── stage-1-infrastructure.yaml  # Stage 1: Infrastructure (no PostgreSQL)
-    │   ├── stage-2-secrets.yaml         # Stage 2: Secrets bootstrapping
-    │   ├── stage-3-keycloak.yaml        # Stage 3: Keycloak infrastructure
-    │   ├── stage-4-applications.yaml    # Stage 4: Applications
-    │   ├── stage-5-ingress.yaml         # Stage 5: Ingress with SSL/TLS
-    │   └── patches/               # Environment-specific patches
-    └── production/                # Production environment
-        ├── stage-1-infrastructure.yaml  # Stage 1: Infrastructure (no PostgreSQL)
-        ├── stage-2-secrets.yaml         # Stage 2: Secrets bootstrapping
-        ├── stage-3-keycloak.yaml        # Stage 3: Keycloak infrastructure
-        ├── stage-4-applications.yaml    # Stage 4: Applications
-        ├── stage-5-ingress.yaml         # Stage 5: Ingress with SSL/TLS
-        ├── patches/               # Environment-specific patches
-        └── hpa.yaml               # Production HPA
 ```
 
 ## Prerequisites
@@ -112,96 +66,6 @@ Use Gradle tasks for deployment with automatic image building and environment co
 
 # Full deployment for production (requires confirmation)
 ./gradlew deployAll -Penvironment=production -PremoteRegistry=your-registry.example.com
-
-# Stage-specific deployment
-./gradlew deployStage -Penvironment=local -Pstage=1    # Infrastructure only
-./gradlew deployStage -Penvironment=local -Pstage=2    # Secrets bootstrapping only
-./gradlew deployStage -Penvironment=local -Pstage=3    # Keycloak infrastructure only
-./gradlew deployStage -Penvironment=local -Pstage=4    # Terraform and secrets update only
-./gradlew deployStage -Penvironment=local -Pstage=5    # Application components only
-./gradlew deployStage -Penvironment=staging -Pstage=6  # Ingress only (staging/production)
-```
-
-
-
-### Manual Staged Deployment
-
-If you prefer to run each stage manually:
-
-#### Stage 1: Deploy Infrastructure
-
-```bash
-# 1. Deploy infrastructure components (namespace, PostgreSQL)
-kubectl apply -k k8s/overlays/local/stage-1-infrastructure.yaml
-
-# 2. Wait for PostgreSQL to be ready (if applicable)
-kubectl wait --for=condition=ready pod -l app=postgres -n congen --timeout=300s
-```
-
-#### Stage 2: Deploy Secrets Bootstrapping
-
-```bash
-# Deploy secrets with dummy values
-kubectl apply -k k8s/overlays/local/stage-2-secrets.yaml
-
-# Verify secrets are created
-kubectl get secrets -n congen
-```
-
-#### Stage 3: Deploy Keycloak Infrastructure
-
-```bash
-# 1. Deploy Keycloak to Kubernetes
-kubectl apply -k k8s/overlays/local/stage-3-keycloak.yaml
-
-# 2. Wait for Keycloak to be ready
-kubectl wait --for=condition=ready pod -l app=keycloak -n congen --timeout=300s
-
-# 3. Set up port forwarding
-kubectl port-forward -n congen service/keycloak 8080:8081 &
-
-# 4. Bootstrap Keycloak with Terraform client
-# Note: This is handled automatically by the Gradle deployment tasks
-```
-
-#### Stage 4: Apply Terraform and Update Secrets
-
-```bash
-# 1. Apply Terraform configuration
-cd terraform/environments/local
-terraform init
-terraform apply -auto-approve
-cd -
-
-# 2. Update Kubernetes secrets with Terraform outputs
-# Note: This requires Stage 2 to be deployed first (secrets must exist)
-# Note: Secrets update is skipped if Terraform was up to date (no changes applied)
-./scripts/update-k8s-secrets.sh -e local
-
-# Verify secrets are updated
-kubectl get secret congen-secret -n congen -o yaml
-```
-
-#### Stage 5: Deploy Application Components
-
-```bash
-# Deploy all application components
-kubectl apply -k k8s/overlays/local/stage-4-applications.yaml
-
-# Verify deployment
-kubectl get pods -n congen
-kubectl get services -n congen
-```
-
-#### Stage 6: Deploy Ingress (Staging/Production Only)
-
-```bash
-# Deploy ingress with environment-specific configuration
-kubectl apply -k k8s/overlays/staging/stage-5-ingress.yaml
-
-# Verify ingress
-kubectl get ingress -n congen
-```
 
 ## Environment-Specific Configuration
 

@@ -11,9 +11,9 @@ This directory contains automatically generated API documentation for the Conjug
 
 ## Quick Access
 
-- **Interactive API Docs**: http://localhost:8080/api/v1/swagger-ui.html (when running)
-- **OpenAPI JSON**: http://localhost:8080/api/v1/api-docs
-- **OpenAPI YAML**: http://localhost:8080/api/v1/api-docs.yaml
+- **Interactive API Docs**: http://localhost:8888/api/v1/swagger-ui.html (when running)
+- **OpenAPI JSON**: http://localhost:8888/api/v1/api-docs
+- **OpenAPI YAML**: http://localhost:8888/api/v1/api-docs.yaml
 
 ## Regeneration
 

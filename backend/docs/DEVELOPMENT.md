@@ -221,8 +221,8 @@ The script will:
 If you prefer manual generation:
 
 1. Start the application: `./gradlew bootRun`
-2. Access OpenAPI JSON: http://localhost:8080/api-docs
-3. Access Swagger UI: http://localhost:8080/swagger-ui.html
+2. Access OpenAPI JSON: http://localhost:8888/api-docs
+3. Access Swagger UI: http://localhost:8888/swagger-ui.html
 
 ## Documentation Structure
 

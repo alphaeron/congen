@@ -75,7 +75,7 @@ The Keycloak configuration is environment-specific:
 
 | Environment | Keycloak URL | Admin Credentials |
 |-------------|--------------|-------------------|
-| Local | http://localhost:8081 | admin/admin |
+| Local | http://localhost:8080 | admin/admin |
 | Staging | https://staging.congen.com/auth | Configured via secrets |
 | Production | https://congen.com/auth | Configured via secrets |
 
@@ -86,7 +86,7 @@ The frontend uses environment variables to configure Keycloak:
 ```typescript
 const KEYCLOAK_CONFIG = {
   loc: {
-    url: 'http://localhost:8081/auth',
+    url: 'http://localhost:8080/auth',
     realm: 'congen',
     clientId: 'congen-frontend',
   },
@@ -264,7 +264,7 @@ logging.level.com.congen.auth=DEBUG
 ### Keycloak Admin Console
 
 Access the Keycloak admin console at:
-- Local: http://localhost:8081
+- Local: http://localhost:8080
 - Credentials: admin/admin
 
 ## Security Considerations

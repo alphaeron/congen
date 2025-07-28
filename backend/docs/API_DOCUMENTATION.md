@@ -9,7 +9,7 @@ This documentation is automatically generated from the OpenAPI specification.
 
 ## Interactive Documentation
 
-- **Swagger UI**: [http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html)
+- **Swagger UI**: [http://localhost:8888/api/v1/swagger-ui.html](http://localhost:8888/api/v1/swagger-ui.html)
 - **OpenAPI JSON**: [openapi.json](openapi.json)
 - **OpenAPI YAML**: [openapi.yaml](openapi.yaml)
 
@@ -28,6 +28,7 @@ The API uses standard HTTP status codes:
 - **404 Not Found**: Resource not found
 - **422 Unprocessable Entity**: Validation errors
 - **500 Internal Server Error**: Server-side errors
+- ...
 
 ---
 *This documentation was automatically generated from OpenAPI specification on Mon Jul 21 10:33:06 EDT 2025*

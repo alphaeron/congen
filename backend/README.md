@@ -195,7 +195,7 @@ For detailed CORS configuration and troubleshooting, see [CORS_SECURITY.md](CORS
 
 ### Base URL
 ```
-http://localhost:8080/api/v1
+http://localhost:8888/api/v1
 ```
 
 ### Authentication
@@ -356,9 +356,9 @@ The documentation generation creates the following files in the `docs/` director
 ### Accessing Documentation
 
 **Interactive API Documentation:**
-- **Swagger UI**: http://localhost:8080/api/v1/swagger-ui.html (when running)
-- **OpenAPI JSON**: http://localhost:8080/api/v1/api-docs
-- **OpenAPI YAML**: http://localhost:8080/api/v1/api-docs.yaml
+- **Swagger UI**: http://localhost:8888/api/v1/swagger-ui.html (when running)
+- **OpenAPI JSON**: http://localhost:8888/api/v1/api-docs
+- **OpenAPI YAML**: http://localhost:8888/api/v1/api-docs.yaml
 
 **Generated Documentation:**
 - **Local Server**: http://localhost:8000 (when using `./gradlew :backend:serveDocs`)

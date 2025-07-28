@@ -87,7 +87,7 @@ kubectl apply -k k8s/overlays/local/stage-4-applications.yaml
 
 ### Backend Deployment
 - **Image**: Configurable via overlays
-- **Port**: 8080
+- **Port**: 8888
 - **Health Checks**: `/api/v1/health/`
 - **Resources**: Configurable via patches
 - **Security**: Non-root user, read-only filesystem

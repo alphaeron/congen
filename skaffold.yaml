@@ -20,7 +20,15 @@ deploy:
 
 portForward:
 - resourceType: service
+  resourceName: frontend
+  port: 80
+  localPort: 3000
+- resourceType: service
   resourceName: congen
+  port: 8888
+  localPort: 8888
+- resourceType: service
+  resourceName: keycloak
   port: 8080
   localPort: 8080
 - resourceType: service

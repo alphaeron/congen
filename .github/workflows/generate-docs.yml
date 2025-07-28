@@ -71,7 +71,7 @@ jobs:
         sleep 30
         
         # Check if application started successfully
-        if ! curl -s http://localhost:8080/actuator/health > /dev/null; then
+        if ! curl -s http://localhost:8888/actuator/health > /dev/null; then
           echo "Application failed to start. Logs:"
           cat app.log
           exit 1
@@ -80,11 +80,11 @@ jobs:
     - name: Generate OpenAPI JSON
       run: |
         mkdir -p docs
-        curl -s http://localhost:8080/api-docs > docs/openapi.json
+        curl -s http://localhost:8888/api-docs > docs/openapi.json
         
     - name: Generate OpenAPI YAML
       run: |
-        curl -s http://localhost:8080/api-docs.yaml > docs/openapi.yaml || echo "YAML endpoint not available"
+        curl -s http://localhost:8888/api-docs.yaml > docs/openapi.yaml || echo "YAML endpoint not available"
         
     - name: Stop application
       run: |
@@ -119,7 +119,7 @@ jobs:
         ## Interactive Documentation
         
         When the application is running, you can access the interactive Swagger UI at:
-        - http://localhost:8080/swagger-ui.html
+        - http://localhost:8888/swagger-ui.html
         
         ## Regenerating Documentation
         
@@ -140,8 +140,8 @@ jobs:
         If you prefer to generate documentation manually:
         
         1. Start the application: `./gradlew bootRun`
-        2. Access the OpenAPI JSON: http://localhost:8080/api-docs
-        3. Access the Swagger UI: http://localhost:8080/swagger-ui.html
+        2. Access the OpenAPI JSON: http://localhost:8888/api-docs
+        3. Access the Swagger UI: http://localhost:8888/swagger-ui.html
         
         ---
         

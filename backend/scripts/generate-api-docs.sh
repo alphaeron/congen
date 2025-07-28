@@ -83,14 +83,14 @@ setup_port_forwarding() {
     pkill -f "kubectl port-forward" 2>/dev/null || true
     
     # Start port-forwarding in background
-    kubectl port-forward -n congen service/congen 8080:8080 > /dev/null 2>&1 &
+    kubectl port-forward -n congen service/congen 8888:8888 > /dev/null 2>&1 &
     PORT_FORWARD_PID=$!
     
     # Wait for port-forwarding to be ready
     sleep 3
     
     # Test if port-forwarding is working
-    if curl -s http://localhost:8080/api/v1/health/ > /dev/null; then
+    if curl -s http://localhost:8888/api/v1/health/ > /dev/null; then
         print_success "Port-forwarding is working"
     else
         print_warning "Port-forwarding may not be working properly"
@@ -115,10 +115,10 @@ check_application_health() {
     
     if [[ ${kubernetes_available} -eq 0 ]]; then
         # Use port-forwarding for Kubernetes
-        curl -s http://localhost:8080/api/v1/health/ > /dev/null
+        curl -s http://localhost:8888/api/v1/health/ > /dev/null
         return $?
     else
-        curl -s http://localhost:8080/api/v1/health/ > /dev/null
+        curl -s http://localhost:8888/api/v1/health/ > /dev/null
         return $?
     fi
 }
@@ -175,7 +175,7 @@ check_application() {
 generate_openapi_json() {
     print_status "Generating OpenAPI JSON specification..."
 
-    if curl -s http://localhost:8080/api/v1/api-docs > "${OPENAPI_JSON_FILE}"; then
+    if curl -s http://localhost:8888/api/v1/api-docs > "${OPENAPI_JSON_FILE}"; then
         print_success "OpenAPI JSON generated: ${OPENAPI_JSON_FILE}"
     else
         print_error "Failed to generate OpenAPI JSON"
@@ -187,7 +187,7 @@ generate_openapi_json() {
 generate_openapi_yaml() {
     print_status "Generating OpenAPI YAML specification..."
 
-    if curl -s http://localhost:8080/api/v1/api-docs.yaml > "${OPENAPI_YAML_FILE}"; then
+    if curl -s http://localhost:8888/api/v1/api-docs.yaml > "${OPENAPI_YAML_FILE}"; then
         print_success "OpenAPI YAML generated: ${OPENAPI_YAML_FILE}"
     else
         print_warning "OpenAPI YAML generation failed (endpoint may not be available)"
@@ -212,7 +212,7 @@ The Congen API provides endpoints for managing workout programs, exercises, user
 
 ## Interactive Documentation
 
-- **Swagger UI**: [http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html)
+- **Swagger UI**: [http://localhost:8888/api/v1/swagger-ui.html](http://localhost:8888/api/v1/swagger-ui.html)
 - **OpenAPI JSON**: [openapi.json](openapi.json)
 - **OpenAPI YAML**: [openapi.yaml](openapi.yaml)
 
@@ -263,7 +263,7 @@ EOF
         cat >> "${API_DOCS_FILE}" << 'EOF'
 ## Interactive Documentation
 
-- **Swagger UI**: [http://localhost:8080/api/v1/swagger-ui.html](http://localhost:8080/api/v1/swagger-ui.html)
+- **Swagger UI**: [http://localhost:8888/api/v1/swagger-ui.html](http://localhost:8888/api/v1/swagger-ui.html)
 - **OpenAPI JSON**: [openapi.json](openapi.json)
 - **OpenAPI YAML**: [openapi.yaml](openapi.yaml)
 
@@ -335,9 +335,9 @@ This directory contains automatically generated API documentation for the Conjug
 
 ## Quick Access
 
-- **Interactive API Docs**: http://localhost:8080/api/v1/swagger-ui.html (when running)
-- **OpenAPI JSON**: http://localhost:8080/api/v1/api-docs
-- **OpenAPI YAML**: http://localhost:8080/api/v1/api-docs.yaml
+- **Interactive API Docs**: http://localhost:8888/api/v1/swagger-ui.html (when running)
+- **OpenAPI JSON**: http://localhost:8888/api/v1/api-docs
+- **OpenAPI YAML**: http://localhost:8888/api/v1/api-docs.yaml
 
 ## Regeneration
 
@@ -381,7 +381,7 @@ main() {
 
     print_success "API documentation generation completed!"
     print_status "Documentation files created in: ${DOCS_DIR}"
-    print_status "Interactive documentation available at: http://localhost:8080/api/v1/swagger-ui.html"
+    print_status "Interactive documentation available at: http://localhost:8888/api/v1/swagger-ui.html"
 }
 
 # Run main function

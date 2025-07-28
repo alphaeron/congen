@@ -13,14 +13,14 @@ pkill -f "kubectl port-forward.*congen" || true
 
 # Start port forward in background
 echo "Starting port forward..."
-kubectl port-forward service/congen 8080:8080 -n congen > /tmp/congen-port-forward.log 2>&1 &
+kubectl port-forward service/congen 8888:8888 -n congen > /tmp/congen-port-forward.log 2>&1 &
 PORT_FORWARD_PID=$!
 
 # Wait for port forward to establish
 sleep 3
 
 # Check if port forward is working
-if ! nc -z localhost 8080 2>/dev/null; then
+if ! nc -z localhost 8888 2>/dev/null; then
     echo "❌ Port forward failed to establish"
     kill "${PORT_FORWARD_PID}" 2>/dev/null || true
     exit 1
@@ -28,8 +28,8 @@ fi
 
 echo "✅ Port forward established (PID: ${PORT_FORWARD_PID})"
 echo "📝 Application is now accessible at:"
-echo "   - Health check: http://localhost:8080/actuator/health"
-echo "   - Main application: http://localhost:8080"
+echo "   - Health check: http://localhost:8888/actuator/health"
+echo "   - Main application: http://localhost:8888"
 echo ""
 echo "To stop the port forward, run: kill ${PORT_FORWARD_PID}"
 echo "Or use: pkill -f 'kubectl port-forward.*congen'"
@@ -42,16 +42,16 @@ echo "${PORT_FORWARD_PID}" > /tmp/congen-port-forward.pid
 # Test the health endpoint
 echo ""
 echo "🧪 Testing health endpoint..."
-if curl -s http://localhost:8080/actuator/health > /dev/null; then
+if curl -s http://localhost:8888/actuator/health > /dev/null; then
     echo "✅ Application is healthy and accessible!"
     echo ""
     echo "🎉 You can now access the application at:"
-    echo "   http://localhost:8080"
+    echo "   http://localhost:8888"
     echo ""
     echo "💡 Alternative access methods:"
     # shellcheck disable=SC2312
     echo "   - Fixed NodePort: http://$(minikube ip):30080"
-    echo "   - Port forwarding: http://localhost:8080 (current)"
+    echo "   - Port forwarding: http://localhost:8888 (current)"
 else
     echo "❌ Application health check failed"
     exit 1

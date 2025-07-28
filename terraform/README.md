@@ -84,7 +84,7 @@ terraform/
 
 **Purpose**: Development and testing on local machine
 **Configuration**:
-- Keycloak URL: `http://localhost:8081`
+- Keycloak URL: `http://localhost:8080`
 - Frontend redirects: `http://localhost:3000/*`
 - Database: Local PostgreSQL
 - Security: HTTP (acceptable for local)
@@ -220,7 +220,7 @@ terraform init && terraform apply
 
 ### Keycloak Monitoring
 
-- **Admin Console**: `http://localhost:8081` (local)
+- **Admin Console**: `http://localhost:8080` (local)
 - **Health Checks**: `/health` endpoint
 - **Audit Logs**: User authentication and authorization
 
