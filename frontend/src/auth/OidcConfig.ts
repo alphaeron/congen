@@ -52,11 +52,8 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     redirect_uri: config.redirect_uri,
     post_logout_redirect_uri: config.post_logout_redirect_uri,
     silent_redirect_uri: config.silent_redirect_uri,
-    scope: 'openid profile email',
+    scope: 'openid profile email groups',
     response_type: 'code',
-    loadUserInfo: false, // Disable loading user info to reduce network requests
-    automaticSilentRenew: false, // Disable automatic token renewal for now
-    monitorSession: false, // Disable session monitoring
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
       token_endpoint: `${authority}/protocol/openid-connect/token`,
@@ -66,4 +63,4 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
       issuer: authority,
     },
   };
-}; 
+};
