@@ -35,3 +35,7 @@ patches:
   target:
     kind: Deployment
     name: migration-service
+- path: patches/frontend-service-patch.yaml
+  target:
+    kind: Service
+    name: frontend

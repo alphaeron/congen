@@ -8,7 +8,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Grid from '@mui/material/Grid';
 
-import { useAuth } from '../auth/AuthContext';
+import { useAuth } from 'react-oidc-context';
 
 /**
  * Login page component.
@@ -19,7 +19,7 @@ import { useAuth } from '../auth/AuthContext';
  * @return Login page component
  */
 export const LoginPage: React.FC = () => {
-  const { authenticated, login, loading } = useAuth();
+  const { isAuthenticated, signinRedirect, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -28,16 +28,16 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     // If already authenticated, redirect to intended destination
-    if (authenticated && !loading) {
+    if (isAuthenticated && !isLoading) {
       navigate(from, { replace: true });
     }
-  }, [authenticated, loading, navigate, from]);
+  }, [isAuthenticated, isLoading, navigate, from]);
 
   const handleLogin = () => {
-    login();
+    signinRedirect();
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Container maxWidth="sm">
         <Box

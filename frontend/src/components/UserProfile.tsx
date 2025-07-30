@@ -14,8 +14,8 @@ import { default as LogoutIcon } from '@mui/icons-material/Logout';
 import { default as PersonIcon } from '@mui/icons-material/Person';
 import { default as SettingsIcon } from '@mui/icons-material/Settings';
 
-import { useAuth } from '../auth/AuthContext';
-import { AuthenticatedOnly } from './AuthenticatedOnly';
+import { useAuth } from 'react-oidc-context';
+import { AuthorizedElement } from './AuthorizedElement';
 
 /**
  * User profile component.
@@ -26,7 +26,7 @@ import { AuthenticatedOnly } from './AuthenticatedOnly';
  * @return User profile component
  */
 export const UserProfile: React.FC = () => {
-  const { keycloak, logout } = useAuth();
+  const { signoutRedirect, user } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -40,25 +40,23 @@ export const UserProfile: React.FC = () => {
 
   const handleLogout = () => {
     handleClose();
-    logout();
+    signoutRedirect();
   };
 
   const handleAccountManagement = () => {
     handleClose();
-    // Open Keycloak account management page
-    if (keycloak?.accountManagement) {
-      keycloak.accountManagement();
-    }
+    // Account management is not directly available in react-oidc-context
+    // You may need to implement this differently
   };
 
-  // Extract user information from Keycloak token
-  const userInfo = keycloak?.tokenParsed as any;
-  const username = userInfo?.preferred_username || userInfo?.email || 'User';
-  const email = userInfo?.email || '';
-  const name = userInfo?.name || username;
+  // Extract user information from OIDC user object
+  const userInfo = user;
+  const username = userInfo?.profile?.preferred_username || userInfo?.profile?.email || 'User';
+  const email = userInfo?.profile?.email || '';
+  const name = userInfo?.profile?.name || username;
 
   return (
-    <AuthenticatedOnly>
+    <AuthorizedElement requireAuth={true}>
       <Box sx={{ display: 'flex', alignItems: 'center', textAlign: 'center' }}>
         <Tooltip title="Account settings">
           <IconButton
@@ -126,7 +124,7 @@ export const UserProfile: React.FC = () => {
           </Box>
         </MenuItem>
         <Divider />
-        {typeof keycloak?.accountManagement === 'function' && (
+        {false && (
           <MenuItem onClick={handleAccountManagement}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
@@ -141,6 +139,6 @@ export const UserProfile: React.FC = () => {
           Logout
         </MenuItem>
       </Menu>
-    </AuthenticatedOnly>
+    </AuthorizedElement>
   );
 };

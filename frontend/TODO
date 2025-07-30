@@ -15,3 +15,7 @@
 - assets for exercises/muscles images
 - custom snackbar format instead of the default
 - fix landing page styling, and add screenshots for landing page
+- auto-refresh token if page is still active?
+
+### Infrastructure
+- health check

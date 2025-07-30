@@ -7,4 +7,4 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: congen-ui:0.1.0.27489a2-debug
+        image: congen-ui:0.1.0.0041034-1753831400067-debug

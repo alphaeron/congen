@@ -16,9 +16,10 @@ jest.mock('keycloak-js', () => {
   }));
 });
 
-// Mock AuthContext
-jest.mock('./auth/AuthContext', () => ({
-  useAuth: jest.fn(),
+// Mock react-oidc-context
+const mockUseAuth = jest.fn();
+jest.mock('react-oidc-context', () => ({
+  useAuth: mockUseAuth,
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
@@ -41,7 +42,7 @@ jest.mock('./api/endpoint', () => ({
 }));
 
 describe('App', () => {
-  const mockUseAuth = require('./auth/AuthContext').useAuth;
+  const mockUseAuth = require('react-oidc-context').useAuth;
 
   beforeEach(() => {
     jest.clearAllMocks();

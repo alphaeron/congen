@@ -101,17 +101,9 @@ task deployStage {
             throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
-    
+   
     dependsOn subprojects.collect { it.path + ':prepareDeployment' }
-    if (environment == 'local') {
-        dependsOn setupLocalKubernetes
-        dependsOn ':backend:prepareLocalImage'
-        dependsOn ':frontend:prepareLocalImage'
-    } else {
-        dependsOn ':backend:prepareRemoteImage'
-        dependsOn ':frontend:prepareRemoteImage'
-    }
-    
+
     doLast {
         def stageNum = project.getProperty('stage') as Integer
         def stageDescriptions = [
@@ -140,16 +132,11 @@ task deployStage {
 task deployAll {
     group = 'deployment'
     description = 'Prepare and deploy all subprojects to Kubernetes using staged deployment'
-    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
-    dependsOn ':confirmDeployment'
     if (environment == 'local') {
         dependsOn setupLocalKubernetes
-        dependsOn ':backend:prepareLocalImage'
-        dependsOn ':frontend:prepareLocalImage'
-    } else {
-        dependsOn ':backend:prepareRemoteImage'
-        dependsOn ':frontend:prepareRemoteImage'
     }
+    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
+    dependsOn ':confirmDeployment'
     doLast {
         println "🚀 Starting staged deployment for environment: ${environment}"
         

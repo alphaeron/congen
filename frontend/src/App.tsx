@@ -1,5 +1,4 @@
 import { default as MenuIcon } from '@mui/icons-material/Menu';
-import { PaletteMode } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -14,8 +13,11 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { BrowserRouter, Link, Routes, Route, Navigate } from 'react-router-dom';
 
-import { AuthProvider, useAuth } from './auth/AuthContext';
-import { AuthenticatedOnly } from './components/AuthenticatedOnly';
+import { AuthProvider, useAuth } from 'react-oidc-context';
+
+import { getAuthProviderConfig } from './auth/OidcConfig';
+import { AuthorizedElement } from './components/AuthorizedElement';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserProfile } from './components/UserProfile';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
@@ -44,7 +46,7 @@ function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const { authenticated, loading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -53,7 +55,7 @@ function AppContent(): React.ReactElement {
   const theme = createTheme(getTheme(mode));
 
   // Show loading state while authentication is being determined
-  if (loading) {
+  if (isLoading) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
@@ -78,8 +80,7 @@ function AppContent(): React.ReactElement {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
-        <Container maxWidth="xl">
+      <Container maxWidth="xl">
           <AppBar
             position="static"
             sx={{
@@ -131,7 +132,7 @@ function AppContent(): React.ReactElement {
                 >
                   ConGen
                 </Typography>
-                <AuthenticatedOnly>
+                <AuthorizedElement requireAuth={false}>
                   <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                     <MenuItem
                       sx={{ py: '6px', px: '12px' }}
@@ -143,7 +144,7 @@ function AppContent(): React.ReactElement {
                       Exercises
                     </MenuItem>
                   </Box>
-                </AuthenticatedOnly>
+                </AuthorizedElement>
               </Box>
               <Box
                 sx={{
@@ -152,32 +153,6 @@ function AppContent(): React.ReactElement {
                   alignItems: 'center',
                 }}
               >
-                <AuthenticatedOnly
-                  fallback={
-                    <React.Fragment>
-                      <Button
-                        color="primary"
-                        variant="text"
-                        size="small"
-                        component={Link}
-                        to="/login"
-                      >
-                        Sign in
-                      </Button>
-                      <Button
-                        color="primary"
-                        variant="contained"
-                        size="small"
-                        component={Link}
-                        to="/login"
-                      >
-                        Sign up
-                      </Button>
-                    </React.Fragment>
-                  }
-                >
-                  <UserProfile />
-                </AuthenticatedOnly>
               </Box>
               <Box sx={{ display: { sm: '', md: 'none' } }}>
                 <Button
@@ -198,7 +173,7 @@ function AppContent(): React.ReactElement {
                       flexGrow: 1,
                     }}
                   >
-                    <AuthenticatedOnly>
+                    <AuthorizedElement requireAuth={false}>
                       <MenuItem
                         /* eslint-disable-next-line react/display-name */
                         component={React.forwardRef((props, ref) => (
@@ -207,9 +182,9 @@ function AppContent(): React.ReactElement {
                       >
                         Exercises
                       </MenuItem>
-                    </AuthenticatedOnly>
+                    </AuthorizedElement>
                     <Divider />
-                    <AuthenticatedOnly
+                    <AuthorizedElement
                       fallback={
                         <React.Fragment>
                           <MenuItem>
@@ -240,7 +215,7 @@ function AppContent(): React.ReactElement {
                       <MenuItem>
                         <UserProfile />
                       </MenuItem>
-                    </AuthenticatedOnly>
+                    </AuthorizedElement>
                   </Box>
                 </Drawer>
               </Box>
@@ -249,34 +224,41 @@ function AppContent(): React.ReactElement {
           <Routes>
             <Route
               path="/"
-              element={authenticated ? <Navigate to="/exercises" replace /> : <RootPage />}
+              element={
+                <ProtectedRoute requireAuth={false}>
+                  <RootPage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/login"
-              element={authenticated ? <Navigate to="/exercises" replace /> : <LoginPage />}
+              element={
+                <ProtectedRoute requireAuth={false} redirectTo="/exercises">
+                  <LoginPage />
+                </ProtectedRoute>
+              }
             />
             <Route
               path="/exercises"
               element={
-                <AuthenticatedOnly fallback={<Navigate to="/" replace />}>
+                <ProtectedRoute>
                   <ExerciseOverviewPage />
-                </AuthenticatedOnly>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/exercises/:exerciseName"
               element={
-                <AuthenticatedOnly fallback={<Navigate to="/" replace />}>
+                <ProtectedRoute>
                   <ExerciseDetailsPage />
-                </AuthenticatedOnly>
+                </ProtectedRoute>
               }
             />
           </Routes>
         </Container>
-      </BrowserRouter>
-    </ThemeProvider>
-  );
-} // end component AppContent
+      </ThemeProvider>
+    );
+  } // end component AppContent
 
 /**
  * The main application wrapper with authentication provider.
@@ -284,9 +266,13 @@ function AppContent(): React.ReactElement {
  * @return A component to render for the main application.
  */
 export function App(): React.ReactElement {
+  const authConfig = getAuthProviderConfig();
+  
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider {...authConfig}>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 } // end component App

@@ -1,9 +1,9 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 
 import { LoginPage } from './LoginPage';
-import { AuthProvider, useAuth } from '../auth/AuthContext';
+import { AuthProvider, useAuth } from 'react-oidc-context';
 
 // Mock Keycloak
 jest.mock('keycloak-js', () => {
@@ -18,26 +18,20 @@ jest.mock('keycloak-js', () => {
   }));
 });
 
-// Mock KeycloakConfig
-jest.mock('../auth/KeycloakConfig', () => ({
-  initKeycloak: jest.fn().mockResolvedValue({
-    authenticated: false,
-    token: null,
-    tokenParsed: null,
-    login: jest.fn(),
-    logout: jest.fn(),
-    updateToken: jest.fn().mockResolvedValue(true),
-    accountManagement: jest.fn(),
-  }),
+// Mock react-oidc-context
+const mockUseAuth = jest.fn();
+jest.mock('react-oidc-context', () => ({
+  useAuth: mockUseAuth,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Test wrapper component
 const TestWrapper = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <LoginPage />
-      </BrowserRouter>
+              <MemoryRouter>
+          <LoginPage />
+        </MemoryRouter>
     </AuthProvider>
   );
 };

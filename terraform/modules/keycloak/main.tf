@@ -10,10 +10,11 @@ terraform {
 
 # Create the Congen realm
 resource "keycloak_realm" "congen" {
-  realm             = var.realm_name
-  enabled           = true
-  display_name      = var.realm_display_name
-  display_name_html = var.realm_display_name_html
+  realm                = var.realm_name
+  enabled              = true
+  display_name         = var.realm_display_name
+  display_name_html    = var.realm_display_name_html
+  registration_allowed = true
 }
 
 # Create roles

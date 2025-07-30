@@ -13,7 +13,10 @@ const defaultHtmlPluginConfig = {
 
 module.exports = merge(common, {
   mode: 'development',
-  devtool: 'eval-source-map',
+  devtool: 'source-map',
+  output: {
+    sourceMapFilename: '[name].map',
+  },
   devServer: {
     static: path.resolve(__dirname, 'dist'),
     port: 3000,
