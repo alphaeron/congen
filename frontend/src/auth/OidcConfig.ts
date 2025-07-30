@@ -44,6 +44,7 @@ export const getOidcConfig = () => {
  */
 export const getAuthProviderConfig = (): AuthProviderProps => {
   const config = getOidcConfig();
+  const authority = config.authority;
 
   return {
     authority: config.authority,
@@ -53,5 +54,16 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     silent_redirect_uri: config.silent_redirect_uri,
     scope: 'openid profile email',
     response_type: 'code',
+    loadUserInfo: false, // Disable loading user info to reduce network requests
+    automaticSilentRenew: false, // Disable automatic token renewal for now
+    monitorSession: false, // Disable session monitoring
+    metadata: {
+      authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
+      token_endpoint: `${authority}/protocol/openid-connect/token`,
+      end_session_endpoint: `${authority}/protocol/openid-connect/logout`,
+      userinfo_endpoint: `${authority}/protocol/openid-connect/userinfo`,
+      jwks_uri: `${authority}/protocol/openid-connect/certs`,
+      issuer: authority,
+    },
   };
 }; 

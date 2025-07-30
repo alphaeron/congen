@@ -11,7 +11,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { BrowserRouter, Link, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { AuthProvider, useAuth } from 'react-oidc-context';
 
@@ -46,7 +46,22 @@ function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, error, signoutRedirect } = useAuth();
+  const location = useLocation();
+
+  // Handle stuck OIDC state by forcing a signout and redirect back to current location
+  React.useEffect(() => {
+    if (isLoading) {
+      const timeout = setTimeout(() => {
+        // Force a signout to reset the OIDC client state, but redirect back to current location
+        signoutRedirect({
+          post_logout_redirect_uri: `${window.location.origin}${location.pathname}`
+        });
+      }, 1000); // 1 second timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading, signoutRedirect, location.pathname]);
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -137,7 +152,7 @@ function AppContent(): React.ReactElement {
                     <MenuItem
                       sx={{ py: '6px', px: '12px' }}
                       /* eslint-disable-next-line react/display-name */
-                      component={React.forwardRef((props, ref) => (
+                      component={React.forwardRef<HTMLAnchorElement>((props, ref) => (
                         <Link to="/exercises" {...props} ref={ref} />
                       ))}
                     >
@@ -176,7 +191,7 @@ function AppContent(): React.ReactElement {
                     <AuthorizedElement requireAuth={false}>
                       <MenuItem
                         /* eslint-disable-next-line react/display-name */
-                        component={React.forwardRef((props, ref) => (
+                        component={React.forwardRef<HTMLAnchorElement>((props, ref) => (
                           <Link to="/exercises" {...props} ref={ref} />
                         ))}
                       >
