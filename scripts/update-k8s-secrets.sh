@@ -92,21 +92,16 @@ print_error() {
 get_terraform_output() {
     local output_name="$1"
     local terraform_dir="$2"
-    
-    print_status "Getting Terraform output: ${output_name}"
-    
+
     cd "${terraform_dir}"
     local output_value
     output_value=$(terraform output -raw "${output_name}" 2>/dev/null || echo "")
     cd - > /dev/null
-    
+
     if [[ -z "${output_value}" ]]; then
-        print_error "Failed to get Terraform output: ${output_name}"
-        print_error "Make sure Terraform has been applied in ${terraform_dir}"
         exit 1
     fi
-    
-    print_success "Got ${output_name}: ${output_value:0:10}..."
+
     echo "${output_value}"
 }
 

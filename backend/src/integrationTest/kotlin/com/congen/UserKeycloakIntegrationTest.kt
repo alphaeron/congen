@@ -305,4 +305,12 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
+
+    @Test
+    fun `should return 403 when accessing me endpoint without authentication`() {
+        webTestClient.get()
+            .uri("/api/v1/user/me")
+            .exchange()
+            .expectStatus().isForbidden()
+    }
 }

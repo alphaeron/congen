@@ -161,6 +161,51 @@ class UserController(
     }
 
     /**
+     * Retrieves the current user's profile.
+     *
+     * This endpoint fetches the profile information of the currently authenticated user.
+     * The user is identified by their Keycloak user ID from the authentication context.
+     *
+     * @return The current user's profile
+     */
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get current user profile",
+        description = "Retrieves the profile information of the currently authenticated user.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Current user profile retrieved successfully",
+                content = [
+                    Content(
+                        mediaType = "application/json",
+                    ),
+                ],
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Current user not found in database",
+                content = [
+                    Content(
+                        mediaType = "application/json",
+                    ),
+                ],
+            ),
+        ],
+    )
+    fun getCurrentUser(): Mono<ResponseEntity<User>> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakUserId ->
+                logger.debug("Getting current user profile for Keycloak user ID: {}", keycloakUserId)
+                userService.getUserByKeycloakUserId(keycloakUserId)
+            }
+            .map { ResponseEntity.ok(it) }
+    }
+
+    /**
      * Retrieves a user by their unique identifier.
      *
      * This endpoint fetches a specific user's profile information by their ID.

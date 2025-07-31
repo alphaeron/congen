@@ -1,23 +1,6 @@
 import { AuthProviderProps } from 'react-oidc-context';
 
-import { DEPLOYMENT_ENVIRONMENT } from '../globals';
-
-/**
- * Mapping of various environments to the corresponding backend endpoint.
- */
-const _ENVIRONMENT_TO_ENDPOINT_MAPPING = {
-  loc: 'http://localhost',
-  staging: 'https://staging.congen.com',
-  production: 'https://congen.com',
-};
-
-/**
- * The base URL for the backend API.
- */
-const _BASE_URL =
-  _ENVIRONMENT_TO_ENDPOINT_MAPPING[
-    DEPLOYMENT_ENVIRONMENT as keyof typeof _ENVIRONMENT_TO_ENDPOINT_MAPPING
-  ] || 'http://localhost';
+import { DEPLOYMENT_ENVIRONMENT, KEYCLOAK_URL, BASE_URL } from '../globals';
 
 /**
  * Constructs the OIDC configuration dynamically based on the environment.
@@ -25,8 +8,8 @@ const _BASE_URL =
  * @return OIDC configuration object
  */
 export const getOidcConfig = () => {
-  const authority = DEPLOYMENT_ENVIRONMENT === 'loc' ? `${_BASE_URL}:8080/realms/congen` : `${_BASE_URL}/realms/congen`;
-  const frontendHost = DEPLOYMENT_ENVIRONMENT === 'loc' ? `${_BASE_URL}:3000` : _BASE_URL;
+  const authority = `${KEYCLOAK_URL}/realms/congen`;
+  const frontendHost = DEPLOYMENT_ENVIRONMENT === 'loc' ? `${BASE_URL}:3000` : BASE_URL;
 
   return {
     authority: authority,
@@ -52,7 +35,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     redirect_uri: config.redirect_uri,
     post_logout_redirect_uri: config.post_logout_redirect_uri,
     silent_redirect_uri: config.silent_redirect_uri,
-    scope: 'openid profile email groups',
+    scope: 'openid profile email',
     response_type: 'code',
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,

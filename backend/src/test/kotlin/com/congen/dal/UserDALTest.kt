@@ -10,6 +10,10 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 
 class UserDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -137,5 +141,20 @@ class UserDALTest {
             .expectNext(user)
             .verifyComplete()
         verify(postgresClient).update<User>("DELETE FROM \"user\" WHERE id=$1", user.id)
+    }
+
+    @Test
+    fun `selectUserByKeycloakUserId should return user`() {
+        val keycloakUserId = "test-keycloak-user-id"
+        val expectedUser = mockUser(keycloakUserId = keycloakUserId)
+        whenever(postgresClient.selectIndividual<User>(any(), any(), eq(keycloakUserId)))
+            .thenReturn(Mono.just(expectedUser))
+
+        val result = userDAL.selectUserByKeycloakUserId(keycloakUserId)
+
+        StepVerifier.create(result)
+            .expectNext(expectedUser)
+            .verifyComplete()
+        verify(postgresClient).selectIndividual<User>(any(), any(), eq(keycloakUserId))
     }
 }

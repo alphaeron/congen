@@ -63,6 +63,24 @@ class UserDAL(
     }
 
     /**
+     * Retrieves a user by their Keycloak user ID.
+     *
+     * This method queries the database for a user with the specified Keycloak user ID.
+     * If no user is found, a [NoResultsFoundException] is thrown.
+     *
+     * @param keycloakUserId The Keycloak user ID to search for
+     * @return Mono containing the user if found
+     * @throws NoResultsFoundException if no user exists with the given Keycloak user ID
+     */
+    fun selectUserByKeycloakUserId(keycloakUserId: String): Mono<User> {
+        logger.debug("Selecting user by Keycloak user ID: {}", keycloakUserId)
+        return postgresClient.selectIndividual(
+            "SELECT * FROM \"user\" WHERE keycloak_user_id=$1",
+            keycloakUserId,
+        )
+    }
+
+    /**
      * Retrieves all users from the database.
      *
      * This method queries the database for all user records and returns

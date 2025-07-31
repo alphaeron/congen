@@ -18,6 +18,10 @@ spec:
         app: migration-service
     spec:
       serviceAccountName: congen-service-account
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox
+        command: ['sh', '-c', 'timeout 180 sh -c "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done; echo postgres is ready;" || (echo "Timeout waiting for postgres"; exit 1)']
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -31,11 +35,6 @@ spec:
           runAsNonRoot: true
           runAsUser: 1000
         env:
-        - name: DB_BASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: congen-secret
-              key: DB_BASE_URL
         - name: PGHOST
           valueFrom:
             secretKeyRef:
@@ -111,7 +110,7 @@ spec:
             find /tmp/liquibase -type f -name "*.sql" | sort
             
             # Construct JDBC URL from secret values
-            export DB="${DB_BASE_URL}${PGHOST}:${PGPORT}/${PGDATABASE}"
+            export DB="jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}"
             
             # Run Liquibase migrations from the writable location
             cd /tmp/liquibase
@@ -157,7 +156,7 @@ spec:
             done
             
             # Construct JDBC URL from secret values
-            export DB="${DB_BASE_URL}${PGHOST}:${PGPORT}/${PGDATABASE}"
+            export DB="jdbc:postgresql://${PGHOST}:${PGPORT}/${PGDATABASE}"
             
             # Check if migrations are needed
             cd /tmp/liquibase
@@ -169,11 +168,6 @@ spec:
               return 0
             fi
           }
-          
-          # Wait for PostgreSQL to be ready (simple approach)
-          echo "Waiting for PostgreSQL to be ready..."
-          sleep 10
-          echo "Proceeding with migration..."
           
           # Run initial migration
           echo "Running initial migration check..."
@@ -204,6 +198,6 @@ spec:
       volumes:
       - name: migrations
         configMap:
-          name: backend-config
+          name: migrations-config
       - name: tmp
         emptyDir: {} 

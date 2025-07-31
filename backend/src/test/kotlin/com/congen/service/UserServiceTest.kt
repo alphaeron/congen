@@ -344,4 +344,32 @@ class UserServiceTest {
 
         verify(userDAL).selectUserById(USER_ID)
     }
+
+    @Test
+    fun `getUserByKeycloakUserId should return user when found`() {
+        val keycloakUserId = "test-keycloak-user-id"
+        val expectedUser = mockUser(keycloakUserId = keycloakUserId)
+        whenever(userDAL.selectUserByKeycloakUserId(keycloakUserId)).thenReturn(Mono.just(expectedUser))
+
+        val result = userService.getUserByKeycloakUserId(keycloakUserId)
+
+        StepVerifier.create(result)
+            .expectNext(expectedUser)
+            .verifyComplete()
+        verify(userDAL).selectUserByKeycloakUserId(keycloakUserId)
+    }
+
+    @Test
+    fun `getUserByKeycloakUserId should propagate error when user not found`() {
+        val keycloakUserId = "non-existent-keycloak-user-id"
+        val error = RuntimeException("User not found")
+        whenever(userDAL.selectUserByKeycloakUserId(keycloakUserId)).thenReturn(Mono.error(error))
+
+        val result = userService.getUserByKeycloakUserId(keycloakUserId)
+
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(userDAL).selectUserByKeycloakUserId(keycloakUserId)
+    }
 }

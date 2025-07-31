@@ -14,7 +14,7 @@ resource "keycloak_realm" "congen" {
   enabled              = true
   display_name         = var.realm_display_name
   display_name_html    = var.realm_display_name_html
-  registration_allowed = true
+  registration_allowed = false
 }
 
 # Create roles

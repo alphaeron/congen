@@ -11,11 +11,9 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { BrowserRouter, Link, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-
-import { AuthProvider, useAuth } from 'react-oidc-context';
-
-import { getAuthProviderConfig } from './auth/OidcConfig';
+import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
+import { useAuth } from './contexts/AuthContext';
+import { AuthProvider } from './contexts/AuthContext';
 import { AuthorizedElement } from './components/AuthorizedElement';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserProfile } from './components/UserProfile';
@@ -23,6 +21,7 @@ import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
 import { LoginPage } from './pages/LoginPage';
 import { RootPage } from './pages/RootPage';
+import { AuthCallback } from './components/AuthCallback';
 import { getTheme } from './theme';
 
 import './App.css';
@@ -46,22 +45,7 @@ function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const { isAuthenticated, isLoading, error, signoutRedirect } = useAuth();
-  const location = useLocation();
-
-  // Handle stuck OIDC state by forcing a signout and redirect back to current location
-  React.useEffect(() => {
-    if (isLoading) {
-      const timeout = setTimeout(() => {
-        // Force a signout to reset the OIDC client state, but redirect back to current location
-        signoutRedirect({
-          post_logout_redirect_uri: `${window.location.origin}${location.pathname}`
-        });
-      }, 1000); // 1 second timeout
-
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading, signoutRedirect, location.pathname]);
+  const { isLoading, logout } = useAuth();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -168,6 +152,38 @@ function AppContent(): React.ReactElement {
                   alignItems: 'center',
                 }}
               >
+                <AuthorizedElement
+                  fallback={
+                    <React.Fragment>
+                      <Button
+                        color="primary"
+                        variant="contained"
+                        component={Link}
+                        to="/login"
+                        sx={{ mr: 1 }}
+                      >
+                        Sign up
+                      </Button>
+                      <Button
+                        color="primary"
+                        variant="outlined"
+                        component={Link}
+                        to="/login"
+                      >
+                        Sign in
+                      </Button>
+                    </React.Fragment>
+                  }
+                >
+                  <UserProfile />
+                  <Button
+                    color="inherit"
+                    onClick={logout}
+                    sx={{ ml: 1 }}
+                  >
+                    Sign Out
+                  </Button>
+                </AuthorizedElement>
               </Box>
               <Box sx={{ display: { sm: '', md: 'none' } }}>
                 <Button
@@ -230,6 +246,15 @@ function AppContent(): React.ReactElement {
                       <MenuItem>
                         <UserProfile />
                       </MenuItem>
+                      <MenuItem>
+                        <Button
+                          color="inherit"
+                          onClick={logout}
+                          sx={{ width: '100%' }}
+                        >
+                          Sign Out
+                        </Button>
+                      </MenuItem>
                     </AuthorizedElement>
                   </Box>
                 </Drawer>
@@ -269,6 +294,10 @@ function AppContent(): React.ReactElement {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/auth/callback"
+              element={<AuthCallback />}
+            />
           </Routes>
         </Container>
       </ThemeProvider>
@@ -281,11 +310,9 @@ function AppContent(): React.ReactElement {
  * @return A component to render for the main application.
  */
 export function App(): React.ReactElement {
-  const authConfig = getAuthProviderConfig();
-  
   return (
     <BrowserRouter>
-      <AuthProvider {...authConfig}>
+      <AuthProvider>
         <AppContent />
       </AuthProvider>
     </BrowserRouter>

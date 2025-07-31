@@ -5,3 +5,9 @@ namespace: congen
 
 resources:
 - ../../../base/stage-4
+
+patches:
+- path: patches/congen-secret-patch.yaml
+  target:
+    kind: Secret
+    name: congen-secret

@@ -1,63 +1,69 @@
-import React, { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import Grid from '@mui/material/Grid';
+import React, { useState } from 'react';
+import {
+  Container,
+  Paper,
+  Box,
+  Typography,
+  Tabs,
+  Tab,
+} from '@mui/material';
+import { LoginForm } from '../components/LoginForm';
+import { RegisterForm } from '../components/RegisterForm';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-import { useAuth } from 'react-oidc-context';
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
 
-/**
- * Login page component.
- *
- * Handles the authentication flow and provides information about account creation.
- * Users can sign in with existing accounts or create new ones through Keycloak.
- *
- * @return Login page component
- */
-export const LoginPage: React.FC = () => {
-  const { isAuthenticated, signinRedirect, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Get the intended destination from location state
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
-
-  useEffect(() => {
-    // If already authenticated, redirect to intended destination
-    if (isAuthenticated && !isLoading) {
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate, from]);
-
-  const handleLogin = () => {
-    signinRedirect();
-  };
-
-  if (isLoading) {
-    return (
-      <Container maxWidth="sm">
-        <Box
-          sx={{
-            marginTop: 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
-          <Typography component="h1" variant="h5">
-            Loading...
-          </Typography>
-        </Box>
-      </Container>
-    );
-  }
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
 
   return (
-    <Container maxWidth="md">
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`auth-tabpanel-${index}`}
+      aria-labelledby={`auth-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
+export const LoginPage: React.FC = () => {
+  const [tabValue, setTabValue] = useState(0);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
+  const handleAuthSuccess = () => {
+    navigate('/');
+  };
+
+  const handleSwitchToLogin = () => {
+    setTabValue(0);
+  };
+
+  const handleSwitchToRegister = () => {
+    setTabValue(1);
+  };
+
+  return (
+    <Container component="main" maxWidth="sm">
       <Box
         sx={{
           marginTop: 8,
@@ -66,77 +72,31 @@ export const LoginPage: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        <Typography component="h1" variant="h3" gutterBottom>
-          Welcome to ConGen
-        </Typography>
-        <Typography component="h2" variant="h6" color="text.secondary" gutterBottom>
-          Your AI-powered workout companion
-        </Typography>
-
-        <Grid container spacing={3} sx={{ mt: 4 }}>
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" component="h3" gutterBottom>
-                  Sign In
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  Access your personalized workout programs and track your progress.
-                </Typography>
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={handleLogin}
-                  sx={{ width: '100%' }}
-                >
-                  Sign In
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h5" component="h3" gutterBottom>
-                  Create Account
-                </Typography>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  New to ConGen? Create an account to get started with personalized workout
-                  programs.
-                </Typography>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  onClick={handleLogin}
-                  sx={{ width: '100%' }}
-                >
-                  Sign Up
-                </Button>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-
-        <Box sx={{ mt: 4, textAlign: 'center' }}>
-          <Typography variant="body2" color="text.secondary">
-            By signing in or creating an account, you'll be able to:
-          </Typography>
-          <Box component="ul" sx={{ mt: 2, textAlign: 'left', display: 'inline-block' }}>
-            <Typography component="li" variant="body2" color="text.secondary">
-              Generate personalized workout programs
-            </Typography>
-            <Typography component="li" variant="body2" color="text.secondary">
-              Track your exercise preferences and equipment
-            </Typography>
-            <Typography component="li" variant="body2" color="text.secondary">
-              Monitor your progress and one-rep maxes
-            </Typography>
-            <Typography component="li" variant="body2" color="text.secondary">
-              Access a comprehensive exercise database
-            </Typography>
+        <Paper elevation={3} sx={{ width: '100%' }}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs value={tabValue} onChange={handleTabChange} aria-label="auth tabs">
+              <Tab label="Sign In" />
+              <Tab label="Sign Up" />
+            </Tabs>
           </Box>
-        </Box>
+          
+          <TabPanel value={tabValue} index={0}>
+            <Typography component="h1" variant="h5" align="center" gutterBottom>
+              Sign In
+            </Typography>
+            <LoginForm onSuccess={handleAuthSuccess} />
+          </TabPanel>
+          
+          <TabPanel value={tabValue} index={1}>
+            <Typography component="h1" variant="h5" align="center" gutterBottom>
+              Create Account
+            </Typography>
+            <RegisterForm 
+              onSuccess={handleAuthSuccess} 
+              onSwitchToLogin={handleSwitchToLogin}
+            />
+          </TabPanel>
+        </Paper>
       </Box>
     </Container>
   );

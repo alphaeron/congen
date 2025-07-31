@@ -15,6 +15,8 @@ import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
+import org.mockito.kotlin.never
+import org.mockito.kotlin.any
 
 @TestPropertySource(
     properties = [
@@ -233,5 +235,70 @@ class UserControllerTest {
             .verify()
 
         verify(userService).deleteUser(NON_EXISTENT_USER_ID)
+    }
+
+    @Test
+    fun `getCurrentUser should return current user profile`() {
+        // Given
+        val keycloakUserId = "test-keycloak-user-id"
+        val now = Instant.now()
+        val expectedUser = User(
+            id = USER_ID,
+            name = NAME,
+            age = AGE,
+            height = BigDecimal(HEIGHT),
+            weight = BigDecimal(WEIGHT),
+            createdAt = now,
+            updatedAt = now,
+            keycloakUserId = keycloakUserId
+        )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakUserId))
+        whenever(userService.getUserByKeycloakUserId(keycloakUserId)).thenReturn(Mono.just(expectedUser))
+
+        // When
+        val result = userController.getCurrentUser()
+
+        // Then
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(expectedUser))
+            .verifyComplete()
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userService).getUserByKeycloakUserId(keycloakUserId)
+    }
+
+    @Test
+    fun `getCurrentUser should return 404 when user not found in database`() {
+        // Given
+        val keycloakUserId = "test-keycloak-user-id"
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakUserId))
+        whenever(userService.getUserByKeycloakUserId(keycloakUserId))
+            .thenReturn(Mono.error(NoResultsFoundException("User not found")))
+
+        // When
+        val result = userController.getCurrentUser()
+
+        // Then
+        StepVerifier.create(result)
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userService).getUserByKeycloakUserId(keycloakUserId)
+    }
+
+    @Test
+    fun `getCurrentUser should propagate keycloak error`() {
+        // Given
+        val error = RuntimeException("Keycloak error")
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.error(error))
+
+        // When
+        val result = userController.getCurrentUser()
+
+        // Then
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userService, never()).getUserByKeycloakUserId(any())
     }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { useAuth } from 'react-oidc-context';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AuthorizedElementProps {
   roles?: string[];
@@ -51,10 +51,12 @@ export const AuthorizedElement: React.FC<AuthorizedElementProps> = ({
   // Check if user has any of the required roles
   const isAuthorized = () => {
     if (user && roles) {
-      // For now, we'll check if the user has any of the required roles
-      // This is a simplified implementation - you may need to adjust based on your OIDC setup
-      const userRoles = (user.profile?.roles as string[]) || [];
-      return roles.some(role => userRoles.includes(role));
+      // Check user's groups and roles
+      const userGroups = user.groups || [];
+      const userRoles = user.roles || [];
+      
+      // Check if user has any of the required roles
+      return roles.some(role => userGroups.includes(role) || userRoles.includes(role));
     }
     return false;
   };

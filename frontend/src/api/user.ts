@@ -55,3 +55,14 @@ export const getUserById = (userId: number): Promise<User> =>
     method: 'GET',
     url: `/user/${userId}`,
   });
+
+/**
+ * Get current user profile.
+ *
+ * @return The current user's profile
+ */
+export const getCurrentUser = (): Promise<User> =>
+  REQUEST({
+    method: 'GET',
+    url: '/user/me',
+  });

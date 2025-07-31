@@ -14,7 +14,7 @@ import { default as LogoutIcon } from '@mui/icons-material/Logout';
 import { default as PersonIcon } from '@mui/icons-material/Person';
 import { default as SettingsIcon } from '@mui/icons-material/Settings';
 
-import { useAuth } from 'react-oidc-context';
+import { useAuth } from '../contexts/AuthContext';
 import { AuthorizedElement } from './AuthorizedElement';
 
 /**
@@ -26,7 +26,7 @@ import { AuthorizedElement } from './AuthorizedElement';
  * @return User profile component
  */
 export const UserProfile: React.FC = () => {
-  const { signoutRedirect, user } = useAuth();
+  const { logout, user } = useAuth();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -40,7 +40,7 @@ export const UserProfile: React.FC = () => {
 
   const handleLogout = () => {
     handleClose();
-    signoutRedirect();
+    logout();
   };
 
   const handleAccountManagement = () => {
@@ -49,11 +49,11 @@ export const UserProfile: React.FC = () => {
     // You may need to implement this differently
   };
 
-  // Extract user information from OIDC user object
-  const userInfo = user;
-  const username = userInfo?.profile?.preferred_username || userInfo?.profile?.email || 'User';
-  const email = userInfo?.profile?.email || '';
-  const name = userInfo?.profile?.name || username;
+  // Extract user information from our user object
+  const username = user?.name || 'User';
+  const name = user?.name || username;
+  const groups = user?.groups || [];
+  const roles = user?.roles || [];
 
   return (
     <AuthorizedElement requireAuth={true}>
@@ -116,9 +116,9 @@ export const UserProfile: React.FC = () => {
             <Typography variant="body2" fontWeight="bold">
               {name}
             </Typography>
-            {email && (
+            {(groups.length > 0 || roles.length > 0) && (
               <Typography variant="caption" color="text.secondary">
-                {email}
+                {[...groups, ...roles].join(', ')}
               </Typography>
             )}
           </Box>

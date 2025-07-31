@@ -54,4 +54,6 @@ export interface User {
   created_at: string;
   updated_at: string;
   keycloak_user_id?: string;
+  groups?: string[]; // Keycloak groups, these aren't tracked in the backend
+  roles?: string[]; // Keycloak roles, these aren't tracked in the backend
 } // end interface User
