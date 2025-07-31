@@ -31,7 +31,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       if (requireAuth && !isAuthenticated) {
         navigate(redirectTo, { state: { from: location }, replace: true });
       } else if (!requireAuth && isAuthenticated) {
-        navigate('/exercises', { replace: true });
+        navigate(redirectTo || '/profile', { replace: true });
       }
     }
   }, [isLoading, requireAuth, isAuthenticated, navigate, redirectTo, location]);

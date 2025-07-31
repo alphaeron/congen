@@ -39,14 +39,14 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
             <Typography color="text.secondary">{props.exercise.name}</Typography>
           </Link>
           <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
-            <Chip label={`${capitalizeEachWord(props.exercise.movementType)} Exercise`} />
-            <BinaryTag isOn={props.exercise.isUpper} onText="Upper Body" offText="Lower Body" />
+            <Chip label={`${capitalizeEachWord(props.exercise.movement_type)}Exercise`} />
+            <BinaryTag isOn={props.exercise.is_upper} onText="Upper Body" offText="Lower Body" />
             <BinaryTag
-              isOn={props.exercise.isAccessory}
+              isOn={props.exercise.is_accessory}
               onText="Accessory"
               offText="Primary Movement"
             />
-            <BinaryTag isOn={props.exercise.isUnilateral} onText="Unilateral" offText="Bilateral" />
+            <BinaryTag isOn={props.exercise.is_unilateral} onText="Unilateral" offText="Bilateral" />
           </Stack>
           {props.equipment.length > 0 && (
             <React.Fragment>

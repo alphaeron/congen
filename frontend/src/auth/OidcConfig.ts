@@ -14,7 +14,7 @@ export const getOidcConfig = () => {
   return {
     authority: authority,
     client_id: 'congen-frontend',
-    redirect_uri: frontendHost,
+    redirect_uri: `${frontendHost}/auth/callback`,
     post_logout_redirect_uri: frontendHost,
     silent_redirect_uri: `${frontendHost}/silent-renew.html`,
   };
@@ -37,6 +37,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     silent_redirect_uri: config.silent_redirect_uri,
     scope: 'openid profile email',
     response_type: 'code',
+    loadUserInfo: true,
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
       token_endpoint: `${authority}/protocol/openid-connect/token`,

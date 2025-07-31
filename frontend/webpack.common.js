@@ -91,6 +91,7 @@ module.exports = {
     filename: '[name].js',
     chunkFilename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '/',
     clean: true,
   },
 };

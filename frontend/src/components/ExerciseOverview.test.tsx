@@ -7,7 +7,7 @@ import * as React from 'react';
 import { ENDPOINT } from '../api/endpoint';
 import { ExerciseOverview } from './ExerciseOverview';
 
-import { EXERCISE, EXERCISE_MUSCLE, EXERCISE_EQUIPMENT, MUSCLE, EQUIPMENT } from '__mocks__/data';
+import { EXERCISE, EXERCISE_MUSCLE, EXERCISE_EQUIPMENT, MUSCLE, EQUIPMENT } from '../__mocks__/data';
 
 describe('ExerciseOverview component', () => {
   const queryClient = new QueryClient({

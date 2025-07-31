@@ -1,113 +1,120 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
-import { exchangeCodeForTokens } from '../api/auth';
+import React, { useEffect } from 'react';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Box, CircularProgress, Typography } from '@mui/material';
 
 /**
- * AuthCallback component handles the OAuth authorization code callback.
- * 
- * This component is called when Keycloak redirects back to our application
- * after the user has authenticated. It exchanges the authorization code
- * for access and refresh tokens.
+ * Component to handle OIDC authentication callback.
+ * This component manually processes the authentication callback from Keycloak
+ * and redirects the user to the appropriate page.
  */
 export const AuthCallback: React.FC = () => {
-  const [searchParams] = useSearchParams();
+  const oidcAuth = useOidcAuth();
   const navigate = useNavigate();
-  const { clearError } = useAuth();
-  const [error, setError] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        clearError();
-        
-        // Get authorization code and state from URL parameters
-        const code = searchParams.get('code');
-        const state = searchParams.get('state');
-        const error = searchParams.get('error');
-        const errorDescription = searchParams.get('error_description');
+        console.log('AuthCallback: Processing callback...');
+        console.log('AuthCallback: Current URL:', location.pathname + location.search);
+        console.log('AuthCallback: OIDC state:', {
+          isLoading: oidcAuth.isLoading,
+          isAuthenticated: oidcAuth.isAuthenticated,
+          user: oidcAuth.user ? 'present' : 'null',
+          error: oidcAuth.error ? oidcAuth.error.message : 'none'
+        });
 
-        // Check for OAuth errors
+        // Check if we have a code parameter in the URL (OIDC callback)
+        const urlParams = new URLSearchParams(location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        const error = urlParams.get('error');
+
         if (error) {
-          throw new Error(errorDescription || error);
+          console.error('AuthCallback: OIDC error:', error);
+          navigate('/login', { 
+            state: { 
+              error: `Authentication failed: ${error}` 
+            },
+            replace: true 
+          });
+          return;
         }
 
-        // Validate required parameters
-        if (!code || !state) {
-          throw new Error('Missing required authorization parameters');
-        }
-
-        // Exchange authorization code for tokens
-        const tokens = await exchangeCodeForTokens(code, state);
-        
-        // Store tokens
-        localStorage.setItem('access_token', tokens.access_token);
-        localStorage.setItem('refresh_token', tokens.refresh_token);
-        
-        // Redirect to the main application
-        navigate('/', { replace: true });
-        
-      } catch (err: any) {
-        console.error('Authentication callback error:', err);
-        setError(err.message || 'Authentication failed');
-        
-        // Redirect to login page after a delay
-        setTimeout(() => {
+        if (!code) {
+          console.log('AuthCallback: No code parameter, redirecting to login');
           navigate('/login', { replace: true });
-        }, 3000);
-      } finally {
-        setIsProcessing(false);
+          return;
+        }
+
+        // If we have a code, wait for the OIDC library to process it
+        if (oidcAuth.isLoading) {
+          console.log('AuthCallback: OIDC is loading, waiting...');
+          return;
+        }
+
+        // Check if authentication was successful
+        if (oidcAuth.isAuthenticated && oidcAuth.user) {
+          console.log('AuthCallback: Authentication successful, redirecting to profile');
+          // Clean up the URL by removing the callback parameters
+          window.history.replaceState({}, document.title, '/profile');
+          navigate('/profile', { replace: true });
+          return;
+        }
+
+        // Check if there was an error
+        if (oidcAuth.error) {
+          console.error('AuthCallback: OIDC error:', oidcAuth.error);
+          navigate('/login', { 
+            state: { 
+              error: oidcAuth.error.message 
+            },
+            replace: true 
+          });
+          return;
+        }
+
+        // If we get here, something went wrong
+        console.log('AuthCallback: Unexpected state, redirecting to login');
+        navigate('/login', { 
+          state: { 
+            error: 'Authentication failed. Please try again.' 
+          },
+          replace: true 
+        });
+
+      } catch (error) {
+        console.error('AuthCallback: Error handling callback:', error);
+        navigate('/login', { 
+          state: { 
+            error: 'Authentication failed. Please try again.' 
+          },
+          replace: true 
+        });
       }
     };
 
-    handleCallback();
-  }, [searchParams, navigate, clearError]);
+    // Add a small delay to allow the OIDC library to process
+    const timer = setTimeout(handleCallback, 100);
+    return () => clearTimeout(timer);
+  }, [oidcAuth.isLoading, oidcAuth.isAuthenticated, oidcAuth.user, oidcAuth.error, navigate, location]);
 
-  if (isProcessing) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          gap: 2,
-        }}
-      >
-        <CircularProgress />
-        <Typography variant="h6">Completing authentication...</Typography>
-      </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          gap: 2,
-          p: 3,
-        }}
-      >
-        <Alert severity="error" sx={{ maxWidth: 600 }}>
-          <Typography variant="h6" gutterBottom>
-            Authentication Error
-          </Typography>
-          <Typography>{error}</Typography>
-          <Typography variant="body2" sx={{ mt: 1 }}>
-            Redirecting to login page...
-          </Typography>
-        </Alert>
-      </Box>
-    );
-  }
-
-  return null;
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        gap: 2,
+      }}
+    >
+      <CircularProgress size={60} />
+      <Typography variant="h6" color="text.secondary">
+        Processing authentication...
+      </Typography>
+    </Box>
+  );
 }; 

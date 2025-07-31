@@ -76,14 +76,14 @@ export function ExerciseOverview(): React.ReactElement {
     retry: 1,
   });
 
-  const getExerciseEquipmentMap = async (): Map<string, Set<string>> => {
+  const getExerciseEquipmentMap = async (): Promise<Map<string, Set<string>>> => {
     const res = await getExerciseEquipment();
-    const mapping = new Map<string, string>();
-    const exerciseNames = Array.from(new Set(res.map(e => e.exerciseName)));
+    const mapping = new Map<string, Set<string>>();
+    const exerciseNames = Array.from(new Set(res.map(e => e.exercise_name)));
     for (const exerciseName of exerciseNames) {
       mapping.set(
         exerciseName,
-        new Set(res.filter(e => e.exerciseName == exerciseName).map(e => e.equipmentName))
+        new Set(res.filter(e => e.exercise_name === exerciseName).map(e => e.equipment_name))
       );
     }
     return mapping;
@@ -100,14 +100,14 @@ export function ExerciseOverview(): React.ReactElement {
     retry: 1,
   });
 
-  const getExerciseMuscleMap = async (): Map<string, Set<string>> => {
+  const getExerciseMuscleMap = async (): Promise<Map<string, Set<string>>> => {
     const res = await getExerciseMuscle();
-    const mapping = new Map<string, string>();
-    const exerciseNames = Array.from(new Set(res.map(e => e.exerciseName)));
+    const mapping = new Map<string, Set<string>>();
+    const exerciseNames = Array.from(new Set(res.map(e => e.exercise_name)));
     for (const exerciseName of exerciseNames) {
       mapping.set(
         exerciseName,
-        new Set(res.filter(e => e.exerciseName == exerciseName).map(e => e.muscleName))
+        new Set(res.filter(e => e.exercise_name === exerciseName).map(e => e.muscle_name))
       );
     }
     return mapping;
@@ -126,7 +126,7 @@ export function ExerciseOverview(): React.ReactElement {
 
   React.useEffect(() => {
     if (exercises) {
-      setMovementTypes(Array.from(new Set(exercises.map(e => e.movementType))));
+      setMovementTypes(Array.from(new Set(exercises.map(e => e.movement_type))));
     }
   }, [exercises]);
 
@@ -135,18 +135,18 @@ export function ExerciseOverview(): React.ReactElement {
       let toDisplay = exercises;
       if (isUnilateralFilter !== 'Both') {
         const isUnilateral = isUnilateralFilter === 'Unilateral';
-        toDisplay = toDisplay.filter(e => e.isUnilateral === isUnilateral);
+        toDisplay = toDisplay.filter(e => e.is_unilateral === isUnilateral);
       }
       if (isAccessoryFilter !== 'Both') {
         const isAccessory = isAccessoryFilter === 'Accessory';
-        toDisplay = toDisplay.filter(e => e.isAccessory === isAccessory);
+        toDisplay = toDisplay.filter(e => e.is_accessory === isAccessory);
       }
       if (isUpperFilter !== 'Both') {
         const isUpper = isUpperFilter === 'Upper';
-        toDisplay = toDisplay.filter(e => e.isUpper === isUpper);
+        toDisplay = toDisplay.filter(e => e.is_upper === isUpper);
       }
       if (movementTypes.find(element => element === movementTypeFilter) !== undefined) {
-        toDisplay = toDisplay.filter(e => e.movementType === movementTypeFilter);
+        toDisplay = toDisplay.filter(e => e.movement_type === movementTypeFilter);
       }
 
       if (

@@ -74,7 +74,7 @@ export function ExerciseDetails(
   } = useApiGet<Muscle[]>(
     [`muscles${props.exerciseName}`, exerciseMuscles],
     async (): Promise<Muscle[]> =>
-      Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscleName))),
+      Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name))),
     {
       enabled: true,
       refetchOnWindowFocus: true,
@@ -107,7 +107,7 @@ export function ExerciseDetails(
   } = useApiGet<Equipment[]>(
     [`equipment${props.exerciseName}`, exerciseEquipment],
     async (): Promise<Equipment[]> =>
-      Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipmentName))),
+      Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name))),
     {
       enabled: true,
       refetchOnWindowFocus: true,
@@ -157,14 +157,14 @@ export function ExerciseDetails(
         <Grid container={true} spacing={2}>
           <Grid size={12}>
             <Stack direction="row" spacing={2}>
-              <Chip label={`${capitalizeEachWord(exercise.movementType)} Exercise`} />
-              <BinaryTag isOn={exercise.isUpper} onText="Upper Body" offText="Lower Body" />
+              <Chip label={`${capitalizeEachWord(exercise.movement_type)} Exercise`} />
+              <BinaryTag isOn={exercise.is_upper} onText="Upper Body" offText="Lower Body" />
               <BinaryTag
-                isOn={exercise.isAccessory}
+                isOn={exercise.is_accessory}
                 onText="Accessory"
                 offText="Primary Movement"
               />
-              <BinaryTag isOn={exercise.isUnilateral} onText="Unilateral" offText="Bilateral" />
+              <BinaryTag isOn={exercise.is_unilateral} onText="Unilateral" offText="Bilateral" />
             </Stack>
           </Grid>
           <Grid size={9}>
@@ -194,12 +194,12 @@ export function ExerciseDetails(
                   <Typography variant="h3">Muscles Worked</Typography>
                 </Divider>
                 <Grid container={true} spacing={2}>
-                  {exerciseMuscles.map(em => {
-                    const muscle = muscles.find(elem => elem.name === em.muscleName);
+                  {exerciseMuscles?.map(em => {
+                    const muscle = muscles.find(elem => elem.name === em.muscle_name);
                     return (
-                      <Grid size={12} key={em.muscleName}>
+                      <Grid size={12} key={em.muscle_name}>
                         <Tooltip arrow={true} title={muscle?.description}>
-                          <Chip label={`${capitalizeEachWord(em.muscleName)}`} />
+                          <Chip label={`${capitalizeEachWord(em.muscle_name)}`} />
                         </Tooltip>
                       </Grid>
                     );
@@ -211,12 +211,12 @@ export function ExerciseDetails(
                   <Typography variant="h3">Equipment Needed</Typography>
                 </Divider>
                 <Grid container={true} spacing={2}>
-                  {exerciseEquipment.map(ee => {
-                    const equip = equipment.find(elem => elem.name === ee.equipmentName);
+                  {exerciseEquipment?.map(ee => {
+                    const equip = equipment.find(elem => elem.name === ee.equipment_name);
                     return (
-                      <Grid size={12} key={ee.equipmentName}>
+                      <Grid size={12} key={ee.equipment_name}>
                         <Tooltip arrow={true} title={equip?.description}>
-                          <Chip label={`${capitalizeEachWord(ee.equipmentName)}`} />
+                          <Chip label={`${capitalizeEachWord(ee.equipment_name)}`} />
                         </Tooltip>
                       </Grid>
                     );

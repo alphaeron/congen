@@ -6,11 +6,12 @@ import {
   Typography,
   Tabs,
   Tab,
+  Alert,
 } from '@mui/material';
 import { LoginForm } from '../components/LoginForm';
 import { RegisterForm } from '../components/RegisterForm';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -38,20 +39,29 @@ export const LoginPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const registrationMessage = location.state?.message;
 
   // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      navigate('/profile');
     }
   }, [isAuthenticated, navigate]);
+
+  // Switch to login tab if there's a registration message
+  React.useEffect(() => {
+    if (registrationMessage) {
+      setTabValue(0);
+    }
+  }, [registrationMessage]);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
   const handleAuthSuccess = () => {
-    navigate('/');
+    navigate('/profile');
   };
 
   const handleSwitchToLogin = () => {
@@ -72,6 +82,11 @@ export const LoginPage: React.FC = () => {
           alignItems: 'center',
         }}
       >
+        {registrationMessage && (
+          <Alert severity="success" sx={{ width: '100%', mb: 2 }}>
+            {registrationMessage}
+          </Alert>
+        )}
         <Paper elevation={3} sx={{ width: '100%' }}>
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs value={tabValue} onChange={handleTabChange} aria-label="auth tabs">

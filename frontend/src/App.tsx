@@ -13,16 +13,18 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
 import { useAuth } from './contexts/AuthContext';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
+import { getAuthProviderConfig } from './auth/OidcConfig';
 import { AuthorizedElement } from './components/AuthorizedElement';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { UserProfile } from './components/UserProfile';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
 import { LoginPage } from './pages/LoginPage';
 import { RootPage } from './pages/RootPage';
-import { AuthCallback } from './components/AuthCallback';
+import { UserProfilePage } from './pages/UserProfilePage';
 import { getTheme } from './theme';
+import { AuthProvider } from './contexts/AuthContext';
+import { AuthCallback } from './components/AuthCallback';
 
 import './App.css';
 import './styles/menuButton.css';
@@ -154,28 +156,24 @@ function AppContent(): React.ReactElement {
               >
                 <AuthorizedElement
                   fallback={
-                    <React.Fragment>
-                      <Button
-                        color="primary"
-                        variant="contained"
-                        component={Link}
-                        to="/login"
-                        sx={{ mr: 1 }}
-                      >
-                        Sign up
-                      </Button>
-                      <Button
-                        color="primary"
-                        variant="outlined"
-                        component={Link}
-                        to="/login"
-                      >
-                        Sign in
-                      </Button>
-                    </React.Fragment>
+                    <Button
+                      color="primary"
+                      variant="contained"
+                      component={Link}
+                      to="/login"
+                    >
+                      Sign in
+                    </Button>
                   }
                 >
-                  <UserProfile />
+                  <Button
+                    color="inherit"
+                    component={Link}
+                    to="/profile"
+                    sx={{ mr: 1 }}
+                  >
+                    Profile
+                  </Button>
                   <Button
                     color="inherit"
                     onClick={logout}
@@ -217,34 +215,24 @@ function AppContent(): React.ReactElement {
                     <Divider />
                     <AuthorizedElement
                       fallback={
-                        <React.Fragment>
-                          <MenuItem>
-                            <Button
-                              color="primary"
-                              variant="contained"
-                              component={Link}
-                              to="/login"
-                              sx={{ width: '100%' }}
-                            >
-                              Sign up
-                            </Button>
-                          </MenuItem>
-                          <MenuItem>
-                            <Button
-                              color="primary"
-                              variant="outlined"
-                              component={Link}
-                              to="/login"
-                              sx={{ width: '100%' }}
-                            >
-                              Sign in
-                            </Button>
-                          </MenuItem>
-                        </React.Fragment>
+                        <MenuItem>
+                          <Button
+                            color="primary"
+                            variant="contained"
+                            component={Link}
+                            to="/login"
+                            sx={{ width: '100%' }}
+                          >
+                            Sign in
+                          </Button>
+                        </MenuItem>
                       }
                     >
-                      <MenuItem>
-                        <UserProfile />
+                      <MenuItem
+                        component={Link}
+                        to="/profile"
+                      >
+                        Profile
                       </MenuItem>
                       <MenuItem>
                         <Button
@@ -273,7 +261,7 @@ function AppContent(): React.ReactElement {
             <Route
               path="/login"
               element={
-                <ProtectedRoute requireAuth={false} redirectTo="/exercises">
+                <ProtectedRoute requireAuth={false} redirectTo="/profile">
                   <LoginPage />
                 </ProtectedRoute>
               }
@@ -295,6 +283,14 @@ function AppContent(): React.ReactElement {
               }
             />
             <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/auth/callback"
               element={<AuthCallback />}
             />
@@ -312,9 +308,11 @@ function AppContent(): React.ReactElement {
 export function App(): React.ReactElement {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <OidcAuthProvider {...getAuthProviderConfig()}>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </OidcAuthProvider>
     </BrowserRouter>
   );
 } // end component App

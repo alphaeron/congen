@@ -66,3 +66,17 @@ export const getCurrentUser = (): Promise<User> =>
     method: 'GET',
     url: '/user/me',
   });
+
+/**
+ * Delete a user account.
+ *
+ * Permanently removes a user from the system. This action cannot be undone.
+ *
+ * @param userId The user ID to delete
+ * @return The deleted user profile
+ */
+export const deleteUser = (userId: number): Promise<User> =>
+  REQUEST({
+    method: 'DELETE',
+    url: `/user/${userId}`,
+  });
