@@ -11,16 +11,19 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         // Create a unique user for each test
         val unique = System.nanoTime()
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique")
+        val token = getValidToken("user")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = token)
     }
 
     @Test
     fun `should save user equipment`() {
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
+        val token = getValidToken("user")
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
 
         // Verify the user equipment was created correctly
         webTestClient.get()
             .uri("/api/v1/user_equipment/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -30,9 +33,11 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user equipment by user id`() {
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
+        val token = getValidToken("user")
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
         webTestClient.get()
             .uri("/api/v1/user_equipment/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -42,11 +47,13 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete user equipment`() {
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
+        val token = getValidToken("user")
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
 
         // Delete the user equipment using query parameters
         webTestClient.delete()
             .uri("/api/v1/user_equipment/?user_id=$userId&equipment_name=${IntegrationTestHelpers.TEST_EQUIPMENT_NAME}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -56,13 +63,15 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle multiple equipment for same user`() {
+        val token = getValidToken("user")
         // Add multiple equipment for the same user
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME_2)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME_2, token = token)
 
         // Get all equipment for the user
         webTestClient.get()
             .uri("/api/v1/user_equipment/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

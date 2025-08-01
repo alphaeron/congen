@@ -14,7 +14,13 @@ resource "keycloak_realm" "congen" {
   enabled              = true
   display_name         = var.realm_display_name
   display_name_html    = var.realm_display_name_html
-  registration_allowed = false
+  registration_allowed = true
+  registration_email_as_username = false
+  edit_username_allowed = false
+  reset_password_allowed = true
+  remember_me = true
+  login_with_email_allowed = true
+  duplicate_emails_allowed = false
 }
 
 # Create roles
@@ -95,6 +101,7 @@ resource "keycloak_openid_client" "frontend_client" {
   service_accounts_enabled     = false
   valid_redirect_uris          = var.frontend_redirect_uris
   web_origins                  = var.frontend_web_origins
+  login_theme                  = "congen"
 }
 
 # Assign service role to backend service account

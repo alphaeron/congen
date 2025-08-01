@@ -7,7 +7,12 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
+import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter
 import org.springframework.security.web.server.SecurityWebFilterChain
+import reactor.core.publisher.Mono
 
 /**
  * Security configuration for Keycloak integration.
@@ -21,7 +26,6 @@ import org.springframework.security.web.server.SecurityWebFilterChain
  * @since 1.0.0
  */
 @Configuration
-@Profile("!integration-test")
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 class SecurityConfig {
@@ -43,12 +47,35 @@ class SecurityConfig {
                 exchanges
                     .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow all OPTIONS requests for CORS
                     .pathMatchers("/api/v1/health/**").permitAll()
-                    .pathMatchers("/api/v1/user/").permitAll() // Only allow user registration endpoint
                     .anyExchange().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->
-                oauth2.jwt { }
+                oauth2.jwt { jwt ->
+                    jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
+                }
             }
             .build()
+    }
+
+    /**
+     * Configures JWT authentication converter to extract roles from Keycloak JWT tokens.
+     *
+     * Maps Keycloak realm roles to Spring Security authorities.
+     *
+     * @return ReactiveJwtAuthenticationConverterAdapter configured for Keycloak roles
+     */
+    @Bean
+    fun jwtAuthenticationConverter(): ReactiveJwtAuthenticationConverterAdapter {
+        val converter = JwtAuthenticationConverter()
+        converter.setJwtGrantedAuthoritiesConverter { jwt: Jwt ->
+            val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
+            val roles = realmAccess?.get("roles") as? List<*>
+            
+            roles?.map { role ->
+                SimpleGrantedAuthority("ROLE_${role}")
+            } ?: emptyList()
+        }
+        
+        return ReactiveJwtAuthenticationConverterAdapter(converter)
     }
 }

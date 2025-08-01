@@ -508,6 +508,30 @@
       },
       "notBefore": 0,
       "groups": []
+    },
+    {
+      "id": "test-user-id-1234",
+      "username": "testuser",
+      "email": "testuser@example.com",
+      "emailVerified": true,
+      "createdTimestamp": 1753495994255,
+      "enabled": true,
+      "totp": false,
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "default-roles-congen"
+      ],
+      "clientRoles": {},
+      "credentials": [
+        {
+          "type": "password",
+          "value": "testpassword",
+          "temporary": false
+        }
+      ],
+      "notBefore": 0,
+      "groups": []
     }
   ],
   "scopeMappings": [

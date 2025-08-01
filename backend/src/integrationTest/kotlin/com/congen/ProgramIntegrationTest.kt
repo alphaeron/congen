@@ -12,9 +12,11 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create program`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         webTestClient.post()
             .uri("/api/v1/program/?user_id=$userId&name=${IntegrationTestHelpers.TEST_PROGRAM_NAME}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -26,15 +28,18 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get program by id`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId =
             IntegrationTestHelpers.createTestProgram(
                 webTestClient,
                 userId,
-                name = IntegrationTestHelpers.TEST_PROGRAM_NAME
+                name = IntegrationTestHelpers.TEST_PROGRAM_NAME,
+                token = token
             )
         webTestClient.get()
             .uri("/api/v1/program/$programId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -49,23 +54,28 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when program not found`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/program/999")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should get all programs`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
         // Create second program as inactive to avoid unique constraint violation
         webTestClient.post()
             .uri("/api/v1/program/?user_id=$userId&name=Another Program&is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
         webTestClient.get()
             .uri("/api/v1/program/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -75,14 +85,16 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update program`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
 
         // First create a program
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME)
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME, token = token)
 
         // Then update it
         webTestClient.patch()
             .uri("/api/v1/program/$programId?name=Updated Program&current_week_number=3&is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -95,23 +107,28 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when updating non-existent program`() {
+        val token = getValidToken("user")
         webTestClient.patch()
             .uri("/api/v1/program/999?name=Updated Program&current_week_number=3&is_active=true")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should delete program`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId =
             IntegrationTestHelpers.createTestProgram(
                 webTestClient,
                 userId,
-                name = IntegrationTestHelpers.TEST_PROGRAM_NAME
+                name = IntegrationTestHelpers.TEST_PROGRAM_NAME,
+                token = token
             )
         webTestClient.delete()
             .uri("/api/v1/program/$programId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -123,24 +140,29 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when deleting non-existent program`() {
+        val token = getValidToken("user")
         webTestClient.delete()
             .uri("/api/v1/program/999")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should get programs by user id without filter`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 1")
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 1", token = token)
         // Create second program as inactive to avoid unique constraint violation
         webTestClient.post()
             .uri("/api/v1/program/?user_id=$userId&name=Test Program 2&is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/api/v1/program/user/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -150,11 +172,13 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get active programs by user id`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Active Program")
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Active Program", token = token)
 
         webTestClient.get()
             .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -165,17 +189,20 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get inactive programs by user id`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
 
         // Deactivate the program
         webTestClient.patch()
             .uri("/api/v1/program/$programId?name=Test Program&current_week_number=1&is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/api/v1/program/user/$userId?is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -186,17 +213,19 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should deactivate other programs when creating new active program`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
 
         // Create first program (should be active by default)
-        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program")
+        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
 
         // Create second program (should deactivate the first one)
-        val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program")
+        val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program", token = token)
 
         // Check that only the second program is active
         webTestClient.get()
             .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -208,6 +237,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         // Check that the first program is now inactive
         webTestClient.get()
             .uri("/api/v1/program/user/$userId?is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -219,14 +249,16 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create inactive program without deactivating others`() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
 
         // Create first program (should be active by default)
-        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program")
+        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
 
         // Create second program as inactive
         webTestClient.post()
             .uri("/api/v1/program/?user_id=$userId&name=Second Program&is_active=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -235,6 +267,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         // Check that the first program is still active
         webTestClient.get()
             .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

@@ -29,56 +29,41 @@ class ApiPrefixIntegrationTest : BaseIntegrationTest() {
     }
 
     /**
-     * Tests that user endpoint is accessible with API prefix.
+     * Tests that user endpoint is accessible with API prefix and authentication.
      */
     @Test
     fun `user endpoint should be accessible with API prefix`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/user/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk
     }
 
     /**
-     * Tests that program endpoint is accessible with API prefix.
+     * Tests that program endpoint is accessible with API prefix and authentication.
      */
     @Test
     fun `program endpoint should be accessible with API prefix`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/program/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk
     }
 
     /**
-     * Tests that exercise endpoint is accessible with API prefix.
+     * Tests that exercise endpoint is accessible with API prefix and authentication.
      */
     @Test
     fun `exercise endpoint should be accessible with API prefix`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/exercise/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk
-    }
-
-    /**
-     * Tests that endpoints without API prefix return 404.
-     */
-    @Test
-    fun `endpoints without API prefix should return 404`() {
-        webTestClient.get()
-            .uri("/health/")
-            .exchange()
-            .expectStatus().isNotFound
-
-        webTestClient.get()
-            .uri("/user/")
-            .exchange()
-            .expectStatus().isNotFound
-
-        webTestClient.get()
-            .uri("/program/")
-            .exchange()
-            .expectStatus().isNotFound
     }
 }

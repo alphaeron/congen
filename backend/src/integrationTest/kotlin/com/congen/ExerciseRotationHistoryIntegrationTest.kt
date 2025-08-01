@@ -16,13 +16,16 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         // Exercises already exist in migrations
         // Ensure a user exists before each test
-        testUserId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test
     fun `should create exercise rotation history record`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=false")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -35,18 +38,22 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 400 when isAccessory is invalid`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=invalid")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
     }
 
     @Test
     fun `should get exercise rotation history by id`() {
+        val token = getValidToken("user")
         // First create a record
         val response =
             webTestClient.post()
                 .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Safety Bar Squat&is_accessory=true")
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -56,6 +63,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // Then get the record by id
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/${response.id}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -67,25 +75,29 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get exercise rotation history by isAccessory`() {
+        val token = getValidToken("user")
         // First create some records for different accessory types
         IntegrationTestHelpers.createTestExerciseRotationHistory(
             webTestClient,
             testUserId,
             "Bench Press",
             "2024-01-01",
-            isAccessory = false
+            isAccessory = false,
+            token = token
         )
         IntegrationTestHelpers.createTestExerciseRotationHistory(
             webTestClient,
             testUserId,
             "Safety Bar Squat",
             "2024-01-01",
-            isAccessory = true
+            isAccessory = true,
+            token = token
         )
 
         // Then get records for accessory exercises
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/is_accessory/true")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -95,22 +107,26 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all exercise rotation history`() {
+        val token = getValidToken("user")
         IntegrationTestHelpers.createTestExerciseRotationHistory(
             webTestClient,
             testUserId,
             "Bench Press",
             "2024-01-01",
-            isAccessory = false
+            isAccessory = false,
+            token = token
         )
         IntegrationTestHelpers.createTestExerciseRotationHistory(
             webTestClient,
             testUserId,
             "Safety Bar Squat",
             "2024-01-01",
-            isAccessory = true
+            isAccessory = true,
+            token = token
         )
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -120,10 +136,12 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update exercise rotation history`() {
+        val token = getValidToken("user")
         // First create a record
         val response =
             webTestClient.post()
                 .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=false")
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -133,6 +151,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // Then update the record
         webTestClient.patch()
             .uri("/api/v1/exercise_rotation_history/${response.id}?user_id=$testUserId&exercise_name=Bench Press&is_accessory=true")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -142,10 +161,12 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete exercise rotation history by id`() {
+        val token = getValidToken("user")
         // First create a record
         val response =
             webTestClient.post()
                 .uri("/api/v1/exercise_rotation_history/?user_id=$testUserId&exercise_name=Bench Press&is_accessory=false")
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ExerciseRotationHistory::class.java)
@@ -155,6 +176,7 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // Then delete the record
         webTestClient.delete()
             .uri("/api/v1/exercise_rotation_history/${response.id}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -163,14 +185,17 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // Verify the record is deleted
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/${response.id}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
     fun `should return 404 when getting non-existent record`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/999999")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }

@@ -56,8 +56,8 @@ variable "frontend_redirect_uris" {
   description = "Frontend client redirect URIs"
   type        = list(string)
   default = [
-    "http://localhost:3000/*",
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:3000/profile/create"
   ]
 }
 

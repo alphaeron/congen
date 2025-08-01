@@ -17,6 +17,8 @@ import java.math.BigDecimal
 import java.time.Instant
 import org.mockito.kotlin.never
 import org.mockito.kotlin.any
+import java.time.LocalDateTime
+import org.mockito.kotlin.eq
 
 @TestPropertySource(
     properties = [
@@ -50,31 +52,52 @@ class UserControllerTest {
     }
 
     @Test
-    fun `save should return created user`() {
-        val now = Instant.now()
-        val user =
-            User(
-                id = 0,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now,
-                keycloakUserId = null
-            )
-        val savedUser = user.copy(id = USER_ID)
+    fun `save should create user profile after Keycloak registration`() {
+        // Given
+        val keycloakUserId = "test-keycloak-user-id"
+        val name = "John Doe"
+        val age = 30
+        val height = BigDecimal("175.5")
+        val weight = BigDecimal("80.0")
+        val unit = "KG"
+        val expectedUser = User(
+            id = 1,
+            name = name,
+            age = age,
+            height = height,
+            weight = BigDecimal("80.0"),
+            keycloakUserId = keycloakUserId,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
 
-        whenever(userService.createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123"))
-            .thenReturn(Mono.just(savedUser))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakUserId))
+        whenever(userService.createUser(
+            eq(keycloakUserId),
+            eq(name),
+            eq(age),
+            eq(height),
+            eq(weight),
+            eq(unit)
+        )).thenReturn(Mono.just(expectedUser))
 
-        val result = userController.save(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123")
+        // When
+        val result = userController.save(name, age, height, weight, unit)
 
+        // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(savedUser))
+            .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
 
-        verify(userService).createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123")
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userService).createUser(
+            keycloakUserId,
+            name,
+            age,
+            height,
+            weight,
+            unit
+        )
     }
 
     @Test

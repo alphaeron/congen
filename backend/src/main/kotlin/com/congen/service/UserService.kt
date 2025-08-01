@@ -30,39 +30,37 @@ class UserService(
     }
 
     /**
-     * Creates a new user after validation and unit conversion.
+     * Creates a new user profile after Keycloak registration.
+     * This method is called after a user has registered through Keycloak
+     * and we need to create their profile in our database.
+     * 
+     * @param keycloakUserId The Keycloak user ID
+     * @param name The user's full name
+     * @param age The user's age in years
+     * @param height The user's height in centimeters
+     * @param weight The user's weight in kilograms
+     * @param unit The weight unit (optional, defaults to KG)
+     * @return The created user profile
      * @throws ValidationException if validation fails
      */
     fun createUser(
+        keycloakUserId: String,
         name: String,
         age: Int,
         height: BigDecimal,
         weight: BigDecimal,
-        unit: String?,
-        email: String,
-        password: String
+        unit: String?
     ): Mono<User> {
-        logger.info("Creating user: {}", name)
+        logger.info("Creating user profile after Keycloak registration: {}", name)
         return Mono.fromCallable {
             val weightUnit = WeightUnit.fromString(unit)
             ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
         }
             .flatMap { weightInKg ->
-                val nameParts = name.split(" ", limit = 2)
-                val firstName = nameParts.firstOrNull() ?: name
-                val lastName = nameParts.getOrNull(1) ?: ""
-                keycloakClient.createUser(
-                    username = email,
-                    email = email,
-                    firstName = firstName,
-                    lastName = lastName,
-                    password = password
-                ).flatMap { keycloakUserId ->
-                    userDAL.insertUser(name, age, height, weightInKg, keycloakUserId)
-                }
+                userDAL.insertUser(name, age, height, weightInKg, keycloakUserId)
             }
-            .doOnSuccess { logger.debug("Created user with id: {}", it.id) }
-            .doOnError { e -> logger.error("Error creating user: {}", name, e) }
+            .doOnSuccess { logger.debug("Created user profile with id: {}", it.id) }
+            .doOnError { e -> logger.error("Error creating user profile: {}", name, e) }
     }
 
     /**

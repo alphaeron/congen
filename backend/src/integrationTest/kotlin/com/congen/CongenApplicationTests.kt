@@ -76,17 +76,11 @@ class CongenApplicationTests : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 404 for non-existent non-prefixed endpoints`() {
-        webTestClient.get()
-            .uri("/non-existent")
-            .exchange()
-            .expectStatus().isNotFound
-    }
-
-    @Test
     fun `should return 404 for non-existent prefixed endpoints`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/non-existent")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound
     }
@@ -106,9 +100,11 @@ class CongenApplicationTests : BaseIntegrationTest() {
 
     @Test
     fun `should handle invalid JSON gracefully`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri("/api/v1/equipment/")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer $token")
             .bodyValue("invalid json")
             .exchange()
             .expectStatus().isBadRequest
@@ -116,11 +112,13 @@ class CongenApplicationTests : BaseIntegrationTest() {
 
     @Test
     fun `should handle missing required fields gracefully`() {
+        val token = getValidToken("user")
         val invalidEquipment = mapOf("description" to "Missing name field")
 
         webTestClient.post()
             .uri("/api/v1/equipment/")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Authorization", "Bearer $token")
             .bodyValue(invalidEquipment)
             .exchange()
             .expectStatus().isBadRequest

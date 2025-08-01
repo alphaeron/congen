@@ -13,6 +13,7 @@ import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.util.Base64
 
 /**
  * Helper class for integration tests providing reusable constants and helper methods.
@@ -60,6 +61,8 @@ object IntegrationTestHelpers {
 
     /**
      * Creates a test user via the API and returns the user ID.
+     * This function works with the new authentication flow that uses Keycloak user IDs.
+     * The Keycloak user ID is automatically extracted from the JWT token.
      */
     fun createTestUser(
         webTestClient: WebTestClient,
@@ -67,9 +70,8 @@ object IntegrationTestHelpers {
         age: Int = TEST_USER_AGE,
         height: Double = TEST_USER_HEIGHT,
         weight: Double = TEST_USER_WEIGHT,
-        email: String? = "test.${System.nanoTime()}@example.com",
-        password: String? = "notarealpassword",
-        unit: WeightUnit? = null
+        unit: WeightUnit? = null,
+        token: String? = null,
     ): Int {
         val baseUri =
             "/api/v1/user/?name=$name" +
@@ -77,27 +79,26 @@ object IntegrationTestHelpers {
                 "&height=$height" +
                 "&weight=$weight"
 
-        val withAuth =
-            if (email != null && password != null) {
-                "$baseUri&email=$email&password=$password"
+        // Add authorization header - use provided token or get a default one
+        val authToken = token ?: BaseIntegrationTest.getDefaultTestToken()
+
+        val finalUri =
+            if (unit != null) {
+                "$baseUri&unit=${unit.name}"
             } else {
                 baseUri
             }
 
-        val finalUri =
-            if (unit != null) {
-                "$withAuth&unit=${unit.name}"
-            } else {
-                withAuth
-            }
+        val request = webTestClient.post()
+            .uri(finalUri)
 
-        val result =
-            webTestClient.post()
-                .uri(finalUri)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
+        request.header("Authorization", "Bearer $authToken")
+
+        val result = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(User::class.java)
+            .returnResult()
 
         val response = result.responseBody
         if (response == null) {
@@ -112,15 +113,24 @@ object IntegrationTestHelpers {
      */
     fun getTestUser(
         webTestClient: WebTestClient,
-        userId: Int
+        userId: Int,
+        token: String? = null
     ): User {
-        val result =
-            webTestClient.get()
-                .uri("/api/v1/user/$userId")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(User::class.java)
-                .returnResult()
+        val request = webTestClient.get()
+            .uri("/api/v1/user/$userId")
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val result = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(User::class.java)
+            .returnResult()
 
         val response = result.responseBody
         if (response == null) {
@@ -161,19 +171,28 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         name: String = TEST_PROGRAM_NAME,
-        isActive: Boolean = true
+        isActive: Boolean = true,
+        token: String? = null
     ): Long {
-        val result =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/program/?user_id=$userId" +
-                        "&name=$name" +
-                        "&is_active=$isActive"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(Program::class.java)
-                .returnResult()
+        val request = webTestClient.post()
+            .uri(
+                "/api/v1/program/?user_id=$userId" +
+                    "&name=$name" +
+                    "&is_active=$isActive"
+            )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val result = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(Program::class.java)
+            .returnResult()
 
         val response = result.responseBody
         if (response == null) {
@@ -191,20 +210,29 @@ object IntegrationTestHelpers {
         programId: Long,
         // Use unique day number
         dayNumber: Int = (System.nanoTime() % 1000).toInt() + 1,
-        name: String = TEST_WORKOUT_NAME
+        name: String = TEST_WORKOUT_NAME,
+        token: String? = null
     ): Long {
-        val response =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/programmed_workout/?program_id=$programId" +
-                        "&day_number=$dayNumber" +
-                        "&name=$name"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProgrammedWorkout::class.java)
-                .returnResult()
-                .responseBody!!
+        val request = webTestClient.post()
+            .uri(
+                "/api/v1/programmed_workout/?program_id=$programId" +
+                    "&day_number=$dayNumber" +
+                    "&name=$name"
+            )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val response = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ProgrammedWorkout::class.java)
+            .returnResult()
+            .responseBody!!
         return response.id
     }
 
@@ -217,21 +245,30 @@ object IntegrationTestHelpers {
         stageTypeId: Int = 1,
         // Use unique position
         position: Int = (System.nanoTime() % 1000).toInt() + 1,
-        name: String = TEST_STAGE_NAME
+        name: String = TEST_STAGE_NAME,
+        token: String? = null
     ): Long {
-        val response =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/workout_stage/?programmed_workout_id=$programmedWorkoutId" +
-                        "&stage_type_id=$stageTypeId" +
-                        "&position=$position" +
-                        "&name=$name"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(WorkoutStage::class.java)
-                .returnResult()
-                .responseBody!!
+        val request = webTestClient.post()
+            .uri(
+                "/api/v1/workout_stage/?programmed_workout_id=$programmedWorkoutId" +
+                    "&stage_type_id=$stageTypeId" +
+                    "&position=$position" +
+                    "&name=$name"
+            )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val response = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(WorkoutStage::class.java)
+            .returnResult()
+            .responseBody!!
         return response.id
     }
 
@@ -242,14 +279,24 @@ object IntegrationTestHelpers {
     fun createTestUserEquipment(
         webTestClient: WebTestClient,
         userId: Int,
-        equipmentName: String = TEST_EQUIPMENT_NAME
+        equipmentName: String = TEST_EQUIPMENT_NAME,
+        token: String? = null
     ) {
-        // Now create the user equipment relationship
-        webTestClient.post()
+        val request = webTestClient.post()
             .uri(
                 "/api/v1/user_equipment/?user_id=$userId" +
                     "&equipment_name=$equipmentName"
             )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        // Now create the user equipment relationship
+        request
             .exchange()
             .expectStatus().isOk()
     }
@@ -261,14 +308,24 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         exerciseName: String = TEST_EXERCISE_NAME,
-        shouldAvoid: Boolean = false
+        shouldAvoid: Boolean = false,
+        token: String? = null
     ) {
-        webTestClient.post()
+        val request = webTestClient.post()
             .uri(
                 "/api/v1/user_exercise_preference/?user_id=$userId" +
                     "&exercise_name=$exerciseName" +
                     "&should_avoid=$shouldAvoid"
             )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        request
             .exchange()
             .expectStatus().isOk()
     }
@@ -281,15 +338,25 @@ object IntegrationTestHelpers {
         userId: Int,
         exerciseName: String = TEST_EXERCISE_NAME,
         oneRepMax: Double = 100.0,
-        unit: String = "KG"
+        unit: String = "KG",
+        token: String? = null
     ) {
-        webTestClient.put()
+        val request = webTestClient.put()
             .uri(
                 "/api/v1/user_one_rep_max/?user_id=$userId" +
                     "&exercise_name=$exerciseName" +
                     "&one_rep_max=$oneRepMax" +
                     "&unit=$unit"
             )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        request
             .exchange()
             .expectStatus().isOk()
     }
@@ -301,14 +368,24 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         programDaysPerWeek: Int = 3,
-        sessionTimeLengthInMinutes: Int = 60
+        sessionTimeLengthInMinutes: Int = 60,
+        token: String? = null
     ) {
-        webTestClient.post()
+        val request = webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=$programDaysPerWeek" +
                     "&session_time_length_in_minutes=$sessionTimeLengthInMinutes"
             )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        request
             .exchange()
             .expectStatus().isOk()
     }
@@ -319,10 +396,11 @@ object IntegrationTestHelpers {
      */
     fun createMinimalReferenceDataForUser(
         webTestClient: WebTestClient,
-        userId: Int
+        userId: Int,
+        token: String? = null
     ) {
-        createTestUserProgramPreferences(webTestClient, userId)
-        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME)
+        createTestUserProgramPreferences(webTestClient, userId, token = token)
+        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME, token = token)
     }
 
     /**
@@ -332,22 +410,23 @@ object IntegrationTestHelpers {
     fun createAllReferenceDataForUser(
         webTestClient: WebTestClient,
         userId: Int,
-        programDaysPerWeek: Int = 3
+        programDaysPerWeek: Int = 3,
+        token: String? = null
     ) {
         // Create program preferences
-        createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek)
+        createTestUserProgramPreferences(webTestClient, userId, programDaysPerWeek, token = token)
 
         // Create user equipment (bench and power bar)
-        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME)
-        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME_2)
+        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME, token = token)
+        createTestUserEquipment(webTestClient, userId, TEST_EQUIPMENT_NAME_2, token = token)
 
         // Create user exercise preferences
-        createTestUserExercisePreference(webTestClient, userId, "Deadlift")
-        createTestUserExercisePreference(webTestClient, userId, TEST_EXERCISE_NAME_2)
+        createTestUserExercisePreference(webTestClient, userId, "Deadlift", token = token)
+        createTestUserExercisePreference(webTestClient, userId, TEST_EXERCISE_NAME_2, token = token)
 
         // Create user one rep maxes
-        createTestUserOneRepMax(webTestClient, userId, "Deadlift")
-        createTestUserOneRepMax(webTestClient, userId, TEST_EXERCISE_NAME_2)
+        createTestUserOneRepMax(webTestClient, userId, "Deadlift", token = token)
+        createTestUserOneRepMax(webTestClient, userId, TEST_EXERCISE_NAME_2, token = token)
     }
 
     /**
@@ -356,11 +435,12 @@ object IntegrationTestHelpers {
      */
     fun createCompleteTestProgram(
         webTestClient: WebTestClient,
-        userId: Int
+        userId: Int,
+        token: String? = null
     ): Map<String, Any> {
-        val programId = createTestProgram(webTestClient, userId)
-        val workoutId = createTestProgrammedWorkout(webTestClient, programId)
-        val stageId = createTestWorkoutStage(webTestClient, workoutId)
+        val programId = createTestProgram(webTestClient, userId, token = token)
+        val workoutId = createTestProgrammedWorkout(webTestClient, programId, token = token)
+        val stageId = createTestWorkoutStage(webTestClient, workoutId, token = token)
 
         return mapOf(
             "userId" to userId,
@@ -383,26 +463,35 @@ object IntegrationTestHelpers {
         wasSetPerformed: Boolean = false,
         isAmrap: Boolean = false,
         isEmom: Boolean = false,
-        useTempo: Boolean = false
+        useTempo: Boolean = false,
+        token: String? = null
     ): Long {
-        val response =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId" +
-                        "&set_number=$setNumber" +
-                        "&was_set_performed=$wasSetPerformed" +
-                        "&is_amrap=$isAmrap" +
-                        "&is_emom=$isEmom" +
-                        "&use_tempo=$useTempo" +
-                        "&target_weight=$targetWeight" +
-                        "&target_rep_count=$targetRepCount" +
-                        "&rest_seconds=$restSeconds"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(SetScheme::class.java)
-                .returnResult()
-                .responseBody!!
+        val request = webTestClient.post()
+            .uri(
+                "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId" +
+                    "&set_number=$setNumber" +
+                    "&was_set_performed=$wasSetPerformed" +
+                    "&is_amrap=$isAmrap" +
+                    "&is_emom=$isEmom" +
+                    "&use_tempo=$useTempo" +
+                    "&target_weight=$targetWeight" +
+                    "&target_rep_count=$targetRepCount" +
+                    "&rest_seconds=$restSeconds"
+            )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val response = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(SetScheme::class.java)
+            .returnResult()
+            .responseBody!!
         return response.id
     }
 
@@ -413,20 +502,29 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         workoutStageId: Long,
         exerciseName: String = TEST_EXERCISE_NAME,
-        position: Int = 1
+        position: Int = 1,
+        token: String? = null
     ): Long {
-        val response =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/programmed_exercise/?workout_stage_id=$workoutStageId" +
-                        "&exercise_name=$exerciseName" +
-                        "&position=$position"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ProgrammedExercise::class.java)
-                .returnResult()
-                .responseBody!!
+        val request = webTestClient.post()
+            .uri(
+                "/api/v1/programmed_exercise/?workout_stage_id=$workoutStageId" +
+                    "&exercise_name=$exerciseName" +
+                    "&position=$position"
+            )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val response = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ProgrammedExercise::class.java)
+            .returnResult()
+            .responseBody!!
         return response.id
     }
 
@@ -438,21 +536,30 @@ object IntegrationTestHelpers {
         userId: Int,
         exerciseName: String,
         rotationDate: String,
-        isAccessory: Boolean = false
+        isAccessory: Boolean = false,
+        token: String? = null
     ): Long {
-        val response =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/exercise_rotation_history/?user_id=$userId" +
-                        "&exercise_name=$exerciseName" +
-                        "&rotation_date=$rotationDate" +
-                        "&is_accessory=$isAccessory"
-                )
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ExerciseRotationHistory::class.java)
-                .returnResult()
-                .responseBody!!
+        val request = webTestClient.post()
+            .uri(
+                "/api/v1/exercise_rotation_history/?user_id=$userId" +
+                    "&exercise_name=$exerciseName" +
+                    "&rotation_date=$rotationDate" +
+                    "&is_accessory=$isAccessory"
+            )
+
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+
+        val response = request
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody(ExerciseRotationHistory::class.java)
+            .returnResult()
+            .responseBody!!
         return response.id
     }
 
@@ -490,16 +597,25 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         exerciseName: String,
-        preferredUnit: String
+        preferredUnit: String,
+        token: String? = null
     ) {
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
-        webTestClient.put()
+        val request = webTestClient.put()
             .uri(
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$encodedExerciseName" +
                     "&preferred_unit=$preferredUnit"
             )
-            .exchange()
+        
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+        
+        request.exchange()
             .expectStatus().isOk()
     }
 
@@ -512,15 +628,24 @@ object IntegrationTestHelpers {
         userId: Int,
         exerciseName: String,
         oneRepMax: java.math.BigDecimal,
-        unit: String? = null
+        unit: String? = null,
+        token: String? = null
     ): UserOneRepMax {
         val uri = StringBuilder("/api/v1/user_one_rep_max/?user_id=$userId&exercise_name=$exerciseName&one_rep_max=$oneRepMax")
         if (unit != null) {
             uri.append("&unit=$unit")
         }
-        return webTestClient.put()
+        val request = webTestClient.put()
             .uri(uri.toString())
-            .exchange()
+        
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+        
+        return request.exchange()
             .expectStatus().isOk()
             .expectBody(UserOneRepMax::class.java)
             .returnResult()
@@ -535,15 +660,24 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         userId: Int,
         exerciseName: String,
-        unit: String? = null
+        unit: String? = null,
+        token: String? = null
     ): UserOneRepMax {
         val uri = StringBuilder("/api/v1/user_one_rep_max/user/$userId/exercise/$exerciseName")
         if (unit != null) {
             uri.append("?unit=$unit")
         }
-        return webTestClient.get()
+        val request = webTestClient.get()
             .uri(uri.toString())
-            .exchange()
+        
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+        
+        return request.exchange()
             .expectStatus().isOk()
             .expectBody(UserOneRepMax::class.java)
             .returnResult()
@@ -555,11 +689,20 @@ object IntegrationTestHelpers {
      */
     fun getAllUserOneRepMaxes(
         webTestClient: WebTestClient,
-        userId: Int
+        userId: Int,
+        token: String? = null
     ): List<UserOneRepMax> {
-        return webTestClient.get()
+        val request = webTestClient.get()
             .uri("/api/v1/user_one_rep_max/user/$userId")
-            .exchange()
+        
+        // Add authorization header if token is provided
+        if (token != null) {
+            request.header("Authorization", "Bearer $token")
+        } else {
+            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
+        }
+        
+        return request.exchange()
             .expectStatus().isOk()
             .expectBodyList(UserOneRepMax::class.java)
             .returnResult()

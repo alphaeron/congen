@@ -71,31 +71,33 @@ class UserController(
     /**
      * Creates a new user profile (public registration endpoint).
      *
-     * This endpoint allows public user registration. It creates both a Keycloak
-     * user account and a corresponding user profile in the application database.
-     * The user will be assigned a unique ID and can immediately start using the system
-     * to create workout preferences and programs.
+     * This endpoint allows public user registration. It creates a user profile
+     * in the application database linked to the authenticated user's Keycloak ID.
+     * The user must be authenticated and the profile will be linked to their Keycloak user ID.
      *
-     * @param user The user data to create. Must include valid name, age, height, and weight.
+     * @param name The user's full name
+     * @param age The user's age in years
+     * @param height The user's height in centimeters
+     * @param weight The user's weight in kilograms
+     * @param unit The weight unit (optional, defaults to KG)
      * @return The created user with assigned ID and timestamps
      *
      * @throws ValidationException if user data fails validation
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
-        summary = "Register a new user",
+        summary = "Create user profile after Keycloak registration",
         description =
-            "Public endpoint for user registration. Creates both a Keycloak " +
-                "user account and a corresponding user profile in the application database. " +
-                "The user will be assigned a unique ID and can immediately start " +
-                "using the system to create workout preferences and programs.",
+            "Creates a user profile in the application database after successful Keycloak registration. " +
+                "The user must be authenticated and the profile will be linked to their Keycloak user ID.",
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "User created successfully",
+                description = "User profile created successfully",
                 content = [
                     Content(
                         mediaType = "application/json",
@@ -139,23 +141,21 @@ class UserController(
         )
         @RequestParam weight: BigDecimal,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
-        @Parameter(
-            description = "User's email address (required for Keycloak integration)",
-            required = true,
-            example = "john.doe@example.com",
-        )
-        @RequestParam(required = true) email: String,
-        @Parameter(
-            description = "User's password (required for Keycloak integration)",
-            required = true,
-            example = "securePassword123",
-        )
-        @RequestParam(required = true) password: String,
     ): Mono<ResponseEntity<User>> {
-        logger.info("Saving user: {}", name)
-        return userService.createUser(name, age, height, weight, unit, email, password)
+        logger.info("Creating user profile for authenticated user: {}", name)
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakUserId ->
+                userService.createUser(
+                    keycloakUserId,
+                    name,
+                    age,
+                    height,
+                    weight,
+                    unit
+                )
+            }
             .map { savedUser ->
-                logger.debug("Saved user with id: {}", savedUser.id)
+                logger.debug("Created user profile with id: {}", savedUser.id)
                 ResponseEntity.ok(savedUser)
             }
     }

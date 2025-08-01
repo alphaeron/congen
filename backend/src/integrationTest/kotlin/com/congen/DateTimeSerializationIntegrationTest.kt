@@ -17,6 +17,7 @@ import java.time.ZoneOffset
 class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should correctly serialize and deserialize Instant timestamps`() {
+        val token = getValidToken("user")
         // Create a user (which has Instant fields)
         val userId =
             IntegrationTestHelpers.createTestUser(
@@ -24,11 +25,12 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
                 name = "Test User",
                 age = 25,
                 height = 175.0,
-                weight = 80.0
+                weight = 80.0,
+                token = token
             )
 
         // Retrieve the user to get the full response with timestamps
-        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId)
+        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
 
         // Verify the user was created with valid timestamps
         assertNotNull(userResponse.id)
@@ -80,6 +82,7 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle microsecond precision timestamps correctly`() {
+        val token = getValidToken("user")
         // Create a user
         val userId =
             IntegrationTestHelpers.createTestUser(
@@ -87,11 +90,12 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
                 name = "Test User 3",
                 age = 35,
                 height = 170.0,
-                weight = 75.0
+                weight = 75.0,
+                token = token
             )
 
         // Retrieve the user to get the full response with timestamps
-        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId)
+        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
 
         // Verify the timestamp has microsecond precision (6 decimal places)
         val createdAtString = userResponse.createdAt.toString()

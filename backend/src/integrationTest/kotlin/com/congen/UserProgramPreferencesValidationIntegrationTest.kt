@@ -13,17 +13,20 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test
     fun `should return 422 when program_days_per_week is 1`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=1" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -34,12 +37,14 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 5`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=5" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -50,12 +55,14 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 0`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=0" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -66,12 +73,14 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 8`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=8" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -82,52 +91,60 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 2`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=2" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should accept valid program_days_per_week value 3`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=3" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should accept valid program_days_per_week value 4`() {
+        val token = getValidToken("user")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
                     "&program_days_per_week=4" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should allow changing session time when user has existing workouts`() {
+        val token = getValidToken("user")
         // Create user
         // Create all reference data (exercises, equipment, etc.) before generating workouts
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
 
         // Create a program first
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
 
         // Generate a workout to create existing workouts
         webTestClient.post()
             .uri("/api/v1/conjugate_workout_generator/$programId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -138,22 +155,25 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                     "&program_days_per_week=3" +
                     "&session_time_length_in_minutes=90"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
     }
 
     @Test
     fun `should prevent changing program days per week when user has existing workouts`() {
+        val token = getValidToken("user")
         // Create user
         // Create all reference data (exercises, equipment, etc.) before generating workouts
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
 
         // Create a program first
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
 
         // Generate a workout to create existing workouts
         webTestClient.post()
             .uri("/api/v1/conjugate_workout_generator/$programId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -164,6 +184,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                     "&program_days_per_week=4" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -180,16 +201,18 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should prevent changing program days per week from 4 to 3 when user has existing workouts`() {
+        val token = getValidToken("user")
         // Create user
         // Create all reference data (exercises, equipment, etc.) before generating workouts
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = token)
 
         // Create a program first
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program")
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
 
         // Generate a workout to create existing workouts
         webTestClient.post()
             .uri("/api/v1/conjugate_workout_generator/$programId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -206,6 +229,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                     "&program_days_per_week=3" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -215,6 +239,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should allow changing program days per week when no workouts exist`() {
+        val token = getValidToken("user")
         // Create user
         // Create program preferences with 3 days per week
         webTestClient.post()
@@ -223,6 +248,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                     "&program_days_per_week=3" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -233,6 +259,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
                     "&program_days_per_week=4" +
                     "&session_time_length_in_minutes=60"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
     }

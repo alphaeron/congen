@@ -11,6 +11,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create exercise workout type relationship`() {
+        val token = getValidToken("user")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -20,12 +21,14 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
                     "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Then create the exercise-workout-type relationship
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=dynamic_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -36,6 +39,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all exercise workout types`() {
+        val token = getValidToken("user")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -45,22 +49,26 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
                     "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Create the relationships
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=dynamic_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=maximal_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/api/v1/exercise_workout_type/exercise/$uniqueExercise")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -72,6 +80,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get workout types by exercise name`() {
+        val token = getValidToken("user")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -81,22 +90,26 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
                     "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Create the relationships
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=dynamic_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=maximal_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/api/v1/exercise_workout_type/exercise/$uniqueExercise")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -108,6 +121,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get workout types by movement type`() {
+        val token = getValidToken("user")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -117,17 +131,20 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
                     "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Create the relationship
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=dynamic_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/api/v1/exercise_workout_type/movement_type/horizontal_push")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -140,6 +157,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle multiple workout types for same exercise`() {
+        val token = getValidToken("user")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -149,22 +167,26 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/exercise/?name=$uniqueExercise&description=Test exercise for workout type relationship" +
                     "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Create multiple relationships for the same exercise
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=dynamic_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=maximal_effort")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.get()
             .uri("/api/v1/exercise_workout_type/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

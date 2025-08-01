@@ -8,10 +8,10 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.TestPropertySource
 
 /**
- * Integration tests for user creation with Keycloak integration.
+ * Integration tests for user profile creation with Keycloak OAuth2 integration.
  *
- * These tests use a real Keycloak instance via Testcontainers to test the actual
- * user creation flow, including Keycloak account creation and database profile creation.
+ * These tests verify that authenticated users can create their profiles after
+ * registering through Keycloak, without handling passwords in our backend.
  */
 @TestPropertySource(
     properties = [
@@ -29,21 +29,20 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should create user with Keycloak integration when email and password provided`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should create user profile after Keycloak registration`() {
+        val token = getValidToken("user")
 
         val userId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
-                email = email,
-                password = password
+                token = token
             )
 
-        // Verify the user was created successfully
+        // Verify the user profile was created successfully
         webTestClient.get()
-            .uri("/api/v1/user/$userId")
+            .uri("/api/v1/user/me")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -55,72 +54,31 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 400 when email is missing`() {
-        val password = "SecurePassword123!"
-
+    fun `should return 401 when not authenticated`() {
         webTestClient.post()
             .uri(
                 "/api/v1/user/?name=$testUserName" +
                     "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}" +
-                    "&password=$password"
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
             .contentType(MediaType.APPLICATION_JSON)
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
+            .expectStatus().isEqualTo(HttpStatus.UNAUTHORIZED)
     }
 
     @Test
-    fun `should return 400 when password is missing`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}" +
-                    "&email=$email"
-            )
-            .contentType(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
-    }
-
-    @Test
-    fun `should return 400 when email is invalid format`() {
-        val email = "invalid-email-format"
-        val password = "SecurePassword123!"
-
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}" +
-                    "&email=$email" +
-                    "&password=$password"
-            )
-            .contentType(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
-    }
-
-    @Test
-    fun `should return 422 when user age is 0 with Keycloak integration`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should return 422 when user age is 0`() {
+        val token = getValidToken("user")
 
         webTestClient.post()
             .uri(
                 "/api/v1/user/?name=$testUserName" +
                     "&age=0" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}" +
-                    "&email=$email" +
-                    "&password=$password"
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
+            .header("Authorization", "Bearer $token")
             .contentType(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -131,19 +89,17 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 422 when user age is 151 with Keycloak integration`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should return 422 when user age is 151`() {
+        val token = getValidToken("user")
 
         webTestClient.post()
             .uri(
                 "/api/v1/user/?name=$testUserName" +
                     "&age=151" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}" +
-                    "&email=$email" +
-                    "&password=$password"
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
+            .header("Authorization", "Bearer $token")
             .contentType(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -154,19 +110,17 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 422 when user height is 0 with Keycloak integration`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should return 422 when user height is 0`() {
+        val token = getValidToken("user")
 
         webTestClient.post()
             .uri(
                 "/api/v1/user/?name=$testUserName" +
                     "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
                     "&height=0" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}" +
-                    "&email=$email" +
-                    "&password=$password"
+                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
             )
+            .header("Authorization", "Bearer $token")
             .contentType(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -177,19 +131,17 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should return 422 when user weight is 0 with Keycloak integration`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should return 422 when user weight is 0`() {
+        val token = getValidToken("user")
 
         webTestClient.post()
             .uri(
                 "/api/v1/user/?name=$testUserName" +
                     "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
                     "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=0" +
-                    "&email=$email" +
-                    "&password=$password"
+                    "&weight=0"
             )
+            .header("Authorization", "Bearer $token")
             .contentType(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -200,9 +152,8 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should create user with weight conversion from LBS to KG`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should create user profile with weight conversion from LBS to KG`() {
+        val token = getValidToken("user")
         val weightInLbs = 150.0
         val expectedWeightInKg = 68.04
 
@@ -211,14 +162,14 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
                 webTestClient = webTestClient,
                 name = testUserName,
                 weight = weightInLbs,
-                email = email,
-                password = password,
+                token = token,
                 unit = WeightUnit.LBS
             )
 
-        // Verify the user was created successfully with weight conversion
+        // Verify the user profile was created successfully with weight conversion
         webTestClient.get()
-            .uri("/api/v1/user/$userId")
+            .uri("/api/v1/user/me")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -228,22 +179,21 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should get user by id after Keycloak creation`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+    fun `should get user by id after profile creation`() {
+        val token = getValidToken("user")
 
-        // Create user first using helper method
+        // Create user profile first using helper method
         val userId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
-                email = email,
-                password = password
+                token = token
             )
 
         // Then get user by ID
         webTestClient.get()
-            .uri("/api/v1/user/$userId")
+            .uri("/api/v1/user/me")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -254,63 +204,61 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete user`() {
-        val email = "test.user.${System.nanoTime()}@example.com"
-        val password = "SecurePassword123!"
+        val userToken = getValidToken("user")
 
-        // Create user first
+        // Create user profile first
         val userId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
-                email = email,
-                password = password
+                token = userToken
             )
 
         // Verify user exists in database
         webTestClient.get()
-            .uri("/api/v1/user/$userId")
+            .uri("/api/v1/user/me")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(userId)
 
-        // Delete the user
+        // Delete the user using service account token (admin privileges)
+        val serviceToken = getValidToken("service")
         webTestClient.delete()
             .uri("/api/v1/user/$userId")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.id").isEqualTo(userId)
             .jsonPath("$.name").isEqualTo(testUserName)
 
-        // Verify user is deleted from database
+        // Verify user is deleted from database by trying to access the user by ID
         webTestClient.get()
             .uri("/api/v1/user/$userId")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
-
-        // Note: We cannot directly verify Keycloak deletion in integration tests
-        // because we don't have access to Keycloak's internal state.
-        // The deletion is verified indirectly by ensuring the database deletion
-        // succeeds, which indicates the Keycloak deletion also succeeded
-        // (since the service method handles both operations atomically).
     }
 
     @Test
     fun `should return 404 when deleting non-existent user`() {
+        val serviceToken = getValidToken("service")
         val nonExistentUserId = 99999
 
         webTestClient.delete()
             .uri("/api/v1/user/$nonExistentUserId")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test
-    fun `should return 403 when accessing me endpoint without authentication`() {
+    fun `should return 401 when accessing me endpoint without authentication`() {
         webTestClient.get()
             .uri("/api/v1/user/me")
             .exchange()
-            .expectStatus().isForbidden()
+            .expectStatus().isUnauthorized()
     }
 }

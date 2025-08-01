@@ -38,6 +38,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
+    monitorSession: false,
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
       token_endpoint: `${authority}/protocol/openid-connect/token`,

@@ -60,6 +60,7 @@ class UserServiceTest {
 
     @Test
     fun `createUser should create user successfully`() {
+        val keycloakUserId = "test-keycloak-user-id"
         val now = Instant.now()
         val user =
             mockUser(
@@ -76,23 +77,21 @@ class UserServiceTest {
         // Mock unit conversion for KG (no conversion needed)
         whenever(unitConverter.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
             .thenReturn(BigDecimal(WEIGHT))
-        // Mock Keycloak client to return a user ID
-        whenever(keycloakClient.createUser(eq("test@example.com"), eq("test@example.com"), eq("John"), eq("Doe"), eq("password123")))
-            .thenReturn(Mono.just("keycloak-user-id"))
-        whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT)), eq("keycloak-user-id")))
+        whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT)), eq(keycloakUserId)))
             .thenReturn(Mono.just(savedUser))
 
-        val result = userService.createUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG", "test@example.com", "password123")
+        val result = userService.createUser(keycloakUserId, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
 
         StepVerifier.create(result)
             .expectNext(savedUser)
             .verifyComplete()
 
-        verify(userDAL).insertUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "keycloak-user-id")
+        verify(userDAL).insertUser(NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), keycloakUserId)
     }
 
     @Test
     fun `createUser should convert weight from LBS to KG`() {
+        val keycloakUserId = "test-keycloak-user-id"
         val now = Instant.now()
         val weightInLbs = BigDecimal("150.0")
         val weightInKg = BigDecimal("68.04")
@@ -110,31 +109,29 @@ class UserServiceTest {
 
         whenever(unitConverter.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
             .thenReturn(weightInKg)
-        // Mock Keycloak client to return a user ID
-        whenever(keycloakClient.createUser(eq("test@example.com"), eq("test@example.com"), eq("John"), eq("Doe"), eq("password123")))
-            .thenReturn(Mono.just("keycloak-user-id"))
-        whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(weightInKg), eq("keycloak-user-id")))
+        whenever(userDAL.insertUser(eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(weightInKg), eq(keycloakUserId)))
             .thenReturn(Mono.just(savedUser))
 
-        val result = userService.createUser(NAME, AGE, BigDecimal(HEIGHT), weightInLbs, "LBS", "test@example.com", "password123")
+        val result = userService.createUser(keycloakUserId, NAME, AGE, BigDecimal(HEIGHT), weightInLbs, "LBS")
 
         StepVerifier.create(result)
             .expectNext(savedUser)
             .verifyComplete()
 
         verify(unitConverter).toKg(weightInLbs, WeightUnit.LBS)
-        verify(userDAL).insertUser(NAME, AGE, BigDecimal(HEIGHT), weightInKg, "keycloak-user-id")
+        verify(userDAL).insertUser(NAME, AGE, BigDecimal(HEIGHT), weightInKg, keycloakUserId)
     }
 
     @Test
     fun `createUser should throw ValidationException when validation fails`() {
+        val keycloakUserId = "test-keycloak-user-id"
         val invalidWeight = BigDecimal("-10.0")
         val convertedWeight = BigDecimal("-10.0") // Invalid weight after conversion
 
         whenever(unitConverter.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
             .thenReturn(convertedWeight)
 
-        val result = userService.createUser(NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG", "test@example.com", "password123")
+        val result = userService.createUser(keycloakUserId, NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")
 
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->

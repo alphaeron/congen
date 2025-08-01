@@ -20,9 +20,9 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
-import { LoginPage } from './pages/LoginPage';
 import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
+import { ProfileCreationPage } from './pages/ProfileCreationPage';
 import { getTheme } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthCallback } from './components/AuthCallback';
@@ -45,11 +45,6 @@ const ExercisesLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWi
 );
 ExercisesLink.displayName = 'ExercisesLink';
 
-const LoginLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithRef<'a'>>(
-  (props, ref) => <Link to="/login" {...props} ref={ref} />
-);
-LoginLink.displayName = 'LoginLink';
-
 const ProfileLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithRef<'a'>>(
   (props, ref) => <Link to="/profile" {...props} ref={ref} />
 );
@@ -64,10 +59,18 @@ function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const { isLoading, logout } = useAuth();
+  const { isLoading, logout, login } = useAuth();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
+  };
+
+  const handleSignIn = async () => {
+    try {
+      await login();
+    } catch {
+      // Error is handled by the auth context
+    }
   };
 
   const theme = createTheme(getTheme(mode));
@@ -154,7 +157,7 @@ function AppContent(): React.ReactElement {
             >
               <AuthorizedElement
                 fallback={
-                  <Button color="primary" variant="contained" component={LoginLink}>
+                  <Button color="primary" variant="contained" onClick={handleSignIn}>
                     Sign in
                   </Button>
                 }
@@ -196,7 +199,7 @@ function AppContent(): React.ReactElement {
                         <Button
                           color="primary"
                           variant="contained"
-                          component={LoginLink}
+                          onClick={handleSignIn}
                           sx={{ width: '100%' }}
                         >
                           Sign in
@@ -226,14 +229,6 @@ function AppContent(): React.ReactElement {
             }
           />
           <Route
-            path="/login"
-            element={
-              <ProtectedRoute requireAuth={false} redirectTo="/profile">
-                <LoginPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/exercises"
             element={
               <ProtectedRoute>
@@ -254,6 +249,14 @@ function AppContent(): React.ReactElement {
             element={
               <ProtectedRoute>
                 <UserProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/create"
+            element={
+              <ProtectedRoute>
+                <ProfileCreationPage />
               </ProtectedRoute>
             }
           />

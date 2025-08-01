@@ -49,7 +49,6 @@ interface KeycloakUtil {
  * @since 1.0.0
  */
 @Component
-@Profile("!integration-test")
 class KeycloakUtilImpl : KeycloakUtil {
     companion object {
         private val logger = LoggerFactory.getLogger(KeycloakUtilImpl::class.java)

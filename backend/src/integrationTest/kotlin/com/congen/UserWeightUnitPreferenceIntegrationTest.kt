@@ -23,11 +23,13 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        userId = IntegrationTestHelpers.createTestUser(webTestClient)
+        val token = getValidToken("user")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test
     fun `should create weight unit preference`() {
+        val token = getValidToken("user")
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
@@ -37,6 +39,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$encodedExerciseName&preferred_unit=$preferredUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody(UserWeightUnitPreference::class.java)
@@ -49,6 +52,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create weight unit preference with KG`() {
+        val token = getValidToken("user")
         val exerciseName = "Deadlift"
         val preferredUnit = "KG"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
@@ -58,6 +62,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$encodedExerciseName&preferred_unit=$preferredUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody(UserWeightUnitPreference::class.java)
@@ -70,6 +75,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 for invalid weight unit`() {
+        val token = getValidToken("user")
         val exerciseName = "Bench Press"
         val invalidUnit = "INVALID"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
@@ -79,6 +85,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$encodedExerciseName&preferred_unit=$invalidUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -89,6 +96,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update existing weight unit preference`() {
+        val token = getValidToken("user")
         val exerciseName = "Safety Bar Squat"
         val initialUnit = "LBS"
         val updatedUnit = "KG"
@@ -99,6 +107,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$exerciseName&preferred_unit=$initialUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -108,6 +117,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$exerciseName&preferred_unit=$updatedUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody(UserWeightUnitPreference::class.java)
@@ -120,6 +130,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all weight unit preferences for user`() {
+        val token = getValidToken("user")
         val exercise1 = "Bench Press"
         val exercise2 = "Deadlift"
         val unit1 = "LBS"
@@ -134,6 +145,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$encodedExercise1&preferred_unit=$unit1"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -142,6 +154,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$encodedExercise2&preferred_unit=$unit2"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -149,6 +162,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         val preferences =
             webTestClient.get()
                 .uri("/api/v1/user_weight_unit_preference/$userId")
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(UserWeightUnitPreference::class.java)
@@ -161,6 +175,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get specific weight unit preference`() {
+        val token = getValidToken("user")
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
 
@@ -170,12 +185,14 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$exerciseName&preferred_unit=$preferredUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Get the specific preference
         webTestClient.get()
             .uri("/api/v1/user_weight_unit_preference/$userId/$exerciseName")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody(UserWeightUnitPreference::class.java)
@@ -188,17 +205,20 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 for non-existent weight unit preference`() {
+        val token = getValidToken("user")
         val exerciseName = "NonExistentExercise"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
 
         webTestClient.get()
             .uri("/api/v1/user_weight_unit_preference/$userId/$encodedExerciseName")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should delete weight unit preference`() {
+        val token = getValidToken("user")
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
 
@@ -208,18 +228,21 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
                 "/api/v1/user_weight_unit_preference/?user_id=$userId" +
                     "&exercise_name=$exerciseName&preferred_unit=$preferredUnit"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Delete the preference
         webTestClient.delete()
             .uri("/api/v1/user_weight_unit_preference/$userId/$exerciseName")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Verify it's deleted
         webTestClient.get()
             .uri("/api/v1/user_weight_unit_preference/$userId/$exerciseName")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }

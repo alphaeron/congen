@@ -20,40 +20,45 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     }
 
     private fun setupTestEntities() {
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "SetScheme User" + System.nanoTime())
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId)
-        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program" + System.nanoTime())
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "SetScheme User" + System.nanoTime(), token = token)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = token)
+        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program" + System.nanoTime(), token = token)
         // Create a programmed workout
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
                 webTestClient,
                 programId,
                 dayNumber = 1,
-                name = "Test Workout" + System.nanoTime()
+                name = "Test Workout" + System.nanoTime(),
+                token = token
             )
         // Create a workout stage
-        val stageTypeId = getWorkoutStageTypeId("Warmup")
+        val stageTypeId = getWorkoutStageTypeId("Warmup", token)
         val stageId =
             IntegrationTestHelpers.createTestWorkoutStage(
                 webTestClient,
                 workoutId,
                 stageTypeId = stageTypeId,
                 position = 1,
-                name = "Warmup Stage" + System.nanoTime()
+                name = "Warmup Stage" + System.nanoTime(),
+                token = token
             )
         // Create a programmed exercise first
         programmedExerciseId =
             IntegrationTestHelpers.createTestProgrammedExercise(
                 webTestClient,
                 stageId,
-                exerciseName = "Bench Press"
+                exerciseName = "Bench Press",
+                token = token
             )
     }
 
-    private fun getWorkoutStageTypeId(name: String): Int {
+    private fun getWorkoutStageTypeId(name: String, token: String): Int {
         val response =
             webTestClient.get()
                 .uri("/api/v1/workout_stage_type/name/$name")
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStageType::class.java)
@@ -64,12 +69,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when set number is 0`() {
+        val token = getValidToken("user")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=0&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=100.0&target_rep_count=8&rest_seconds=120"
         webTestClient.post()
             .uri(uri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -78,12 +85,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when set number is negative`() {
+        val token = getValidToken("user")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=-1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=100.0&target_rep_count=8&rest_seconds=120"
         webTestClient.post()
             .uri(uri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -92,12 +101,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when target weight is 0`() {
+        val token = getValidToken("user")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=0&target_rep_count=8&rest_seconds=120"
         webTestClient.post()
             .uri(uri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -106,12 +117,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when target rep count is 0`() {
+        val token = getValidToken("user")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=100.0&target_rep_count=0&rest_seconds=120"
         webTestClient.post()
             .uri(uri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -120,12 +133,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when rest seconds is negative`() {
+        val token = getValidToken("user")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=100.0&target_rep_count=8&rest_seconds=-1"
         webTestClient.post()
             .uri(uri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -134,12 +149,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid set scheme data`() {
+        val token = getValidToken("user")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=100.0&target_rep_count=8&rest_seconds=120"
         webTestClient.post()
             .uri(uri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -152,6 +169,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get set scheme by id`() {
+        val token = getValidToken("user")
         // First create a set scheme
         val createUri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=2&" +
@@ -161,6 +179,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         val setSchemeResponse =
             webTestClient.post()
                 .uri(createUri)
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(SetScheme::class.java)
@@ -170,6 +189,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         // Then get the set scheme by id
         webTestClient.get()
             .uri("/api/v1/set_scheme/${setSchemeResponse.id}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -185,6 +205,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get set schemes by programmed exercise id`() {
+        val token = getValidToken("user")
         // First create multiple set schemes for the same exercise
         val uri1 =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
@@ -192,6 +213,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 "target_weight=100.0&target_rep_count=8&rest_seconds=120"
         webTestClient.post()
             .uri(uri1)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -201,6 +223,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 "target_weight=110.0&target_rep_count=6&rest_seconds=180"
         webTestClient.post()
             .uri(uri2)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
@@ -210,12 +233,14 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 "target_weight=120.0&target_rep_count=10&rest_seconds=240"
         webTestClient.post()
             .uri(uri3)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
         // Then get all set schemes for the exercise
         webTestClient.get()
             .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -229,6 +254,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all set schemes`() {
+        val token = getValidToken("user")
         val uri1 =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -237,10 +263,11 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=2&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
                 "target_weight=110.0&target_rep_count=6&rest_seconds=180"
-        webTestClient.post().uri(uri1).exchange().expectStatus().isOk()
-        webTestClient.post().uri(uri2).exchange().expectStatus().isOk()
+        webTestClient.post().uri(uri1).header("Authorization", "Bearer $token").exchange().expectStatus().isOk()
+        webTestClient.post().uri(uri2).header("Authorization", "Bearer $token").exchange().expectStatus().isOk()
         webTestClient.get()
             .uri("/api/v1/set_scheme/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -250,6 +277,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update set scheme`() {
+        val token = getValidToken("user")
         // First create a set scheme
         val createUri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
@@ -258,6 +286,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         val setSchemeResponse =
             webTestClient.post()
                 .uri(createUri)
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(SetScheme::class.java)
@@ -271,6 +300,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 "target_weight=100.0&performed_weight=95.0&target_rep_count=8&performed_rep_count=7&rest_seconds=120"
         webTestClient.patch()
             .uri(updateUri)
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -281,6 +311,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete set scheme`() {
+        val token = getValidToken("user")
         // First create a set scheme
         val createUri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
@@ -289,6 +320,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         val setSchemeResponse =
             webTestClient.post()
                 .uri(createUri)
+                .header("Authorization", "Bearer $token")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(SetScheme::class.java)
@@ -298,6 +330,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
         // Then delete the set scheme
         webTestClient.delete()
             .uri("/api/v1/set_scheme/${setSchemeResponse.id}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

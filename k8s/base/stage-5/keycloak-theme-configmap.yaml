@@ -1,0 +1,295 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-theme
+  namespace: congen
+data:
+  # Login theme template
+  "theme.properties": |
+    parent=keycloak
+    import=common/keycloak
+    styles=css/congen.css
+    scripts=js/congen.js
+    templates=ftl/congen.ftl
+  
+  # Custom CSS for Congen branding
+  "css/congen.css": |
+    .kc-logo-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2236CC;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .kc-form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    .kc-form-control {
+      border-radius: 8px;
+      border: 1px solid #E5E7EB;
+      padding: 12px 16px;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+    
+    .kc-form-control:focus {
+      border-color: #2236CC;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(34, 54, 204, 0.1);
+    }
+    
+    .kc-button {
+      background: linear-gradient(135deg, #2236CC 0%, #1E40AF 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      padding: 12px 24px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    
+    .kc-button:hover {
+      background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(34, 54, 204, 0.3);
+    }
+    
+    .kc-button:active {
+      transform: translateY(0);
+    }
+    
+    .kc-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .kc-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .kc-header img {
+      width: 72px;
+      height: auto;
+      margin-bottom: 1rem;
+    }
+    
+    .kc-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .kc-form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #374151;
+    }
+    
+    .kc-form-group input {
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .kc-form-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+    }
+    
+    .kc-form-options a {
+      color: #2236CC;
+      text-decoration: none;
+      font-size: 0.875rem;
+    }
+    
+    .kc-form-options a:hover {
+      text-decoration: underline;
+    }
+    
+    .kc-info-area {
+      background: #F3F4F6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid #2236CC;
+    }
+    
+    .kc-info-area p {
+      margin: 0;
+      color: #374151;
+      font-size: 0.875rem;
+    }
+    
+    .kc-alert {
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid;
+    }
+    
+    .kc-alert-error {
+      background: #FEF2F2;
+      border-color: #FECACA;
+      color: #DC2626;
+    }
+    
+    .kc-alert-success {
+      background: #F0FDF4;
+      border-color: #BBF7D0;
+      color: #16A34A;
+    }
+    
+    .kc-alert-warning {
+      background: #FFFBEB;
+      border-color: #FED7AA;
+      color: #D97706;
+    }
+    
+    .kc-social-area {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    
+    .kc-social-area p {
+      color: #6B7280;
+      margin-bottom: 1rem;
+    }
+    
+    .kc-social-area a {
+      display: inline-block;
+      margin: 0 0.5rem;
+      padding: 8px 16px;
+      border: 1px solid #D1D5DB;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #374151;
+      transition: all 0.2s ease;
+    }
+    
+    .kc-social-area a:hover {
+      border-color: #2236CC;
+      color: #2236CC;
+    }
+  
+  # Custom JavaScript for enhanced UX
+  "js/congen.js": |
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add smooth transitions
+      const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
+      inputs.forEach(input => {
+        input.classList.add('kc-form-control');
+      });
+      
+      // Add button styling
+      const buttons = document.querySelectorAll('input[type="submit"], button[type="submit"]');
+      buttons.forEach(button => {
+        button.classList.add('kc-button');
+      });
+      
+      // Add form styling
+      const forms = document.querySelectorAll('form');
+      forms.forEach(form => {
+        form.classList.add('kc-form');
+      });
+      
+      // Add card styling to main container
+      const mainContainer = document.querySelector('#kc-form-buttons')?.closest('.card-pf');
+      if (mainContainer) {
+        mainContainer.classList.add('kc-card');
+      }
+      
+      // Add header styling
+      const header = document.querySelector('.card-pf-heading');
+      if (header) {
+        header.classList.add('kc-header');
+      }
+    });
+  
+  # Custom FreeMarker template for login page
+  "ftl/congen.ftl": |
+    <#import "template.ftl" as layout>
+    <@layout.registrationLayout displayInfo=social.displayInfo displayWide=(realm.password && social.providers??); section>
+        <#if section = "header">
+            <div class="kc-header">
+                <img src="${url.resourcesPath}/img/congen-icon.svg" alt="ConGen" />
+                <div class="kc-logo-text">ConGen</div>
+            </div>
+        <#elseif section = "form">
+            <div id="kc-form">
+                <div id="kc-form-wrapper">
+                    <#if realm.password>
+                        <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
+                            <div class="kc-form-group">
+                                <label for="username" class="control-label">${msg("username")}</label>
+                                <input tabindex="1" id="username" class="kc-form-control" name="username" value="${(login.username!'')}"  type="text" autofocus autocomplete="off"
+                                       aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"
+                                />
+                            </div>
+
+                            <div class="kc-form-group">
+                                <label for="password" class="control-label">${msg("password")}</label>
+                                <input tabindex="2" id="password" class="kc-form-control" name="password" type="password" autocomplete="off"
+                                       aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"
+                                />
+                            </div>
+
+                            <div class="kc-form-options">
+                                <#if realm.rememberMe && !usernameEditDisabled??>
+                                    <div class="checkbox">
+                                        <label>
+                                            <#if login.rememberMe??>
+                                                <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox" checked> ${msg("rememberMe")}
+                                            <#else>
+                                                <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox"> ${msg("rememberMe")}
+                                            </#if>
+                                        </label>
+                                    </div>
+                                </#if>
+                                <div>
+                                    <#if realm.resetPasswordAllowed>
+                                        <span><a tabindex="5" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a></span>
+                                    </#if>
+                                </div>
+                            </div>
+
+                            <div id="kc-form-buttons" class="kc-form-group">
+                                <input type="hidden" id="id-hidden-input" name="credentialId" <#if auth.selectedCredential?has_content>value="${auth.selectedCredential}"</#if>/>
+                                <input tabindex="4" class="kc-button" name="login" id="kc-login" type="submit" value="${msg("doLogIn")}"/>
+                            </div>
+                        </form>
+                    </#if>
+                </div>
+            </div>
+
+        <#elseif section = "info" >
+            <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
+                <div id="kc-registration">
+                    <span>${msg("noAccount")} <a tabindex="6" href="${url.registrationUrl}">${msg("doRegister")}</a></span>
+                </div>
+            </#if>
+        </#if>
+    </@layout.registrationLayout>
+  
+  # Congen icon SVG
+  "img/congen-icon.svg": |
+    <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect width="72" height="72" rx="16" fill="#2236CC"/>
+      <path d="M18 36C18 25.5066 26.5066 17 37 17C47.4934 17 56 25.5066 56 36C56 46.4934 47.4934 55 37 55C26.5066 55 18 46.4934 18 36Z" fill="white"/>
+      <path d="M28 28C28 26.8954 28.8954 26 30 26H44C45.1046 26 46 26.8954 46 28V44C46 45.1046 45.1046 46 44 46H30C28.8954 46 28 45.1046 28 44V28Z" fill="#2236CC"/>
+      <path d="M32 32H42V34H32V32Z" fill="white"/>
+      <path d="M32 36H42V38H32V36Z" fill="white"/>
+      <path d="M32 40H38V42H32V40Z" fill="white"/>
+    </svg> 

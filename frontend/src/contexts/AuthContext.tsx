@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
-import { registerUser, getCurrentUser } from '../api/user';
+import { createUserProfile, getCurrentUser } from '../api/user';
 import { User } from '../api/types';
 import { setTokenGetter } from '../api/endpoint';
 import { decodeToken } from '../common/authUtils';
@@ -13,17 +13,15 @@ interface AuthContextType {
   error: string | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  createProfile: (userData: ProfileData) => Promise<void>;
   clearError: () => void;
 }
 
-interface RegisterData {
+interface ProfileData {
   name: string;
   age: number;
   height: number;
   weight: number;
-  email: string;
-  password: string;
   unit?: string;
 }
 
@@ -73,9 +71,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             groups,
             roles,
           });
-        } catch (error) {
-          // If we can't get the profile, log the error and don't set user
-          console.error('Failed to get user profile:', error);
+        } catch {
+          // If we can't get the profile, the user might not have a profile yet
+          // Check if we're already on the profile creation page to avoid redirect loops
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/profile/create') {
+            // Redirect to profile creation page
+            navigate('/profile/create');
+          }
           setUser(null);
         }
       } else {
@@ -84,7 +87,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     syncUserProfile();
-  }, [oidcAuth.user, oidcAuth.isAuthenticated]);
+  }, [oidcAuth.user, oidcAuth.isAuthenticated, navigate]);
 
   // Handle OIDC errors
   useEffect(() => {
@@ -113,24 +116,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (userData: RegisterData) => {
+  const createProfile = async (userData: ProfileData) => {
     try {
-      // Register user through backend
-      await registerUser(
+      setError(null);
+      await createUserProfile(
         userData.name,
         userData.age,
         userData.height,
         userData.weight,
-        userData.email,
-        userData.password,
         userData.unit
       );
 
-      // After successful registration, redirect to login page
-      navigate('/login', {
+      // After successful profile creation, redirect to profile page
+      navigate('/profile', {
         state: {
-          message: 'Registration successful! Please sign in with your new account.',
-          email: userData.email,
+          message: 'Profile created successfully!',
         },
         replace: true,
       });
@@ -146,7 +146,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         typeof err.response.data === 'object' &&
         'message' in err.response.data
           ? String(err.response.data.message)
-          : 'Registration failed';
+          : 'Profile creation failed';
       setError(errorMessage);
     }
   };
@@ -162,7 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error,
     login,
     logout,
-    register,
+    createProfile,
     clearError,
   };
 

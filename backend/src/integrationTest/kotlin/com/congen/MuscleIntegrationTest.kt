@@ -12,9 +12,11 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create muscle`() {
+        val token = getValidToken("user")
         val uniqueName = "testmuscleout_${System.nanoTime()}"
         webTestClient.post()
             .uri("/api/v1/muscle/?name=$uniqueName&description=$uniqueName")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -24,9 +26,11 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get muscle by name`() {
+        val token = getValidToken("user")
         // Muscle already exists in migrations
         webTestClient.get()
             .uri("/api/v1/muscle/${IntegrationTestHelpers.TEST_MUSCLE_NAME}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -36,17 +40,21 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when muscle not found`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/muscle/NonExistentMuscle")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should get all muscles`() {
+        val token = getValidToken("user")
         // Muscles already exist in migrations
         webTestClient.get()
             .uri("/api/v1/muscle/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -59,11 +67,13 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get exercises for muscle`() {
+        val token = getValidToken("user")
         // Muscle and exercise already exist in migrations
         // The relationship already exists in migration data, no need to create it
 
         webTestClient.get()
             .uri("/api/v1/muscle/${IntegrationTestHelpers.TEST_MUSCLE_NAME}/exercise")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -84,17 +94,21 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when no exercises found for muscle`() {
+        val token = getValidToken("user")
         // Muscle exists in migrations but no relationship created
         webTestClient.get()
             .uri("/api/v1/muscle/thisdefinitelydoesntexist/exercise")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should return 404 when muscle not found for exercises`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/muscle/NonExistentMuscle/exercise")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }

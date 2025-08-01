@@ -13,50 +13,54 @@ import org.junit.jupiter.api.Test
  * @since 1.0.0
  */
 class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
-    private var userId1: Int = 0
-    private var userId2: Int = 0
+    private var userId: Int = 0
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
         val unique = System.nanoTime()
-        // Create test users with unique names using helpers
-        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 1 $unique")
-        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 2 $unique")
+        val token = getValidToken("user")
+        // Create a single test user to avoid keycloak_user_id conflicts
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = token)
         // Exercises already exist in migrations
     }
 
     @Test
     fun `should create user one rep max when it does not exist`() {
+        val token = getValidToken("user")
         // Create a one rep max record using PUT (upsert)
         webTestClient.put()
-            .uri("/api/v1/user_one_rep_max/?user_id=$userId1&exercise_name=Bench Press&one_rep_max=100.0&unit=KG")
+            .uri("/api/v1/user_one_rep_max/?user_id=$userId&exercise_name=Bench Press&one_rep_max=100.0&unit=KG")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.exercise_name").isEqualTo("Bench Press")
             .jsonPath("$.one_rep_max").isEqualTo(100.0)
 
         // Verify it was created
         webTestClient.get()
-            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.exercise_name").isEqualTo("Bench Press")
             .jsonPath("$.one_rep_max").isEqualTo(100.0)
     }
 
     @Test
     fun `should update user one rep max when it already exists`() {
+        val token = getValidToken("user")
         // First create a one rep max record
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press", 100.0, "KG")
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 100.0, "KG", token = token)
 
         // Then update it using PUT (upsert)
         webTestClient.put()
-            .uri("/api/v1/user_one_rep_max/?user_id=$userId1&exercise_name=Bench Press&one_rep_max=150.0&unit=KG")
+            .uri("/api/v1/user_one_rep_max/?user_id=$userId&exercise_name=Bench Press&one_rep_max=150.0&unit=KG")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -64,7 +68,8 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
         // Verify it was updated
         webTestClient.get()
-            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -73,59 +78,68 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user one rep max by user and exercise`() {
+        val token = getValidToken("user")
         // First create a one rep max record
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press", 200.0, "KG")
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 200.0, "KG", token = token)
 
         // Then retrieve it
         webTestClient.get()
-            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.exercise_name").isEqualTo("Bench Press")
             .jsonPath("$.one_rep_max").isEqualTo(200.0)
     }
 
     @Test
     fun `should delete user one rep max`() {
+        val token = getValidToken("user")
         // First save a one rep max
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press", 100.0, "KG")
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 100.0, "KG", token = token)
 
         // Then delete it
         webTestClient.delete()
-            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.exercise_name").isEqualTo("Bench Press")
             .jsonPath("$.one_rep_max").isEqualTo(100.0)
 
         // Verify it's deleted
         webTestClient.get()
-            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/Bench Press")
+            .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should return not found when user one rep max not found`() {
+        val token = getValidToken("user")
         webTestClient.get()
-            .uri("/api/v1/user_one_rep_max/user/$userId1/exercise/NonExistent")
+            .uri("/api/v1/user_one_rep_max/user/$userId/exercise/NonExistent")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should get all user one rep maxes`() {
+        val token = getValidToken("user")
         // Create one rep max records for the existing user
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Bench Press", 100.0, "KG")
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 100.0, "KG", token = token)
         // Create another exercise and one rep max for the same user - use Safety Bar Squat which exists in migrations
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId1, "Safety Bar Squat", 150.0, "KG")
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat", 150.0, "KG", token = token)
 
         webTestClient.get()
-            .uri("/api/v1/user_one_rep_max/user/$userId1")
+            .uri("/api/v1/user_one_rep_max/user/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()

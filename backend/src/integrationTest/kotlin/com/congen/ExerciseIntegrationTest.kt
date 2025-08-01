@@ -5,12 +5,14 @@ import org.junit.jupiter.api.Test
 class ExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should create exercise`() {
+        val token = getValidToken("user")
         val uniqueExerciseName = "testexerciseout-${System.nanoTime()}"
         webTestClient.post()
             .uri(
                 "/api/v1/exercise/?name=$uniqueExerciseName&description=testexerciseout" +
                     "&movement_type=horizontal_push&is_unilateral=false&is_upper=true&is_accessory=false"
             )
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -24,9 +26,11 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get exercise by name`() {
+        val token = getValidToken("user")
         // Exercise already exists in migrations
         webTestClient.get()
             .uri("/api/v1/exercise/${IntegrationTestHelpers.TEST_EXERCISE_NAME}")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -36,17 +40,21 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when exercise not found`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/exercise/NonExistentExercise")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should get all exercises`() {
+        val token = getValidToken("user")
         // Exercises already exist in migrations
         webTestClient.get()
             .uri("/api/v1/exercise/")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -59,11 +67,13 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get muscles for exercise`() {
+        val token = getValidToken("user")
         // Exercise and muscle already exist in migrations
         // The relationship already exists in migration data, no need to create it
 
         webTestClient.get()
             .uri("/api/v1/exercise/${IntegrationTestHelpers.TEST_EXERCISE_NAME}/muscle")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -77,27 +87,33 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when no muscles found for exercise`() {
+        val token = getValidToken("user")
         // Exercise exists in migrations but no relationship created
         webTestClient.get()
             .uri("/api/v1/exercise/thisdefinitelydoesntexist/muscle")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should return 404 when exercise not found for muscles`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/exercise/NonExistentExercise/muscle")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should get equipment for exercise`() {
+        val token = getValidToken("user")
         // Exercise and equipment already exist in migrations
         // The relationship already exists in migration data, no need to create it
         webTestClient.get()
             .uri("/api/v1/exercise/${IntegrationTestHelpers.TEST_EXERCISE_NAME}/equipment")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -108,17 +124,21 @@ class ExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when no equipment found for exercise`() {
+        val token = getValidToken("user")
         // Exercise exists in migrations but no relationship created
         webTestClient.get()
             .uri("/api/v1/exercise/thisdefinitelydoesntexist/equipment")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should return 404 when exercise not found for equipment`() {
+        val token = getValidToken("user")
         webTestClient.get()
             .uri("/api/v1/exercise/NonExistentExercise/equipment")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isNotFound()
     }

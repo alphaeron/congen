@@ -4,20 +4,21 @@ This document describes the Keycloak integration for the Congen application, inc
 
 ## Overview
 
-The Congen application uses Keycloak for authentication and authorization. Keycloak provides:
+The Congen application uses Keycloak for authentication and authorization with a proper OAuth2 authorization code flow. Keycloak provides:
 
 - **Single Sign-On (SSO)**: Users can authenticate once and access multiple services
 - **Role-based Access Control**: Fine-grained permissions based on user roles
 - **JWT Tokens**: Secure token-based authentication for API access
 - **User Management**: Centralized user account management
+- **Registration Flow**: Secure user registration through Keycloak
 
 ## Architecture
 
 ### Components
 
-1. **Keycloak Server**: Authentication and authorization server
+1. **Keycloak Server**: Authentication and authorization server with custom Congen theme
 2. **Backend API**: Spring Boot application with OAuth2 resource server
-3. **Frontend Application**: React application with Keycloak JavaScript adapter
+3. **Frontend Application**: React application with react-oidc-context
 
 ### Authentication Flow
 
@@ -27,6 +28,16 @@ The Congen application uses Keycloak for authentication and authorization. Keycl
 4. Frontend includes JWT token in API requests
 5. Backend validates JWT token and extracts user information
 6. Backend applies role-based authorization using `@PreAuthorize` annotations
+
+### Registration Flow
+
+1. User clicks "Create Account" on the frontend
+2. User is redirected to Keycloak registration page with custom Congen theme
+3. User completes registration on Keycloak (no passwords sent to our backend)
+4. User is redirected back to our application with authentication token
+5. If user doesn't have a profile yet, they're redirected to profile creation page
+6. User completes their fitness profile information
+7. Profile is created in our database linked to their Keycloak user ID
 
 ## Setup
 
@@ -137,120 +148,73 @@ The application defines the following roles:
 
 All API endpoints require authentication except:
 
-- Health check endpoints (`/api/v1/health/**`)
-- Public documentation endpoints (when enabled)
+- `POST /user/` - Public registration (deprecated, use Keycloak registration)
+- `GET /exercises` - Public exercise information
+- `GET /exercises/{name}` - Public exercise details
 
-### Authorization Annotations
+### New Profile Creation Endpoint
 
-The backend uses Spring Security `@PreAuthorize` annotations for fine-grained access control:
+After Keycloak registration, users can create their fitness profiles:
 
-```kotlin
-// User-specific access
-@PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+- `POST /user/profile` - Create user profile (requires authentication)
 
-// Role-based access
-@PreAuthorize("hasRole('admin') or hasRole('service')")
+This endpoint:
+- Requires valid JWT token from Keycloak
+- Creates user profile linked to Keycloak user ID
+- Validates fitness data (age, height, weight)
+- Supports unit conversion (KG/LBS)
 
-// Authenticated access
-@PreAuthorize("isAuthenticated()")
+## Custom Keycloak Theme
 
-// Program-specific access
-@PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
-```
+The application includes a custom Keycloak theme with Congen branding:
 
-### Token Management
+### Features
 
-The frontend automatically handles JWT token management:
+- **Congen Logo**: Custom SVG logo with brand colors
+- **Modern Design**: Clean, modern interface matching the application
+- **Responsive Layout**: Works on desktop and mobile devices
+- **Brand Colors**: Uses Congen's primary color (#2236CC)
 
-- **Token Refresh**: Automatically refreshes tokens before expiration
-- **Error Handling**: Redirects to login on authentication failures
-- **Request Interceptors**: Adds Authorization headers to API requests
+### Theme Components
 
-## Frontend Integration
+- **CSS Styling**: Custom styles for forms, buttons, and layout
+- **JavaScript Enhancements**: Smooth transitions and UX improvements
+- **FreeMarker Templates**: Custom login and registration templates
 
-### Authentication Context
+## Security Benefits
 
-The frontend uses a React context for authentication state management:
+### OAuth2 Authorization Code Flow
 
-```typescript
-const { authenticated, loading, login, logout, keycloak } = useAuth();
-```
+- **No Password Handling**: Passwords are never sent to our backend
+- **Secure Token Exchange**: Uses authorization codes instead of direct credentials
+- **Token Validation**: JWT tokens are cryptographically verified
+- **Automatic Token Refresh**: Handled by react-oidc-context
 
-### Protected Routes
+### User Registration Security
 
-Use the `ProtectedRoute` component to protect pages that require authentication:
-
-```typescript
-<Route 
-  path="/dashboard" 
-  element={
-    <ProtectedRoute>
-      <DashboardPage />
-    </ProtectedRoute>
-  } 
-/>
-```
-
-### API Calls
-
-Use the authenticated API client for API calls:
-
-```typescript
-import { useAuth } from '../auth/AuthContext';
-import { authenticatedRequest } from '../api/authClient';
-
-const { keycloak } = useAuth();
-
-const data = await authenticatedRequest(keycloak, {
-  method: 'GET',
-  url: '/api/v1/exercises',
-});
-```
-
-## Testing
-
-### Backend Tests
-
-Backend tests use `@TestPropertySource` to exclude security auto-configuration:
-
-```kotlin
-@TestPropertySource(
-    properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
-)
-```
-
-### Frontend Tests
-
-Frontend tests mock the authentication context:
-
-```typescript
-jest.mock('../auth/AuthContext', () => ({
-  useAuth: () => ({
-    authenticated: true,
-    loading: false,
-    keycloak: mockKeycloak,
-  }),
-}));
-```
+- **Keycloak-Managed Passwords**: All password policies enforced by Keycloak
+- **Email Verification**: Optional email verification through Keycloak
+- **Account Lockout**: Automatic account lockout for failed attempts
+- **Password Policies**: Configurable password strength requirements
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Keycloak Connection Failed**
-   - Check if Keycloak is running: `kubectl get pods -n congen` (or use the `deployAll` task which handles this automatically)
-   - Verify Keycloak URL in configuration
-   - Check network connectivity
+1. **Registration Redirect Issues**
+   - Ensure Keycloak registration is enabled
+   - Check redirect URIs include `/profile/create`
+   - Verify custom theme is properly mounted
 
-2. **Authentication Errors**
-   - Verify client configuration in Keycloak
-   - Check redirect URIs and web origins
-   - Ensure JWT token is valid and not expired
+2. **Authentication Failures**
+   - Check JWT token expiration
+   - Verify Keycloak realm configuration
+   - Ensure client secrets are correct
 
-3. **Authorization Errors**
-   - Verify user has required roles
-   - Check `@PreAuthorize` annotations
-   - Ensure roles are properly mapped
+3. **Profile Creation Issues**
+   - Verify user is authenticated
+   - Check Keycloak user ID mapping
+   - Validate fitness data constraints
 
 ### Debugging
 
@@ -258,76 +222,15 @@ Enable debug logging for authentication:
 
 ```properties
 logging.level.org.springframework.security=DEBUG
-logging.level.com.congen.auth=DEBUG
+logging.level.com.congen=DEBUG
 ```
 
-### Keycloak Admin Console
+## Migration from Old Registration
 
-Access the Keycloak admin console at:
-- Local: http://localhost:8080
-- Credentials: admin/admin
+The old registration endpoint (`POST /user/`) is deprecated. Users should:
 
-## Security Considerations
+1. Use Keycloak registration instead
+2. Complete profile creation after authentication
+3. No password data is stored in our database
 
-### Best Practices
-
-1. **Token Security**
-   - Use HTTPS in production
-   - Set appropriate token expiration times
-   - Implement token refresh properly
-
-2. **Role Management**
-   - Follow principle of least privilege
-   - Regularly review and update role assignments
-   - Use specific roles rather than broad permissions
-
-3. **Configuration Security**
-   - Store sensitive configuration in Kubernetes secrets
-   - Use environment-specific configurations
-   - Regularly rotate credentials
-
-### Production Deployment
-
-1. **Keycloak Configuration**
-   - Use external database (PostgreSQL)
-   - Configure SSL/TLS certificates
-   - Set up proper backup and monitoring
-
-2. **Network Security**
-   - Use network policies to restrict access
-   - Implement proper ingress/egress rules
-   - Monitor authentication logs
-
-3. **Monitoring**
-   - Monitor authentication success/failure rates
-   - Track token refresh patterns
-   - Alert on suspicious activity
-
-## Migration Guide
-
-### From No Authentication
-
-1. Deploy Keycloak infrastructure
-2. Run setup script to configure realm and clients
-3. Update backend with security annotations
-4. Update frontend with authentication components
-5. Test authentication flow
-6. Gradually migrate existing users
-
-### From Other Authentication System
-
-1. Export users from existing system
-2. Import users into Keycloak
-3. Map existing roles to Keycloak roles
-4. Update application configuration
-5. Test authentication flow
-6. Deploy and monitor
-
-## Support
-
-For issues related to Keycloak integration:
-
-1. Check the troubleshooting section
-2. Review Keycloak logs: `kubectl logs -n congen -l app=keycloak` (for debugging only)
-3. Check application logs for authentication errors
-4. Verify configuration in Keycloak admin console 
+This ensures full compliance with OAuth2 authorization code flow and eliminates password security risks. 

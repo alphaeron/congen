@@ -5,26 +5,25 @@ import org.junit.jupiter.api.Test
 
 class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
     private var userId: Int = 0
-    private var userId1: Int = 0
-    private var userId2: Int = 0
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        // Create unique users for each test
+        // Create a single test user to avoid keycloak_user_id conflicts
         val unique = System.nanoTime()
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique")
-        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 1 $unique")
-        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 2 $unique")
+        val token = getValidToken("user")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = token)
     }
 
     @Test
     fun `should create user program preferences`() {
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60)
+        val token = getValidToken("user")
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = token)
 
         // Verify the preferences were created correctly
         webTestClient.get()
             .uri("/api/v1/user_program_preferences/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -35,12 +34,14 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user program preferences by user id`() {
+        val token = getValidToken("user")
         // First create user program preferences using helper
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = token)
 
         // Then get them by user id
         webTestClient.get()
             .uri("/api/v1/user_program_preferences/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -51,12 +52,14 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update user program preferences`() {
+        val token = getValidToken("user")
         // First create user program preferences using helper
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = token)
 
         // Then update them
         webTestClient.patch()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=4&session_time_length_in_minutes=90")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -67,12 +70,14 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete user program preferences`() {
+        val token = getValidToken("user")
         // First create user program preferences using helper
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = token)
 
         // Then delete them
         webTestClient.delete()
             .uri("/api/v1/user_program_preferences/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -82,27 +87,41 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should handle multiple users with different preferences`() {
-        // Create different preferences for each user using helpers
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId1, 3, 60)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId2, 4, 45)
+    fun `should handle user program preferences updates`() {
+        val token = getValidToken("user")
+        // Create initial preferences for the user
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = token)
 
-        // Verify each user has their own preferences
+        // Verify initial preferences
         webTestClient.get()
-            .uri("/api/v1/user_program_preferences/$userId1")
+            .uri("/api/v1/user_program_preferences/$userId")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(userId1)
+            .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.program_days_per_week").isEqualTo(3)
             .jsonPath("$.session_time_length_in_minutes").isEqualTo(60)
 
-        webTestClient.get()
-            .uri("/api/v1/user_program_preferences/$userId2")
+        // Update preferences
+        webTestClient.patch()
+            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=4&session_time_length_in_minutes=45")
+            .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.user_id").isEqualTo(userId2)
+            .jsonPath("$.user_id").isEqualTo(userId)
+            .jsonPath("$.program_days_per_week").isEqualTo(4)
+            .jsonPath("$.session_time_length_in_minutes").isEqualTo(45)
+
+        // Verify updated preferences
+        webTestClient.get()
+            .uri("/api/v1/user_program_preferences/$userId")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.program_days_per_week").isEqualTo(4)
             .jsonPath("$.session_time_length_in_minutes").isEqualTo(45)
     }

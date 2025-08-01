@@ -1,29 +1,24 @@
-import { REQUEST, ENDPOINT } from './endpoint';
+import { REQUEST } from './endpoint';
 import { User } from './types';
-import axios from 'axios';
 
 /**
- * Register a new user.
+ * Create user profile after Keycloak registration.
  *
- * Creates both a Keycloak user account and a corresponding user profile
- * in the application database.
+ * Creates a user profile in the application database after successful Keycloak registration.
+ * The user must be authenticated and the profile will be linked to their Keycloak user ID.
  *
  * @param name The user's full name
  * @param age The user's age in years
  * @param height The user's height in centimeters
  * @param weight The user's weight in kilograms
- * @param email The user's email address (required for Keycloak integration)
- * @param password The user's password (required for Keycloak integration)
  * @param unit The weight unit (optional, defaults to KG)
- * @return The created user with assigned ID and timestamps
+ * @return The created user profile
  */
-export const registerUser = (
+export const createUserProfile = (
   name: string,
   age: number,
   height: number,
   weight: number,
-  email: string,
-  password: string,
   unit?: string
 ): Promise<User> => {
   const params = new URLSearchParams({
@@ -31,24 +26,15 @@ export const registerUser = (
     age: age.toString(),
     height: height.toString(),
     weight: weight.toString(),
-    email,
-    password,
   });
 
   if (unit) {
     params.append('unit', unit);
   }
 
-  // For user registration, we need to bypass the token interceptor
-  // since this is a public endpoint that doesn't require authentication
-  return axios({
+  return REQUEST({
     method: 'POST',
-    url: `${ENDPOINT.defaults.baseURL}user/?${params.toString()}`,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  }).then((response: any) => response.data).catch((error: any) => {
-    return Promise.reject(error.response?.data || error);
+    url: `/user/?${params.toString()}`,
   });
 };
 

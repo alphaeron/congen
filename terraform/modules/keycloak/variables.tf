@@ -46,6 +46,7 @@ variable "frontend_redirect_uris" {
   default = [
     "http://localhost:3000/*",
     "http://localhost:3000",
+    "http://localhost:3000/profile/create",
     "https://staging.congen.com/*",
     "https://congen.com/*"
   ]
