@@ -180,7 +180,15 @@ class CorsFilter(
                         userAgent,
                     )
                 }
-                // For requests without origin or from disallowed origins, don't set CORS headers
+                // For requests without origin or from disallowed origins, still set CORS headers for OPTIONS requests
+                if (requestMethod == HttpMethod.OPTIONS) {
+                    exchange.response.headers.add("Access-Control-Allow-Methods", allowedMethods)
+                    exchange.response.headers.add("Access-Control-Allow-Headers", allowedHeaders)
+                    exchange.response.headers.add("Access-Control-Max-Age", maxAge)
+                    exchange.response.statusCode = HttpStatus.NO_CONTENT
+                    logger.debug("CORS preflight request handled for path: {}", requestPath)
+                    return Mono.empty()
+                }
                 return chain.filter(exchange)
             }
 

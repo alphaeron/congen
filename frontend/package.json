@@ -67,7 +67,7 @@
     "coverage": "jest --coverage",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "type-check": "tsc --noEmit"
+    "type_check": "tsc --noEmit"
   },
   "eslintConfig": {
     "extends": [

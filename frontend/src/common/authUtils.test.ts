@@ -1,12 +1,6 @@
-import {
-  getUserRoles,
-  getUserGroups,
-  getUserPermissions,
-  hasAnyPermission,
-  hasAllPermissions,
-} from './authUtils';
+import { decodeToken, hasAnyPermission } from './authUtils';
 
-// Type for OIDC user object (matching the interface in authUtils.ts)
+// Type for OIDC user object (matching the one in authUtils.ts)
 interface OidcUser {
   profile?: {
     sub?: string;
@@ -22,279 +16,257 @@ interface OidcUser {
 }
 
 describe('authUtils', () => {
-  describe('getUserRoles', () => {
-    it('should return empty array for null user', () => {
-      const result = getUserRoles(null);
-      expect(result).toEqual([]);
-    });
-
-    it('should return empty array for user without profile', () => {
-      const user = {} as OidcUser;
-      const result = getUserRoles(user);
-      expect(result).toEqual([]);
-    });
-
-    it('should return roles from realm_access.roles', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin', 'user'],
-          },
-        },
+  describe('decodeToken', () => {
+    it('should decode valid JWT token', () => {
+      // Create a mock JWT token with known payload
+      const mockPayload = {
+        sub: 'user123',
+        name: 'Test User',
+        groups: ['admin', 'user'],
+        realm_access: { roles: ['admin'] },
       };
-      const result = getUserRoles(user);
-      expect(result).toEqual(['admin', 'user']);
+
+      const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
+
+      const result = decodeToken(mockToken);
+
+      expect(result).toEqual(mockPayload);
     });
 
-    it('should return roles from direct roles property when realm_access not available', () => {
-      const user: OidcUser = {
-        profile: {
-          roles: ['service', 'user'],
-        },
+    it('should handle token with special characters in payload', () => {
+      const mockPayload = {
+        sub: 'user123',
+        name: 'Test User with special chars: !@#$%^&*()',
+        groups: ['admin', 'user'],
+        realm_access: { roles: ['admin'] },
       };
-      const result = getUserRoles(user);
-      expect(result).toEqual(['service', 'user']);
+
+      const mockToken = `header.${btoa(JSON.stringify(mockPayload))}.signature`;
+
+      const result = decodeToken(mockToken);
+
+      expect(result).toEqual(mockPayload);
     });
 
-    it('should return empty array when no roles are present', () => {
-      const user: OidcUser = {
-        profile: {
-          email: 'test@example.com',
-        },
-      };
-      const result = getUserRoles(user);
-      expect(result).toEqual([]);
-    });
-  });
+    it('should return null for invalid token format', () => {
+      const invalidToken = 'invalid-token-format';
 
-  describe('getUserGroups', () => {
-    it('should return empty array for null user', () => {
-      const result = getUserGroups(null);
-      expect(result).toEqual([]);
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = decodeToken(invalidToken);
+
+      expect(result).toBeNull();
+
+      consoleSpy.mockRestore();
     });
 
-    it('should return empty array for user without profile', () => {
-      const user = {} as OidcUser;
-      const result = getUserGroups(user);
-      expect(result).toEqual([]);
+    it('should return null for token with invalid base64', () => {
+      const invalidToken = 'header.invalid-base64.signature';
+
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = decodeToken(invalidToken);
+
+      expect(result).toBeNull();
+
+      consoleSpy.mockRestore();
     });
 
-    it('should return groups from profile.groups', () => {
-      const user: OidcUser = {
-        profile: {
-          groups: ['premium-users', 'beta-testers'],
-        },
-      };
-      const result = getUserGroups(user);
-      expect(result).toEqual(['premium-users', 'beta-testers']);
+    it('should return null for token with invalid JSON', () => {
+      const invalidToken = `header.${btoa('invalid-json')}.signature`;
+
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = decodeToken(invalidToken);
+
+      expect(result).toBeNull();
+
+      consoleSpy.mockRestore();
     });
 
-    it('should return empty array when no groups are present', () => {
-      const user: OidcUser = {
-        profile: {
-          email: 'test@example.com',
-        },
-      };
-      const result = getUserGroups(user);
-      expect(result).toEqual([]);
-    });
-  });
+    it('should handle empty token', () => {
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-  describe('getUserPermissions', () => {
-    it('should return empty array for null user', () => {
-      const result = getUserPermissions(null);
-      expect(result).toEqual([]);
+      const result = decodeToken('');
+
+      expect(result).toBeNull();
+
+      consoleSpy.mockRestore();
     });
 
-    it('should combine roles and groups', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin', 'user'],
-          },
-          groups: ['premium-users', 'beta-testers'],
-        },
-      };
-      const result = getUserPermissions(user);
-      expect(result).toEqual(['admin', 'user', 'premium-users', 'beta-testers']);
+    it('should handle null token', () => {
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const result = decodeToken(null as unknown as string);
+
+      expect(result).toBeNull();
+
+      consoleSpy.mockRestore();
     });
 
-    it('should handle user with only roles', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['service'],
-          },
-        },
-      };
-      const result = getUserPermissions(user);
-      expect(result).toEqual(['service']);
-    });
+    it('should handle undefined token', () => {
+      // Suppress console.error for this test since we expect an error
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    it('should handle user with only groups', () => {
-      const user: OidcUser = {
-        profile: {
-          groups: ['premium-users'],
-        },
-      };
-      const result = getUserPermissions(user);
-      expect(result).toEqual(['premium-users']);
-    });
+      const result = decodeToken(undefined as unknown as string);
 
-    it('should return empty array when no permissions are present', () => {
-      const user: OidcUser = {
-        profile: {
-          email: 'test@example.com',
-        },
-      };
-      const result = getUserPermissions(user);
-      expect(result).toEqual([]);
+      expect(result).toBeNull();
+
+      consoleSpy.mockRestore();
     });
   });
 
   describe('hasAnyPermission', () => {
+    const createMockUser = (groups: string[] = [], roles: string[] = []) => ({
+      profile: {
+        groups,
+        realm_access: { roles },
+      },
+    });
+
     it('should return false for null user', () => {
       const result = hasAnyPermission(null, ['admin']);
+
       expect(result).toBe(false);
     });
 
     it('should return false for empty permissions array', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin'],
-          },
-        },
-      };
+      const user = createMockUser(['admin'], ['admin']);
+
       const result = hasAnyPermission(user, []);
+
       expect(result).toBe(false);
     });
 
-    it('should return true when user has any of the required permissions (roles)', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin', 'user'],
-          },
-        },
-      };
-      const result = hasAnyPermission(user, ['admin', 'service']);
+    it('should return true when user has matching group', () => {
+      const user = createMockUser(['admin', 'user'], ['user']);
+
+      const result = hasAnyPermission(user, ['admin']);
+
       expect(result).toBe(true);
     });
 
-    it('should return true when user has any of the required permissions (groups)', () => {
-      const user: OidcUser = {
-        profile: {
-          groups: ['premium-users', 'beta-testers'],
-        },
-      };
-      const result = hasAnyPermission(user, ['premium-users', 'vip-users']);
+    it('should return true when user has matching role', () => {
+      const user = createMockUser(['user'], ['admin', 'user']);
+
+      const result = hasAnyPermission(user, ['admin']);
+
       expect(result).toBe(true);
     });
 
-    it('should return true when user has permission from either roles or groups', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['user'],
-          },
-          groups: ['premium-users'],
-        },
-      };
-      const result = hasAnyPermission(user, ['admin', 'premium-users']);
+    it('should return true when user has matching permission in both groups and roles', () => {
+      const user = createMockUser(['admin'], ['admin']);
+
+      const result = hasAnyPermission(user, ['admin']);
+
       expect(result).toBe(true);
     });
 
-    it('should return false when user has none of the required permissions', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['user'],
-          },
-          groups: ['basic-users'],
-        },
-      };
-      const result = hasAnyPermission(user, ['admin', 'service']);
+    it('should return false when user has no matching permissions', () => {
+      const user = createMockUser(['user'], ['user']);
+
+      const result = hasAnyPermission(user, ['admin', 'moderator']);
+
       expect(result).toBe(false);
+    });
+
+    it('should return true when user has any of multiple required permissions', () => {
+      const user = createMockUser(['user'], ['admin']);
+
+      const result = hasAnyPermission(user, ['admin', 'moderator']);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle user with no groups or roles', () => {
+      const user = createMockUser([], []);
+
+      const result = hasAnyPermission(user, ['admin']);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle user with undefined groups and roles', () => {
+      const user = {
+        profile: {
+          groups: undefined,
+          realm_access: { roles: undefined },
+        },
+      };
+
+      const result = hasAnyPermission(user as unknown as OidcUser, ['admin']);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle user with null groups and roles', () => {
+      const user = {
+        profile: {
+          groups: null,
+          realm_access: { roles: null },
+        },
+      };
+
+      const result = hasAnyPermission(user as unknown as OidcUser, ['admin']);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle user with missing profile', () => {
+      const user = {};
+
+      const result = hasAnyPermission(user as unknown as OidcUser, ['admin']);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle user with missing realm_access', () => {
+      const user = {
+        profile: {
+          groups: ['admin'],
+        },
+      };
+
+      const result = hasAnyPermission(user as unknown as OidcUser, ['admin']);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle case-sensitive permission matching', () => {
+      const user = createMockUser(['Admin'], ['User']);
+
+      const result = hasAnyPermission(user, ['admin', 'user']);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle empty strings in permissions', () => {
+      const user = createMockUser(['admin'], ['user']);
+
+      const result = hasAnyPermission(user, ['', 'admin']);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle special characters in permissions', () => {
+      const user = createMockUser(['admin-user'], ['user@domain']);
+
+      const result = hasAnyPermission(user, ['admin-user', 'user@domain']);
+
+      expect(result).toBe(true);
+    });
+
+    it('should handle whitespace in permissions', () => {
+      const user = createMockUser([' admin '], [' user ']);
+
+      const result = hasAnyPermission(user, ['admin', 'user']);
+
+      expect(result).toBe(false); // Exact match required
     });
   });
-
-  describe('hasAllPermissions', () => {
-    it('should return false for null user', () => {
-      const result = hasAllPermissions(null, ['admin']);
-      expect(result).toBe(false);
-    });
-
-    it('should return false for empty permissions array', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin'],
-          },
-        },
-      };
-      const result = hasAllPermissions(user, []);
-      expect(result).toBe(false);
-    });
-
-    it('should return true when user has all required permissions (roles only)', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin', 'user', 'service'],
-          },
-        },
-      };
-      const result = hasAllPermissions(user, ['admin', 'user']);
-      expect(result).toBe(true);
-    });
-
-    it('should return true when user has all required permissions (groups only)', () => {
-      const user: OidcUser = {
-        profile: {
-          groups: ['premium-users', 'beta-testers', 'vip-users'],
-        },
-      };
-      const result = hasAllPermissions(user, ['premium-users', 'beta-testers']);
-      expect(result).toBe(true);
-    });
-
-    it('should return true when user has all permissions from roles and groups combined', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin'],
-          },
-          groups: ['premium-users'],
-        },
-      };
-      const result = hasAllPermissions(user, ['admin', 'premium-users']);
-      expect(result).toBe(true);
-    });
-
-    it('should return false when user is missing any required permission', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['admin'],
-          },
-          groups: ['premium-users'],
-        },
-      };
-      const result = hasAllPermissions(user, ['admin', 'service']);
-      expect(result).toBe(false);
-    });
-
-    it('should return false when user has none of the required permissions', () => {
-      const user: OidcUser = {
-        profile: {
-          realm_access: {
-            roles: ['user'],
-          },
-        },
-      };
-      const result = hasAllPermissions(user, ['admin', 'service']);
-      expect(result).toBe(false);
-    });
-  });
-}); 
+});

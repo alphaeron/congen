@@ -30,7 +30,8 @@ task formatCheck {
 
 // Configure tasks to be skipped if no changes
 npm_run_lint.onlyIf {
-    fileTree(dir: 'src', include: '**/*.{js,jsx,ts,tsx}').any { it.lastModified() > project.buildDir.lastModified() }
+    // Always run linting for now to ensure it works
+    true
 }
 
 tasks.named('check').configure {

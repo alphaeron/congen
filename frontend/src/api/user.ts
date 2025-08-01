@@ -1,5 +1,6 @@
-import { REQUEST } from './endpoint';
+import { REQUEST, ENDPOINT } from './endpoint';
 import { User } from './types';
+import axios from 'axios';
 
 /**
  * Register a new user.
@@ -38,9 +39,16 @@ export const registerUser = (
     params.append('unit', unit);
   }
 
-  return REQUEST({
+  // For user registration, we need to bypass the token interceptor
+  // since this is a public endpoint that doesn't require authentication
+  return axios({
     method: 'POST',
-    url: `/user/?${params.toString()}`,
+    url: `${ENDPOINT.defaults.baseURL}user/?${params.toString()}`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  }).then((response: any) => response.data).catch((error: any) => {
+    return Promise.reject(error.response?.data || error);
   });
 };
 

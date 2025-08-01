@@ -3,7 +3,6 @@ import {
   Box,
   Button,
   TextField,
-  Typography,
   Alert,
   CircularProgress,
   FormControl,
@@ -20,10 +19,7 @@ interface RegisterFormProps {
   onSwitchToLogin?: () => void;
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ 
-  onSuccess, 
-  onSwitchToLogin 
-}) => {
+export const RegisterForm: React.FC<RegisterFormProps> = ({ onSuccess, onSwitchToLogin }) => {
   const { register, isLoading, error, clearError } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -52,7 +48,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const handleHeightUnitChange = (e: SelectChangeEvent) => {
     const newUnit = e.target.value;
     const currentHeight = parseFloat(formData.height) || 0;
-    
+
     if (formData.heightUnit === 'CM' && newUnit === 'FT_IN') {
       // Convert from cm to feet+inches
       const { feet, inches } = cmToFeetInches(currentHeight);
@@ -92,11 +88,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    
+
     if (formData.password !== formData.confirmPassword) {
       return;
     }
-    
+
     // Convert height to cm for backend
     let heightInCm = parseFloat(formData.height);
     if (formData.heightUnit === 'FT_IN') {
@@ -107,7 +103,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         heightInCm = feetInchesToCm(feet, inches);
       }
     }
-    
+
     try {
       await register({
         name: formData.name,
@@ -119,7 +115,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         unit: formData.unit,
       });
       onSuccess?.();
-    } catch (err) {
+    } catch {
       // Error is handled by the auth context
     }
   };
@@ -145,7 +141,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           {error}
         </Alert>
       )}
-      
+
       <TextField
         margin="normal"
         required
@@ -159,7 +155,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      
+
       <TextField
         margin="normal"
         required
@@ -172,7 +168,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      
+
       <Grid container spacing={2}>
         <Grid item xs={8}>
           <TextField
@@ -207,7 +203,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </FormControl>
         </Grid>
       </Grid>
-      
+
       <Grid container spacing={2}>
         <Grid item xs={8}>
           <TextField
@@ -241,7 +237,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           </FormControl>
         </Grid>
       </Grid>
-      
+
       <TextField
         margin="normal"
         required
@@ -255,7 +251,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      
+
       <TextField
         margin="normal"
         required
@@ -268,7 +264,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         onChange={handleInputChange}
         disabled={isLoading}
       />
-      
+
       <TextField
         margin="normal"
         required
@@ -287,7 +283,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
             : ''
         }
       />
-      
+
       <Button
         type="submit"
         fullWidth
@@ -297,17 +293,12 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       >
         {isLoading ? <CircularProgress size={24} /> : 'Create Account'}
       </Button>
-      
+
       {onSwitchToLogin && (
-        <Button
-          fullWidth
-          variant="text"
-          onClick={onSwitchToLogin}
-          disabled={isLoading}
-        >
+        <Button fullWidth variant="text" onClick={onSwitchToLogin} disabled={isLoading}>
           Already have an account? Sign in
         </Button>
       )}
     </Box>
   );
-}; 
+};

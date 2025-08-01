@@ -46,7 +46,11 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
               onText="Accessory"
               offText="Primary Movement"
             />
-            <BinaryTag isOn={props.exercise.is_unilateral} onText="Unilateral" offText="Bilateral" />
+            <BinaryTag
+              isOn={props.exercise.is_unilateral}
+              onText="Unilateral"
+              offText="Bilateral"
+            />
           </Stack>
           {props.equipment.length > 0 && (
             <React.Fragment>

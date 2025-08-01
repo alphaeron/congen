@@ -6,7 +6,13 @@ import * as React from 'react';
 import { ENDPOINT } from '../api/endpoint';
 import { ExerciseDetails } from './ExerciseDetails';
 
-import { EQUIPMENT, EXERCISE, EXERCISE_MUSCLE, EXERCISE_EQUIPMENT, MUSCLE } from '../__mocks__/data';
+import {
+  EQUIPMENT,
+  EXERCISE,
+  EXERCISE_MUSCLE,
+  EXERCISE_EQUIPMENT,
+  MUSCLE,
+} from '../__mocks__/data';
 
 describe('ExerciseDetails component', () => {
   const queryClient = new QueryClient({

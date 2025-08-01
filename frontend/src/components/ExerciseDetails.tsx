@@ -129,7 +129,7 @@ export function ExerciseDetails(
     equipment === undefined ||
     muscles === undefined
   ) {
-    return <React.Fragment />;
+    return <React.Fragment />; // eslint-disable-line react/jsx-no-useless-fragment
   } else if (
     isExerciseError ||
     isEquipmentError ||

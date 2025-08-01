@@ -16,6 +16,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -87,6 +88,44 @@ class JacksonConfig {
                         throw IllegalArgumentException("Unable to parse timestamp: $text", e3)
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Custom serializer for BigDecimal to output as numbers instead of strings.
+     *
+     * This serializer ensures that BigDecimal values are serialized as numbers
+     * instead of strings, which is the expected format for the frontend.
+     */
+    class BigDecimalSerializer : JsonSerializer<BigDecimal>() {
+        override fun serialize(
+            value: BigDecimal?,
+            gen: JsonGenerator,
+            serializers: SerializerProvider
+        ) {
+            if (value != null) {
+                gen.writeNumber(value)
+            }
+        }
+    }
+
+    /**
+     * Custom deserializer for BigDecimal to handle various numeric input formats.
+     *
+     * This deserializer handles cases where BigDecimal values might be sent as
+     * numbers, strings, or other numeric types from the frontend.
+     */
+    class BigDecimalDeserializer : JsonDeserializer<BigDecimal>() {
+        override fun deserialize(
+            p: JsonParser,
+            ctxt: DeserializationContext
+        ): BigDecimal {
+            return when (p.currentToken) {
+                JsonToken.VALUE_NUMBER_INT -> BigDecimal.valueOf(p.longValue)
+                JsonToken.VALUE_NUMBER_FLOAT -> BigDecimal.valueOf(p.doubleValue)
+                JsonToken.VALUE_STRING -> BigDecimal(p.text)
+                else -> throw JsonMappingException(p, "Cannot deserialize ${p.currentToken} to BigDecimal")
             }
         }
     }
@@ -167,6 +206,8 @@ class JacksonConfig {
             val customModule = SimpleModule()
             customModule.addDeserializer(Int::class.java, NumericIntDeserializer())
             customModule.addDeserializer(Int::class.javaObjectType, NumericIntDeserializer())
+            customModule.addSerializer(BigDecimal::class.java, BigDecimalSerializer())
+            customModule.addDeserializer(BigDecimal::class.java, BigDecimalDeserializer())
             mapper.registerModule(customModule)
         }
     }

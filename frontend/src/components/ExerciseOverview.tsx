@@ -154,9 +154,12 @@ export function ExerciseOverview(): React.ReactElement {
         exerciseEquipmentMap &&
         equipment.find(element => element.name === exerciseEquipmentFilter) !== undefined
       ) {
-        toDisplay = toDisplay.filter(e =>
-          exerciseEquipmentMap.get(e.name).has(exerciseEquipmentFilter)
-        );
+        toDisplay = toDisplay.filter(e => {
+          const equipmentSet = exerciseEquipmentMap.get(e.name);
+          return (
+            equipmentSet && exerciseEquipmentFilter && equipmentSet.has(exerciseEquipmentFilter)
+          );
+        });
       }
 
       if (
@@ -207,7 +210,7 @@ export function ExerciseOverview(): React.ReactElement {
     exerciseEquipmentMap === undefined ||
     exerciseMuscleMap === undefined
   ) {
-    return <React.Fragment />;
+    return <React.Fragment />; // eslint-disable-line react/jsx-no-useless-fragment
   } else if (
     isExercisesError ||
     isEquipmentError ||

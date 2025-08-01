@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Container,
-  Paper,
-  Box,
-  Typography,
-  Tabs,
-  Tab,
-  Alert,
-} from '@mui/material';
+import { Container, Paper, Box, Typography, Tabs, Tab, Alert } from '@mui/material';
 import { LoginForm } from '../components/LoginForm';
 import { RegisterForm } from '../components/RegisterForm';
 import { useAuth } from '../contexts/AuthContext';
@@ -68,10 +60,6 @@ export const LoginPage: React.FC = () => {
     setTabValue(0);
   };
 
-  const handleSwitchToRegister = () => {
-    setTabValue(1);
-  };
-
   return (
     <Container component="main" maxWidth="sm">
       <Box
@@ -94,22 +82,19 @@ export const LoginPage: React.FC = () => {
               <Tab label="Sign Up" />
             </Tabs>
           </Box>
-          
+
           <TabPanel value={tabValue} index={0}>
             <Typography component="h1" variant="h5" align="center" gutterBottom>
               Sign In
             </Typography>
             <LoginForm onSuccess={handleAuthSuccess} />
           </TabPanel>
-          
+
           <TabPanel value={tabValue} index={1}>
             <Typography component="h1" variant="h5" align="center" gutterBottom>
               Create Account
             </Typography>
-            <RegisterForm 
-              onSuccess={handleAuthSuccess} 
-              onSwitchToLogin={handleSwitchToLogin}
-            />
+            <RegisterForm onSuccess={handleAuthSuccess} onSwitchToLogin={handleSwitchToLogin} />
           </TabPanel>
         </Paper>
       </Box>

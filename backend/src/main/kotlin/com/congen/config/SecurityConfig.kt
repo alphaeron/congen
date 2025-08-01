@@ -3,6 +3,7 @@ package com.congen.config
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
 import org.springframework.security.config.web.server.ServerHttpSecurity
@@ -40,8 +41,9 @@ class SecurityConfig {
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->
                 exchanges
+                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow all OPTIONS requests for CORS
                     .pathMatchers("/api/v1/health/**").permitAll()
-                    .pathMatchers("/api/v1/user/").permitAll()
+                    .pathMatchers("/api/v1/user/").permitAll() // Only allow user registration endpoint
                     .anyExchange().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->

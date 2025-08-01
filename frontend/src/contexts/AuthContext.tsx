@@ -4,23 +4,7 @@ import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { registerUser, getCurrentUser } from '../api/user';
 import { User } from '../api/types';
 import { setTokenGetter } from '../api/endpoint';
-
-/**
- * Decode JWT token and extract user information
- */
-const decodeToken = (token: string): any => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-};
+import { decodeToken } from '../common/authUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -75,34 +59,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           // Get user profile from our backend
           const userProfile = await getCurrentUser();
-          
-          // Extract groups from JWT token
-          const tokenPayload = decodeToken(oidcAuth.user.access_token);
-          if (tokenPayload) {
-            const groups = tokenPayload.groups || [];
-            const roles = tokenPayload.realm_access?.roles || [];
-            setUser({
-              ...userProfile,
-              groups,
-              roles,
-            });
-          } else {
-            setUser(userProfile);
-          }
-        } catch (err) {
-          console.error('Failed to sync user profile:', err);
-          // If we can't get the profile, still set basic user info from OIDC
+
+          // Extract groups and roles from JWT token
+          const tokenPayload = decodeToken(oidcAuth.user.access_token) as {
+            groups?: string[];
+            realm_access?: { roles?: string[] };
+          };
+          const groups = tokenPayload?.groups || [];
+          const roles = tokenPayload?.realm_access?.roles || [];
+
           setUser({
-            id: 0,
-            name: oidcAuth.user.profile.name || '',
-            age: 0,
-            height: 0,
-            weight: 0,
-            groups: [],
-            roles: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            ...userProfile,
+            groups,
+            roles,
           });
+        } catch (error) {
+          // If we can't get the profile, log the error and don't set user
+          console.error('Failed to get user profile:', error);
+          setUser(null);
         }
       } else {
         setUser(null);
@@ -123,9 +97,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setError(null);
       await oidcAuth.signinRedirect();
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
-      throw err;
+    } catch (err: unknown) {
+      const errorMessage =
+        err && typeof err === 'object' && 'message' in err ? String(err.message) : 'Login failed';
+      setError(errorMessage);
     }
   };
 
@@ -133,15 +108,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await oidcAuth.removeUser();
       setUser(null);
-    } catch (err) {
-      console.error('Logout error:', err);
+    } catch {
+      // Logout error handled silently
     }
   };
 
   const register = async (userData: RegisterData) => {
     try {
       // Register user through backend
-      const newUser = await registerUser(
+      await registerUser(
         userData.name,
         userData.age,
         userData.height,
@@ -150,29 +125,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         userData.password,
         userData.unit
       );
-      
-      // After successful registration, automatically log the user in
-      try {
-        await oidcAuth.signinRedirect({
-          extraQueryParams: {
-            login_hint: userData.email,
-          },
-        });
-      } catch (loginErr: any) {
-        // If automatic login fails, fall back to manual login
-        console.warn('Automatic login after registration failed:', loginErr);
-        navigate('/login', { 
-          state: { 
-            message: 'Registration successful! Please sign in with your new account.',
-            email: userData.email 
-          },
-          replace: true 
-        });
-      }
-      
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
-      throw err;
+
+      // After successful registration, redirect to login page
+      navigate('/login', {
+        state: {
+          message: 'Registration successful! Please sign in with your new account.',
+          email: userData.email,
+        },
+        replace: true,
+      });
+    } catch (err: unknown) {
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+          ? String(err.response.data.message)
+          : 'Registration failed';
+      setError(errorMessage);
     }
   };
 
@@ -192,4 +167,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}; 
+};

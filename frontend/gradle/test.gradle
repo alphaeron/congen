@@ -22,10 +22,11 @@ task testCoverage {
 }
 
 // TypeScript compilation check
-task typeCheck {
+task typeCheck(type: NpmTask) {
     group = 'verification'
     description = 'Check TypeScript compilation without emitting files'
-    dependsOn npm_run_type_check
+    dependsOn npm_install
+    args = ['run', 'type_check']
     inputs.dir('src')
     inputs.file('package.json')
     inputs.file('tsconfig.json')
@@ -39,5 +40,6 @@ npm_run_test.doLast {
 
 // Configure tasks to be skipped if no changes
 npm_run_test.onlyIf {
-    fileTree(dir: 'src', include: '**/*.{js,jsx,ts,tsx}').any { it.lastModified() > project.buildDir.lastModified() }
+    // Always run tests for now to ensure they work
+    true
 }

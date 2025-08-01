@@ -24,11 +24,7 @@ jest.mock('../contexts/AuthContext', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
+  return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
 describe('UserProfilePage', () => {
@@ -94,7 +90,9 @@ describe('UserProfilePage', () => {
 
     renderWithProviders(<UserProfilePage />);
 
-    expect(screen.getByText('User information not available. Please log in to view your profile.')).toBeInTheDocument();
+    expect(
+      screen.getByText('User information not available. Please log in to view your profile.')
+    ).toBeInTheDocument();
     expect(screen.queryByText('User Profile')).not.toBeInTheDocument();
   });
-}); 
+});

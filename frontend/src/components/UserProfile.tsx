@@ -59,8 +59,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
       // Logout after successful deletion
       await logout();
       navigate('/');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to delete account');
+    } catch (err: unknown) {
+      const errorMessage =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+          ? String(err.response.data.message)
+          : 'Failed to delete account';
+      setError(errorMessage);
     } finally {
       setIsDeleting(false);
     }
@@ -107,11 +119,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                     Member since {user.created_at ? formatDate(user.created_at) : 'N/A'}
                   </Typography>
                 </Box>
-                <Button
-                  variant="outlined"
-                  startIcon={<EditIcon />}
-                  onClick={handleEditProfile}
-                >
+                <Button variant="outlined" startIcon={<EditIcon />} onClick={handleEditProfile}>
                   Edit Profile
                 </Button>
               </Box>
@@ -127,32 +135,26 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 Personal Information
               </Typography>
               <Divider sx={{ mb: 2 }} />
-              
+
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                   Age
                 </Typography>
-                <Typography variant="body1">
-                  {user.age} years old
-                </Typography>
+                <Typography variant="body1">{user.age} years old</Typography>
               </Box>
 
               <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                   Height
                 </Typography>
-                <Typography variant="body1">
-                  {user.height} cm
-                </Typography>
+                <Typography variant="body1">{user.height} cm</Typography>
               </Box>
 
               <Box>
                 <Typography variant="body2" color="text.secondary">
                   Weight
                 </Typography>
-                <Typography variant="body1">
-                  {user.weight} kg
-                </Typography>
+                <Typography variant="body1">{user.weight} kg</Typography>
               </Box>
             </CardContent>
           </Card>
@@ -205,12 +207,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 </Box>
               )}
 
-              {(!user.roles || user.roles.length === 0) && 
-               (!user.groups || user.groups.length === 0) && (
-                <Typography variant="body2" color="text.secondary">
-                  No roles or groups assigned
-                </Typography>
-              )}
+              {(!user.roles || user.roles.length === 0) &&
+                (!user.groups || user.groups.length === 0) && (
+                  <Typography variant="body2" color="text.secondary">
+                    No roles or groups assigned
+                  </Typography>
+                )}
             </CardContent>
           </Card>
         </Grid>
@@ -223,11 +225,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 Danger Zone
               </Typography>
               <Divider sx={{ mb: 2 }} />
-              
+
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Once you delete your account, there is no going back. Please be certain.
               </Typography>
-              
+
               <Button
                 variant="outlined"
                 color="error"
@@ -248,20 +250,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
       >
-        <DialogTitle id="delete-dialog-title">
-          Deactivate Account
-        </DialogTitle>
+        <DialogTitle id="delete-dialog-title">Deactivate Account</DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to deactivate your account? This action cannot be undone.
-            All your data, including workout preferences and exercise history, will be permanently deleted.
+            Are you sure you want to deactivate your account? This action cannot be undone. All your
+            data, including workout preferences and exercise history, will be permanently deleted.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)}
-            disabled={isDeleting}
-          >
+          <Button onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
             Cancel
           </Button>
           <Button

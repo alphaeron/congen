@@ -4,7 +4,7 @@ import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
 
 global.TextEncoder = TextEncoder;
-global.TextDecoder = TextDecoder as any;
+global.TextDecoder = TextDecoder as never;
 
 // Set up window.location for React Router tests
 Object.defineProperty(window, 'location', {

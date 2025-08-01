@@ -3,41 +3,27 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import { ProtectedRoute } from './ProtectedRoute';
-import { AuthProvider, useAuth } from 'react-oidc-context';
 
-// Mock Keycloak
-jest.mock('keycloak-js', () => {
-  return jest.fn().mockImplementation(() => ({
-    authenticated: false,
-    token: null,
-    tokenParsed: null,
-    login: jest.fn(),
-    logout: jest.fn(),
-    updateToken: jest.fn().mockResolvedValue(true),
-    accountManagement: jest.fn(),
-  }));
-});
+// Mock react-router-dom
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
 
-// Mock react-oidc-context
+// Mock the AuthContext
 const mockUseAuth = jest.fn();
-jest.mock('react-oidc-context', () => ({
-  useAuth: mockUseAuth,
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: () => mockUseAuth(),
 }));
 
 const TestComponent: React.FC = () => <div>Protected Content</div>;
 
 const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <MemoryRouter>
-    <AuthProvider>
-      {children}
-    </AuthProvider>
-  </MemoryRouter>
+  <MemoryRouter>{children}</MemoryRouter>
 );
 
 describe('ProtectedRoute', () => {
-  const mockUseAuth = useAuth as jest.MockedFunction<any>;
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -47,8 +33,6 @@ describe('ProtectedRoute', () => {
       isAuthenticated: false,
       isLoading: true,
       user: null,
-      signinRedirect: jest.fn(),
-      signoutRedirect: jest.fn(),
     });
 
     render(
@@ -59,16 +43,14 @@ describe('ProtectedRoute', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('Loading...')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('should render children when user is authenticated', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { sub: 'test-user' } },
-      signinRedirect: jest.fn(),
-      signoutRedirect: jest.fn(),
+      user: { id: 1, name: 'Test User' },
     });
 
     render(
@@ -82,13 +64,11 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
   });
 
-  it('should redirect to login when user is not authenticated', () => {
+  it('should redirect to login when user is not authenticated', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
       user: null,
-      signinRedirect: jest.fn(),
-      signoutRedirect: jest.fn(),
     });
 
     render(
@@ -99,29 +79,32 @@ describe('ProtectedRoute', () => {
       </TestWrapper>
     );
 
-    // Should redirect to login (Navigate component behavior)
-    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/login', {
+        state: { from: expect.objectContaining({ pathname: '/' }) },
+        replace: true,
+      });
+    });
   });
 
-  it('should redirect authenticated users away from public pages', () => {
+  it('should redirect authenticated users away from public pages', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { profile: { sub: 'test-user' } },
-      signinRedirect: jest.fn(),
-      signoutRedirect: jest.fn(),
+      user: { id: 1, name: 'Test User' },
     });
 
     render(
       <TestWrapper>
-        <ProtectedRoute requireAuth={false}>
+        <ProtectedRoute requireAuth={false} redirectTo="/profile">
           <TestComponent />
         </ProtectedRoute>
       </TestWrapper>
     );
 
-    // Should redirect authenticated users away from public pages
-    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/profile', { replace: true });
+    });
   });
 
   it('should render public content for unauthenticated users', () => {
@@ -129,8 +112,6 @@ describe('ProtectedRoute', () => {
       isAuthenticated: false,
       isLoading: false,
       user: null,
-      signinRedirect: jest.fn(),
-      signoutRedirect: jest.fn(),
     });
 
     render(
@@ -143,4 +124,4 @@ describe('ProtectedRoute', () => {
 
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
   });
-}); 
+});

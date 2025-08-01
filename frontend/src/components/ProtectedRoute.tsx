@@ -1,7 +1,8 @@
 import React from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../contexts/AuthContext';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,7 +12,7 @@ interface ProtectedRouteProps {
 
 /**
  * Protected route component that handles authentication routing.
- * 
+ *
  * @param children The components to render if authentication requirements are met
  * @param requireAuth Whether authentication is required (default: true)
  * @param redirectTo Where to redirect if authentication requirements are not met
@@ -38,16 +39,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Show loading state while authentication is being determined
   if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh' 
-      }}>
-        Loading...
-      </div>
-    );
+    return <LoadingSpinner fullHeight />;
   }
 
   // If authentication is required but user is not authenticated, or
@@ -57,5 +49,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Render children if authentication requirements are met
-  return <>{children}</>;
-}; 
+  return <React.Fragment>{children}</React.Fragment>;
+};

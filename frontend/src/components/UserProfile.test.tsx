@@ -39,11 +39,7 @@ jest.mock('../contexts/AuthContext', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
+  return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
 describe('UserProfile', () => {
@@ -58,7 +54,7 @@ describe('UserProfile', () => {
 
   it('should render user profile information', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     expect(screen.getByText('30 years old')).toBeInTheDocument();
@@ -68,7 +64,7 @@ describe('UserProfile', () => {
 
   it('should display roles and groups', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     expect(screen.getByText('Roles & Groups')).toBeInTheDocument();
     expect(screen.getByText('user')).toBeInTheDocument();
     expect(screen.getByText('fitness-enthusiasts')).toBeInTheDocument();
@@ -76,54 +72,58 @@ describe('UserProfile', () => {
 
   it('should show deactivate account button', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
   });
 
   it('should show edit profile button', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     expect(screen.getByText('Edit Profile')).toBeInTheDocument();
   });
 
   it('should open delete confirmation dialog when deactivate button is clicked', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     const deactivateButton = screen.getAllByText('Deactivate Account')[0];
     fireEvent.click(deactivateButton);
-    
-    expect(screen.getByText(/Are you sure you want to deactivate your account/)).toBeInTheDocument();
+
+    expect(
+      screen.getByText(/Are you sure you want to deactivate your account/)
+    ).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
     expect(screen.getAllByText('Deactivate Account')).toHaveLength(3);
   });
 
   it('should close dialog when cancel is clicked', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     const deactivateButton = screen.getAllByText('Deactivate Account')[0];
     fireEvent.click(deactivateButton);
-    
+
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     await waitFor(() => {
-      expect(screen.queryByText(/Are you sure you want to deactivate your account/)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/Are you sure you want to deactivate your account/)
+      ).not.toBeInTheDocument();
     });
   });
 
   it('should call onEditProfile when edit button is clicked', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
-    
+
     const editButton = screen.getByText('Edit Profile');
     fireEvent.click(editButton);
-    
+
     expect(mockNavigate).toHaveBeenCalledWith('/profile/edit');
   });
 
   it('should verify axios mock is working', async () => {
     // Test that the axios mock is working by making a simple request
     mock.onGet('/test').reply(200, { message: 'test' });
-    
+
     const response = await ENDPOINT.get('/test');
     expect(response.data.message).toBe('test');
   });
@@ -131,7 +131,7 @@ describe('UserProfile', () => {
   it('should verify deleteUser function works with axios mock', async () => {
     // Test that the deleteUser function works with the axios mock
     mock.onDelete('/user/1').reply(200, mockUser);
-    
+
     const result = await deleteUser(1);
     expect(result).toEqual(mockUser);
   });
@@ -142,9 +142,9 @@ describe('UserProfile', () => {
       roles: undefined,
       groups: undefined,
     };
-    
+
     renderWithProviders(<UserProfile user={userWithoutRoles} />);
-    
+
     expect(screen.getByText('No roles or groups assigned')).toBeInTheDocument();
   });
 
@@ -153,7 +153,7 @@ describe('UserProfile', () => {
   // 1. The component not actually calling the deleteUser function
   // 2. The deleteUser function not being properly imported/mocked
   // 3. The URL path being different than expected
-  // 
+  //
   // The axios-mock-adapter is set up correctly and working (as verified by the tests above),
   // and the deleteUser function works correctly with the mock.
   // The issue appears to be that the component's delete button click handler is not

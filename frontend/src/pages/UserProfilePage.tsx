@@ -25,4 +25,4 @@ export const UserProfilePage: React.FC = () => {
   }
 
   return <UserProfile user={user} />;
-}; 
+};

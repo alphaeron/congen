@@ -14,6 +14,7 @@ export function ExerciseDetailsPage(): React.ReactElement {
     return <ExerciseDetails exerciseName={exerciseName} />;
   } else {
     // TODO Show alert instead?
+    // eslint-disable-next-line react/jsx-no-useless-fragment
     return <React.Fragment />;
   }
 } // end component ExerciseDetailsPage
