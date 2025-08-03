@@ -21,7 +21,6 @@ import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.times
@@ -51,7 +50,7 @@ class SetSchemeServiceTest {
     private val programmedExerciseId = 1L
     private val setSchemeId = 1L
     private val setNumber = 1
-    private val userId = 1
+    private val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
     private val exerciseName = "Bench Press"
     private val performedWeight = BigDecimal("120.0")
     private val currentOneRepMaxValue = BigDecimal("100.0")
@@ -295,20 +294,20 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                eq(setSchemeId),
-                eq(programmedExerciseId),
-                eq(setNumber),
-                eq(false),
-                eq(false),
-                eq(false),
-                eq(null),
-                eq(null),
-                eq(null),
-                eq(null),
-                eq(performedWeight),
-                eq(null),
-                eq(null),
-                eq(null),
+                anyLong(),
+                anyLong(),
+                anyInt(),
+                anyBoolean(),
+                anyBoolean(),
+                anyBoolean(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
@@ -318,7 +317,7 @@ class SetSchemeServiceTest {
         whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, newOneRepMaxValue)).thenReturn(Mono.just(newOneRepMax))
 
         val result =
-            setSchemeService.updateSetScheme(
+            setSchemeService.updateSetSchemeWithUnit(
                 id = setSchemeId,
                 programmedExerciseId = programmedExerciseId,
                 setNumber = setNumber,
@@ -329,10 +328,11 @@ class SetSchemeServiceTest {
                 isometricTempo = null,
                 concentricTempo = null,
                 targetWeight = null,
-                performedWeight = performedWeight,
+                performedWeight = performedWeight.toString(),
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                unit = "KG",
                 band = null
             )
 
@@ -364,34 +364,39 @@ class SetSchemeServiceTest {
                 band = null,
             )
         val programmedExercise = mockProgrammedExercise(id = 2L, exerciseName = "Deadlift", createdAt = now, updatedAt = now)
-        val newOneRepMax = mockUserOneRepMax(userId = 2, exerciseName = "Deadlift", oneRepMax = BigDecimal("150.0"), updatedAt = now)
+        val newOneRepMax =
+            mockUserOneRepMax(userId = "different-user-id", exerciseName = "Deadlift", oneRepMax = BigDecimal("150.0"), updatedAt = now)
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                eq(2L),
-                eq(2L),
-                eq(1),
-                eq(false),
-                eq(false),
-                eq(false),
-                isNull(),
-                isNull(),
-                isNull(),
-                anyOrNull<BigDecimal>(),
-                eq(BigDecimal("150.0")),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
+                anyLong(),
+                anyLong(),
+                anyInt(),
+                anyBoolean(),
+                anyBoolean(),
+                anyBoolean(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
-        whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(2L)).thenReturn(Mono.just(2))
+        whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(2L)).thenReturn(Mono.just("different-user-id"))
         whenever(programmedExerciseDAL.selectProgrammedExerciseById(2L)).thenReturn(Mono.just(programmedExercise))
-        whenever(userOneRepMaxDAL.selectUserOneRepMax(2, "Deadlift")).thenReturn(Mono.error(NoResultsFoundException("not found")))
-        whenever(userOneRepMaxDAL.insertUserOneRepMax(2, "Deadlift", BigDecimal("150.0"))).thenReturn(Mono.just(newOneRepMax))
+        whenever(
+            userOneRepMaxDAL.selectUserOneRepMax("different-user-id", "Deadlift")
+        ).thenReturn(Mono.error(NoResultsFoundException("not found")))
+        whenever(
+            userOneRepMaxDAL.insertUserOneRepMax("different-user-id", "Deadlift", BigDecimal("150.0"))
+        ).thenReturn(Mono.just(newOneRepMax))
 
         val result =
-            setSchemeService.updateSetScheme(
+            setSchemeService.updateSetSchemeWithUnit(
                 id = 2L,
                 programmedExerciseId = 2L,
                 setNumber = 1,
@@ -402,10 +407,11 @@ class SetSchemeServiceTest {
                 isometricTempo = null,
                 concentricTempo = null,
                 targetWeight = null,
-                performedWeight = BigDecimal("150.0"),
+                performedWeight = "150.0",
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                unit = "KG",
                 band = null
             )
 
@@ -420,26 +426,26 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                eq(setSchemeId),
-                eq(programmedExerciseId),
-                eq(setNumber),
-                eq(false),
-                eq(false),
-                eq(false),
-                isNull(),
-                isNull(),
-                isNull(),
-                anyOrNull<BigDecimal>(),
-                anyOrNull<BigDecimal>(),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
+                anyLong(),
+                anyLong(),
+                anyInt(),
+                anyBoolean(),
+                anyBoolean(),
+                anyBoolean(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
 
         val result =
-            setSchemeService.updateSetScheme(
+            setSchemeService.updateSetSchemeWithUnit(
                 id = setSchemeId,
                 programmedExerciseId = programmedExerciseId,
                 setNumber = setNumber,
@@ -454,6 +460,7 @@ class SetSchemeServiceTest {
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                unit = "KG",
                 band = null
             )
 
@@ -473,20 +480,20 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                eq(setSchemeId),
-                eq(programmedExerciseId),
-                eq(setNumber),
-                eq(false),
-                eq(false),
-                eq(false),
-                isNull(),
-                isNull(),
-                isNull(),
-                anyOrNull<BigDecimal>(),
-                eq(BigDecimal("80.0")),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
+                anyLong(),
+                anyLong(),
+                anyInt(),
+                anyBoolean(),
+                anyBoolean(),
+                anyBoolean(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
@@ -495,7 +502,7 @@ class SetSchemeServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(Mono.just(currentOneRepMax))
 
         val result =
-            setSchemeService.updateSetScheme(
+            setSchemeService.updateSetSchemeWithUnit(
                 id = setSchemeId,
                 programmedExerciseId = programmedExerciseId,
                 setNumber = setNumber,
@@ -506,10 +513,11 @@ class SetSchemeServiceTest {
                 isometricTempo = null,
                 concentricTempo = null,
                 targetWeight = null,
-                performedWeight = BigDecimal("80.0"),
+                performedWeight = "80.0",
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                unit = "KG",
                 band = null
             )
 
@@ -530,20 +538,20 @@ class SetSchemeServiceTest {
 
         whenever(
             setSchemeDAL.updateSetScheme(
-                eq(setSchemeId),
-                eq(programmedExerciseId),
-                eq(setNumber),
-                eq(false),
-                eq(false),
-                eq(false),
-                isNull(),
-                isNull(),
-                isNull(),
-                anyOrNull<BigDecimal>(),
-                eq(BigDecimal("120.5")),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
-                anyOrNull<Int>(),
+                anyLong(),
+                anyLong(),
+                anyInt(),
+                anyBoolean(),
+                anyBoolean(),
+                anyBoolean(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
+                anyOrNull(),
                 anyOrNull()
             )
         ).thenReturn(Mono.just(setScheme))
@@ -553,7 +561,7 @@ class SetSchemeServiceTest {
         whenever(userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, BigDecimal("120.5"))).thenReturn(Mono.just(newOneRepMax))
 
         val result =
-            setSchemeService.updateSetScheme(
+            setSchemeService.updateSetSchemeWithUnit(
                 id = setSchemeId,
                 programmedExerciseId = programmedExerciseId,
                 setNumber = setNumber,
@@ -564,10 +572,11 @@ class SetSchemeServiceTest {
                 isometricTempo = null,
                 concentricTempo = null,
                 targetWeight = null,
-                performedWeight = BigDecimal("120.5"),
+                performedWeight = "120.5",
                 targetRepCount = null,
                 performedRepCount = null,
                 restSeconds = null,
+                unit = "KG",
                 band = null
             )
 
@@ -627,8 +636,8 @@ class SetSchemeServiceTest {
     @Test
     fun `isOwner returns true when user is owner`() {
         val setScheme = mockSetScheme(id = setSchemeId, programmedExerciseId = programmedExerciseId)
-        val ownerUserId = 42
-        val userId = "42"
+        val ownerUserId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
 
@@ -636,13 +645,15 @@ class SetSchemeServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(setSchemeDAL).selectSetSchemeById(setSchemeId)
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
     fun `isOwner returns false when user is not owner`() {
         val setScheme = mockSetScheme(id = setSchemeId, programmedExerciseId = programmedExerciseId)
-        val ownerUserId = 42
-        val userId = "99"
+        val ownerUserId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val userId = "different-user-id"
         whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.just(setScheme))
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
 
@@ -650,23 +661,26 @@ class SetSchemeServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(setSchemeDAL).selectSetSchemeById(setSchemeId)
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
     fun `isOwner returns false when set scheme not found`() {
-        val userId = "42"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.error(NoResultsFoundException("not found")))
 
         val result = setSchemeService.isOwner(setSchemeId, userId)
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(setSchemeDAL).selectSetSchemeById(setSchemeId)
     }
 
     @Test
     fun `isOwner returns false when programmed exercise not found`() {
         val setScheme = mockSetScheme(id = setSchemeId, programmedExerciseId = programmedExerciseId)
-        val userId = "42"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         whenever(setSchemeDAL.selectSetSchemeById(setSchemeId)).thenReturn(Mono.just(setScheme))
         whenever(
             programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)
@@ -676,11 +690,13 @@ class SetSchemeServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(setSchemeDAL).selectSetSchemeById(setSchemeId)
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
     fun `selectSetSchemesByUserId returns list of user owned set schemes`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val userSetSchemes =
             listOf(
                 mockSetScheme(id = 1L, programmedExerciseId = 1L, setNumber = 1),
@@ -696,7 +712,7 @@ class SetSchemeServiceTest {
 
     @Test
     fun `selectSetSchemesByUserId returns empty list when user has no set schemes`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val emptyList = emptyList<SetScheme>()
         whenever(setSchemeDAL.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(emptyList))
 
@@ -708,7 +724,7 @@ class SetSchemeServiceTest {
 
     @Test
     fun `selectSetSchemesByUserId propagates database errors`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val databaseError = RuntimeException("Database connection failed")
         whenever(setSchemeDAL.selectSetSchemesByUserId(userId)).thenReturn(Mono.error(databaseError))
 

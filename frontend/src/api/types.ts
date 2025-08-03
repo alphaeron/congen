@@ -46,14 +46,13 @@ export interface Muscle {
  * User profile information for workout generation.
  */
 export interface User {
-  id: number;
+  keycloak_id: string;
   name: string;
   age: number;
   height: number;
   weight: number;
   created_at: string;
   updated_at: string;
-  keycloak_user_id?: string;
   groups?: string[]; // Keycloak groups, these aren't tracked in the backend
   roles?: string[]; // Keycloak roles, these aren't tracked in the backend
 } // end interface User

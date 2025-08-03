@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonMappingException
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
@@ -147,7 +148,7 @@ class JacksonConfig {
                 JsonToken.VALUE_NUMBER_FLOAT -> p.doubleValue.toInt()
                 JsonToken.VALUE_STRING -> p.text.toInt()
                 JsonToken.START_OBJECT -> {
-                    val node = p.codec.readTree<com.fasterxml.jackson.databind.JsonNode>(p)
+                    val node = p.codec.readTree<JsonNode>(p)
                     if (node.size() == 1) {
                         // Extract the first (and only) field value, regardless of field name
                         val fieldName = node.fieldNames().next()
@@ -208,6 +209,7 @@ class JacksonConfig {
             customModule.addDeserializer(Int::class.javaObjectType, NumericIntDeserializer())
             customModule.addSerializer(BigDecimal::class.java, BigDecimalSerializer())
             customModule.addDeserializer(BigDecimal::class.java, BigDecimalDeserializer())
+
             mapper.registerModule(customModule)
         }
     }

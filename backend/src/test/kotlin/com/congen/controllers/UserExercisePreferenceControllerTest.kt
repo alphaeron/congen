@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserExercisePreference
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -28,10 +29,11 @@ import java.time.Instant
 )
 class UserExercisePreferenceControllerTest {
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
+    private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var userExercisePreferenceController: UserExercisePreferenceController
 
     companion object {
-        private const val USER_ID = 1
+        private const val USER_ID = "b226d772-c063-4974-ae08-ab64134abbcf"
         private const val EXERCISE_NAME = "Bench Press"
         private const val SHOULD_AVOID = true
         private const val SQUAT = "Squat"
@@ -40,7 +42,12 @@ class UserExercisePreferenceControllerTest {
     @BeforeEach
     fun setUp() {
         userExercisePreferenceDAL = mock()
-        userExercisePreferenceController = UserExercisePreferenceController(userExercisePreferenceDAL)
+        keycloakUtil = mock()
+        userExercisePreferenceController = UserExercisePreferenceController(userExercisePreferenceDAL, keycloakUtil)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test

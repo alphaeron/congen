@@ -24,10 +24,10 @@ class UserWeakMuscleDAL(
     /**
      * Retrieves all weak muscles for a specific user.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of UserWeakMuscle
      */
-    fun selectUserWeakMusclesByUser(userId: Int): Mono<List<UserWeakMuscle>> {
+    fun selectUserWeakMusclesByUser(userId: String): Mono<List<UserWeakMuscle>> {
         logger.debug("Selecting weak muscles for user: {}", userId)
         return postgresClient.select(
             "SELECT * FROM user_weak_muscle WHERE user_id=$1",
@@ -38,12 +38,12 @@ class UserWeakMuscleDAL(
     /**
      * Inserts a new weak muscle for a user.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param muscleName The name of the weak muscle group
      * @return Mono containing the created UserWeakMuscle
      */
     fun insertUserWeakMuscle(
-        userId: Int,
+        userId: String,
         muscleName: String
     ): Mono<UserWeakMuscle> {
         logger.debug("Inserting user weak muscle: {} - {}", userId, muscleName)
@@ -60,12 +60,12 @@ class UserWeakMuscleDAL(
     /**
      * Deletes a weak muscle for a user.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param muscleName The name of the weak muscle group
      * @return Mono containing the deleted UserWeakMuscle
      */
     fun deleteUserWeakMuscle(
-        userId: Int,
+        userId: String,
         muscleName: String
     ): Mono<UserWeakMuscle> {
         logger.debug("Deleting user weak muscle: {} - {}", userId, muscleName)

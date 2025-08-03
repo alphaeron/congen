@@ -114,10 +114,10 @@ class WorkoutStageDAL(
      * WorkoutStage → ProgrammedWorkout → Program → User
      * If no workout stages exist for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of workout stages owned by the user
      */
-    fun selectWorkoutStagesByUserId(userId: Int): Mono<List<WorkoutStage>> {
+    fun selectWorkoutStagesByUserId(userId: String): Mono<List<WorkoutStage>> {
         logger.debug("Selecting workout stages by user id: {}", userId)
         return postgresClient.select(
             """

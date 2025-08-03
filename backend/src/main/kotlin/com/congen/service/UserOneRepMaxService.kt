@@ -57,23 +57,20 @@ class UserOneRepMaxService(
     }
 
     /**
-     * Creates or updates a user one rep max.
+     * Creates or updates a user one rep max value.
      *
-     * This method performs an upsert operation - if a one rep max exists for the specified
-     * user and exercise, it will be updated; otherwise, a new one rep max will be created.
+     * This method creates a new one rep max record or updates an existing one for the specified user and exercise.
+     * The weight is converted to kg for storage, regardless of the input unit. The method handles unit conversion
+     * and validation of the weight value.
      *
-     * The weight value is automatically converted to kg for internal storage. If no unit
-     * is specified, the system will use the user's preferred unit for this exercise, or
-     * default to kg if no preference is set.
-     *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak user ID
      * @param exerciseName The name of the exercise
      * @param oneRepMax The one rep max weight value
      * @param unit The unit of the weight value (KG or LBS). If not specified, uses user's preference or defaults to KG
      * @return Mono containing the created or updated user one rep max (stored in kg)
      */
     fun upsertOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         oneRepMax: BigDecimal,
         unit: String?
@@ -97,12 +94,12 @@ class UserOneRepMaxService(
      * returning a list of user-exercise 1RM relationships. Weights are converted to the user's
      * preferred units for each exercise, or displayed in kg if no preference is set.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak user ID
      * @param unit Optional unit to convert all weights to (KG or LBS). If not specified, uses each exercise's preferred unit
      * @return Mono containing a list of user one rep max values in preferred units
      */
     fun getAllByUser(
-        userId: Int,
+        userId: String,
         unit: String?
     ): Mono<List<UserOneRepMax>> {
         return userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
@@ -146,14 +143,14 @@ class UserOneRepMaxService(
      * The weight is converted to the user's preferred unit for this exercise, or displayed
      * in kg if no preference is set. If no 1RM exists, a NoResultsFoundException will be thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak user ID
      * @param exerciseName The name of the exercise
      * @param unit Optional unit to convert the weight to (KG or LBS). If not specified, uses exercise's preferred unit
      * @return Mono containing the user one rep max if found
      * @throws NoResultsFoundException if the one rep max is not found
      */
     fun getByUserAndExercise(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         unit: String?
     ): Mono<UserOneRepMax> {
@@ -211,13 +208,13 @@ class UserOneRepMaxService(
      * This method removes the one rep max for the specified user and exercise.
      * If no 1RM exists, a NoResultsFoundException will be thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak user ID
      * @param exerciseName The name of the exercise
      * @return Mono containing the deleted user one rep max
      * @throws NoResultsFoundException if the one rep max is not found
      */
     fun deleteOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String
     ): Mono<UserOneRepMax> {
         logger.info("Deleting user one rep max: {} - {}", userId, exerciseName)

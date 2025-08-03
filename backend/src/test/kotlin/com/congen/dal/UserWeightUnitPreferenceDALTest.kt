@@ -143,7 +143,7 @@ class UserWeightUnitPreferenceDALTest {
     @Test
     fun `selectUserWeightUnitPreference should throw NoResultsFoundException when not found`() {
         // Given
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "NonExistentExercise"
 
         whenever(
@@ -165,7 +165,7 @@ class UserWeightUnitPreferenceDALTest {
     @Test
     fun `selectUserWeightUnitPreferencesByUser should return all preferences for user`() {
         // Given
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val preferences =
             listOf(
                 mockUserWeightUnitPreference(userId = userId, exerciseName = "Bench Press"),
@@ -190,7 +190,7 @@ class UserWeightUnitPreferenceDALTest {
     @Test
     fun `selectUserWeightUnitPreferencesByUser should return empty list when no preferences exist`() {
         // Given
-        val userId = 1
+        val userId = "test-keycloak-user-id"
 
         whenever(
             postgresClient.select<UserWeightUnitPreference>(

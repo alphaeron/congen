@@ -11,7 +11,7 @@ class ExerciseEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create exercise equipment relationship`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique names that don't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
         val uniqueEquipment = "Test Equipment ${System.nanoTime()}"
@@ -46,7 +46,7 @@ class ExerciseEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all exercise equipment`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique names that don't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
         val uniqueEquipment = "Test Equipment ${System.nanoTime()}"

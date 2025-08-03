@@ -59,13 +59,13 @@ data class Program(
         readOnly = true,
     )
     @param:JsonProperty("id") val id: Long,
-    /** ID of the user who owns this program. */
+    /** ID of the user who owns this program (Keycloak ID). */
     @Schema(
-        description = "ID of the user who owns this program",
-        example = "1",
+        description = "ID of the user who owns this program (Keycloak ID)",
+        example = "123e4567-e89b-12d3-a456-426614174000",
         required = true,
     )
-    @param:JsonProperty("user_id") val userId: Int,
+    @param:JsonProperty("user_id") val userId: String,
     /** Human-readable name of the program. */
     @Schema(
         description = "Human-readable name of the program",

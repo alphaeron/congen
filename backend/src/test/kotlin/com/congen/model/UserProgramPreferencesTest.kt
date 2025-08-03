@@ -12,14 +12,14 @@ class UserProgramPreferencesTest {
     fun `should create user program preferences with correct properties`() {
         val prefs =
             mockUserProgramPreferences(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 programDaysPerWeek = 4,
                 sessionTimeLengthInMinutes = 60,
                 createdAt = now,
                 updatedAt = now
             )
 
-        assertEquals(1, prefs.userId)
+        assertEquals("test-keycloak-user-id", prefs.userId)
         assertEquals(4, prefs.programDaysPerWeek)
         assertEquals(60, prefs.sessionTimeLengthInMinutes)
         assertEquals(now, prefs.createdAt)

@@ -23,13 +23,13 @@ class UserOneRepMaxTest {
     fun `should create user one rep max with valid parameters`() {
         val userOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
             )
 
-        assertEquals(1, userOneRepMax.userId)
+        assertEquals("test-keycloak-user-id", userOneRepMax.userId)
         assertEquals("Bench Press", userOneRepMax.exerciseName)
         assertEquals(BigDecimal("225.0"), userOneRepMax.oneRepMax)
         assertEquals(now, userOneRepMax.updatedAt)
@@ -39,7 +39,7 @@ class UserOneRepMaxTest {
     fun `should create user one rep max with different exercise`() {
         val userOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Squat",
                 oneRepMax = BigDecimal("315.0"),
                 updatedAt = now
@@ -53,7 +53,7 @@ class UserOneRepMaxTest {
     fun `should create user one rep max with decimal weight`() {
         val userOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Deadlift",
                 oneRepMax = BigDecimal("405.5"),
                 updatedAt = now
@@ -67,7 +67,7 @@ class UserOneRepMaxTest {
         val updatedAt = Instant.parse("2024-01-01T10:00:00Z")
         val userOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = updatedAt
@@ -80,7 +80,7 @@ class UserOneRepMaxTest {
     fun `should support data class copy`() {
         val originalOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -88,7 +88,7 @@ class UserOneRepMaxTest {
 
         val updatedOneRepMax = originalOneRepMax.copy(oneRepMax = BigDecimal("250.0"))
 
-        assertEquals(1, updatedOneRepMax.userId)
+        assertEquals("test-keycloak-user-id", updatedOneRepMax.userId)
         assertEquals("Bench Press", updatedOneRepMax.exerciseName)
         assertEquals(BigDecimal("250.0"), updatedOneRepMax.oneRepMax)
         assertEquals(now, updatedOneRepMax.updatedAt)
@@ -98,7 +98,7 @@ class UserOneRepMaxTest {
     fun `should support data class equality`() {
         val oneRepMax1 =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -106,7 +106,7 @@ class UserOneRepMaxTest {
 
         val oneRepMax2 =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -114,7 +114,7 @@ class UserOneRepMaxTest {
 
         val oneRepMax3 =
             mockUserOneRepMax(
-                userId = 2,
+                userId = "test-keycloak-user-id-2",
                 exerciseName = "Squat",
                 oneRepMax = BigDecimal("315.0"),
                 updatedAt = now
@@ -128,7 +128,7 @@ class UserOneRepMaxTest {
     fun `should support data class toString`() {
         val userOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -137,7 +137,7 @@ class UserOneRepMaxTest {
         val toString = userOneRepMax.toString()
         assertNotNull(toString)
         assert(toString.contains("UserOneRepMax"))
-        assert(toString.contains("userId=1"))
+        assert(toString.contains("userId=test-keycloak-user-id"))
         assert(toString.contains("exerciseName=Bench Press"))
         assert(toString.contains("oneRepMax=225.0"))
     }
@@ -146,7 +146,7 @@ class UserOneRepMaxTest {
     fun `should support data class hashCode`() {
         val oneRepMax1 =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -154,7 +154,7 @@ class UserOneRepMaxTest {
 
         val oneRepMax2 =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -167,7 +167,7 @@ class UserOneRepMaxTest {
     fun `should support data class component functions`() {
         val userOneRepMax =
             mockUserOneRepMax(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 oneRepMax = BigDecimal("225.0"),
                 updatedAt = now
@@ -175,7 +175,7 @@ class UserOneRepMaxTest {
 
         val (userId, exerciseName, oneRepMax, updatedAt) = userOneRepMax
 
-        assertEquals(1, userId)
+        assertEquals("test-keycloak-user-id", userId)
         assertEquals("Bench Press", exerciseName)
         assertEquals(BigDecimal("225.0"), oneRepMax)
         assertEquals(now, updatedAt)

@@ -12,7 +12,7 @@ class MuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create muscle`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uniqueName = "testmuscleout_${System.nanoTime()}"
         webTestClient.post()
             .uri("/api/v1/muscle/?name=$uniqueName&description=$uniqueName")

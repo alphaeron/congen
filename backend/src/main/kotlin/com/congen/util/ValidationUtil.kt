@@ -311,7 +311,7 @@ object ValidationUtil {
      * @throws ValidationException if the user is trying to change program days per week
      */
     fun validateProgramDaysPerWeekChange(
-        userId: Int,
+        userId: String,
         newProgramDaysPerWeek: Int,
         currentProgramDaysPerWeek: Int
     ) {

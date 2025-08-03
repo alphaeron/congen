@@ -7,6 +7,7 @@ import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
@@ -67,7 +68,16 @@ class ProgramDALTest {
                 ($1, $2, $3, $4)
             """.trimIndent()
 
-        // Mock the insert to succeed without constraint violation
+        // Mock the deactivation to complete successfully
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+                Any::class,
+                program.userId
+            )
+        ).thenReturn(Mono.empty())
+
+        // Mock the insert to succeed
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
@@ -83,6 +93,11 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
+        verify(postgresClient).updateLiteral<Any>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+            Any::class,
+            program.userId
+        )
         verify(postgresClient).update<Program>(
             expectedQuery,
             program.userId,
@@ -102,19 +117,7 @@ class ProgramDALTest {
                 ($1, $2, $3, $4)
             """.trimIndent()
 
-        // Mock the first insert to fail with constraint violation, then the retry to succeed
-        whenever(
-            postgresClient.update<Program>(
-                expectedQuery,
-                program.userId,
-                program.name,
-                program.currentWeekNumber,
-                program.isActive,
-            ),
-        ).thenReturn(Mono.error(RuntimeException("duplicate key value violates unique constraint \"idx_program_user_active_unique\"")))
-            .thenReturn(Mono.just(program))
-
-        // Mock the updateLiteral call to throw NoResultsFoundException (no programs to deactivate)
+        // Mock the deactivation to throw NoResultsFoundException (no programs to deactivate)
         whenever(
             postgresClient.updateLiteral<Any>(
                 "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
@@ -123,43 +126,7 @@ class ProgramDALTest {
             )
         ).thenReturn(Mono.error(NoResultsFoundException("No programs found to deactivate")))
 
-        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, program.isActive)
-
-        StepVerifier.create(result)
-            .expectNext(program)
-            .verifyComplete()
-        verify(postgresClient).updateLiteral<Any>(
-            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-            Any::class,
-            program.userId
-        )
-        verify(postgresClient, org.mockito.kotlin.times(2)).update<Program>(
-            expectedQuery,
-            program.userId,
-            program.name,
-            program.currentWeekNumber,
-            program.isActive,
-        )
-    }
-
-    @Test
-    fun `insertProgram should insert program directly when no existing programs found`() {
-        val expectedQuery =
-            """
-            INSERT INTO program
-                (user_id, name, current_week_number, is_active)
-            VALUES
-                ($1, $2, $3, $4)
-            """.trimIndent()
-
-        // Mock selectProgramsByUserId to return empty list (no existing programs)
-        whenever(
-            postgresClient.select<Program>(
-                "SELECT * FROM program WHERE user_id=$1 ORDER BY name",
-                program.userId
-            )
-        ).thenReturn(Mono.just(emptyList()))
-
+        // Mock the insert to succeed
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
@@ -175,13 +142,53 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-        // Should not call updateLiteral since no existing programs
+        verify(postgresClient).updateLiteral<Any>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+            Any::class,
+            program.userId
+        )
         verify(postgresClient).update<Program>(
             expectedQuery,
             program.userId,
             program.name,
             program.currentWeekNumber,
             program.isActive,
+        )
+    }
+
+    @Test
+    fun `insertProgram should insert program directly when not active`() {
+        val expectedQuery =
+            """
+            INSERT INTO program
+                (user_id, name, current_week_number, is_active)
+            VALUES
+                ($1, $2, $3, $4)
+            """.trimIndent()
+
+        // Mock the insert to succeed for inactive program
+        whenever(
+            postgresClient.update<Program>(
+                expectedQuery,
+                program.userId,
+                program.name,
+                program.currentWeekNumber,
+                false,
+            ),
+        ).thenReturn(Mono.just(program.copy(isActive = false)))
+
+        val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, false)
+
+        StepVerifier.create(result)
+            .expectNext(program.copy(isActive = false))
+            .verifyComplete()
+        // Should not call updateLiteral since program is not active
+        verify(postgresClient).update<Program>(
+            expectedQuery,
+            program.userId,
+            program.name,
+            program.currentWeekNumber,
+            false,
         )
     }
 
@@ -195,7 +202,16 @@ class ProgramDALTest {
                 ($1, $2, $3, $4)
             """.trimIndent()
 
-        // Mock the first insert to fail with constraint violation, then the retry to succeed
+        // Mock the deactivation to complete successfully
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+                Any::class,
+                program.userId
+            )
+        ).thenReturn(Mono.empty())
+
+        // Mock the insert to succeed
         whenever(
             postgresClient.update<Program>(
                 expectedQuery,
@@ -204,17 +220,7 @@ class ProgramDALTest {
                 program.currentWeekNumber,
                 program.isActive,
             ),
-        ).thenReturn(Mono.error(RuntimeException("duplicate key value violates unique constraint \"idx_program_user_active_unique\"")))
-            .thenReturn(Mono.just(program))
-
-        // Mock the updateLiteral call for deactivating existing programs
-        whenever(
-            postgresClient.updateLiteral<Any>(
-                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-                Any::class,
-                program.userId
-            )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(program))
 
         val result = programDAL.insertProgram(program.userId, program.name, program.currentWeekNumber, program.isActive)
 
@@ -226,7 +232,7 @@ class ProgramDALTest {
             Any::class,
             program.userId
         )
-        verify(postgresClient, org.mockito.kotlin.times(2)).update<Program>(
+        verify(postgresClient).update<Program>(
             expectedQuery,
             program.userId,
             program.name,

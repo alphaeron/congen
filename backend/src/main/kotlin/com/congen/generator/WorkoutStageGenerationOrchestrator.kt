@@ -84,7 +84,7 @@ class WorkoutStageGenerationOrchestrator(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         // Get the appropriate business logic service based on program days
         val service = workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(programPreferences.programDaysPerWeek)
@@ -101,7 +101,7 @@ class WorkoutStageGenerationOrchestrator(
             rotationHistory = rotationHistory,
             weakMuscles = weakMuscles,
             currentWeekNumber = currentWeekNumber,
-            userId = userId
+            userId = userId,
         )
     }
 }

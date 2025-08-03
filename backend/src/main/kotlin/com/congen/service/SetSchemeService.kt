@@ -13,7 +13,6 @@ import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.math.BigDecimal
 
 /**
  * Service for managing set scheme operations with automatic 1RM updates.
@@ -220,7 +219,7 @@ class SetSchemeService(
             band,
         )
             .flatMap { updatedSetScheme ->
-                // Check for 1RM update if the set has a performed weight
+                // Check for 1RM update if the set has a performed weight and we're not skipping it
                 if (updatedSetScheme.performedWeight != null) {
                     checkAndUpdateOneRepMax(updatedSetScheme)
                         .thenReturn(updatedSetScheme)
@@ -242,76 +241,6 @@ class SetSchemeService(
             }
             .doOnError { e ->
                 logger.error("Error updating set scheme: {}", id, e)
-            }
-    }
-
-    /**
-     * Updates an existing set scheme and checks for 1RM updates.
-     *
-     * This method updates an existing set scheme and automatically updates the user's
-     * one rep max if the performed weight exceeds the current 1RM for the exercise.
-     *
-     * @param id The unique identifier of the set scheme to update
-     * @param programmedExerciseId ID of the programmed exercise this set belongs to
-     * @param setNumber Order of this set within the exercise (1-based)
-     * @param isAmrap As Many Reps As Possible flag
-     * @param isEmom Every Minute On the Minute flag
-     * @param useTempo Whether to use tempo timing
-     * @param eccentricTempo Eccentric phase tempo (0-9 seconds)
-     * @param isometricTempo Isometric phase tempo (0-9 seconds)
-     * @param concentricTempo Concentric phase tempo (0-9 seconds)
-     * @param targetWeight Target weight for the set in kg
-     * @param performedWeight Actual weight used in kg
-     * @param targetRepCount Target number of repetitions
-     * @param performedRepCount Actual number of repetitions completed
-     * @param restSeconds Rest period after the set in seconds
-     * @param band The band information for Dynamic Effort exercises
-     * @return Mono containing the updated set scheme
-     */
-    fun updateSetScheme(
-        id: Long,
-        programmedExerciseId: Long,
-        setNumber: Int,
-        isAmrap: Boolean,
-        isEmom: Boolean,
-        useTempo: Boolean,
-        eccentricTempo: String?,
-        isometricTempo: String?,
-        concentricTempo: String?,
-        targetWeight: BigDecimal?,
-        performedWeight: BigDecimal?,
-        targetRepCount: Int?,
-        performedRepCount: Int?,
-        restSeconds: Int?,
-        band: Band? = null,
-    ): Mono<SetScheme> {
-        logger.debug("Updating set scheme: {} for exercise: {}", id, programmedExerciseId)
-
-        return setSchemeDAL.updateSetScheme(
-            id,
-            programmedExerciseId,
-            setNumber,
-            isAmrap,
-            isEmom,
-            useTempo,
-            eccentricTempo,
-            isometricTempo,
-            concentricTempo,
-            targetWeight,
-            performedWeight,
-            targetRepCount,
-            performedRepCount,
-            restSeconds,
-            band
-        )
-            .flatMap { updatedSetScheme ->
-                // Check for 1RM update if the set has a performed weight
-                if (updatedSetScheme.performedWeight != null) {
-                    checkAndUpdateOneRepMax(updatedSetScheme)
-                        .thenReturn(updatedSetScheme)
-                } else {
-                    Mono.just(updatedSetScheme)
-                }
             }
     }
 
@@ -371,7 +300,7 @@ class SetSchemeService(
      * @param userId The unique identifier of the user
      * @return Mono containing a list of set schemes owned by the user
      */
-    fun selectSetSchemesByUserId(userId: Int): Mono<List<SetScheme>> {
+    fun selectSetSchemesByUserId(userId: String): Mono<List<SetScheme>> {
         logger.debug("Getting set schemes for user: {}", userId)
         return setSchemeDAL.selectSetSchemesByUserId(userId)
             .doOnError { e ->
@@ -390,7 +319,7 @@ class SetSchemeService(
     fun deleteSetScheme(id: Long): Mono<SetScheme> {
         logger.info("Deleting set scheme: {}", id)
         return setSchemeDAL.deleteSetScheme(id)
-            .doOnSuccess { deletedScheme ->
+            .doOnSuccess {
                 logger.debug("Deleted set scheme: {}", id)
             }
             .doOnError { e ->
@@ -427,56 +356,56 @@ class SetSchemeService(
                                 exerciseName,
                                 performedReps
                             )
-                            return@flatMap Mono.empty<Void>()
-                        }
+                            Mono.empty<Void>()
+                        } else {
+                            // Calculate estimated 1RM from performed weight and reps
+                            val estimatedOneRepMax = oneRepMaxCalculator.estimateOneRepMax(performedWeight, performedReps)
 
-                        // Calculate estimated 1RM from performed weight and reps
-                        val estimatedOneRepMax = oneRepMaxCalculator.estimateOneRepMax(performedWeight, performedReps)
-
-                        // Check if user has a 1RM for this exercise
-                        userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
-                            .flatMap { currentOneRepMax ->
-                                // Update 1RM if estimated 1RM is greater than current
-                                if (estimatedOneRepMax > currentOneRepMax.oneRepMax) {
-                                    userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
+                            // Check if user has a 1RM for this exercise
+                            userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)
+                                .flatMap { currentOneRepMax ->
+                                    // Update 1RM if estimated 1RM is greater than current
+                                    if (estimatedOneRepMax > currentOneRepMax.oneRepMax) {
+                                        userOneRepMaxDAL.updateUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
+                                            .doOnSuccess {
+                                                logger.info(
+                                                    "Updated 1RM for user {} exercise {} from {} to {} (calculated from {} lbs × {} reps)",
+                                                    userId,
+                                                    exerciseName,
+                                                    currentOneRepMax.oneRepMax,
+                                                    estimatedOneRepMax,
+                                                    performedWeight,
+                                                    performedReps
+                                                )
+                                            }
+                                            .then()
+                                    } else {
+                                        logger.debug(
+                                            "No 1RM update needed for user {} exercise {} - estimated {} not greater than current {}",
+                                            userId,
+                                            exerciseName,
+                                            estimatedOneRepMax,
+                                            currentOneRepMax.oneRepMax
+                                        )
+                                        Mono.empty<Void>()
+                                    }
+                                }
+                                .onErrorResume(NoResultsFoundException::class.java) {
+                                    // No existing 1RM, create new one with estimated value
+                                    userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
                                         .doOnSuccess {
                                             logger.info(
-                                                "Updated 1RM for user {} exercise {} from {} to {} (calculated from {} lbs × {} reps)",
+                                                "Created new 1RM for user {} exercise {}: {} (calculated from {} lbs × {} reps)",
                                                 userId,
                                                 exerciseName,
-                                                currentOneRepMax.oneRepMax,
                                                 estimatedOneRepMax,
                                                 performedWeight,
                                                 performedReps
                                             )
                                         }
                                         .then()
-                                } else {
-                                    logger.debug(
-                                        "No 1RM update needed for user {} exercise {} - estimated {} not greater than current {}",
-                                        userId,
-                                        exerciseName,
-                                        estimatedOneRepMax,
-                                        currentOneRepMax.oneRepMax
-                                    )
-                                    Mono.empty<Void>()
                                 }
-                            }
-                            .onErrorResume(NoResultsFoundException::class.java) {
-                                // No existing 1RM, create new one with estimated value
-                                userOneRepMaxDAL.insertUserOneRepMax(userId, exerciseName, estimatedOneRepMax)
-                                    .doOnSuccess {
-                                        logger.info(
-                                            "Created new 1RM for user {} exercise {}: {} (calculated from {} lbs × {} reps)",
-                                            userId,
-                                            exerciseName,
-                                            estimatedOneRepMax,
-                                            performedWeight,
-                                            performedReps
-                                        )
-                                    }
-                                    .then()
-                            }
+                        }
                     }
             }
             .then()
@@ -489,9 +418,9 @@ class SetSchemeService(
      * ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
      *
      * @param programmedExerciseId The ID of the programmed exercise
-     * @return Mono containing the user ID
+     * @return Mono containing the Keycloak user ID
      */
-    private fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<Int> {
+    private fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<String> {
         return programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
@@ -513,7 +442,7 @@ class SetSchemeService(
             .flatMap { setScheme ->
                 programmedExerciseDAL.getUserIdFromProgrammedExercise(setScheme.programmedExerciseId)
             }
-            .map { ownerUserId -> ownerUserId.toString() == userId }
+            .map { ownerUserId -> ownerUserId == userId }
             .onErrorReturn(false)
     }
 }

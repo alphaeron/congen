@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.dal.UserEquipmentDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserEquipment
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -28,10 +29,11 @@ import java.time.Instant
 )
 class UserEquipmentControllerTest {
     private lateinit var userEquipmentDAL: UserEquipmentDAL
+    private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var userEquipmentController: UserEquipmentController
 
     companion object {
-        private const val USER_ID = 1
+        private const val USER_ID = "b226d772-c063-4974-ae08-ab64134abbcf"
         private const val EQUIPMENT_NAME = "Barbell"
         private const val DUMBBELLS = "Dumbbells"
     }
@@ -39,7 +41,12 @@ class UserEquipmentControllerTest {
     @BeforeEach
     fun setUp() {
         userEquipmentDAL = mock()
-        userEquipmentController = UserEquipmentController(userEquipmentDAL)
+        keycloakUtil = mock()
+        userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test

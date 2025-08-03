@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 class ExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should create exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uniqueExerciseName = "testexerciseout-${System.nanoTime()}"
         webTestClient.post()
             .uri(

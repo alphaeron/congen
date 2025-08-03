@@ -3,7 +3,7 @@ def versionInfo = versionDetails()
 def timestamp = new Date().getTime()
 
 // Get environment from project property, default to 'local'
-def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+ext.environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
 
 // Generate final image tag
 def tag = "${versionInfo.branchName}-${versionInfo.gitHash}-${environment}-${timestamp}"
@@ -67,7 +67,7 @@ task createMigrationsConfigMap {
 
     doLast {
         def migrationsDir = file('resources/migrations')
-        def outputFile = file('../k8s/base/migrations-configmap.yaml')
+        def outputFile = file('../k8s/base/stage-6/migrations-configmap.yaml')
 
         if (!migrationsDir.exists()) {
             throw new GradleException("Migrations directory not found: ${migrationsDir.absolutePath}")
@@ -195,8 +195,8 @@ task prepareDeployment {
 }
 
 prepareDeployment.dependsOn createMigrationsConfigMap
-if (environment == 'local') {
+if (project.environment == 'local') {
     prepareDeployment.dependsOn prepareLocalImage
-} else if (environment == 'staging' || environment == 'production') {
+} else if (project.environment == 'staging' || project.environment == 'production') {
     prepareDeployment.dependsOn prepareRemoteImage
 }

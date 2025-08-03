@@ -4,6 +4,7 @@ import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
 import com.congen.model.MovementType
+import com.congen.model.UserOneRepMax
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
@@ -36,7 +37,7 @@ class ExerciseMatchingServiceTest {
 
         val equipmentMap = mapOf<String, List<ExerciseEquipment>>()
         val muscleMap = mapOf<String, List<ExerciseMuscle>>()
-        val userOneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
+        val userOneRepMaxes = emptyList<UserOneRepMax>()
 
         // Setup mock to return appropriate reference exercises
         `when`(mockReferenceDetector.findBestReferenceExercises(exercises, userOneRepMaxes, emptyMap()))
@@ -68,7 +69,7 @@ class ExerciseMatchingServiceTest {
 
         val equipmentMap = mapOf<String, List<ExerciseEquipment>>()
         val muscleMap = mapOf<String, List<ExerciseMuscle>>()
-        val userOneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
+        val userOneRepMaxes = emptyList<UserOneRepMax>()
 
         // Setup mock
         `when`(mockReferenceDetector.findBestReferenceExercises(listOf(exercise1, exercise2, exercise3), userOneRepMaxes, emptyMap()))
@@ -146,7 +147,7 @@ class ExerciseMatchingServiceTest {
                 "Dumbbell Bench Press" to listOf(ExerciseEquipment("Dumbbell Bench Press", "dumbbell"))
             )
         val muscleMap = mapOf<String, List<ExerciseMuscle>>()
-        val userOneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
+        val userOneRepMaxes = emptyList<UserOneRepMax>()
 
         // Setup mock
         `when`(mockReferenceDetector.findBestReferenceExercises(listOf(exercise1, exercise2, exercise3), userOneRepMaxes, emptyMap()))
@@ -199,7 +200,7 @@ class ExerciseMatchingServiceTest {
                     ),
                 "Deadlift" to listOf(ExerciseMuscle("Deadlift", "hamstrings"), ExerciseMuscle("Deadlift", "glutes"))
             )
-        val userOneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
+        val userOneRepMaxes = emptyList<UserOneRepMax>()
 
         // Setup mock
         `when`(mockReferenceDetector.findBestReferenceExercises(listOf(exercise1, exercise2, exercise3), userOneRepMaxes, emptyMap()))
@@ -243,7 +244,7 @@ class ExerciseMatchingServiceTest {
 
         val equipmentMap = mapOf<String, List<ExerciseEquipment>>()
         val muscleMap = mapOf<String, List<ExerciseMuscle>>()
-        val userOneRepMaxes = emptyList<com.congen.model.UserOneRepMax>()
+        val userOneRepMaxes = emptyList<UserOneRepMax>()
 
         // Setup mock to return no reference exercises
         `when`(mockReferenceDetector.findBestReferenceExercises(exercises, userOneRepMaxes, emptyMap()))

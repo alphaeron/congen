@@ -23,6 +23,7 @@ import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
 import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { ProfileCreationPage } from './pages/ProfileCreationPage';
+import { LoginPage } from './pages/LoginPage';
 import { getTheme } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
 import { AuthCallback } from './components/AuthCallback';
@@ -59,18 +60,10 @@ function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const { isLoading, logout, login } = useAuth();
+  const { isLoading, logout } = useAuth();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
-  };
-
-  const handleSignIn = async () => {
-    try {
-      await login();
-    } catch {
-      // Error is handled by the auth context
-    }
   };
 
   const theme = createTheme(getTheme(mode));
@@ -157,7 +150,7 @@ function AppContent(): React.ReactElement {
             >
               <AuthorizedElement
                 fallback={
-                  <Button color="primary" variant="contained" onClick={handleSignIn}>
+                  <Button color="primary" variant="contained" component={Link} to="/login">
                     Sign in
                   </Button>
                 }
@@ -195,11 +188,10 @@ function AppContent(): React.ReactElement {
                   <Divider />
                   <AuthorizedElement
                     fallback={
-                      <MenuItem>
+                      <MenuItem component={Link} to="/login">
                         <Button
                           color="primary"
                           variant="contained"
-                          onClick={handleSignIn}
                           sx={{ width: '100%' }}
                         >
                           Sign in
@@ -261,6 +253,7 @@ function AppContent(): React.ReactElement {
             }
           />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
       </Container>
     </ThemeProvider>

@@ -6,6 +6,7 @@ import com.congen.service.SetSchemeService
 import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -88,7 +89,7 @@ class SetSchemeController(
      * @return Mono containing the created set scheme with generated ID
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedExerciseService.isOwner(#programmedExerciseId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun save(
         @RequestParam("programmed_exercise_id") programmedExerciseId: Long,
         @RequestParam("set_number") setNumber: Int,
@@ -105,23 +106,54 @@ class SetSchemeController(
         @RequestParam("rest_seconds") restSeconds: Int?,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<SetScheme>> {
-        return setSchemeService.createSetScheme(
-            programmedExerciseId,
-            setNumber,
-            isAmrap,
-            isEmom,
-            useTempo,
-            eccentricTempo,
-            isometricTempo,
-            concentricTempo,
-            targetWeight,
-            performedWeight,
-            targetRepCount,
-            performedRepCount,
-            restSeconds,
-            unit
-        )
-            .map { setScheme -> ResponseEntity.ok(setScheme) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val setSchemeMono =
+                if (isAdminOrService) {
+                    setSchemeService.createSetScheme(
+                        programmedExerciseId,
+                        setNumber,
+                        isAmrap,
+                        isEmom,
+                        useTempo,
+                        eccentricTempo,
+                        isometricTempo,
+                        concentricTempo,
+                        targetWeight,
+                        performedWeight,
+                        targetRepCount,
+                        performedRepCount,
+                        restSeconds,
+                        unit
+                    )
+                } else {
+                    programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            setSchemeService.createSetScheme(
+                                programmedExerciseId,
+                                setNumber,
+                                isAmrap,
+                                isEmom,
+                                useTempo,
+                                eccentricTempo,
+                                isometricTempo,
+                                concentricTempo,
+                                targetWeight,
+                                performedWeight,
+                                targetRepCount,
+                                performedRepCount,
+                                restSeconds,
+                                unit
+                            )
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                        }
+                    }
+                }
+            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+        }
     }
 
     /**
@@ -134,12 +166,28 @@ class SetSchemeController(
      * @return Mono containing the set scheme if found
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @setSchemeService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {
-        return setSchemeService.selectSetSchemeById(id)
-            .map { setScheme -> ResponseEntity.ok(setScheme) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val setSchemeMono =
+                if (isAdminOrService) {
+                    setSchemeService.selectSetSchemeById(id)
+                } else {
+                    setSchemeService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            setSchemeService.selectSetSchemeById(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this set scheme"))
+                        }
+                    }
+                }
+            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+        }
     }
 
     /**
@@ -153,15 +201,15 @@ class SetSchemeController(
     @GetMapping("/")
     @PreAuthorize("isAuthenticated()")
     fun getAll(): Mono<ResponseEntity<List<SetScheme>>> {
-        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()).flatMap { tuple ->
-            val userId = tuple.t1
-            val roles = tuple.t2
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             val setSchemeMono =
                 if (isAdminOrService) {
                     setSchemeService.selectSetSchemes()
                 } else {
-                    setSchemeService.selectSetSchemesByUserId(userId.toInt())
+                    setSchemeService.selectSetSchemesByUserId(userId)
                 }
             setSchemeMono.map { ResponseEntity.ok(it) }
         }
@@ -177,12 +225,28 @@ class SetSchemeController(
      * @return ResponseEntity containing a list of set schemes for the exercise
      */
     @GetMapping("/exercise/{programmed_exercise_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedExerciseService.isOwner(#programmedExerciseId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun getByProgrammedExerciseId(
         @PathVariable("programmed_exercise_id") programmedExerciseId: Long,
     ): Mono<ResponseEntity<List<SetScheme>>> {
-        return setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
-            .map { setSchemes -> ResponseEntity.ok(setSchemes) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val setSchemeMono =
+                if (isAdminOrService) {
+                    setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
+                } else {
+                    programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                        }
+                    }
+                }
+            setSchemeMono.map { setSchemes -> ResponseEntity.ok(setSchemes) }
+        }
     }
 
     /**
@@ -210,11 +274,7 @@ class SetSchemeController(
      * @return ResponseEntity containing the updated set scheme
      */
     @PatchMapping("/{id}")
-    @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or " +
-            "(@setSchemeService.isOwner(#id, principal.subject) and " +
-            "@programmedExerciseService.isOwner(#programmedExerciseId, principal.subject))"
-    )
+    @PreAuthorize("isAuthenticated()")
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam("programmed_exercise_id") programmedExerciseId: Long,
@@ -232,24 +292,65 @@ class SetSchemeController(
         @RequestParam("rest_seconds") restSeconds: Int?,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<SetScheme>> {
-        return setSchemeService.updateSetSchemeWithUnit(
-            id,
-            programmedExerciseId,
-            setNumber,
-            isAmrap,
-            isEmom,
-            useTempo,
-            eccentricTempo,
-            isometricTempo,
-            concentricTempo,
-            targetWeight,
-            performedWeight,
-            targetRepCount,
-            performedRepCount,
-            restSeconds,
-            unit
-        )
-            .map { setScheme -> ResponseEntity.ok(setScheme) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val setSchemeMono =
+                if (isAdminOrService) {
+                    setSchemeService.updateSetSchemeWithUnit(
+                        id,
+                        programmedExerciseId,
+                        setNumber,
+                        isAmrap,
+                        isEmom,
+                        useTempo,
+                        eccentricTempo,
+                        isometricTempo,
+                        concentricTempo,
+                        targetWeight,
+                        performedWeight,
+                        targetRepCount,
+                        performedRepCount,
+                        restSeconds,
+                        unit,
+                    )
+                } else {
+                    setSchemeService.isOwner(
+                        id,
+                        userId
+                    ).zipWith(programmedExerciseService.isOwner(programmedExerciseId, userId)) { isSchemeOwner, isExerciseOwner ->
+                        isSchemeOwner && isExerciseOwner
+                    }.flatMap { hasAccess ->
+                        if (hasAccess) {
+                            setSchemeService.updateSetSchemeWithUnit(
+                                id,
+                                programmedExerciseId,
+                                setNumber,
+                                isAmrap,
+                                isEmom,
+                                useTempo,
+                                eccentricTempo,
+                                isometricTempo,
+                                concentricTempo,
+                                targetWeight,
+                                performedWeight,
+                                targetRepCount,
+                                performedRepCount,
+                                restSeconds,
+                                unit,
+                            )
+                        } else {
+                            Mono.error(
+                                AccessDeniedException(
+                                    "Access denied: User is not the owner of this set scheme and programmed exercise"
+                                )
+                            )
+                        }
+                    }
+                }
+            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+        }
     }
 
     /**
@@ -262,11 +363,27 @@ class SetSchemeController(
      * @return ResponseEntity containing the deleted set scheme
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @setSchemeService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<SetScheme>> {
-        return setSchemeService.deleteSetScheme(id)
-            .map { setScheme -> ResponseEntity.ok(setScheme) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val setSchemeMono =
+                if (isAdminOrService) {
+                    setSchemeService.deleteSetScheme(id)
+                } else {
+                    setSchemeService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            setSchemeService.deleteSetScheme(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this set scheme"))
+                        }
+                    }
+                }
+            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+        }
     }
 }

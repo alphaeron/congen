@@ -2,11 +2,13 @@ package com.congen.controllers
 
 import com.congen.model.WorkoutStage
 import com.congen.service.ProgramService
+import com.congen.service.ProgrammedWorkoutService
 import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Parameter
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -58,6 +60,7 @@ import reactor.core.publisher.Mono
 class WorkoutStageController(
     private val workoutStageService: WorkoutStageService,
     private val programService: ProgramService,
+    private val programmedWorkoutService: ProgrammedWorkoutService,
     private val keycloakUtil: KeycloakUtil
 ) {
     companion object {
@@ -79,7 +82,7 @@ class WorkoutStageController(
      * @return Mono containing the created workout stage with generated ID
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun save(
         @Parameter(description = "Programmed workout ID", required = true)
         @RequestParam("programmed_workout_id") programmedWorkoutId: Long,
@@ -90,21 +93,44 @@ class WorkoutStageController(
         @Parameter(description = "Name of the workout stage", required = true)
         @RequestParam name: String,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        logger.info("Saving workout stage for workout {} with name {}", programmedWorkoutId, name)
-        return workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
-            .map { savedStage ->
-                logger.debug("Saved workout stage with id: {}", savedStage.id)
-                ResponseEntity.ok(savedStage)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val workoutStageMono =
+                if (isAdminOrService) {
+                    workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
+                } else {
+                    // First check if the programmed workout exists, then check ownership
+                    programmedWorkoutService.selectProgrammedWorkoutById(programmedWorkoutId)
+                        .flatMap { programmedWorkout ->
+                            programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
+                                if (isOwner) {
+                                    workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
+                                } else {
+                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                                }
+                            }
+                        }
+                        .doOnError { e ->
+                            logger.error("Error checking ownership for workout stage creation: {}", programmedWorkoutId, e)
+                        }
+                }
+
+            workoutStageMono.map {
+                logger.debug("Saved workout stage with id: {}", it.id)
+                ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error(
-                    "Error saving workout stage for workout: {}, position: {}, name: {}",
-                    programmedWorkoutId,
-                    position,
-                    name,
-                    e,
-                )
-            }
+                .doOnError { e ->
+                    logger.error(
+                        "Error saving workout stage for workout: {}, position: {}, name: {}",
+                        programmedWorkoutId,
+                        position,
+                        name,
+                        e,
+                    )
+                }
+        }
     }
 
     /**
@@ -117,18 +143,39 @@ class WorkoutStageController(
      * @return Mono containing the workout stage if found
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @workoutStageService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageService.selectWorkoutStageById(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val workoutStageMono =
+                if (isAdminOrService) {
+                    workoutStageService.selectWorkoutStageById(id)
+                } else {
+                    // First check if the workout stage exists, then check ownership
+                    workoutStageService.selectWorkoutStageById(id)
+                        .flatMap { workoutStage ->
+                            workoutStageService.isOwner(workoutStage.id, userId).flatMap { isOwner ->
+                                if (isOwner) {
+                                    Mono.just(workoutStage)
+                                } else {
+                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                                }
+                            }
+                        }
+                }
+
+            workoutStageMono.map {
                 logger.debug("Found workout stage: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error getting workout stage: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting workout stage: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -150,7 +197,7 @@ class WorkoutStageController(
                 if (isAdminOrService) {
                     workoutStageService.selectWorkoutStages()
                 } else {
-                    workoutStageService.selectWorkoutStagesByUserId(userId.toInt())
+                    workoutStageService.selectWorkoutStagesByUserId(userId)
                 }
             workoutStageMono.map { ResponseEntity.ok(it) }
         }
@@ -166,19 +213,43 @@ class WorkoutStageController(
      * @return ResponseEntity containing a list of workout stages for the workout
      */
     @GetMapping("/workout/{programmed_workout_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun getByProgrammedWorkoutId(
         @PathVariable("programmed_workout_id") programmedWorkoutId: Long,
     ): Mono<ResponseEntity<List<WorkoutStage>>> {
-        logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
-        return workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
-            .map { workoutStages ->
-                logger.debug("Found {} workout stages for programmed workout: {}", workoutStages.size, programmedWorkoutId)
-                ResponseEntity.ok(workoutStages)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val workoutStageMono =
+                if (isAdminOrService) {
+                    workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
+                } else {
+                    // First check if the programmed workout exists, then check ownership
+                    programmedWorkoutService.selectProgrammedWorkoutById(programmedWorkoutId)
+                        .flatMap { programmedWorkout ->
+                            programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
+                                if (isOwner) {
+                                    logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
+                                    workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
+                                } else {
+                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                                }
+                            }
+                        }
+                        .doOnError { e ->
+                            logger.error("Error checking ownership for workout stages: {}", programmedWorkoutId, e)
+                        }
+                }
+
+            workoutStageMono.map {
+                logger.debug("Found {} workout stages for programmed workout: {}", it.size, programmedWorkoutId)
+                ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error getting workout stages for programmed workout: {}", programmedWorkoutId, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting workout stages for programmed workout: {}", programmedWorkoutId, e)
+                }
+        }
     }
 
     /**
@@ -195,11 +266,7 @@ class WorkoutStageController(
      * @return ResponseEntity containing the updated workout stage
      */
     @PatchMapping("/")
-    @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or " +
-            "(@workoutStageService.isOwner(#id, principal.subject) and " +
-            "@programmedWorkoutService.isOwner(#programmedWorkoutId, principal.subject))"
-    )
+    @PreAuthorize("isAuthenticated()")
     fun update(
         @Parameter(description = "Workout stage ID", required = true)
         @RequestParam id: Long,
@@ -212,14 +279,37 @@ class WorkoutStageController(
         @Parameter(description = "Name of the workout stage", required = true)
         @RequestParam name: String,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val workoutStageMono =
+                if (isAdminOrService) {
+                    workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
+                } else {
+                    workoutStageService.isOwner(id, userId).flatMap { isWorkoutStageOwner ->
+                        if (isWorkoutStageOwner) {
+                            programmedWorkoutService.isOwner(programmedWorkoutId, userId).flatMap { isProgrammedWorkoutOwner ->
+                                if (isProgrammedWorkoutOwner) {
+                                    workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
+                                } else {
+                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                                }
+                            }
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                        }
+                    }
+                }
+
+            workoutStageMono.map {
                 logger.debug("Updated workout stage: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error updating workout stage: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error updating workout stage: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -232,17 +322,35 @@ class WorkoutStageController(
      * @return ResponseEntity containing the deleted workout stage
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @workoutStageService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<WorkoutStage>> {
-        return workoutStageService.deleteWorkoutStage(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val workoutStageMono =
+                if (isAdminOrService) {
+                    workoutStageService.deleteWorkoutStage(id)
+                } else {
+                    // First check if the workout stage exists, then check ownership
+                    workoutStageService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            workoutStageService.deleteWorkoutStage(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                        }
+                    }
+                }
+
+            workoutStageMono.map {
                 logger.debug("Deleted workout stage: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error deleting workout stage: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error deleting workout stage: {}", id, e)
+                }
+        }
     }
 }

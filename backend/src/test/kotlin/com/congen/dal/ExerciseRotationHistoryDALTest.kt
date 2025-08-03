@@ -105,27 +105,25 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `selectByUserId returns records for user only`() {
-        val userId = 42
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val expected = listOf(history)
         whenever(
             postgresClient.select<ExerciseRotationHistory>(
                 "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY created_at DESC",
-                userId,
-                null
+                userId
             )
         ).thenReturn(Mono.just(expected))
         val result = dal.selectByUserId(userId)
         StepVerifier.create(result).expectNext(expected).verifyComplete()
         verify(postgresClient).select<ExerciseRotationHistory>(
             "SELECT * FROM exercise_rotation_history WHERE user_id=$1 ORDER BY created_at DESC",
-            userId,
-            null
+            userId
         )
     }
 
     @Test
     fun `selectByUserId returns records for user and isAccessory true`() {
-        val userId = 42
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val isAccessory = true
         val expected = listOf(history)
         whenever(
@@ -146,7 +144,7 @@ class ExerciseRotationHistoryDALTest {
 
     @Test
     fun `selectByUserId returns records for user and isAccessory false`() {
-        val userId = 42
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val isAccessory = false
         val expected = listOf(history)
         whenever(

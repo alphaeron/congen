@@ -2,6 +2,7 @@ package com.congen.components
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.MockitoAnnotations
@@ -32,7 +33,7 @@ class SecurityHeadersFilterTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        `when`(webFilterChain.filter(org.mockito.ArgumentMatchers.any())).thenReturn(Mono.empty())
+        `when`(webFilterChain.filter(ArgumentMatchers.any())).thenReturn(Mono.empty())
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.springframework.http.ResponseEntity
 import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -44,7 +45,7 @@ class ExerciseMuscleControllerTest {
         val result = exerciseMuscleController.save(EXERCISE_NAME, MUSCLE_NAME)
 
         StepVerifier.create(result)
-            .expectNext(org.springframework.http.ResponseEntity.ok(exerciseMuscle))
+            .expectNext(ResponseEntity.ok(exerciseMuscle))
             .verifyComplete()
         verify(exerciseMuscleDAL).insertExerciseMuscle(EXERCISE_NAME, MUSCLE_NAME)
     }
@@ -60,7 +61,7 @@ class ExerciseMuscleControllerTest {
         val result = exerciseMuscleController.save(specialExercise, specialMuscle)
 
         StepVerifier.create(result)
-            .expectNext(org.springframework.http.ResponseEntity.ok(exerciseMuscle))
+            .expectNext(ResponseEntity.ok(exerciseMuscle))
             .verifyComplete()
         verify(exerciseMuscleDAL).insertExerciseMuscle(specialExercise, specialMuscle)
     }
@@ -90,7 +91,7 @@ class ExerciseMuscleControllerTest {
         val result = exerciseMuscleController.getAll()
 
         StepVerifier.create(result)
-            .expectNext(org.springframework.http.ResponseEntity.ok(exerciseMuscleList))
+            .expectNext(ResponseEntity.ok(exerciseMuscleList))
             .verifyComplete()
         verify(exerciseMuscleDAL).selectAllExerciseMuscle()
     }
@@ -102,7 +103,7 @@ class ExerciseMuscleControllerTest {
         val result = exerciseMuscleController.getAll()
 
         StepVerifier.create(result)
-            .expectNext(org.springframework.http.ResponseEntity.ok(emptyList<ExerciseMuscle>()))
+            .expectNext(ResponseEntity.ok(emptyList<ExerciseMuscle>()))
             .verifyComplete()
         verify(exerciseMuscleDAL).selectAllExerciseMuscle()
     }
@@ -115,7 +116,7 @@ class ExerciseMuscleControllerTest {
         val result = exerciseMuscleController.getAll()
 
         StepVerifier.create(result)
-            .expectNext(org.springframework.http.ResponseEntity.ok(single))
+            .expectNext(ResponseEntity.ok(single))
             .verifyComplete()
         verify(exerciseMuscleDAL).selectAllExerciseMuscle()
     }

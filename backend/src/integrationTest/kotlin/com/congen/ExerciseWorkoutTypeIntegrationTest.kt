@@ -11,7 +11,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create exercise workout type relationship`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -39,7 +39,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all exercise workout types`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -80,7 +80,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get workout types by exercise name`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -121,7 +121,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get workout types by movement type`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 
@@ -157,7 +157,7 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle multiple workout types for same exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique exercise name that doesn't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
 

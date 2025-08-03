@@ -44,7 +44,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var exerciseSelectionService: ExerciseSelectionService
     private lateinit var workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
-    private lateinit var userWeakMuscleDAL: com.congen.dal.UserWeakMuscleDAL
+    private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
 
     companion object {
         private const val PROGRAM_ID = 1L
@@ -561,7 +561,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     ): Program {
         return Program(
             id = id,
-            userId = 1,
+            userId = "b226d772-c063-4974-ae08-ab64134abbcf",
             name = "Test Program",
             currentWeekNumber = currentWeekNumber,
             isActive = true,
@@ -572,7 +572,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     private fun mockUserProgramPreferences(programDaysPerWeek: Int): UserProgramPreferences {
         return UserProgramPreferences(
-            userId = 1,
+            userId = "b226d772-c063-4974-ae08-ab64134abbcf",
             programDaysPerWeek = programDaysPerWeek,
             sessionTimeLengthInMinutes = 60,
             createdAt = Instant.now(),

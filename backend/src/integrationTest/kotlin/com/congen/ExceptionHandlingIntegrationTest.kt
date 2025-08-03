@@ -22,7 +22,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle no results found exception with 404 status`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Test no results found exception by trying to get a non-existent user
         webTestClient.get()
             .uri("/api/v1/user/999")
@@ -35,7 +35,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle user not found after creation`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create a valid user first
         val userId =
             IntegrationTestHelpers.createTestUser(
@@ -49,7 +49,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
         // Verify user exists
         val user = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
-        assert(user.id == userId)
+        assert(user.keycloakId == userId)
 
         // Test getting a non-existent user
         webTestClient.get()
@@ -180,7 +180,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle invalid workout id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.get()
             .uri("/api/v1/programmed_workout/999")
             .header("Authorization", "Bearer $token")
@@ -190,7 +190,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle invalid set scheme id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.get()
             .uri("/api/v1/set_scheme/999")
             .header("Authorization", "Bearer $token")
@@ -200,7 +200,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle valid program and invalid program`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create a user first
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
 
@@ -224,7 +224,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle valid workout and invalid workout`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create a user and program first
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)

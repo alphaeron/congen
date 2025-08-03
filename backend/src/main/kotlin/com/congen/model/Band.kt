@@ -12,7 +12,8 @@ import java.math.BigDecimal
  */
 data class Band(
     /** The weight of the band in pounds. */
-    @JsonValue val weightLbs: BigDecimal
+    @JsonValue
+    val weightLbs: BigDecimal
 ) {
     /**
      * The color of the band based on its weight.

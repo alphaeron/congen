@@ -5,6 +5,7 @@ import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
 import com.congen.service.ProgramService
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -50,6 +52,7 @@ import reactor.core.publisher.Mono
 class ConjugateWorkoutGeneratorController(
     private val conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService,
     private val programService: ProgramService,
+    private val keycloakUtil: KeycloakUtil,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -68,7 +71,7 @@ class ConjugateWorkoutGeneratorController(
      * @throws ValidationException if the program parameters are invalid
      */
     @PostMapping("/{program_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Generate next week of conjugate workout program",
         description =
@@ -96,18 +99,32 @@ class ConjugateWorkoutGeneratorController(
         @Parameter(description = "ID of the program to generate workouts for", required = true)
         @PathVariable("program_id") programId: Long
     ): Mono<ResponseEntity<Program>> {
-        logger.info("Generating conjugate workout program for program: {}, next week", programId)
-
-        return conjugateWorkoutGeneratorService.generateNextWeek(programId)
-            .map { program -> ResponseEntity.ok(program) }
-            .doOnError(NoResultsFoundException::class.java) { error ->
-                logger.error("Error generating workout program for program: {}", programId, error)
-            }
-            .doOnError(ValidationException::class.java) { error ->
-                logger.error("Validation error generating workout program for program: {}", programId, error)
-            }
-            .doOnError { error ->
-                logger.error("Unexpected error generating workout program for program: {}", programId, error)
-            }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programMono =
+                if (isAdminOrService) {
+                    conjugateWorkoutGeneratorService.generateNextWeek(programId)
+                } else {
+                    programService.isOwner(programId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            conjugateWorkoutGeneratorService.generateNextWeek(programId)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                        }
+                    }
+                }
+            programMono.map { program -> ResponseEntity.ok(program) }
+                .doOnError(NoResultsFoundException::class.java) { error ->
+                    logger.error("Error generating workout program for program: {}", programId, error)
+                }
+                .doOnError(ValidationException::class.java) { error ->
+                    logger.error("Validation error generating workout program for program: {}", programId, error)
+                }
+                .doOnError { error ->
+                    logger.error("Unexpected error generating workout program for program: {}", programId, error)
+                }
+        }
     }
 }

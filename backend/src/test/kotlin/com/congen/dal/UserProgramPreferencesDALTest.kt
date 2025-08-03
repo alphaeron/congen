@@ -43,15 +43,18 @@ class UserProgramPreferencesDALTest {
 
     @Test
     fun `selectUserProgramPreferences should return null when not found`() {
+        val nonExistentUserId = "non-existent-keycloak-user-id"
         whenever(
             postgresClient.selectIndividual<UserProgramPreferences>(
                 "SELECT * FROM user_program_preferences WHERE user_id=$1",
-                999,
+                nonExistentUserId,
             ),
         ).thenReturn(Mono.empty())
-        val result = userProgramPreferencesDAL.selectUserProgramPreferences(999)
+        val result = userProgramPreferencesDAL.selectUserProgramPreferences(nonExistentUserId)
         StepVerifier.create(result).verifyComplete()
-        verify(postgresClient).selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", 999)
+        verify(
+            postgresClient
+        ).selectIndividual<UserProgramPreferences>("SELECT * FROM user_program_preferences WHERE user_id=$1", nonExistentUserId)
     }
 
     @Test
@@ -206,7 +209,7 @@ class UserProgramPreferencesDALTest {
         val currentPrefs = mockUserProgramPreferences(programDaysPerWeek = 3, sessionTimeLengthInMinutes = 60)
         val newProgramDaysPerWeek = 4
         val expectedMessage =
-            "Cannot change program days per week from 3 to 4 for user 1 because they have existing workouts. " +
+            "Cannot change program days per week from 3 to 4 for user ${currentPrefs.userId} because they have existing workouts. " +
                 "Program days per week becomes immutable once workouts are generated to prevent day numbering conflicts " +
                 "and maintain program consistency. To change program frequency, the user must start a new program."
         whenever(programmedWorkoutDAL.hasUserExistingWorkouts(currentPrefs.userId)).thenReturn(Mono.just(true))

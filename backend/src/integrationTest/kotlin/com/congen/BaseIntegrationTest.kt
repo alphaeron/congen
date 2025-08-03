@@ -18,15 +18,13 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.MountableFile
+import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.net.URI
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
+import java.util.Base64
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.Base64
 
 /**
  * Base class for all integration tests.
@@ -87,21 +85,22 @@ abstract class BaseIntegrationTest {
             val realm = "congen"
             val clientId = "congen-backend"
             val clientSecret = "congen-backend-secret"
-            
+
             val tokenUrl = "${keycloak.authServerUrl}/realms/$realm/protocol/openid-connect/token"
-            
+
             // Use password grant type for user operations by default
             val username = "testuser"
             val password = "testpassword"
             val requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password"
-            
+
             val client = HttpClient.newHttpClient()
-            val request = HttpRequest.newBuilder()
-                .uri(URI.create(tokenUrl))
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-                .build()
-            
+            val request =
+                HttpRequest.newBuilder()
+                    .uri(URI.create(tokenUrl))
+                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build()
+
             return try {
                 val response = client.send(request, HttpResponse.BodyHandlers.ofString())
                 if (response.statusCode() == 200) {
@@ -140,13 +139,13 @@ abstract class BaseIntegrationTest {
                 if (parts.size != 3) {
                     throw RuntimeException("Invalid JWT token format")
                 }
-                
+
                 val payload = parts[1]
                 // Add padding if needed
                 val paddedPayload = payload + "=".repeat((4 - payload.length % 4) % 4)
                 val decodedBytes = Base64.getUrlDecoder().decode(paddedPayload)
                 val payloadJson = String(decodedBytes, Charsets.UTF_8)
-                
+
                 val jsonNode = ObjectMapper().readTree(payloadJson)
                 jsonNode.get("sub").asText()
             } catch (e: Exception) {
@@ -178,10 +177,12 @@ abstract class BaseIntegrationTest {
             registry.add("congen.keycloak.client.id") { "congen-backend" }
             registry.add("congen.keycloak.client.secret") { "congen-backend-secret" }
             registry.add("congen.keycloak.service_account.username") { "service-account-congen-backend" }
-            
+
             // JWT configuration properties
             registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri") { "${keycloak.authServerUrl}/realms/congen" }
-            registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri") { "${keycloak.authServerUrl}/realms/congen/protocol/openid-connect/certs" }
+            registry.add("spring.security.oauth2.resourceserver.jwt.jwk-set-uri") {
+                "${keycloak.authServerUrl}/realms/congen/protocol/openid-connect/certs"
+            }
             // Configure audiences to match the service account token audiences
             registry.add("spring.security.oauth2.resourceserver.jwt.audiences") { "realm-management,account" }
 
@@ -210,34 +211,39 @@ abstract class BaseIntegrationTest {
      * Creates a test user in Keycloak for integration tests.
      * This ensures the user has no required actions and is fully set up.
      */
-    protected fun createTestUserInKeycloak(username: String, password: String): String {
+    protected fun createTestUserInKeycloak(
+        username: String,
+        password: String
+    ): String {
         val realm = "congen"
         val clientId = "congen-backend"
         val clientSecret = "congen-backend-secret"
-        
+
         val tokenUrl = "${keycloak.authServerUrl}/realms/$realm/protocol/openid-connect/token"
         val adminUrl = "${keycloak.authServerUrl}/admin/realms/$realm/users"
-        
+
         // First get service account token
         val client = HttpClient.newHttpClient()
         val tokenRequestBody = "grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret"
-        
-        val tokenRequest = HttpRequest.newBuilder()
-            .uri(URI.create(tokenUrl))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString(tokenRequestBody))
-            .build()
-        
+
+        val tokenRequest =
+            HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(tokenRequestBody))
+                .build()
+
         val tokenResponse = client.send(tokenRequest, HttpResponse.BodyHandlers.ofString())
         if (tokenResponse.statusCode() != 200) {
             throw RuntimeException("Failed to get service account token: ${tokenResponse.statusCode()} - ${tokenResponse.body()}")
         }
-        
+
         val tokenJson = ObjectMapper().readTree(tokenResponse.body())
         val accessToken = tokenJson.get("access_token").asText()
-        
+
         // Create user with no required actions and no roles (users have no roles by default)
-        val userRequest = """
+        val userRequest =
+            """
             {
                 "username": "$username",
                 "email": "$username@test.com",
@@ -257,26 +263,27 @@ abstract class BaseIntegrationTest {
                     }
                 ]
             }
-        """.trimIndent()
-        
-        val userRequestHttp = HttpRequest.newBuilder()
-            .uri(URI.create(adminUrl))
-            .header("Authorization", "Bearer $accessToken")
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(userRequest))
-            .build()
-        
+            """.trimIndent()
+
+        val userRequestHttp =
+            HttpRequest.newBuilder()
+                .uri(URI.create(adminUrl))
+                .header("Authorization", "Bearer $accessToken")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(userRequest))
+                .build()
+
         val userResponse = client.send(userRequestHttp, HttpResponse.BodyHandlers.ofString())
         if (userResponse.statusCode() != 201) {
             throw RuntimeException("Failed to create test user: ${userResponse.statusCode()} - ${userResponse.body()}")
         }
-        
+
         // Extract user ID from Location header
         val location = userResponse.headers().firstValue("Location").orElse(null)
         if (location == null) {
             throw RuntimeException("No Location header returned when creating user")
         }
-        
+
         return location.substringAfterLast("/")
     }
 
@@ -289,7 +296,7 @@ abstract class BaseIntegrationTest {
     /**
      * Gets a valid JWT token for testing authentication using client credentials.
      * This method uses the service account to get a token with the specified role.
-     * 
+     *
      * NOTE: Client credentials grant is used ONLY FOR TESTING purposes. In production,
      * this would be for machine-to-machine communication, not user authentication.
      * The proper OAuth2 flow for production would be the authorization code flow
@@ -299,38 +306,40 @@ abstract class BaseIntegrationTest {
         val realm = "congen"
         val clientId = "congen-backend"
         val clientSecret = "congen-backend-secret"
-        
+
         val tokenUrl = "${keycloak.authServerUrl}/realms/$realm/protocol/openid-connect/token"
-        
+
         val client = HttpClient.newHttpClient()
         val requestBody: String
-        
+
         if (role == "user") {
             // Use password grant type for user operations
             val username = "testuser-${System.nanoTime()}"
             val password = "testpassword"
-            
+
             // Create a fresh test user to avoid required actions issues
-            val finalUsername = try {
-                createTestUserInKeycloak(username, password)
-                username
-            } catch (e: Exception) {
-                // If user creation fails, fall back to the pre-configured user
-                "testuser"
-            }
-            
+            val finalUsername =
+                try {
+                    createTestUserInKeycloak(username, password)
+                    username
+                } catch (e: Exception) {
+                    // If user creation fails, fall back to the pre-configured user
+                    "testuser"
+                }
+
             requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$finalUsername&password=$password"
         } else {
             // Use client credentials grant type for service operations
             requestBody = "grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret"
         }
-        
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create(tokenUrl))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString(requestBody))
-            .build()
-        
+
+        val request =
+            HttpRequest.newBuilder()
+                .uri(URI.create(tokenUrl))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                .build()
+
         return try {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
             if (response.statusCode() == 200) {

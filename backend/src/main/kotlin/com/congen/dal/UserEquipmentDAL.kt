@@ -50,13 +50,13 @@ class UserEquipmentDAL(
      * This method queries the database to find the relationship between the specified user and equipment.
      * If no relationship exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param equipmentName The name of the equipment
      * @return Mono containing the user-equipment relationship if found
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
     fun selectUserEquipment(
-        userId: Int,
+        userId: String,
         equipmentName: String,
     ): Mono<UserEquipment> {
         logger.debug("Selecting user equipment: {} - {}", userId, equipmentName)
@@ -73,10 +73,10 @@ class UserEquipmentDAL(
      * This method fetches all equipment that is associated with the specified user.
      * If no equipment exists for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-equipment relationships
      */
-    fun selectUserEquipmentByUser(userId: Int): Mono<List<UserEquipment>> {
+    fun selectUserEquipmentByUser(userId: String): Mono<List<UserEquipment>> {
         logger.debug("Selecting equipment for user: {}", userId)
         return postgresClient.select(
             "SELECT * FROM user_equipment WHERE user_id=$1",
@@ -90,13 +90,13 @@ class UserEquipmentDAL(
      * This method inserts a new relationship between the specified user and equipment.
      * The combination of user ID and equipment name must be unique.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param equipmentName The name of the equipment
      * @return Mono containing the created user-equipment relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
     fun insertUserEquipment(
-        userId: Int,
+        userId: String,
         equipmentName: String,
     ): Mono<UserEquipment> {
         logger.debug("Inserting user equipment: {} - {}", userId, equipmentName)
@@ -118,13 +118,13 @@ class UserEquipmentDAL(
      * This method removes the relationship between the specified user and equipment.
      * If no relationship exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param equipmentName The name of the equipment
      * @return Mono containing the deleted user-equipment relationship
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
     fun deleteUserEquipment(
-        userId: Int,
+        userId: String,
         equipmentName: String,
     ): Mono<UserEquipment> {
         logger.debug("Deleting user equipment: {} - {}", userId, equipmentName)

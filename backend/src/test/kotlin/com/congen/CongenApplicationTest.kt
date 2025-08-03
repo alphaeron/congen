@@ -1,6 +1,7 @@
 package com.congen
 
 import org.junit.jupiter.api.Test
+import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.TestPropertySource
 
@@ -46,6 +47,6 @@ class CongenApplicationTest {
         // Verify the main function exists and is accessible
         // In Kotlin, the main function is a top-level function, not a class method
         // We can verify the class exists and has the SpringBootApplication annotation
-        assert(CongenApplication::class.java.isAnnotationPresent(org.springframework.boot.autoconfigure.SpringBootApplication::class.java))
+        assert(CongenApplication::class.java.isAnnotationPresent(SpringBootApplication::class.java))
     }
 }

@@ -93,7 +93,7 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should return error when user one rep max not found`() {
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "Non-existent Exercise"
         whenever(
             postgresClient.selectIndividual<UserOneRepMax>(
@@ -167,7 +167,7 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should return error when updating non-existent user one rep max`() {
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "Non-existent Exercise"
         val oneRepMax = BigDecimal("250.0")
         whenever(
@@ -220,7 +220,7 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should return error when deleting non-existent user one rep max`() {
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "Non-existent Exercise"
         whenever(
             postgresClient.update<UserOneRepMax>(
@@ -281,7 +281,7 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should handle decimal one rep max values`() {
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "Deadlift"
         val oneRepMax = BigDecimal("225.5")
         val userOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = oneRepMax)
@@ -317,7 +317,7 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should handle special characters in exercise name`() {
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "Barbell Bench Press (Incline)"
         val oneRepMax = BigDecimal("120.0")
         val userOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = oneRepMax)
@@ -353,7 +353,7 @@ class UserOneRepMaxDALTest {
 
     @Test
     fun `should handle large one rep max values`() {
-        val userId = 1
+        val userId = "test-keycloak-user-id"
         val exerciseName = "Heavy Deadlift"
         val oneRepMax = BigDecimal("500.0")
         val userOneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName, oneRepMax = oneRepMax)

@@ -54,11 +54,11 @@ class UserProgramPreferencesDAL(
      * This method queries the database to find the program preferences for the specified user.
      * If no preferences exist, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing the user program preferences if found
      * @throws NoResultsFoundException when the preferences don't exist
      */
-    fun selectUserProgramPreferences(userId: Int): Mono<UserProgramPreferences> {
+    fun selectUserProgramPreferences(userId: String): Mono<UserProgramPreferences> {
         logger.debug("Selecting program preferences for user: {}", userId)
         return postgresClient.selectIndividual(
             "SELECT * FROM user_program_preferences WHERE user_id=$1",
@@ -72,14 +72,14 @@ class UserProgramPreferencesDAL(
      * This method validates and inserts new program preferences for the specified user.
      * The user ID must be unique in the user_program_preferences table.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param programDaysPerWeek The number of days per week for the program
      * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return Mono containing the created user program preferences
      * @throws DatabaseException when the preferences already exist or database operation fails
      */
     fun insertUserProgramPreferences(
-        userId: Int,
+        userId: String,
         programDaysPerWeek: Int,
         sessionTimeLengthInMinutes: Int,
     ): Mono<UserProgramPreferences> {
@@ -110,7 +110,7 @@ class UserProgramPreferencesDAL(
      * Program days per week cannot be changed if the user has existing workouts to prevent
      * day numbering conflicts and maintain program consistency.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param programDaysPerWeek The number of days per week for the program
      * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return Mono containing the updated user program preferences
@@ -118,7 +118,7 @@ class UserProgramPreferencesDAL(
      * @throws ValidationException when program days per week cannot be changed due to existing workouts
      */
     fun updateUserProgramPreferences(
-        userId: Int,
+        userId: String,
         programDaysPerWeek: Int,
         sessionTimeLengthInMinutes: Int,
     ): Mono<UserProgramPreferences> {
@@ -174,11 +174,11 @@ class UserProgramPreferencesDAL(
      * This method removes the program preferences for the specified user.
      * If no preferences exist, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing the deleted user program preferences
      * @throws NoResultsFoundException when the preferences don't exist
      */
-    fun deleteUserProgramPreferences(userId: Int): Mono<UserProgramPreferences> {
+    fun deleteUserProgramPreferences(userId: String): Mono<UserProgramPreferences> {
         logger.debug("Deleting user program preferences: {}", userId)
         return postgresClient.update(
             """

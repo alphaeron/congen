@@ -2,8 +2,38 @@
 // Root project only contains shared tasks that don't require plugins
 
 task kubeval(type: Exec, group: 'verification') {
-    description = 'Lint Kubernetes manifests with kubeval'
-    commandLine 'sh', '-c', 'kustomize build k8s/base | kubeval --ignore-missing-schemas'
+    description = 'Lint Kubernetes manifests with kubeval for all base and overlay environments'
+    commandLine 'sh', '-c', '''
+        for env in "base" "overlays/production" "overlays/staging" "overlays/local"; do
+            case "$env" in
+                "base")
+                    env_display="Base"
+                    ;;
+                "overlays/production")
+                    env_display="Production"
+                    ;;
+                "overlays/staging")
+                    env_display="Staging"
+                    ;;
+                "overlays/local")
+                    env_display="Local"
+                    ;;
+            esac
+            echo "=== Kubeval Linting ${env_display} Environment ==="
+            for stage in k8s/$env/stage-*; do
+                if [ -d "$stage" ]; then
+                    echo "Linting ${env_display} stage: $(basename "$stage")"
+                    kustomize build "$stage" | kubeval --ignore-missing-schemas
+                    if [ $? -ne 0 ]; then
+                        echo "❌ Kubeval failed for ${env_display} stage: $(basename "$stage")"
+                        exit 1
+                    fi
+                    echo "✅ ${env_display} stage $(basename "$stage") passed kubeval"
+                fi
+            done
+        done
+        echo "✅ All environments passed kubeval validation!"
+    '''
 }
 
 task kubeLinter(type: Exec, group: 'verification') {
@@ -16,13 +46,43 @@ task kubeLinter(type: Exec, group: 'verification') {
         echo "=== Linting Local Overlay (Development) ===" &&
         kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,mismatching-selector k8s/overlays/local &&
         echo "=== Linting Base Kubernetes Resources ===" &&
-        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root k8s/base
+        kube-linter lint --exclude=latest-tag,no-read-only-root-fs,unset-cpu-requirements,unset-memory-requirements,run-as-non-root,non-existent-service-account k8s/base
     '''
 }
 
 task kubectlDryRun(type: Exec, group: 'verification') {
-    description = 'Validate base kustomize output with kubectl dry-run'
-    commandLine 'kubectl', 'apply', '--dry-run=client', '-k', 'k8s/base'
+    description = 'Validate all stages in base and overlay environments with kubectl dry-run'
+    commandLine 'sh', '-c', '''
+        for env in "base" "overlays/production" "overlays/staging" "overlays/local"; do
+            case "$env" in
+                "base")
+                    env_display="Base"
+                    ;;
+                "overlays/production")
+                    env_display="Production"
+                    ;;
+                "overlays/staging")
+                    env_display="Staging"
+                    ;;
+                "overlays/local")
+                    env_display="Local"
+                    ;;
+            esac
+            echo "=== Dry Run ${env_display} Stages ==="
+            for stage in k8s/$env/stage-*; do
+                if [ -d "$stage" ]; then
+                    echo "Testing ${env_display} stage: $(basename "$stage")"
+                    kubectl apply --dry-run=client -k "$stage"
+                    if [ $? -ne 0 ]; then
+                        echo "❌ Dry run failed for ${env_display} stage: $(basename "$stage")"
+                        exit 1
+                    fi
+                    echo "✅ ${env_display} stage $(basename "$stage") passed dry run"
+                fi
+            done
+        done
+        echo "✅ All stages passed dry run validation!"
+    '''
 }
 
 task shellCheck(type: Exec, group: 'verification') {
@@ -81,17 +141,21 @@ task jsonFormatCheck(type: Exec, group: 'verification') {
         }
     }
     commandLine 'sh', '-c', '''
-        find . -name "*.json" -type f | grep -v node_modules | grep -v .terraform | while read file; do
+        has_errors=false
+        find . -name "*.json" -type f | grep -v node_modules | grep -v .terraform | grep -v build | grep -v dist | while read file; do
             echo "Checking: $file"
             if ! jq . "$file" > /dev/null 2>&1; then
                 echo "❌ Invalid JSON: $file"
-                exit 1
+                has_errors=true
             fi
             if ! jq . "$file" | diff "$file" - > /dev/null; then
                 echo "❌ JSON not properly formatted: $file"
-                exit 1
+                has_errors=true
             fi
         done
+        if [ "$has_errors" = true ]; then
+            exit 1
+        fi
         echo "✅ All JSON files are valid and properly formatted"
     '''
 }

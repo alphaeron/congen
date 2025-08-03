@@ -89,8 +89,8 @@ class ConjugateWorkoutGeneratorService(
      *
      * @param programId The ID of the existing program
      * @return Mono containing the updated program with new workouts
-     * @throws com.congen.exceptions.ValidationException if the user's program contains an invalid number of days/week
-     * @throws com.congen.exceptions.NoResultsFoundException if the program is not found
+     * @throws ValidationException if the user's program contains an invalid number of days/week
+     * @throws NoResultsFoundException if the program is not found
      */
     fun generateNextWeek(programId: Long): Mono<Program> {
         logger.info("Generating next week for program {}", programId)
@@ -156,7 +156,7 @@ class ConjugateWorkoutGeneratorService(
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
         rotationHistory: List<ExerciseRotationHistory>,
-        template: List<com.congen.generator.DayTemplate>,
+        template: List<DayTemplate>,
         weakMuscles: List<String>,
         currentWeekNumber: Int
     ): Mono<Void> {

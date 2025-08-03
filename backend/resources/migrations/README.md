@@ -56,7 +56,7 @@ This directory contains all database migration files for the project, managed wi
 ### ConfigMap Generation
 The `createMigrationsConfigMap` Gradle task:
 - Reads all files from `resources/migrations/`
-- Creates a Kubernetes ConfigMap (`k8s/base/migrations-configmap.yaml`)
+- Creates a Kubernetes ConfigMap (`k8s/base/stage-6/migrations-configmap.yaml`)
 - Includes all SQL, XML, and properties files
 - Maintains directory structure for Liquibase
 

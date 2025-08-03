@@ -16,14 +16,54 @@ spec:
       labels:
         app: keycloak
     spec:
+      initContainers:
+      - name: theme-setup
+        image: busybox:1.35
+        command: ['sh', '-c']
+        args:
+        - |
+          # Clean up any existing theme structure
+          rm -rf /opt/keycloak/themes/congen
+          # Create proper theme structure for login theme
+          mkdir -p /opt/keycloak/themes/congen/login/resources/css
+          mkdir -p /opt/keycloak/themes/congen/login/resources/js
+          mkdir -p /opt/keycloak/themes/congen/login/resources/img
+          # Copy theme files to login theme directory
+          cp /tmp/theme/theme.properties /opt/keycloak/themes/congen/login/
+          cp /tmp/theme/css-congen.css /opt/keycloak/themes/congen/login/resources/css/congen.css
+          cp /tmp/theme/js-congen.js /opt/keycloak/themes/congen/login/resources/js/congen.js
+          cp /tmp/theme/ftl-congen.ftl /opt/keycloak/themes/congen/login/congen.ftl
+          cp /tmp/theme/img-congen-icon.svg /opt/keycloak/themes/congen/login/resources/img/congen-icon.svg
+          # (Optional) Repeat for account theme if needed
+          mkdir -p /opt/keycloak/themes/congen/account/resources/css
+          mkdir -p /opt/keycloak/themes/congen/account/resources/js
+          mkdir -p /opt/keycloak/themes/congen/account/resources/img
+          cp /tmp/theme/theme.properties /opt/keycloak/themes/congen/account/
+          cp /tmp/theme/css-congen.css /opt/keycloak/themes/congen/account/resources/css/congen.css
+          cp /tmp/theme/js-congen.js /opt/keycloak/themes/congen/account/resources/js/congen.js
+          cp /tmp/theme/img-congen-icon.svg /opt/keycloak/themes/congen/account/resources/img/congen-icon.svg
+          # Set proper permissions
+          chmod -R 755 /opt/keycloak/themes/congen
+          # Debug: List the created files
+          echo "=== Theme files created ==="
+          find /opt/keycloak/themes/congen -type f -exec ls -la {} \;
+          echo "=== Theme directory structure ==="
+          find /opt/keycloak/themes/congen -type d | sort
+        volumeMounts:
+        - name: keycloak-theme
+          mountPath: /tmp/theme
+        - name: keycloak-theme-volume
+          mountPath: /opt/keycloak/themes
       containers:
       - name: keycloak
         image: quay.io/keycloak/keycloak:26.3.2
+        command: ["/opt/keycloak/bin/kc.sh"]
         ports:
         - containerPort: 8080
+        - containerPort: 9000
         volumeMounts:
-        - name: keycloak-theme
-          mountPath: /opt/keycloak/themes/congen
+        - name: keycloak-theme-volume
+          mountPath: /opt/keycloak/themes
         env:
         # In a production environment, add a TLS certificate to Keycloak to either end-to-end encrypt the traffic between
         # the client or Keycloak, or to encrypt the traffic between your proxy and Keycloak.
@@ -103,3 +143,5 @@ spec:
       - name: keycloak-theme
         configMap:
           name: keycloak-theme
+      - name: keycloak-theme-volume
+        emptyDir: {}

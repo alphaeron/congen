@@ -5,6 +5,7 @@ import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.model.Band
 import com.congen.model.Exercise
 import com.congen.model.MovementType
 import com.congen.model.UserOneRepMax
@@ -54,7 +55,7 @@ class WeightSelectionService(
         /** The calculated target weight for the exercise, rounded to achievable equipment weights */
         val targetWeight: BigDecimal,
         /** Optional band to be used with the exercise (for dynamic effort exercises) */
-        val band: com.congen.model.Band?
+        val band: Band?
     )
 
     /**
@@ -75,7 +76,7 @@ class WeightSelectionService(
         exerciseName: String,
         intensity: Double,
         oneRepMaxes: List<UserOneRepMax>,
-        userId: Int,
+        userId: String,
         isDynamicEffort: Boolean = false,
         currentWeekNumber: Int = 1
     ): Mono<TargetWeightResult> {
@@ -99,7 +100,7 @@ class WeightSelectionService(
      * @return Mono containing the weight unit preference, defaulting to KG if not found
      */
     private fun getWeightUnitForExercise(
-        userId: Int,
+        userId: String,
         exerciseName: String
     ): Mono<WeightUnit> {
         return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
@@ -114,7 +115,7 @@ class WeightSelectionService(
         exerciseName: String,
         intensity: Double,
         oneRepMaxes: List<UserOneRepMax>,
-        userId: Int,
+        userId: String,
         isDynamicEffort: Boolean,
         currentWeekNumber: Int
     ): Mono<TargetWeightResult> {
@@ -186,7 +187,7 @@ class WeightSelectionService(
     private fun processTargetWeight(
         exerciseName: String,
         calculatedWeight: BigDecimal,
-        userId: Int,
+        userId: String,
         isDynamicEffort: Boolean,
         currentWeekNumber: Int
     ): Mono<TargetWeightResult> {
@@ -228,7 +229,7 @@ class WeightSelectionService(
     private fun getConservativeBodyweightEstimate(
         exerciseName: String,
         intensity: Double,
-        userId: Int,
+        userId: String,
         isDynamicEffort: Boolean,
         currentWeekNumber: Int
     ): Mono<TargetWeightResult> {
@@ -251,7 +252,7 @@ class WeightSelectionService(
     private fun getBodyweightEstimate(
         exercise: Exercise,
         intensity: Double,
-        userId: Int,
+        userId: String,
         isDynamicEffort: Boolean,
         currentWeekNumber: Int
     ): Mono<TargetWeightResult> {

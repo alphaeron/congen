@@ -9,25 +9,35 @@ import java.math.BigDecimal
 import java.time.Instant
 
 /**
- * Represents a user profile in the workout generation system.
+ * Represents a user in the workout generation system.
  *
- * Users are the primary entities in the system and contain personal information
- * used to generate personalized workout programs. Each user can have associated
- * preferences, equipment, and program selections.
+ * Users are individuals who use the system to generate personalized workout programs.
+ * Each user has a profile with basic information and can have associated preferences,
+ * equipment, and program selections.
+ *
+ * ## User Profile Information
+ *
+ * Users contain:
+ * - **Personal Details**: Name, age, height, weight
+ * - **Fitness Preferences**: Equipment preferences, exercise preferences
+ * - **Program Data**: Associated workout programs and preferences
+ * - **Authentication**: Linked to Keycloak for secure access
  *
  * ## Validation Rules
  *
- * - **Name**: Required, non-empty string
- * - **Age**: Must be between 1 and 150 years
- * - **Height**: Must be between 0.01 and 300 cm
- * - **Weight**: Must be between 0.01 and 1000 kg
+ * - **Name**: Required, non-empty string (1-255 characters)
+ * - **Age**: 1-150 years
+ * - **Height**: 0.01-300 cm
+ * - **Weight**: 0.01-1000 kg
  *
- * ## Usage
+ * ## Keycloak Integration
  *
- * Users are created through the `/user/` endpoint and can be updated or deleted
- * as needed. User data is validated before persistence to ensure data integrity.
+ * Users are linked to Keycloak for authentication:
+ * - Each user has a unique Keycloak ID as their primary identifier
+ * - This ensures seamless integration with the authentication system
+ * - Authorization checks use the Keycloak ID for security validation
  *
- * @property id Unique identifier for the user (auto-generated)
+ * @property keycloakId Unique Keycloak identifier for the user (primary key)
  * @property name User's full name
  * @property age User's age in years
  * @property height User's height in centimeters
@@ -41,16 +51,17 @@ import java.time.Instant
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
-    description = "User profile information for workout generation",
+    description = "A user profile in the workout generation system",
+    example = "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", name=\"John Doe\", age=30, height=175.5, weight=80.0)",
 )
 data class User(
-    /** Unique identifier for the user (auto-generated). */
+    /** Unique Keycloak identifier for the user (primary key). */
     @Schema(
-        description = "Unique identifier for the user",
-        example = "1",
+        description = "Unique Keycloak identifier for the user",
+        example = "123e4567-e89b-12d3-a456-426614174000",
         readOnly = true,
     )
-    @param:JsonProperty("id") val id: Int,
+    @param:JsonProperty("keycloak_id") val keycloakId: String,
     /** User's full name. */
     @Schema(
         description = "User's full name",
@@ -91,11 +102,4 @@ data class User(
         required = true,
     )
     @param:JsonProperty("updated_at") val updatedAt: Instant,
-    /** Keycloak user ID for authentication integration. */
-    @Schema(
-        description = "Keycloak user ID for authentication integration",
-        example = "123e4567-e89b-12d3-a456-426614174000",
-        required = false,
-    )
-    @param:JsonProperty("keycloak_user_id") val keycloakUserId: String?,
 )

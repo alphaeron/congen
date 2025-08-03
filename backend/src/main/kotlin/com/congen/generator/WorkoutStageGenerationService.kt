@@ -110,7 +110,7 @@ abstract class WorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         return generateStagesForDayType(
             workout = workout,
@@ -159,7 +159,7 @@ abstract class WorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void>
 
     /**
@@ -175,7 +175,6 @@ abstract class WorkoutStageGenerationService(
         workout: ProgrammedWorkout,
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>,
-        userId: Int
     ): Mono<Void> {
         return createWorkoutStage(
             workout.id,
@@ -189,7 +188,6 @@ abstract class WorkoutStageGenerationService(
                 createProgrammedExercise(primaryStage.id, exercise.name)
                     .flatMap { primaryProgrammedExercise ->
                         createSetSchemes(
-                            userId,
                             primaryProgrammedExercise.id,
                             setSchemes,
                             WeightUnit.KG
@@ -212,7 +210,6 @@ abstract class WorkoutStageGenerationService(
         workout: ProgrammedWorkout,
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>,
-        userId: Int
     ): Mono<Void> {
         return createWorkoutStage(
             workout.id,
@@ -223,7 +220,6 @@ abstract class WorkoutStageGenerationService(
                 createProgrammedExercise(secondaryStage.id, exercise.name)
                     .flatMap { secondaryProgrammedExercise ->
                         createSetSchemes(
-                            userId,
                             secondaryProgrammedExercise.id,
                             setSchemes,
                             WeightUnit.KG
@@ -250,7 +246,6 @@ abstract class WorkoutStageGenerationService(
         secondaryExercise: Exercise?,
         primarySetSchemes: List<SetSchemeParams>,
         secondarySetSchemes: List<SetSchemeParams>,
-        userId: Int
     ): Mono<Void> {
         if (primaryExercise == null && secondaryExercise == null) {
             return Mono.empty()
@@ -273,7 +268,6 @@ abstract class WorkoutStageGenerationService(
                             createProgrammedExercise(primaryStage.id, primaryExercise.name)
                                 .flatMap { primaryProgrammedExercise ->
                                     createSetSchemes(
-                                        userId,
                                         primaryProgrammedExercise.id,
                                         primarySetSchemes,
                                         WeightUnit.KG
@@ -288,7 +282,6 @@ abstract class WorkoutStageGenerationService(
                             createProgrammedExercise(primaryStage.id, secondaryExercise.name)
                                 .flatMap { secondaryProgrammedExercise ->
                                     createSetSchemes(
-                                        userId,
                                         secondaryProgrammedExercise.id,
                                         secondarySetSchemes,
                                         WeightUnit.KG
@@ -327,8 +320,8 @@ abstract class WorkoutStageGenerationService(
         weakMuscles: List<String>,
         numAccessoryExercises: Int,
         rotationHistory: List<ExerciseRotationHistory>,
+        userId: String,
         currentWeekNumber: Int,
-        userId: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
         if (numAccessoryExercises <= 0) {
@@ -342,16 +335,13 @@ abstract class WorkoutStageGenerationService(
         )
             .flatMap { accessoryStage ->
                 Flux.range(1, numAccessoryExercises)
-                    .flatMap { exerciseNumber ->
+                    .flatMap {
                         selectAccessoryExercise(
                             exercises = exercises,
                             preferences = preferences,
                             userEquipment = userEquipment,
                             weakMuscles = weakMuscles,
-                            // Assuming rotationHistory is not needed for accessory exercises
-                            rotationHistory = emptyList(),
-                            currentWeekNumber = currentWeekNumber,
-                            userId = userId,
+                            rotationHistory = rotationHistory,
                             movementBalanceState = movementBalanceState
                         ).flatMap { accessoryExercise ->
                             if (accessoryExercise != null) {
@@ -369,7 +359,6 @@ abstract class WorkoutStageGenerationService(
                                             userId = userId
                                         ).flatMap { accessoryScheme ->
                                             createSetSchemes(
-                                                userId,
                                                 accessoryProgrammedExercise.id,
                                                 accessoryScheme,
                                                 WeightUnit.KG
@@ -408,8 +397,7 @@ abstract class WorkoutStageGenerationService(
         oneRepMaxes: List<UserOneRepMax>,
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
-        currentWeekNumber: Int,
-        userId: Int,
+        userId: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
         if (!hasConditioning(dayType)) {
@@ -427,10 +415,7 @@ abstract class WorkoutStageGenerationService(
                     preferences = preferences,
                     userEquipment = userEquipment,
                     weakMuscles = weakMuscles,
-                    // Assuming rotationHistory is not needed for conditioning exercises
-                    rotationHistory = emptyList(),
-                    currentWeekNumber = currentWeekNumber,
-                    userId = userId,
+                    rotationHistory = rotationHistory,
                     movementBalanceState = movementBalanceState
                 ).flatMap { conditioningExercise ->
                     if (conditioningExercise != null) {
@@ -445,7 +430,6 @@ abstract class WorkoutStageGenerationService(
                                     userId = userId
                                 ).flatMap { conditioningScheme ->
                                     createSetSchemes(
-                                        userId,
                                         conditioningProgrammedExercise.id,
                                         conditioningScheme,
                                         WeightUnit.KG
@@ -485,7 +469,7 @@ abstract class WorkoutStageGenerationService(
         primaryExercise: Exercise?,
         isFourDayTemplate: Boolean,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         return exerciseSelectionService.selectWarmupExercises(
             exercises = exercises,
@@ -522,7 +506,6 @@ abstract class WorkoutStageGenerationService(
                                             currentWeekNumber = currentWeekNumber
                                         ).flatMap { warmupScheme ->
                                             createSetSchemes(
-                                                userId,
                                                 warmupProgrammedExercise.id,
                                                 warmupScheme,
                                                 WeightUnit.KG
@@ -552,7 +535,7 @@ abstract class WorkoutStageGenerationService(
         exercise: Exercise,
         dayType: String,
         oneRepMaxes: List<UserOneRepMax>,
-        userId: Int,
+        userId: String,
         currentWeekNumber: Int
     ): Mono<List<SetSchemeParams>> {
         // Warmup exercises: 4 sets of 25 reps at appropriate proportion of weight
@@ -642,13 +625,9 @@ abstract class WorkoutStageGenerationService(
         exercises: List<Exercise>,
         preferences: List<UserExercisePreference>,
         userEquipment: List<UserEquipment>,
-        oneRepMaxes: List<UserOneRepMax>,
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
         workoutType: String,
-        movementType: String,
-        currentWeekNumber: Int,
-        userId: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return if (workoutType == "dynamic_effort") {
@@ -765,7 +744,7 @@ abstract class WorkoutStageGenerationService(
         dayType: String,
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<List<SetSchemeParams>> {
         return generatePrilepinBasedScheme(
             exercise = exercise,
@@ -794,7 +773,7 @@ abstract class WorkoutStageGenerationService(
         dayType: String,
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<List<SetSchemeParams>> {
         val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -865,7 +844,7 @@ abstract class WorkoutStageGenerationService(
         dayType: String,
         oneRepMaxes: List<UserOneRepMax>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<List<SetSchemeParams>> {
         return generatePrilepinBasedScheme(
             exercise = exercise,
@@ -888,7 +867,7 @@ abstract class WorkoutStageGenerationService(
     protected fun generateAmrapOrEmomScheme(
         exercise: Exercise,
         oneRepMaxes: List<UserOneRepMax>,
-        userId: Int
+        userId: String,
     ): Mono<List<SetSchemeParams>> {
         // Conditioning exercises: 3-5 sets, 10-15 reps, 60-90 seconds rest
         val numSets = (3..5).random()
@@ -984,7 +963,6 @@ abstract class WorkoutStageGenerationService(
      * @return Mono<Void> indicating completion
      */
     protected fun createSetSchemes(
-        userId: Int,
         programmedExerciseId: Long,
         setSchemes: List<SetSchemeParams>,
         weightUnit: WeightUnit
@@ -1019,10 +997,7 @@ abstract class WorkoutStageGenerationService(
      * @param stageCreators List of stage creation functions to execute sequentially
      * @return Mono<Void> indicating completion
      */
-    protected fun createStagesSequentially(
-        workout: ProgrammedWorkout,
-        stageCreators: List<() -> Mono<Void>>
-    ): Mono<Void> {
+    protected fun createStagesSequentially(stageCreators: List<() -> Mono<Void>>): Mono<Void> {
         var currentMono: Mono<Void> = Mono.empty()
 
         for (stageCreator in stageCreators) {
@@ -1050,8 +1025,6 @@ abstract class WorkoutStageGenerationService(
         userEquipment: List<UserEquipment>,
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
-        currentWeekNumber: Int,
-        userId: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return exerciseSelectionService.selectRotatingExercise(
@@ -1083,8 +1056,6 @@ abstract class WorkoutStageGenerationService(
         userEquipment: List<UserEquipment>,
         weakMuscles: List<String>,
         rotationHistory: List<ExerciseRotationHistory>,
-        currentWeekNumber: Int,
-        userId: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
         return exerciseSelectionService.selectRotatingExercise(

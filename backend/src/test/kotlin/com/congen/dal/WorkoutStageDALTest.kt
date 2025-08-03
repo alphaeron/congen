@@ -138,7 +138,7 @@ class WorkoutStageDALTest {
 
     @Test
     fun `selectWorkoutStagesByUserId should return list of user owned workout stages`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val userWorkoutStages =
             listOf(
                 mockWorkoutStage(id = 1L, programmedWorkoutId = 1L, position = 1, name = "User Stage 1"),
@@ -177,7 +177,7 @@ class WorkoutStageDALTest {
 
     @Test
     fun `selectWorkoutStagesByUserId should return empty list when user has no workout stages`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val emptyList = emptyList<WorkoutStage>()
 
         whenever(
@@ -212,7 +212,7 @@ class WorkoutStageDALTest {
 
     @Test
     fun `selectWorkoutStagesByUserId should propagate database errors`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val databaseError = RuntimeException("Database connection failed")
 
         whenever(

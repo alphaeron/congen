@@ -133,10 +133,10 @@ class SetSchemeDAL(
      * SetScheme → ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
      * If no set schemes exist for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of set schemes owned by the user
      */
-    fun selectSetSchemesByUserId(userId: Int): Mono<List<SetScheme>> {
+    fun selectSetSchemesByUserId(userId: String): Mono<List<SetScheme>> {
         logger.debug("Selecting set schemes by user id: {}", userId)
         return postgresClient.select(
             """

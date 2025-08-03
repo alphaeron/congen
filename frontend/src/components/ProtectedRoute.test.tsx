@@ -1,127 +1,171 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render } from '@testing-library/react';
 
+import { useAuth } from '../contexts/AuthContext';
 import { ProtectedRoute } from './ProtectedRoute';
+import { LoadingSpinner } from './LoadingSpinner';
+import { User } from '../api/types';
 
-// Mock react-router-dom
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-}));
+// Mock dependencies
+jest.mock('../contexts/AuthContext');
+jest.mock('./LoadingSpinner');
 
-// Mock the AuthContext
-const mockUseAuth = jest.fn();
-jest.mock('../contexts/AuthContext', () => ({
-  useAuth: () => mockUseAuth(),
-}));
-
-const TestComponent: React.FC = () => <div>Protected Content</div>;
-
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <MemoryRouter>{children}</MemoryRouter>
-);
+const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockLoadingSpinner = LoadingSpinner as jest.MockedFunction<typeof LoadingSpinner>;
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockLoadingSpinner.mockReturnValue(<div data-testid="loading-spinner">Loading...</div>);
   });
 
-  it('should show loading state when authentication is loading', () => {
+  it('should render children when authentication is required and user is authenticated', () => {
+    const mockUser: User = {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+      age: 25,
+      height: 180,
+      weight: 75,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+      groups: [],
+      roles: [],
+    };
+
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: mockUser,
+      error: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
+    });
+
+    const { getByText } = render(
+      <ProtectedRoute requireAuth={true}>
+        <div>Protected Content</div>
+      </ProtectedRoute>
+    );
+
+    expect(getByText('Protected Content')).toBeInTheDocument();
+  });
+
+  it('should not render children when authentication is required and user is not authenticated', () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
+    });
+
+    const { queryByText } = render(
+      <ProtectedRoute requireAuth={true}>
+        <div>Protected Content</div>
+      </ProtectedRoute>
+    );
+
+    expect(queryByText('Protected Content')).not.toBeInTheDocument();
+  });
+
+  it('should render children when authentication is not required and user is not authenticated', () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
+    });
+
+    const { getByText } = render(
+      <ProtectedRoute requireAuth={false}>
+        <div>Public Content</div>
+      </ProtectedRoute>
+    );
+
+    expect(getByText('Public Content')).toBeInTheDocument();
+  });
+
+  it('should not render children when authentication is not required and user is authenticated', () => {
+    const mockUser: User = {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+      age: 25,
+      height: 180,
+      weight: 75,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+      groups: [],
+      roles: [],
+    };
+
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: mockUser,
+      error: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
+    });
+
+    const { queryByText } = render(
+      <ProtectedRoute requireAuth={false}>
+        <div>Public Content</div>
+      </ProtectedRoute>
+    );
+
+    expect(queryByText('Public Content')).not.toBeInTheDocument();
+  });
+
+  it('should show loading spinner when authentication is loading', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: true,
       user: null,
+      error: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
     });
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    const { getByTestId } = render(
+      <ProtectedRoute requireAuth={true}>
+        <div>Protected Content</div>
+      </ProtectedRoute>
     );
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
-  it('should render children when user is authenticated', () => {
-    mockUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      user: { id: 1, name: 'Test User' },
-    });
-
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
-    );
-
-    expect(screen.getByText('Protected Content')).toBeInTheDocument();
-  });
-
-  it('should redirect to login when user is not authenticated', async () => {
+  it('should default to requiring authentication', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
       user: null,
+      error: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
     });
 
-    render(
-      <TestWrapper>
-        <ProtectedRoute>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
+    const { queryByText } = render(
+      <ProtectedRoute>
+        <div>Protected Content</div>
+      </ProtectedRoute>
     );
 
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/login', {
-        state: { from: expect.objectContaining({ pathname: '/' }) },
-        replace: true,
-      });
-    });
-  });
-
-  it('should redirect authenticated users away from public pages', async () => {
-    mockUseAuth.mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      user: { id: 1, name: 'Test User' },
-    });
-
-    render(
-      <TestWrapper>
-        <ProtectedRoute requireAuth={false} redirectTo="/profile">
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
-    );
-
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/profile', { replace: true });
-    });
-  });
-
-  it('should render public content for unauthenticated users', () => {
-    mockUseAuth.mockReturnValue({
-      isAuthenticated: false,
-      isLoading: false,
-      user: null,
-    });
-
-    render(
-      <TestWrapper>
-        <ProtectedRoute requireAuth={false}>
-          <TestComponent />
-        </ProtectedRoute>
-      </TestWrapper>
-    );
-
-    expect(screen.getByText('Protected Content')).toBeInTheDocument();
+    expect(queryByText('Protected Content')).not.toBeInTheDocument();
   });
 });

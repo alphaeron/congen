@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -71,16 +72,16 @@ class ExerciseRotationHistoryController(
      * This endpoint creates a new exercise rotation history record with the provided information.
      * The record will be assigned a unique ID and timestamp automatically.
      *
-     * @param userId The ID of the user
+     * @param userId The Keycloak ID of the user
      * @param exerciseName The name of the exercise that was used
      * @param isAccessory Whether the exercise was used as an accessory movement
-     * @return The created exercise rotation history record with assigned ID and timestamp
+     * @return The created exercise rotation history record
      *
      * @throws ValidationException if data fails validation
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Create a new exercise rotation history record",
         description =
@@ -111,11 +112,11 @@ class ExerciseRotationHistoryController(
     )
     fun save(
         @Parameter(
-            description = "The ID of the user",
+            description = "The Keycloak ID of the user",
             required = true,
-            example = "1",
+            example = "b226d772-c063-4974-ae08-ab64134abbcf",
         )
-        @RequestParam("user_id") userId: Int,
+        @RequestParam("user_id") userId: String,
         @Parameter(
             description = "The name of the exercise that was used",
             required = true,
@@ -129,33 +130,37 @@ class ExerciseRotationHistoryController(
         )
         @RequestParam("is_accessory") isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
-        logger.info(
-            "Saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
-            userId,
-            exerciseName,
-            isAccessory,
-        )
-        return exerciseRotationHistoryService.insert(userId, exerciseName, isAccessory)
-            .map { savedRecord ->
-                logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
-                ResponseEntity.ok(savedRecord)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val hasAccess = isAdminOrService || currentUserId == userId
+            if (hasAccess) {
+                exerciseRotationHistoryService.insert(userId, exerciseName, isAccessory)
+                    .map { savedRecord ->
+                        logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
+                        ResponseEntity.ok(savedRecord)
+                    }
+                    .doOnError { e ->
+                        logger.error(
+                            "Error saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
+                            userId,
+                            exerciseName,
+                            isAccessory,
+                            e,
+                        )
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only access their own exercise rotation history"))
             }
-            .doOnError { e ->
-                logger.error(
-                    "Error saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
-                    userId,
-                    exerciseName,
-                    isAccessory,
-                    e,
-                )
-            }
+        }
     }
 
     /**
      * Retrieves an exercise rotation history record by its unique identifier.
      *
-     * This endpoint fetches a specific exercise rotation history record by its ID.
-     * If the record is not found, a 404 error will be returned.
+     * This endpoint fetches an exercise rotation history record from the database using the provided ID.
+     * If no record exists with the given ID, a 404 Not Found response is returned.
      *
      * @param id The unique identifier of the exercise rotation history record to retrieve
      * @return The exercise rotation history record if found, or 404 if not found
@@ -163,7 +168,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @exerciseRotationHistoryService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get exercise rotation history record by ID",
         description = "Retrieves a specific exercise rotation history record by its unique identifier.",
@@ -182,11 +187,6 @@ class ExerciseRotationHistoryController(
             ApiResponse(
                 responseCode = "404",
                 description = "Exercise rotation history record not found",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
             ),
         ],
     )
@@ -198,15 +198,31 @@ class ExerciseRotationHistoryController(
         )
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
-        logger.info("Getting exercise rotation history by id: {}", id)
-        return exerciseRotationHistoryService.selectById(id)
-            .map { record ->
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val exerciseRotationHistoryMono =
+                if (isAdminOrService) {
+                    exerciseRotationHistoryService.selectById(id)
+                } else {
+                    exerciseRotationHistoryService.selectById(id)
+                        .flatMap { record ->
+                            if (record.userId == userId) {
+                                Mono.just(record)
+                            } else {
+                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history"))
+                            }
+                        }
+                }
+            exerciseRotationHistoryMono.map { record ->
                 logger.debug("Found exercise rotation history record: {}", record.id)
                 ResponseEntity.ok(record)
             }
-            .doOnError { e ->
-                logger.error("Error getting exercise rotation history by id: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting exercise rotation history by id: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -255,7 +271,7 @@ class ExerciseRotationHistoryController(
                 if (isAdminOrService) {
                     exerciseRotationHistoryService.selectByIsAccessory(isAccessory)
                 } else {
-                    exerciseRotationHistoryService.selectByUserId(userId.toInt(), isAccessory)
+                    exerciseRotationHistoryService.selectByUserId(userId, isAccessory)
                 }
             exerciseRotationHistoryMono.map { records ->
                 ResponseEntity.ok(records)
@@ -301,7 +317,7 @@ class ExerciseRotationHistoryController(
                 if (isAdminOrService) {
                     exerciseRotationHistoryService.selectAll()
                 } else {
-                    exerciseRotationHistoryService.selectByUserId(userId.toInt())
+                    exerciseRotationHistoryService.selectByUserId(userId)
                 }
             exerciseRotationHistoryMono.map { records ->
                 ResponseEntity.ok(records)
@@ -312,11 +328,11 @@ class ExerciseRotationHistoryController(
     /**
      * Updates an existing exercise rotation history record.
      *
-     * This endpoint updates an exercise rotation history record with the provided information.
-     * If the record is not found, a 404 error will be returned.
+     * This endpoint updates an existing exercise rotation history record with the provided information.
+     * The record ID from the path parameter is used to ensure the correct record is updated.
      *
      * @param id The unique identifier of the exercise rotation history record to update
-     * @param userId The ID of the user
+     * @param userId The Keycloak ID of the user
      * @param exerciseName The name of the exercise that was used
      * @param isAccessory Whether the exercise was used as an accessory movement
      * @return The updated exercise rotation history record
@@ -325,10 +341,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @PatchMapping("/{id}")
-    @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or " +
-            "(#userId == principal.subject and @exerciseRotationHistoryService.isOwner(#id, principal.subject))"
-    )
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Update an exercise rotation history record",
         description = "Updates an existing exercise rotation history record with the provided information.",
@@ -372,11 +385,11 @@ class ExerciseRotationHistoryController(
         )
         @PathVariable("id") id: Long,
         @Parameter(
-            description = "The ID of the user",
+            description = "The Keycloak ID of the user",
             required = true,
-            example = "1",
+            example = "b226d772-c063-4974-ae08-ab64134abbcf",
         )
-        @RequestParam("user_id") userId: Int,
+        @RequestParam("user_id") userId: String,
         @Parameter(
             description = "The name of the exercise that was used",
             required = true,
@@ -390,28 +403,43 @@ class ExerciseRotationHistoryController(
         )
         @RequestParam("is_accessory") isAccessory: Boolean,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
-        logger.info(
-            "Updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
-            id,
-            userId,
-            exerciseName,
-            isAccessory,
-        )
-        return exerciseRotationHistoryService.update(id, userId, exerciseName, isAccessory)
-            .map { updatedRecord ->
-                logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
-                ResponseEntity.ok(updatedRecord)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val hasAccess =
+                if (isAdminOrService) {
+                    Mono.just(true)
+                } else {
+                    exerciseRotationHistoryService.isOwner(
+                        id,
+                        currentUserId
+                    ).zipWith(Mono.just(currentUserId == userId)) { isOwner, isUserOwner ->
+                        isOwner && isUserOwner
+                    }
+                }
+            hasAccess.flatMap { hasAccess ->
+                if (hasAccess) {
+                    exerciseRotationHistoryService.update(id, userId, exerciseName, isAccessory)
+                        .map { updatedRecord ->
+                            logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
+                            ResponseEntity.ok(updatedRecord)
+                        }
+                        .doOnError { e ->
+                            logger.error(
+                                "Error updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
+                                id,
+                                userId,
+                                exerciseName,
+                                isAccessory,
+                                e,
+                            )
+                        }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history record"))
+                }
             }
-            .doOnError { e ->
-                logger.error(
-                    "Error updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
-                    id,
-                    userId,
-                    exerciseName,
-                    isAccessory,
-                    e,
-                )
-            }
+        }
     }
 
     /**
@@ -426,7 +454,7 @@ class ExerciseRotationHistoryController(
      * @throws DatabaseException if database operation fails
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @exerciseRotationHistoryService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Delete an exercise rotation history record",
         description = "Deletes an exercise rotation history record by its unique identifier.",
@@ -461,14 +489,29 @@ class ExerciseRotationHistoryController(
         )
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ExerciseRotationHistory>> {
-        logger.info("Deleting exercise rotation history: {}", id)
-        return exerciseRotationHistoryService.deleteById(id)
-            .map { deletedRecord ->
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val exerciseRotationHistoryMono =
+                if (isAdminOrService) {
+                    exerciseRotationHistoryService.deleteById(id)
+                } else {
+                    exerciseRotationHistoryService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            exerciseRotationHistoryService.deleteById(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history"))
+                        }
+                    }
+                }
+            exerciseRotationHistoryMono.map { deletedRecord ->
                 logger.debug("Deleted exercise rotation history record: {}", deletedRecord.id)
                 ResponseEntity.ok(deletedRecord)
             }
-            .doOnError { e ->
-                logger.error("Error deleting exercise rotation history: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error deleting exercise rotation history: {}", id, e)
+                }
+        }
     }
 }

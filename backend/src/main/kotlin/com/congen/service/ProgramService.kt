@@ -27,18 +27,15 @@ class ProgramService(
      *
      * @param programId The ID of the program to check ownership for
      * @param userId The Keycloak user ID to check ownership against
-     * @return true if the user owns the program, false otherwise
+     * @return Mono<Boolean> true if the user owns the program, false otherwise
      */
     fun isOwner(
         programId: Long,
         userId: String
-    ): Boolean {
-        return try {
-            val program = programDAL.selectProgramById(programId).block()
-            program?.userId?.toString() == userId
-        } catch (e: NoResultsFoundException) {
-            false
-        }
+    ): Mono<Boolean> {
+        return programDAL.selectProgramById(programId)
+            .map { program -> program.userId == userId }
+            .onErrorReturn(false)
     }
 
     /**
@@ -64,12 +61,12 @@ class ProgramService(
     /**
      * Retrieves programs for a specific user, optionally filtered by active status.
      *
-     * @param userId The user ID to filter programs by
+     * @param userId The Keycloak user ID to filter programs by
      * @param isActive Optional filter for active status. If null, returns all programs for the user
      * @return Mono containing a list of programs for the user
      */
     fun getProgramsByUserId(
-        userId: Int,
+        userId: String,
         isActive: Boolean? = null
     ): Mono<List<Program>> {
         return programDAL.selectProgramsByUserId(userId, isActive)
@@ -78,7 +75,7 @@ class ProgramService(
     /**
      * Inserts a new program for a user.
      *
-     * @param userId The user ID to associate with the new program
+     * @param userId The Keycloak user ID to associate with the new program
      * @param name The name of the new program
      * @param currentWeekNumber The current week number for the new program
      * @param isActive Whether the new program should be active (default: true)
@@ -86,7 +83,7 @@ class ProgramService(
      * @throws NoResultsFoundException if the insert operation fails
      */
     fun createProgram(
-        userId: Int,
+        userId: String,
         name: String,
         currentWeekNumber: Int,
         isActive: Boolean = true

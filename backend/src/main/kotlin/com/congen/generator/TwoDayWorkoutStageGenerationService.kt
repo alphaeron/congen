@@ -87,7 +87,7 @@ class TwoDayWorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
@@ -107,13 +107,9 @@ class TwoDayWorkoutStageGenerationService(
                 exercises = exercises,
                 preferences = preferences,
                 userEquipment = userEquipment,
-                oneRepMaxes = oneRepMaxes,
                 weakMuscles = weakMuscles,
                 rotationHistory = rotationHistory,
                 workoutType = "maximal_effort",
-                movementType = primaryMovementType,
-                currentWeekNumber = currentWeekNumber,
-                userId = userId,
                 movementBalanceState = movementBalanceState
             )
 
@@ -180,7 +176,6 @@ class TwoDayWorkoutStageGenerationService(
 
                 // Create stages sequentially using the common pattern
                 createStagesSequentially(
-                    workout = workout,
                     stageCreators =
                         listOf(
                             // Warmup stage
@@ -206,7 +201,6 @@ class TwoDayWorkoutStageGenerationService(
                                     secondaryExercise = secondaryExercise,
                                     primarySetSchemes = primarySetSchemes,
                                     secondarySetSchemes = secondarySetSchemes,
-                                    userId = userId
                                 )
                             },
                             // Accessory stage if needed
@@ -242,7 +236,6 @@ class TwoDayWorkoutStageGenerationService(
                                         dayType = dayType,
                                         weakMuscles = weakMuscles,
                                         rotationHistory = rotationHistory,
-                                        currentWeekNumber = currentWeekNumber,
                                         userId = userId,
                                         movementBalanceState = movementBalanceState
                                     )

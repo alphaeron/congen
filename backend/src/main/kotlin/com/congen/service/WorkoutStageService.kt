@@ -47,7 +47,7 @@ class WorkoutStageService(
      * Retrieves all workout stages owned by a specific user.
      * @see WorkoutStageDAL.selectWorkoutStagesByUserId
      */
-    fun selectWorkoutStagesByUserId(userId: Int): Mono<List<WorkoutStage>> = workoutStageDAL.selectWorkoutStagesByUserId(userId)
+    fun selectWorkoutStagesByUserId(userId: String): Mono<List<WorkoutStage>> = workoutStageDAL.selectWorkoutStagesByUserId(userId)
 
     /**
      * Inserts a new workout stage into the database.
@@ -108,9 +108,7 @@ class WorkoutStageService(
             .flatMap { programmedWorkout ->
                 programDAL.selectProgramById(programmedWorkout.programId)
             }
-            .map { program ->
-                program.userId.toString() == userId
-            }
+            .map { program -> program.userId.toString() == userId }
             .onErrorReturn(false)
     }
 }

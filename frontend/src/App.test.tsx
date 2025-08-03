@@ -52,10 +52,6 @@ jest.mock('./pages/RootPage', () => ({
   RootPage: () => <div data-testid="root-page">ConGen Home Page</div>,
 }));
 
-jest.mock('./pages/LoginPage', () => ({
-  LoginPage: () => <div data-testid="login-page">Login Page</div>,
-}));
-
 jest.mock('./pages/ExerciseOverviewPage', () => ({
   ExerciseOverviewPage: () => (
     <div data-testid="exercise-overview-page">Exercise Overview Page</div>
@@ -147,7 +143,6 @@ describe('App', () => {
       ) {
         return;
       }
-      console.error(...args);
     });
 
     mockUseAuth.mockReturnValue({
@@ -196,7 +191,7 @@ describe('App', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { id: '1', email: 'test@example.com' },
+      user: { keycloak_id: 'test-user-id', email: 'test@example.com' },
       login: jest.fn(),
       logout: jest.fn(),
       register: jest.fn(),

@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.model.ProgrammedWorkout
 import org.springframework.stereotype.Service
@@ -18,7 +19,8 @@ import reactor.core.publisher.Mono
  */
 @Service
 class ProgrammedWorkoutService(
-    private val programmedWorkoutDAL: ProgrammedWorkoutDAL
+    private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
+    private val programDAL: ProgramDAL
 ) {
     /**
      * Retrieves a programmed workout by its unique identifier.
@@ -43,7 +45,7 @@ class ProgrammedWorkoutService(
      * Retrieves all programmed workouts owned by a specific user.
      * @see ProgrammedWorkoutDAL.selectProgrammedWorkoutsByUserId
      */
-    fun selectProgrammedWorkoutsByUserId(userId: Int): Mono<List<ProgrammedWorkout>> =
+    fun selectProgrammedWorkoutsByUserId(userId: String): Mono<List<ProgrammedWorkout>> =
         programmedWorkoutDAL.selectProgrammedWorkoutsByUserId(userId)
 
     /**
@@ -71,7 +73,7 @@ class ProgrammedWorkoutService(
      * Checks if a user has any existing programmed workouts.
      * @see ProgrammedWorkoutDAL.hasUserExistingWorkouts
      */
-    fun hasUserExistingWorkouts(userId: Int): Mono<Boolean> = programmedWorkoutDAL.hasUserExistingWorkouts(userId)
+    fun hasUserExistingWorkouts(userId: String): Mono<Boolean> = programmedWorkoutDAL.hasUserExistingWorkouts(userId)
 
     /**
      * Deletes a programmed workout record from the database.
@@ -95,12 +97,9 @@ class ProgrammedWorkoutService(
     ): Mono<Boolean> {
         return programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkoutId)
             .flatMap { programmedWorkout ->
-                // Need to get the Program to check userId
-                // This requires access to ProgramDAL, which is not injected here.
-                // For now, assume programId is the userId (if not, this will need to be updated to inject ProgramDAL)
-                // Replace this with actual lookup if needed.
-                Mono.just(programmedWorkout.programId.toString() == userId)
+                programDAL.selectProgramById(programmedWorkout.programId)
             }
+            .map { program -> program.userId == userId }
             .onErrorReturn(false)
     }
 }

@@ -13,7 +13,7 @@ class UserTest {
     fun `should create user with correct properties`() {
         val user =
             mockUser(
-                id = 1,
+                keycloakId = "test-keycloak-id",
                 name = "John Doe",
                 age = 30,
                 height = BigDecimal("180.5"),
@@ -22,7 +22,7 @@ class UserTest {
                 updatedAt = now
             )
 
-        assertEquals(1, user.id)
+        assertEquals("test-keycloak-id", user.keycloakId)
         assertEquals("John Doe", user.name)
         assertEquals(30, user.age)
         assertEquals(BigDecimal("180.5"), user.height)

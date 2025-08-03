@@ -2,6 +2,7 @@ package com.congen.components
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
@@ -125,7 +126,7 @@ class CorsRateLimitFilter(
                         count,
                         VIOLATION_WINDOW_MINUTES,
                     )
-                    exchange.response.statusCode = org.springframework.http.HttpStatus.TOO_MANY_REQUESTS
+                    exchange.response.statusCode = HttpStatus.TOO_MANY_REQUESTS
                     return Mono.empty()
                 }
             }

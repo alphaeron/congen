@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth as useOidcAuth } from 'react-oidc-context';
-import { createUserProfile, getCurrentUser } from '../api/user';
+
+import { getCurrentUser, createUserProfile } from '../api/user';
 import { User } from '../api/types';
-import { setTokenGetter } from '../api/endpoint';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { decodeToken } from '../common/authUtils';
+import { setTokenGetter } from '../api/endpoint';
 
 interface AuthContextType {
   user: User | null;
@@ -22,7 +22,7 @@ interface ProfileData {
   age: number;
   height: number;
   weight: number;
-  unit?: string;
+  unit: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,15 +35,10 @@ export const useAuth = () => {
   return context;
 };
 
-interface AuthProviderProps {
-  children: React.ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const oidcAuth = useOidcAuth();
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   // Register token getter for API requests
   useEffect(() => {
@@ -53,46 +48,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Sync OIDC user with our custom user profile
   useEffect(() => {
     const syncUserProfile = async () => {
-      if (oidcAuth.user && oidcAuth.isAuthenticated) {
-        try {
-          // Get user profile from our backend
-          const userProfile = await getCurrentUser();
-
-          // Extract groups and roles from JWT token
-          const tokenPayload = decodeToken(oidcAuth.user.access_token) as {
-            groups?: string[];
-            realm_access?: { roles?: string[] };
-          };
-          const groups = tokenPayload?.groups || [];
-          const roles = tokenPayload?.realm_access?.roles || [];
-
-          setUser({
-            ...userProfile,
-            groups,
-            roles,
-          });
-        } catch {
-          // If we can't get the profile, the user might not have a profile yet
-          // Check if we're already on the profile creation page to avoid redirect loops
-          const currentPath = window.location.pathname;
-          if (currentPath !== '/profile/create') {
-            // Redirect to profile creation page
-            navigate('/profile/create');
-          }
-          setUser(null);
-        }
-      } else {
+      // If OIDC says we're not authenticated, clear user state immediately
+      if (!oidcAuth.user || !oidcAuth.isAuthenticated) {
         setUser(null);
+        return;
+      }
+
+      try {
+        // Get user profile from our backend
+        const userProfile = await getCurrentUser();
+
+        // Extract groups and roles from JWT token
+        const tokenPayload = decodeToken(oidcAuth.user.access_token) as {
+          groups?: string[];
+          realm_access?: { roles?: string[] };
+        };
+        const groups = tokenPayload?.groups || [];
+        const roles = tokenPayload?.realm_access?.roles || [];
+
+        setUser({
+          ...userProfile,
+          groups,
+          roles,
+        });
+        setError(null);
+      } catch (profileError) {
+        // Check if the error is due to authentication (401/403) vs missing profile
+        const isAuthError = profileError && 
+          typeof profileError === 'object' && 
+          'response' in profileError && 
+          profileError.response && 
+          typeof profileError.response === 'object' && 
+          'status' in profileError.response && 
+          (profileError.response.status === 401 || profileError.response.status === 403);
+        
+        if (isAuthError) {
+          // Authentication error - clear user state
+          setUser(null);
+          setError('Authentication failed. Please log in again.');
+        } else {
+          // Profile doesn't exist - set error for component to handle
+          setUser(null);
+          setError('Profile not found. Please create your profile.');
+        }
       }
     };
 
-    syncUserProfile();
-  }, [oidcAuth.user, oidcAuth.isAuthenticated, navigate]);
+    // Only sync if OIDC is not loading
+    if (!oidcAuth.isLoading) {
+      syncUserProfile();
+    }
+  }, [oidcAuth.user, oidcAuth.isAuthenticated, oidcAuth.isLoading]);
 
   // Handle OIDC errors
   useEffect(() => {
     if (oidcAuth.error) {
       setError(oidcAuth.error.message);
+      setUser(null);
     }
   }, [oidcAuth.error]);
 
@@ -111,6 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await oidcAuth.removeUser();
       setUser(null);
+      setError(null);
     } catch {
       // Logout error handled silently
     }
@@ -127,12 +140,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         userData.unit
       );
 
-      // After successful profile creation, redirect to profile page
-      navigate('/profile', {
-        state: {
-          message: 'Profile created successfully!',
-        },
-        replace: true,
+      // After successful profile creation, sync the user profile
+      const userProfile = await getCurrentUser();
+      setUser({
+        ...userProfile,
+        groups: user?.groups || [],
+        roles: user?.roles || [],
       });
     } catch (err: unknown) {
       const errorMessage =
@@ -157,7 +170,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: oidcAuth.isAuthenticated,
+    isAuthenticated: oidcAuth.isAuthenticated && !!user,
     isLoading: oidcAuth.isLoading,
     error,
     login,

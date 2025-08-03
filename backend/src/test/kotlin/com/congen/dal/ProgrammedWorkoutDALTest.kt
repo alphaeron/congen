@@ -178,7 +178,7 @@ class ProgrammedWorkoutDALTest {
 
     @Test
     fun `hasUserExistingWorkouts should return true when user has workouts`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val mockResult = mapOf("value" to true)
 
         whenever(
@@ -213,7 +213,7 @@ class ProgrammedWorkoutDALTest {
 
     @Test
     fun `hasUserExistingWorkouts should return false when user has no workouts`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val mockResult = mapOf("value" to false)
 
         whenever(
@@ -248,7 +248,7 @@ class ProgrammedWorkoutDALTest {
 
     @Test
     fun `selectProgrammedWorkoutsByUserId should return list of user owned workouts`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val userWorkouts =
             listOf(
                 mockProgrammedWorkout(id = 1L, programId = 1L, dayNumber = 1, name = "User Workout 1"),
@@ -285,7 +285,7 @@ class ProgrammedWorkoutDALTest {
 
     @Test
     fun `selectProgrammedWorkoutsByUserId should return empty list when user has no workouts`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val emptyList = emptyList<ProgrammedWorkout>()
 
         whenever(
@@ -318,7 +318,7 @@ class ProgrammedWorkoutDALTest {
 
     @Test
     fun `selectProgrammedWorkoutsByUserId should propagate database errors`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val databaseError = RuntimeException("Database connection failed")
 
         whenever(

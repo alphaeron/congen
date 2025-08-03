@@ -5,14 +5,21 @@ import org.junit.jupiter.api.Test
 class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should create programmed exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1", token = token)
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Workout 1",
+                token = token
+            )
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1, token = token)
         // Exercises and equipment already exist in migrations
         val programmedExerciseId = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, token = token)
-        
+
         // Verify the created programmed exercise
         webTestClient.get()
             .uri("/api/v1/programmed_exercise/$programmedExerciseId")
@@ -27,10 +34,17 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get programmed exercise by id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1", token = token)
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Workout 1",
+                token = token
+            )
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1, token = token)
         // Exercises and equipment already exist in migrations
         val programmedExercise = IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, token = token)
@@ -47,7 +61,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when programmed exercise not found`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.get()
             .uri("/api/v1/programmed_exercise/999")
             .header("Authorization", "Bearer $token")
@@ -57,10 +71,17 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all programmed exercises`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1", token = token)
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Workout 1",
+                token = token
+            )
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1, token = token)
         // Exercises and equipment already exist in migrations
         IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, token = token)
@@ -77,10 +98,17 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get programmed exercises by stage`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1", token = token)
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Workout 1",
+                token = token
+            )
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1, token = token)
         // Exercises and equipment already exist in migrations
 
@@ -102,10 +130,17 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update programmed exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1", token = token)
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Workout 1",
+                token = token
+            )
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1, token = token)
         // Exercises and equipment already exist in migrations
 
@@ -131,7 +166,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when updating non-existent programmed exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.patch()
             .uri("/api/v1/programmed_exercise/999?workout_stage_id=1&exercise_name=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=1")
             .header("Authorization", "Bearer $token")
@@ -141,10 +176,17 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete programmed exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Workout 1", token = token)
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Workout 1",
+                token = token
+            )
         val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, position = 1, token = token)
         // Exercises and equipment already exist in migrations
 
@@ -165,7 +207,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 when deleting non-existent programmed exercise`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.delete()
             .uri("/api/v1/programmed_exercise/999")
             .header("Authorization", "Bearer $token")

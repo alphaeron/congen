@@ -145,7 +145,7 @@ class WorkoutStageServiceTest {
         val workoutStageId = 1L
         val programmedWorkoutId = 2L
         val programId = 3L
-        val ownerUserId = 42
+        val ownerUserId = "42"
         val userId = "42"
         val workoutStage = mockWorkoutStage(id = workoutStageId, programmedWorkoutId = programmedWorkoutId)
         val programmedWorkout = mockProgrammedWorkout(id = programmedWorkoutId, programId = programId)
@@ -159,6 +159,9 @@ class WorkoutStageServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(workoutStageDAL).selectWorkoutStageById(workoutStageId)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(programId)
     }
 
     @Test
@@ -166,7 +169,7 @@ class WorkoutStageServiceTest {
         val workoutStageId = 1L
         val programmedWorkoutId = 2L
         val programId = 3L
-        val ownerUserId = 99
+        val ownerUserId = "99"
         val userId = "42"
         val workoutStage = mockWorkoutStage(id = workoutStageId, programmedWorkoutId = programmedWorkoutId)
         val programmedWorkout = mockProgrammedWorkout(id = programmedWorkoutId, programId = programId)
@@ -180,6 +183,9 @@ class WorkoutStageServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(workoutStageDAL).selectWorkoutStageById(workoutStageId)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(programId)
     }
 
     @Test
@@ -192,6 +198,7 @@ class WorkoutStageServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(workoutStageDAL).selectWorkoutStageById(workoutStageId)
     }
 
     @Test
@@ -209,6 +216,8 @@ class WorkoutStageServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(workoutStageDAL).selectWorkoutStageById(workoutStageId)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
     }
 
     @Test
@@ -227,6 +236,9 @@ class WorkoutStageServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(workoutStageDAL).selectWorkoutStageById(workoutStageId)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(programId)
     }
 
     @Test
@@ -234,7 +246,7 @@ class WorkoutStageServiceTest {
         val workoutStageId = 1L
         val programmedWorkoutId = 2L
         val programId = 3L
-        val ownerUserId = 42
+        val ownerUserId = "42"
         val userId = "42"
         val workoutStage = mockWorkoutStage(id = workoutStageId, programmedWorkoutId = programmedWorkoutId)
         val programmedWorkout = mockProgrammedWorkout(id = programmedWorkoutId, programId = programId)
@@ -248,11 +260,14 @@ class WorkoutStageServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(workoutStageDAL).selectWorkoutStageById(workoutStageId)
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(programId)
     }
 
     @Test
     fun `selectWorkoutStagesByUserId returns list of user owned workout stages`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val userWorkoutStages =
             listOf(
                 mockWorkoutStage(id = 1L, programmedWorkoutId = 1L, position = 1, name = "User Stage 1"),
@@ -268,7 +283,7 @@ class WorkoutStageServiceTest {
 
     @Test
     fun `selectWorkoutStagesByUserId returns empty list when user has no workout stages`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val emptyList = emptyList<WorkoutStage>()
         whenever(workoutStageDAL.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(emptyList))
 
@@ -280,7 +295,7 @@ class WorkoutStageServiceTest {
 
     @Test
     fun `selectWorkoutStagesByUserId propagates database errors`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val databaseError = RuntimeException("Database connection failed")
         whenever(workoutStageDAL.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.error(databaseError))
 

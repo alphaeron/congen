@@ -5,21 +5,21 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpMethod
 
 class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
-    private var userId: Int = 0
+    private var userId: String = ""
     private val muscleNames = listOf("hamstrings", "glutes", "lats")
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
         val unique = System.nanoTime()
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create a single test user to avoid keycloak_user_id conflicts
         userId = IntegrationTestHelpers.createTestUser(webTestClient, "WeakMuscle User $unique", token = token)
     }
 
     @Test
     fun `should add and retrieve user weak muscle`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Add weak muscle
         webTestClient.post()
             .uri { uriBuilder ->
@@ -48,7 +48,7 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user weak muscles by user id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Add weak muscle
         webTestClient.post()
             .uri { uriBuilder ->
@@ -76,7 +76,7 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete user weak muscle`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Add weak muscle
         webTestClient.post()
             .uri { uriBuilder ->
@@ -118,7 +118,7 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle multiple weak muscles for same user`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Add multiple weak muscles for the same user
         webTestClient.post()
             .uri { uriBuilder ->

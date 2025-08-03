@@ -15,7 +15,7 @@ class ExerciseRotationHistoryServiceTest {
     private lateinit var exerciseRotationHistoryService: ExerciseRotationHistoryService
 
     private val history = mockExerciseRotationHistory()
-    private val historyList = listOf(history, mockExerciseRotationHistory(id = 2L, userId = 2))
+    private val historyList = listOf(history, mockExerciseRotationHistory(id = 2L, userId = "different-user-id"))
 
     @BeforeEach
     fun setUp() {
@@ -65,22 +65,26 @@ class ExerciseRotationHistoryServiceTest {
 
     @Test
     fun `insert returns inserted record`() {
-        whenever(exerciseRotationHistoryDAL.insert(1, "Bench Press", false)).thenReturn(Mono.just(history))
-        val result = exerciseRotationHistoryService.insert(1, "Bench Press", false)
+        whenever(
+            exerciseRotationHistoryDAL.insert("b226d772-c063-4974-ae08-ab64134abbcf", "Bench Press", false)
+        ).thenReturn(Mono.just(history))
+        val result = exerciseRotationHistoryService.insert("b226d772-c063-4974-ae08-ab64134abbcf", "Bench Press", false)
         StepVerifier.create(result)
             .expectNext(history)
             .verifyComplete()
-        verify(exerciseRotationHistoryDAL).insert(1, "Bench Press", false)
+        verify(exerciseRotationHistoryDAL).insert("b226d772-c063-4974-ae08-ab64134abbcf", "Bench Press", false)
     }
 
     @Test
     fun `update returns updated record`() {
-        whenever(exerciseRotationHistoryDAL.update(1L, 1, "Bench Press", false)).thenReturn(Mono.just(history))
-        val result = exerciseRotationHistoryService.update(1L, 1, "Bench Press", false)
+        whenever(
+            exerciseRotationHistoryDAL.update(1L, "b226d772-c063-4974-ae08-ab64134abbcf", "Bench Press", false)
+        ).thenReturn(Mono.just(history))
+        val result = exerciseRotationHistoryService.update(1L, "b226d772-c063-4974-ae08-ab64134abbcf", "Bench Press", false)
         StepVerifier.create(result)
             .expectNext(history)
             .verifyComplete()
-        verify(exerciseRotationHistoryDAL).update(1L, 1, "Bench Press", false)
+        verify(exerciseRotationHistoryDAL).update(1L, "b226d772-c063-4974-ae08-ab64134abbcf", "Bench Press", false)
     }
 
     @Test
@@ -95,19 +99,19 @@ class ExerciseRotationHistoryServiceTest {
 
     @Test
     fun `deleteByUserId returns number of deleted records`() {
-        whenever(exerciseRotationHistoryDAL.deleteByUserId(1L)).thenReturn(Mono.just(2))
-        val result = exerciseRotationHistoryService.deleteByUserId(1L)
+        whenever(exerciseRotationHistoryDAL.deleteByUserId("b226d772-c063-4974-ae08-ab64134abbcf")).thenReturn(Mono.just(2))
+        val result = exerciseRotationHistoryService.deleteByUserId("b226d772-c063-4974-ae08-ab64134abbcf")
         StepVerifier.create(result)
             .expectNext(2)
             .verifyComplete()
-        verify(exerciseRotationHistoryDAL).deleteByUserId(1L)
+        verify(exerciseRotationHistoryDAL).deleteByUserId("b226d772-c063-4974-ae08-ab64134abbcf")
     }
 
     @Test
     fun `isOwner returns true when user is owner`() {
         val historyId = 1L
-        val ownerUserId = 42
-        val userId = "42"
+        val ownerUserId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val history = mockExerciseRotationHistory(id = historyId, userId = ownerUserId)
         whenever(exerciseRotationHistoryDAL.selectById(historyId)).thenReturn(Mono.just(history))
 
@@ -115,13 +119,14 @@ class ExerciseRotationHistoryServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(exerciseRotationHistoryDAL).selectById(historyId)
     }
 
     @Test
     fun `isOwner returns false when user is not owner`() {
         val historyId = 1L
-        val ownerUserId = 99
-        val userId = "42"
+        val ownerUserId = "different-user-id"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val history = mockExerciseRotationHistory(id = historyId, userId = ownerUserId)
         whenever(exerciseRotationHistoryDAL.selectById(historyId)).thenReturn(Mono.just(history))
 
@@ -129,25 +134,27 @@ class ExerciseRotationHistoryServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(exerciseRotationHistoryDAL).selectById(historyId)
     }
 
     @Test
     fun `isOwner returns false when record not found`() {
         val historyId = 1L
-        val userId = "42"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         whenever(exerciseRotationHistoryDAL.selectById(historyId)).thenReturn(Mono.error(RuntimeException("Not found")))
 
         val result = exerciseRotationHistoryService.isOwner(historyId, userId)
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(exerciseRotationHistoryDAL).selectById(historyId)
     }
 
     @Test
     fun `isOwner handles userId as string vs int`() {
         val historyId = 1L
-        val ownerUserId = 42
-        val userId = "42"
+        val ownerUserId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val history = mockExerciseRotationHistory(id = historyId, userId = ownerUserId)
         whenever(exerciseRotationHistoryDAL.selectById(historyId)).thenReturn(Mono.just(history))
 
@@ -155,11 +162,12 @@ class ExerciseRotationHistoryServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(exerciseRotationHistoryDAL).selectById(historyId)
     }
 
     @Test
     fun `selectByUserId returns records for user only`() {
-        val userId = 42
+        val userId = "42"
         val expected = listOf(history)
         whenever(exerciseRotationHistoryDAL.selectByUserId(userId, null)).thenReturn(Mono.just(expected))
         val result = exerciseRotationHistoryService.selectByUserId(userId)
@@ -169,7 +177,7 @@ class ExerciseRotationHistoryServiceTest {
 
     @Test
     fun `selectByUserId returns records for user and isAccessory true`() {
-        val userId = 42
+        val userId = "42"
         val isAccessory = true
         val expected = listOf(history)
         whenever(exerciseRotationHistoryDAL.selectByUserId(userId, isAccessory)).thenReturn(Mono.just(expected))
@@ -180,7 +188,7 @@ class ExerciseRotationHistoryServiceTest {
 
     @Test
     fun `selectByUserId returns records for user and isAccessory false`() {
-        val userId = 42
+        val userId = "42"
         val isAccessory = false
         val expected = listOf(history)
         whenever(exerciseRotationHistoryDAL.selectByUserId(userId, isAccessory)).thenReturn(Mono.just(expected))

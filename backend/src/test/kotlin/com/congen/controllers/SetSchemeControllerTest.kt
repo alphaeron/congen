@@ -1,6 +1,7 @@
 package com.congen.controllers
 
 import com.congen.mockSetScheme
+import com.congen.model.SetScheme
 import com.congen.service.ProgrammedExerciseService
 import com.congen.service.SetSchemeService
 import com.congen.util.KeycloakUtil
@@ -56,6 +57,10 @@ class SetSchemeControllerTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         setSchemeController = SetSchemeController(setSchemeService, keycloakUtil, programmedExerciseService)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test
@@ -122,7 +127,7 @@ class SetSchemeControllerTest {
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(setSchemeService.selectSetSchemesByUserId(userId.toInt())).thenReturn(Mono.just(userSetSchemes))
+        whenever(setSchemeService.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(userSetSchemes))
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -131,7 +136,7 @@ class SetSchemeControllerTest {
                 assert(resp.body == userSetSchemes)
             }
             .verifyComplete()
-        verify(setSchemeService).selectSetSchemesByUserId(userId.toInt())
+        verify(setSchemeService).selectSetSchemesByUserId(userId)
     }
 
     @Test
@@ -179,13 +184,13 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should return empty list when regular user has no owned set schemes`() {
-        val emptyList = emptyList<com.congen.model.SetScheme>()
+        val emptyList = emptyList<SetScheme>()
         val userId = "123"
         val roles = setOf("user")
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(setSchemeService.selectSetSchemesByUserId(userId.toInt())).thenReturn(Mono.just(emptyList))
+        whenever(setSchemeService.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(emptyList))
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -194,7 +199,7 @@ class SetSchemeControllerTest {
                 assert(resp.body == emptyList)
             }
             .verifyComplete()
-        verify(setSchemeService).selectSetSchemesByUserId(userId.toInt())
+        verify(setSchemeService).selectSetSchemesByUserId(userId)
     }
 
     @Test
@@ -205,13 +210,13 @@ class SetSchemeControllerTest {
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(setSchemeService.selectSetSchemesByUserId(userId.toInt())).thenReturn(Mono.error(databaseError))
+        whenever(setSchemeService.selectSetSchemesByUserId(userId)).thenReturn(Mono.error(databaseError))
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
             .expectError(databaseError::class.java)
             .verify()
-        verify(setSchemeService).selectSetSchemesByUserId(userId.toInt())
+        verify(setSchemeService).selectSetSchemesByUserId(userId)
     }
 
     @Test
@@ -228,6 +233,7 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemeById(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
         val result = setSchemeController.get(SCHEME_ID_1)
         StepVerifier.create(result)
@@ -237,6 +243,7 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should return empty when set scheme not found`() {
+        whenever(setSchemeService.isOwner(NON_EXISTENT_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemeById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
         val result = setSchemeController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
@@ -258,6 +265,7 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
             setSchemeService.createSetScheme(
                 PROGRAMMED_EXERCISE_ID,
@@ -312,6 +320,8 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
             setSchemeService.updateSetSchemeWithUnit(
                 SCHEME_ID_1,
@@ -368,6 +378,7 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.deleteSetScheme(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
         val result = setSchemeController.delete(SCHEME_ID_1)
         StepVerifier.create(result)
@@ -401,6 +412,7 @@ class SetSchemeControllerTest {
                     updatedAt = now
                 )
             )
+        whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)).thenReturn(Mono.just(setSchemes))
         val result = setSchemeController.getByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)
         StepVerifier.create(result)
@@ -426,6 +438,7 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
             setSchemeService.createSetScheme(
                 PROGRAMMED_EXERCISE_ID,
@@ -481,6 +494,8 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
             setSchemeService.updateSetSchemeWithUnit(
                 SCHEME_ID_1,

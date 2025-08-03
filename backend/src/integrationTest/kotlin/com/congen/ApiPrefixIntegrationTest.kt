@@ -33,7 +33,7 @@ class ApiPrefixIntegrationTest : BaseIntegrationTest() {
      */
     @Test
     fun `user endpoint should be accessible with API prefix`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.get()
             .uri("/api/v1/user/")
             .header("Authorization", "Bearer $token")

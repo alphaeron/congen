@@ -92,7 +92,7 @@ class ThreeDayWorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         return when {
             conjugateTemplates.isCombinedMEDay(dayType) -> {
@@ -145,7 +145,7 @@ class ThreeDayWorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
@@ -159,13 +159,9 @@ class ThreeDayWorkoutStageGenerationService(
                 exercises = exercises,
                 preferences = preferences,
                 userEquipment = userEquipment,
-                oneRepMaxes = oneRepMaxes,
                 weakMuscles = weakMuscles,
                 rotationHistory = rotationHistory,
                 workoutType = "maximal_effort",
-                movementType = primaryMovementType,
-                currentWeekNumber = currentWeekNumber,
-                userId = userId,
                 movementBalanceState = movementBalanceState
             )
 
@@ -232,7 +228,6 @@ class ThreeDayWorkoutStageGenerationService(
 
                 // Create stages sequentially using the common pattern
                 createStagesSequentially(
-                    workout = workout,
                     stageCreators =
                         listOf(
                             // Warmup stage
@@ -258,7 +253,6 @@ class ThreeDayWorkoutStageGenerationService(
                                     secondaryExercise = secondaryExercise,
                                     primarySetSchemes = primarySetSchemes,
                                     secondarySetSchemes = secondarySetSchemes,
-                                    userId = userId
                                 )
                             },
                             // Accessory stage if needed
@@ -294,7 +288,6 @@ class ThreeDayWorkoutStageGenerationService(
                                         dayType = dayType,
                                         weakMuscles = weakMuscles,
                                         rotationHistory = rotationHistory,
-                                        currentWeekNumber = currentWeekNumber,
                                         userId = userId,
                                         movementBalanceState = movementBalanceState
                                     )
@@ -323,7 +316,7 @@ class ThreeDayWorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
@@ -334,13 +327,9 @@ class ThreeDayWorkoutStageGenerationService(
                 exercises = exercises,
                 preferences = preferences,
                 userEquipment = userEquipment,
-                oneRepMaxes = oneRepMaxes,
                 weakMuscles = weakMuscles,
                 rotationHistory = rotationHistory,
                 workoutType = "dynamic_effort",
-                movementType = "DE_Upper",
-                currentWeekNumber = currentWeekNumber,
-                userId = userId,
                 movementBalanceState = movementBalanceState
             )
 
@@ -350,13 +339,9 @@ class ThreeDayWorkoutStageGenerationService(
                 exercises = exercises,
                 preferences = preferences,
                 userEquipment = userEquipment,
-                oneRepMaxes = oneRepMaxes,
                 weakMuscles = weakMuscles,
                 rotationHistory = rotationHistory,
                 workoutType = "dynamic_effort",
-                movementType = "DE_Lower",
-                currentWeekNumber = currentWeekNumber,
-                userId = userId,
                 movementBalanceState = movementBalanceState
             )
 
@@ -412,7 +397,6 @@ class ThreeDayWorkoutStageGenerationService(
 
                 // Create stages sequentially using the common pattern
                 createStagesSequentially(
-                    workout = workout,
                     stageCreators =
                         listOf(
                             // Warmup stage
@@ -438,7 +422,6 @@ class ThreeDayWorkoutStageGenerationService(
                                     secondaryExercise = lowerDEExercise,
                                     primarySetSchemes = upperDESetSchemes,
                                     secondarySetSchemes = lowerDESetSchemes,
-                                    userId = userId
                                 )
                             },
                             // Accessory stage if needed
@@ -473,7 +456,6 @@ class ThreeDayWorkoutStageGenerationService(
                                     oneRepMaxes = oneRepMaxes,
                                     weakMuscles = weakMuscles,
                                     rotationHistory = rotationHistory,
-                                    currentWeekNumber = currentWeekNumber,
                                     userId = userId,
                                     movementBalanceState = movementBalanceState
                                 )

@@ -32,7 +32,7 @@ class ExerciseRotationHistoryControllerTest {
     companion object {
         private const val ID_1 = 1L
         private const val ID_2 = 2L
-        private const val USER_ID = 1
+        private const val USER_ID = "1"
         private const val BENCH_PRESS = "Bench Press"
         private const val SQUAT = "Back Squat"
         private const val BARBELL_BENCH_PRESS = "Bench Press"
@@ -45,6 +45,10 @@ class ExerciseRotationHistoryControllerTest {
         exerciseRotationHistoryService = mock()
         keycloakUtil = mock()
         exerciseRotationHistoryController = ExerciseRotationHistoryController(exerciseRotationHistoryService, keycloakUtil)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test
@@ -114,6 +118,7 @@ class ExerciseRotationHistoryControllerTest {
                 isAccessory = false,
                 createdAt = now
             )
+        whenever(exerciseRotationHistoryService.isOwner(ID_1, USER_ID)).thenReturn(Mono.just(true))
         whenever(exerciseRotationHistoryService.insert(USER_ID, BENCH_PRESS, false)).thenReturn(Mono.just(exerciseRotationHistory))
         val result = exerciseRotationHistoryController.save(USER_ID, BENCH_PRESS, false)
         StepVerifier.create(result)
@@ -128,14 +133,13 @@ class ExerciseRotationHistoryControllerTest {
             ExerciseRotationHistory(
                 id = ID_1,
                 userId = USER_ID,
-                exerciseName = BARBELL_BENCH_PRESS,
+                exerciseName = BENCH_PRESS,
                 isAccessory = true,
                 createdAt = now
             )
-        whenever(
-            exerciseRotationHistoryService.update(ID_1, USER_ID, BARBELL_BENCH_PRESS, true)
-        ).thenReturn(Mono.just(exerciseRotationHistory))
-        val result = exerciseRotationHistoryController.update(ID_1, USER_ID, BARBELL_BENCH_PRESS, true)
+        whenever(exerciseRotationHistoryService.isOwner(ID_1, USER_ID)).thenReturn(Mono.just(true))
+        whenever(exerciseRotationHistoryService.update(ID_1, USER_ID, BENCH_PRESS, true)).thenReturn(Mono.just(exerciseRotationHistory))
+        val result = exerciseRotationHistoryController.update(ID_1, USER_ID, BENCH_PRESS, true)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exerciseRotationHistory))
             .verifyComplete()
@@ -143,7 +147,9 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should return empty when updating non-existent exercise rotation history`() {
-        whenever(exerciseRotationHistoryService.update(NON_EXISTENT_ID, USER_ID, BENCH_PRESS, false)).thenReturn(Mono.empty())
+        whenever(exerciseRotationHistoryService.isOwner(NON_EXISTENT_ID, USER_ID)).thenReturn(Mono.just(true))
+        whenever(exerciseRotationHistoryService.update(NON_EXISTENT_ID, USER_ID, BENCH_PRESS, false))
+            .thenReturn(Mono.empty())
         val result = exerciseRotationHistoryController.update(NON_EXISTENT_ID, USER_ID, BENCH_PRESS, false)
         StepVerifier.create(result)
             .expectComplete()
@@ -161,6 +167,7 @@ class ExerciseRotationHistoryControllerTest {
                 isAccessory = false,
                 createdAt = now
             )
+        whenever(exerciseRotationHistoryService.isOwner(ID_1, USER_ID)).thenReturn(Mono.just(true))
         whenever(exerciseRotationHistoryService.deleteById(ID_1)).thenReturn(Mono.just(exerciseRotationHistory))
         val result = exerciseRotationHistoryController.delete(ID_1)
         StepVerifier.create(result)
@@ -170,6 +177,7 @@ class ExerciseRotationHistoryControllerTest {
 
     @Test
     fun `should return empty when deleting non-existent exercise rotation history`() {
+        whenever(exerciseRotationHistoryService.isOwner(NON_EXISTENT_ID, USER_ID)).thenReturn(Mono.just(true))
         whenever(exerciseRotationHistoryService.deleteById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
         val result = exerciseRotationHistoryController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result)
@@ -225,8 +233,8 @@ class ExerciseRotationHistoryControllerTest {
         val roles = setOf("admin")
         val histories =
             listOf(
-                ExerciseRotationHistory(1L, 1, "Bench Press", isAccessory, Instant.now()),
-                ExerciseRotationHistory(2L, 2, "Squat", isAccessory, Instant.now())
+                ExerciseRotationHistory(1L, "1", "Bench Press", isAccessory, Instant.now()),
+                ExerciseRotationHistory(2L, "2", "Squat", isAccessory, Instant.now())
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
@@ -248,8 +256,8 @@ class ExerciseRotationHistoryControllerTest {
         val roles = setOf("service")
         val histories =
             listOf(
-                ExerciseRotationHistory(1L, 1, "Bench Press", isAccessory, Instant.now()),
-                ExerciseRotationHistory(2L, 2, "Squat", isAccessory, Instant.now())
+                ExerciseRotationHistory(1L, "1", "Bench Press", isAccessory, Instant.now()),
+                ExerciseRotationHistory(2L, "2", "Squat", isAccessory, Instant.now())
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
@@ -271,17 +279,17 @@ class ExerciseRotationHistoryControllerTest {
         val roles = setOf("user")
         val histories =
             listOf(
-                ExerciseRotationHistory(1L, 1, "Bench Press", isAccessory, Instant.now())
+                ExerciseRotationHistory(1L, "1", "Bench Press", isAccessory, Instant.now())
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(exerciseRotationHistoryService.selectByUserId(userId.toInt(), isAccessory)).thenReturn(Mono.just(histories))
+        whenever(exerciseRotationHistoryService.selectByUserId(userId, isAccessory)).thenReturn(Mono.just(histories))
 
         val result = exerciseRotationHistoryController.getByIsAccessory(isAccessory)
         StepVerifier.create(result)
             .assertNext { response ->
                 assert(response.body!!.size == 1)
-                assert(response.body!![0].userId.toString() == userId)
+                assert(response.body!![0].userId == userId)
             }
             .verifyComplete()
     }
@@ -294,7 +302,7 @@ class ExerciseRotationHistoryControllerTest {
         val histories = emptyList<ExerciseRotationHistory>()
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(exerciseRotationHistoryService.selectByUserId(userId.toInt(), isAccessory)).thenReturn(Mono.just(histories))
+        whenever(exerciseRotationHistoryService.selectByUserId(userId, isAccessory)).thenReturn(Mono.just(histories))
 
         val result = exerciseRotationHistoryController.getByIsAccessory(isAccessory)
         StepVerifier.create(result)
@@ -310,8 +318,8 @@ class ExerciseRotationHistoryControllerTest {
         val roles = setOf("admin")
         val histories =
             listOf(
-                ExerciseRotationHistory(1L, 1, "Bench Press", false, Instant.now()),
-                ExerciseRotationHistory(2L, 2, "Squat", false, Instant.now())
+                ExerciseRotationHistory(1L, "1", "Bench Press", false, Instant.now()),
+                ExerciseRotationHistory(2L, "2", "Squat", false, Instant.now())
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
@@ -332,8 +340,8 @@ class ExerciseRotationHistoryControllerTest {
         val roles = setOf("service")
         val histories =
             listOf(
-                ExerciseRotationHistory(1L, 1, "Bench Press", false, Instant.now()),
-                ExerciseRotationHistory(2L, 2, "Squat", false, Instant.now())
+                ExerciseRotationHistory(1L, "1", "Bench Press", false, Instant.now()),
+                ExerciseRotationHistory(2L, "2", "Squat", false, Instant.now())
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
@@ -354,17 +362,17 @@ class ExerciseRotationHistoryControllerTest {
         val roles = setOf("user")
         val histories =
             listOf(
-                ExerciseRotationHistory(1L, 1, "Bench Press", false, Instant.now())
+                ExerciseRotationHistory(1L, "1", "Bench Press", false, Instant.now())
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(exerciseRotationHistoryService.selectByUserId(userId.toInt())).thenReturn(Mono.just(histories))
+        whenever(exerciseRotationHistoryService.selectByUserId(userId)).thenReturn(Mono.just(histories))
 
         val result = exerciseRotationHistoryController.getAll()
         StepVerifier.create(result)
             .assertNext { response ->
                 assert(response.body!!.size == 1)
-                assert(response.body!![0].userId.toString() == userId)
+                assert(response.body!![0].userId == userId)
             }
             .verifyComplete()
     }
@@ -376,7 +384,7 @@ class ExerciseRotationHistoryControllerTest {
         val histories = emptyList<ExerciseRotationHistory>()
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(exerciseRotationHistoryService.selectByUserId(userId.toInt())).thenReturn(Mono.just(histories))
+        whenever(exerciseRotationHistoryService.selectByUserId(userId)).thenReturn(Mono.just(histories))
 
         val result = exerciseRotationHistoryController.getAll()
         StepVerifier.create(result)

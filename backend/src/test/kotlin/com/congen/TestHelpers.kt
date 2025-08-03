@@ -3,6 +3,8 @@ package com.congen
 import com.congen.generator.DayTemplate
 import com.congen.generator.PrilepinGuidelines
 import com.congen.generator.SetSchemeParams
+import com.congen.generator.WeightSelectionService
+import com.congen.model.Band
 import com.congen.model.Equipment
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
@@ -23,33 +25,36 @@ import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
+import com.congen.model.UserWeightUnitPreference
+import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
+import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
 
 fun sampleInstant(): Instant = Instant.parse("2024-01-01T00:00:00Z")
 
 fun mockUser(
-    id: Int = 1,
+    keycloakId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     name: String = "John Doe",
     age: Int = 30,
     height: BigDecimal = BigDecimal("180.5"),
     weight: BigDecimal = BigDecimal("75.0"),
     createdAt: Instant = sampleInstant(),
-    updatedAt: Instant = sampleInstant(),
-    keycloakUserId: String? = null
+    updatedAt: Instant = sampleInstant()
 ): User =
     User(
-        id = id,
+        keycloakId = keycloakId,
         name = name,
         age = age,
         height = height,
         weight = weight,
         createdAt = createdAt,
-        updatedAt = updatedAt,
-        keycloakUserId = keycloakUserId
+        updatedAt = updatedAt
     )
 
 fun mockSetScheme(
@@ -69,7 +74,7 @@ fun mockSetScheme(
     restSeconds: Int? = null,
     createdAt: Instant = sampleInstant(),
     updatedAt: Instant = sampleInstant(),
-    band: com.congen.model.Band? = null
+    band: Band? = null
 ): SetScheme =
     SetScheme(
         id = id,
@@ -111,7 +116,7 @@ fun mockProgrammedExercise(
     )
 
 fun mockUserOneRepMax(
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     exerciseName: String = "Bench Press",
     oneRepMax: BigDecimal = BigDecimal("100.0"),
     updatedAt: Instant = sampleInstant()
@@ -124,7 +129,7 @@ fun mockUserOneRepMax(
     )
 
 fun mockUserEquipment(
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     equipmentName: String = "Barbell",
     createdAt: Instant = sampleInstant()
 ): UserEquipment =
@@ -135,7 +140,7 @@ fun mockUserEquipment(
     )
 
 fun mockUserExercisePreference(
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     exerciseName: String = "Bench Press",
     shouldAvoid: Boolean = false,
     createdAt: Instant = sampleInstant()
@@ -148,7 +153,7 @@ fun mockUserExercisePreference(
     )
 
 fun mockUserProgramPreferences(
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     programDaysPerWeek: Int = 3,
     sessionTimeLengthInMinutes: Int = 60,
     createdAt: Instant = sampleInstant(),
@@ -181,7 +186,7 @@ fun mockExercise(
 
 fun mockProgram(
     id: Long = 1L,
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     name: String = "Test Program",
     currentWeekNumber: Int = 1,
     createdAt: Instant = sampleInstant(),
@@ -323,7 +328,7 @@ fun mockExerciseWorkoutType(
 // ExerciseRotationHistory helpers
 fun mockExerciseRotationHistory(
     id: Long = 1L,
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     exerciseName: String = "Bench Press",
     isAccessory: Boolean = false,
     createdAt: Instant = sampleInstant()
@@ -382,7 +387,7 @@ fun mockSetSchemeParams(
     targetRepCount: Int? = 5,
     performedRepCount: Int? = null,
     restSeconds: Int? = 180,
-    band: com.congen.model.Band? = null
+    band: Band? = null
 ): SetSchemeParams =
     SetSchemeParams(
         setNumber = setNumber,
@@ -417,22 +422,22 @@ fun mockPrilepinGuidelines(
 
 fun mockWeightSelectionResult(
     targetWeight: BigDecimal = BigDecimal("100.0"),
-    band: com.congen.model.Band? = null
-): com.congen.generator.WeightSelectionService.TargetWeightResult =
-    com.congen.generator.WeightSelectionService.TargetWeightResult(
+    band: Band? = null
+): WeightSelectionService.TargetWeightResult =
+    WeightSelectionService.TargetWeightResult(
         targetWeight = targetWeight,
         band = band
     )
 
 // Weight unit preference helpers
 fun mockUserWeightUnitPreference(
-    userId: Int = 1,
+    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     exerciseName: String = "Bench Press",
-    preferredUnit: com.congen.model.WeightUnit = com.congen.model.WeightUnit.LBS,
+    preferredUnit: WeightUnit = WeightUnit.LBS,
     createdAt: Instant = sampleInstant(),
     updatedAt: Instant = sampleInstant()
-): com.congen.model.UserWeightUnitPreference =
-    com.congen.model.UserWeightUnitPreference(
+): UserWeightUnitPreference =
+    UserWeightUnitPreference(
         userId = userId,
         exerciseName = exerciseName,
         preferredUnit = preferredUnit,
@@ -441,43 +446,43 @@ fun mockUserWeightUnitPreference(
     )
 
 // Mock setup helpers for reactive testing
-fun <T : Any> createMockMono(value: T): reactor.core.publisher.Mono<T> = reactor.core.publisher.Mono.just(value)
+fun <T : Any> createMockMono(value: T): Mono<T> = Mono.just(value)
 
-fun <T : Any> createMockMonoError(exception: Exception): reactor.core.publisher.Mono<T> = reactor.core.publisher.Mono.error(exception)
+fun <T : Any> createMockMonoError(exception: Exception): Mono<T> = Mono.error(exception)
 
-fun <T : Any> createMockFlux(values: List<T>): reactor.core.publisher.Flux<T> = reactor.core.publisher.Flux.fromIterable(values)
+fun <T : Any> createMockFlux(values: List<T>): Flux<T> = Flux.fromIterable(values)
 
-fun <T : Any> createMockFluxEmpty(): reactor.core.publisher.Flux<T> = reactor.core.publisher.Flux.empty()
+fun <T : Any> createMockFluxEmpty(): Flux<T> = Flux.empty()
 
 // Common test assertions for reactive streams
 fun <T : Any> assertMonoSuccess(
-    mono: reactor.core.publisher.Mono<T>,
+    mono: Mono<T>,
     expectedValue: T
 ) {
-    reactor.test.StepVerifier.create(mono)
+    StepVerifier.create(mono)
         .expectNext(expectedValue)
         .verifyComplete()
 }
 
 fun <T : Any> assertMonoError(
-    mono: reactor.core.publisher.Mono<T>,
+    mono: Mono<T>,
     expectedException: Class<out Exception>
 ) {
-    reactor.test.StepVerifier.create(mono)
+    StepVerifier.create(mono)
         .expectError(expectedException)
         .verify()
 }
 
 fun <T : Any> assertFluxSuccess(
-    flux: reactor.core.publisher.Flux<T>,
+    flux: Flux<T>,
     expectedValues: List<T>
 ) {
-    reactor.test.StepVerifier.create(flux)
+    StepVerifier.create(flux)
         .expectNextSequence(expectedValues)
         .verifyComplete()
 }
 
-fun <T : Any> assertFluxEmpty(flux: reactor.core.publisher.Flux<T>) {
-    reactor.test.StepVerifier.create(flux)
+fun <T : Any> assertFluxEmpty(flux: Flux<T>) {
+    StepVerifier.create(flux)
         .verifyComplete()
 }

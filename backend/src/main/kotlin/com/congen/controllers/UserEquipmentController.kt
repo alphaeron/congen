@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserEquipmentDAL
 import com.congen.model.UserEquipment
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -46,6 +48,7 @@ import reactor.core.publisher.Mono
  * - **500 Internal Server Error**: When database operations fail
  *
  * @property userEquipmentDAL Data access layer for user equipment operations
+ * @property keycloakUtil Utility for Keycloak operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -54,6 +57,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/user_equipment")
 class UserEquipmentController(
     private val userEquipmentDAL: UserEquipmentDAL,
+    private val keycloakUtil: KeycloakUtil,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -66,12 +70,12 @@ class UserEquipmentController(
      * This endpoint creates an association between a user and a piece of equipment,
      * indicating that the user has access to that equipment for their workouts.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param equipmentName The name of the equipment
      * @return Mono containing the created user-equipment relationship
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Create user equipment relationship",
         description = "Creates a new user-equipment relationship.",
@@ -96,17 +100,26 @@ class UserEquipmentController(
         ],
     )
     fun save(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Equipment name", required = true)
         @RequestParam("equipment_name") equipmentName: String,
     ): Mono<ResponseEntity<UserEquipment>> {
-        logger.info("Saving user equipment: {} - {}", userId, equipmentName)
-        return userEquipmentDAL.insertUserEquipment(userId, equipmentName)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error saving user equipment: {} - {}", userId, equipmentName, e)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                logger.info("Saving user equipment: {} - {}", userId, equipmentName)
+                userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error("Error saving user equipment: userId={}, equipmentName={}", userId, equipmentName, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only create equipment for themselves"))
             }
+        }
     }
 
     /**
@@ -115,11 +128,11 @@ class UserEquipmentController(
      * This endpoint fetches all equipment that is associated with the specified user,
      * returning a list of user-equipment relationships.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user equipment relationships
      */
     @GetMapping("/{user_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get user equipment by user ID",
         description = "Retrieves all equipment associated with a given user.",
@@ -134,17 +147,26 @@ class UserEquipmentController(
         ],
     )
     fun getByUser(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @PathVariable("user_id") userId: String,
     ): Mono<ResponseEntity<List<UserEquipment>>> {
-        return userEquipmentDAL.selectUserEquipmentByUser(userId)
-            .map { equipment ->
-                logger.debug("Found {} equipment items for user: {}", equipment.size, userId)
-                ResponseEntity.ok(equipment)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                userEquipmentDAL.selectUserEquipmentByUser(userId)
+                    .map { equipment ->
+                        logger.debug("Found {} equipment items for user: {}", equipment.size, userId)
+                        ResponseEntity.ok(equipment)
+                    }
+                    .doOnError { e ->
+                        logger.error("Error getting user equipment for user: {}", userId, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only view their own equipment"))
             }
-            .doOnError { e ->
-                logger.error("Error getting user equipment for user: {}", userId, e)
-            }
+        }
     }
 
     /**
@@ -153,12 +175,12 @@ class UserEquipmentController(
      * This endpoint removes the association between a user and a piece of equipment,
      * indicating that the user no longer has access to that equipment.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param equipmentName The name of the equipment
      * @return Mono containing the deleted user-equipment relationship
      */
     @DeleteMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Delete user equipment relationship",
         description = "Deletes a user-equipment relationship.",
@@ -183,17 +205,26 @@ class UserEquipmentController(
         ],
     )
     fun delete(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Equipment name", required = true)
         @RequestParam("equipment_name") equipmentName: String,
     ): Mono<ResponseEntity<UserEquipment>> {
-        logger.info("Deleting user equipment: {} - {}", userId, equipmentName)
-        return userEquipmentDAL.deleteUserEquipment(userId, equipmentName)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error deleting user equipment: {} - {}", userId, equipmentName, e)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                logger.info("Deleting user equipment: {} - {}", userId, equipmentName)
+                userEquipmentDAL.deleteUserEquipment(userId, equipmentName)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error("Error deleting user equipment: {} - {}", userId, equipmentName, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only delete their own equipment"))
             }
+        }
     }
 
     /**
@@ -202,12 +233,12 @@ class UserEquipmentController(
      * This endpoint creates multiple equipment associations for a user in a single request,
      * which is useful for bulk operations when setting up a user's available equipment.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param equipmentNames List of equipment names to associate with the user
      * @return Mono containing a list of created user-equipment relationships
      */
     @PostMapping("/bulk")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Create multiple user equipment relationships",
         description = "Creates multiple user-equipment relationships in a single request.",
@@ -232,20 +263,29 @@ class UserEquipmentController(
         ],
     )
     fun saveBulk(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Equipment names", required = true)
         @RequestParam("equipment_names") equipmentNames: List<String>,
     ): Mono<ResponseEntity<List<UserEquipment>>> {
-        logger.info("Saving bulk user equipment: {} - {}", userId, equipmentNames)
-        return Flux.fromIterable(equipmentNames)
-            .flatMap { equipmentName ->
-                userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                logger.info("Saving bulk user equipment: {} - {}", userId, equipmentNames)
+                Flux.fromIterable(equipmentNames)
+                    .flatMap { equipmentName ->
+                        userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+                    }
+                    .collectList()
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only create equipment for themselves"))
             }
-            .collectList()
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
-            }
+        }
     }
 }

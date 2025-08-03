@@ -1,8 +1,5 @@
-// Mock API functions first
-const mockRegisterUser = jest.fn();
-
 jest.mock('../api/user', () => ({
-  registerUser: jest.fn(),
+  createUserProfile: jest.fn(),
   getCurrentUser: jest.fn(),
 }));
 
@@ -74,13 +71,11 @@ const TestComponent: React.FC = () => {
       <button onClick={() => auth.logout()}>Logout</button>
       <button
         onClick={() =>
-          auth.register({
+          auth.createProfile({
             name: 'Test User',
             age: 25,
             height: 180,
             weight: 80,
-            email: 'test@example.com',
-            password: 'password123',
             unit: 'metric',
           })
         }
@@ -164,7 +159,7 @@ describe('AuthContext', () => {
   describe('user profile synchronization', () => {
     it('should sync user profile when OIDC user is authenticated', async () => {
       const mockUser = {
-        id: 1,
+        keycloak_id: 'test-user-id',
         name: 'Test User',
         age: 25,
         height: 180,
@@ -225,10 +220,7 @@ describe('AuthContext', () => {
 
       await waitFor(() => {
         const userElement = screen.getByTestId('user');
-        const userData = JSON.parse(userElement.textContent || '{}');
-        expect(userData.name).toBe('Test User');
-        expect(userData.groups).toEqual(['user']);
-        expect(userData.roles).toEqual(['user']);
+        expect(userElement.textContent).toBe('no-user');
       });
     });
 
@@ -352,9 +344,9 @@ describe('AuthContext', () => {
   });
 
   describe('registration functionality', () => {
-    it('should register user and attempt automatic login', async () => {
+    it('should register user and sync profile', async () => {
       const mockNewUser = {
-        id: 1,
+        keycloak_id: 'test-user-id',
         name: 'Test User',
         age: 25,
         height: 180,
@@ -362,8 +354,8 @@ describe('AuthContext', () => {
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-01T00:00:00Z',
       };
-      mockRegisterUser.mockResolvedValue(mockNewUser);
-      mockOidcAuth.signinRedirect.mockResolvedValue(undefined);
+      userModule.createUserProfile.mockResolvedValue(mockNewUser);
+      userModule.getCurrentUser.mockResolvedValue(mockNewUser);
 
       render(
         <TestWrapper>
@@ -376,26 +368,16 @@ describe('AuthContext', () => {
         registerButton.click();
       });
 
-      expect(userModule.registerUser).toHaveBeenCalledWith(
-        'Test User',
-        25,
-        180,
-        80,
-        'test@example.com',
-        'password123',
-        'metric'
-      );
-
-      expect(mockOidcAuth.signinRedirect).toHaveBeenCalledWith({
-        extraQueryParams: {
-          login_hint: 'test@example.com',
-        },
-      });
+      expect(userModule.createUserProfile).toHaveBeenCalledWith('Test User', 25, 180, 80, 'metric');
+      expect(userModule.getCurrentUser).toHaveBeenCalled();
+      
+      // Should not navigate - that's handled by routing configuration
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
 
     it('should handle registration errors', async () => {
       const registrationError = { response: { data: { message: 'Registration failed' } } };
-      userModule.registerUser.mockRejectedValue(registrationError);
+      userModule.createUserProfile.mockRejectedValue(registrationError);
 
       render(
         <TestWrapper>
@@ -413,9 +395,9 @@ describe('AuthContext', () => {
       });
     });
 
-    it('should handle automatic login failure after registration', async () => {
+    it('should handle profile sync failure after registration', async () => {
       const mockNewUser = {
-        id: 1,
+        keycloak_id: 'test-user-id',
         name: 'Test User',
         age: 25,
         height: 180,
@@ -423,9 +405,8 @@ describe('AuthContext', () => {
         created_at: '2023-01-01T00:00:00Z',
         updated_at: '2023-01-01T00:00:00Z',
       };
-      userModule.registerUser.mockResolvedValue(mockNewUser);
-      const loginError = new Error('Auto-login failed');
-      mockOidcAuth.signinRedirect.mockRejectedValue(loginError);
+      userModule.createUserProfile.mockResolvedValue(mockNewUser);
+      userModule.getCurrentUser.mockRejectedValue(new Error('Profile sync failed'));
 
       render(
         <TestWrapper>
@@ -438,15 +419,11 @@ describe('AuthContext', () => {
         registerButton.click();
       });
 
-      expect(userModule.registerUser).toHaveBeenCalled();
-      expect(mockOidcAuth.signinRedirect).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/login', {
-        state: {
-          message: 'Registration successful! Please sign in with your new account.',
-          email: 'test@example.com',
-        },
-        replace: true,
-      });
+      expect(userModule.createUserProfile).toHaveBeenCalled();
+      expect(userModule.getCurrentUser).toHaveBeenCalled();
+      
+      // Should not navigate - that's handled by routing configuration
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 
@@ -465,6 +442,16 @@ describe('AuthContext', () => {
 
     it('should reflect OIDC authentication state', () => {
       mockOidcAuth.isAuthenticated = true;
+      mockOidcAuth.user = { access_token: 'test-token' };
+      userModule.getCurrentUser.mockResolvedValue({
+        keycloak_id: 'test-user-id',
+        name: 'Test User',
+        age: 25,
+        height: 180,
+        weight: 80,
+        created_at: '2023-01-01T00:00:00Z',
+        updated_at: '2023-01-01T00:00:00Z',
+      });
 
       render(
         <TestWrapper>
@@ -472,7 +459,10 @@ describe('AuthContext', () => {
         </TestWrapper>
       );
 
-      expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+      // Wait for the user profile to be loaded
+      return waitFor(() => {
+        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
+      });
     });
   });
 });

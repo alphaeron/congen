@@ -56,6 +56,7 @@ describe('OidcConfig', () => {
         scope: 'openid profile email',
         response_type: 'code',
         loadUserInfo: true,
+        monitorSession: false,
         metadata: {
           authorization_endpoint:
             'http://localhost:8080/realms/congen/protocol/openid-connect/auth',
@@ -80,6 +81,7 @@ describe('OidcConfig', () => {
       expect(config).toHaveProperty('scope');
       expect(config).toHaveProperty('response_type');
       expect(config).toHaveProperty('loadUserInfo');
+      expect(config).toHaveProperty('monitorSession');
       expect(config).toHaveProperty('metadata');
     });
   });
@@ -135,6 +137,7 @@ describe('OidcConfig - Staging Environment', () => {
       scope: 'openid profile email',
       response_type: 'code',
       loadUserInfo: true,
+      monitorSession: false,
       metadata: {
         authorization_endpoint:
           'https://staging.congen.com/realms/congen/protocol/openid-connect/auth',

@@ -12,12 +12,12 @@ class UserEquipmentTest {
     fun `should create user equipment with correct properties`() {
         val userEquipment =
             mockUserEquipment(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 equipmentName = "Barbell",
                 createdAt = now
             )
 
-        assertEquals(1, userEquipment.userId)
+        assertEquals("test-keycloak-user-id", userEquipment.userId)
         assertEquals("Barbell", userEquipment.equipmentName)
         assertEquals(now, userEquipment.createdAt)
     }

@@ -11,7 +11,7 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create exercise muscle relationship`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique names that don't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
         val uniqueMuscle = "Test Muscle ${System.nanoTime()}"
@@ -46,7 +46,7 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all exercise muscle relationships`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Use unique names that don't exist in migrations
         val uniqueExercise = "Test Exercise ${System.nanoTime()}"
         val uniqueMuscle1 = "Test Muscle 1 ${System.nanoTime()}"

@@ -11,14 +11,13 @@ import { deleteUser } from '../api/user';
 const mock = new MockAdapter(ENDPOINT);
 
 const mockUser: User = {
-  id: 1,
+  keycloak_id: 'test-user-id',
   name: 'John Doe',
   age: 30,
   height: 175,
   weight: 80,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-  keycloak_user_id: 'test-user-id',
   groups: ['fitness-enthusiasts'],
   roles: ['user'],
 };
@@ -130,9 +129,9 @@ describe('UserProfile', () => {
 
   it('should verify deleteUser function works with axios mock', async () => {
     // Test that the deleteUser function works with the axios mock
-    mock.onDelete('/user/1').reply(200, mockUser);
+    mock.onDelete('/user/test-user-id').reply(200, mockUser);
 
-    const result = await deleteUser(1);
+    const result = await deleteUser('test-user-id');
     expect(result).toEqual(mockUser);
   });
 

@@ -89,7 +89,13 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
 
         // First create a program
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, IntegrationTestHelpers.TEST_PROGRAM_NAME, token = token)
+        val programId =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                IntegrationTestHelpers.TEST_PROGRAM_NAME,
+                token = token
+            )
 
         // Then update it
         webTestClient.patch()

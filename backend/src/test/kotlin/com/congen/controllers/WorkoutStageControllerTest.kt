@@ -5,8 +5,10 @@ import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockWorkoutStage
+import com.congen.model.ProgrammedWorkout
 import com.congen.model.WorkoutStage
 import com.congen.service.ProgramService
+import com.congen.service.ProgrammedWorkoutService
 import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
@@ -14,8 +16,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -32,14 +36,20 @@ class WorkoutStageControllerTest {
     @Mock
     private lateinit var programService: ProgramService
 
+    @Mock
+    private lateinit var programmedWorkoutService: ProgrammedWorkoutService
+
     private lateinit var workoutStageController: WorkoutStageController
     private lateinit var workoutStageService: WorkoutStageService
     private lateinit var keycloakUtil: KeycloakUtil
+
+    private val currentUserId = "test-keycloak-user-id"
 
     companion object {
         private const val WORKOUT_STAGE_ID_1 = 1L
         private const val WORKOUT_STAGE_ID_2 = 2L
         private const val PROGRAMMED_WORKOUT_ID = 5L
+        private const val PROGRAM_ID = 10L
         private const val STAGE_TYPE_ID_1 = 1
         private const val STAGE_TYPE_ID_2 = 2
         private const val POSITION_1 = 1
@@ -185,8 +195,14 @@ class WorkoutStageControllerTest {
     fun setUp() {
         MockitoAnnotations.openMocks(this)
         workoutStageService = mock()
+        programService = mock()
+        programmedWorkoutService = mock()
         keycloakUtil = mock()
-        workoutStageController = WorkoutStageController(workoutStageService, programService, keycloakUtil)
+        workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test
@@ -203,6 +219,8 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
         whenever(workoutStageService.selectWorkoutStageById(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(workoutStage))
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID_1, currentUserId)).thenReturn(Mono.just(true))
+
         val result = workoutStageController.get(WORKOUT_STAGE_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStage))
@@ -218,6 +236,25 @@ class WorkoutStageControllerTest {
         testAction: (WorkoutStageController, WorkoutStageService) -> Mono<ResponseEntity<WorkoutStage>>,
         verification: (WorkoutStageService) -> Unit
     ) {
+        // Mock the security checks for all not found scenarios
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        whenever(workoutStageService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(anyLong())).thenReturn(
+            Mono.just(
+                ProgrammedWorkout(
+                    id = PROGRAMMED_WORKOUT_ID,
+                    programId = PROGRAM_ID,
+                    dayNumber = 1,
+                    name = "Test Workout",
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
+                )
+            )
+        )
+        whenever(programService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+
         val result = testAction(workoutStageController, workoutStageService)
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
@@ -234,6 +271,25 @@ class WorkoutStageControllerTest {
         verification: (WorkoutStageService) -> Unit,
         expectError: Boolean
     ) {
+        // Mock the security checks for all error scenarios
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        whenever(workoutStageService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(anyLong())).thenReturn(
+            Mono.just(
+                ProgrammedWorkout(
+                    id = PROGRAMMED_WORKOUT_ID,
+                    programId = PROGRAM_ID,
+                    dayNumber = 1,
+                    name = "Test Workout",
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
+                )
+            )
+        )
+        whenever(programService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+
         val result = testAction(workoutStageController, workoutStageService)
         if (expectError) {
             StepVerifier.create(result)
@@ -305,13 +361,13 @@ class WorkoutStageControllerTest {
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(userWorkoutStages))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(userWorkoutStages))
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(userWorkoutStages))
             .verifyComplete()
-        verify(workoutStageService).selectWorkoutStagesByUserId(userId.toInt())
+        verify(workoutStageService).selectWorkoutStagesByUserId(userId)
     }
 
     @Test
@@ -360,13 +416,13 @@ class WorkoutStageControllerTest {
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(emptyList))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(emptyList))
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(emptyList))
             .verifyComplete()
-        verify(workoutStageService).selectWorkoutStagesByUserId(userId.toInt())
+        verify(workoutStageService).selectWorkoutStagesByUserId(userId)
     }
 
     @Test
@@ -377,13 +433,13 @@ class WorkoutStageControllerTest {
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.error(databaseError))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.error(databaseError))
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
             .expectError(databaseError::class.java)
             .verify()
-        verify(workoutStageService).selectWorkoutStagesByUserId(userId.toInt())
+        verify(workoutStageService).selectWorkoutStagesByUserId(userId)
     }
 
     @Test
@@ -425,7 +481,21 @@ class WorkoutStageControllerTest {
                     updatedAt = now
                 )
             )
+
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = PROGRAMMED_WORKOUT_ID,
+                programId = PROGRAM_ID,
+                dayNumber = 1,
+                name = "Test Workout",
+                createdAt = now,
+                updatedAt = now
+            )
+
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(programmedWorkout))
+        whenever(programService.isOwner(PROGRAM_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(workoutStages))
+
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(workoutStages))
@@ -435,8 +505,25 @@ class WorkoutStageControllerTest {
 
     @Test
     fun `GET by programmed workout ID should handle database errors`() {
+        // Mock the security checks
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(PROGRAMMED_WORKOUT_ID)).thenReturn(
+            Mono.just(
+                ProgrammedWorkout(
+                    id = PROGRAMMED_WORKOUT_ID,
+                    programId = PROGRAM_ID,
+                    dayNumber = 1,
+                    name = "Test Workout",
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now()
+                )
+            )
+        )
+        whenever(programService.isOwner(PROGRAM_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID))
             .thenReturn(Mono.error(DatabaseException("Database connection failed")))
+
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
@@ -457,6 +544,19 @@ class WorkoutStageControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+
+        val programmedWorkout =
+            ProgrammedWorkout(
+                id = PROGRAMMED_WORKOUT_ID,
+                programId = PROGRAM_ID,
+                dayNumber = 1,
+                name = "Test Workout",
+                createdAt = now,
+                updatedAt = now
+            )
+
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(programmedWorkout))
+        whenever(programService.isOwner(PROGRAM_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(
             workoutStageService.insertWorkoutStage(
                 programmedWorkoutId = PROGRAMMED_WORKOUT_ID,
@@ -465,6 +565,7 @@ class WorkoutStageControllerTest {
                 name = WARMUP_NAME
             )
         ).thenReturn(Mono.just(createdStage))
+
         val result = workoutStageController.save(PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_1, POSITION_1, WARMUP_NAME)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(createdStage))
@@ -490,6 +591,9 @@ class WorkoutStageControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID_1, currentUserId)).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.isOwner(PROGRAMMED_WORKOUT_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(
             workoutStageService.updateWorkoutStage(
                 id = WORKOUT_STAGE_ID_1,
@@ -499,6 +603,7 @@ class WorkoutStageControllerTest {
                 name = MAIN_WORK_NAME
             )
         ).thenReturn(Mono.just(updatedStage))
+
         val result = workoutStageController.update(WORKOUT_STAGE_ID_1, PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_2, POSITION_2, MAIN_WORK_NAME)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(updatedStage))
@@ -525,7 +630,10 @@ class WorkoutStageControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID_1, currentUserId)).thenReturn(Mono.just(true))
         whenever(workoutStageService.deleteWorkoutStage(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(deletedStage))
+
         val result = workoutStageController.delete(WORKOUT_STAGE_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(deletedStage))
@@ -588,7 +696,7 @@ class WorkoutStageControllerTest {
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(stages))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(stages))
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
@@ -606,7 +714,7 @@ class WorkoutStageControllerTest {
         val stages = emptyList<WorkoutStage>()
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId.toInt())).thenReturn(Mono.just(stages))
+        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(stages))
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)

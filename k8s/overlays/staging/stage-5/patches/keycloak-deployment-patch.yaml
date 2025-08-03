@@ -5,7 +5,20 @@ metadata:
 spec:
   replicas: 2
   template:
+    metadata:
+      labels:
+        app: keycloak
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - keycloak
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: keycloak
         envFrom:

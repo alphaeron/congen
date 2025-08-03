@@ -1,6 +1,8 @@
 package com.congen.service
 
+import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.model.Program
 import com.congen.model.ProgrammedWorkout
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,9 +15,20 @@ import java.time.Instant
 
 class ProgrammedWorkoutServiceTest {
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
+    private lateinit var programDAL: ProgramDAL
     private lateinit var programmedWorkoutService: ProgrammedWorkoutService
 
     private val now = Instant.now()
+    private val testProgram =
+        Program(
+            id = 1L,
+            userId = "b226d772-c063-4974-ae08-ab64134abbcf",
+            name = "Test Program",
+            currentWeekNumber = 1,
+            isActive = true,
+            createdAt = now,
+            updatedAt = now
+        )
     private val workout =
         ProgrammedWorkout(
             id = 1L,
@@ -30,7 +43,8 @@ class ProgrammedWorkoutServiceTest {
     @BeforeEach
     fun setUp() {
         programmedWorkoutDAL = mock()
-        programmedWorkoutService = ProgrammedWorkoutService(programmedWorkoutDAL)
+        programDAL = mock()
+        programmedWorkoutService = ProgrammedWorkoutService(programmedWorkoutDAL, programDAL)
     }
 
     @Test
@@ -95,12 +109,12 @@ class ProgrammedWorkoutServiceTest {
 
     @Test
     fun `hasUserExistingWorkouts returns true`() {
-        whenever(programmedWorkoutDAL.hasUserExistingWorkouts(1)).thenReturn(Mono.just(true))
-        val result = programmedWorkoutService.hasUserExistingWorkouts(1)
+        whenever(programmedWorkoutDAL.hasUserExistingWorkouts("b226d772-c063-4974-ae08-ab64134abbcf")).thenReturn(Mono.just(true))
+        val result = programmedWorkoutService.hasUserExistingWorkouts("b226d772-c063-4974-ae08-ab64134abbcf")
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
-        verify(programmedWorkoutDAL).hasUserExistingWorkouts(1)
+        verify(programmedWorkoutDAL).hasUserExistingWorkouts("b226d772-c063-4974-ae08-ab64134abbcf")
     }
 
     @Test
@@ -116,35 +130,39 @@ class ProgrammedWorkoutServiceTest {
     @Test
     fun `isOwner returns true when user is owner`() {
         val programmedWorkoutId = 1L
-        val ownerUserId = 42L
-        val userId = "42"
-        val workout = this.workout.copy(id = programmedWorkoutId, programId = ownerUserId)
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val workout = this.workout.copy(id = programmedWorkoutId, programId = 1L)
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkoutId)).thenReturn(Mono.just(workout))
+        whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.just(testProgram))
 
         val result = programmedWorkoutService.isOwner(programmedWorkoutId, userId)
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(1L)
     }
 
     @Test
     fun `isOwner returns false when user is not owner`() {
         val programmedWorkoutId = 1L
-        val ownerUserId = 99L
-        val userId = "42"
-        val workout = this.workout.copy(id = programmedWorkoutId, programId = ownerUserId)
+        val userId = "different-user-id"
+        val workout = this.workout.copy(id = programmedWorkoutId, programId = 1L)
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkoutId)).thenReturn(Mono.just(workout))
+        whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.just(testProgram))
 
         val result = programmedWorkoutService.isOwner(programmedWorkoutId, userId)
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(1L)
     }
 
     @Test
     fun `isOwner returns false when programmed workout not found`() {
         val programmedWorkoutId = 1L
-        val userId = "42"
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         whenever(
             programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkoutId)
         ).thenReturn(Mono.error(RuntimeException("Not found")))
@@ -153,25 +171,28 @@ class ProgrammedWorkoutServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
     }
 
     @Test
-    fun `isOwner handles userId as string vs int`() {
+    fun `isOwner returns false when program not found`() {
         val programmedWorkoutId = 1L
-        val ownerUserId = 42L
-        val userId = "42"
-        val workout = this.workout.copy(id = programmedWorkoutId, programId = ownerUserId)
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val workout = this.workout.copy(id = programmedWorkoutId, programId = 1L)
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkoutId)).thenReturn(Mono.just(workout))
+        whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.error(RuntimeException("Program not found")))
 
         val result = programmedWorkoutService.isOwner(programmedWorkoutId, userId)
         StepVerifier.create(result)
-            .expectNext(true)
+            .expectNext(false)
             .verifyComplete()
+        verify(programmedWorkoutDAL).selectProgrammedWorkoutById(programmedWorkoutId)
+        verify(programDAL).selectProgramById(1L)
     }
 
     @Test
     fun `selectProgrammedWorkoutsByUserId returns list of user owned workouts`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val userWorkouts =
             listOf(
                 workout.copy(id = 1L, programId = 1L, dayNumber = 1, name = "User Workout 1"),
@@ -187,7 +208,7 @@ class ProgrammedWorkoutServiceTest {
 
     @Test
     fun `selectProgrammedWorkoutsByUserId returns empty list when user has no workouts`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val emptyList = emptyList<ProgrammedWorkout>()
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByUserId(userId)).thenReturn(Mono.just(emptyList))
 
@@ -199,7 +220,7 @@ class ProgrammedWorkoutServiceTest {
 
     @Test
     fun `selectProgrammedWorkoutsByUserId propagates database errors`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val databaseError = RuntimeException("Database connection failed")
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByUserId(userId)).thenReturn(Mono.error(databaseError))
 

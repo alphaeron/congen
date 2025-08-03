@@ -61,7 +61,7 @@ class WeightSelectionServiceTest {
     @InjectMocks
     private lateinit var weightSelectionService: WeightSelectionService
 
-    private val userId = 1
+    private val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
     private val exerciseName = "Bench Press"
     private val intensity = 0.8
     private val oneRepMax = BigDecimal("225")

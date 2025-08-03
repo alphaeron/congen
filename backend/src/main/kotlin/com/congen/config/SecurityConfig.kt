@@ -2,7 +2,6 @@ package com.congen.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
@@ -12,7 +11,6 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter
 import org.springframework.security.web.server.SecurityWebFilterChain
-import reactor.core.publisher.Mono
 
 /**
  * Security configuration for Keycloak integration.
@@ -27,7 +25,7 @@ import reactor.core.publisher.Mono
  */
 @Configuration
 @EnableWebFluxSecurity
-@EnableReactiveMethodSecurity
+@EnableReactiveMethodSecurity(useAuthorizationManager = true)
 class SecurityConfig {
     /**
      * Configures the security filter chain for the API.
@@ -70,12 +68,12 @@ class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter { jwt: Jwt ->
             val realmAccess = jwt.claims["realm_access"] as? Map<*, *>
             val roles = realmAccess?.get("roles") as? List<*>
-            
+
             roles?.map { role ->
-                SimpleGrantedAuthority("ROLE_${role}")
+                SimpleGrantedAuthority("ROLE_$role")
             } ?: emptyList()
         }
-        
+
         return ReactiveJwtAuthenticationConverterAdapter(converter)
     }
 }

@@ -20,10 +20,16 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     }
 
     private fun setupTestEntities() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, "SetScheme User" + System.nanoTime(), token = token)
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = token)
-        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program" + System.nanoTime(), token = token)
+        programId =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                name = "Test Program" + System.nanoTime(),
+                token = token
+            )
         // Create a programmed workout
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
@@ -54,7 +60,10 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             )
     }
 
-    private fun getWorkoutStageTypeId(name: String, token: String): Int {
+    private fun getWorkoutStageTypeId(
+        name: String,
+        token: String
+    ): Int {
         val response =
             webTestClient.get()
                 .uri("/api/v1/workout_stage_type/name/$name")
@@ -69,7 +78,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when set number is 0`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=0&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -85,7 +94,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when set number is negative`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=-1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -101,7 +110,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when target weight is 0`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -117,7 +126,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when target rep count is 0`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -133,7 +142,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when rest seconds is negative`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -149,7 +158,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid set scheme data`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -169,7 +178,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get set scheme by id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // First create a set scheme
         val createUri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=2&" +
@@ -205,7 +214,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get set schemes by programmed exercise id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // First create multiple set schemes for the same exercise
         val uri1 =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
@@ -254,7 +263,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all set schemes`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uri1 =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
                 "was_set_performed=false&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -277,7 +286,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update set scheme`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // First create a set scheme
         val createUri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +
@@ -311,7 +320,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete set scheme`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // First create a set scheme
         val createUri =
             "/api/v1/set_scheme/?programmed_exercise_id=$programmedExerciseId&set_number=1&" +

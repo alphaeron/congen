@@ -155,7 +155,7 @@ class UserController(
                 )
             }
             .map { savedUser ->
-                logger.debug("Created user profile with id: {}", savedUser.id)
+                logger.debug("Created user profile with keycloak id: {}", savedUser.keycloakId)
                 ResponseEntity.ok(savedUser)
             }
     }
@@ -200,25 +200,25 @@ class UserController(
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakUserId ->
                 logger.debug("Getting current user profile for Keycloak user ID: {}", keycloakUserId)
-                userService.getUserByKeycloakUserId(keycloakUserId)
+                userService.getUserByKeycloakId(keycloakUserId)
             }
             .map { ResponseEntity.ok(it) }
     }
 
     /**
-     * Retrieves a user by their unique identifier.
+     * Retrieves a user by their Keycloak identifier.
      *
-     * This endpoint fetches a specific user's profile information by their ID.
+     * This endpoint fetches a specific user's profile information by their Keycloak ID.
      * If the user is not found, a 404 error will be returned.
      *
-     * @param id The unique identifier of the user to retrieve
+     * @param keycloakId The Keycloak identifier of the user to retrieve
      * @return The user profile if found, or 404 if not found
      */
-    @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #id == principal.subject")
+    @GetMapping("/{keycloakId}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #keycloakId == principal.subject")
     @Operation(
-        summary = "Get user by ID",
-        description = "Retrieves a specific user's profile information by their unique identifier.",
+        summary = "Get user by Keycloak ID",
+        description = "Retrieves a specific user's profile information by their Keycloak identifier.",
     )
     @ApiResponses(
         value = [
@@ -244,13 +244,13 @@ class UserController(
     )
     fun get(
         @Parameter(
-            description = "Unique identifier of the user",
+            description = "Keycloak identifier of the user",
             required = true,
-            example = "1",
+            example = "123e4567-e89b-12d3-a456-426614174000",
         )
-        @PathVariable("id") id: Int,
+        @PathVariable("keycloakId") keycloakId: String,
     ): Mono<ResponseEntity<User>> {
-        return userService.getUserById(id)
+        return userService.getUserByKeycloakId(keycloakId)
             .map { ResponseEntity.ok(it) }
     }
 
@@ -293,9 +293,9 @@ class UserController(
      * Updates an existing user profile.
      *
      * This endpoint updates a user's profile information. The user must exist
-     * and have a valid ID. All provided fields will be updated.
+     * and have a valid Keycloak ID. All provided fields will be updated.
      *
-     * @param id The unique identifier of the user to update
+     * @param keycloakId The Keycloak identifier of the user to update
      * @param name The updated user's full name
      * @param age The updated user's age in years
      * @param height The updated user's height in centimeters
@@ -305,13 +305,13 @@ class UserController(
      * @throws ValidationException if user data fails validation
      * @throws DatabaseException if database operation fails
      */
-    @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #id == principal.subject")
+    @PatchMapping("/{keycloakId}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #keycloakId == principal.subject")
     @Operation(
         summary = "Update user",
         description =
             "Updates an existing user's profile information. " +
-                "The user must exist and have a valid ID.",
+                "The user must exist and have a valid Keycloak ID.",
     )
     @ApiResponses(
         value = [
@@ -337,11 +337,11 @@ class UserController(
     )
     fun update(
         @Parameter(
-            description = "Unique identifier of the user to update",
+            description = "Keycloak identifier of the user to update",
             required = true,
-            example = "1",
+            example = "123e4567-e89b-12d3-a456-426614174000",
         )
-        @PathVariable("id") id: Int,
+        @PathVariable("keycloakId") keycloakId: String,
         @Parameter(
             description = "User's full name",
             required = true,
@@ -368,7 +368,7 @@ class UserController(
         @RequestParam weight: BigDecimal,
         @RequestParam(required = false, defaultValue = "KG") unit: String?,
     ): Mono<ResponseEntity<User>> {
-        return userService.updateUser(id, name, age, height, weight, unit)
+        return userService.updateUser(keycloakId, name, age, height, weight, unit)
             .map { ResponseEntity.ok(it) }
     }
 
@@ -378,13 +378,13 @@ class UserController(
      * This endpoint permanently removes a user from the system. This action
      * cannot be undone and will also remove associated preferences and data.
      *
-     * @param id The unique identifier of the user to delete
+     * @param keycloakId The Keycloak identifier of the user to delete
      * @return Confirmation of deletion
      *
      * @throws DatabaseException if database operation fails
      */
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #id == principal.subject")
+    @DeleteMapping("/{keycloakId}")
+    @PreAuthorize("hasRole('admin') or hasRole('service') or #keycloakId == principal.subject")
     @Operation(
         summary = "Delete user",
         description =
@@ -415,13 +415,13 @@ class UserController(
     )
     fun delete(
         @Parameter(
-            description = "Unique identifier of the user to delete",
+            description = "Keycloak identifier of the user to delete",
             required = true,
-            example = "1",
+            example = "123e4567-e89b-12d3-a456-426614174000",
         )
-        @PathVariable("id") id: Int,
+        @PathVariable("keycloakId") keycloakId: String,
     ): Mono<ResponseEntity<User>> {
-        return userService.deleteUser(id)
+        return userService.deleteUser(keycloakId)
             .map { ResponseEntity.ok(it) }
     }
 }

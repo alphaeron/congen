@@ -3,8 +3,10 @@ package com.congen.config
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.format.FormatterRegistry
 import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.WebFluxConfigurer
+import org.springframework.web.reactive.result.method.RequestMappingInfo
 import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping
 
 /**
@@ -50,17 +52,15 @@ class WebConfig : WebFluxConfigurer {
             override fun getMappingForMethod(
                 method: java.lang.reflect.Method,
                 handlerType: Class<*>
-            ): org.springframework.web.reactive.result.method.RequestMappingInfo? {
+            ): RequestMappingInfo? {
                 val mapping = super.getMappingForMethod(method, handlerType)
                 return mapping?.let { addApiPrefix(it) }
             }
 
-            private fun addApiPrefix(
-                mapping: org.springframework.web.reactive.result.method.RequestMappingInfo
-            ): org.springframework.web.reactive.result.method.RequestMappingInfo {
+            private fun addApiPrefix(mapping: RequestMappingInfo): RequestMappingInfo {
                 val patterns = mapping.patternsCondition.patterns.map { "/api/v1$it" }
 
-                return org.springframework.web.reactive.result.method.RequestMappingInfo.paths(*patterns.toTypedArray())
+                return RequestMappingInfo.paths(*patterns.toTypedArray())
                     .methods(*mapping.methodsCondition.methods.toTypedArray())
                     .params(*mapping.paramsCondition.expressions.map { it.toString() }.toTypedArray())
                     .headers(*mapping.headersCondition.expressions.map { it.toString() }.toTypedArray())
@@ -75,7 +75,7 @@ class WebConfig : WebFluxConfigurer {
      * This method registers custom converters that allow Spring to automatically
      * convert URL parameters to complex types like enums.
      */
-    override fun addFormatters(registry: org.springframework.format.FormatterRegistry) {
+    override fun addFormatters(registry: FormatterRegistry) {
         super.addFormatters(registry)
         registry.addConverter(MovementTypeConverter())
         registry.addConverter(WeightUnitConverter())

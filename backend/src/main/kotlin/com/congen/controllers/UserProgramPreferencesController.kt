@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.model.UserProgramPreferences
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -55,6 +57,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/user_program_preferences")
 class UserProgramPreferencesController(
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
+    private val keycloakUtil: KeycloakUtil,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -67,13 +70,13 @@ class UserProgramPreferencesController(
      * This endpoint creates program preferences for a user, allowing them to specify
      * their workout frequency, duration, and other program-related settings.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param programDaysPerWeek The number of days per week for the program
      * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return ResponseEntity containing the created user program preferences
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Create user program preferences",
         description = "Creates new user program preferences.",
@@ -88,19 +91,25 @@ class UserProgramPreferencesController(
         ],
     )
     fun save(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Number of days per week for the program", required = true)
         @RequestParam("program_days_per_week") programDaysPerWeek: Int,
         @Parameter(description = "Session time length in minutes", required = true)
         @RequestParam("session_time_length_in_minutes") sessionTimeLengthInMinutes: Int,
     ): Mono<ResponseEntity<UserProgramPreferences>> {
-        logger.info("Saving user program preferences: {}", userId)
-        return userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error saving user program preferences: {} - {}", userId, programDaysPerWeek, e)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                logger.info("Saving user program preferences: {}", userId)
+                userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only create preferences for themselves"))
             }
+        }
     }
 
     /**
@@ -109,11 +118,11 @@ class UserProgramPreferencesController(
      * This endpoint fetches the program preferences for the specified user,
      * returning their workout program settings and preferences.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing the user program preferences
      */
     @GetMapping("/{user_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get user program preferences by user ID",
         description = "Retrieves user program preferences for a given user.",
@@ -128,17 +137,26 @@ class UserProgramPreferencesController(
         ],
     )
     fun get(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @PathVariable("user_id") userId: String,
     ): Mono<ResponseEntity<UserProgramPreferences>> {
-        return userProgramPreferencesDAL.selectUserProgramPreferences(userId)
-            .map {
-                logger.debug("Found user program preferences: {}", userId)
-                ResponseEntity.ok(it)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                userProgramPreferencesDAL.selectUserProgramPreferences(userId)
+                    .map {
+                        logger.debug("Found user program preferences: {}", userId)
+                        ResponseEntity.ok(it)
+                    }
+                    .doOnError { e ->
+                        logger.error("Error getting user program preferences: {}", userId, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only view their own preferences"))
             }
-            .doOnError { e ->
-                logger.error("Error getting user program preferences: {}", userId, e)
-            }
+        }
     }
 
     /**
@@ -149,7 +167,7 @@ class UserProgramPreferencesController(
      * Note: Program days per week cannot be changed if the user has existing workouts
      * to prevent day numbering conflicts and maintain program consistency.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param programDaysPerWeek The number of days per week for the program
      * @param sessionTimeLengthInMinutes The session time length in minutes
      * @return ResponseEntity containing the updated user program preferences
@@ -158,7 +176,7 @@ class UserProgramPreferencesController(
      * @throws DatabaseException if database operation fails
      */
     @PatchMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Update user program preferences",
         description = "Updates existing user program preferences.",
@@ -173,19 +191,25 @@ class UserProgramPreferencesController(
         ],
     )
     fun update(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Number of days per week for the program", required = true)
         @RequestParam("program_days_per_week") programDaysPerWeek: Int,
         @Parameter(description = "Session time length in minutes", required = true)
         @RequestParam("session_time_length_in_minutes") sessionTimeLengthInMinutes: Int,
     ): Mono<ResponseEntity<UserProgramPreferences>> {
-        logger.info("Updating user program preferences: {}", userId)
-        return userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error updating user program preferences: {} - {}", userId, programDaysPerWeek, e)
+        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
+            if (currentUserId == userId) {
+                logger.info("Updating user program preferences: {}", userId)
+                userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error("Error updating user program preferences: {} - {}", userId, programDaysPerWeek, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only update their own preferences"))
             }
+        }
     }
 
     /**
@@ -194,11 +218,11 @@ class UserProgramPreferencesController(
      * This endpoint removes the program preferences for the specified user,
      * effectively resetting their program preferences to default values.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return ResponseEntity containing the deleted user program preferences
      */
     @DeleteMapping("/{user_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Delete user program preferences by user ID",
         description = "Deletes user program preferences for a given user.",
@@ -213,14 +237,20 @@ class UserProgramPreferencesController(
         ],
     )
     fun delete(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @PathVariable("user_id") userId: String,
     ): Mono<ResponseEntity<UserProgramPreferences>> {
-        logger.info("Deleting user program preferences: {}", userId)
-        return userProgramPreferencesDAL.deleteUserProgramPreferences(userId)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error deleting user program preferences: {}", userId, e)
+        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
+            if (currentUserId == userId) {
+                logger.info("Deleting user program preferences: {}", userId)
+                userProgramPreferencesDAL.deleteUserProgramPreferences(userId)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error("Error deleting user program preferences: {}", userId, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only delete their own preferences"))
             }
+        }
     }
 }

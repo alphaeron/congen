@@ -46,7 +46,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
   const [error, setError] = useState<string | null>(null);
 
   const handleDeleteAccount = async () => {
-    if (!user.id) {
+    if (!user.keycloak_id) {
       return;
     }
 
@@ -54,11 +54,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
     setError(null);
 
     try {
-      await deleteUser(user.id);
+      await deleteUser(user.keycloak_id);
       setDeleteDialogOpen(false);
       // Logout after successful deletion
       await logout();
-      navigate('/');
+      navigate('/login');
     } catch (err: unknown) {
       const errorMessage =
         err &&

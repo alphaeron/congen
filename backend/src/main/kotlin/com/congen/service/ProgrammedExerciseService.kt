@@ -78,17 +78,17 @@ class ProgrammedExerciseService(
     ): Mono<ProgrammedExercise> = programmedExerciseDAL.selectProgrammedExerciseByStageIdAndExerciseName(workoutStageId, exerciseName)
 
     /**
-     * Gets the user ID for a programmed exercise by tracing the relationship chain.
+     * Gets the user ID associated with a programmed exercise.
      * @see ProgrammedExerciseDAL.getUserIdFromProgrammedExercise
      */
-    fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<Int> =
+    fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<String> =
         programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)
 
     /**
-     * Retrieves all programmed exercises for a specific user.
+     * Retrieves all programmed exercises owned by a specific user.
      * @see ProgrammedExerciseDAL.selectProgrammedExercisesByUserId
      */
-    fun selectProgrammedExercisesByUserId(userId: Int): Mono<List<ProgrammedExercise>> =
+    fun selectProgrammedExercisesByUserId(userId: String): Mono<List<ProgrammedExercise>> =
         programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
 
     /**
@@ -103,7 +103,7 @@ class ProgrammedExerciseService(
         userId: String
     ): Mono<Boolean> {
         return getUserIdFromProgrammedExercise(programmedExerciseId)
-            .map { it.toString() == userId }
+            .map { ownerUserId -> ownerUserId == userId }
             .onErrorReturn(false)
     }
 }

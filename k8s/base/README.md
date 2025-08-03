@@ -26,7 +26,7 @@ The base resources provide a common foundation for all environments while allowi
 - `service-account.yaml` - Service account for the application
 - `reloader-rbac.yaml` - RBAC configuration for reloader
 - `reloader-deployment.yaml` - Reloader for configuration updates
-- `migrations-configmap.yaml` - Database migration configuration
+- `stage-6/migrations-configmap.yaml` - Database migration configuration
 - `migration-service-deployment.yaml` - Database migration service
 
 ### Networking

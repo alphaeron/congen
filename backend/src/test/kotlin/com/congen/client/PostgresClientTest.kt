@@ -8,10 +8,15 @@ import com.congen.mockProgrammedExercise
 import com.congen.mockUser
 import com.congen.model.ProgrammedExercise
 import com.congen.model.User
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.vertx.core.Future
 import io.vertx.core.json.JsonObject
 import io.vertx.sqlclient.PreparedQuery
 import io.vertx.sqlclient.Row
+import io.vertx.sqlclient.RowIterator
 import io.vertx.sqlclient.RowSet
 import io.vertx.sqlclient.SqlClient
 import io.vertx.sqlclient.Tuple
@@ -62,24 +67,24 @@ class PostgresClientTest {
     fun `should execute select query successfully`() {
         // Given
         val query = "SELECT * FROM users WHERE id = \$1"
-        val expectedResult = listOf(mockUser(id = 1), mockUser(id = 2))
+        val expectedResult = listOf(mockUser(keycloakId = "1"), mockUser(keycloakId = "2"))
         val row1 = mock<Row>()
         val row2 = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row1, row2)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
         // Use Jackson to serialize the User to a map and stub row.toJson() accordingly
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
-        val map1 = objectMapper.convertValue(mockUser(id = 1), Map::class.java) as Map<String, Any>
-        val map2 = objectMapper.convertValue(mockUser(id = 2), Map::class.java) as Map<String, Any>
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val map1 = objectMapper.convertValue(mockUser(keycloakId = "1"), Map::class.java) as Map<String, Any>
+        val map2 = objectMapper.convertValue(mockUser(keycloakId = "2"), Map::class.java) as Map<String, Any>
         whenever(row1.toJson()).thenReturn(JsonObject(map1))
         whenever(row2.toJson()).thenReturn(JsonObject(map2))
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
@@ -98,24 +103,26 @@ class PostgresClientTest {
     fun `should execute update query successfully`() {
         // Given
         val query = "UPDATE users SET name = \$1 WHERE id = \$2"
-        val expectedResult = mockUser(id = 1, name = "New Name", age = 30)
+        val expectedResult = mockUser(keycloakId = "1", name = "New Name", age = 30)
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         whenever(
             row.toJson()
         ).thenReturn(
-            JsonObject((objectMapper.convertValue(mockUser(id = 1, name = "New Name", age = 30), Map::class.java) as Map<String, Any>))
+            JsonObject(
+                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "New Name", age = 30), Map::class.java) as Map<String, Any>)
+            )
         )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBWriter.preparedQuery(eq("$query RETURNING *"))).thenReturn(preparedQuery)
@@ -133,24 +140,26 @@ class PostgresClientTest {
     fun `should execute updateLiteral query successfully`() {
         // Given
         val query = "UPDATE users SET name = 'New Name' WHERE id = 1 RETURNING *"
-        val expectedResult = mockUser(id = 1, name = "New Name", age = 30)
+        val expectedResult = mockUser(keycloakId = "1", name = "New Name", age = 30)
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         whenever(
             row.toJson()
         ).thenReturn(
-            JsonObject((objectMapper.convertValue(mockUser(id = 1, name = "New Name", age = 30), Map::class.java) as Map<String, Any>))
+            JsonObject(
+                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "New Name", age = 30), Map::class.java) as Map<String, Any>)
+            )
         )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBWriter.preparedQuery(eq(query))).thenReturn(preparedQuery)
@@ -168,23 +177,23 @@ class PostgresClientTest {
     fun `should handle query with multiple parameters`() {
         // Given
         val query = "SELECT * FROM users WHERE age > \$1 AND city = \$2"
-        val expectedResult = listOf(mockUser(id = 1, age = 30))
+        val expectedResult = listOf(mockUser(keycloakId = "1", age = 30))
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         whenever(
             row.toJson()
-        ).thenReturn(JsonObject((objectMapper.convertValue(mockUser(id = 1, age = 30), Map::class.java) as Map<String, Any>)))
+        ).thenReturn(JsonObject((objectMapper.convertValue(mockUser(keycloakId = "1", age = 30), Map::class.java) as Map<String, Any>)))
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
@@ -206,7 +215,7 @@ class PostgresClientTest {
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = emptyList<Row>()
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
@@ -226,24 +235,26 @@ class PostgresClientTest {
     fun `should return individual result from selectIndividual`() {
         // Given
         val query = "SELECT * FROM users WHERE id = \$1"
-        val expectedResult = mockUser(id = 1, name = "John", age = 30)
+        val expectedResult = mockUser(keycloakId = "1", name = "John", age = 30)
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         whenever(
             row.toJson()
         ).thenReturn(
-            JsonObject((objectMapper.convertValue(mockUser(id = 1, name = "John", age = 30), Map::class.java) as Map<String, Any>))
+            JsonObject(
+                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "John", age = 30), Map::class.java) as Map<String, Any>)
+            )
         )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
@@ -265,7 +276,7 @@ class PostgresClientTest {
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = emptyList<Row>()
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
@@ -294,20 +305,24 @@ class PostgresClientTest {
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row1, row2)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         whenever(
             row1.toJson()
-        ).thenReturn(JsonObject((objectMapper.convertValue(mockUser(id = 1, name = "John"), Map::class.java) as Map<String, Any>)))
+        ).thenReturn(
+            JsonObject((objectMapper.convertValue(mockUser(keycloakId = "1", name = "John"), Map::class.java) as Map<String, Any>))
+        )
         whenever(
             row2.toJson()
-        ).thenReturn(JsonObject((objectMapper.convertValue(mockUser(id = 2, name = "Jane"), Map::class.java) as Map<String, Any>)))
+        ).thenReturn(
+            JsonObject((objectMapper.convertValue(mockUser(keycloakId = "2", name = "Jane"), Map::class.java) as Map<String, Any>))
+        )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
@@ -381,7 +396,7 @@ class PostgresClientTest {
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = emptyList<Row>()
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
@@ -407,14 +422,14 @@ class PostgresClientTest {
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         val rows = listOf(row)
         val rowsIterator = rows.iterator()
-        val rowIterator = mock<io.vertx.sqlclient.RowIterator<Row>>()
+        val rowIterator = mock<RowIterator<Row>>()
         whenever(rowIterator.hasNext()).thenAnswer { rowsIterator.hasNext() }
         whenever(rowIterator.next()).thenAnswer { rowsIterator.next() }
         whenever(rowSet.iterator()).thenReturn(rowIterator)
-        val objectMapper = com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
-        objectMapper.registerModule(com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-        objectMapper.disable(com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-        objectMapper.disable(com.fasterxml.jackson.databind.DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+        val objectMapper = jacksonObjectMapper()
+        objectMapper.registerModule(JavaTimeModule())
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         val map = objectMapper.convertValue(mockProgrammedExercise(id = 1, exerciseName = "Test"), Map::class.java) as Map<String, Any>
         whenever(row.toJson()).thenReturn(JsonObject(map))
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))

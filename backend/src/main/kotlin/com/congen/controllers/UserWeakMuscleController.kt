@@ -43,7 +43,7 @@ class UserWeakMuscleController(
     /**
      * Adds a weak muscle for a user.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param muscleName The name of the weak muscle group
      * @return ResponseEntity containing the created UserWeakMuscle
      */
@@ -60,8 +60,8 @@ class UserWeakMuscleController(
         ],
     )
     fun add(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Muscle name", required = true)
         @RequestParam("muscle_name") muscleName: String,
     ): Mono<ResponseEntity<UserWeakMuscle>> {
@@ -76,7 +76,7 @@ class UserWeakMuscleController(
     /**
      * Retrieves all weak muscles for a user.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of UserWeakMuscle
      */
     @GetMapping("/{user_id}")
@@ -88,8 +88,8 @@ class UserWeakMuscleController(
         ],
     )
     fun getByUser(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @PathVariable("user_id") userId: String,
     ): Mono<ResponseEntity<List<UserWeakMuscle>>> {
         return userWeakMuscleDAL.selectUserWeakMusclesByUser(userId)
             .map { ResponseEntity.ok(it) }
@@ -98,7 +98,7 @@ class UserWeakMuscleController(
     /**
      * Deletes a weak muscle for a user.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param muscleName The name of the weak muscle group
      * @return ResponseEntity containing the deleted UserWeakMuscle
      */
@@ -115,8 +115,8 @@ class UserWeakMuscleController(
         ],
     )
     fun delete(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Muscle name", required = true)
         @RequestParam("muscle_name") muscleName: String,
     ): Mono<ResponseEntity<UserWeakMuscle>> {

@@ -66,6 +66,11 @@ class ProgrammedExerciseControllerTest {
         workoutStageService = mock()
         keycloakUtil = mock()
         programmedExerciseController = ProgrammedExerciseController(programmedExerciseService, workoutStageService, keycloakUtil)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+
         testProgrammedExercise =
             ProgrammedExercise(
                 id = EXERCISE_ID_1,
@@ -80,6 +85,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `save should create new programmed exercise successfully`() {
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.insertProgrammedExercise(any(), any(), any(), any()))
             .thenReturn(Mono.just(testProgrammedExercise))
         val result =
@@ -98,6 +104,7 @@ class ProgrammedExerciseControllerTest {
     @Test
     fun `save should handle null notes`() {
         val exerciseWithNullNotes = testProgrammedExercise.copy(notes = null)
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.insertProgrammedExercise(WORKOUT_STAGE_ID, BENCH_PRESS, POSITION_1, null))
             .thenReturn(Mono.just(exerciseWithNullNotes))
         val result =
@@ -115,6 +122,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `save should handle validation errors`() {
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.insertProgrammedExercise(any(), any(), any(), any()))
             .thenReturn(Mono.error(DatabaseQueryException("Validation error")))
         val result =
@@ -132,6 +140,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `save should handle database errors`() {
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.insertProgrammedExercise(any(), any(), any(), any()))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         val result =
@@ -149,6 +158,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `get should return programmed exercise when found`() {
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExerciseById(EXERCISE_ID_1))
             .thenReturn(Mono.just(testProgrammedExercise))
         val result = programmedExerciseController.get(EXERCISE_ID_1)
@@ -160,6 +170,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `get should return not found when programmed exercise not found`() {
+        whenever(programmedExerciseService.isOwner(NON_EXISTENT_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExerciseById(NON_EXISTENT_ID))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
         val result = programmedExerciseController.get(NON_EXISTENT_ID)
@@ -171,6 +182,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `get should handle database errors`() {
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExerciseById(EXERCISE_ID_1))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result = programmedExerciseController.get(EXERCISE_ID_1)
@@ -191,6 +203,7 @@ class ProgrammedExerciseControllerTest {
                     position = POSITION_2
                 )
             )
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID))
             .thenReturn(Mono.just(exercises))
         val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
@@ -202,6 +215,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `getByStage should handle database errors`() {
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
@@ -262,7 +276,7 @@ class ProgrammedExerciseControllerTest {
         val ownedExercises = listOf(testProgrammedExercise)
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programmedExerciseService.selectProgrammedExercisesByUserId(userId.toInt())).thenReturn(Mono.just(ownedExercises))
+        whenever(programmedExerciseService.selectProgrammedExercisesByUserId(userId)).thenReturn(Mono.just(ownedExercises))
 
         val result = programmedExerciseController.getAll()
         StepVerifier.create(result)
@@ -279,7 +293,7 @@ class ProgrammedExerciseControllerTest {
         val roles = setOf("user")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programmedExerciseService.selectProgrammedExercisesByUserId(userId.toInt())).thenReturn(Mono.just(emptyList()))
+        whenever(programmedExerciseService.selectProgrammedExercisesByUserId(userId)).thenReturn(Mono.just(emptyList()))
 
         val result = programmedExerciseController.getAll()
         StepVerifier.create(result)
@@ -296,7 +310,7 @@ class ProgrammedExerciseControllerTest {
         val ex = RuntimeException("db error")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programmedExerciseService.selectProgrammedExercisesByUserId(userId.toInt())).thenReturn(Mono.error(ex))
+        whenever(programmedExerciseService.selectProgrammedExercisesByUserId(userId)).thenReturn(Mono.error(ex))
 
         val result = programmedExerciseController.getAll()
         StepVerifier.create(result)
@@ -307,6 +321,8 @@ class ProgrammedExerciseControllerTest {
     @Test
     fun `update should update programmed exercise successfully`() {
         val updatedExercise = testProgrammedExercise.copy(notes = UPDATED_NOTES)
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.updateProgrammedExercise(any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(updatedExercise))
         val result =
@@ -332,6 +348,8 @@ class ProgrammedExerciseControllerTest {
                 notes = null,
                 updatedAt = now
             )
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.updateProgrammedExercise(EXERCISE_ID_1, WORKOUT_STAGE_ID, SQUAT, POSITION_2, null))
             .thenReturn(Mono.just(updatedExercise))
         val result =
@@ -350,6 +368,8 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `update should return not found when programmed exercise not found`() {
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programmedExerciseService.isOwner(NON_EXISTENT_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.updateProgrammedExercise(any(), any(), any(), any(), any()))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
         val result =
@@ -368,6 +388,8 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `update should handle database errors`() {
+        whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.updateProgrammedExercise(any(), any(), any(), any(), any()))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         val result =
@@ -386,6 +408,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `delete should delete programmed exercise successfully`() {
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.deleteProgrammedExercise(EXERCISE_ID_1))
             .thenReturn(Mono.just(testProgrammedExercise))
         val result = programmedExerciseController.delete(EXERCISE_ID_1)
@@ -397,6 +420,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `delete should return not found when programmed exercise not found`() {
+        whenever(programmedExerciseService.isOwner(NON_EXISTENT_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.deleteProgrammedExercise(NON_EXISTENT_ID))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
         val result = programmedExerciseController.delete(NON_EXISTENT_ID)
@@ -408,6 +432,7 @@ class ProgrammedExerciseControllerTest {
 
     @Test
     fun `delete should handle database errors`() {
+        whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.deleteProgrammedExercise(EXERCISE_ID_1))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         val result = programmedExerciseController.delete(EXERCISE_ID_1)

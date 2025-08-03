@@ -77,7 +77,7 @@ class ProgramController(
      * program is created, all other programs for the same user are automatically
      * deactivated to ensure only one active program per user.
      *
-     * @param userId The user ID for the program
+     * @param userId The Keycloak user ID for the program
      * @param name The name of the program
      * @param isActive Whether the program should be active (defaults to true)
      * @return Mono containing the created program with generated ID
@@ -98,13 +98,13 @@ class ProgramController(
         ],
     )
     fun save(
-        @RequestParam("user_id") userId: Int,
+        @RequestParam("user_id") userId: String,
         @RequestParam name: String,
         @RequestParam(name = "is_active", defaultValue = "true") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
         return keycloakUtil.getCurrentUserId().flatMap { keycloakId ->
             keycloakUtil.getCurrentUserRoles().flatMap { roles ->
-                if (roles.contains("admin") || roles.contains("service") || userId.toString() == keycloakId) {
+                if (roles.contains("admin") || roles.contains("service") || userId == keycloakId) {
                     logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
                     val startingCurrentWeekNumber = 1
                     programService.createProgram(userId, name, startingCurrentWeekNumber, isActive)
@@ -132,7 +132,7 @@ class ProgramController(
      * @return Mono containing the program if found, or 404 if not found
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get program by ID",
         description = "Retrieves a specific program by its unique identifier.",
@@ -159,14 +159,31 @@ class ProgramController(
         )
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<Program>> {
-        return programService.getProgramById(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programMono =
+                if (isAdminOrService) {
+                    programService.getProgramById(id)
+                } else {
+                    programService.getProgramById(id)
+                        .flatMap { program ->
+                            if (program.userId == userId) {
+                                Mono.just(program)
+                            } else {
+                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                            }
+                        }
+                }
+            programMono.map {
                 logger.debug("Found program: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error getting program: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting program: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -201,7 +218,7 @@ class ProgramController(
                 if (isAdminOrService) {
                     programService.getAllPrograms()
                 } else {
-                    programService.getProgramsByUserId(userId.toInt(), null)
+                    programService.getProgramsByUserId(userId, null)
                 }
             programMono.map { programs ->
                 ResponseEntity.ok(programs)
@@ -216,7 +233,7 @@ class ProgramController(
      * is provided, only programs with that active status are returned. If no
      * programs exist, an empty list is returned.
      *
-     * @param userId The user ID to filter programs by
+     * @param userId The Keycloak user ID to filter programs by
      * @param isActive Optional filter for active status. If not provided, returns all programs for the user
      * @return ResponseEntity containing a list of programs for the user
      */
@@ -237,11 +254,11 @@ class ProgramController(
     )
     fun getByUserId(
         @Parameter(
-            description = "User ID to filter programs by",
+            description = "Keycloak user ID to filter programs by",
             required = true,
-            example = "1",
+            example = "b226d772-c063-4974-ae08-ab64134abbcf",
         )
-        @PathVariable("user_id") userId: Int,
+        @PathVariable("user_id") userId: String,
         @Parameter(
             description = "Optional filter for active status",
             required = false,
@@ -275,7 +292,7 @@ class ProgramController(
      * @return Mono containing the updated program, or 404 if not found
      */
     @PatchMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Update program",
         description = "Updates an existing program with the specified ID.",
@@ -320,14 +337,31 @@ class ProgramController(
         )
         @RequestParam("is_active") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
-        return programService.updateProgram(id, name, currentWeekNumber, isActive)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programMono =
+                if (isAdminOrService) {
+                    programService.updateProgram(id, name, currentWeekNumber, isActive)
+                } else {
+                    programService.getProgramById(id)
+                        .flatMap { program ->
+                            if (program.userId == userId) {
+                                programService.updateProgram(id, name, currentWeekNumber, isActive)
+                            } else {
+                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                            }
+                        }
+                }
+            programMono.map {
                 logger.debug("Updated program: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error updating program: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error updating program: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -341,7 +375,7 @@ class ProgramController(
      * @return Mono containing the deleted program, or 404 if not found
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Delete program",
         description = "Deletes a program by its unique identifier.",
@@ -368,13 +402,30 @@ class ProgramController(
         )
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<Program>> {
-        return programService.deleteProgram(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programMono =
+                if (isAdminOrService) {
+                    programService.deleteProgram(id)
+                } else {
+                    programService.getProgramById(id)
+                        .flatMap { program ->
+                            if (program.userId == userId) {
+                                programService.deleteProgram(id)
+                            } else {
+                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                            }
+                        }
+                }
+            programMono.map {
                 logger.debug("Deleted program: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error deleting program: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error deleting program: {}", id, e)
+                }
+        }
     }
 }

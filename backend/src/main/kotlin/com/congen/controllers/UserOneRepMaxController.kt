@@ -3,8 +3,12 @@ package com.congen.controllers
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.model.UserOneRepMax
 import com.congen.service.UserOneRepMaxService
+import com.congen.util.KeycloakUtil
 import com.congen.util.ValidationUtil
+import io.swagger.v3.oas.annotations.Parameter
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -54,79 +58,123 @@ import java.math.BigDecimal
 class UserOneRepMaxController(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userOneRepMaxService: UserOneRepMaxService,
-    private val validationUtil: ValidationUtil
+    private val validationUtil: ValidationUtil,
+    private val keycloakUtil: KeycloakUtil
 ) {
+    private val logger = LoggerFactory.getLogger(UserOneRepMaxController::class.java)
+
     /**
      * Get all one rep max records for a user.
      *
-     * @param userId The user ID
+     * @param userId The Keycloak user ID
      * @param unit Optional unit to convert weights to (kg or lbs)
      * @return Mono containing list of one rep max records
      */
     @GetMapping("/user/{user_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     fun getOneRepMaxesByUserId(
-        @PathVariable("user_id") userId: Int,
+        @PathVariable("user_id") userId: String,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<List<UserOneRepMax>>> {
-        return userOneRepMaxService.getAllByUser(userId, unit)
-            .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
+            if (currentUserId == userId) {
+                userOneRepMaxService.getAllByUser(userId, unit)
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only view their own one rep maxes"))
+            }
+        }
     }
 
     /**
      * Get a specific one rep max record by user and exercise.
      *
-     * @param userId The user ID
+     * @param userId The Keycloak user ID
      * @param exerciseName The exercise name
      * @param unit Optional unit to convert weight to (kg or lbs)
      * @return Mono containing the one rep max record or empty if not found
      */
     @GetMapping("/user/{user_id}/exercise/{exercise_name}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     fun getOneRepMaxByUserAndExercise(
-        @PathVariable("user_id") userId: Int,
+        @PathVariable("user_id") userId: String,
         @PathVariable("exercise_name") exerciseName: String,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
-        return userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
-            .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
+            if (currentUserId == userId) {
+                userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only view their own one rep maxes"))
+            }
+        }
     }
 
     /**
      * Create or update a one rep max record.
      *
-     * @param userId The user ID
+     * @param userId The Keycloak user ID
      * @param exerciseName The exercise name
      * @param oneRepMax The one rep max weight value
      * @param unit The weight unit (kg or lbs)
      * @return Mono containing the created or updated one rep max record
      */
     @PutMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     fun upsertOneRepMax(
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
+        @RequestParam("user_id") userId: String,
+        @Parameter(description = "Exercise name", required = true, example = "Bench Press")
         @RequestParam("exercise_name") exerciseName: String,
+        @Parameter(description = "One rep max weight", required = true, example = "225.0")
         @RequestParam("one_rep_max") oneRepMax: BigDecimal,
-        @RequestParam(required = false, defaultValue = "KG") unit: String?
+        @Parameter(description = "Weight unit", required = true, example = "KG")
+        @RequestParam("unit") unit: String,
     ): Mono<ResponseEntity<UserOneRepMax>> {
-        return userOneRepMaxService.upsertOneRepMax(userId, exerciseName, oneRepMax, unit)
-            .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                userOneRepMaxService.upsertOneRepMax(userId, exerciseName, oneRepMax, unit)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error(
+                            "Error upserting user one rep max: userId={}, exerciseName={}, oneRepMax={}, unit={}",
+                            userId,
+                            exerciseName,
+                            oneRepMax,
+                            unit,
+                            e
+                        )
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only update their own one rep maxes"))
+            }
+        }
     }
 
     /**
      * Delete a one rep max record.
      *
-     * @param userId The user ID
+     * @param userId The Keycloak user ID
      * @param exerciseName The exercise name
      * @return Mono containing confirmation of deletion
      */
     @DeleteMapping("/user/{user_id}/exercise/{exercise_name}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     fun deleteOneRepMax(
-        @PathVariable("user_id") userId: Int,
+        @PathVariable("user_id") userId: String,
         @PathVariable("exercise_name") exerciseName: String
     ): Mono<ResponseEntity<UserOneRepMax>> {
-        return userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
-            .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
+            if (currentUserId == userId) {
+                userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only delete their own one rep maxes"))
+            }
+        }
     }
 }

@@ -54,13 +54,13 @@ class UserOneRepMaxDAL(
      * This method queries the database to find the 1RM between the specified user and exercise.
      * If no 1RM exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return Mono containing the user-exercise 1RM if found
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
     fun selectUserOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String,
     ): Mono<UserOneRepMax> {
         logger.debug("Selecting user one rep max: {} - {}", userId, exerciseName)
@@ -77,10 +77,10 @@ class UserOneRepMaxDAL(
      * This method fetches all 1RM values that are associated with the specified user.
      * If no 1RM values exist for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-exercise 1RM values
      */
-    fun selectUserOneRepMaxByUser(userId: Int): Mono<List<UserOneRepMax>> {
+    fun selectUserOneRepMaxByUser(userId: String): Mono<List<UserOneRepMax>> {
         logger.debug("Selecting one rep max values for user: {}", userId)
         return postgresClient.select(
             "SELECT * FROM user_one_rep_max WHERE user_id=$1 ORDER BY exercise_name",
@@ -94,14 +94,14 @@ class UserOneRepMaxDAL(
      * This method inserts a new 1RM between the specified user and exercise.
      * The combination of user ID and exercise name must be unique.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param oneRepMax The one rep max weight value
      * @return Mono containing the created user-exercise 1RM
      * @throws DatabaseException when the 1RM already exists or database operation fails
      */
     fun insertUserOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         oneRepMax: java.math.BigDecimal,
     ): Mono<UserOneRepMax> {
@@ -127,14 +127,14 @@ class UserOneRepMaxDAL(
      * This method modifies the 1RM for the specified user and exercise.
      * If no 1RM exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param oneRepMax The one rep max weight value
      * @return Mono containing the updated user-exercise 1RM
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
     fun updateUserOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         oneRepMax: java.math.BigDecimal,
     ): Mono<UserOneRepMax> {
@@ -159,14 +159,14 @@ class UserOneRepMaxDAL(
      * This method performs an upsert operation - if a 1RM exists for the specified user and exercise,
      * it will be updated; otherwise, a new 1RM will be created.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param oneRepMax The one rep max weight value
      * @return Mono containing the created or updated user-exercise 1RM
      * @throws DatabaseException when database operation fails
      */
     fun upsertUserOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         oneRepMax: java.math.BigDecimal,
     ): Mono<UserOneRepMax> {
@@ -196,13 +196,13 @@ class UserOneRepMaxDAL(
      * This method removes the 1RM between the specified user and exercise.
      * If no 1RM exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return Mono containing the deleted user-exercise 1RM
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
     fun deleteUserOneRepMax(
-        userId: Int,
+        userId: String,
         exerciseName: String,
     ): Mono<UserOneRepMax> {
         logger.debug("Deleting user one rep max: {} - {}", userId, exerciseName)

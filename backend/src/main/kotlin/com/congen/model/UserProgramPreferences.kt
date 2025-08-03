@@ -27,9 +27,9 @@ import java.time.Instant
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Represents a user's program preferences, such as days per week and session length.")
 data class UserProgramPreferences(
-    /** ID of the user. */
-    @Schema(description = "ID of the user", example = "1", required = true)
-    @param:JsonProperty("user_id") val userId: Int,
+    /** ID of the user (Keycloak ID). */
+    @Schema(description = "ID of the user (Keycloak ID)", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
+    @param:JsonProperty("user_id") val userId: String,
     /** Number of program days per week. */
     @Schema(description = "Number of program days per week", example = "4", required = true)
     @param:JsonProperty("program_days_per_week") val programDaysPerWeek: Int,

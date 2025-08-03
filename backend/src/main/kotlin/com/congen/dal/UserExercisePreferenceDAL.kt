@@ -52,13 +52,13 @@ class UserExercisePreferenceDAL(
      * This method queries the database to find the preference between the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return Mono containing the user-exercise preference if found
      * @throws NoResultsFoundException when the preference doesn't exist
      */
     fun selectUserExercisePreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
     ): Mono<UserExercisePreference> {
         logger.debug("Selecting user exercise preference: {} - {}", userId, exerciseName)
@@ -75,10 +75,10 @@ class UserExercisePreferenceDAL(
      * This method fetches all exercise preferences that are associated with the specified user.
      * If no preferences exist for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-exercise preferences
      */
-    fun selectUserExercisePreferencesByUser(userId: Int): Mono<List<UserExercisePreference>> {
+    fun selectUserExercisePreferencesByUser(userId: String): Mono<List<UserExercisePreference>> {
         logger.debug("Selecting exercise preferences for user: {}", userId)
         return postgresClient.select(
             "SELECT * FROM user_exercise_preference WHERE user_id=$1",
@@ -92,14 +92,14 @@ class UserExercisePreferenceDAL(
      * This method inserts a new preference between the specified user and exercise.
      * The combination of user ID and exercise name must be unique.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param shouldAvoid Whether the user should avoid this exercise
      * @return Mono containing the created user-exercise preference
      * @throws DatabaseException when the preference already exists or database operation fails
      */
     fun insertUserExercisePreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         shouldAvoid: Boolean,
     ): Mono<UserExercisePreference> {
@@ -123,14 +123,14 @@ class UserExercisePreferenceDAL(
      * This method modifies the preference for the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param shouldAvoid Whether the user should avoid this exercise
      * @return Mono containing the updated user-exercise preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
     fun updateUserExercisePreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         shouldAvoid: Boolean,
     ): Mono<UserExercisePreference> {
@@ -153,13 +153,13 @@ class UserExercisePreferenceDAL(
      * This method removes the preference between the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return Mono containing the deleted user-exercise preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
     fun deleteUserExercisePreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
     ): Mono<UserExercisePreference> {
         logger.debug("Deleting user exercise preference: {} - {}", userId, exerciseName)

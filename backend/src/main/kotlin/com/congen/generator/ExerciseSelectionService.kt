@@ -65,7 +65,7 @@ class ExerciseSelectionService(
     ): Mono<Exercise?> {
         // Get all exercises from the database to ensure we can include user preferences
         return exerciseDAL.selectExercises()
-            .flatMap { allExercises ->
+            .flatMap outer@{ allExercises ->
                 // Filter exercises based on preferences and ensure preferred exercises are included
                 val exercisesToAvoid = preferences.filter { it.shouldAvoid }.map { it.exerciseName }.toSet()
                 val preferredExercises = preferences.filter { !it.shouldAvoid }.map { it.exerciseName }.toSet()
@@ -88,7 +88,7 @@ class ExerciseSelectionService(
 
                 if (availableExercises.isEmpty()) {
                     logger.warn("No available exercises found for isAccessory: {}", isAccessory)
-                    return@flatMap Mono.justOrEmpty(null)
+                    return@outer Mono.justOrEmpty(null)
                 }
 
                 // Filter exercises by target muscles and equipment availability
@@ -242,7 +242,7 @@ class ExerciseSelectionService(
                             )
 
                         val selectedExercise = sortedExercises.firstOrNull()
-                        return@flatMap Mono.justOrEmpty(selectedExercise)
+                        Mono.justOrEmpty(selectedExercise)
                     }
             }
     }
@@ -276,8 +276,8 @@ class ExerciseSelectionService(
             return Mono.empty()
         }
         val equipmentFilteredExercises =
-            availableExercises.filter { exercise ->
-                userEquipment.any { _ -> true }
+            availableExercises.filter {
+                userEquipment.any { true }
             }
         if (equipmentFilteredExercises.isEmpty()) {
             logger.warn("No exercises available with user's equipment for secondary movement")

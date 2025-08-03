@@ -1,5 +1,7 @@
 package com.congen.generator
 
+import com.congen.model.Band
+
 /**
  * Data class for day templates.
  */
@@ -51,7 +53,7 @@ data class SetSchemeParams(
     /** The rest time in seconds before the next set. */
     val restSeconds: Int?,
     /** The band information for Dynamic Effort exercises. */
-    val band: com.congen.model.Band?
+    val band: Band?
 )
 
 /**

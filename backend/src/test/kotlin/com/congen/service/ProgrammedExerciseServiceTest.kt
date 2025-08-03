@@ -106,10 +106,10 @@ class ProgrammedExerciseServiceTest {
 
     @Test
     fun `getUserIdFromProgrammedExercise returns user id`() {
-        whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just(42))
+        whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(1L)).thenReturn(Mono.just("42"))
         val result = programmedExerciseService.getUserIdFromProgrammedExercise(1L)
         StepVerifier.create(result)
-            .expectNext(42)
+            .expectNext("42")
             .verifyComplete()
         verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(1L)
     }
@@ -117,7 +117,7 @@ class ProgrammedExerciseServiceTest {
     @Test
     fun `isOwner returns true when user is owner`() {
         val programmedExerciseId = 1L
-        val ownerUserId = 42
+        val ownerUserId = "42"
         val userId = "42"
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
 
@@ -125,12 +125,13 @@ class ProgrammedExerciseServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
     fun `isOwner returns false when user is not owner`() {
         val programmedExerciseId = 1L
-        val ownerUserId = 99
+        val ownerUserId = "99"
         val userId = "42"
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
 
@@ -138,6 +139,7 @@ class ProgrammedExerciseServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
@@ -152,12 +154,13 @@ class ProgrammedExerciseServiceTest {
         StepVerifier.create(result)
             .expectNext(false)
             .verifyComplete()
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
     fun `isOwner handles userId as string vs int`() {
         val programmedExerciseId = 1L
-        val ownerUserId = 42
+        val ownerUserId = "42"
         val userId = "42"
         whenever(programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExerciseId)).thenReturn(Mono.just(ownerUserId))
 
@@ -165,11 +168,12 @@ class ProgrammedExerciseServiceTest {
         StepVerifier.create(result)
             .expectNext(true)
             .verifyComplete()
+        verify(programmedExerciseDAL).getUserIdFromProgrammedExercise(programmedExerciseId)
     }
 
     @Test
     fun `selectProgrammedExercisesByUserId returns list of records`() {
-        val userId = 42
+        val userId = "42"
         whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)).thenReturn(Mono.just(exerciseList))
         val result = programmedExerciseService.selectProgrammedExercisesByUserId(userId)
         StepVerifier.create(result)
@@ -180,7 +184,7 @@ class ProgrammedExerciseServiceTest {
 
     @Test
     fun `selectProgrammedExercisesByUserId returns empty list`() {
-        val userId = 99
+        val userId = "99"
         whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)).thenReturn(Mono.just(emptyList()))
         val result = programmedExerciseService.selectProgrammedExercisesByUserId(userId)
         StepVerifier.create(result)
@@ -191,7 +195,7 @@ class ProgrammedExerciseServiceTest {
 
     @Test
     fun `selectProgrammedExercisesByUserId propagates error`() {
-        val userId = 42
+        val userId = "42"
         val ex = RuntimeException("db error")
         whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)).thenReturn(Mono.error(ex))
         val result = programmedExerciseService.selectProgrammedExercisesByUserId(userId)

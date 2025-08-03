@@ -41,10 +41,10 @@ export const createUserProfile = (
 /**
  * Get user profile by ID.
  *
- * @param userId The user ID
+ * @param userId The user ID (Keycloak ID)
  * @return The user profile
  */
-export const getUserById = (userId: number): Promise<User> =>
+export const getUserById = (userId: string): Promise<User> =>
   REQUEST({
     method: 'GET',
     url: `/user/${userId}`,
@@ -66,10 +66,10 @@ export const getCurrentUser = (): Promise<User> =>
  *
  * Permanently removes a user from the system. This action cannot be undone.
  *
- * @param userId The user ID to delete
+ * @param userId The user ID (Keycloak ID) to delete
  * @return The deleted user profile
  */
-export const deleteUser = (userId: number): Promise<User> =>
+export const deleteUser = (userId: string): Promise<User> =>
   REQUEST({
     method: 'DELETE',
     url: `/user/${userId}`,

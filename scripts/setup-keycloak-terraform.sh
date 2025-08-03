@@ -109,7 +109,7 @@ if [[ -z "${ADMIN_USERNAME}" ]]; then
     tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
     if [[ -f "${tfvars_file}" ]]; then
         # Check if admin_username is defined in tfvars
-        tfvars_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "')
+        tfvars_username=$(grep "^admin_username" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
         if [[ -n "${tfvars_username}" ]]; then
             ADMIN_USERNAME="${tfvars_username}"
             print_status "Using admin username from terraform.tfvars: ${ADMIN_USERNAME}"
@@ -130,7 +130,7 @@ if [[ -z "${ADMIN_PASSWORD}" ]]; then
     tfvars_file="terraform/environments/${ENVIRONMENT}/terraform.tfvars"
     if [[ -f "${tfvars_file}" ]]; then
         # Check if admin_password is defined in tfvars
-        tfvars_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "')
+        tfvars_password=$(grep "^admin_password" "${tfvars_file}" | cut -d'=' -f2 | tr -d ' "' || true)
         if [[ -n "${tfvars_password}" ]]; then
             ADMIN_PASSWORD="${tfvars_password}"
             print_status "Using admin password from terraform.tfvars"
@@ -323,7 +323,7 @@ assign_realm_management_roles() {
         fresh_token=$(curl -s -X POST \
             -H "Content-Type: application/x-www-form-urlencoded" \
             -d "username=${ADMIN_USERNAME}&password=${ADMIN_PASSWORD}&grant_type=password&client_id=admin-cli" \
-            "${KEYCLOAK_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" | jq -r '.access_token')
+            "${KEYCLOAK_URL}/realms/${MASTER_REALM}/protocol/openid-connect/token" | jq -r '.access_token' || true)
         
         local service_account_response
         service_account_response=$(curl -s -X GET \
@@ -362,7 +362,7 @@ assign_realm_management_roles() {
     local admin_role_id
     admin_role_id=$(curl -s -X GET \
         -H "Authorization: Bearer ${admin_token}" \
-        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/roles" | jq -r '.[] | select(.name == "admin") | .id')
+        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/roles" | jq -r '.[] | select(.name == "admin") | .id' || true)
     
     if [[ "${admin_role_id}" != "null" && -n "${admin_role_id}" ]]; then
         if curl -s -X POST \
@@ -383,7 +383,7 @@ assign_realm_management_roles() {
     local create_realm_role_id
     create_realm_role_id=$(curl -s -X GET \
         -H "Authorization: Bearer ${admin_token}" \
-        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/roles" | jq -r '.[] | select(.name == "create-realm") | .id')
+        "${KEYCLOAK_URL}/admin/realms/${MASTER_REALM}/roles" | jq -r '.[] | select(.name == "create-realm") | .id' || true)
     
     if [[ "${create_realm_role_id}" != "null" && -n "${create_realm_role_id}" ]]; then
         if curl -s -X POST \
@@ -413,11 +413,18 @@ generate_terraform_config() {
         # Replace existing value
         print_status "Replacing existing keycloak_client_secret value..."
         # Use awk instead of sed to avoid newline issues
-        awk -v secret="${client_secret}" '/^keycloak_client_secret = / {print "keycloak_client_secret = \"" secret "\""; next} {print}' "${tfvars_file}" > "${tfvars_file}.tmp" 2>/dev/null && mv "${tfvars_file}.tmp" "${tfvars_file}" || {
+        if awk -v secret="${client_secret}" '/^keycloak_client_secret = / {print "keycloak_client_secret = \"" secret "\""; next} {print}' "${tfvars_file}" > "${tfvars_file}.tmp" 2>/dev/null && mv "${tfvars_file}.tmp" "${tfvars_file}"; then
+            print_status "Successfully updated client secret using awk"
+        else
             # Fallback to simple replacement if awk fails
             print_status "Using fallback method to update client secret..."
-            grep -v "^keycloak_client_secret" "${tfvars_file}" > "${tfvars_file}.tmp" && echo "keycloak_client_secret = \"${client_secret}\"" >> "${tfvars_file}.tmp" && mv "${tfvars_file}.tmp" "${tfvars_file}"
-        }
+            if grep -v "^keycloak_client_secret" "${tfvars_file}" > "${tfvars_file}.tmp" && echo "keycloak_client_secret = \"${client_secret}\"" >> "${tfvars_file}.tmp" && mv "${tfvars_file}.tmp" "${tfvars_file}"; then
+                print_status "Successfully updated client secret using fallback method"
+            else
+                print_error "Failed to update client secret"
+                exit 1
+            fi
+        fi
         print_success "Updated existing keycloak_client_secret in ${tfvars_file}"
     else
         # Append new line at the end of the file
@@ -460,8 +467,7 @@ main() {
     
     # Get admin token
     local admin_token
-    admin_token=$(get_admin_token)
-    if [[ $? -ne 0 ]]; then
+    if ! admin_token=$(get_admin_token); then
         print_error "Failed to get admin token"
         exit 1
     fi
@@ -482,8 +488,7 @@ main() {
     # Get client UUID
     local client_uuid
     print_status "About to get client ID for ${TERRAFORM_CLIENT_ID}..."
-    client_uuid=$(get_client_id "${admin_token}" "${TERRAFORM_CLIENT_ID}")
-    if [[ $? -ne 0 ]]; then
+    if ! client_uuid=$(get_client_id "${admin_token}" "${TERRAFORM_CLIENT_ID}"); then
         print_error "Failed to get client UUID"
         exit 1
     fi
@@ -493,8 +498,7 @@ main() {
     # Get client secret
     local client_secret
     print_status "About to get client secret for UUID: ${client_uuid}..."
-    client_secret=$(get_client_secret "${admin_token}" "${client_uuid}")
-    if [[ $? -ne 0 ]]; then
+    if ! client_secret=$(get_client_secret "${admin_token}" "${client_uuid}"); then
         print_error "Failed to get client secret"
         exit 1
     fi

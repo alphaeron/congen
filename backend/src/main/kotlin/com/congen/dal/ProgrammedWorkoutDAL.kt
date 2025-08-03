@@ -104,10 +104,10 @@ class ProgrammedWorkoutDAL(
      * owned by the specified user by joining with the program table.
      * If no programmed workouts exist for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of programmed workouts owned by the user
      */
-    fun selectProgrammedWorkoutsByUserId(userId: Int): Mono<List<ProgrammedWorkout>> {
+    fun selectProgrammedWorkoutsByUserId(userId: String): Mono<List<ProgrammedWorkout>> {
         logger.debug("Selecting programmed workouts by user id: {}", userId)
         return postgresClient.select(
             """
@@ -201,10 +201,10 @@ class ProgrammedWorkoutDAL(
      * This method queries the database to determine if the specified user has any
      * programmed workouts by joining with the program table.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing true if the user has workouts, false otherwise
      */
-    fun hasUserExistingWorkouts(userId: Int): Mono<Boolean> {
+    fun hasUserExistingWorkouts(userId: String): Mono<Boolean> {
         logger.debug("Checking if user has existing workouts: {}", userId)
         // Explicit type
         return postgresClient.selectIndividual<Map<String, Any>>(

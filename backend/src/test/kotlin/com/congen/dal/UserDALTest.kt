@@ -10,10 +10,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
-import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 
 class UserDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -29,16 +25,16 @@ class UserDALTest {
     }
 
     @Test
-    fun `selectUserById should return user`() {
-        whenever(postgresClient.selectIndividual<User>("SELECT * FROM \"user\" WHERE id=$1", user.id))
+    fun `selectUserByKeycloakId should return user`() {
+        whenever(postgresClient.selectIndividual<User>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
             .thenReturn(Mono.just(user))
 
-        val result = userDAL.selectUserById(user.id)
+        val result = userDAL.selectUserByKeycloakId(user.keycloakId)
 
         StepVerifier.create(result)
             .expectNext(user)
             .verifyComplete()
-        verify(postgresClient).selectIndividual<User>("SELECT * FROM \"user\" WHERE id=$1", user.id)
+        verify(postgresClient).selectIndividual<User>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
     }
 
     @Test
@@ -56,24 +52,24 @@ class UserDALTest {
 
     @Test
     fun `insertUser should return inserted user`() {
-        val insertUser = mockUser(id = 0)
+        val insertUser = mockUser(keycloakId = "0")
         whenever(
             postgresClient.update<User>(
                 """
                 INSERT INTO "user"
-                    (name, age, height, weight, keycloak_user_id)
+                    (keycloak_id, name, age, height, weight)
                 VALUES
                     ($1, $2, $3, $4, $5)
                 """.trimIndent(),
+                insertUser.keycloakId,
                 insertUser.name,
                 insertUser.age,
                 insertUser.height,
                 insertUser.weight,
-                insertUser.keycloakUserId,
             ),
         ).thenReturn(Mono.just(insertUser))
 
-        val result = userDAL.insertUser(insertUser.name, insertUser.age, insertUser.height, insertUser.weight, insertUser.keycloakUserId)
+        val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name, insertUser.age, insertUser.height, insertUser.weight)
 
         StepVerifier.create(result)
             .expectNext(insertUser)
@@ -81,15 +77,15 @@ class UserDALTest {
         verify(postgresClient).update<User>(
             """
             INSERT INTO "user"
-                (name, age, height, weight, keycloak_user_id)
+                (keycloak_id, name, age, height, weight)
             VALUES
                 ($1, $2, $3, $4, $5)
             """.trimIndent(),
+            insertUser.keycloakId,
             insertUser.name,
             insertUser.age,
             insertUser.height,
             insertUser.weight,
-            insertUser.keycloakUserId,
         )
     }
 
@@ -101,9 +97,9 @@ class UserDALTest {
                 """
                 UPDATE "user"
                 SET name=$2, age=$3, height=$4, weight=$5, updated_at=NOW()
-                WHERE id=$1
+                WHERE keycloak_id=$1
                 """.trimIndent(),
-                updatedUser.id,
+                updatedUser.keycloakId,
                 updatedUser.name,
                 updatedUser.age,
                 updatedUser.height,
@@ -111,7 +107,7 @@ class UserDALTest {
             ),
         ).thenReturn(Mono.just(updatedUser))
 
-        val result = userDAL.updateUser(updatedUser.id, updatedUser.name, updatedUser.age, updatedUser.height, updatedUser.weight)
+        val result = userDAL.updateUser(updatedUser.keycloakId, updatedUser.name, updatedUser.age, updatedUser.height, updatedUser.weight)
 
         StepVerifier.create(result)
             .expectNext(updatedUser)
@@ -120,9 +116,9 @@ class UserDALTest {
             """
             UPDATE "user"
             SET name=$2, age=$3, height=$4, weight=$5, updated_at=NOW()
-            WHERE id=$1
+            WHERE keycloak_id=$1
             """.trimIndent(),
-            updatedUser.id,
+            updatedUser.keycloakId,
             updatedUser.name,
             updatedUser.age,
             updatedUser.height,
@@ -132,29 +128,14 @@ class UserDALTest {
 
     @Test
     fun `deleteUser should return deleted user`() {
-        whenever(postgresClient.update<User>("DELETE FROM \"user\" WHERE id=$1", user.id))
+        whenever(postgresClient.update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
             .thenReturn(Mono.just(user))
 
-        val result = userDAL.deleteUser(user.id)
+        val result = userDAL.deleteUser(user.keycloakId)
 
         StepVerifier.create(result)
             .expectNext(user)
             .verifyComplete()
-        verify(postgresClient).update<User>("DELETE FROM \"user\" WHERE id=$1", user.id)
-    }
-
-    @Test
-    fun `selectUserByKeycloakUserId should return user`() {
-        val keycloakUserId = "test-keycloak-user-id"
-        val expectedUser = mockUser(keycloakUserId = keycloakUserId)
-        whenever(postgresClient.selectIndividual<User>(any(), any(), eq(keycloakUserId)))
-            .thenReturn(Mono.just(expectedUser))
-
-        val result = userDAL.selectUserByKeycloakUserId(keycloakUserId)
-
-        StepVerifier.create(result)
-            .expectNext(expectedUser)
-            .verifyComplete()
-        verify(postgresClient).selectIndividual<User>(any(), any(), eq(keycloakUserId))
+        verify(postgresClient).update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
     }
 }

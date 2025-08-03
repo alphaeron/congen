@@ -33,8 +33,8 @@ class UserService(
      * Creates a new user profile after Keycloak registration.
      * This method is called after a user has registered through Keycloak
      * and we need to create their profile in our database.
-     * 
-     * @param keycloakUserId The Keycloak user ID
+     *
+     * @param keycloakId The Keycloak user ID
      * @param name The user's full name
      * @param age The user's age in years
      * @param height The user's height in centimeters
@@ -44,7 +44,7 @@ class UserService(
      * @throws ValidationException if validation fails
      */
     fun createUser(
-        keycloakUserId: String,
+        keycloakId: String,
         name: String,
         age: Int,
         height: BigDecimal,
@@ -57,28 +57,19 @@ class UserService(
             ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
         }
             .flatMap { weightInKg ->
-                userDAL.insertUser(name, age, height, weightInKg, keycloakUserId)
+                userDAL.insertUser(keycloakId, name, age, height, weightInKg)
             }
-            .doOnSuccess { logger.debug("Created user profile with id: {}", it.id) }
+            .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }
             .doOnError { e -> logger.error("Error creating user profile: {}", name, e) }
     }
 
     /**
-     * Retrieves a user by ID.
+     * Retrieves a user by their Keycloak ID.
      */
-    fun getUserById(id: Int): Mono<User> {
-        return userDAL.selectUserById(id)
-            .doOnSuccess { logger.debug("Found user: {}", id) }
-            .doOnError { e -> logger.error("Error getting user: {}", id, e) }
-    }
-
-    /**
-     * Retrieves a user by their Keycloak user ID.
-     */
-    fun getUserByKeycloakUserId(keycloakUserId: String): Mono<User> {
-        return userDAL.selectUserByKeycloakUserId(keycloakUserId)
-            .doOnSuccess { logger.debug("Found user by Keycloak ID: {}", keycloakUserId) }
-            .doOnError { e -> logger.error("Error getting user by Keycloak ID: {}", keycloakUserId, e) }
+    fun getUserByKeycloakId(keycloakId: String): Mono<User> {
+        return userDAL.selectUserByKeycloakId(keycloakId)
+            .doOnSuccess { logger.debug("Found user by Keycloak ID: {}", keycloakId) }
+            .doOnError { e -> logger.error("Error getting user by Keycloak ID: {}", keycloakId, e) }
     }
 
     /**
@@ -94,39 +85,37 @@ class UserService(
      * @throws ValidationException if validation fails
      */
     fun updateUser(
-        id: Int,
+        keycloakId: String,
         name: String,
         age: Int,
         height: BigDecimal,
         weight: BigDecimal,
         unit: String?
     ): Mono<User> {
-        logger.info("Updating user: {}", id)
+        logger.info("Updating user with Keycloak ID: {}", keycloakId)
         return Mono.fromCallable {
             val weightUnit = WeightUnit.fromString(unit)
             ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
         }
             .flatMap { weightInKg ->
-                userDAL.updateUser(id, name, age, height, weightInKg)
+                userDAL.updateUser(keycloakId, name, age, height, weightInKg)
             }
-            .doOnSuccess { logger.debug("Updated user: {}", id) }
-            .doOnError { e -> logger.error("Error updating user: {}", id, e) }
+            .doOnSuccess { logger.debug("Updated user with Keycloak ID: {}", keycloakId) }
+            .doOnError { e -> logger.error("Error updating user with Keycloak ID: {}", keycloakId, e) }
     }
 
     /**
-     * Deletes a user by ID.
+     * Deletes a user by their Keycloak ID.
      */
-    fun deleteUser(id: Int): Mono<User> {
-        logger.info("Deleting user: {}", id)
-        return userDAL.selectUserById(id)
-            .flatMap { user ->
-                user.keycloakUserId?.let { keycloakUserId ->
-                    // Delete from Keycloak first, then from database
-                    keycloakClient.deleteUser(keycloakUserId)
-                        .then(userDAL.deleteUser(id))
-                } ?: userDAL.deleteUser(id)
+    fun deleteUser(keycloakId: String): Mono<User> {
+        logger.info("Deleting user with Keycloak ID: {}", keycloakId)
+        return userDAL.selectUserByKeycloakId(keycloakId)
+            .flatMap {
+                // Delete from Keycloak first, then from database
+                keycloakClient.deleteUser(keycloakId)
+                    .then(userDAL.deleteUser(keycloakId))
             }
-            .doOnSuccess { logger.debug("Deleted user: {}", id) }
-            .doOnError { e -> logger.error("Error deleting user: {}", id, e) }
+            .doOnSuccess { logger.debug("Deleted user with Keycloak ID: {}", keycloakId) }
+            .doOnError { e -> logger.error("Error deleting user with Keycloak ID: {}", keycloakId, e) }
     }
 }

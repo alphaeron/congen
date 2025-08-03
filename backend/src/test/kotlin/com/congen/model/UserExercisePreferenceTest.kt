@@ -12,13 +12,13 @@ class UserExercisePreferenceTest {
     fun `should create user exercise preference with correct properties`() {
         val pref =
             mockUserExercisePreference(
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 exerciseName = "Bench Press",
                 shouldAvoid = true,
                 createdAt = now
             )
 
-        assertEquals(1, pref.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", pref.userId)
         assertEquals("Bench Press", pref.exerciseName)
         assertEquals(true, pref.shouldAvoid)
         assertEquals(now, pref.createdAt)

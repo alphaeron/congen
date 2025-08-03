@@ -24,9 +24,9 @@ import java.time.Instant
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Represents a user's preference for a specific exercise.")
 data class UserExercisePreference(
-    /** The ID of the user */
-    @Schema(description = "The ID of the user", example = "1", required = true)
-    @param:JsonProperty("user_id") val userId: Int,
+    /** ID of the user (Keycloak ID). */
+    @Schema(description = "ID of the user (Keycloak ID)", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
+    @param:JsonProperty("user_id") val userId: String,
     /** The name of the exercise */
     @Schema(description = "The name of the exercise", example = "Bench Press", required = true)
     @param:JsonProperty("exercise_name") val exerciseName: String,

@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.model.UserExercisePreference
+import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -46,6 +48,7 @@ import reactor.core.publisher.Mono
  * - **500 Internal Server Error**: When database operations fail
  *
  * @property userExercisePreferenceDAL Data access layer for user exercise preference operations
+ * @property keycloakUtil Utility for Keycloak operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -54,6 +57,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/user_exercise_preference")
 class UserExercisePreferenceController(
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
+    private val keycloakUtil: KeycloakUtil,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -66,13 +70,13 @@ class UserExercisePreferenceController(
      * This endpoint creates a preference relationship between a user and an exercise,
      * allowing the user to specify whether they like or dislike the exercise.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param shouldAvoid Whether the user should avoid this exercise
      * @return ResponseEntity containing the created user exercise preference
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Create user exercise preference",
         description = "Creates a new user exercise preference relationship.",
@@ -87,19 +91,34 @@ class UserExercisePreferenceController(
         ],
     )
     fun save(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Exercise name", required = true)
         @RequestParam("exercise_name") exerciseName: String,
         @Parameter(description = "Whether the user should avoid this exercise", required = true)
         @RequestParam("should_avoid") shouldAvoid: Boolean,
     ): Mono<ResponseEntity<UserExercisePreference>> {
-        logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
-        return userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error saving user exercise preference: {} - {}", userId, exerciseName, e)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
+                userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error(
+                            "Error saving user exercise preference: userId={}, exerciseName={}, shouldAvoid={}",
+                            userId,
+                            exerciseName,
+                            shouldAvoid,
+                            e
+                        )
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only create preferences for themselves"))
             }
+        }
     }
 
     /**
@@ -108,11 +127,11 @@ class UserExercisePreferenceController(
      * This endpoint fetches all exercise preferences that are associated with the specified user,
      * returning a list of user-exercise preference relationships.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user exercise preferences
      */
     @GetMapping("/{user_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Get user exercise preferences by user ID",
         description = "Retrieves all exercise preferences associated with a given user.",
@@ -127,17 +146,26 @@ class UserExercisePreferenceController(
         ],
     )
     fun getByUser(
-        @Parameter(description = "User ID", required = true)
-        @PathVariable("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @PathVariable("user_id") userId: String,
     ): Mono<ResponseEntity<List<UserExercisePreference>>> {
-        return userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
-            .map { preferences ->
-                logger.debug("Found exercise preferences for user: {}", userId)
-                ResponseEntity.ok(preferences)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
+                    .map { preferences ->
+                        logger.debug("Found exercise preferences for user: {}", userId)
+                        ResponseEntity.ok(preferences)
+                    }
+                    .doOnError { e ->
+                        logger.error("Error getting exercise preferences for user: {}", userId, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only view their own exercise preferences"))
             }
-            .doOnError { e ->
-                logger.error("Error getting exercise preferences for user: {}", userId, e)
-            }
+        }
     }
 
     /**
@@ -146,12 +174,12 @@ class UserExercisePreferenceController(
      * This endpoint removes the preference relationship between a user and an exercise,
      * effectively removing the user's preference for that exercise.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return ResponseEntity containing the deleted user exercise preference
      */
     @DeleteMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #userId == principal.subject")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
         summary = "Delete user exercise preference",
         description = "Deletes a user exercise preference relationship.",
@@ -166,16 +194,25 @@ class UserExercisePreferenceController(
         ],
     )
     fun delete(
-        @Parameter(description = "User ID", required = true)
-        @RequestParam("user_id") userId: Int,
+        @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
+        @RequestParam("user_id") userId: String,
         @Parameter(description = "Exercise name", required = true)
         @RequestParam("exercise_name") exerciseName: String,
     ): Mono<ResponseEntity<UserExercisePreference>> {
-        logger.info("Deleting user exercise preference: {} - {}", userId, exerciseName)
-        return userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error deleting user exercise preference: {} - {}", userId, exerciseName, e)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                logger.info("Deleting user exercise preference: {} - {}", userId, exerciseName)
+                userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)
+                    .map { ResponseEntity.ok(it) }
+                    .doOnError { e ->
+                        logger.error("Error deleting user exercise preference: {} - {}", userId, exerciseName, e)
+                    }
+            } else {
+                Mono.error(AccessDeniedException("Access denied: User can only delete their own exercise preferences"))
             }
+        }
     }
 }

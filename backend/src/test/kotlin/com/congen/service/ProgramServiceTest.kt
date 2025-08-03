@@ -5,7 +5,6 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
@@ -14,8 +13,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @ExtendWith(MockitoExtension::class)
 class ProgramServiceTest {
@@ -27,7 +24,7 @@ class ProgramServiceTest {
     private val testProgram =
         Program(
             id = 1L,
-            userId = 123,
+            userId = "b226d772-c063-4974-ae08-ab64134abbcf",
             name = "Test Program",
             currentWeekNumber = 1,
             createdAt = Instant.now(),
@@ -44,9 +41,11 @@ class ProgramServiceTest {
     fun `isOwner should return true when user owns the program`() {
         whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.just(testProgram))
 
-        val result = programService.isOwner(1L, "123")
+        val result = programService.isOwner(1L, "b226d772-c063-4974-ae08-ab64134abbcf")
 
-        assertTrue(result)
+        StepVerifier.create(result)
+            .expectNext(true)
+            .verifyComplete()
         verify(programDAL).selectProgramById(1L)
     }
 
@@ -54,9 +53,11 @@ class ProgramServiceTest {
     fun `isOwner should return false when user does not own the program`() {
         whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.just(testProgram))
 
-        val result = programService.isOwner(1L, "456")
+        val result = programService.isOwner(1L, "different-user-id")
 
-        assertFalse(result)
+        StepVerifier.create(result)
+            .expectNext(false)
+            .verifyComplete()
         verify(programDAL).selectProgramById(1L)
     }
 
@@ -64,12 +65,11 @@ class ProgramServiceTest {
     fun `isOwner should return false when program not found`() {
         whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.error(NoResultsFoundException("Program not found")))
 
-        val exception =
-            assertThrows<RuntimeException> {
-                programService.isOwner(1L, "123")
-            }
+        val result = programService.isOwner(1L, "b226d772-c063-4974-ae08-ab64134abbcf")
 
-        assertTrue(exception.cause is NoResultsFoundException)
+        StepVerifier.create(result)
+            .expectNext(false)
+            .verifyComplete()
         verify(programDAL).selectProgramById(1L)
     }
 
@@ -101,51 +101,55 @@ class ProgramServiceTest {
     @Test
     fun `getProgramsByUserId should delegate to DAL with userId only`() {
         val programs = listOf(testProgram)
-        whenever(programDAL.selectProgramsByUserId(123, null)).thenReturn(Mono.just(programs))
+        whenever(programDAL.selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", null)).thenReturn(Mono.just(programs))
 
-        val result = programService.getProgramsByUserId(123)
+        val result = programService.getProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf")
 
         StepVerifier.create(result)
             .expectNext(programs)
             .verifyComplete()
-        verify(programDAL).selectProgramsByUserId(123, null)
+        verify(programDAL).selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", null)
     }
 
     @Test
     fun `getProgramsByUserId should delegate to DAL with userId and isActive`() {
         val programs = listOf(testProgram)
-        whenever(programDAL.selectProgramsByUserId(123, true)).thenReturn(Mono.just(programs))
+        whenever(programDAL.selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", true)).thenReturn(Mono.just(programs))
 
-        val result = programService.getProgramsByUserId(123, true)
+        val result = programService.getProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", true)
 
         StepVerifier.create(result)
             .expectNext(programs)
             .verifyComplete()
-        verify(programDAL).selectProgramsByUserId(123, true)
+        verify(programDAL).selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", true)
     }
 
     @Test
     fun `createProgram should delegate to DAL`() {
-        whenever(programDAL.insertProgram(123, "Test Program", 1, true)).thenReturn(Mono.just(testProgram))
+        whenever(
+            programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        ).thenReturn(Mono.just(testProgram))
 
-        val result = programService.createProgram(123, "Test Program", 1, true)
+        val result = programService.createProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
 
         StepVerifier.create(result)
             .expectNext(testProgram)
             .verifyComplete()
-        verify(programDAL).insertProgram(123, "Test Program", 1, true)
+        verify(programDAL).insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
     }
 
     @Test
     fun `createProgram should use default isActive value`() {
-        whenever(programDAL.insertProgram(123, "Test Program", 1, true)).thenReturn(Mono.just(testProgram))
+        whenever(
+            programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        ).thenReturn(Mono.just(testProgram))
 
-        val result = programService.createProgram(123, "Test Program", 1)
+        val result = programService.createProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1)
 
         StepVerifier.create(result)
             .expectNext(testProgram)
             .verifyComplete()
-        verify(programDAL).insertProgram(123, "Test Program", 1, true)
+        verify(programDAL).insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
     }
 
     @Test

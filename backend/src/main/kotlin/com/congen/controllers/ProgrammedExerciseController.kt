@@ -6,6 +6,7 @@ import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -78,28 +79,43 @@ class ProgrammedExerciseController(
      * @return Mono containing the created programmed exercise with generated ID
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @workoutStageService.isOwner(#workoutStageId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun save(
         @RequestParam("workout_stage_id") workoutStageId: Long,
         @RequestParam("exercise_name") exerciseName: String,
         @RequestParam position: Int,
         @RequestParam notes: String?,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
-        logger.info("Saving programmed exercise: {} for stage: {} at position: {}", exerciseName, workoutStageId, position)
-        return programmedExerciseService.insertProgrammedExercise(workoutStageId, exerciseName, position, notes)
-            .map { savedExercise ->
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedExerciseMono =
+                if (isAdminOrService) {
+                    programmedExerciseService.insertProgrammedExercise(workoutStageId, exerciseName, position, notes)
+                } else {
+                    workoutStageService.isOwner(workoutStageId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedExerciseService.insertProgrammedExercise(workoutStageId, exerciseName, position, notes)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                        }
+                    }
+                }
+            programmedExerciseMono.map { savedExercise ->
                 logger.debug("Saved programmed exercise with id: {}", savedExercise.id)
                 ResponseEntity.ok(savedExercise)
             }
-            .doOnError { e ->
-                logger.error(
-                    "Error saving programmed exercise: {} for stage: {} at position: {}",
-                    exerciseName,
-                    workoutStageId,
-                    position,
-                    e,
-                )
-            }
+                .doOnError { e ->
+                    logger.error(
+                        "Error saving programmed exercise: {} for stage: {} at position: {}",
+                        exerciseName,
+                        workoutStageId,
+                        position,
+                        e,
+                    )
+                }
+        }
     }
 
     /**
@@ -112,18 +128,34 @@ class ProgrammedExerciseController(
      * @return Mono containing the programmed exercise if found, or 404 if not found
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedExerciseService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
-        return programmedExerciseService.selectProgrammedExerciseById(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedExerciseMono =
+                if (isAdminOrService) {
+                    programmedExerciseService.selectProgrammedExerciseById(id)
+                } else {
+                    programmedExerciseService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedExerciseService.selectProgrammedExerciseById(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                        }
+                    }
+                }
+            programmedExerciseMono.map {
                 logger.debug("Found programmed exercise: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error getting programmed exercise: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting programmed exercise: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -136,19 +168,34 @@ class ProgrammedExerciseController(
      * @return ResponseEntity containing a list of programmed exercises for the stage
      */
     @GetMapping("/stage/{workout_stage_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @workoutStageService.isOwner(#workoutStageId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun getByStage(
         @PathVariable("workout_stage_id") workoutStageId: Long,
     ): Mono<ResponseEntity<List<ProgrammedExercise>>> {
-        logger.debug("Getting programmed exercises for stage: {}", workoutStageId)
-        return programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(workoutStageId)
-            .map { programmedExercises ->
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedExerciseMono =
+                if (isAdminOrService) {
+                    programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(workoutStageId)
+                } else {
+                    workoutStageService.isOwner(workoutStageId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(workoutStageId)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                        }
+                    }
+                }
+            programmedExerciseMono.map { programmedExercises ->
                 logger.debug("Found {} programmed exercises for stage: {}", programmedExercises.size, workoutStageId)
                 ResponseEntity.ok(programmedExercises)
             }
-            .doOnError { e ->
-                logger.error("Error getting programmed exercises for stage: {}", workoutStageId, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting programmed exercises for stage: {}", workoutStageId, e)
+                }
+        }
     }
 
     /**
@@ -170,7 +217,7 @@ class ProgrammedExerciseController(
                 if (isAdminOrService) {
                     programmedExerciseService.selectProgrammedExercises()
                 } else {
-                    programmedExerciseService.selectProgrammedExercisesByUserId(userId.toInt())
+                    programmedExerciseService.selectProgrammedExercisesByUserId(userId)
                 }
             programmedExerciseMono.map { ResponseEntity.ok(it) }
         }
@@ -192,11 +239,7 @@ class ProgrammedExerciseController(
      * @return Mono containing the updated programmed exercise, or 404 if not found
      */
     @PatchMapping("/{id}")
-    @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or " +
-            "(@workoutStageService.isOwner(#workoutStageId, principal.subject) and " +
-            "@programmedExerciseService.isOwner(#id, principal.subject))"
-    )
+    @PreAuthorize("isAuthenticated()")
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam("workout_stage_id") workoutStageId: Long,
@@ -204,14 +247,37 @@ class ProgrammedExerciseController(
         @RequestParam position: Int,
         @RequestParam notes: String?,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
-        return programmedExerciseService.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedExerciseMono =
+                if (isAdminOrService) {
+                    programmedExerciseService.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
+                } else {
+                    workoutStageService.isOwner(
+                        workoutStageId,
+                        userId
+                    ).zipWith(programmedExerciseService.isOwner(id, userId)) { isStageOwner, isExerciseOwner ->
+                        isStageOwner && isExerciseOwner
+                    }.flatMap { hasAccess ->
+                        if (hasAccess) {
+                            programmedExerciseService.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
+                        } else {
+                            Mono.error(
+                                AccessDeniedException("Access denied: User is not the owner of this workout stage and programmed exercise")
+                            )
+                        }
+                    }
+                }
+            programmedExerciseMono.map {
                 logger.debug("Updated programmed exercise: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error updating programmed exercise: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error updating programmed exercise: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -225,17 +291,33 @@ class ProgrammedExerciseController(
      * @return Mono containing the deleted programmed exercise, or 404 if not found
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedExerciseService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedExercise>> {
-        return programmedExerciseService.deleteProgrammedExercise(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedExerciseMono =
+                if (isAdminOrService) {
+                    programmedExerciseService.deleteProgrammedExercise(id)
+                } else {
+                    programmedExerciseService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedExerciseService.deleteProgrammedExercise(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                        }
+                    }
+                }
+            programmedExerciseMono.map {
                 logger.debug("Deleted programmed exercise: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error deleting programmed exercise: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error deleting programmed exercise: {}", id, e)
+                }
+        }
     }
 }

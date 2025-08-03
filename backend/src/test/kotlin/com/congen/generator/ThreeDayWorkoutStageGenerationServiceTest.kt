@@ -1,5 +1,10 @@
 package com.congen.generator
 
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.SetSchemeDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.mockExercise
 import com.congen.mockPrilepinGuidelines
 import com.congen.mockProgrammedWorkout
@@ -10,6 +15,7 @@ import com.congen.mockUserProgramPreferences
 import com.congen.mockWeightSelectionResult
 import com.congen.model.Exercise
 import com.congen.model.ExerciseRotationHistory
+import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -30,14 +36,14 @@ import reactor.test.StepVerifier
 class ThreeDayWorkoutStageGenerationServiceTest {
     private lateinit var threeDayService: ThreeDayWorkoutStageGenerationService
     private lateinit var exerciseSelectionService: ExerciseSelectionService
-    private lateinit var workoutStageDAL: com.congen.dal.WorkoutStageDAL
-    private lateinit var workoutStageTypeDAL: com.congen.dal.WorkoutStageTypeDAL
-    private lateinit var programmedExerciseDAL: com.congen.dal.ProgrammedExerciseDAL
-    private lateinit var setSchemeDAL: com.congen.dal.SetSchemeDAL
-    private lateinit var setSchemeService: com.congen.service.SetSchemeService
+    private lateinit var workoutStageDAL: WorkoutStageDAL
+    private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
+    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
+    private lateinit var setSchemeDAL: SetSchemeDAL
+    private lateinit var setSchemeService: SetSchemeService
     private lateinit var prilepinGuidelinesService: PrilepinGuidelinesService
     private lateinit var weightSelectionService: WeightSelectionService
-    private lateinit var userWeightUnitPreferenceDAL: com.congen.dal.UserWeightUnitPreferenceDAL
+    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var sessionTimeCalculator: SessionTimeCalculator
     private lateinit var conjugateTemplates: ConjugateTemplates
 
@@ -52,7 +58,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
     private val rotationHistory = listOf<ExerciseRotationHistory>()
     private val weakMuscles = listOf("hamstrings", "glutes")
     private val currentWeekNumber = 1
-    private val userId = 1
+    private val userId = "test-user-id"
 
     @BeforeEach
     fun setUp() {

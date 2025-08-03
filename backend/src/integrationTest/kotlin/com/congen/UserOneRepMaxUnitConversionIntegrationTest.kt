@@ -18,18 +18,18 @@ import java.math.BigDecimal
  */
 class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
-    private var userId: Int = 0
+    private var userId: String = ""
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        val token = getValidToken("user")
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val serviceToken = getValidToken("service")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = serviceToken)
     }
 
     @Test
     fun `should store weight in kg when input is in lbs`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Bench Press"
         val weightInLbs = BigDecimal("225.0")
         val expectedWeightInKg = BigDecimal("102.06") // 225 lbs * 0.453592 = 102.06 kg
@@ -41,7 +41,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
                 exerciseName,
                 weightInLbs,
                 unit = "LBS",
-                token = token
+                token = serviceToken
             )
         assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
@@ -50,7 +50,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should store weight in kg when input is in kg`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Deadlift"
         val weightInKg = BigDecimal("150.0")
 
@@ -61,7 +61,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
                 exerciseName,
                 weightInKg,
                 unit = "KG",
-                token = token
+                token = serviceToken
             )
         assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
@@ -70,7 +70,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should use user preference when no unit specified`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Safety Bar Squat"
         val weightInLbs = BigDecimal("315.0")
         val expectedWeightInKg = BigDecimal("142.88") // 315 lbs * 0.453592 = 142.88 kg
@@ -80,7 +80,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             userId,
             exerciseName,
             "LBS",
-            token = token
+            token = serviceToken
         )
         val oneRepMax =
             IntegrationTestHelpers.putUserOneRepMax(
@@ -89,7 +89,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
                 exerciseName,
                 weightInLbs,
                 unit = "LBS",
-                token = token
+                token = serviceToken
             )
         assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
@@ -98,7 +98,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should default to kg when no unit specified and no preference exists`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Bent-Over Row"
         val weightInKg = BigDecimal("100.0")
 
@@ -109,7 +109,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
                 exerciseName,
                 weightInKg,
                 unit = "KG",
-                token = token
+                token = serviceToken
             )
         assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
@@ -118,7 +118,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return weight in user's preferred unit when retrieving`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Deadlift"
         val weightInLbs = BigDecimal("225.0")
         val expectedWeightInLbs = BigDecimal("225.00")
@@ -128,7 +128,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             userId,
             exerciseName,
             "LBS",
-            token = token
+            token = serviceToken
         )
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
@@ -136,7 +136,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             exerciseName,
             weightInLbs,
             unit = "LBS",
-            token = token
+            token = serviceToken
         )
         // Small delay to ensure database transaction is committed
         Thread.sleep(100)
@@ -145,7 +145,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
                 webTestClient,
                 userId,
                 exerciseName,
-                token = token
+                token = serviceToken
             )
         assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
@@ -154,7 +154,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return weight in specified unit when retrieving with unit parameter`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Deadlift"
         val weightInKg = BigDecimal("150.0")
         val expectedWeightInLbs = BigDecimal("330.69") // 150 kg * 2.20462 = 330.69 lbs
@@ -165,7 +165,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             exerciseName,
             weightInKg,
             unit = "KG",
-            token = token
+            token = serviceToken
         )
         // Small delay to ensure database transaction is committed
         Thread.sleep(100)
@@ -175,7 +175,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
                 userId,
                 exerciseName,
                 unit = "LBS",
-                token = token
+                token = serviceToken
             )
         assert(oneRepMax.userId == userId)
         assert(oneRepMax.exerciseName == exerciseName)
@@ -184,7 +184,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 400 for invalid unit parameter`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exerciseName = "Bench Press"
         val weight = BigDecimal("225.0")
         val invalidUnit = "INVALID"
@@ -192,7 +192,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
         val uri = "/api/v1/user_one_rep_max/?user_id=$userId&exercise_name=$exerciseName&one_rep_max=$weight&unit=$invalidUnit"
         webTestClient.put()
             .uri(uri)
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -203,7 +203,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return all one rep maxes in user's preferred units`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val exercise1 = "Bench Press"
         val exercise2 = "Deadlift"
         val weight1 = BigDecimal("225.0") // lbs
@@ -214,14 +214,14 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             userId,
             exercise1,
             "LBS",
-            token = token
+            token = serviceToken
         )
         IntegrationTestHelpers.setUserWeightUnitPreference(
             webTestClient,
             userId,
             exercise2,
             "KG",
-            token = token
+            token = serviceToken
         )
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
@@ -229,7 +229,7 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             exercise1,
             weight1,
             unit = "LBS",
-            token = token
+            token = serviceToken
         )
         IntegrationTestHelpers.putUserOneRepMax(
             webTestClient,
@@ -237,13 +237,13 @@ class UserOneRepMaxUnitConversionIntegrationTest : BaseIntegrationTest() {
             exercise2,
             weight2,
             unit = "KG",
-            token = token
+            token = serviceToken
         )
         val oneRepMaxes =
             IntegrationTestHelpers.getAllUserOneRepMaxes(
                 webTestClient,
                 userId,
-                token = token
+                token = serviceToken
             )
         assert(oneRepMaxes.size == 2)
         val benchPress = oneRepMaxes.find { it.exerciseName == exercise1 }

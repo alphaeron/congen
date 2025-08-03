@@ -5,14 +5,16 @@ plugins {
 
 description = 'Conjugate Workout Generator Frontend'
 
+// Get environment from project property, default to 'local'
+ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+
 // Environment-aware build task using gradle-node-plugin built-in tasks
 task buildApp {
     group = 'build'
     description = 'Build the application (uses environment to determine build type)'
     dependsOn npm_install
 
-    def environment = project.hasProperty('environment') ? project.environment : 'local'
-    def buildType = (environment == 'production') ? 'production' : 'debug'
+    def buildType = (project.environment == 'production') ? 'production' : 'debug'
 
     if (buildType == 'production') {
         dependsOn npm_run_build

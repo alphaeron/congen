@@ -4,13 +4,18 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseRotationHistoryDAL
+import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.mockExercise
 import com.congen.mockExerciseEquipment
 import com.congen.mockExerciseMuscle
 import com.congen.mockExerciseRotationHistory
 import com.congen.mockUserEquipment
 import com.congen.mockUserExercisePreference
+import com.congen.model.Exercise
+import com.congen.model.ExerciseMuscle
+import com.congen.model.ExerciseRotationHistory
 import com.congen.model.MovementType
+import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
@@ -49,7 +54,7 @@ class ExerciseSelectionServiceTest {
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
 
     @Mock
-    private lateinit var exerciseWorkoutTypeDAL: com.congen.dal.ExerciseWorkoutTypeDAL
+    private lateinit var exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL
 
     private lateinit var exerciseSelectionService: ExerciseSelectionService
 
@@ -70,13 +75,13 @@ class ExerciseSelectionServiceTest {
     fun `selectRotatingExercise should return exercise for primary movement`() {
         val targetMuscles = listOf("chest", "triceps")
         val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
-        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val preferences = emptyList<UserExercisePreference>()
         val exercises =
             listOf(
                 mockExercise(name = EXERCISE_NAME, isAccessory = false),
                 mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
-        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+        val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
@@ -109,13 +114,13 @@ class ExerciseSelectionServiceTest {
     fun `selectRotatingExercise should return exercise for accessory movement`() {
         val targetMuscles = listOf("biceps")
         val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
-        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val preferences = emptyList<UserExercisePreference>()
         val exercises =
             listOf(
                 mockExercise(name = EXERCISE_NAME_6, isAccessory = true),
                 mockExercise(name = EXERCISE_NAME_7, isAccessory = true)
             )
-        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+        val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
@@ -157,7 +162,7 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = EXERCISE_NAME, isAccessory = false),
                 mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
-        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+        val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
@@ -190,7 +195,7 @@ class ExerciseSelectionServiceTest {
     fun `selectRotatingExercise should prioritize unused exercises`() {
         val targetMuscles = listOf("chest")
         val userEquipment = listOf(mockUserEquipment(equipmentName = "Barbell"))
-        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val preferences = emptyList<UserExercisePreference>()
         val exercises =
             listOf(
                 mockExercise(name = EXERCISE_NAME, isAccessory = false),
@@ -242,7 +247,7 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = EXERCISE_NAME, isAccessory = false),
                 mockExercise(name = EXERCISE_NAME_4, isAccessory = false)
             )
-        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+        val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
 
@@ -358,21 +363,21 @@ class ExerciseSelectionServiceTest {
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(EXERCISE_NAME)).thenReturn(
             Mono.just(
                 listOf(
-                    com.congen.model.ExerciseMuscle(EXERCISE_NAME, "chest"),
-                    com.congen.model.ExerciseMuscle(EXERCISE_NAME, "triceps")
+                    ExerciseMuscle(EXERCISE_NAME, "chest"),
+                    ExerciseMuscle(EXERCISE_NAME, "triceps")
                 )
             )
         )
         // Candidate1 targets chest only
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Incline Bench Press")).thenReturn(
-            Mono.just(listOf(com.congen.model.ExerciseMuscle("Incline Bench Press", "chest")))
+            Mono.just(listOf(ExerciseMuscle("Incline Bench Press", "chest")))
         )
         // Candidate2 targets chest and triceps (full overlap)
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Overhead Press")).thenReturn(
             Mono.just(
                 listOf(
-                    com.congen.model.ExerciseMuscle("Overhead Press", "chest"),
-                    com.congen.model.ExerciseMuscle("Overhead Press", "triceps")
+                    ExerciseMuscle("Overhead Press", "chest"),
+                    ExerciseMuscle("Overhead Press", "triceps")
                 )
             )
         )
@@ -462,7 +467,7 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = "Tricep Extension", isAccessory = true),
                 mockExercise(name = "Shoulder Press", isAccessory = true)
             )
-        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val preferences = emptyList<UserExercisePreference>()
         val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
         val dayType = "ME_Upper"
         val primaryExercise = mockExercise(name = "Bench Press", isAccessory = false, movementType = MovementType.HORIZONTAL_PUSH)
@@ -515,7 +520,7 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = "Tricep Extension", isAccessory = true),
                 mockExercise(name = "Shoulder Press", isAccessory = true)
             )
-        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val preferences = emptyList<UserExercisePreference>()
         val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
         val dayType = "ME_Upper_DE_Lower"
 
@@ -557,8 +562,8 @@ class ExerciseSelectionServiceTest {
     @Test
     fun `selectWarmupExercises should return empty list when no exercises available`() {
         // Given
-        val exercises = emptyList<com.congen.model.Exercise>()
-        val preferences = emptyList<com.congen.model.UserExercisePreference>()
+        val exercises = emptyList<Exercise>()
+        val preferences = emptyList<UserExercisePreference>()
         val userEquipment = listOf(mockUserEquipment(equipmentName = "Dumbbells"))
         val dayType = "ME_Upper"
         val primaryExercise = mockExercise(name = "Bench Press", isAccessory = false)
@@ -601,7 +606,7 @@ class ExerciseSelectionServiceTest {
                 mockExercise(name = EXERCISE_NAME, isAccessory = false),
                 mockExercise(name = "Preferred Exercise", isAccessory = false)
             )
-        val rotationHistory = emptyList<com.congen.model.ExerciseRotationHistory>()
+        val rotationHistory = emptyList<ExerciseRotationHistory>()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(allExercises))
 

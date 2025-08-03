@@ -33,7 +33,7 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
 
         // Verify the user was created with valid timestamps
-        assertNotNull(userResponse.id)
+        assertNotNull(userResponse.keycloakId)
         assertNotNull(userResponse.createdAt)
         assertNotNull(userResponse.updatedAt)
 

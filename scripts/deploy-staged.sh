@@ -212,7 +212,7 @@ deploy_keycloak_infrastructure() {
     local attempt=0
     while [[ ${attempt} -lt ${max_attempts} ]]; do
         local pod_count
-        pod_count=$(kubectl get pods -n congen -l app=keycloak --no-headers 2>/dev/null | wc -l)
+        pod_count=$(kubectl get pods -n congen -l app=keycloak --no-headers 2>/dev/null | wc -l || true)
         
         if [[ ${pod_count} -gt 0 ]]; then
             print_status "Keycloak pods found, waiting for them to be ready..."
@@ -263,12 +263,12 @@ apply_terraform() {
     local terraform_dir="terraform/environments/${ENVIRONMENT}"
     
     print_status "Initializing Terraform..."
-    cd "${terraform_dir}"
+    cd "${terraform_dir}" || exit
     if terraform init; then
         print_success "Terraform initialized"
     else
         print_error "Terraform initialization failed"
-        cd - > /dev/null
+        cd - > /dev/null || exit
         exit 1
     fi
     
@@ -284,14 +284,14 @@ apply_terraform() {
     
     if [[ ${plan_exit_code} -eq 0 ]]; then
         print_success "No Terraform changes detected - infrastructure is up to date"
-        cd - > /dev/null
+        cd - > /dev/null || exit
         # Set a flag to indicate no Terraform changes were applied
         export TERRAFORM_NO_CHANGES=true
         return
     elif [[ ${plan_exit_code} -eq 1 ]]; then
         print_error "Terraform plan failed"
         echo "Plan output: ${plan_output}"
-        cd - > /dev/null
+        cd - > /dev/null || exit
         exit 1
     elif [[ ${plan_exit_code} -eq 2 ]]; then
         print_status "Terraform changes detected, applying configuration..."
@@ -306,17 +306,17 @@ apply_terraform() {
             export TERRAFORM_NO_CHANGES=false
         else
             print_error "Terraform apply failed"
-            cd - > /dev/null
+            cd - > /dev/null || exit
             exit 1
         fi
     else
         print_error "Unexpected Terraform plan exit code: ${plan_exit_code}"
         echo "Plan output: ${plan_output}"
-        cd - > /dev/null
+        cd - > /dev/null || exit
         exit 1
     fi
     
-    cd - > /dev/null
+    cd - > /dev/null || exit
 }
 
 # Function to update Kubernetes secrets
@@ -499,6 +499,9 @@ main() {
             6)
                 print_status "Setting up port forwarding for Terraform operations..."
                 setup_port_forwarding
+                ;;
+            *)
+                # No port forwarding needed for other stages
                 ;;
         esac
     fi

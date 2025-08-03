@@ -11,13 +11,15 @@ export const getOidcConfig = () => {
   const authority = `${KEYCLOAK_URL}/realms/congen`;
   const frontendHost = DEPLOYMENT_ENVIRONMENT === 'loc' ? `${BASE_URL}:3000` : BASE_URL;
 
-  return {
+  const config = {
     authority: authority,
     client_id: 'congen-frontend',
     redirect_uri: `${frontendHost}/auth/callback`,
     post_logout_redirect_uri: frontendHost,
     silent_redirect_uri: `${frontendHost}/silent-renew.html`,
   };
+
+  return config;
 };
 
 /**
@@ -29,7 +31,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
   const config = getOidcConfig();
   const authority = config.authority;
 
-  return {
+  const authProviderConfig = {
     authority: config.authority,
     client_id: config.client_id,
     redirect_uri: config.redirect_uri,
@@ -39,6 +41,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     response_type: 'code',
     loadUserInfo: true,
     monitorSession: false,
+
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
       token_endpoint: `${authority}/protocol/openid-connect/token`,
@@ -48,4 +51,6 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
       issuer: authority,
     },
   };
+
+  return authProviderConfig;
 };

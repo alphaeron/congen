@@ -213,10 +213,10 @@ class ProgrammedExerciseDAL(
      *
      * This method fetches all programmed exercises that are owned by the specified user.
      *
-     * @param userId The user ID
+     * @param userId The Keycloak user ID
      * @return Mono containing a list of programmed exercises for the user
      */
-    fun selectProgrammedExercisesByUserId(userId: Int): Mono<List<ProgrammedExercise>> {
+    fun selectProgrammedExercisesByUserId(userId: String): Mono<List<ProgrammedExercise>> {
         logger.debug("Selecting programmed exercises by user id: {}", userId)
         return postgresClient.select(
             """
@@ -242,9 +242,9 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the user ID
      * @throws NoResultsFoundException when the relationship chain cannot be traced
      */
-    fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<Int> {
+    fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<String> {
         logger.debug("Getting user ID for programmed exercise: {}", programmedExerciseId)
-        return postgresClient.selectIndividual(
+        return postgresClient.selectIndividual<Map<String, Any>>(
             """
             SELECT p.user_id
             FROM programmed_exercise pe
@@ -254,6 +254,8 @@ class ProgrammedExerciseDAL(
             WHERE pe.id = $1
             """.trimIndent(),
             programmedExerciseId,
-        )
+        ).map { result ->
+            result["user_id"] as String
+        }
     }
 }

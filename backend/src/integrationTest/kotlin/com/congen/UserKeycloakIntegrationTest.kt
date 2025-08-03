@@ -32,7 +32,7 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     fun `should create user profile after Keycloak registration`() {
         val token = getValidToken("user")
 
-        val userId =
+        val keycloakId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
@@ -46,7 +46,7 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(userId)
+            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
             .jsonPath("$.name").isEqualTo(testUserName)
             .jsonPath("$.age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
             .jsonPath("$.height").isEqualTo(IntegrationTestHelpers.TEST_USER_HEIGHT)
@@ -157,7 +157,7 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
         val weightInLbs = 150.0
         val expectedWeightInKg = 68.04
 
-        val userId =
+        val keycloakId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
@@ -173,7 +173,7 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(userId)
+            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
             .jsonPath("$.name").isEqualTo(testUserName)
             .jsonPath("$.weight").isEqualTo(expectedWeightInKg)
     }
@@ -183,21 +183,21 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
         val token = getValidToken("user")
 
         // Create user profile first using helper method
-        val userId =
+        val keycloakId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
                 token = token
             )
 
-        // Then get user by ID
+        // Then get user by Keycloak ID
         webTestClient.get()
-            .uri("/api/v1/user/me")
+            .uri("/api/v1/user/$keycloakId")
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath(".id").isEqualTo(userId)
+            .jsonPath(".keycloak_id").isEqualTo(keycloakId)
             .jsonPath(".name").isEqualTo(testUserName)
             .jsonPath(".age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
     }
@@ -207,7 +207,7 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
         val userToken = getValidToken("user")
 
         // Create user profile first
-        val userId =
+        val keycloakId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
                 name = testUserName,
@@ -216,27 +216,27 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
 
         // Verify user exists in database
         webTestClient.get()
-            .uri("/api/v1/user/me")
+            .uri("/api/v1/user/$keycloakId")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(userId)
+            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
 
         // Delete the user using service account token (admin privileges)
         val serviceToken = getValidToken("service")
         webTestClient.delete()
-            .uri("/api/v1/user/$userId")
+            .uri("/api/v1/user/$keycloakId")
             .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.id").isEqualTo(userId)
+            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
             .jsonPath("$.name").isEqualTo(testUserName)
 
-        // Verify user is deleted from database by trying to access the user by ID
+        // Verify user is deleted from database by trying to access the user by Keycloak ID
         webTestClient.get()
-            .uri("/api/v1/user/$userId")
+            .uri("/api/v1/user/$keycloakId")
             .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
@@ -245,10 +245,10 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when deleting non-existent user`() {
         val serviceToken = getValidToken("service")
-        val nonExistentUserId = 99999
+        val nonExistentKeycloakId = "non-existent-keycloak-id"
 
         webTestClient.delete()
-            .uri("/api/v1/user/$nonExistentUserId")
+            .uri("/api/v1/user/$nonExistentKeycloakId")
             .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)

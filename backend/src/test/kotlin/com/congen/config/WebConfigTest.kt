@@ -3,6 +3,7 @@ package com.congen.config
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping
 
 /**
@@ -47,7 +48,7 @@ class WebConfigTest {
      * Test controller class for unit testing.
      */
     class TestController {
-        @org.springframework.web.bind.annotation.GetMapping("/test")
+        @GetMapping("/test")
         fun testEndpoint(): String = "test"
     }
 }

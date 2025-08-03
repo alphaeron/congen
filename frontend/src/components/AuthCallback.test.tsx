@@ -1,370 +1,105 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { render } from '@testing-library/react';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
+
 import { AuthCallback } from './AuthCallback';
+import { LoadingSpinner } from './LoadingSpinner';
 
-// Mock react-router-dom
-const mockNavigate = jest.fn();
-const mockLocation = { search: '' };
+// Mock dependencies
+jest.mock('react-oidc-context');
+jest.mock('./LoadingSpinner');
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-  useLocation: () => mockLocation,
-}));
-
-// Mock react-oidc-context
-const mockOidcAuth: {
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  user: unknown;
-  error: unknown;
-} = {
-  isLoading: false,
-  isAuthenticated: false,
-  user: null,
-  error: null,
-};
-
-jest.mock('react-oidc-context', () => ({
-  useAuth: () => mockOidcAuth,
-}));
-
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <MemoryRouter>{children}</MemoryRouter>
-);
+const mockUseOidcAuth = useOidcAuth as jest.MockedFunction<typeof useOidcAuth>;
+const mockLoadingSpinner = LoadingSpinner as jest.MockedFunction<typeof LoadingSpinner>;
 
 describe('AuthCallback', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockOidcAuth.isLoading = false;
-    mockOidcAuth.isAuthenticated = false;
-    mockOidcAuth.user = null;
-    mockOidcAuth.error = null;
-    mockLocation.search = '';
+    mockLoadingSpinner.mockReturnValue(<div data-testid="loading-spinner">Loading...</div>);
   });
 
-  describe('URL error handling', () => {
-    it('should redirect to login with error when URL contains error parameter', async () => {
-      mockLocation.search = '?error=access_denied';
+  it('should show loading spinner when OIDC is loading', () => {
+    mockUseOidcAuth.mockReturnValue({
+      isLoading: true,
+      isAuthenticated: false,
+      user: null,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
+    const { getByTestId } = render(<AuthCallback />);
 
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Authentication failed: access_denied' },
-          replace: true,
-        });
-      });
-    });
-
-    it('should handle different error types', async () => {
-      mockLocation.search = '?error=invalid_request';
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Authentication failed: invalid_request' },
-          replace: true,
-        });
-      });
-    });
+    expect(getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
-  describe('loading state handling', () => {
-    it('should show loading spinner while OIDC is processing', () => {
-      mockOidcAuth.isLoading = true;
+  it('should log successful authentication', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
+    mockUseOidcAuth.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      user: { sub: 'test-user' },
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      expect(screen.getByText('Processing authentication...')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    });
+    render(<AuthCallback />);
 
-    it('should not redirect while loading', async () => {
-      mockOidcAuth.isLoading = true;
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      // Wait a bit to ensure no redirect happens
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
+    expect(consoleSpy).toHaveBeenCalledWith('🔐 AuthCallback: Authentication successful');
+    consoleSpy.mockRestore();
   });
 
-  describe('successful authentication', () => {
-    it('should redirect to profile when authentication is successful', async () => {
-      mockOidcAuth.isAuthenticated = true;
-      mockOidcAuth.user = { access_token: 'test-token' };
+  it('should log authentication error', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+    const mockError = new Error('Authentication failed');
 
-      // Mock window.history.replaceState
-      const mockReplaceState = jest.fn();
-      Object.defineProperty(window, 'history', {
-        value: { replaceState: mockReplaceState },
-        writable: true,
-      });
+    mockUseOidcAuth.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: false,
+      user: null,
+      error: mockError,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
+    render(<AuthCallback />);
 
-      await waitFor(() => {
-        expect(mockReplaceState).toHaveBeenCalledWith({}, document.title, '/profile');
-        expect(mockNavigate).toHaveBeenCalledWith('/profile', { replace: true });
-      });
-    });
-
-    it('should clean up URL before redirecting', async () => {
-      mockOidcAuth.isAuthenticated = true;
-      mockOidcAuth.user = { access_token: 'test-token' };
-
-      const mockReplaceState = jest.fn();
-      Object.defineProperty(window, 'history', {
-        value: { replaceState: mockReplaceState },
-        writable: true,
-      });
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(mockReplaceState).toHaveBeenCalledWith({}, document.title, '/profile');
-      });
-    });
+    expect(consoleSpy).toHaveBeenCalledWith('🔐 AuthCallback: Authentication failed', mockError);
+    consoleSpy.mockRestore();
   });
 
-  describe('authentication error handling', () => {
-    it('should redirect to login when OIDC error occurs', async () => {
-      mockOidcAuth.error = { message: 'Authentication failed' };
+  it('should log unclear authentication state', () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
+    mockUseOidcAuth.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: false,
+      user: null,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Authentication failed' },
-          replace: true,
-        });
-      });
-    });
+    render(<AuthCallback />);
 
-    it('should handle different error message formats', async () => {
-      mockOidcAuth.error = { message: 'Network error occurred' };
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Network error occurred' },
-          replace: true,
-        });
-      });
-    });
+    expect(consoleSpy).toHaveBeenCalledWith('🔐 AuthCallback: Authentication state unclear');
+    consoleSpy.mockRestore();
   });
 
-  describe('fallback handling', () => {
-    it('should redirect to login with generic error for unexpected states', async () => {
-      // No URL error, not loading, not authenticated, no OIDC error
-      // This represents an unexpected state
+  it('should return null when not loading', () => {
+    mockUseOidcAuth.mockReturnValue({
+      isLoading: false,
+      isAuthenticated: true,
+      user: { sub: 'test-user' },
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
+    const { container } = render(<AuthCallback />);
 
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Authentication failed. Please try again.' },
-          replace: true,
-        });
-      });
-    });
-
-    it('should handle case where user is authenticated but no user object', async () => {
-      mockOidcAuth.isAuthenticated = true;
-      mockOidcAuth.user = null;
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Authentication failed. Please try again.' },
-          replace: true,
-        });
-      });
-    });
-  });
-
-  describe('component rendering', () => {
-    it('should always render loading spinner initially', () => {
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      expect(screen.getByText('Processing authentication...')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    });
-
-    it('should use full height loading spinner', () => {
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      const loadingSpinner = screen.getByRole('progressbar').closest('div');
-      expect(loadingSpinner).toHaveStyle({ height: '100vh' });
-    });
-  });
-
-  describe('timing and async behavior', () => {
-    it('should wait for OIDC processing before making decisions', async () => {
-      // Start with loading, then become authenticated
-      mockOidcAuth.isLoading = true;
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      // Should not redirect while loading
-      await new Promise(resolve => setTimeout(resolve, 50));
-      expect(mockNavigate).not.toHaveBeenCalled();
-
-      // Simulate OIDC finishing
-      mockOidcAuth.isLoading = false;
-      mockOidcAuth.isAuthenticated = true;
-      mockOidcAuth.user = { access_token: 'test-token' };
-
-      const mockReplaceState = jest.fn();
-      Object.defineProperty(window, 'history', {
-        value: { replaceState: mockReplaceState },
-        writable: true,
-      });
-
-      // Wait for the effect to run again
-      await waitFor(() => {
-        expect(mockReplaceState).toHaveBeenCalled();
-      });
-    });
-
-    it('should handle rapid state changes gracefully', async () => {
-      // Simulate rapid state changes
-      mockOidcAuth.isLoading = true;
-      mockOidcAuth.isAuthenticated = false;
-      mockOidcAuth.user = null;
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      // Change state rapidly
-      mockOidcAuth.isLoading = false;
-      mockOidcAuth.isAuthenticated = true;
-      mockOidcAuth.user = { access_token: 'test-token' };
-
-      const mockReplaceState = jest.fn();
-      Object.defineProperty(window, 'history', {
-        value: { replaceState: mockReplaceState },
-        writable: true,
-      });
-
-      await waitFor(() => {
-        expect(mockReplaceState).toHaveBeenCalled();
-      });
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should handle empty search string', async () => {
-      mockLocation.search = '';
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      // Should not redirect due to URL error
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(mockNavigate).toHaveBeenCalledWith('/login', {
-        state: { error: 'Authentication failed. Please try again.' },
-        replace: true,
-      });
-    });
-
-    it('should handle search string with no error parameter', async () => {
-      mockLocation.search = '?code=some-auth-code&state=some-state';
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      // Should not redirect due to URL error
-      await new Promise(resolve => setTimeout(resolve, 100));
-      expect(mockNavigate).toHaveBeenCalledWith('/login', {
-        state: { error: 'Authentication failed. Please try again.' },
-        replace: true,
-      });
-    });
-
-    it('should handle multiple error parameters', async () => {
-      mockLocation.search = '?error=access_denied&error_description=User+cancelled';
-
-      render(
-        <TestWrapper>
-          <AuthCallback />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/login', {
-          state: { error: 'Authentication failed: access_denied' },
-          replace: true,
-        });
-      });
-    });
+    expect(container.firstChild).toBeNull();
   });
 });

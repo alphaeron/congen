@@ -41,12 +41,12 @@ class ExerciseRotationHistoryService(
 
     /**
      * Retrieves all exercise rotation history records for a specific user, optionally filtered by accessory type.
-     * @param userId The user ID
+     * @param userId The Keycloak user ID
      * @param isAccessory Optional filter for accessory exercises
      * @return Mono containing a list of exercise rotation history records for the user
      */
     fun selectByUserId(
-        userId: Int,
+        userId: String,
         isAccessory: Boolean? = null
     ): Mono<List<ExerciseRotationHistory>> = exerciseRotationHistoryDAL.selectByUserId(userId, isAccessory)
 
@@ -55,7 +55,7 @@ class ExerciseRotationHistoryService(
      * @see ExerciseRotationHistoryDAL.insert
      */
     fun insert(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         isAccessory: Boolean
     ): Mono<ExerciseRotationHistory> = exerciseRotationHistoryDAL.insert(userId, exerciseName, isAccessory)
@@ -66,7 +66,7 @@ class ExerciseRotationHistoryService(
      */
     fun update(
         id: Long,
-        userId: Int,
+        userId: String,
         exerciseName: String,
         isAccessory: Boolean
     ): Mono<ExerciseRotationHistory> = exerciseRotationHistoryDAL.update(id, userId, exerciseName, isAccessory)
@@ -81,7 +81,7 @@ class ExerciseRotationHistoryService(
      * Deletes all exercise rotation history records for a specific user.
      * @see ExerciseRotationHistoryDAL.deleteByUserId
      */
-    fun deleteByUserId(userId: Long): Mono<Int> = exerciseRotationHistoryDAL.deleteByUserId(userId)
+    fun deleteByUserId(userId: String): Mono<Int> = exerciseRotationHistoryDAL.deleteByUserId(userId)
 
     /**
      * Checks if the given user is the owner of the exercise rotation history record.
@@ -95,7 +95,7 @@ class ExerciseRotationHistoryService(
         userId: String
     ): Mono<Boolean> {
         return exerciseRotationHistoryDAL.selectById(historyId)
-            .map { it.userId.toString() == userId }
+            .map { record -> record.userId.toString() == userId }
             .onErrorReturn(false)
     }
 }

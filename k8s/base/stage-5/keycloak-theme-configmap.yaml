@@ -4,27 +4,50 @@ metadata:
   name: keycloak-theme
   namespace: congen
 data:
-  # Login theme template
+  # Theme properties file
   "theme.properties": |
     parent=keycloak
     import=common/keycloak
     styles=css/congen.css
     scripts=js/congen.js
-    templates=ftl/congen.ftl
+    templates=congen.ftl
   
   # Custom CSS for Congen branding
-  "css/congen.css": |
+  "css-congen.css": |
+    /* Override problematic fonts with system fonts */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    
+    /* Center the main login container */
+    #kc-form-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    
+    /* Center the card container */
+    .card-pf {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 400px;
+    }
+    
     .kc-logo-text {
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       font-size: 2rem;
       font-weight: 700;
       color: #2236CC;
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
     }
     
     .kc-form-group {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
     
     .kc-form-control {
@@ -39,6 +62,34 @@ data:
       border-color: #2236CC;
       outline: none;
       box-shadow: 0 0 0 3px rgba(34, 54, 204, 0.1);
+    }
+    
+    /* Reduce whitespace in form elements */
+    .form-group {
+      margin-bottom: 0.75rem;
+    }
+    
+    .form-group label {
+      margin-bottom: 0.25rem;
+    }
+    
+    .checkbox {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .checkbox label {
+      margin-bottom: 0;
+    }
+    
+    /* Reduce spacing in the main form container */
+    #kc-form {
+      padding: 0;
+    }
+    
+    /* Reduce spacing in the main content area */
+    #kc-content {
+      padding: 1rem 0;
     }
     
     .kc-button {
@@ -68,14 +119,15 @@ data:
       background: white;
       border-radius: 16px;
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
+      padding: 1.5rem;
       max-width: 400px;
       width: 100%;
+      margin: 0 auto;
     }
     
     .kc-header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
     }
     
     .kc-header img {
@@ -87,7 +139,16 @@ data:
     .kc-form {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+      width: 100%;
+    }
+    
+    /* Ensure the main form container is centered */
+    #kc-form {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
     }
     
     .kc-form-group label {
@@ -185,7 +246,7 @@ data:
     }
   
   # Custom JavaScript for enhanced UX
-  "js/congen.js": |
+  "js-congen.js": |
     document.addEventListener('DOMContentLoaded', function() {
       // Add smooth transitions
       const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
@@ -219,12 +280,12 @@ data:
     });
   
   # Custom FreeMarker template for login page
-  "ftl/congen.ftl": |
+  "ftl-congen.ftl": |
     <#import "template.ftl" as layout>
     <@layout.registrationLayout displayInfo=social.displayInfo displayWide=(realm.password && social.providers??); section>
         <#if section = "header">
             <div class="kc-header">
-                <img src="${url.resourcesPath}/img/congen-icon.svg" alt="ConGen" />
+                <img src="${url.resourcesPath}/img-congen-icon.svg" alt="ConGen" />
                 <div class="kc-logo-text">ConGen</div>
             </div>
         <#elseif section = "form">
@@ -284,7 +345,7 @@ data:
     </@layout.registrationLayout>
   
   # Congen icon SVG
-  "img/congen-icon.svg": |
+  "img-congen-icon.svg": |
     <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
       <rect width="72" height="72" rx="16" fill="#2236CC"/>
       <path d="M18 36C18 25.5066 26.5066 17 37 17C47.4934 17 56 25.5066 56 36C56 46.4934 47.4934 55 37 55C26.5066 55 18 46.4934 18 36Z" fill="white"/>

@@ -55,13 +55,13 @@ class UserWeightUnitPreferenceDAL(
      * This method queries the database to find the unit preference between the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return Mono containing the user-exercise unit preference if found
      * @throws NoResultsFoundException when the preference doesn't exist
      */
     fun selectUserWeightUnitPreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
     ): Mono<UserWeightUnitPreference> {
         logger.debug("Selecting user weight unit preference: {} - {}", userId, exerciseName)
@@ -78,10 +78,10 @@ class UserWeightUnitPreferenceDAL(
      * This method fetches all unit preferences that are associated with the specified user.
      * If no preferences exist for the user, an empty list is returned.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-exercise unit preferences
      */
-    fun selectUserWeightUnitPreferencesByUser(userId: Int): Mono<List<UserWeightUnitPreference>> {
+    fun selectUserWeightUnitPreferencesByUser(userId: String): Mono<List<UserWeightUnitPreference>> {
         logger.debug("Selecting weight unit preferences for user: {}", userId)
         return postgresClient.select(
             "SELECT * FROM user_weight_unit_preference WHERE user_id=$1 ORDER BY exercise_name",
@@ -95,14 +95,14 @@ class UserWeightUnitPreferenceDAL(
      * This method inserts a new unit preference between the specified user and exercise.
      * The combination of user ID and exercise name must be unique.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param preferredUnit The user's preferred weight unit for this exercise
      * @return Mono containing the created user-exercise unit preference
      * @throws DatabaseException when the preference already exists or database operation fails
      */
     fun insertUserWeightUnitPreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         preferredUnit: WeightUnit,
     ): Mono<UserWeightUnitPreference> {
@@ -126,14 +126,14 @@ class UserWeightUnitPreferenceDAL(
      * This method modifies the unit preference for the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param preferredUnit The user's preferred weight unit for this exercise
      * @return Mono containing the updated user-exercise unit preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
     fun updateUserWeightUnitPreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         preferredUnit: WeightUnit,
     ): Mono<UserWeightUnitPreference> {
@@ -156,14 +156,14 @@ class UserWeightUnitPreferenceDAL(
      * This method performs an upsert operation - if a unit preference exists for the specified user and exercise,
      * it will be updated; otherwise, a new preference will be created.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param preferredUnit The user's preferred weight unit for this exercise
      * @return Mono containing the created or updated user-exercise unit preference
      * @throws DatabaseException when database operation fails
      */
     fun upsertUserWeightUnitPreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
         preferredUnit: WeightUnit,
     ): Mono<UserWeightUnitPreference> {
@@ -191,13 +191,13 @@ class UserWeightUnitPreferenceDAL(
      * This method removes the unit preference between the specified user and exercise.
      * If no preference exists, a NoResultsFoundException is thrown.
      *
-     * @param userId The unique identifier of the user
+     * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @return Mono containing the deleted user-exercise unit preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
     fun deleteUserWeightUnitPreference(
-        userId: Int,
+        userId: String,
         exerciseName: String,
     ): Mono<UserWeightUnitPreference> {
         logger.debug("Deleting user weight unit preference: {} - {}", userId, exerciseName)

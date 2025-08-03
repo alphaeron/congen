@@ -4,6 +4,7 @@ import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserProgramPreferences
 import com.congen.model.UserProgramPreferences
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
@@ -29,10 +30,11 @@ import java.time.Instant
 )
 class UserProgramPreferencesControllerTest {
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
+    private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var userProgramPreferencesController: UserProgramPreferencesController
 
     companion object {
-        private const val USER_ID = 1
+        private const val USER_ID = "test-keycloak-user-id"
         private const val PROGRAM_DAYS_PER_WEEK_4 = 4
         private const val PROGRAM_DAYS_PER_WEEK_5 = 5
         private const val SESSION_TIME_60 = 60
@@ -42,7 +44,12 @@ class UserProgramPreferencesControllerTest {
     @BeforeEach
     fun setUp() {
         userProgramPreferencesDAL = mock()
-        userProgramPreferencesController = UserProgramPreferencesController(userProgramPreferencesDAL)
+        keycloakUtil = mock()
+        userProgramPreferencesController = UserProgramPreferencesController(userProgramPreferencesDAL, keycloakUtil)
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test

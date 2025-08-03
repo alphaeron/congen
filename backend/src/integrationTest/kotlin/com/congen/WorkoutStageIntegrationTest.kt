@@ -20,10 +20,10 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
     }
 
     private fun createTestProgram(id: Long): Long {
-        val token = getValidToken("user")
-        // First create a user
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
-        // Then create a program for that user
+        val serviceToken = getValidToken("service")
+        // First create a user with service token
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = serviceToken)
+        // Then create a program for that user with service token
         val unique = System.nanoTime()
         val response =
             webTestClient.post()
@@ -33,7 +33,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&name=Test Program $unique" +
                         "&current_week_number=1"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -58,7 +58,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when position is 0`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(1)
         val workoutResponse =
             webTestClient.post()
@@ -68,7 +68,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=101" +
                         "&name=Test Workout for Position 0 Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -84,7 +84,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=0" +
                     "&name=Test Stage"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -93,7 +93,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when position is negative`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(2)
         val workoutResponse =
             webTestClient.post()
@@ -103,7 +103,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=102" +
                         "&name=Test Workout for Negative Position Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -119,7 +119,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=-1" +
                     "&name=Test Stage"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -128,7 +128,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid workout stage data`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(1)
         val workoutResponse =
             webTestClient.post()
@@ -138,7 +138,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=101" +
                         "&name=Test Workout for Valid Stage Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -154,7 +154,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=1" +
                     "&name=Test Stage"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -165,7 +165,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get workout stage by id`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(4)
         val workoutResponse =
             webTestClient.post()
@@ -175,7 +175,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=104" +
                         "&name=Test Workout for Get Stage Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -192,7 +192,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&position=5" +
                         "&name=Test Stage"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStage::class.java)
@@ -201,7 +201,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
         webTestClient.get()
             .uri("/api/v1/workout_stage/${stageResponse.id}")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -213,7 +213,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get workout stages by programmed workout id`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(5)
         val workoutResponse =
             webTestClient.post()
@@ -223,7 +223,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=105" +
                         "&name=Test Workout for Get Stages Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -242,7 +242,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=1" +
                     "&name=Warmup Stage"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
@@ -255,14 +255,14 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=2" +
                     "&name=Primary Stage"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
         // Get all stages for the workout
         webTestClient.get()
             .uri("/api/v1/workout_stage/workout/${workoutResponse.id}")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -272,7 +272,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update workout stage`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(6)
         val workoutResponse =
             webTestClient.post()
@@ -282,7 +282,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=106" +
                         "&name=Test Workout for Update Stage Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -299,7 +299,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&position=1" +
                         "&name=Original Stage Name"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStage::class.java)
@@ -316,7 +316,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=1" +
                     "&name=Updated Stage Name"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -325,7 +325,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete workout stage`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(7)
         val workoutResponse =
             webTestClient.post()
@@ -335,7 +335,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=107" +
                         "&name=Test Workout for Delete Stage Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -352,7 +352,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&position=1" +
                         "&name=Stage to Delete"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(WorkoutStage::class.java)
@@ -362,14 +362,14 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         // Delete the stage
         webTestClient.delete()
             .uri("/api/v1/workout_stage/${stageResponse.id}")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
         // Verify it's deleted
         webTestClient.get()
             .uri("/api/v1/workout_stage/${stageResponse.id}")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isNotFound()
     }
@@ -386,7 +386,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle multiple stages with different positions`() {
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         val programId = createTestProgram(8)
         val workoutResponse =
             webTestClient.post()
@@ -396,7 +396,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                         "&day_number=108" +
                         "&name=Test Workout for Multiple Stages Test"
                 )
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedWorkout::class.java)
@@ -416,7 +416,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=1" +
                     "&name=Warmup"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
@@ -428,7 +428,7 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=2" +
                     "&name=Primary"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
@@ -440,19 +440,20 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
                     "&position=3" +
                     "&name=Accessory"
             )
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
         // Get all stages and verify they're in the correct order
-        val stages = webTestClient.get()
-            .uri("/api/v1/workout_stage/workout/${workoutResponse.id}")
-            .header("Authorization", "Bearer $token")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBodyList(WorkoutStage::class.java)
-            .returnResult()
-            .responseBody!!
+        val stages =
+            webTestClient.get()
+                .uri("/api/v1/workout_stage/workout/${workoutResponse.id}")
+                .header("Authorization", "Bearer $serviceToken")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(WorkoutStage::class.java)
+                .returnResult()
+                .responseBody!!
 
         assert(stages.size == 3)
         assert(stages[0].position == 1)

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 
 class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
-    private var userId: Int = 0
+    private var userId: String = ""
     private var programId: Long = 0
 
     @BeforeEach
@@ -17,7 +17,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // to ensure Spring context is fully initialized first
     }
 
-    private fun createTestUserAndProgram(): Pair<Int, Long> {
+    private fun createTestUserAndProgram(): Pair<String, Long> {
         val unique = System.nanoTime()
         val userToken = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = userToken)
@@ -27,7 +27,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         return Pair(userId, programId)
     }
 
-    private fun createTestUserAndProgramWithToken(): Triple<Int, Long, String> {
+    private fun createTestUserAndProgramWithToken(): Triple<String, Long, String> {
         val unique = System.nanoTime()
         val userToken = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = userToken)
@@ -119,12 +119,11 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle invalid programDaysPerWeek in database`() {
-        val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Create user program preferences with invalid days per week should fail
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
@@ -147,22 +146,22 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate workout with user exercise preferences`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Create user program preferences (required for workout generation)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = token)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = serviceToken)
 
         // Exercises already exist in migrations
 
         // Add exercise preferences (different exercises to avoid duplicate key constraint)
         webTestClient.post()
             .uri("/api/v1/user_exercise_preference/?user_id=$userId&exercise_name=Safety Bar Squat&should_avoid=true")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
         webTestClient.post()
             .uri("/api/v1/user_exercise_preference/?user_id=$userId&exercise_name=Deadlift&should_avoid=false")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $serviceToken")
             .exchange()
             .expectStatus().isOk()
 
@@ -170,7 +169,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -185,20 +184,20 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate workout with user equipment`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Create user program preferences (required for workout generation)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = token)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = serviceToken)
 
         // Equipment already exists in migrations
 
         // Add user equipment (only add 'dumbbells' since 'power bar' is already added by reference data)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = token)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = serviceToken)
 
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -213,21 +212,21 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate workout with user one rep max data`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Create user program preferences (required for workout generation)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = token)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = serviceToken)
 
         // Exercises already exist in migrations
 
         // Add one rep max data
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", token = token)
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat", token = token)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", token = serviceToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Safety Bar Squat", token = serviceToken)
 
         // When - Generate workout program
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -241,12 +240,11 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user program preferences`() {
-        val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Add program preferences
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=3&session_time_length_in_minutes=60")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
 
@@ -254,7 +252,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -269,21 +267,27 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should generate DE set scheme with correct band and bar weights`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Set up user with 1RM for banded exercises specifically
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = token)
-        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Safety Bar Squat", oneRepMax = 350.0, token = token)
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
+        IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = serviceToken)
+        IntegrationTestHelpers.createTestUserOneRepMax(
+            webTestClient,
+            userId,
+            "Banded Safety Bar Squat",
+            oneRepMax = 350.0,
+            token = serviceToken
+        )
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = serviceToken)
 
         // Add equipment needed for banded exercises (power bar is already added by createAllReferenceDataForUser)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = token)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = token)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = serviceToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = serviceToken)
 
         // Generate conjugate program
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -294,7 +298,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val workoutsResponse =
             webTestClient.get()
                 .uri("/api/v1/programmed_workout/program/${programResponse.id}")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -310,7 +314,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val stagesResponse =
             webTestClient.get()
                 .uri("/api/v1/workout_stage/workout/$deWorkoutId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(WorkoutStage::class.java)
@@ -326,7 +330,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val exercisesResponse =
             webTestClient.get()
                 .uri("/api/v1/programmed_exercise/stage/$primaryStageId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -345,7 +349,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val setSchemesResponse =
             webTestClient.get()
                 .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -365,7 +369,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             // Week 4 is deload week - no bands should be used
             webTestClient.get()
                 .uri("/api/v1/set_scheme/$firstSetSchemeId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -376,7 +380,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             // For weeks 1-3, banded DE exercises should have band weights
             webTestClient.get()
                 .uri("/api/v1/set_scheme/$firstSetSchemeId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -391,7 +395,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             // For non-banded DE exercises, band_weight_lbs may be null
             webTestClient.get()
                 .uri("/api/v1/set_scheme/$firstSetSchemeId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -407,15 +411,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should validate 2-day template invariants`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Given - Set up user with 2-day program
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = token)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = serviceToken)
 
         // When - Generate conjugate program
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -426,7 +430,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val workoutsResponse =
             webTestClient.get()
                 .uri("/api/v1/programmed_workout/program/${programResponse.id}")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -445,7 +449,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             val stagesResponse =
                 webTestClient.get()
                     .uri("/api/v1/workout_stage/workout/$workoutId")
-                    .header("Authorization", "Bearer $token")
+                    .header("Authorization", "Bearer $serviceToken")
                     .exchange()
                     .expectStatus().isOk()
                     .expectBodyList(WorkoutStage::class.java)
@@ -453,22 +457,22 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .responseBody!!
 
             // Validate stage structure for 2-day programs
-            validateTwoDayWorkoutStages(stagesResponse, workoutName, token)
+            validateTwoDayWorkoutStages(stagesResponse, workoutName, serviceToken)
         }
     }
 
     @Test
     fun `should validate 3-day template invariants`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Given - Set up user with 3-day program
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = serviceToken)
 
         // When - Generate conjugate program
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -479,7 +483,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val workoutsResponse =
             webTestClient.get()
                 .uri("/api/v1/programmed_workout/program/${programResponse.id}")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -498,7 +502,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             val stagesResponse =
                 webTestClient.get()
                     .uri("/api/v1/workout_stage/workout/$workoutId")
-                    .header("Authorization", "Bearer $token")
+                    .header("Authorization", "Bearer $serviceToken")
                     .exchange()
                     .expectStatus().isOk()
                     .expectBodyList(WorkoutStage::class.java)
@@ -506,22 +510,22 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .responseBody!!
 
             // Validate stage structure for 3-day programs
-            validateThreeDayWorkoutStages(stagesResponse, workoutName, token)
+            validateThreeDayWorkoutStages(stagesResponse, workoutName, serviceToken)
         }
     }
 
     @Test
     fun `should validate 4-day template invariants`() {
         val (userId, programId) = createTestUserAndProgram()
-        val token = getValidToken("user")
+        val serviceToken = getValidToken("service")
         // Given - Set up user with 4-day program
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = token)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = serviceToken)
 
         // When - Generate conjugate program
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -532,7 +536,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         val workoutsResponse =
             webTestClient.get()
                 .uri("/api/v1/programmed_workout/program/${programResponse.id}")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $serviceToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBodyList(Map::class.java)
@@ -551,7 +555,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             val stagesResponse =
                 webTestClient.get()
                     .uri("/api/v1/workout_stage/workout/$workoutId")
-                    .header("Authorization", "Bearer $token")
+                    .header("Authorization", "Bearer $serviceToken")
                     .exchange()
                     .expectStatus().isOk()
                     .expectBodyList(WorkoutStage::class.java)
@@ -559,7 +563,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                     .responseBody!!
 
             // Validate stage structure for 4-day programs
-            validateFourDayWorkoutStages(stagesResponse, workoutName, token)
+            validateFourDayWorkoutStages(stagesResponse, workoutName, serviceToken)
         }
     }
 

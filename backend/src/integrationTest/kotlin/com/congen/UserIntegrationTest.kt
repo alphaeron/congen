@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 
 class UserIntegrationTest : BaseIntegrationTest() {
     private lateinit var testUserName: String
-    private var userId: Int = 0
+    private var userId: String = ""
 
     @BeforeEach
     override fun setUp() {
@@ -22,21 +22,21 @@ class UserIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user by id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.get()
             .uri("/api/v1/user/$userId")
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
-            .jsonPath(".id").isEqualTo(userId)
+            .jsonPath(".keycloak_id").isEqualTo(userId)
             .jsonPath(".name").isEqualTo(testUserName)
             .jsonPath(".age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
     }
 
     @Test
     fun `should get all users`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.get()
             .uri("/api/v1/user/")
             .header("Authorization", "Bearer $token")

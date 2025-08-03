@@ -13,14 +13,14 @@ class ExerciseRotationHistoryTest {
         val history =
             mockExerciseRotationHistory(
                 id = 1L,
-                userId = 42,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 exerciseName = "Squat",
                 isAccessory = true,
                 createdAt = now
             )
 
         assertEquals(1L, history.id)
-        assertEquals(42, history.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", history.userId)
         assertEquals("Squat", history.exerciseName)
         assertEquals(true, history.isAccessory)
         assertEquals(now, history.createdAt)
@@ -31,14 +31,14 @@ class ExerciseRotationHistoryTest {
         val exerciseRotationHistory =
             mockExerciseRotationHistory(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 exerciseName = "Bench Press",
                 isAccessory = false,
                 createdAt = now
             )
 
         assertEquals(1L, exerciseRotationHistory.id)
-        assertEquals(1, exerciseRotationHistory.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", exerciseRotationHistory.userId)
         assertEquals("Bench Press", exerciseRotationHistory.exerciseName)
         assertEquals(false, exerciseRotationHistory.isAccessory)
         assertEquals(now, exerciseRotationHistory.createdAt)
@@ -49,14 +49,14 @@ class ExerciseRotationHistoryTest {
         val exerciseRotationHistory =
             mockExerciseRotationHistory(
                 id = 2L,
-                userId = 3,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 exerciseName = "Bicep Curl",
                 isAccessory = true,
                 createdAt = now
             )
 
         assertEquals(2L, exerciseRotationHistory.id)
-        assertEquals(3, exerciseRotationHistory.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", exerciseRotationHistory.userId)
         assertEquals("Bicep Curl", exerciseRotationHistory.exerciseName)
         assertEquals(true, exerciseRotationHistory.isAccessory)
         assertEquals(now, exerciseRotationHistory.createdAt)

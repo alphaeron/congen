@@ -26,9 +26,9 @@ import java.time.Instant
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "Represents a user's one rep max for a specific exercise.")
 data class UserOneRepMax(
-    /** ID of the user. */
-    @Schema(description = "ID of the user", example = "1", required = true)
-    @param:JsonProperty("user_id") val userId: Int,
+    /** ID of the user (Keycloak ID). */
+    @Schema(description = "ID of the user (Keycloak ID)", example = "123e4567-e89b-12d3-a456-426614174000", required = true)
+    @param:JsonProperty("user_id") val userId: String,
     /** Name of the exercise (e.g., "Bench Press"). */
     @Schema(description = "Name of the exercise", example = "Bench Press", required = true)
     @param:JsonProperty("exercise_name") val exerciseName: String,

@@ -345,7 +345,7 @@ class SetSchemeDALTest {
 
     @Test
     fun `selectSetSchemesByUserId should return list of user owned set schemes`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val userSetSchemes =
             listOf(
                 mockSetScheme(id = 1L, programmedExerciseId = 1L, setNumber = 1),
@@ -388,7 +388,7 @@ class SetSchemeDALTest {
 
     @Test
     fun `selectSetSchemesByUserId should return empty list when user has no set schemes`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val emptyList = emptyList<SetScheme>()
 
         whenever(
@@ -427,7 +427,7 @@ class SetSchemeDALTest {
 
     @Test
     fun `selectSetSchemesByUserId should propagate database errors`() {
-        val userId = 1
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val databaseError = RuntimeException("Database connection failed")
 
         whenever(

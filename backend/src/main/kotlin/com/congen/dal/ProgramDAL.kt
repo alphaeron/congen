@@ -93,12 +93,12 @@ class ProgramDAL(
      * If isActive is provided, only programs with that active status are returned.
      * If no programs exist, an empty list is returned.
      *
-     * @param userId The user ID to filter programs by
+     * @param userId The Keycloak user ID to filter programs by
      * @param isActive Optional filter for active status. If null, returns all programs for the user
      * @return Mono containing a list of programs for the user
      */
     fun selectProgramsByUserId(
-        userId: Int,
+        userId: String,
         isActive: Boolean? = null
     ): Mono<List<Program>> {
         logger.debug("Selecting programs for user: {} with isActive filter: {}", userId, isActive)
@@ -120,10 +120,10 @@ class ProgramDAL(
     /**
      * Safely deactivates all programs for a user, handling the case where no programs exist.
      *
-     * @param userId The user ID whose programs should be deactivated
+     * @param userId The Keycloak user ID whose programs should be deactivated
      * @return Mono that completes when deactivation is done (or when no programs exist)
      */
-    private fun deactivateProgramsForUser(userId: Int): Mono<Void> {
+    private fun deactivateProgramsForUser(userId: String): Mono<Void> {
         return postgresClient.updateLiteral<Any>(
             "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
             Any::class,
@@ -141,9 +141,9 @@ class ProgramDAL(
      * before inserting the new one. If no existing programs are found, it inserts the new program directly.
      * If the new program is not active, it is inserted without deactivating others.
      *
-     * This method handles race conditions by catching constraint violations and retrying the operation.
+     * This method ensures that only one active program exists per user at any time.
      *
-     * @param userId The user ID to associate with the new program
+     * @param userId The Keycloak user ID to associate with the new program
      * @param name The name of the new program
      * @param currentWeekNumber The current week number for the new program
      * @param isActive Whether the new program should be active (default: true)
@@ -151,7 +151,7 @@ class ProgramDAL(
      * @throws NoResultsFoundException if the deactivation or insert operation fails due to missing records
      */
     fun insertProgram(
-        userId: Int,
+        userId: String,
         name: String,
         currentWeekNumber: Int,
         isActive: Boolean = true
@@ -166,24 +166,10 @@ class ProgramDAL(
                 ($1, $2, $3, $4)
             """.trimIndent()
         return if (isActive) {
-            // Try to insert directly first, and if it fails due to constraint violation, deactivate and retry
-            postgresClient.update<Program>(insertQuery, userId, name, currentWeekNumber, isActive)
-                .onErrorResume { error: Throwable ->
-                    val errorMessage = error.message ?: ""
-                    val causeMessage = error.cause?.message ?: ""
-                    if (errorMessage.contains("duplicate key value violates unique constraint \"idx_program_user_active_unique\"") ||
-                        causeMessage.contains("duplicate key value violates unique constraint \"idx_program_user_active_unique\"")
-                    ) {
-                        logger.debug("Constraint violation detected for user {}, deactivating existing programs and retrying", userId)
-                        // Deactivate existing programs and retry the insert
-                        deactivateProgramsForUser(userId).then(
-                            postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
-                        )
-                    } else {
-                        // Re-throw the error if it's not a constraint violation
-                        Mono.error(error)
-                    }
-                }
+            // If creating an active program, first deactivate all existing programs for this user
+            deactivateProgramsForUser(userId).then(
+                postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
+            )
         } else {
             // If not active, just insert the program without deactivating others
             postgresClient.update(

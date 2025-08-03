@@ -12,7 +12,7 @@ class EquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create equipment`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val uniqueName = "testequipmentout_${System.nanoTime()}"
         webTestClient.post()
             .uri("/api/v1/equipment/?name=$uniqueName&description=$uniqueName")

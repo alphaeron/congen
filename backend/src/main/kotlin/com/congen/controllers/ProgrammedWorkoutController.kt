@@ -6,6 +6,7 @@ import com.congen.service.ProgrammedWorkoutService
 import com.congen.util.KeycloakUtil
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -77,21 +78,36 @@ class ProgrammedWorkoutController(
      * @return Mono containing the created programmed workout with generated ID
      */
     @PostMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun save(
         @RequestParam("program_id") programId: Long,
         @RequestParam("day_number") dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        logger.info("Saving programmed workout: {} for program {}", name, programId)
-        return programmedWorkoutService.insertProgrammedWorkout(programId, dayNumber, name)
-            .map { savedWorkout ->
-                logger.debug("Saved programmed workout with id: {}", savedWorkout.id)
-                ResponseEntity.ok(savedWorkout)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedWorkoutMono =
+                if (isAdminOrService) {
+                    programmedWorkoutService.insertProgrammedWorkout(programId, dayNumber, name)
+                } else {
+                    programService.isOwner(programId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedWorkoutService.insertProgrammedWorkout(programId, dayNumber, name)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                        }
+                    }
+                }
+            programmedWorkoutMono.map {
+                logger.debug("Saved programmed workout with id: {}", it.id)
+                ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error saving programmed workout: {} for program {}", name, programId, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error saving programmed workout: {} for program {}", name, programId, e)
+                }
+        }
     }
 
     /**
@@ -104,18 +120,34 @@ class ProgrammedWorkoutController(
      * @return Mono containing the programmed workout if found
      */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return programmedWorkoutService.selectProgrammedWorkoutById(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedWorkoutMono =
+                if (isAdminOrService) {
+                    programmedWorkoutService.selectProgrammedWorkoutById(id)
+                } else {
+                    programmedWorkoutService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedWorkoutService.selectProgrammedWorkoutById(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                        }
+                    }
+                }
+            programmedWorkoutMono.map {
                 logger.debug("Found programmed workout: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error getting programmed workout: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting programmed workout: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -137,7 +169,7 @@ class ProgrammedWorkoutController(
                 if (isAdminOrService) {
                     programmedWorkoutService.selectProgrammedWorkouts()
                 } else {
-                    programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId.toInt())
+                    programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId)
                 }
             programmedWorkoutMono.map { ResponseEntity.ok(it) }
         }
@@ -153,19 +185,34 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing a list of programmed workouts for the program
      */
     @GetMapping("/program/{program_id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programService.isOwner(#programId, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun getByProgramId(
         @PathVariable("program_id") programId: Long,
     ): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
-        logger.debug("Getting programmed workouts for program: {}", programId)
-        return programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
-            .map { programmedWorkouts ->
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedWorkoutMono =
+                if (isAdminOrService) {
+                    programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
+                } else {
+                    programService.isOwner(programId, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                        }
+                    }
+                }
+            programmedWorkoutMono.map { programmedWorkouts ->
                 logger.debug("Found {} programmed workouts for program: {}", programmedWorkouts.size, programId)
                 ResponseEntity.ok(programmedWorkouts)
             }
-            .doOnError { e ->
-                logger.error("Error getting programmed workouts for program: {}", programId, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error getting programmed workouts for program: {}", programId, e)
+                }
+        }
     }
 
     /**
@@ -182,24 +229,42 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing the updated programmed workout
      */
     @PatchMapping("/{id}")
-    @PreAuthorize(
-        "hasRole('admin') or hasRole('service') or " +
-            "(@programService.isOwner(#programId, principal.subject) and @programmedWorkoutService.isOwner(#id, principal.subject))"
-    )
+    @PreAuthorize("isAuthenticated()")
     fun update(
         @PathVariable("id") id: Long,
         @RequestParam("program_id") programId: Long,
         @RequestParam("day_number") dayNumber: Int,
         @RequestParam name: String,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return programmedWorkoutService.updateProgrammedWorkout(id, programId, dayNumber, name)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedWorkoutMono =
+                if (isAdminOrService) {
+                    programmedWorkoutService.updateProgrammedWorkout(id, programId, dayNumber, name)
+                } else {
+                    programService.isOwner(
+                        programId,
+                        userId
+                    ).zipWith(programmedWorkoutService.isOwner(id, userId)) { isProgramOwner, isWorkoutOwner ->
+                        isProgramOwner && isWorkoutOwner
+                    }.flatMap { hasAccess ->
+                        if (hasAccess) {
+                            programmedWorkoutService.updateProgrammedWorkout(id, programId, dayNumber, name)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this program and programmed workout"))
+                        }
+                    }
+                }
+            programmedWorkoutMono.map {
                 logger.debug("Updated programmed workout: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error updating programmed workout: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error updating programmed workout: {}", id, e)
+                }
+        }
     }
 
     /**
@@ -212,17 +277,33 @@ class ProgrammedWorkoutController(
      * @return ResponseEntity containing the deleted programmed workout
      */
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or @programmedWorkoutService.isOwner(#id, principal.subject)")
+    @PreAuthorize("isAuthenticated()")
     fun delete(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return programmedWorkoutService.deleteProgrammedWorkout(id)
-            .map {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            val programmedWorkoutMono =
+                if (isAdminOrService) {
+                    programmedWorkoutService.deleteProgrammedWorkout(id)
+                } else {
+                    programmedWorkoutService.isOwner(id, userId).flatMap { isOwner ->
+                        if (isOwner) {
+                            programmedWorkoutService.deleteProgrammedWorkout(id)
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                        }
+                    }
+                }
+            programmedWorkoutMono.map {
                 logger.debug("Deleted programmed workout: {}", id)
                 ResponseEntity.ok(it)
             }
-            .doOnError { e ->
-                logger.error("Error deleting programmed workout: {}", id, e)
-            }
+                .doOnError { e ->
+                    logger.error("Error deleting programmed workout: {}", id, e)
+                }
+        }
     }
 }

@@ -85,7 +85,7 @@ class HealthController(
                 content = [
                     Content(
                         mediaType = "application/json",
-                        schema = Schema(implementation = com.congen.model.HealthCheckResponse::class),
+                        schema = Schema(implementation = HealthCheckResponse::class),
                     ),
                 ],
             ),
@@ -95,7 +95,7 @@ class HealthController(
                 content = [
                     Content(
                         mediaType = "application/json",
-                        schema = Schema(implementation = com.congen.model.HealthCheckResponse::class),
+                        schema = Schema(implementation = HealthCheckResponse::class),
                     ),
                 ],
             ),

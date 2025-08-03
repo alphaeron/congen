@@ -235,9 +235,10 @@ class ProgrammedExerciseDALTest {
 
     @Test
     fun `getUserIdFromProgrammedExercise should return user ID`() {
-        val userId = 123
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
+        val resultMap = mapOf("user_id" to userId)
         whenever(
-            postgresClient.selectIndividual<Int>(
+            postgresClient.selectIndividual<Map<String, Any>>(
                 """
                 SELECT p.user_id
                 FROM programmed_exercise pe
@@ -248,12 +249,12 @@ class ProgrammedExerciseDALTest {
                 """.trimIndent(),
                 programmedExercise.id
             )
-        ).thenReturn(Mono.just(userId))
+        ).thenReturn(Mono.just(resultMap))
         val result = programmedExerciseDAL.getUserIdFromProgrammedExercise(programmedExercise.id)
         StepVerifier.create(result)
             .expectNext(userId)
             .verifyComplete()
-        verify(postgresClient).selectIndividual<Int>(
+        verify(postgresClient).selectIndividual<Map<String, Any>>(
             """
             SELECT p.user_id
             FROM programmed_exercise pe
@@ -268,7 +269,7 @@ class ProgrammedExerciseDALTest {
 
     @Test
     fun `selectProgrammedExercisesByUserId should return list of programmed exercises`() {
-        val userId = 42
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val expectedQuery =
             """
             SELECT pe.*
@@ -287,7 +288,7 @@ class ProgrammedExerciseDALTest {
 
     @Test
     fun `selectProgrammedExercisesByUserId should return empty list`() {
-        val userId = 99
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val expectedQuery =
             """
             SELECT pe.*
@@ -306,7 +307,7 @@ class ProgrammedExerciseDALTest {
 
     @Test
     fun `selectProgrammedExercisesByUserId should propagate error`() {
-        val userId = 42
+        val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
         val expectedQuery =
             """
             SELECT pe.*

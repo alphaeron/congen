@@ -2,17 +2,17 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { UserProfilePage } from './UserProfilePage';
+import { User } from '../api/types';
 
 // Mock the auth context
-const mockUser = {
-  id: 1,
+const mockUser: User = {
+  keycloak_id: 'test-user-id',
   name: 'John Doe',
   age: 30,
   height: 175,
   weight: 80,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-  keycloak_user_id: 'test-user-id',
   groups: ['fitness-enthusiasts'],
   roles: ['user'],
 };

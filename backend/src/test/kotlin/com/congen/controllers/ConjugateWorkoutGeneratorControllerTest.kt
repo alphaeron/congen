@@ -6,13 +6,13 @@ import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
 import com.congen.service.ProgramService
+import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
-import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
@@ -26,19 +26,15 @@ import java.time.Instant
     properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
 )
 class ConjugateWorkoutGeneratorControllerTest {
-    @Mock
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
-
-    @Mock
     private lateinit var programService: ProgramService
-
-    @InjectMocks
+    private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var conjugateWorkoutGeneratorController: ConjugateWorkoutGeneratorController
 
     private lateinit var testProgram: Program
 
     companion object {
-        private const val USER_ID = 123
+        private const val USER_ID = "b226d772-c063-4974-ae08-ab64134abbcf"
         private const val CURRENT_WEEK = 1
         private const val PROGRAM_ID = 1L
         private const val PROGRAM_NAME = "Conjugate Powerlifting - Week 1"
@@ -46,6 +42,20 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @BeforeEach
     fun setUp() {
+        conjugateWorkoutGeneratorService = mock()
+        programService = mock()
+        keycloakUtil = mock()
+        conjugateWorkoutGeneratorController =
+            ConjugateWorkoutGeneratorController(
+                conjugateWorkoutGeneratorService,
+                programService,
+                keycloakUtil
+            )
+
+        // Mock KeycloakUtil methods for all tests
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+
         testProgram =
             Program(
                 id = PROGRAM_ID,
@@ -60,6 +70,7 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should generate workout program successfully`() {
+        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.just(testProgram))
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
@@ -71,6 +82,7 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should return 404 when program not found`() {
+        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.error(NoResultsFoundException("Program not found")))
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
@@ -82,6 +94,7 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should return 422 for validation error`() {
+        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.error(ValidationException("Invalid program parameters")))
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
@@ -93,6 +106,7 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should return 500 for unexpected error`() {
+        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.error(DatabaseException("Unexpected error")))
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)

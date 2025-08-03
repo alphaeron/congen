@@ -8,18 +8,18 @@ import org.springframework.http.HttpStatus
 
 class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
-    private var userId: Int = 0
+    private var userId: String = ""
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test
     fun `should return 422 when program_days_per_week is 1`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -37,7 +37,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 5`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -55,7 +55,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 0`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -73,7 +73,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 when program_days_per_week is 8`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -91,7 +91,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 2`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -105,7 +105,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 3`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -119,7 +119,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should accept valid program_days_per_week value 4`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         webTestClient.post()
             .uri(
                 "/api/v1/user_program_preferences/?user_id=$userId" +
@@ -133,7 +133,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should allow changing session time when user has existing workouts`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create user
         // Create all reference data (exercises, equipment, etc.) before generating workouts
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
@@ -162,7 +162,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should prevent changing program days per week when user has existing workouts`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create user
         // Create all reference data (exercises, equipment, etc.) before generating workouts
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
@@ -201,7 +201,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should prevent changing program days per week from 4 to 3 when user has existing workouts`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create user
         // Create all reference data (exercises, equipment, etc.) before generating workouts
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = token)
@@ -239,7 +239,7 @@ class UserProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should allow changing program days per week when no workouts exist`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Create user
         // Create program preferences with 3 days per week
         webTestClient.post()

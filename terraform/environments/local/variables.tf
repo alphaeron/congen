@@ -57,7 +57,8 @@ variable "frontend_redirect_uris" {
   type        = list(string)
   default = [
     "http://localhost:3000",
-    "http://localhost:3000/profile/create"
+    "http://localhost:3000/profile/create",
+    "http://localhost:3000/auth/callback"
   ]
 }
 

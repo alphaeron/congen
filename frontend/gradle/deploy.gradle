@@ -2,6 +2,9 @@
 
 import groovy.json.JsonSlurper
 
+// Get environment from project property, default to 'local'
+ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+
 task dockerBuild {
     group = 'build'
     description = 'Build Docker image for the frontend (uses environment to determine build type)'
@@ -12,8 +15,7 @@ task dockerBuild {
         if (file('dist').exists()) {
             println "📦 Ensuring fresh build for Docker image..."
         }
-        def environment = project.hasProperty('environment') ? project.environment : 'local'
-        def buildType = (environment == 'production') ? 'production' : 'debug'
+        def buildType = (project.environment == 'production') ? 'production' : 'debug'
         
         def packageJson = file('package.json')
         def version = new JsonSlurper().parse(packageJson).version
@@ -110,7 +112,6 @@ task prepareRemoteImage {
     }
 
     doLast {
-        def environment = project.hasProperty('environment') ? project.environment : 'staging'
         def remoteImageName = "${remoteRegistry}/${remoteRegistryNamespace}/frontend:${project.ext.frontendImageTag.split(':')[1]}"
 
         // Tag and push to remote registry
@@ -127,7 +128,7 @@ task prepareRemoteImage {
         println "✅ Image pushed to remote registry: ${remoteImageName}"
 
         // Generate image tag patch for remote environment
-        generateFrontendImageTagPatchForEnvironment(environment, remoteImageName)
+        generateFrontendImageTagPatchForEnvironment(project.environment, remoteImageName)
     }
 }
 
@@ -140,10 +141,9 @@ task prepareDeployment {
 
 // Configure prepareDeployment dependencies based on environment
 prepareDeployment.configure {
-    def environment = project.hasProperty('environment') ? project.environment : 'local'
-    if (environment == 'local') {
+    if (project.environment == 'local') {
         dependsOn prepareLocalImage
-    } else if (environment == 'staging' || environment == 'production') {
+    } else if (project.environment == 'staging' || project.environment == 'production') {
         dependsOn prepareRemoteImage
     }
 } 

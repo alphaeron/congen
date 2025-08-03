@@ -91,7 +91,7 @@ class FourDayWorkoutStageGenerationService(
         rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
-        userId: Int
+        userId: String,
     ): Mono<Void> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
@@ -110,13 +110,9 @@ class FourDayWorkoutStageGenerationService(
                 exercises = exercises,
                 preferences = preferences,
                 userEquipment = userEquipment,
-                oneRepMaxes = oneRepMaxes,
                 weakMuscles = weakMuscles,
                 rotationHistory = rotationHistory,
                 workoutType = workoutType,
-                movementType = dayType,
-                currentWeekNumber = currentWeekNumber,
-                userId = userId,
                 movementBalanceState = movementBalanceState
             ).flatMap { primaryExercise ->
                 // Update movement balance state with primary exercise
@@ -140,7 +136,10 @@ class FourDayWorkoutStageGenerationService(
 
         // Process primary exercise and generate workout stages
         return primaryExerciseAndSchemesMono
-            .flatMap { (primaryExercise, primarySetSchemes, hasPrimary) ->
+            .flatMap { tuple ->
+                val primaryExercise = tuple.first
+                val primarySetSchemes = tuple.second
+
                 val secondaryExerciseMono: Mono<Exercise> =
                     if (conjugateTemplates.hasSecondaryMovement(dayType) && primaryExercise != null) {
                         selectSecondaryExercise(
@@ -174,7 +173,6 @@ class FourDayWorkoutStageGenerationService(
 
                             // Create stages sequentially using the common pattern
                             createStagesSequentially(
-                                workout = workout,
                                 stageCreators =
                                     listOf(
                                         // Warmup stage
@@ -199,7 +197,6 @@ class FourDayWorkoutStageGenerationService(
                                                     workout = workout,
                                                     exercise = primaryExercise,
                                                     setSchemes = primarySetSchemes,
-                                                    userId = userId
                                                 )
                                             } else {
                                                 Mono.empty()
@@ -238,7 +235,6 @@ class FourDayWorkoutStageGenerationService(
                                                     oneRepMaxes = oneRepMaxes,
                                                     weakMuscles = weakMuscles,
                                                     rotationHistory = rotationHistory,
-                                                    currentWeekNumber = currentWeekNumber,
                                                     userId = userId,
                                                     movementBalanceState = movementBalanceState
                                                 )
@@ -273,7 +269,6 @@ class FourDayWorkoutStageGenerationService(
 
                                     // Create stages sequentially using the common pattern
                                     createStagesSequentially(
-                                        workout = workout,
                                         stageCreators =
                                             listOf(
                                                 // Warmup stage
@@ -298,7 +293,6 @@ class FourDayWorkoutStageGenerationService(
                                                             workout = workout,
                                                             exercise = primaryExercise,
                                                             setSchemes = primarySetSchemes,
-                                                            userId = userId
                                                         )
                                                     } else {
                                                         Mono.empty()
@@ -310,7 +304,6 @@ class FourDayWorkoutStageGenerationService(
                                                         workout = workout,
                                                         exercise = secondaryExercise,
                                                         setSchemes = secondarySetSchemes,
-                                                        userId = userId
                                                     )
                                                 },
                                                 // Accessory stage if needed
@@ -326,8 +319,8 @@ class FourDayWorkoutStageGenerationService(
                                                             weakMuscles = weakMuscles,
                                                             numAccessoryExercises = numAccessoryExercises,
                                                             rotationHistory = rotationHistory,
-                                                            currentWeekNumber = currentWeekNumber,
                                                             userId = userId,
+                                                            currentWeekNumber = currentWeekNumber,
                                                             movementBalanceState = movementBalanceState
                                                         )
                                                     } else {
@@ -346,7 +339,6 @@ class FourDayWorkoutStageGenerationService(
                                                             dayType = dayType,
                                                             weakMuscles = weakMuscles,
                                                             rotationHistory = rotationHistory,
-                                                            currentWeekNumber = currentWeekNumber,
                                                             userId = userId,
                                                             movementBalanceState = movementBalanceState
                                                         )

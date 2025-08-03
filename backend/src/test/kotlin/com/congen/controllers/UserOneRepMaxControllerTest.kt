@@ -4,12 +4,13 @@ import com.congen.dal.UserOneRepMaxDAL
 import com.congen.exceptions.DatabaseException
 import com.congen.model.UserOneRepMax
 import com.congen.service.UserOneRepMaxService
+import com.congen.util.KeycloakUtil
 import com.congen.util.ValidationUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
@@ -19,191 +20,213 @@ import reactor.test.StepVerifier
 import java.math.BigDecimal
 import java.time.Instant
 
+/**
+ * Unit tests for UserOneRepMaxController.
+ *
+ * These tests verify the REST API endpoints for user one rep max operations,
+ * including CRUD operations and error handling.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 @ExtendWith(MockitoExtension::class)
 @TestPropertySource(
     properties = ["spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration"]
 )
 class UserOneRepMaxControllerTest {
-    @Mock
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
-
-    @Mock
     private lateinit var userOneRepMaxService: UserOneRepMaxService
-
-    @Mock
     private lateinit var validationUtil: ValidationUtil
+    private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var userOneRepMaxController: UserOneRepMaxController
 
-    private lateinit var controller: UserOneRepMaxController
+    companion object {
+        private const val TEST_USER_ID = "test-user-id"
+        private const val TEST_EXERCISE_NAME = "Bench Press"
 
-    private val testUserId = 1
-    private val testExerciseName = "Bench Press"
-    private val testOneRepMax =
-        UserOneRepMax(
-            userId = testUserId,
-            exerciseName = testExerciseName,
-            oneRepMax = BigDecimal("100.0"),
-            updatedAt = Instant.now()
-        )
+        private val TEST_ONE_REP_MAX =
+            UserOneRepMax(
+                userId = TEST_USER_ID,
+                exerciseName = TEST_EXERCISE_NAME,
+                oneRepMax = BigDecimal("100.0"),
+                updatedAt = Instant.now()
+            )
+    }
 
     @BeforeEach
     fun setUp() {
-        controller = UserOneRepMaxController(userOneRepMaxDAL, userOneRepMaxService, validationUtil)
+        userOneRepMaxDAL = mock()
+        userOneRepMaxService = mock()
+        validationUtil = mock()
+        keycloakUtil = mock()
+        userOneRepMaxController = UserOneRepMaxController(userOneRepMaxDAL, userOneRepMaxService, validationUtil, keycloakUtil)
     }
 
     @Test
     fun `getOneRepMaxesByUserId should return list of one rep maxes`() {
         // Given
-        val oneRepMaxes = listOf(testOneRepMax)
-        whenever(userOneRepMaxService.getAllByUser(testUserId, null))
+        val oneRepMaxes = listOf(TEST_ONE_REP_MAX)
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.getAllByUser(TEST_USER_ID, null))
             .thenReturn(Mono.just(oneRepMaxes))
 
         // When
-        val result = controller.getOneRepMaxesByUserId(testUserId, null)
+        val result = userOneRepMaxController.getOneRepMaxesByUserId(TEST_USER_ID, null)
 
         // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(oneRepMaxes))
             .verifyComplete()
 
-        verify(userOneRepMaxService).getAllByUser(testUserId, null)
+        verify(userOneRepMaxService).getAllByUser(TEST_USER_ID, null)
     }
 
     @Test
     fun `getOneRepMaxesByUserId should pass unit parameter to service`() {
         // Given
-        val oneRepMaxes = listOf(testOneRepMax)
-        whenever(userOneRepMaxService.getAllByUser(testUserId, "lbs"))
+        val oneRepMaxes = listOf(TEST_ONE_REP_MAX)
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.getAllByUser(TEST_USER_ID, "lbs"))
             .thenReturn(Mono.just(oneRepMaxes))
 
         // When
-        val result = controller.getOneRepMaxesByUserId(testUserId, "lbs")
+        val result = userOneRepMaxController.getOneRepMaxesByUserId(TEST_USER_ID, "lbs")
 
         // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(oneRepMaxes))
             .verifyComplete()
 
-        verify(userOneRepMaxService).getAllByUser(testUserId, "lbs")
+        verify(userOneRepMaxService).getAllByUser(TEST_USER_ID, "lbs")
     }
 
     @Test
     fun `getOneRepMaxByUserAndExercise should return one rep max when found`() {
         // Given
-        whenever(userOneRepMaxService.getByUserAndExercise(testUserId, testExerciseName, null))
-            .thenReturn(Mono.just(testOneRepMax))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.getByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null))
+            .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
         // When
-        val result = controller.getOneRepMaxByUserAndExercise(testUserId, testExerciseName, null)
+        val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testOneRepMax))
+            .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
 
-        verify(userOneRepMaxService).getByUserAndExercise(testUserId, testExerciseName, null)
+        verify(userOneRepMaxService).getByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
     }
 
     @Test
     fun `getOneRepMaxByUserAndExercise should return not found when not found`() {
         // Given
-        whenever(userOneRepMaxService.getByUserAndExercise(testUserId, testExerciseName, null))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.getByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null))
             .thenReturn(Mono.error(DatabaseException("Not found")))
 
         // When
-        val result = controller.getOneRepMaxByUserAndExercise(testUserId, testExerciseName, null)
+        val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
 
         // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
 
-        verify(userOneRepMaxService).getByUserAndExercise(testUserId, testExerciseName, null)
+        verify(userOneRepMaxService).getByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
     }
 
     @Test
     fun `getOneRepMaxByUserAndExercise should pass unit parameter to service`() {
         // Given
-        whenever(userOneRepMaxService.getByUserAndExercise(testUserId, testExerciseName, "kg"))
-            .thenReturn(Mono.just(testOneRepMax))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.getByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, "kg"))
+            .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
         // When
-        val result = controller.getOneRepMaxByUserAndExercise(testUserId, testExerciseName, "kg")
+        val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, "kg")
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testOneRepMax))
+            .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
 
-        verify(userOneRepMaxService).getByUserAndExercise(testUserId, testExerciseName, "kg")
+        verify(userOneRepMaxService).getByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, "kg")
     }
 
     @Test
     fun `upsertOneRepMax should return created one rep max`() {
         // Given
         val oneRepMax = BigDecimal("100.0")
-        whenever(userOneRepMaxService.upsertOneRepMax(testUserId, testExerciseName, oneRepMax, null))
-            .thenReturn(Mono.just(testOneRepMax))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        whenever(userOneRepMaxService.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg"))
+            .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
         // When
-        val result = controller.upsertOneRepMax(testUserId, testExerciseName, oneRepMax, null)
+        val result = userOneRepMaxController.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg")
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testOneRepMax))
+            .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
 
-        verify(userOneRepMaxService).upsertOneRepMax(testUserId, testExerciseName, oneRepMax, null)
+        verify(userOneRepMaxService).upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg")
     }
 
     @Test
     fun `upsertOneRepMax should pass unit parameter to service`() {
         // Given
         val oneRepMax = BigDecimal("100.0")
-        whenever(userOneRepMaxService.upsertOneRepMax(testUserId, testExerciseName, oneRepMax, "lbs"))
-            .thenReturn(Mono.just(testOneRepMax))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        whenever(userOneRepMaxService.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "lbs"))
+            .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
         // When
-        val result = controller.upsertOneRepMax(testUserId, testExerciseName, oneRepMax, "lbs")
+        val result = userOneRepMaxController.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "lbs")
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testOneRepMax))
+            .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
 
-        verify(userOneRepMaxService).upsertOneRepMax(testUserId, testExerciseName, oneRepMax, "lbs")
+        verify(userOneRepMaxService).upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "lbs")
     }
 
     @Test
     fun `deleteOneRepMax should return deleted one rep max when deleted`() {
         // Given
-        whenever(userOneRepMaxService.deleteOneRepMax(testUserId, testExerciseName))
-            .thenReturn(Mono.just(testOneRepMax))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME))
+            .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
         // When
-        val result = controller.deleteOneRepMax(testUserId, testExerciseName)
+        val result = userOneRepMaxController.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(testOneRepMax))
+            .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
 
-        verify(userOneRepMaxService).deleteOneRepMax(testUserId, testExerciseName)
+        verify(userOneRepMaxService).deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
     }
 
     @Test
     fun `deleteOneRepMax should return not found when not found`() {
         // Given
-        whenever(userOneRepMaxService.deleteOneRepMax(testUserId, testExerciseName))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
+        whenever(userOneRepMaxService.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME))
             .thenReturn(Mono.error(DatabaseException("Not found")))
 
         // When
-        val result = controller.deleteOneRepMax(testUserId, testExerciseName)
+        val result = userOneRepMaxController.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
 
         // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
 
-        verify(userOneRepMaxService).deleteOneRepMax(testUserId, testExerciseName)
+        verify(userOneRepMaxService).deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
     }
 }

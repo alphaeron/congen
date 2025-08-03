@@ -7,9 +7,11 @@ import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
+import com.congen.model.ExerciseRotationHistory
 import com.congen.model.MovementType
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
+import com.congen.model.SetScheme
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
@@ -24,6 +26,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
@@ -58,7 +61,7 @@ class WorkoutStageGenerationServiceTest {
     private lateinit var weakMuscles: List<String>
     private lateinit var setSchemeParams: List<SetSchemeParams>
     private var currentWeekNumber: Int = 0
-    private var userId: Int = 0
+    private var userId: String = "test-user-id"
 
     @BeforeEach
     fun setUp() {
@@ -115,7 +118,7 @@ class WorkoutStageGenerationServiceTest {
         weakMuscles = listOf("chest", "back")
         setSchemeParams = listOf(mockSetSchemeParams())
         currentWeekNumber = 1
-        userId = 1
+        userId = "test-user-id"
     }
 
     @Test
@@ -168,7 +171,7 @@ class WorkoutStageGenerationServiceTest {
 
         // Create a mock SetScheme object
         val mockSetScheme =
-            com.congen.model.SetScheme(
+            SetScheme(
                 id = 1L,
                 programmedExerciseId = 1L,
                 setNumber = 1,
@@ -267,8 +270,7 @@ class WorkoutStageGenerationServiceTest {
             workoutStageGenerationService.testCreatePrimaryStage(
                 workout = workout,
                 exercise = exercise,
-                setSchemes = setSchemeParams,
-                userId = userId
+                setSchemes = setSchemeParams
             )
 
         // Then
@@ -385,7 +387,7 @@ class WorkoutStageGenerationServiceTest {
 
         // Create a mock SetScheme object
         val mockSetScheme =
-            com.congen.model.SetScheme(
+            SetScheme(
                 id = 2L,
                 programmedExerciseId = 2L,
                 setNumber = 1,
@@ -484,8 +486,7 @@ class WorkoutStageGenerationServiceTest {
             workoutStageGenerationService.testCreateSecondaryStage(
                 workout = workout,
                 exercise = exercise,
-                setSchemes = setSchemeParams,
-                userId = userId
+                setSchemes = setSchemeParams
             )
 
         // Then
@@ -543,6 +544,7 @@ class WorkoutStageGenerationServiceTest {
                 oneRepMaxes = oneRepMaxes,
                 dayType = "ME_Upper",
                 weakMuscles = weakMuscles,
+                rotationHistory = emptyList(),
                 currentWeekNumber = currentWeekNumber,
                 userId = userId
             )
@@ -552,7 +554,7 @@ class WorkoutStageGenerationServiceTest {
             .verifyComplete()
 
         // Verify no stage creation was attempted
-        verify(workoutStageDAL, org.mockito.kotlin.times(0)).insertWorkoutStage(any(), any(), any(), any())
+        verify(workoutStageDAL, times(0)).insertWorkoutStage(any(), any(), any(), any())
     }
 
     @Test
@@ -568,6 +570,7 @@ class WorkoutStageGenerationServiceTest {
                 userEquipment = userEquipment,
                 oneRepMaxes = oneRepMaxes,
                 weakMuscles = weakMuscles,
+                rotationHistory = emptyList(),
                 userId = userId
             )
 
@@ -576,7 +579,7 @@ class WorkoutStageGenerationServiceTest {
             .verifyComplete()
 
         // Verify no stage creation was attempted
-        verify(workoutStageDAL, org.mockito.kotlin.times(0)).insertWorkoutStage(any(), any(), any(), any())
+        verify(workoutStageDAL, times(0)).insertWorkoutStage(any(), any(), any(), any())
     }
 
     @Test
@@ -656,17 +659,16 @@ class WorkoutStageGenerationServiceTest {
             userEquipment: List<UserEquipment>,
             oneRepMaxes: List<UserOneRepMax>,
             programPreferences: UserProgramPreferences,
-            rotationHistory: List<com.congen.model.ExerciseRotationHistory>,
+            rotationHistory: List<ExerciseRotationHistory>,
             weakMuscles: List<String>,
             currentWeekNumber: Int,
-            userId: Int
+            userId: String
         ): Mono<Void> {
             // Simple test implementation that creates a primary stage
             return createPrimaryStage(
                 workout = workout,
                 exercise = exercises.first(),
-                setSchemes = listOf(mockSetSchemeParams()),
-                userId = userId
+                setSchemes = listOf(mockSetSchemeParams())
             )
         }
 
@@ -674,16 +676,14 @@ class WorkoutStageGenerationServiceTest {
         fun testCreatePrimaryStage(
             workout: ProgrammedWorkout,
             exercise: Exercise,
-            setSchemes: List<SetSchemeParams>,
-            userId: Int
-        ): Mono<Void> = createPrimaryStage(workout, exercise, setSchemes, userId)
+            setSchemes: List<SetSchemeParams>
+        ): Mono<Void> = createPrimaryStage(workout, exercise, setSchemes)
 
         fun testCreateSecondaryStage(
             workout: ProgrammedWorkout,
             exercise: Exercise,
-            setSchemes: List<SetSchemeParams>,
-            userId: Int
-        ): Mono<Void> = createSecondaryStage(workout, exercise, setSchemes, userId)
+            setSchemes: List<SetSchemeParams>
+        ): Mono<Void> = createSecondaryStage(workout, exercise, setSchemes)
 
         fun testCreateAccessoryStage(
             workout: ProgrammedWorkout,
@@ -694,8 +694,9 @@ class WorkoutStageGenerationServiceTest {
             oneRepMaxes: List<UserOneRepMax>,
             dayType: String,
             weakMuscles: List<String>,
+            rotationHistory: List<ExerciseRotationHistory>,
             currentWeekNumber: Int,
-            userId: Int
+            userId: String
         ): Mono<Void> =
             createAccessoryStage(
                 workout,
@@ -706,9 +707,9 @@ class WorkoutStageGenerationServiceTest {
                 dayType,
                 weakMuscles,
                 numAccessoryExercises,
-                emptyList(),
-                currentWeekNumber,
-                userId
+                rotationHistory,
+                userId,
+                currentWeekNumber
             )
 
         fun testCreateConditioningStage(
@@ -719,7 +720,8 @@ class WorkoutStageGenerationServiceTest {
             userEquipment: List<UserEquipment>,
             oneRepMaxes: List<UserOneRepMax>,
             weakMuscles: List<String>,
-            userId: Int
+            rotationHistory: List<ExerciseRotationHistory>,
+            userId: String
         ): Mono<Void> =
             createConditioningStage(
                 workout,
@@ -729,8 +731,7 @@ class WorkoutStageGenerationServiceTest {
                 userEquipment,
                 oneRepMaxes,
                 weakMuscles,
-                emptyList(),
-                1,
+                rotationHistory,
                 userId
             )
 

@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import reactor.test.StepVerifier
 import java.math.BigDecimal
 
 @ExtendWith(MockitoExtension::class)
@@ -36,25 +37,45 @@ class UserOneRepMaxServiceTest {
 
     private lateinit var service: UserOneRepMaxService
 
-    private val userId = 1
+    private val userId = "b226d772-c063-4974-ae08-ab64134abbcf"
     private val exerciseName = "Bench Press"
     private val oneRepMax = mockUserOneRepMax(userId = userId, exerciseName = exerciseName)
 
     companion object {
         @JvmStatic
-        fun createUserOneRepMaxTestData(): List<com.congen.model.UserOneRepMax> =
+        fun createUserOneRepMaxTestData(): List<UserOneRepMax> =
             listOf(
-                mockUserOneRepMax(userId = 1, exerciseName = "Bench Press", oneRepMax = BigDecimal("225.0")),
-                mockUserOneRepMax(userId = 1, exerciseName = "Deadlift", oneRepMax = BigDecimal("315.0")),
-                mockUserOneRepMax(userId = 1, exerciseName = "Squat", oneRepMax = BigDecimal("275.0"))
+                mockUserOneRepMax(
+                    userId = "b226d772-c063-4974-ae08-ab64134abbcf",
+                    exerciseName = "Bench Press",
+                    oneRepMax = BigDecimal("225.0")
+                ),
+                mockUserOneRepMax(
+                    userId = "b226d772-c063-4974-ae08-ab64134abbcf",
+                    exerciseName = "Deadlift",
+                    oneRepMax = BigDecimal("315.0")
+                ),
+                mockUserOneRepMax(userId = "b226d772-c063-4974-ae08-ab64134abbcf", exerciseName = "Squat", oneRepMax = BigDecimal("275.0"))
             )
 
         @JvmStatic
-        fun createWeightUnitPreferenceTestData(): List<com.congen.model.UserWeightUnitPreference> =
+        fun createWeightUnitPreferenceTestData(): List<UserWeightUnitPreference> =
             listOf(
-                mockUserWeightUnitPreference(userId = 1, exerciseName = "Bench Press", preferredUnit = com.congen.model.WeightUnit.LBS),
-                mockUserWeightUnitPreference(userId = 1, exerciseName = "Deadlift", preferredUnit = com.congen.model.WeightUnit.KG),
-                mockUserWeightUnitPreference(userId = 1, exerciseName = "Squat", preferredUnit = com.congen.model.WeightUnit.LBS)
+                mockUserWeightUnitPreference(
+                    userId = "b226d772-c063-4974-ae08-ab64134abbcf",
+                    exerciseName = "Bench Press",
+                    preferredUnit = WeightUnit.LBS
+                ),
+                mockUserWeightUnitPreference(
+                    userId = "b226d772-c063-4974-ae08-ab64134abbcf",
+                    exerciseName = "Deadlift",
+                    preferredUnit = WeightUnit.KG
+                ),
+                mockUserWeightUnitPreference(
+                    userId = "b226d772-c063-4974-ae08-ab64134abbcf",
+                    exerciseName = "Squat",
+                    preferredUnit = WeightUnit.LBS
+                )
             )
     }
 
@@ -113,7 +134,7 @@ class UserOneRepMaxServiceTest {
         val result = service.getAllByUser(userId, null)
 
         // Then
-        reactor.test.StepVerifier.create(result)
+        StepVerifier.create(result)
             .assertNext { list ->
                 assert(list.size == 3)
                 assert(list[0].oneRepMax == convertedWeight1)
@@ -137,7 +158,7 @@ class UserOneRepMaxServiceTest {
         val result = service.getByUserAndExercise(userId, exerciseName, null)
 
         // Then
-        reactor.test.StepVerifier.create(result)
+        StepVerifier.create(result)
             .assertNext { userOneRepMax ->
                 assert(userOneRepMax.oneRepMax == convertedWeight)
             }

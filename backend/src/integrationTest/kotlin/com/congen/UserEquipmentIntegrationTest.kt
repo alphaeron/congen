@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class UserEquipmentIntegrationTest : BaseIntegrationTest() {
-    private var userId: Int = 0
+    private var userId: String = ""
 
     @BeforeEach
     override fun setUp() {
@@ -17,7 +17,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should save user equipment`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
 
         // Verify the user equipment was created correctly
@@ -33,7 +33,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user equipment by user id`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
         webTestClient.get()
             .uri("/api/v1/user_equipment/$userId")
@@ -47,7 +47,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete user equipment`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
 
         // Delete the user equipment using query parameters
@@ -63,7 +63,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle multiple equipment for same user`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         // Add multiple equipment for the same user
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = token)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME_2, token = token)

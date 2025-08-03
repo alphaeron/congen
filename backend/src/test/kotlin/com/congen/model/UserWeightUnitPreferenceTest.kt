@@ -20,12 +20,12 @@ class UserWeightUnitPreferenceTest {
     fun `should create UserWeightUnitPreference with all properties`() {
         val preference =
             mockUserWeightUnitPreference(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 preferredUnit = WeightUnit.LBS
             )
 
-        assertEquals(1, preference.userId)
+        assertEquals("test-keycloak-user-id", preference.userId)
         assertEquals("Bench Press", preference.exerciseName)
         assertEquals(WeightUnit.LBS, preference.preferredUnit)
         assertEquals(sampleInstant(), preference.createdAt)
@@ -36,12 +36,12 @@ class UserWeightUnitPreferenceTest {
     fun `should create UserWeightUnitPreference with KG unit`() {
         val preference =
             mockUserWeightUnitPreference(
-                userId = 2,
+                userId = "test-keycloak-user-id-2",
                 exerciseName = "Deadlift",
                 preferredUnit = WeightUnit.KG
             )
 
-        assertEquals(2, preference.userId)
+        assertEquals("test-keycloak-user-id-2", preference.userId)
         assertEquals("Deadlift", preference.exerciseName)
         assertEquals(WeightUnit.KG, preference.preferredUnit)
     }
@@ -53,7 +53,7 @@ class UserWeightUnitPreferenceTest {
         exercises.forEach { exerciseName ->
             val preference =
                 mockUserWeightUnitPreference(
-                    userId = 1,
+                    userId = "test-keycloak-user-id",
                     exerciseName = exerciseName,
                     preferredUnit = WeightUnit.LBS
                 )
@@ -63,7 +63,14 @@ class UserWeightUnitPreferenceTest {
 
     @Test
     fun `should support different user IDs`() {
-        val userIds = listOf(1, 2, 3, 100, 999)
+        val userIds =
+            listOf(
+                "test-keycloak-user-id-1",
+                "test-keycloak-user-id-2",
+                "test-keycloak-user-id-3",
+                "test-keycloak-user-id-100",
+                "test-keycloak-user-id-999"
+            )
 
         userIds.forEach { userId ->
             val preference =
@@ -80,14 +87,14 @@ class UserWeightUnitPreferenceTest {
     fun `should support both weight units`() {
         val kgPreference =
             mockUserWeightUnitPreference(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 preferredUnit = WeightUnit.KG
             )
 
         val lbsPreference =
             mockUserWeightUnitPreference(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 preferredUnit = WeightUnit.LBS
             )
@@ -103,7 +110,7 @@ class UserWeightUnitPreferenceTest {
 
         val preference =
             UserWeightUnitPreference(
-                userId = 1,
+                userId = "test-keycloak-user-id",
                 exerciseName = "Bench Press",
                 preferredUnit = WeightUnit.LBS,
                 createdAt = createdAt,

@@ -28,7 +28,7 @@ class ProgramTest {
         val program =
             mockProgram(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -49,7 +49,7 @@ class ProgramTest {
         val program =
             mockProgram(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -60,7 +60,7 @@ class ProgramTest {
         val json = objectMapper.writeValueAsString(program)
 
         assertTrue(json.contains("\"id\":1"))
-        assertTrue(json.contains("\"user_id\":1"))
+        assertTrue(json.contains("\"user_id\":\"b226d772-c063-4974-ae08-ab64134abbcf\""))
         assertTrue(json.contains("\"name\":\"Conjugate Powerlifting Program\""))
         assertTrue(json.contains("\"current_week_number\":1"))
         assertTrue(json.contains("\"created_at\":\"$now\""))
@@ -74,7 +74,7 @@ class ProgramTest {
             """
             {
                 "id": 1,
-                "user_id": 1,
+                "user_id": "b226d772-c063-4974-ae08-ab64134abbcf",
                 "name": "Conjugate Powerlifting Program",
                 "current_week_number": 1,
                 "created_at": "$now",
@@ -86,7 +86,7 @@ class ProgramTest {
         val program = objectMapper.readValue(json, Program::class.java)
 
         assertEquals(1L, program.id)
-        assertEquals(1, program.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", program.userId)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)
@@ -100,7 +100,7 @@ class ProgramTest {
             """
             {
                 "id": 1,
-                "user_id": 1,
+                "user_id": "b226d772-c063-4974-ae08-ab64134abbcf",
                 "name": "Conjugate Powerlifting Program",
                 "current_week_number": 1,
                 "created_at": "$now",
@@ -113,7 +113,7 @@ class ProgramTest {
         val program = objectMapper.readValue(json, Program::class.java)
 
         assertEquals(1L, program.id)
-        assertEquals(1, program.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", program.userId)
         assertEquals("Conjugate Powerlifting Program", program.name)
         assertEquals(1, program.currentWeekNumber)
         assertEquals(now, program.createdAt)
@@ -126,7 +126,7 @@ class ProgramTest {
         val program1 =
             mockProgram(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -136,7 +136,7 @@ class ProgramTest {
         val program2 =
             mockProgram(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Conjugate Powerlifting Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -146,7 +146,7 @@ class ProgramTest {
         val program3 =
             mockProgram(
                 id = 2L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Different Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -165,7 +165,7 @@ class ProgramTest {
         val original =
             mockProgram(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Original Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -181,7 +181,7 @@ class ProgramTest {
             )
 
         assertEquals(1L, copied.id)
-        assertEquals(1, copied.userId)
+        assertEquals("b226d772-c063-4974-ae08-ab64134abbcf", copied.userId)
         assertEquals("Copied Program", copied.name)
         assertEquals(2, copied.currentWeekNumber)
         assertEquals(now, copied.createdAt)
@@ -194,7 +194,7 @@ class ProgramTest {
         val program =
             mockProgram(
                 id = 1L,
-                userId = 1,
+                userId = "b226d772-c063-4974-ae08-ab64134abbcf",
                 name = "Test Program",
                 currentWeekNumber = 1,
                 createdAt = now,
@@ -205,7 +205,7 @@ class ProgramTest {
         val toString = program.toString()
 
         assertTrue(toString.contains("id=1"))
-        assertTrue(toString.contains("userId=1"))
+        assertTrue(toString.contains("userId=b226d772-c063-4974-ae08-ab64134abbcf"))
         assertTrue(toString.contains("name=Test Program"))
         assertTrue(toString.contains("currentWeekNumber=1"))
         assertTrue(toString.contains("isActive=true"))

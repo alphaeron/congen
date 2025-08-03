@@ -1,11 +1,11 @@
 // Unified deployment task for all subprojects using staged deployment.
 // This integrates with the deploy-staged.sh script for consistent deployment across environments.
 
-def environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
+ext.environment = project.hasProperty('environment') ? project.getProperty('environment') : 'local'
 
 // Helper function to build command line arguments for deploy-staged.sh
 def buildDeployStagedArgs(stage = null) {
-    def args = ['-e', environment]
+    def args = ['-e', project.environment]
     
     // Add stage-specific arguments if provided
     if (stage) {
@@ -97,7 +97,7 @@ task deployStage {
         }
         
         // Check if Stage 9 is being deployed to local environment
-        if (stageNum == 9 && environment == 'local') {
+        if (stageNum == 9 && project.environment == 'local') {
             throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
@@ -118,7 +118,7 @@ task deployStage {
             9: "Horizontal Pod Autoscaler"
         ]
         
-        println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${environment}"
+        println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${project.environment}"
         def args = buildDeployStagedArgs(stageNum.toString())
         def cmdLine = ['scripts/deploy-staged.sh'] + args
         exec {
@@ -132,17 +132,17 @@ task deployStage {
 task deployAll {
     group = 'deployment'
     description = 'Prepare and deploy all subprojects to Kubernetes using staged deployment'
-    if (environment == 'local') {
+    if (project.environment == 'local') {
         dependsOn setupLocalKubernetes
     }
     dependsOn subprojects.collect { it.path + ':prepareDeployment' }
     dependsOn ':confirmDeployment'
     doLast {
-        println "🚀 Starting staged deployment for environment: ${environment}"
+        println "🚀 Starting staged deployment for environment: ${project.environment}"
         
         // Deploy all stages in sequence
         def stages = [1, 2, 3, 4, 5, 6, 7, 8]
-        if (environment != 'local') {
+        if (project.environment != 'local') {
             stages << 9  // Add Stage 9 for staging/production
         }
         
@@ -164,7 +164,7 @@ task confirmDeployment {
     description = 'Confirm production deployment with user input'
     group = 'kubernetes'
     doLast {
-        if (environment == 'production') {
+        if (project.environment == 'production') {
             def response = System.console()?.readLine("Are you sure you want to deploy to production? (y/N): ")
             if (response != 'y' && response != 'Y') {
                 throw new GradleException("Production deployment cancelled")

@@ -28,7 +28,7 @@ class UserWeakMuscleDALTest {
     @Test
     fun `should insert and select user weak muscle`() {
         val now = Instant.now()
-        val userWeakMuscle = UserWeakMuscle(1, "hamstrings", now)
+        val userWeakMuscle = UserWeakMuscle("test-keycloak-user-id", "hamstrings", now)
         val insertQuery =
             """
             INSERT INTO user_weak_muscle (user_id, muscle_name)
@@ -36,14 +36,16 @@ class UserWeakMuscleDALTest {
             """.trimIndent()
         val selectQuery = "SELECT * FROM user_weak_muscle WHERE user_id=$1"
         // Mock with exact arguments, no matchers
-        whenever(postgresClient.update<UserWeakMuscle>(insertQuery, 1, "hamstrings")).thenReturn(Mono.just(userWeakMuscle))
-        whenever(postgresClient.select<UserWeakMuscle>(selectQuery, 1)).thenReturn(Mono.just(listOf(userWeakMuscle)))
+        whenever(
+            postgresClient.update<UserWeakMuscle>(insertQuery, "test-keycloak-user-id", "hamstrings")
+        ).thenReturn(Mono.just(userWeakMuscle))
+        whenever(postgresClient.select<UserWeakMuscle>(selectQuery, "test-keycloak-user-id")).thenReturn(Mono.just(listOf(userWeakMuscle)))
 
-        StepVerifier.create(dal.insertUserWeakMuscle(1, "hamstrings"))
+        StepVerifier.create(dal.insertUserWeakMuscle("test-keycloak-user-id", "hamstrings"))
             .expectNext(userWeakMuscle)
             .verifyComplete()
 
-        StepVerifier.create(dal.selectUserWeakMusclesByUser(1))
+        StepVerifier.create(dal.selectUserWeakMusclesByUser("test-keycloak-user-id"))
             .assertNext { list ->
                 assertEquals(1, list.size)
                 assertEquals(userWeakMuscle, list[0])
@@ -54,11 +56,13 @@ class UserWeakMuscleDALTest {
     @Test
     fun `should delete user weak muscle`() {
         val now = Instant.now()
-        val userWeakMuscle = UserWeakMuscle(2, "glutes", now)
+        val userWeakMuscle = UserWeakMuscle("test-keycloak-user-id-2", "glutes", now)
         val deleteQuery = "DELETE FROM user_weak_muscle WHERE user_id=$1 AND muscle_name=$2"
-        whenever(postgresClient.update<UserWeakMuscle>(deleteQuery, 2, "glutes")).thenReturn(Mono.just(userWeakMuscle))
+        whenever(
+            postgresClient.update<UserWeakMuscle>(deleteQuery, "test-keycloak-user-id-2", "glutes")
+        ).thenReturn(Mono.just(userWeakMuscle))
 
-        StepVerifier.create(dal.deleteUserWeakMuscle(2, "glutes"))
+        StepVerifier.create(dal.deleteUserWeakMuscle("test-keycloak-user-id-2", "glutes"))
             .expectNext(userWeakMuscle)
             .verifyComplete()
     }
@@ -70,9 +74,11 @@ class UserWeakMuscleDALTest {
             INSERT INTO user_weak_muscle (user_id, muscle_name)
             VALUES ($1, $2)
             """.trimIndent()
-        whenever(postgresClient.update<UserWeakMuscle>(insertQuery, 3, "lats")).thenReturn(Mono.error(SQLException("fail")))
+        whenever(
+            postgresClient.update<UserWeakMuscle>(insertQuery, "test-keycloak-user-id-3", "lats")
+        ).thenReturn(Mono.error(SQLException("fail")))
 
-        StepVerifier.create(dal.insertUserWeakMuscle(3, "lats"))
+        StepVerifier.create(dal.insertUserWeakMuscle("test-keycloak-user-id-3", "lats"))
             .expectError(SQLException::class.java)
             .verify()
     }

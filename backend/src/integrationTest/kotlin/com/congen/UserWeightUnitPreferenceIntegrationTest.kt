@@ -18,18 +18,18 @@ import org.springframework.http.HttpStatus
  */
 class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     private val objectMapper = ObjectMapper().registerKotlinModule()
-    private var userId: Int = 0
+    private var userId: String = ""
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test
     fun `should create weight unit preference`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
@@ -52,7 +52,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should create weight unit preference with KG`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "Deadlift"
         val preferredUnit = "KG"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
@@ -75,7 +75,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 422 for invalid weight unit`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "Bench Press"
         val invalidUnit = "INVALID"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
@@ -96,7 +96,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should update existing weight unit preference`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "Safety Bar Squat"
         val initialUnit = "LBS"
         val updatedUnit = "KG"
@@ -130,7 +130,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get all weight unit preferences for user`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exercise1 = "Bench Press"
         val exercise2 = "Deadlift"
         val unit1 = "LBS"
@@ -175,7 +175,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get specific weight unit preference`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
 
@@ -205,7 +205,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should return 404 for non-existent weight unit preference`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "NonExistentExercise"
         val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
 
@@ -218,7 +218,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete weight unit preference`() {
-        val token = getValidToken("user")
+        val token = getValidToken("service")
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
 
