@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.web.cors.reactive.CorsConfigurationSource
 
 /**
  * Security configuration for Keycloak integration.
@@ -35,10 +36,11 @@ class SecurityConfig {
      * - Maps Keycloak roles to Spring authorities (ROLE_USER, ROLE_ADMIN, etc).
      *
      * @param http The ServerHttpSecurity instance
+     * @param corsConfigurationSource The CORS configuration source
      * @return The configured SecurityWebFilterChain
      */
     @Bean
-    fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
+    fun springSecurityFilterChain(http: ServerHttpSecurity, corsConfigurationSource: CorsConfigurationSource): SecurityWebFilterChain {
         return http
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->
@@ -52,6 +54,7 @@ class SecurityConfig {
                     jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
                 }
             }
+            .cors { cors -> cors.configurationSource(corsConfigurationSource) }
             .build()
     }
 

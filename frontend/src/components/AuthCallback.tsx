@@ -1,6 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
+import { useNavigate } from 'react-router';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useAuth } from '../contexts/AuthContext';
+
+/**
+ * Simplified AuthCallback component that handles OIDC authentication callback.
+ * Detects new users and redirects them to profile creation.
+ */
 
 /**
  * Component to handle OIDC authentication callback.
@@ -9,29 +16,67 @@ import { LoadingSpinner } from './LoadingSpinner';
  */
 export const AuthCallback: React.FC = () => {
   const oidcAuth = useOidcAuth();
+  const { isAuthenticated, user, error: authError } = useAuth();
+  const navigate = useNavigate();
+  const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
 
   useEffect(() => {
-    // Wait for OIDC library to process the callback
-    if (oidcAuth.isLoading) {
+    // Only run this effect once when OIDC finishes loading and AuthContext has processed the user
+    if (oidcAuth.isLoading || hasCheckedProfile) {
       return;
     }
 
-    // Log the authentication result for debugging
-    if (oidcAuth.isAuthenticated && oidcAuth.user) {
-      console.log('🔐 AuthCallback: Authentication successful');
-    } else if (oidcAuth.error) {
-      console.log('🔐 AuthCallback: Authentication failed', oidcAuth.error);
-    } else {
-      console.log('🔐 AuthCallback: Authentication state unclear');
-    }
-  }, [oidcAuth.isLoading, oidcAuth.isAuthenticated, oidcAuth.user, oidcAuth.error]);
+    const handleAuthentication = async () => {
+      // Clear sensitive URL parameters from browser history
+      if (window.history.replaceState) {
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+
+      // If OIDC authentication failed, redirect to login
+      if (oidcAuth.error) {
+        navigate('/login');
+        setHasCheckedProfile(true);
+        return;
+      }
+
+      // If OIDC is authenticated and has a user with access token
+      if (oidcAuth.isAuthenticated && oidcAuth.user && oidcAuth.user.access_token) {
+        // Wait for AuthContext to process the authentication
+        // Give AuthContext time to process the user profile
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        if (isAuthenticated && user) {
+          // User has a profile, redirect to home
+          navigate('/');
+        } else if (authError && authError.includes('Profile not found')) {
+          // User doesn't have a profile, redirect to profile creation
+          navigate('/profile/create');
+        } else if (authError && authError.includes('Authentication failed')) {
+          // Authentication error, redirect to login
+          navigate('/login');
+        } else {
+          // Still processing, wait a bit more
+          setTimeout(() => {
+            if (!hasCheckedProfile) {
+              handleAuthentication();
+            }
+          }, 1000);
+          return;
+        }
+      }
+
+      setHasCheckedProfile(true);
+    };
+
+    handleAuthentication();
+  }, [oidcAuth.isLoading, oidcAuth.isAuthenticated, oidcAuth.user, oidcAuth.user?.access_token, oidcAuth.error, isAuthenticated, user, authError, navigate, hasCheckedProfile]);
 
   // Show loading spinner while processing the callback
-  if (oidcAuth.isLoading) {
+  if (oidcAuth.isLoading || !hasCheckedProfile) {
     return <LoadingSpinner fullHeight />;
   }
 
   // Once processing is complete, this component doesn't need to render anything
-  // The routing configuration will handle navigation based on authentication state
   return null;
 };

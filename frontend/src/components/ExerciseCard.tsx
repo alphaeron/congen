@@ -6,7 +6,7 @@ import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 import { Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';

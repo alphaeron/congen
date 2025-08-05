@@ -53,7 +53,7 @@ resource "keycloak_openid_client" "backend_client" {
   standard_flow_enabled        = true
   direct_access_grants_enabled = true
   valid_redirect_uris          = ["http://localhost:8080/"]
-  web_origins                  = ["*"]
+  web_origins                  = ["*"]  # TODO This should not be *
 }
 
 # Assign backend service account roles for user account creation
@@ -102,6 +102,15 @@ resource "keycloak_openid_client" "frontend_client" {
   valid_redirect_uris          = var.frontend_redirect_uris
   web_origins                  = var.frontend_web_origins
   login_theme                  = "congen"
+}
+
+# Create audience protocol mapper for frontend client
+resource "keycloak_openid_audience_protocol_mapper" "frontend_to_backend_audience_mapper" {
+  realm_id  = keycloak_realm.congen.id
+  client_id = keycloak_openid_client.frontend_client.id
+  name      = "frontend-to-backend-audience-mapper"
+
+  included_custom_audience = var.backend_client_id
 }
 
 # Assign service role to backend service account

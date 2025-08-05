@@ -40,7 +40,7 @@ export const AuthorizedElement: React.FC<AuthorizedElementProps> = ({
   }
 
   // If authentication is required but user is not authenticated, show fallback or nothing
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return fallback;
   }
 
@@ -51,7 +51,7 @@ export const AuthorizedElement: React.FC<AuthorizedElementProps> = ({
 
   // Check if user has any of the required roles using the utility function
   const isAuthorized = hasAnyPermission(
-    { profile: { groups: user.groups, roles: user.roles } },
+    { profile: { groups: user?.groups ?? [], roles: user?.roles ?? [] } },
     roles
   );
 

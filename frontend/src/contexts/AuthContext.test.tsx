@@ -13,10 +13,10 @@ jest.mock('../common/authUtils', () => ({
   decodeToken: jest.fn(),
 }));
 
-// Mock react-router-dom
+// Mock react-router
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
 }));
 
@@ -43,7 +43,7 @@ jest.mock('react-oidc-context', () => ({
 
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router';
 
 // Import after mocks are set up
 import { AuthProvider, useAuth } from './AuthContext';
@@ -370,7 +370,7 @@ describe('AuthContext', () => {
 
       expect(userModule.createUserProfile).toHaveBeenCalledWith('Test User', 25, 180, 80, 'metric');
       expect(userModule.getCurrentUser).toHaveBeenCalled();
-      
+
       // Should not navigate - that's handled by routing configuration
       expect(mockNavigate).not.toHaveBeenCalled();
     });
@@ -421,7 +421,7 @@ describe('AuthContext', () => {
 
       expect(userModule.createUserProfile).toHaveBeenCalled();
       expect(userModule.getCurrentUser).toHaveBeenCalled();
-      
+
       // Should not navigate - that's handled by routing configuration
       expect(mockNavigate).not.toHaveBeenCalled();
     });

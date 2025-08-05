@@ -6,6 +6,8 @@ import { LoadingSpinner } from './LoadingSpinner';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAuth?: boolean;
+  requireProfile?: boolean;
+  requireOidcOnly?: boolean;
 }
 
 /**
@@ -13,6 +15,8 @@ interface ProtectedRouteProps {
  *
  * @param children The components to render if authentication requirements are met
  * @param requireAuth Whether authentication is required (default: true)
+ * @param requireProfile Whether a user profile is required (default: true)
+ * @param requireOidcOnly Whether only OIDC authentication is required (ignores profile requirement)
  * @return The protected route component
  */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({

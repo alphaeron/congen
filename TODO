@@ -1,10 +1,6 @@
-keycloak audiences fix in k8s manifests?
+Remove user role from terraform since it is unused
 
-
-
-
-
-
+Remove unused silent-check-sso.html in frontend/public?
 
 Frontend tests
 

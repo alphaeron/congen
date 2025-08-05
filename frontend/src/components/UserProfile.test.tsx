@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import MockAdapter from 'axios-mock-adapter';
 import { ENDPOINT } from '../api/endpoint';
 import { UserProfile } from './UserProfile';
@@ -22,10 +22,10 @@ const mockUser: User = {
   roles: ['user'],
 };
 
-// Mock react-router-dom
+// Mock react-router
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
 }));
 

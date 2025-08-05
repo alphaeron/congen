@@ -56,12 +56,14 @@ variable "frontend_redirect_uris" {
   description = "Frontend client redirect URIs"
   type        = list(string)
   default = [
-    "https://congen.com",
-    "https://www.congen.com",
     "https://congen.com/profile/create",
     "https://www.congen.com/profile/create",
+    "https://congen.com",
+    "https://www.congen.com",
     "https://congen.com/auth/callback",
-    "https://www.congen.com/auth/callback"
+    "https://www.congen.com/auth/callback",
+    "https://congen.com/silent-renew.html",
+    "https://www.congen.com/silent-renew.html"
   ]
 }
 

@@ -5,4 +5,9 @@ metadata:
 data:
   PGSSLMODE: "true"
   SPRINGDOC_API_DOCS_ENABLED: "true"
-  SPRINGDOC_SWAGGER_UI_ENABLED: "true" 
+  SPRINGDOC_SWAGGER_UI_ENABLED: "true"
+  # JWT Configuration for staging environment
+  JWT_ISSUER_URI: "http://staging.congen.com:8080/realms/congen"
+  JWT_JWK_SET_URI: "http://keycloak:8080/realms/congen/protocol/openid-connect/certs"
+  JWT_AUDIENCES: "congen-backend"
+ 

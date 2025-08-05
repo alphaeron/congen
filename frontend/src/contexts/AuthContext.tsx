@@ -42,7 +42,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Register token getter for API requests
   useEffect(() => {
-    setTokenGetter(() => oidcAuth.user?.access_token || null);
+    const token = oidcAuth.user?.access_token || null;
+    setTokenGetter(() => token);
   }, [oidcAuth.user?.access_token]);
 
   // Sync OIDC user with our custom user profile
@@ -53,6 +54,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         return;
       }
+
+      // Ensure we have a valid access token before making API calls
+      if (!oidcAuth.user.access_token) {
+        return;
+      }
+
+      // Small delay to ensure token getter is properly set up
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       try {
         // Get user profile from our backend
@@ -73,29 +82,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         setError(null);
       } catch (profileError) {
-        // Check if the error is due to authentication (401/403) vs missing profile
-        const isAuthError = profileError && 
-          typeof profileError === 'object' && 
-          'response' in profileError && 
-          profileError.response && 
-          typeof profileError.response === 'object' && 
-          'status' in profileError.response && 
-          (profileError.response.status === 401 || profileError.response.status === 403);
+        // Check if the error is due to authentication (401/403) vs missing profile (404)
+        // The error structure depends on how it's transformed by the API layer
+        let isAuthError = false;
+        let isProfileNotFound = false;
+        
+        // Check if it's a transformed error object with error message
+        if (profileError && 
+            typeof profileError === 'object' && 
+            'error' in profileError && 
+            typeof profileError.error === 'string') {
+
+          // If the error message indicates "Resource not found", treat as 404
+          isProfileNotFound = profileError.error.includes('Resource not found') ||
+                             profileError.error.includes('not found');
+        }
         
         if (isAuthError) {
           // Authentication error - clear user state
           setUser(null);
           setError('Authentication failed. Please log in again.');
-        } else {
+        } else if (isProfileNotFound) {
           // Profile doesn't exist - set error for component to handle
           setUser(null);
           setError('Profile not found. Please create your profile.');
+        } else {
+          // Other error - set generic error
+          setUser(null);
+          setError('Error loading user profile. Please try again.');
         }
       }
     };
 
-    // Only sync if OIDC is not loading
-    if (!oidcAuth.isLoading) {
+    // Only sync if OIDC is not loading and we have a user
+    if (!oidcAuth.isLoading && oidcAuth.user && oidcAuth.isAuthenticated) {
       syncUserProfile();
     }
   }, [oidcAuth.user, oidcAuth.isAuthenticated, oidcAuth.isLoading]);
@@ -151,14 +171,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const errorMessage =
         err &&
         typeof err === 'object' &&
-        'response' in err &&
-        err.response &&
-        typeof err.response === 'object' &&
-        'data' in err.response &&
-        err.response.data &&
-        typeof err.response.data === 'object' &&
-        'message' in err.response.data
-          ? String(err.response.data.message)
+        'error' in err &&
+        typeof err.error === 'string'
+          ? String(err.error)
           : 'Profile creation failed';
       setError(errorMessage);
     }
@@ -170,7 +185,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: AuthContextType = {
     user,
-    isAuthenticated: oidcAuth.isAuthenticated && !!user,
+    isAuthenticated: oidcAuth.isAuthenticated,
     isLoading: oidcAuth.isLoading,
     error,
     login,

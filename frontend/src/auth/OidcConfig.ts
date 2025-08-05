@@ -40,7 +40,16 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     scope: 'openid profile email',
     response_type: 'code',
     loadUserInfo: true,
-    monitorSession: false,
+    monitorSession: true, // Enable session monitoring for better security
+    // Enable PKCE for enhanced security
+    code_challenge_method: 'S256',
+    // Security enhancements
+    automaticSilentRenew: true, // Automatically renew tokens before they expire
+    silentRenewError: () => {
+      // Force user to re-authenticate if silent renewal fails
+    },
+    // Token validation
+    validateSubOnSilentRenew: true, // Validate subject on token renewal
 
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,

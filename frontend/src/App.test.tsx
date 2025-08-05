@@ -3,12 +3,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { App } from './App';
 
-// Mock react-router-dom hooks
+// Mock react-router hooks
 const mockNavigate = jest.fn();
 const mockLocation = { pathname: '/', search: '', hash: '', state: null };
 
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
+jest.mock('react-router', () => ({
+  ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
   useLocation: () => mockLocation,
   BrowserRouter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

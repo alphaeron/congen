@@ -11,7 +11,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Link, Routes, Route } from 'react-router';
 import { useAuth } from './contexts/AuthContext';
 import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
 import { getAuthProviderConfig } from './auth/OidcConfig';

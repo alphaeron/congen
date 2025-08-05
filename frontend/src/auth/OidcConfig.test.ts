@@ -49,6 +49,7 @@ describe('OidcConfig', () => {
 
       expect(config).toEqual({
         authority: 'http://localhost:8080/realms/congen',
+        automaticSilentRenew: true,
         client_id: 'congen-frontend',
         redirect_uri: 'http://localhost:3000/auth/callback',
         post_logout_redirect_uri: 'http://localhost:3000',
@@ -56,7 +57,10 @@ describe('OidcConfig', () => {
         scope: 'openid profile email',
         response_type: 'code',
         loadUserInfo: true,
-        monitorSession: false,
+        monitorSession: true,
+        code_challenge_method: 'S256',
+        silentRenewError: expect.any(Function),
+        validateSubOnSilentRenew: true,
         metadata: {
           authorization_endpoint:
             'http://localhost:8080/realms/congen/protocol/openid-connect/auth',
@@ -82,6 +86,7 @@ describe('OidcConfig', () => {
       expect(config).toHaveProperty('response_type');
       expect(config).toHaveProperty('loadUserInfo');
       expect(config).toHaveProperty('monitorSession');
+      expect(config).toHaveProperty('code_challenge_method');
       expect(config).toHaveProperty('metadata');
     });
   });
@@ -130,6 +135,7 @@ describe('OidcConfig - Staging Environment', () => {
 
     expect(config).toEqual({
       authority: 'https://staging.congen.com/realms/congen',
+      automaticSilentRenew: true,
       client_id: 'congen-frontend',
       redirect_uri: 'https://staging.congen.com/auth/callback',
       post_logout_redirect_uri: 'https://staging.congen.com',
@@ -137,15 +143,17 @@ describe('OidcConfig - Staging Environment', () => {
       scope: 'openid profile email',
       response_type: 'code',
       loadUserInfo: true,
-      monitorSession: false,
+      monitorSession: true,
+      code_challenge_method: 'S256',
+      silentRenewError: expect.any(Function),
+      validateSubOnSilentRenew: true,
       metadata: {
         authorization_endpoint:
           'https://staging.congen.com/realms/congen/protocol/openid-connect/auth',
         token_endpoint: 'https://staging.congen.com/realms/congen/protocol/openid-connect/token',
         end_session_endpoint:
           'https://staging.congen.com/realms/congen/protocol/openid-connect/logout',
-        userinfo_endpoint:
-          'https://staging.congen.com/realms/congen/protocol/openid-connect/userinfo',
+        userinfo_endpoint: 'https://staging.congen.com/realms/congen/protocol/openid-connect/userinfo',
         jwks_uri: 'https://staging.congen.com/realms/congen/protocol/openid-connect/certs',
         issuer: 'https://staging.congen.com/realms/congen',
       },

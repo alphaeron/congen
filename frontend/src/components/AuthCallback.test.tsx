@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react';
+import { BrowserRouter } from 'react-router';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 import { AuthCallback } from './AuthCallback';
@@ -8,98 +9,73 @@ import { LoadingSpinner } from './LoadingSpinner';
 // Mock dependencies
 jest.mock('react-oidc-context');
 jest.mock('./LoadingSpinner');
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: jest.fn(),
+}));
 
 const mockUseOidcAuth = useOidcAuth as jest.MockedFunction<typeof useOidcAuth>;
 const mockLoadingSpinner = LoadingSpinner as jest.MockedFunction<typeof LoadingSpinner>;
 
+// Import the mocked useAuth
+import { useAuth } from '../contexts/AuthContext';
+const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+
 describe('AuthCallback', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLoadingSpinner.mockReturnValue(<div data-testid="loading-spinner">Loading...</div>);
   });
 
   it('should show loading spinner when OIDC is loading', () => {
     mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: false,
       isLoading: true,
-      isAuthenticated: false,
       user: null,
+      error: undefined,
+    } as ReturnType<typeof useOidcAuth>);
+
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isAuthenticated: false,
+      isLoading: true,
       error: null,
-      signinRedirect: jest.fn(),
-      removeUser: jest.fn(),
-    } as unknown as ReturnType<typeof useOidcAuth>);
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
+    });
 
-    const { getByTestId } = render(<AuthCallback />);
-
-    expect(getByTestId('loading-spinner')).toBeInTheDocument();
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>
+    );
+    expect(mockLoadingSpinner).toHaveBeenCalled();
   });
 
-  it('should log successful authentication', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
+  it('should show loading spinner when auth context is loading', () => {
     mockUseOidcAuth.mockReturnValue({
-      isLoading: false,
       isAuthenticated: true,
-      user: { sub: 'test-user' },
-      error: null,
-      signinRedirect: jest.fn(),
-      removeUser: jest.fn(),
-    } as unknown as ReturnType<typeof useOidcAuth>);
-
-    render(<AuthCallback />);
-
-    expect(consoleSpy).toHaveBeenCalledWith('🔐 AuthCallback: Authentication successful');
-    consoleSpy.mockRestore();
-  });
-
-  it('should log authentication error', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-    const mockError = new Error('Authentication failed');
-
-    mockUseOidcAuth.mockReturnValue({
       isLoading: false,
-      isAuthenticated: false,
+      user: { access_token: 'test-token' },
+      error: undefined,
+    } as ReturnType<typeof useOidcAuth>);
+
+    mockUseAuth.mockReturnValue({
       user: null,
-      error: mockError,
-      signinRedirect: jest.fn(),
-      removeUser: jest.fn(),
-    } as unknown as ReturnType<typeof useOidcAuth>);
-
-    render(<AuthCallback />);
-
-    expect(consoleSpy).toHaveBeenCalledWith('🔐 AuthCallback: Authentication failed', mockError);
-    consoleSpy.mockRestore();
-  });
-
-  it('should log unclear authentication state', () => {
-    const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-    mockUseOidcAuth.mockReturnValue({
-      isLoading: false,
       isAuthenticated: false,
-      user: null,
+      isLoading: true,
       error: null,
-      signinRedirect: jest.fn(),
-      removeUser: jest.fn(),
-    } as unknown as ReturnType<typeof useOidcAuth>);
+      login: jest.fn(),
+      logout: jest.fn(),
+      createProfile: jest.fn(),
+      clearError: jest.fn(),
+    });
 
-    render(<AuthCallback />);
-
-    expect(consoleSpy).toHaveBeenCalledWith('🔐 AuthCallback: Authentication state unclear');
-    consoleSpy.mockRestore();
-  });
-
-  it('should return null when not loading', () => {
-    mockUseOidcAuth.mockReturnValue({
-      isLoading: false,
-      isAuthenticated: true,
-      user: { sub: 'test-user' },
-      error: null,
-      signinRedirect: jest.fn(),
-      removeUser: jest.fn(),
-    } as unknown as ReturnType<typeof useOidcAuth>);
-
-    const { container } = render(<AuthCallback />);
-
-    expect(container.firstChild).toBeNull();
+    render(
+      <BrowserRouter>
+        <AuthCallback />
+      </BrowserRouter>
+    );
+    expect(mockLoadingSpinner).toHaveBeenCalled();
   });
 });
