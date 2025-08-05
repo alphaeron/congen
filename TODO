@@ -1,5 +1,17 @@
 Remove user role from terraform since it is unused
 
+After profile creation, redirect to /profile
+
+If you navigate to /profile/create and have a profile, redirect to /profile
+
+WarmupManager for backend (BigDecimal?, cache)
+
+Object storage for assets
+
+Frontend listing for import sorting and unused imports
+
+The user profile page should also show your roles and groups.
+
 Remove unused silent-check-sso.html in frontend/public?
 
 Frontend tests

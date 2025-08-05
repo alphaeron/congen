@@ -96,7 +96,7 @@ The frontend uses environment variables to configure Keycloak:
 
 ```typescript
 const KEYCLOAK_CONFIG = {
-  loc: {
+  local: {
     url: 'http://localhost:8080/auth',
     realm: 'congen',
     clientId: 'congen-frontend',

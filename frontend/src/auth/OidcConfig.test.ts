@@ -2,7 +2,7 @@
 const originalEnv = process.env;
 
 beforeAll(() => {
-  process.env.REACT_APP_DEPLOYMENT_ENVIRONMENT = 'loc';
+  process.env.REACT_APP_DEPLOYMENT_ENVIRONMENT = 'local';
 });
 
 afterAll(() => {
@@ -11,7 +11,7 @@ afterAll(() => {
 
 // Mock the globals module before importing the module under test
 jest.mock('../globals', () => ({
-  DEPLOYMENT_ENVIRONMENT: 'loc',
+  DEPLOYMENT_ENVIRONMENT: 'local',
   KEYCLOAK_URL: 'http://localhost:8080',
   BASE_URL: 'http://localhost',
 }));
@@ -20,7 +20,7 @@ import { getOidcConfig, getAuthProviderConfig } from './OidcConfig';
 
 describe('OidcConfig', () => {
   describe('getOidcConfig', () => {
-    it('should return local configuration when environment is loc', () => {
+    it('should return local configuration when environment is local', () => {
       const config = getOidcConfig();
 
       expect(config).toEqual({

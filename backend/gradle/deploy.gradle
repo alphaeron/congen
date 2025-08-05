@@ -52,7 +52,7 @@ jib {
             '-XX:MetaspaceSize=256M', '-XX:MaxMetaspaceSize=256M',
             '-XX:ActiveProcessorCount=2',
             '-Djava.security.edg=file:/dev/./urandom',
-            '-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-loc}',
+            '-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-local}',
             '-classpath', '/app/resources:/app/classes:/app/libs/*',
             'com.congen.CongenApplicationKt'
         ]

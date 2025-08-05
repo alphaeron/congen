@@ -34,7 +34,7 @@ data class OpenApiProperties(
      */
     var serverPort: String = "8888",
     /**
-     * The active Spring profile (e.g., dev, test, prod).
+     * The active Spring profile (e.g., local, staging, production).
      */
     var activeProfile: String = "default"
 )

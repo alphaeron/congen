@@ -126,8 +126,6 @@ The backend supports multiple profiles:
 
 - **Development**: `application.properties` (default)
 - **Integration Test**: `application-integration-test.properties`
-- **Staging**: `application-staging.properties`
-- **Production**: `application-prod.properties`
 
 ### Kubernetes Deployment
 

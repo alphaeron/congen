@@ -301,12 +301,12 @@ class CorsRateLimitFilterTest {
     }
 
     @Test
-    fun `should handle prod profile detection`() {
+    fun `should handle production profile detection`() {
         // Given
         corsRateLimitFilter =
             CorsRateLimitFilter(
                 allowedOriginsConfig = "http://localhost:3000",
-                activeProfile = "prod"
+                activeProfile = "production"
             )
 
         val request =

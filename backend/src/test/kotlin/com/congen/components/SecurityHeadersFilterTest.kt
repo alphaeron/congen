@@ -96,9 +96,9 @@ class SecurityHeadersFilterTest {
     }
 
     @Test
-    fun `should add production security headers when in prod profile`() {
+    fun `should add production security headers when in production profile`() {
         // Given
-        securityHeadersFilter = SecurityHeadersFilter(activeProfile = "prod")
+        securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
         val request =
             MockServerHttpRequest
@@ -297,7 +297,7 @@ class SecurityHeadersFilterTest {
     @Test
     fun `should handle DELETE request with security headers`() {
         // Given
-        securityHeadersFilter = SecurityHeadersFilter(activeProfile = "prod")
+        securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
         val request =
             MockServerHttpRequest

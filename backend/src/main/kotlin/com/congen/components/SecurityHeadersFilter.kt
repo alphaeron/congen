@@ -51,7 +51,7 @@ class SecurityHeadersFilter(
     }
 
     /** Whether the application is running in production mode. */
-    private val isProduction = activeProfile.contains("prod") || activeProfile.contains("production")
+    private val isProduction = activeProfile.contains("production")
 
     /**
      * Filters responses to add security headers.

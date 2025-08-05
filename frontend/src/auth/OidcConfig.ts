@@ -9,7 +9,7 @@ import { DEPLOYMENT_ENVIRONMENT, KEYCLOAK_URL, BASE_URL } from '../globals';
  */
 export const getOidcConfig = () => {
   const authority = `${KEYCLOAK_URL}/realms/congen`;
-  const frontendHost = DEPLOYMENT_ENVIRONMENT === 'loc' ? `${BASE_URL}:3000` : BASE_URL;
+  const frontendHost = DEPLOYMENT_ENVIRONMENT === 'local' ? `${BASE_URL}:3000` : BASE_URL;
 
   const config = {
     authority: authority,

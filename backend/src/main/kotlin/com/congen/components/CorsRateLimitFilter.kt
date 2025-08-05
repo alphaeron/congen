@@ -75,7 +75,7 @@ class CorsRateLimitFilter(
     private val allowedOrigins: Set<String> = allowedOriginsConfig.split(",").map { it.trim() }.toSet()
 
     /** Whether the application is running in production mode. */
-    private val isProduction = activeProfile.contains("prod") || activeProfile.contains("production")
+    private val isProduction = activeProfile.contains("production")
 
     init {
         logger.info("CORS Rate Limit Filter initialized with profile: {}", activeProfile)

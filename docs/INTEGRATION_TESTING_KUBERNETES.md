@@ -174,7 +174,7 @@ The documentation generation creates:
 
 ### Environment Variables
 The application uses these environment variables in Kubernetes:
-- `SPRING_PROFILES_ACTIVE`: Set to `loc` for local development
+- `SPRING_PROFILES_ACTIVE`: Set to `local` for local development
 - `PGWRITERHOST`: PostgreSQL service name (`postgres`)
 - `PGREADERHOST`: PostgreSQL service name (`postgres`)
 - `PGPORT`: PostgreSQL port (`5432`)
