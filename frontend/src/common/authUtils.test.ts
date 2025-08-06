@@ -51,73 +51,43 @@ describe('authUtils', () => {
     it('should return null for invalid token format', () => {
       const invalidToken = 'invalid-token-format';
 
-      // Suppress console.error for this test since we expect an error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = decodeToken(invalidToken);
 
       expect(result).toBeNull();
-
-      consoleSpy.mockRestore();
     });
 
     it('should return null for token with invalid base64', () => {
       const invalidToken = 'header.invalid-base64.signature';
 
-      // Suppress console.error for this test since we expect an error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = decodeToken(invalidToken);
 
       expect(result).toBeNull();
-
-      consoleSpy.mockRestore();
     });
 
     it('should return null for token with invalid JSON', () => {
       const invalidToken = `header.${btoa('invalid-json')}.signature`;
 
-      // Suppress console.error for this test since we expect an error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = decodeToken(invalidToken);
 
       expect(result).toBeNull();
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle empty token', () => {
-      // Suppress console.error for this test since we expect an error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = decodeToken('');
 
       expect(result).toBeNull();
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle null token', () => {
-      // Suppress console.error for this test since we expect an error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = decodeToken(null as unknown as string);
 
       expect(result).toBeNull();
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle undefined token', () => {
-      // Suppress console.error for this test since we expect an error
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       const result = decodeToken(undefined as unknown as string);
 
       expect(result).toBeNull();
-
-      consoleSpy.mockRestore();
     });
   });
 

@@ -6,13 +6,9 @@ Object storage for assets
 
 Frontend listing for import sorting and unused imports
 
-The user profile page should also show your roles and groups.
-
-Remove unused silent-check-sso.html in frontend/public?
+Make it so the user profile page only shows your roles if you have the admin role using AuthorizedElement.  groups should always be shown.
 
 Frontend tests
-
-Back off and retry for fronted requests to backend
 
 rate limiting
 
@@ -20,15 +16,9 @@ backend caching
 
 Add key cloak to the backend health check
 
-check for unused components in the frontend
-
 workout generation algorithm flowchart
 
 optimize webpack bundle
-
-remove console.log/error statements
-
-remove image tag patches from git?
 
 
 
