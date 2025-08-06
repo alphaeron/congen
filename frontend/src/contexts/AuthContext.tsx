@@ -42,8 +42,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Register token getter for API requests
   useEffect(() => {
-    const token = oidcAuth.user?.access_token || null;
-    setTokenGetter(() => token);
+    setTokenGetter(() => oidcAuth.user?.access_token || null);
   }, [oidcAuth.user?.access_token]);
 
   // Sync OIDC user with our custom user profile

@@ -50,8 +50,8 @@ export const AuthCallback: React.FC = () => {
           // User has a profile, redirect to home
           navigate('/');
         } else if (authError && authError.includes('Profile not found')) {
-          // User doesn't have a profile, redirect to profile creation
-          navigate('/profile/create');
+          // User doesn't have a profile, redirect to profile page (which will show creation form)
+          navigate('/profile');
         } else if (authError && authError.includes('Authentication failed')) {
           // Authentication error, redirect to login
           navigate('/login');

@@ -30,9 +30,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <LoadingSpinner fullHeight />;
   }
 
-  // If authentication is required but user is not authenticated, or
-  // if authentication is not required and user is authenticated, don't render children
-  if ((requireAuth && !isAuthenticated) || (!requireAuth && isAuthenticated)) {
+  // If authentication is required but user is not authenticated, don't render children
+  if (requireAuth && !isAuthenticated) {
     return null;
   }
 

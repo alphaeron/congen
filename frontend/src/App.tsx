@@ -22,7 +22,6 @@ import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
 import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
-import { ProfileCreationPage } from './pages/ProfileCreationPage';
 import { LoginPage } from './pages/LoginPage';
 import { getTheme } from './theme';
 import { AuthProvider } from './contexts/AuthContext';
@@ -241,14 +240,6 @@ function AppContent(): React.ReactElement {
             element={
               <ProtectedRoute>
                 <UserProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/create"
-            element={
-              <ProtectedRoute>
-                <ProfileCreationPage />
               </ProtectedRoute>
             }
           />

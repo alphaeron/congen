@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -14,9 +14,11 @@ import {
   Typography,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 export const ProfileCreationForm: React.FC = () => {
   const { createProfile, isLoading, error, clearError } = useAuth();
+  const oidcAuth = useOidcAuth();
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -25,6 +27,31 @@ export const ProfileCreationForm: React.FC = () => {
     weight: '',
     unit: 'KG',
   });
+
+  // Autofill name from Keycloak user profile
+  useEffect(() => {
+    if (oidcAuth.user?.profile?.given_name && oidcAuth.user?.profile?.family_name) {
+      const firstName = oidcAuth.user.profile.given_name;
+      const lastName = oidcAuth.user.profile.family_name;
+      const fullName = `${firstName} ${lastName}`.trim();
+      
+      if (fullName && !formData.name) {
+        setFormData(prev => ({
+          ...prev,
+          name: fullName,
+        }));
+      }
+    } else if (oidcAuth.user?.profile?.name && !formData.name) {
+      // Fallback to the full name if first/last names aren't available
+      const fullName = oidcAuth.user.profile.name;
+      if (fullName) {
+        setFormData(prev => ({
+          ...prev,
+          name: fullName,
+        }));
+      }
+    }
+  }, [oidcAuth.user?.profile, formData.name]);
 
   // Height conversion functions
   const cmToFeetInches = (cm: number): { feet: number; inches: number } => {

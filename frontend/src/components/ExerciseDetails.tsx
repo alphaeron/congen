@@ -18,6 +18,7 @@ import { useApiGet } from '../api/hooks';
 import { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 import { BinaryTag } from './BinaryTag';
+import { LoadingSpinner } from './LoadingSpinner';
 
 /**
  * Props for the ExerciseDetails component.
@@ -76,7 +77,6 @@ export function ExerciseDetails(
     async (): Promise<Muscle[]> =>
       Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name))),
     {
-      enabled: true,
       refetchOnWindowFocus: true,
       retry: 1,
       enabled: exerciseMuscles && exerciseMuscles.length > 0,
@@ -109,7 +109,6 @@ export function ExerciseDetails(
     async (): Promise<Equipment[]> =>
       Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name))),
     {
-      enabled: true,
       refetchOnWindowFocus: true,
       retry: 1,
       enabled: exerciseEquipment && exerciseEquipment.length > 0,
@@ -129,7 +128,7 @@ export function ExerciseDetails(
     equipment === undefined ||
     muscles === undefined
   ) {
-    return <React.Fragment />; // eslint-disable-line react/jsx-no-useless-fragment
+    return <LoadingSpinner message="Loading exercise details..." fullHeight={true} />;
   } else if (
     isExerciseError ||
     isEquipmentError ||
@@ -137,17 +136,34 @@ export function ExerciseDetails(
     isExerciseMuscleError ||
     isExerciseEquipmentError
   ) {
-    return (
-      <Alert severity="error">
-        <AlertTitle>Exercise Not Found</AlertTitle>
-        The specified exercise could not be found.
-        {exerciseError && <Typography>{exerciseError.toString()}</Typography>}
-        {equipmentError && <Typography>{equipmentError.toString()}</Typography>}
-        {musclesError && <Typography>{musclesError.toString()}</Typography>}
-        {exerciseMuscleError && <Typography>{exerciseMuscleError.toString()}</Typography>}
-        {exerciseEquipmentError && <Typography>{exerciseEquipmentError.toString()}</Typography>}
-      </Alert>
-    );
+    // Check if it's a network error or authentication error
+    const isNetworkError = exerciseError?.message?.includes('Network Error') || 
+                          exerciseError?.message?.includes('timeout') ||
+                          exerciseError?.message?.includes('NS_BINDING_ABORTED');
+    
+    if (isNetworkError) {
+      return (
+        <Alert severity="warning">
+          <AlertTitle>Connection Error</AlertTitle>
+          <Typography>
+            Unable to connect to the server. Please check your internet connection and try again.
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Error: {exerciseError?.message || 'Network error'}
+          </Typography>
+        </Alert>
+      );
+    } else {
+      return (
+        <Alert severity="error">
+          <AlertTitle>Exercise Not Found</AlertTitle>
+          <Typography>The specified exercise could not be found.</Typography>
+          {exerciseError && <Typography variant="body2" sx={{ mt: 1 }}>{exerciseError.toString()}</Typography>}
+          {exerciseMuscleError && <Typography variant="body2" sx={{ mt: 1 }}>{exerciseMuscleError.toString()}</Typography>}
+          {exerciseEquipmentError && <Typography variant="body2" sx={{ mt: 1 }}>{exerciseEquipmentError.toString()}</Typography>}
+        </Alert>
+      );
+    }
   } else {
     return (
       <React.Fragment>

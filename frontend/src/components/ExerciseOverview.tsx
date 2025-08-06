@@ -22,6 +22,7 @@ import { useApiGet } from '../api/hooks';
 import { getMuscles } from '../api/muscle';
 import { Equipment, Exercise, Muscle } from '../api/types';
 import { ExerciseCard } from './ExerciseCard';
+import { LoadingSpinner } from './LoadingSpinner';
 
 import '../styles/Form.css';
 
@@ -210,7 +211,7 @@ export function ExerciseOverview(): React.ReactElement {
     exerciseEquipmentMap === undefined ||
     exerciseMuscleMap === undefined
   ) {
-    return <React.Fragment />; // eslint-disable-line react/jsx-no-useless-fragment
+    return <LoadingSpinner message="Loading exercises..." fullHeight={true} />;
   } else if (
     isExercisesError ||
     isEquipmentError ||

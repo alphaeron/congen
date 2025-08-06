@@ -21,7 +21,7 @@
     "react-router": "^7.7.1",
     "slate": "^0.118.0",
     "slate-dom": "^0.117.4",
-    "slate-react": "^0.112.0"
+    "slate-react": "^0.117.4"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",

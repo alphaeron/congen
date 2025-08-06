@@ -203,7 +203,7 @@ The application includes a custom Keycloak theme with Congen branding:
 
 1. **Registration Redirect Issues**
    - Ensure Keycloak registration is enabled
-   - Check redirect URIs include `/profile/create`
+   - Check redirect URIs include `/profile`
    - Verify custom theme is properly mounted
 
 2. **Authentication Failures**

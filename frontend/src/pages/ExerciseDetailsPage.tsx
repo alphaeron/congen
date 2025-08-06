@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useParams } from 'react-router';
+import { Alert, AlertTitle, Typography } from '@mui/material';
 
 import { ExerciseDetails } from '../components/ExerciseDetails';
 
@@ -13,8 +14,11 @@ export function ExerciseDetailsPage(): React.ReactElement {
   if (exerciseName) {
     return <ExerciseDetails exerciseName={exerciseName} />;
   } else {
-    // TODO Show alert instead?
-    // eslint-disable-next-line react/jsx-no-useless-fragment
-    return <React.Fragment />;
+    return (
+      <Alert severity="error">
+        <AlertTitle>Exercise Not Found</AlertTitle>
+        <Typography>No exercise name provided in the URL.</Typography>
+      </Alert>
+    );
   }
 } // end component ExerciseDetailsPage

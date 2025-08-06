@@ -1,9 +1,5 @@
 Remove user role from terraform since it is unused
 
-After profile creation, redirect to /profile
-
-If you navigate to /profile/create and have a profile, redirect to /profile
-
 WarmupManager for backend (BigDecimal?, cache)
 
 Object storage for assets
@@ -74,3 +70,13 @@ Liftalizer (video analysis) service
 Health metric visualization impact on performance page.
 
 hashicorp vault for staging/production
+
+
+
+
+
+I don't like the style of the current app.
+
+I want the theme to look like @https://www.whoop.com/us/en/  and @https://www.trainheroic.com/
+
+Update the theme, style files and any other changes needed to make the style look like those sites but be distinct enough for my own app
