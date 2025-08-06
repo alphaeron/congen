@@ -160,40 +160,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           </Card>
         </Grid>
 
-        {/* Roles */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Roles
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-
-              {user.roles && user.roles.length > 0 && (
-                <Box>
-                  <Box display="flex" flexWrap="wrap" gap={1}>
-                    {user.roles.map((role, index) => (
-                      <Chip
-                        key={index}
-                        label={role}
-                        color="primary"
-                        variant="outlined"
-                        size="small"
-                      />
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
-              {(!user.roles || user.roles.length === 0) && (
-                <Typography variant="body2" color="text.secondary">
-                  No roles assigned
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
         {/* Account Management */}
         <Grid item xs={12}>
           <Card>
