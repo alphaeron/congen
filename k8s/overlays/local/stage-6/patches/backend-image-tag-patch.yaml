@@ -7,4 +7,4 @@ spec:
     spec:
       containers:
       - name: backend
-        image: backend:main-ad85984952-local-1754442814767
+        image: backend:main-1a23a98775-local-1754443136348

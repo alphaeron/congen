@@ -1,4 +1,5 @@
 import React from 'react';
+import { Navigate } from 'react-router';
 
 import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -30,9 +31,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <LoadingSpinner fullHeight />;
   }
 
-  // If authentication is required but user is not authenticated, don't render children
+  // If authentication is required but user is not authenticated, redirect to login
   if (requireAuth && !isAuthenticated) {
-    return null;
+    return <Navigate to="/login" replace />;
   }
 
   // Render children if authentication requirements are met
