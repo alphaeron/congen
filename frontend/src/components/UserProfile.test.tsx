@@ -18,7 +18,6 @@ const mockUser: User = {
   weight: 80,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-  groups: ['fitness-enthusiasts'],
   roles: ['user'],
 };
 
@@ -61,12 +60,11 @@ describe('UserProfile', () => {
     expect(screen.getByText('80 kg')).toBeInTheDocument();
   });
 
-  it('should display roles and groups', () => {
+  it('should display roles', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
-    expect(screen.getByText('Roles & Groups')).toBeInTheDocument();
+    expect(screen.getByText('Roles')).toBeInTheDocument();
     expect(screen.getByText('user')).toBeInTheDocument();
-    expect(screen.getByText('fitness-enthusiasts')).toBeInTheDocument();
   });
 
   it('should show deactivate account button', () => {
@@ -135,16 +133,15 @@ describe('UserProfile', () => {
     expect(result).toEqual(mockUser);
   });
 
-  it('should handle user without roles or groups', () => {
+  it('should handle user without roles', () => {
     const userWithoutRoles: User = {
       ...mockUser,
       roles: undefined,
-      groups: undefined,
     };
 
     renderWithProviders(<UserProfile user={userWithoutRoles} />);
 
-    expect(screen.getByText('No roles or groups assigned')).toBeInTheDocument();
+    expect(screen.getByText('No roles assigned')).toBeInTheDocument();
   });
 
   // Note: The component's delete functionality appears to not be making HTTP requests

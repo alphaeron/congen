@@ -100,7 +100,7 @@ describe('AuthContext', () => {
     mockOidcAuth.isAuthenticated = false;
     mockOidcAuth.isLoading = false;
     mockOidcAuth.error = null;
-    mockDecodeToken.mockReturnValue({ groups: [], roles: [] });
+    mockDecodeToken.mockReturnValue({ roles: [] });
   });
 
   describe('useAuth hook', () => {
@@ -159,7 +159,6 @@ describe('AuthContext', () => {
         age: 25,
         height: 180,
         weight: 80,
-        groups: ['user'],
         roles: ['user'],
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -172,7 +171,6 @@ describe('AuthContext', () => {
       mockOidcAuth.isAuthenticated = true;
       userModule.getCurrentUser.mockResolvedValue(mockUser);
       authUtilsModule.decodeToken.mockReturnValue({
-        groups: ['admin'],
         realm_access: { roles: ['admin'] },
       });
 
@@ -189,7 +187,6 @@ describe('AuthContext', () => {
       await waitFor(() => {
         const userElement = screen.getByTestId('user');
         const userData = JSON.parse(userElement.textContent || '{}');
-        expect(userData.groups).toEqual(['admin']);
         expect(userData.roles).toEqual(['admin']);
       });
     });
@@ -199,7 +196,6 @@ describe('AuthContext', () => {
       mockOidcAuth.isAuthenticated = true;
       userModule.getCurrentUser.mockRejectedValue(new Error('Backend error'));
       authUtilsModule.decodeToken.mockReturnValue({
-        groups: ['user'],
         realm_access: { roles: ['user'] },
       });
 

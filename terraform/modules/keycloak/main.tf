@@ -24,12 +24,6 @@ resource "keycloak_realm" "congen" {
 }
 
 # Create roles
-resource "keycloak_role" "user_role" {
-  realm_id    = keycloak_realm.congen.id
-  name        = "user"
-  description = "Regular user role"
-}
-
 resource "keycloak_role" "admin_role" {
   realm_id    = keycloak_realm.congen.id
   name        = "admin"
@@ -145,7 +139,6 @@ resource "keycloak_user_roles" "admin_user_roles" {
   user_id  = keycloak_user.admin_user.id
 
   role_ids = [
-    keycloak_role.admin_role.id,
-    keycloak_role.user_role.id
+    keycloak_role.admin_role.id
   ]
 } 

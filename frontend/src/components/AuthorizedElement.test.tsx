@@ -43,7 +43,7 @@ describe('AuthorizedElement', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { groups: [], roles: [] },
+      user: { roles: [] },
     });
 
     render(
@@ -116,7 +116,7 @@ describe('AuthorizedElement', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { groups: ['admin'], roles: [] },
+      user: { roles: ['admin'] },
     });
 
     render(
@@ -134,7 +134,7 @@ describe('AuthorizedElement', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { groups: [], roles: ['admin'] },
+      user: { roles: ['admin'] },
     });
 
     render(
@@ -152,7 +152,7 @@ describe('AuthorizedElement', () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
-      user: { groups: ['user'], roles: ['user'] },
+      user: { roles: ['user'] },
     });
 
     render(

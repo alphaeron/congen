@@ -8,7 +8,6 @@ interface OidcUser {
     email?: string;
     name?: string;
     roles?: string[];
-    groups?: string[];
     realm_access?: {
       roles?: string[];
     };
@@ -22,7 +21,6 @@ describe('authUtils', () => {
       const mockPayload = {
         sub: 'user123',
         name: 'Test User',
-        groups: ['admin', 'user'],
         realm_access: { roles: ['admin'] },
       };
 
@@ -37,7 +35,6 @@ describe('authUtils', () => {
       const mockPayload = {
         sub: 'user123',
         name: 'Test User with special chars: !@#$%^&*()',
-        groups: ['admin', 'user'],
         realm_access: { roles: ['admin'] },
       };
 
@@ -92,9 +89,8 @@ describe('authUtils', () => {
   });
 
   describe('hasAnyPermission', () => {
-    const createMockUser = (groups: string[] = [], roles: string[] = []) => ({
+    const createMockUser = (roles: string[] = []) => ({
       profile: {
-        groups,
         realm_access: { roles },
       },
     });
@@ -106,15 +102,23 @@ describe('authUtils', () => {
     });
 
     it('should return false for empty permissions array', () => {
-      const user = createMockUser(['admin'], ['admin']);
+      const user = createMockUser(['admin']);
 
       const result = hasAnyPermission(user, []);
 
       expect(result).toBe(false);
     });
 
-    it('should return true when user has matching group', () => {
-      const user = createMockUser(['admin', 'user'], ['user']);
+    it('should return true when user has matching role', () => {
+      const user = createMockUser(['admin']);
+
+      const result = hasAnyPermission(user, ['admin']);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return true when user has matching role in realm_access', () => {
+      const user = createMockUser(['admin']);
 
       const result = hasAnyPermission(user, ['admin']);
 
@@ -122,15 +126,7 @@ describe('authUtils', () => {
     });
 
     it('should return true when user has matching role', () => {
-      const user = createMockUser(['user'], ['admin', 'user']);
-
-      const result = hasAnyPermission(user, ['admin']);
-
-      expect(result).toBe(true);
-    });
-
-    it('should return true when user has matching permission in both groups and roles', () => {
-      const user = createMockUser(['admin'], ['admin']);
+      const user = createMockUser(['admin']);
 
       const result = hasAnyPermission(user, ['admin']);
 
@@ -138,7 +134,7 @@ describe('authUtils', () => {
     });
 
     it('should return false when user has no matching permissions', () => {
-      const user = createMockUser(['user'], ['user']);
+      const user = createMockUser(['user']);
 
       const result = hasAnyPermission(user, ['admin', 'moderator']);
 
@@ -146,25 +142,24 @@ describe('authUtils', () => {
     });
 
     it('should return true when user has any of multiple required permissions', () => {
-      const user = createMockUser(['user'], ['admin']);
+      const user = createMockUser(['admin']);
 
       const result = hasAnyPermission(user, ['admin', 'moderator']);
 
       expect(result).toBe(true);
     });
 
-    it('should handle user with no groups or roles', () => {
-      const user = createMockUser([], []);
+    it('should handle user with no roles', () => {
+      const user = createMockUser([]);
 
       const result = hasAnyPermission(user, ['admin']);
 
       expect(result).toBe(false);
     });
 
-    it('should handle user with undefined groups and roles', () => {
+    it('should handle user with undefined roles', () => {
       const user = {
         profile: {
-          groups: undefined,
           realm_access: { roles: undefined },
         },
       };
@@ -174,10 +169,9 @@ describe('authUtils', () => {
       expect(result).toBe(false);
     });
 
-    it('should handle user with null groups and roles', () => {
+    it('should handle user with null roles', () => {
       const user = {
         profile: {
-          groups: null,
           realm_access: { roles: null },
         },
       };
@@ -197,18 +191,16 @@ describe('authUtils', () => {
 
     it('should handle user with missing realm_access', () => {
       const user = {
-        profile: {
-          groups: ['admin'],
-        },
+        profile: {},
       };
 
       const result = hasAnyPermission(user as unknown as OidcUser, ['admin']);
 
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
 
     it('should handle case-sensitive permission matching', () => {
-      const user = createMockUser(['Admin'], ['User']);
+      const user = createMockUser(['Admin']);
 
       const result = hasAnyPermission(user, ['admin', 'user']);
 
@@ -216,7 +208,7 @@ describe('authUtils', () => {
     });
 
     it('should handle empty strings in permissions', () => {
-      const user = createMockUser(['admin'], ['user']);
+      const user = createMockUser(['admin']);
 
       const result = hasAnyPermission(user, ['', 'admin']);
 
@@ -224,7 +216,7 @@ describe('authUtils', () => {
     });
 
     it('should handle special characters in permissions', () => {
-      const user = createMockUser(['admin-user'], ['user@domain']);
+      const user = createMockUser(['admin-user']);
 
       const result = hasAnyPermission(user, ['admin-user', 'user@domain']);
 
@@ -232,7 +224,7 @@ describe('authUtils', () => {
     });
 
     it('should handle whitespace in permissions', () => {
-      const user = createMockUser([' admin '], [' user ']);
+      const user = createMockUser([' admin ']);
 
       const result = hasAnyPermission(user, ['admin', 'user']);
 

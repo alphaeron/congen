@@ -51,7 +51,7 @@ export const AuthorizedElement: React.FC<AuthorizedElementProps> = ({
 
   // Check if user has any of the required roles using the utility function
   const isAuthorized = hasAnyPermission(
-    { profile: { groups: user?.groups ?? [], roles: user?.roles ?? [] } },
+    { profile: { roles: user?.roles ?? [] } },
     roles
   );
 

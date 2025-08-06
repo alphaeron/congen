@@ -1,12 +1,8 @@
-Remove user role from terraform since it is unused
-
 WarmupManager for backend (BigDecimal?, cache)
 
 Object storage for assets
 
 Frontend listing for import sorting and unused imports
-
-Make it so the user profile page only shows your roles if you have the admin role using AuthorizedElement.  groups should always be shown.
 
 Frontend tests
 

@@ -32,7 +32,7 @@ interface UserProfileProps {
 /**
  * User profile component.
  *
- * Displays user information, roles, groups, and provides account management options.
+ * Displays user information, roles, and provides account management options.
  * Users can view their profile details, edit their profile, and deactivate their account.
  *
  * @param user The user data to display
@@ -160,20 +160,17 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           </Card>
         </Grid>
 
-        {/* Roles and Groups */}
+        {/* Roles */}
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Roles & Groups
+                Roles
               </Typography>
               <Divider sx={{ mb: 2 }} />
 
               {user.roles && user.roles.length > 0 && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Roles
-                  </Typography>
+                <Box>
                   <Box display="flex" flexWrap="wrap" gap={1}>
                     {user.roles.map((role, index) => (
                       <Chip
@@ -188,31 +185,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 </Box>
               )}
 
-              {user.groups && user.groups.length > 0 && (
-                <Box>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Groups
-                  </Typography>
-                  <Box display="flex" flexWrap="wrap" gap={1}>
-                    {user.groups.map((group, index) => (
-                      <Chip
-                        key={index}
-                        label={group}
-                        color="secondary"
-                        variant="outlined"
-                        size="small"
-                      />
-                    ))}
-                  </Box>
-                </Box>
+              {(!user.roles || user.roles.length === 0) && (
+                <Typography variant="body2" color="text.secondary">
+                  No roles assigned
+                </Typography>
               )}
-
-              {(!user.roles || user.roles.length === 0) &&
-                (!user.groups || user.groups.length === 0) && (
-                  <Typography variant="body2" color="text.secondary">
-                    No roles or groups assigned
-                  </Typography>
-                )}
             </CardContent>
           </Card>
         </Grid>

@@ -6,7 +6,6 @@ interface OidcUser {
     email?: string;
     name?: string;
     roles?: string[];
-    groups?: string[];
     realm_access?: {
       roles?: string[];
     };
@@ -35,7 +34,7 @@ export const decodeToken = (token: string): unknown => {
 };
 
 /**
- * Checks if the user has any of the specified permissions (roles or groups).
+ * Checks if the user has any of the specified permissions (roles).
  *
  * @param user The OIDC user object
  * @param permissions Array of permission strings to check
@@ -46,10 +45,8 @@ export const hasAnyPermission = (user: OidcUser | null, permissions: string[]): 
     return false;
   }
 
-  // Get user's roles and groups
+  // Get user's roles
   const userRoles = user.profile?.realm_access?.roles || user.profile?.roles || [];
-  const userGroups = user.profile?.groups || [];
-  const userPermissions = [...userRoles, ...userGroups];
 
-  return permissions.some(permission => userPermissions.includes(permission));
+  return permissions.some(permission => userRoles.includes(permission));
 };

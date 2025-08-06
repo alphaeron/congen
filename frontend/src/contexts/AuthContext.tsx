@@ -66,17 +66,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Get user profile from our backend
         const userProfile = await getCurrentUser();
 
-        // Extract groups and roles from JWT token
+        // Extract roles from JWT token
         const tokenPayload = decodeToken(oidcAuth.user.access_token) as {
-          groups?: string[];
           realm_access?: { roles?: string[] };
         };
-        const groups = tokenPayload?.groups || [];
         const roles = tokenPayload?.realm_access?.roles || [];
 
         setUser({
           ...userProfile,
-          groups,
           roles,
         });
         setError(null);
@@ -163,7 +160,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userProfile = await getCurrentUser();
       setUser({
         ...userProfile,
-        groups: user?.groups || [],
         roles: user?.roles || [],
       });
     } catch (err: unknown) {

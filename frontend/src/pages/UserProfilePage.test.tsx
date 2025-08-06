@@ -13,7 +13,6 @@ const mockUser: User = {
   weight: 80,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-  groups: ['fitness-enthusiasts'],
   roles: ['user'],
 };
 
@@ -47,7 +46,7 @@ describe('UserProfilePage', () => {
     expect(screen.getByText('80 kg')).toBeInTheDocument();
   });
 
-  it('should display roles and groups when user exists', () => {
+  it('should display roles when user exists', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       logout: jest.fn(),
@@ -55,9 +54,8 @@ describe('UserProfilePage', () => {
 
     renderWithProviders(<UserProfilePage />);
 
-    expect(screen.getByText('Roles & Groups')).toBeInTheDocument();
+    expect(screen.getByText('Roles')).toBeInTheDocument();
     expect(screen.getByText('user')).toBeInTheDocument();
-    expect(screen.getByText('fitness-enthusiasts')).toBeInTheDocument();
   });
 
   it('should show deactivate account button when user exists', () => {
