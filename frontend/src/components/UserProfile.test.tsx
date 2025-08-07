@@ -1,11 +1,13 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router';
 import MockAdapter from 'axios-mock-adapter';
-import { ENDPOINT } from '../api/endpoint';
+import React from 'react';
+import { BrowserRouter } from 'react-router';
+
 import { UserProfile } from './UserProfile';
-import { User } from '../api/types';
+import { ENDPOINT } from '../api/endpoint';
+import type { User } from '../api/types';
 import { deleteUser } from '../api/user';
+
 
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
@@ -58,13 +60,6 @@ describe('UserProfile', () => {
     expect(screen.getByText('30 years old')).toBeInTheDocument();
     expect(screen.getByText('175 cm')).toBeInTheDocument();
     expect(screen.getByText('80 kg')).toBeInTheDocument();
-  });
-
-  it('should display roles', () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
-
-    expect(screen.getByText('Roles')).toBeInTheDocument();
-    expect(screen.getByText('user')).toBeInTheDocument();
   });
 
   it('should show deactivate account button', () => {
@@ -131,17 +126,6 @@ describe('UserProfile', () => {
 
     const result = await deleteUser('test-user-id');
     expect(result).toEqual(mockUser);
-  });
-
-  it('should handle user without roles', () => {
-    const userWithoutRoles: User = {
-      ...mockUser,
-      roles: undefined,
-    };
-
-    renderWithProviders(<UserProfile user={userWithoutRoles} />);
-
-    expect(screen.getByText('No roles assigned')).toBeInTheDocument();
   });
 
   // Note: The component's delete functionality appears to not be making HTTP requests

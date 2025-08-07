@@ -1,24 +1,26 @@
+
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid2';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid2';
 import * as React from 'react';
 import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 
-import { getIndividualExercise, getExerciseMuscles, getExerciseEquipment } from '../api/exercise';
-import { getIndividualMuscle } from '../api/muscle';
-import { getIndividualEquipment } from '../api/equipment';
-import { useApiGet } from '../api/hooks';
-import { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
-import { capitalizeEachWord } from '../common/utils';
 import { BinaryTag } from './BinaryTag';
 import { LoadingSpinner } from './LoadingSpinner';
+import { getIndividualEquipment } from '../api/equipment';
+import { getIndividualExercise, getExerciseMuscles, getExerciseEquipment } from '../api/exercise';
+import { useApiGet } from '../api/hooks';
+import { getIndividualMuscle } from '../api/muscle';
+import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
+import { capitalizeEachWord } from '../common/utils';
+
 
 /**
  * Props for the ExerciseDetails component.
@@ -70,7 +72,6 @@ export function ExerciseDetails(
   const {
     data: muscles,
     isLoading: isMusclesLoading,
-    error: musclesError,
     isError: isMusclesError,
   } = useApiGet<Muscle[]>(
     [`muscles${props.exerciseName}`, exerciseMuscles],
@@ -102,7 +103,6 @@ export function ExerciseDetails(
   const {
     data: equipment,
     isLoading: isEquipmentLoading,
-    error: equipmentError,
     isError: isEquipmentError,
   } = useApiGet<Equipment[]>(
     [`equipment${props.exerciseName}`, exerciseEquipment],
@@ -137,10 +137,11 @@ export function ExerciseDetails(
     isExerciseEquipmentError
   ) {
     // Check if it's a network error or authentication error
-    const isNetworkError = exerciseError?.message?.includes('Network Error') || 
-                          exerciseError?.message?.includes('timeout') ||
-                          exerciseError?.message?.includes('NS_BINDING_ABORTED');
-    
+    const isNetworkError =
+      exerciseError?.message?.includes('Network Error') ||
+      exerciseError?.message?.includes('timeout') ||
+      exerciseError?.message?.includes('NS_BINDING_ABORTED');
+
     if (isNetworkError) {
       return (
         <Alert severity="warning">
@@ -158,9 +159,21 @@ export function ExerciseDetails(
         <Alert severity="error">
           <AlertTitle>Exercise Not Found</AlertTitle>
           <Typography>The specified exercise could not be found.</Typography>
-          {exerciseError && <Typography variant="body2" sx={{ mt: 1 }}>{exerciseError.toString()}</Typography>}
-          {exerciseMuscleError && <Typography variant="body2" sx={{ mt: 1 }}>{exerciseMuscleError.toString()}</Typography>}
-          {exerciseEquipmentError && <Typography variant="body2" sx={{ mt: 1 }}>{exerciseEquipmentError.toString()}</Typography>}
+          {exerciseError && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              {exerciseError.toString()}
+            </Typography>
+          )}
+          {exerciseMuscleError && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              {exerciseMuscleError.toString()}
+            </Typography>
+          )}
+          {exerciseEquipmentError && (
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              {exerciseEquipmentError.toString()}
+            </Typography>
+          )}
         </Alert>
       );
     }

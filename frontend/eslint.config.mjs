@@ -3,6 +3,7 @@ import pluginJs from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import pluginReact from 'eslint-plugin-react';
 import pluginQuery from '@tanstack/eslint-plugin-query';
+import pluginImport from 'eslint-plugin-import';
 
 /** @type {import('eslint').Linter.Config[]} */
 export default [
@@ -13,9 +14,42 @@ export default [
   pluginReact.configs.flat.recommended,
   ...pluginQuery.configs['flat/recommended'],
   {
+    plugins: {
+      import: pluginImport,
+    },
+  },
+  {
     rules: {
       'react/jsx-no-useless-fragment': ['error', { allowExpressions: true }],
       'react/jsx-fragments': ['error', 'element'],
+      'import/order': [
+        'error',
+        {
+          groups: ['builtin', 'external', 'parent', 'sibling', 'index', 'object', 'type'],
+          pathGroups: [
+            {
+              pattern: '.*/**',
+              group: 'sibling',
+              position: 'after',
+            },
+          ],
+          pathGroupsExcludedImportTypes: ['react'],
+          'newlines-between': 'always',
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
+      ],
+      'import/no-unresolved': 'off',
+      'import/no-unused-modules': 'error',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          disallowTypeAnnotations: false,
+        },
+      ],
     },
   },
   {

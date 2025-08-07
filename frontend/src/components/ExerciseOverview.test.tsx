@@ -1,12 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
-import { MemoryRouter } from 'react-router';
 import * as React from 'react';
+import { MemoryRouter } from 'react-router';
 
-import { ENDPOINT } from '../api/endpoint';
 import { ExerciseOverview } from './ExerciseOverview';
-
 import {
   EXERCISE,
   EXERCISE_MUSCLE,
@@ -14,6 +12,8 @@ import {
   MUSCLE,
   EQUIPMENT,
 } from '../__mocks__/data';
+import { ENDPOINT } from '../api/endpoint';
+
 
 describe('ExerciseOverview component', () => {
   const queryClient = new QueryClient({

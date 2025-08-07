@@ -10,4 +10,5 @@ data:
   JWT_ISSUER_URI: "http://congen.com:8080/realms/congen"
   JWT_JWK_SET_URI: "http://keycloak:8080/realms/congen/protocol/openid-connect/certs"
   JWT_AUDIENCES: "congen-backend"
+  CONGEN_KEYCLOAK_MANAGEMENT_URL: "http://keycloak:9000"
  

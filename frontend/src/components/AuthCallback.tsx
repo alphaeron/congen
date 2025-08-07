@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
+
 import { LoadingSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
+
 
 /**
  * Simplified AuthCallback component that handles OIDC authentication callback.
@@ -45,7 +47,7 @@ export const AuthCallback: React.FC = () => {
         // Wait for AuthContext to process the authentication
         // Give AuthContext time to process the user profile
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         if (isAuthenticated && user) {
           // User has a profile, redirect to home
           navigate('/');
@@ -70,7 +72,18 @@ export const AuthCallback: React.FC = () => {
     };
 
     handleAuthentication();
-  }, [oidcAuth.isLoading, oidcAuth.isAuthenticated, oidcAuth.user, oidcAuth.user?.access_token, oidcAuth.error, isAuthenticated, user, authError, navigate, hasCheckedProfile]);
+  }, [
+    oidcAuth.isLoading,
+    oidcAuth.isAuthenticated,
+    oidcAuth.user,
+    oidcAuth.user?.access_token,
+    oidcAuth.error,
+    isAuthenticated,
+    user,
+    authError,
+    navigate,
+    hasCheckedProfile,
+  ]);
 
   // Show loading spinner while processing the callback
   if (oidcAuth.isLoading || !hasCheckedProfile) {

@@ -30,7 +30,6 @@ class CorsConfig(
     @Value("\${cors.max-age}")
     private val maxAgeConfig: String,
 ) {
-
     /**
      * Configures CORS for the entire application using Spring's built-in CORS support.
      *
@@ -39,32 +38,32 @@ class CorsConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        
+
         // Parse allowed origins from configuration
         val allowedOrigins = allowedOriginsConfig.split(",").map { it.trim() }.toSet()
         configuration.allowedOriginPatterns = allowedOrigins.toList()
-        
+
         // Parse allowed methods from configuration
         val allowedMethods = allowedMethodsConfig.split(",").map { it.trim() }.toList()
         configuration.allowedMethods = allowedMethods
-        
+
         // Parse allowed headers from configuration
         val allowedHeaders = allowedHeadersConfig.split(",").map { it.trim() }.toList()
         configuration.allowedHeaders = allowedHeaders
-        
+
         // Parse exposed headers from configuration
         val exposedHeaders = exposedHeadersConfig.split(",").map { it.trim() }.toList()
         configuration.exposedHeaders = exposedHeaders
-        
+
         // Set max age
         configuration.maxAge = maxAgeConfig.toLong()
-        
+
         // Allow credentials
         configuration.allowCredentials = true
-        
+
         val source = UrlBasedCorsConfigurationSource()
         source.registerCorsConfiguration("/**", configuration)
-        
+
         return source
     }
-} 
+}

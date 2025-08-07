@@ -1,6 +1,6 @@
+import { Alert, AlertTitle, Typography } from '@mui/material';
 import * as React from 'react';
 import { useParams } from 'react-router';
-import { Alert, AlertTitle, Typography } from '@mui/material';
 
 import { ExerciseDetails } from '../components/ExerciseDetails';
 

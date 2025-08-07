@@ -47,7 +47,7 @@ resource "keycloak_openid_client" "backend_client" {
   standard_flow_enabled        = true
   direct_access_grants_enabled = true
   valid_redirect_uris          = ["http://localhost:8080/"]
-  web_origins                  = ["*"]  # TODO This should not be *
+  web_origins                  = ["*"] # TODO This should not be *
 }
 
 # Assign backend service account roles for user account creation

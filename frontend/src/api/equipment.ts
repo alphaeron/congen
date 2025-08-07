@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import { Equipment } from './types';
+import type { Equipment } from './types';
 
 /**
  * Get a list of all available equipment.

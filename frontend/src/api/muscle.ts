@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import { Muscle } from './types';
+import type { Muscle } from './types';
 
 /**
  * Get a list of all available muscles.

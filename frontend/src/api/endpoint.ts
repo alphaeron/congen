@@ -1,7 +1,8 @@
 import axios, { AxiosHeaders } from 'axios';
-import { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 import { BACKEND_URL } from '../globals';
+
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 /**
  * Congen backend endpoint.
@@ -29,10 +30,10 @@ ENDPOINT.interceptors.request.use(async config => {
   if (!(headers instanceof AxiosHeaders)) {
     headers = AxiosHeaders.from(headers || {});
   }
-  
+
   // Force preflight requests by adding custom headers
   headers.set('X-Requested-With', 'XMLHttpRequest');
-  
+
   if (getToken) {
     const token = getToken();
     if (token) {
@@ -42,26 +43,26 @@ ENDPOINT.interceptors.request.use(async config => {
         const exp = payload.exp * 1000; // Convert to milliseconds
         const now = Date.now();
         const fiveMinutes = 5 * 60 * 1000;
-        
+
         if (exp - now < fiveMinutes) {
           // The OIDC library should handle silent renewal automatically
         }
       } catch {
         // Token decoding failed, continue with request
       }
-      
+
       headers.set('Authorization', `Bearer ${token}`);
     }
   }
-  
+
   config.headers = headers;
   return config;
 });
 
 // Add response interceptor to handle token refresh on 401 errors
 ENDPOINT.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+  response => response,
+  async error => {
     if (error.response?.status === 401) {
       // The OIDC library should handle token refresh automatically
       // If this persists, the user will need to re-authenticate

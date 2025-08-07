@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { useAuth } from '../contexts/AuthContext';
 import { hasAnyPermission } from '../common/authUtils';
+import { useAuth } from '../contexts/AuthContext';
 
 interface AuthorizedElementProps {
   roles?: string[];
@@ -50,10 +50,7 @@ export const AuthorizedElement: React.FC<AuthorizedElementProps> = ({
   }
 
   // Check if user has any of the required roles using the utility function
-  const isAuthorized = hasAnyPermission(
-    { profile: { roles: user?.roles ?? [] } },
-    roles
-  );
+  const isAuthorized = hasAnyPermission({ profile: { roles: user?.roles ?? [] } }, roles);
 
   return isAuthorized ? <React.Fragment>{children}</React.Fragment> : fallback;
 };

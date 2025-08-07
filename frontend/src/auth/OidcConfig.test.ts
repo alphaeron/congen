@@ -153,7 +153,8 @@ describe('OidcConfig - Staging Environment', () => {
         token_endpoint: 'https://staging.congen.com/realms/congen/protocol/openid-connect/token',
         end_session_endpoint:
           'https://staging.congen.com/realms/congen/protocol/openid-connect/logout',
-        userinfo_endpoint: 'https://staging.congen.com/realms/congen/protocol/openid-connect/userinfo',
+        userinfo_endpoint:
+          'https://staging.congen.com/realms/congen/protocol/openid-connect/userinfo',
         jwks_uri: 'https://staging.congen.com/realms/congen/protocol/openid-connect/certs',
         issuer: 'https://staging.congen.com/realms/congen',
       },

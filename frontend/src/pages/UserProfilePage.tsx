@@ -1,9 +1,10 @@
-import React from 'react';
 import { Container, Alert } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
-import { UserProfile } from '../components/UserProfile';
-import { ProfileCreationForm } from '../components/ProfileCreationForm';
+import React from 'react';
+
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { ProfileCreationForm } from '../components/ProfileCreationForm';
+import { UserProfile } from '../components/UserProfile';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * User profile page component.
@@ -22,13 +23,11 @@ export const UserProfilePage: React.FC = () => {
     return <LoadingSpinner />;
   }
 
-  // If there's an authentication error, show error message
-  if (error && error.includes('Authentication failed')) {
+  // If there's an error, show error message
+  if (error) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">
-          Authentication failed. Please log in to view your profile.
-        </Alert>
+        <Alert severity="error">{error}</Alert>
       </Container>
     );
   }

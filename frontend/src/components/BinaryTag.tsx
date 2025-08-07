@@ -1,6 +1,7 @@
 import Chip from '@mui/material/Chip';
 import * as React from 'react';
 
+
 /**
  * Props for the BinaryTag component.
  */

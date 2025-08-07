@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
 import * as React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { ExerciseCard } from './ExerciseCard';
-
 import { EXERCISE, EXERCISE_MUSCLE, EXERCISE_EQUIPMENT } from '../__mocks__/data';
+
 
 describe('ExerciseCard component', () => {
   beforeEach(() => {

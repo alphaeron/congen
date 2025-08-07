@@ -1,7 +1,10 @@
 import type {} from '@mui/material/themeCssVarsAugmentation';
-import { Theme, ThemeOptions, alpha } from '@mui/material/styles';
 import { red } from '@mui/material/colors';
-import { PaletteMode } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+
+import type { PaletteMode } from '@mui/material';
+import type { Theme, ThemeOptions } from '@mui/material/styles';
+
 
 declare module '@mui/material-pigment-css' {
   interface ThemeArgs {

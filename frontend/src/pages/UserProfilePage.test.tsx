@@ -1,8 +1,10 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import React from 'react';
 import { BrowserRouter } from 'react-router';
+
 import { UserProfilePage } from './UserProfilePage';
-import { User } from '../api/types';
+import type { User } from '../api/types';
+
 
 // Mock the auth context
 const mockUser: User = {
@@ -20,6 +22,18 @@ const mockUseAuth = jest.fn();
 
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: () => mockUseAuth(),
+}));
+
+jest.mock('react-oidc-context', () => ({
+  useAuth: () => ({
+    user: {
+      profile: {
+        given_name: 'John',
+        family_name: 'Doe',
+        name: 'John Doe',
+      },
+    },
+  }),
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
@@ -44,18 +58,6 @@ describe('UserProfilePage', () => {
     expect(screen.getByText('30 years old')).toBeInTheDocument();
     expect(screen.getByText('175 cm')).toBeInTheDocument();
     expect(screen.getByText('80 kg')).toBeInTheDocument();
-  });
-
-  it('should display roles when user exists', () => {
-    mockUseAuth.mockReturnValue({
-      user: mockUser,
-      logout: jest.fn(),
-    });
-
-    renderWithProviders(<UserProfilePage />);
-
-    expect(screen.getByText('Roles')).toBeInTheDocument();
-    expect(screen.getByText('user')).toBeInTheDocument();
   });
 
   it('should show deactivate account button when user exists', () => {
@@ -83,6 +85,7 @@ describe('UserProfilePage', () => {
   it('should show error alert when user is not available', () => {
     mockUseAuth.mockReturnValue({
       user: null,
+      error: 'User information not available. Please log in to view your profile.',
       logout: jest.fn(),
     });
 

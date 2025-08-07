@@ -48,6 +48,19 @@ class HealthControllerTest {
     }
 
     @Test
+    fun `health check should return SERVICE_UNAVAILABLE when keycloak is unhealthy`() {
+        val healthResponse = mockHealthCheckResponse(status = HealthStatus.FAIL, keycloakStatus = HealthStatus.FAIL)
+        whenever(healthCheckService.performHealthCheck()).thenReturn(Mono.just(healthResponse))
+        val result = healthController.healthCheck()
+        StepVerifier.create(result)
+            .assertNext { resp ->
+                assert(resp.statusCode == HttpStatus.SERVICE_UNAVAILABLE)
+                assert(resp.body == healthResponse)
+            }
+            .verifyComplete()
+    }
+
+    @Test
     fun `health check should return OK when status is warn`() {
         val healthResponse = mockHealthCheckResponse(status = HealthStatus.WARN, databaseStatus = HealthStatus.WARN)
         whenever(healthCheckService.performHealthCheck()).thenReturn(Mono.just(healthResponse))

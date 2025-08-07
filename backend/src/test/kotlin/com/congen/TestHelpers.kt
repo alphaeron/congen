@@ -239,6 +239,7 @@ fun mockHealthCheckResponse(
     version: String = "1.2.3",
     releaseId: String = "abc123",
     databaseStatus: HealthStatus = HealthStatus.PASS,
+    keycloakStatus: HealthStatus = HealthStatus.PASS,
     applicationStatus: HealthStatus = HealthStatus.PASS
 ): HealthCheckResponse =
     HealthCheckResponse(
@@ -258,6 +259,20 @@ fun mockHealthCheckResponse(
                                     HealthStatus.PASS -> "Database connection successful"
                                     HealthStatus.WARN -> "Database connection slow"
                                     HealthStatus.FAIL -> "Database connection failed"
+                                }
+                        )
+                    ),
+                "keycloak" to
+                    listOf(
+                        mockHealthCheck(
+                            componentId = "keycloak",
+                            componentType = "auth",
+                            status = keycloakStatus,
+                            output =
+                                when (keycloakStatus) {
+                                    HealthStatus.PASS -> "Keycloak connection successful"
+                                    HealthStatus.WARN -> "Keycloak connection slow"
+                                    HealthStatus.FAIL -> "Keycloak connection failed"
                                 }
                         )
                     ),

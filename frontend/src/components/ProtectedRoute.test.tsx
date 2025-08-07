@@ -1,10 +1,12 @@
-import React from 'react';
 import { render } from '@testing-library/react';
+import React from 'react';
+import { BrowserRouter } from 'react-router';
 
-import { useAuth } from '../contexts/AuthContext';
-import { ProtectedRoute } from './ProtectedRoute';
 import { LoadingSpinner } from './LoadingSpinner';
-import { User } from '../api/types';
+import { ProtectedRoute } from './ProtectedRoute';
+import type { User } from '../api/types';
+import { useAuth } from '../contexts/AuthContext';
+
 
 // Mock dependencies
 jest.mock('../contexts/AuthContext');
@@ -28,7 +30,6 @@ describe('ProtectedRoute', () => {
       weight: 75,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      groups: [],
       roles: [],
     };
 
@@ -44,9 +45,11 @@ describe('ProtectedRoute', () => {
     });
 
     const { getByText } = render(
-      <ProtectedRoute requireAuth={true}>
-        <div>Protected Content</div>
-      </ProtectedRoute>
+      <BrowserRouter>
+        <ProtectedRoute requireAuth={true}>
+          <div>Protected Content</div>
+        </ProtectedRoute>
+      </BrowserRouter>
     );
 
     expect(getByText('Protected Content')).toBeInTheDocument();
@@ -65,9 +68,11 @@ describe('ProtectedRoute', () => {
     });
 
     const { queryByText } = render(
-      <ProtectedRoute requireAuth={true}>
-        <div>Protected Content</div>
-      </ProtectedRoute>
+      <BrowserRouter>
+        <ProtectedRoute requireAuth={true}>
+          <div>Protected Content</div>
+        </ProtectedRoute>
+      </BrowserRouter>
     );
 
     expect(queryByText('Protected Content')).not.toBeInTheDocument();
@@ -86,9 +91,11 @@ describe('ProtectedRoute', () => {
     });
 
     const { getByText } = render(
-      <ProtectedRoute requireAuth={false}>
-        <div>Public Content</div>
-      </ProtectedRoute>
+      <BrowserRouter>
+        <ProtectedRoute requireAuth={false}>
+          <div>Public Content</div>
+        </ProtectedRoute>
+      </BrowserRouter>
     );
 
     expect(getByText('Public Content')).toBeInTheDocument();
@@ -103,7 +110,6 @@ describe('ProtectedRoute', () => {
       weight: 75,
       created_at: '2024-01-01T00:00:00Z',
       updated_at: '2024-01-01T00:00:00Z',
-      groups: [],
       roles: [],
     };
 
@@ -119,9 +125,11 @@ describe('ProtectedRoute', () => {
     });
 
     const { queryByText } = render(
-      <ProtectedRoute requireAuth={false}>
-        <div>Public Content</div>
-      </ProtectedRoute>
+      <BrowserRouter>
+        <ProtectedRoute requireAuth={false}>
+          <div>Public Content</div>
+        </ProtectedRoute>
+      </BrowserRouter>
     );
 
     expect(queryByText('Public Content')).not.toBeInTheDocument();
@@ -140,9 +148,11 @@ describe('ProtectedRoute', () => {
     });
 
     const { getByTestId } = render(
-      <ProtectedRoute requireAuth={true}>
-        <div>Protected Content</div>
-      </ProtectedRoute>
+      <BrowserRouter>
+        <ProtectedRoute requireAuth={true}>
+          <div>Protected Content</div>
+        </ProtectedRoute>
+      </BrowserRouter>
     );
 
     expect(getByTestId('loading-spinner')).toBeInTheDocument();
@@ -161,9 +171,11 @@ describe('ProtectedRoute', () => {
     });
 
     const { queryByText } = render(
-      <ProtectedRoute>
-        <div>Protected Content</div>
-      </ProtectedRoute>
+      <BrowserRouter>
+        <ProtectedRoute>
+          <div>Protected Content</div>
+        </ProtectedRoute>
+      </BrowserRouter>
     );
 
     expect(queryByText('Protected Content')).not.toBeInTheDocument();

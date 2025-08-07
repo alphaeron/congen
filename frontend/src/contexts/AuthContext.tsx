@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-
-import { getCurrentUser, createUserProfile } from '../api/user';
-import { User } from '../api/types';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
-import { decodeToken } from '../common/authUtils';
+
 import { setTokenGetter } from '../api/endpoint';
+import type { User } from '../api/types';
+import { getCurrentUser, createUserProfile } from '../api/user';
+import { decodeToken } from '../common/authUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -78,27 +78,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         setError(null);
       } catch (profileError) {
-        // Check if the error is due to authentication (401/403) vs missing profile (404)
+        // Check if the error is due to missing profile (404) vs other errors
         // The error structure depends on how it's transformed by the API layer
-        let isAuthError = false;
         let isProfileNotFound = false;
-        
-        // Check if it's a transformed error object with error message
-        if (profileError && 
-            typeof profileError === 'object' && 
-            'error' in profileError && 
-            typeof profileError.error === 'string') {
 
+        // Check if it's a transformed error object with error message
+        if (
+          profileError &&
+          typeof profileError === 'object' &&
+          'error' in profileError &&
+          typeof profileError.error === 'string'
+        ) {
           // If the error message indicates "Resource not found", treat as 404
-          isProfileNotFound = profileError.error.includes('Resource not found') ||
-                             profileError.error.includes('not found');
+          isProfileNotFound =
+            profileError.error.includes('Resource not found') ||
+            profileError.error.includes('not found');
         }
-        
-        if (isAuthError) {
-          // Authentication error - clear user state
-          setUser(null);
-          setError('Authentication failed. Please log in again.');
-        } else if (isProfileNotFound) {
+
+        if (isProfileNotFound) {
           // Profile doesn't exist - set error for component to handle
           setUser(null);
           setError('Profile not found. Please create your profile.');
@@ -164,10 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
     } catch (err: unknown) {
       const errorMessage =
-        err &&
-        typeof err === 'object' &&
-        'error' in err &&
-        typeof err.error === 'string'
+        err && typeof err === 'object' && 'error' in err && typeof err.error === 'string'
           ? String(err.error)
           : 'Profile creation failed';
       setError(errorMessage);

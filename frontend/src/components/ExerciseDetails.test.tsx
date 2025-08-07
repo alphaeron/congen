@@ -3,9 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import * as React from 'react';
 
-import { ENDPOINT } from '../api/endpoint';
 import { ExerciseDetails } from './ExerciseDetails';
-
 import {
   EQUIPMENT,
   EXERCISE,
@@ -13,6 +11,8 @@ import {
   EXERCISE_EQUIPMENT,
   MUSCLE,
 } from '../__mocks__/data';
+import { ENDPOINT } from '../api/endpoint';
+
 
 describe('ExerciseDetails component', () => {
   const queryClient = new QueryClient({

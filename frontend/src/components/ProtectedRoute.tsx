@@ -1,8 +1,8 @@
 import React from 'react';
 import { Navigate } from 'react-router';
 
-import { useAuth } from '../contexts/AuthContext';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useAuth } from '../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,10 +20,7 @@ interface ProtectedRouteProps {
  * @param requireOidcOnly Whether only OIDC authentication is required (ignores profile requirement)
  * @return The protected route component
  */
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  children,
-  requireAuth = true,
-}) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAuth = true }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   // Show loading state while authentication is being determined
@@ -34,6 +31,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // If authentication is required but user is not authenticated, redirect to login
   if (requireAuth && !isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // If authentication is not required but user is authenticated, redirect to dashboard
+  if (!requireAuth && isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Render children if authentication requirements are met

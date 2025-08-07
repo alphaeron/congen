@@ -58,6 +58,17 @@ class CongenApplicationTests : BaseIntegrationTest() {
                                     time = Instant.now()
                                 )
                             ),
+                        "keycloak" to
+                            listOf(
+                                HealthCheck(
+                                    componentId = "keycloak",
+                                    componentType = "auth",
+                                    status = HealthStatus.PASS,
+                                    output = "Keycloak connection successful",
+                                    links = mapOf("self" to "/health"),
+                                    time = Instant.now()
+                                )
+                            ),
                         "application" to
                             listOf(
                                 HealthCheck(

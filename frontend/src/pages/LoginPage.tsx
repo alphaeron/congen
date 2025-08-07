@@ -1,7 +1,8 @@
-import React from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import { Button, Container, Typography, Box } from '@mui/material';
+import React from 'react';
+
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Login page component that provides a sign in button.
@@ -54,4 +55,4 @@ export const LoginPage: React.FC = () => {
       </Box>
     </Container>
   );
-}; 
+};

@@ -1,11 +1,12 @@
+
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Autocomplete from '@mui/material/Autocomplete';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
-import FormLabel from '@mui/material/FormLabel';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import FormLabel from '@mui/material/FormLabel';
 import Grid from '@mui/material/Grid2';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
@@ -14,15 +15,16 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 
+import { ExerciseCard } from './ExerciseCard';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getExerciseEquipment } from '../api/exerciseEquipment';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { useApiGet } from '../api/hooks';
 import { getMuscles } from '../api/muscle';
-import { Equipment, Exercise, Muscle } from '../api/types';
-import { ExerciseCard } from './ExerciseCard';
-import { LoadingSpinner } from './LoadingSpinner';
+import type { Equipment, Exercise, Muscle } from '../api/types';
+
 
 import '../styles/Form.css';
 

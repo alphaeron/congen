@@ -96,35 +96,6 @@ class SecurityHeadersFilterTest {
     }
 
     @Test
-    fun `should add production security headers when in production profile`() {
-        // Given
-        securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
-
-        val request =
-            MockServerHttpRequest
-                .get("/api/test")
-                .build()
-
-        val exchange = MockServerWebExchange.from(request)
-
-        // When
-        val result = securityHeadersFilter.filter(exchange, webFilterChain)
-
-        // Then
-        StepVerifier.create(result)
-            .verifyComplete()
-
-        val responseHeaders = exchange.response.headers
-        assert(responseHeaders.getFirst("Strict-Transport-Security") == "max-age=31536000; includeSubDomains; preload")
-        assert(
-            responseHeaders.getFirst("Content-Security-Policy") ==
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; " +
-                "img-src 'self' data: https:; font-src 'self' https:; connect-src 'self' https:; frame-ancestors 'none';"
-        )
-        assert(responseHeaders.getFirst("Permissions-Policy") == "geolocation=(), microphone=(), camera=()")
-    }
-
-    @Test
     fun `should add development security headers when not in production`() {
         // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "local")

@@ -1,7 +1,8 @@
-import { createUserProfile, getUserById } from './user';
-import { ENDPOINT } from './endpoint';
-import { User } from './types';
 import AxiosMockAdapter from 'axios-mock-adapter';
+
+import { ENDPOINT } from './endpoint';
+import type { User } from './types';
+import { createUserProfile, getUserById } from './user';
 
 const mockAdapter = new AxiosMockAdapter(ENDPOINT);
 

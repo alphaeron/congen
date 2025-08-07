@@ -41,8 +41,8 @@ jest.mock('react-oidc-context', () => ({
   useAuth: () => mockOidcAuth,
 }));
 
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
+import React from 'react';
 import { MemoryRouter } from 'react-router';
 
 // Import after mocks are set up

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router';
+
+
+import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
+import { default as DeleteIcon } from '@mui/icons-material/Delete';
+import { default as EditIcon } from '@mui/icons-material/Edit';
 import {
   Avatar,
   Box,
   Button,
   Card,
   CardContent,
-  Chip,
   Container,
   Dialog,
   DialogActions,
@@ -18,10 +20,10 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
-import { default as DeleteIcon } from '@mui/icons-material/Delete';
-import { default as EditIcon } from '@mui/icons-material/Edit';
-import { User } from '../api/types';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router';
+
+import type { User } from '../api/types';
 import { deleteUser } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -150,7 +152,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 <Typography variant="body1">{user.height} cm</Typography>
               </Box>
 
-              <Box>
+              <Box sx={{ mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                   Weight
                 </Typography>

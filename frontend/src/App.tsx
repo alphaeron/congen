@@ -10,28 +10,27 @@ import MenuItem from '@mui/material/MenuItem';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import * as React from 'react';
-import { BrowserRouter, Link, Routes, Route } from 'react-router';
-import { useAuth } from './contexts/AuthContext';
 import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
+import { BrowserRouter, Link, Routes, Route } from 'react-router';
+
 import { getAuthProviderConfig } from './auth/OidcConfig';
+import { AuthCallback } from './components/AuthCallback';
 import { AuthorizedElement } from './components/AuthorizedElement';
-import { ProtectedRoute } from './components/ProtectedRoute';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
+import { LoginPage } from './pages/LoginPage';
 import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
-import { LoginPage } from './pages/LoginPage';
+import ConGenIcon from './resources/congen-icon.svg';
 import { getTheme } from './theme';
-import { AuthProvider } from './contexts/AuthContext';
-import { AuthCallback } from './components/AuthCallback';
 
 import './App.css';
 import './styles/menuButton.css';
-
-import ConGenIcon from './resources/congen-icon.svg';
-import useMediaQuery from '@mui/material/useMediaQuery';
 
 const logoStyle = {
   width: '72px',
@@ -188,11 +187,7 @@ function AppContent(): React.ReactElement {
                   <AuthorizedElement
                     fallback={
                       <MenuItem component={Link} to="/login">
-                        <Button
-                          color="primary"
-                          variant="contained"
-                          sx={{ width: '100%' }}
-                        >
+                        <Button color="primary" variant="contained" sx={{ width: '100%' }}>
                           Sign in
                         </Button>
                       </MenuItem>

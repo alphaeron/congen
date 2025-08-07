@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
@@ -38,6 +39,8 @@ class KeycloakClient(
     private val serviceAccountUsername: String,
     @Value("\${congen.keycloak.client.secret}")
     private val clientSecret: String,
+    @Value("\${congen.keycloak.management.url}")
+    private val managementUrl: String,
     private val keycloakWebClient: WebClient
 ) {
     companion object {
@@ -111,6 +114,21 @@ class KeycloakClient(
             }
             .doOnSuccess { logger.debug("Deleted Keycloak user: {}", userId) }
             .doOnError { e -> logger.error("Error deleting Keycloak user: {}", userId, e) }
+    }
+
+    /**
+     * Checks the health of Keycloak using the /health/live endpoint.
+     * This endpoint is used for monitoring and health checks.
+     *
+     * @return Mono emitting a ResponseEntity indicating the health status
+     */
+    fun checkHealthLive(): Mono<ResponseEntity<Void>> {
+        val healthUrl = "$managementUrl/health/live"
+
+        return keycloakWebClient.get()
+            .uri(healthUrl)
+            .retrieve()
+            .toBodilessEntity()
     }
 
     /**

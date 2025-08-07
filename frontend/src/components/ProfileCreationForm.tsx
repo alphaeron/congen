@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -10,11 +9,15 @@ import {
   Select,
   MenuItem,
   Grid,
-  SelectChangeEvent,
   Typography,
 } from '@mui/material';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
+
+import { useAuth } from '../contexts/AuthContext';
+
+import type { SelectChangeEvent } from '@mui/material';
+
 
 export const ProfileCreationForm: React.FC = () => {
   const { createProfile, isLoading, error, clearError } = useAuth();
@@ -34,7 +37,7 @@ export const ProfileCreationForm: React.FC = () => {
       const firstName = oidcAuth.user.profile.given_name;
       const lastName = oidcAuth.user.profile.family_name;
       const fullName = `${firstName} ${lastName}`.trim();
-      
+
       if (fullName && !formData.name) {
         setFormData(prev => ({
           ...prev,

@@ -1,3 +1,5 @@
+
+
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -8,9 +10,10 @@ import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { Link } from 'react-router';
 
-import { Exercise } from '../api/types';
-import { capitalizeEachWord } from '../common/utils';
 import { BinaryTag } from './BinaryTag';
+import type { Exercise } from '../api/types';
+import { capitalizeEachWord } from '../common/utils';
+
 
 import '../styles/UndecoratedLink.css';
 

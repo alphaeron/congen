@@ -2,15 +2,11 @@ WarmupManager for backend (BigDecimal?, cache)
 
 Object storage for assets
 
-Frontend listing for import sorting and unused imports
-
 Frontend tests
 
 rate limiting
 
 backend caching
-
-Add key cloak to the backend health check
 
 workout generation algorithm flowchart
 
@@ -44,7 +40,7 @@ Program page and viewing this day /week’s workouts,
 Calendar view to place workout days?
 View past workouts
 
-prompt GPT/Copilot to encrypt data and make sure you have GDPR level restrictions on whatever data you have, but it won’t do it by default which is a huge problem.
+We need to to encrypt data and make sure we have GDPR level restrictions on whatever data we are storing.
 
 Fluxionary (whoop data ingestion)
 “Fluxionary" (invented)

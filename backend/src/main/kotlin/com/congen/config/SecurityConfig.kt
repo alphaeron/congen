@@ -40,7 +40,10 @@ class SecurityConfig {
      * @return The configured SecurityWebFilterChain
      */
     @Bean
-    fun springSecurityFilterChain(http: ServerHttpSecurity, corsConfigurationSource: CorsConfigurationSource): SecurityWebFilterChain {
+    fun springSecurityFilterChain(
+        http: ServerHttpSecurity,
+        corsConfigurationSource: CorsConfigurationSource
+    ): SecurityWebFilterChain {
         return http
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->

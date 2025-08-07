@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import { User } from './types';
+import type { User } from './types';
 
 /**
  * Create user profile after Keycloak registration.

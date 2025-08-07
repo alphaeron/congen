@@ -1,10 +1,11 @@
-import React from 'react';
 import { render } from '@testing-library/react';
-import { BrowserRouter } from 'react-router';
+import React from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
+import { BrowserRouter } from 'react-router';
 
 import { AuthCallback } from './AuthCallback';
 import { LoadingSpinner } from './LoadingSpinner';
+import { useAuth } from '../contexts/AuthContext';
 
 // Mock dependencies
 jest.mock('react-oidc-context');
@@ -17,7 +18,6 @@ const mockUseOidcAuth = useOidcAuth as jest.MockedFunction<typeof useOidcAuth>;
 const mockLoadingSpinner = LoadingSpinner as jest.MockedFunction<typeof LoadingSpinner>;
 
 // Import the mocked useAuth
-import { useAuth } from '../contexts/AuthContext';
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
 
 describe('AuthCallback', () => {

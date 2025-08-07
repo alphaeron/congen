@@ -26,8 +26,12 @@ import org.springframework.test.context.TestPropertySource
         "congen.keycloak.client.id=congen-client",
         "congen.keycloak.client.secret=test-secret",
         "congen.keycloak.service_account.username=service-account-congen-backend",
+        "congen.keycloak.management.url=http://localhost:9000",
         "KEYCLOAK_URL=http://localhost:8080",
         "KEYCLOAK_REALM=congen",
+        "JWT_ISSUER_URI=http://localhost:8080/realms/congen",
+        "JWT_JWK_SET_URI=http://localhost:8080/realms/congen/protocol/openid-connect/certs",
+        "JWT_AUDIENCES=congen-backend"
     ]
 )
 class CongenApplicationTest {

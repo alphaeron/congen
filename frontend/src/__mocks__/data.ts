@@ -1,4 +1,4 @@
-import { Exercise, ExerciseEquipment, ExerciseMuscle, Muscle, Equipment } from '../api/types';
+import type { Exercise, ExerciseEquipment, ExerciseMuscle, Muscle, Equipment } from '../api/types';
 
 /**
  * A piece of exercise equipment.

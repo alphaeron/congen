@@ -75,6 +75,9 @@ abstract class BaseIntegrationTest {
                     MountableFile.forClasspathResource("realm_configuration.json"),
                     "/realm_configuration.json"
                 )
+                .withEnv("KC_HEALTH_ENABLED", "true")
+                .withEnv("KC_HTTP_ENABLED", "true")
+                .withEnv("KC_HTTP_RELATIVE_PATH", "/")
 
         /**
          * Gets a default test token for integration tests.
@@ -173,6 +176,7 @@ abstract class BaseIntegrationTest {
 
             // Keycloak properties
             registry.add("congen.keycloak.url") { keycloak.authServerUrl }
+            registry.add("congen.keycloak.management.url") { "http://localhost:${keycloak.getMappedPort(9000)}" }
             registry.add("congen.keycloak.realm") { "congen" }
             registry.add("congen.keycloak.client.id") { "congen-backend" }
             registry.add("congen.keycloak.client.secret") { "congen-backend-secret" }

@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.client.KeycloakClient
 import com.congen.client.PostgresClient
 import com.congen.config.VersionConfig
 import com.congen.model.HealthCheck
@@ -20,6 +21,7 @@ import java.time.Instant
  *
  * The service performs checks on:
  * - **Database**: Verifies connectivity and response time to PostgreSQL
+ * - **Keycloak**: Verifies connectivity and authentication to Keycloak
  * - **Application**: Confirms the application is running and responsive
  *
  * Health check results include:
@@ -37,6 +39,7 @@ import java.time.Instant
 @Service
 class HealthCheckService(
     private val postgresClient: PostgresClient,
+    private val keycloakClient: KeycloakClient,
     private val versionConfig: VersionConfig,
 ) {
     companion object {
@@ -53,6 +56,7 @@ class HealthCheckService(
      *
      * The health check includes:
      * - Database connectivity and response time
+     * - Keycloak connectivity and authentication
      * - Application status
      * - Version and release information
      *
@@ -75,6 +79,19 @@ class HealthCheckService(
                     )
                 )
             },
+            checkKeycloakHealth().onErrorResume { error ->
+                logger.error("Keycloak health check failed in performHealthCheck", error)
+                Mono.just(
+                    HealthCheck(
+                        componentId = "keycloak",
+                        componentType = "auth",
+                        status = HealthStatus.FAIL,
+                        output = "Keycloak connection failed: ${error.message}",
+                        links = mapOf("self" to "/health"),
+                        time = Instant.now()
+                    )
+                )
+            },
             checkApplicationHealth().onErrorResume { error ->
                 logger.error("Application health check failed in performHealthCheck", error)
                 Mono.just(
@@ -90,8 +107,9 @@ class HealthCheckService(
             }
         ).map { tuple ->
             val dbHealth = tuple.t1
-            val appHealth = tuple.t2
-            val overallStatus = determineOverallStatus(listOf(dbHealth.status, appHealth.status))
+            val keycloakHealth = tuple.t2
+            val appHealth = tuple.t3
+            val overallStatus = determineOverallStatus(listOf(dbHealth.status, keycloakHealth.status, appHealth.status))
 
             HealthCheckResponse(
                 status = overallStatus,
@@ -102,6 +120,7 @@ class HealthCheckService(
                 checks =
                     mapOf(
                         "database" to listOf(dbHealth),
+                        "keycloak" to listOf(keycloakHealth),
                         "application" to listOf(appHealth),
                     ),
             )
@@ -121,7 +140,7 @@ class HealthCheckService(
         val startTime = Instant.now()
 
         return postgresClient.select<Map<String, Any>>("SELECT 1 as health_check")
-            .map { result ->
+            .map {
                 val responseTime = Duration.between(startTime, Instant.now()).toMillis()
                 logger.debug("Database health check passed in {}ms", responseTime)
 
@@ -153,6 +172,50 @@ class HealthCheckService(
                             ),
                         time = Instant.now()
                     ),
+                )
+            }
+    }
+
+    /**
+     * Checks the health of the Keycloak authentication service.
+     *
+     * This method performs a health check by calling Keycloak's health endpoint
+     * to verify that the authentication service is accessible and responsive.
+     * It uses the health endpoint that Keycloak provides for monitoring.
+     *
+     * @return Mono containing the Keycloak health check result
+     */
+    private fun checkKeycloakHealth(): Mono<HealthCheck> {
+        val startTime = Instant.now()
+
+        return keycloakClient.checkHealthLive()
+            .map {
+                val responseTime = Duration.between(startTime, Instant.now()).toMillis()
+                logger.debug("Keycloak health check passed in {}ms", responseTime)
+
+                HealthCheck(
+                    componentId = "keycloak",
+                    componentType = "auth",
+                    observedValue = responseTime,
+                    observedUnit = "ms",
+                    status = HealthStatus.PASS,
+                    output = "Keycloak connection successful",
+                    links = mapOf("self" to "/health"),
+                    time = Instant.now()
+                )
+            }
+            .onErrorResume { error ->
+                logger.error("Keycloak health check failed: {}", error.message)
+
+                Mono.just(
+                    HealthCheck(
+                        componentId = "keycloak",
+                        componentType = "auth",
+                        status = HealthStatus.FAIL,
+                        output = "Keycloak health check failed: ${error.message}",
+                        links = mapOf("self" to "/health"),
+                        time = Instant.now()
+                    )
                 )
             }
     }

@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import { ExerciseMuscle } from './types';
+import type { ExerciseMuscle } from './types';
 
 /**
  * Get a list of all available exercises and the muscles they use.

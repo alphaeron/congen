@@ -1,6 +1,8 @@
-import { AuthProviderProps } from 'react-oidc-context';
-
 import { DEPLOYMENT_ENVIRONMENT, KEYCLOAK_URL, BASE_URL } from '../globals';
+
+import type { AuthProviderProps } from 'react-oidc-context';
+
+
 
 /**
  * Constructs the OIDC configuration dynamically based on the environment.

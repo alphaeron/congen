@@ -16,11 +16,17 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.service_id").isEqualTo("congen")
             .jsonPath("$.description").isEqualTo("Congen Exercise API Health Check")
             .jsonPath("$.checks.database").exists()
+            .jsonPath("$.checks.keycloak").exists()
             .jsonPath("$.checks.application").exists()
             .jsonPath("$.checks.database[0].component_id").isEqualTo("postgres")
             .jsonPath("$.checks.database[0].component_type").isEqualTo("database")
+            .jsonPath("$.checks.database[0].status").isEqualTo("pass")
+            .jsonPath("$.checks.keycloak[0].component_id").isEqualTo("keycloak")
+            .jsonPath("$.checks.keycloak[0].component_type").isEqualTo("auth")
+            .jsonPath("$.checks.keycloak[0].status").isEqualTo("pass")
             .jsonPath("$.checks.application[0].component_id").isEqualTo("congen-api")
             .jsonPath("$.checks.application[0].component_type").isEqualTo("service")
+            .jsonPath("$.checks.application[0].status").isEqualTo("pass")
     }
 
     @Test
@@ -32,5 +38,16 @@ class HealthCheckIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$.checks.database[0].observed_value").exists()
             .jsonPath("$.checks.database[0].observed_unit").isEqualTo("ms")
+    }
+
+    @Test
+    fun `health check should include keycloak response time`() {
+        webTestClient.get()
+            .uri("/api/v1/health/")
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.checks.keycloak[0].observed_value").exists()
+            .jsonPath("$.checks.keycloak[0].observed_unit").isEqualTo("ms")
     }
 }

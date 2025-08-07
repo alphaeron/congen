@@ -1,10 +1,6 @@
-import {
-  InvalidateQueryFilters,
-  QueryOptions,
-  useQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+import type { InvalidateQueryFilters, QueryOptions } from '@tanstack/react-query';
 
 export const useApiGet = <T>(
   key: string[],

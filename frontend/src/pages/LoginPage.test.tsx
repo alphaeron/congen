@@ -1,7 +1,9 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import React from 'react';
+
 import { LoginPage } from './LoginPage';
 import { useAuth } from '../contexts/AuthContext';
+
 
 // Mock the useAuth hook
 jest.mock('../contexts/AuthContext');
@@ -85,4 +87,4 @@ describe('LoginPage', () => {
       expect(mockLogin).toHaveBeenCalledTimes(1);
     });
   });
-}); 
+});
