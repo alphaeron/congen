@@ -4,4 +4,4 @@ kind: Kustomization
 namespace: congen
 
 resources:
-  - ../../../base/stage-3
+- hpa.yaml 

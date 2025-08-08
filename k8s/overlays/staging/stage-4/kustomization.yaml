@@ -4,4 +4,10 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- ../../../base/stage-4 
+- ../../../base/stage-4
+
+patches:
+- path: patches/keycloak-secret-patch.yaml
+  target:
+    kind: Secret
+    name: keycloak-secret 

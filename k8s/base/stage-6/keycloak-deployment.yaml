@@ -18,7 +18,7 @@ spec:
     spec:
       initContainers:
       - name: theme-setup
-        image: busybox:1.35
+        image: mirror.gcr.io/busybox:1.35
         command: ['sh', '-c']
         args:
         - |
@@ -114,6 +114,16 @@ spec:
             secretKeyRef:
               name: keycloak-secret
               key: KC_DB_PASSWORD
+        - name: KC_DB
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: KC_DB
+        - name: KC_DB_URL
+          valueFrom:
+            secretKeyRef:
+              name: keycloak-secret
+              key: KC_DB_URL
         resources:
           limits:
             cpu: 2000m
@@ -126,13 +136,13 @@ spec:
             path: /health/started
             port: 9000
           periodSeconds: 1
-          failureThreshold: 600              
+          failureThreshold: 600
         readinessProbe:
           httpGet:
             path: /health/ready
             port: 9000
           periodSeconds: 10
-          failureThreshold: 3              
+          failureThreshold: 3
         livenessProbe:
           httpGet:
             path: /health/live

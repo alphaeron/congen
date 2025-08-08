@@ -6,7 +6,7 @@ metadata:
 data:
   # Theme properties file
   "theme.properties": |
-    parent=keycloak
+    parent=base
     import=common/keycloak
     styles=css/congen.css
     scripts=js/congen.js

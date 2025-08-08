@@ -11,3 +11,7 @@ patches:
   target:
     kind: Secret
     name: congen-secret
+- path: patches/keycloak-secret-patch.yaml
+  target:
+    kind: Secret
+    name: keycloak-secret

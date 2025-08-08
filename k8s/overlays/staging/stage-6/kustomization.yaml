@@ -7,31 +7,7 @@ resources:
 - ../../../base/stage-6
 
 patches:
-- path: patches/migrations-configmap-patch.yaml
+- path: patches/keycloak-deployment-patch.yaml
   target:
-    kind: ConfigMap
-    name: migrations-config
-- path: patches/backend-configmap-patch.yaml
-  target:
-    kind: ConfigMap
-    name: backend-config
-- path: patches/backend-deployment-patch.yaml
-  target:
-    kind: Deployment
-    name: backend
-- path: patches/backend-image-tag-patch.yaml
-  target:
-    kind: Deployment
-    name: backend
-- path: patches/frontend-image-tag-patch.yaml
-  target:
-    kind: Deployment
-    name: frontend
-- path: patches/backend-service-patch.yaml
-  target:
-    kind: Service
-    name: backend
-- path: patches/migration-service-labels-patch.yaml
-  target:
-    kind: Deployment
-    name: migration-service
+    kind: StatefulSet
+    name: keycloak

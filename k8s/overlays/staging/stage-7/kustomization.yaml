@@ -7,11 +7,23 @@ resources:
 - ../../../base/stage-7
 
 patches:
-- path: patches/network-policy-patch.yaml
+- path: patches/backend-configmap-patch.yaml
   target:
-    kind: NetworkPolicy
-    name: congen-network-policy
-- path: patches/ingress-patch.yaml
+    kind: ConfigMap
+    name: backend-config
+- path: patches/backend-deployment-patch.yaml
   target:
-    kind: Ingress
-    name: congen-ingress
+    kind: Deployment
+    name: backend
+- path: patches/backend-image-tag-patch.yaml
+  target:
+    kind: Deployment
+    name: backend
+- path: patches/frontend-image-tag-patch.yaml
+  target:
+    kind: Deployment
+    name: frontend
+- path: patches/backend-service-patch.yaml
+  target:
+    kind: Service
+    name: backend

@@ -25,15 +25,15 @@ Perform staged deployment of Congen application.
 OPTIONS:
     -e, --environment ENV   Environment name (REQUIRED: local, staging, production)
     -u, --keycloak-url URL  Keycloak URL for bootstrap (default: http://localhost:8080)
-    --stage STAGE           Deploy specific stage only (1, 2, 3, 4, 5, 6, 7, 8, 9)
+    --stage STAGE           Deploy specific stage only (1-10)
     -h, --help              Show this help message
 
 EXAMPLES:
     $0 -e local                    # Full deployment for local environment
     $0 -e staging -u https://keycloak.staging.example.com  # Staging deployment
-    $0 -e local --stage 1          # Deploy only Stage 1 (Infrastructure)
-    $0 -e local --stage 2          # Deploy only Stage 2 (Secrets)
-    $0 -e local --stage 4          # Deploy only Stage 4 (Terraform and Secrets Update)
+    $0 -e local --stage 1          # Deploy only Stage 1 (Namespace)
+    $0 -e local --stage 2          # Deploy only Stage 2 (Service Account)
+    $0 -e local --stage 5          # Deploy only Stage 5 (Database Migrations)
 
 EOF
 }
@@ -183,12 +183,32 @@ deploy_secrets() {
     fi
 }
 
+# Function to deploy database migrations
+deploy_database_migrations() {
+    print_step "5" "Deploying Database Migrations"
+    
+    print_status "Deploying database migrations to Kubernetes..."
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
+        print_success "Database migrations deployed"
+    else
+        print_error "Failed to deploy database migrations"
+        exit 1
+    fi
+    
+    print_status "Waiting for migration service to be ready..."
+    if kubectl wait --for=condition=ready pod -l app=migration-service -n congen --timeout=300s; then
+        print_success "Migration service is ready"
+    else
+        print_warning "Migration service may still be starting up"
+    fi
+}
+
 # Function to deploy Keycloak infrastructure
 deploy_keycloak_infrastructure() {
-    print_step "5" "Deploying Keycloak Infrastructure"
+    print_step "6" "Deploying Keycloak Infrastructure"
     
     print_status "Deploying Keycloak to Kubernetes..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-5"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-6"; then
         print_success "Keycloak infrastructure deployed"
     else
         print_error "Failed to deploy Keycloak infrastructure"
@@ -254,7 +274,7 @@ bootstrap_keycloak() {
 
 # Function to apply Terraform
 apply_terraform() {
-    print_step "6" "Bootstrapping Keycloak and Applying Terraform Configuration"
+    print_step "7" "Bootstrapping Keycloak and Applying Terraform Configuration"
     
     # Bootstrap Keycloak first
     print_status "Bootstrapping Keycloak for Terraform..."
@@ -341,10 +361,10 @@ update_secrets() {
 
 # Function to deploy application components
 deploy_applications() {
-    print_step "7" "Deploying Application Components"
+    print_step "8" "Deploying Application Components"
     
     print_status "Deploying Congen application components..."
-    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-6"; then
+    if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-7"; then
         print_success "Application components deployed"
     else
         print_error "Failed to deploy application components"
@@ -367,37 +387,37 @@ deploy_applications() {
 
 # Function to deploy networking
 deploy_networking() {
-    print_step "8" "Deploying Networking"
+    print_step "9" "Deploying Networking"
     
-    # Check if stage-7 directory exists for this environment
-    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-7" ]]; then
+    # Check if stage-8 directory exists for this environment
+    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-8" ]]; then
         print_status "Deploying networking with environment-specific configuration..."
-        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-7"; then
+        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-8"; then
             print_success "Networking deployed"
         else
             print_error "Failed to deploy networking"
             exit 1
         fi
     else
-        print_status "No stage-7 directory found for ${ENVIRONMENT}, skipping networking deployment"
+        print_status "No stage-9 directory found for ${ENVIRONMENT}, skipping networking deployment"
     fi
 }
 
 # Function to deploy Horizontal Pod Autoscaler
 deploy_hpa() {
-    print_step "9" "Deploying Horizontal Pod Autoscaler"
+    print_step "10" "Deploying Horizontal Pod Autoscaler"
     
-    # Check if stage-8 directory exists for this environment
-    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-8" ]]; then
+    # Check if stage-9 directory exists for this environment
+    if [[ -d "k8s/overlays/${ENVIRONMENT}/stage-9" ]]; then
         print_status "Deploying HPA with environment-specific configuration..."
-        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-8"; then
+        if kubectl apply -k "k8s/overlays/${ENVIRONMENT}/stage-9"; then
             print_success "HPA deployed"
         else
             print_error "Failed to deploy HPA"
             exit 1
         fi
     else
-        print_status "No stage-8 directory found for ${ENVIRONMENT}, skipping HPA deployment"
+        print_status "No stage-10 directory found for ${ENVIRONMENT}, skipping HPA deployment"
     fi
 }
 
@@ -496,7 +516,7 @@ main() {
     # Set up port forwarding for stages that need it
     if [[ -n "${STAGE}" ]]; then
         case "${STAGE}" in
-            6)
+            7)
                 print_status "Setting up port forwarding for Terraform operations..."
                 setup_port_forwarding
                 ;;
@@ -526,28 +546,32 @@ main() {
                 deploy_secrets
                 ;;
             5)
-                print_status "Deploying Stage 5: Keycloak Infrastructure only"
-                deploy_keycloak_infrastructure
+                print_status "Deploying Stage 5: Database Migrations only"
+                deploy_database_migrations
                 ;;
             6)
-                print_status "Deploying Stage 6: Terraform and Secrets Update only"
+                print_status "Deploying Stage 6: Keycloak Infrastructure only"
+                deploy_keycloak_infrastructure
+                ;;
+            7)
+                print_status "Deploying Stage 7: Terraform and Secrets Update only"
                 apply_terraform
                 update_secrets
                 ;;
-            7)
-                print_status "Deploying Stage 7: Application Components only"
+            8)
+                print_status "Deploying Stage 8: Application Components only"
                 deploy_applications
                 ;;
-            8)
-                print_status "Deploying Stage 8: Networking only"
+            9)
+                print_status "Deploying Stage 9: Networking only"
                 deploy_networking
                 ;;
-            9)
-                print_status "Deploying Stage 9: Horizontal Pod Autoscaler only"
+            10)
+                print_status "Deploying Stage 10: Horizontal Pod Autoscaler only"
                 deploy_hpa
                 ;;
             *)
-                print_error "Invalid stage: ${STAGE}. Must be 1, 2, 3, 4, 5, 6, 7, 8, or 9."
+                print_error "Invalid stage: ${STAGE}. Must be 1-10."
                 cleanup
                 exit 1
                 ;;
@@ -559,6 +583,7 @@ main() {
         deploy_service_account
         deploy_infrastructure
         deploy_secrets
+        deploy_database_migrations
         deploy_keycloak_infrastructure
         
         # Set up port forwarding before Terraform operations

@@ -4,7 +4,6 @@ kind: Kustomization
 namespace: congen
 
 resources:
-  - keycloak-deployment.yaml
-  - keycloak-service.yaml
-  - keycloak-discovery-service.yaml
-  - keycloak-theme-configmap.yaml
+  - keycloak-migrations-job.yaml
+  - migrations-configmap.yaml
+  - migration-service-deployment.yaml

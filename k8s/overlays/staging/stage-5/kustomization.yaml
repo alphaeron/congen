@@ -4,10 +4,10 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- ../../../base/stage-5
+  - ../../../base/stage-5
 
 patches:
-- path: patches/keycloak-deployment-patch.yaml
+- path: patches/migration-service-labels-patch.yaml
   target:
-    kind: StatefulSet
-    name: keycloak 
+    kind: Deployment
+    name: migration-service

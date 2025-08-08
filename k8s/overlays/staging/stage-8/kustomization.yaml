@@ -4,4 +4,14 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- hpa.yaml 
+- ../../../base/stage-8
+
+patches:
+- path: patches/network-policy-patch.yaml
+  target:
+    kind: NetworkPolicy
+    name: congen-network-policy
+- path: patches/ingress-patch.yaml
+  target:
+    kind: Ingress
+    name: congen-ingress

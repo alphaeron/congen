@@ -4,5 +4,8 @@ kind: Kustomization
 namespace: congen
 
 resources:
-- network-policy.yaml
-- ingress.yaml
+- backend-configmap.yaml
+- backend-deployment.yaml
+- backend-service.yaml
+- frontend-deployment.yaml
+- frontend-service.yaml

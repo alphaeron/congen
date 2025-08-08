@@ -6,8 +6,6 @@ workout generation algorithm flowchart
 
 xss prevention in frontend
 
-Is all keycloak data stored in postgres?  If so, then backing up postgres will take care of backups for keycloak, right?
-
 We need to to encrypt data and make sure we have GDPR level restrictions on whatever data we are storing.
 
 

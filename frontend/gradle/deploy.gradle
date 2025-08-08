@@ -52,7 +52,7 @@ task printImageTag {
 // Helper function to generate frontend image tag patch
 def generateFrontendImageTagPatchForEnvironment(env, imageName) {
     def overlayDir = "../k8s/overlays/${env}"
-    def patchFile = file("${overlayDir}/stage-6/patches/frontend-image-tag-patch.yaml")
+    def patchFile = file("${overlayDir}/stage-7/patches/frontend-image-tag-patch.yaml")
 
     // Create the patch directory if it doesn't exist
     patchFile.parentFile.mkdirs()

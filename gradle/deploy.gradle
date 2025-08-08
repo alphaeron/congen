@@ -83,21 +83,21 @@ task cleanupPortForward {
 // Unified stage deployment task
 task deployStage {
     group = 'deployment'
-    description = 'Deploy a specific stage (1-9)'
+    description = 'Deploy a specific stage (1-10)'
     
     // Validate stage parameter
     doFirst {
         if (!project.hasProperty('stage')) {
-            throw new GradleException("Stage parameter is required. Use: -Pstage=<1-9>")
+            throw new GradleException("Stage parameter is required. Use: -Pstage=<1-10>")
         }
         
         def stageNum = project.getProperty('stage') as Integer
-        if (stageNum < 1 || stageNum > 9) {
-            throw new GradleException("Invalid stage: ${stageNum}. Must be 1, 2, 3, 4, 5, 6, 7, 8, or 9.")
+        if (stageNum < 1 || stageNum > 10) {
+            throw new GradleException("Invalid stage: ${stageNum}. Must be between 1 and 10.")
         }
         
-        // Check if Stage 9 is being deployed to local environment
-        if (stageNum == 9 && project.environment == 'local') {
+        // Check if Stage 10 is being deployed to local environment
+        if (stageNum == 10 && project.environment == 'local') {
             throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
@@ -111,11 +111,12 @@ task deployStage {
             2: "Service Account",
             3: "Infrastructure",
             4: "Secrets",
-            5: "Keycloak",
-            6: "Terraform and Secrets Update",
-            7: "Application",
-            8: "Networking",
-            9: "Horizontal Pod Autoscaler"
+            5: "Database Migrations",
+            6: "Keycloak",
+            7: "Terraform and Secrets Update",
+            8: "Application",
+            9: "Networking",
+            10: "Horizontal Pod Autoscaler",
         ]
         
         println "🚀 Deploying Stage ${stageNum}: ${stageDescriptions[stageNum]} for environment: ${project.environment}"
@@ -141,9 +142,9 @@ task deployAll {
         println "🚀 Starting staged deployment for environment: ${project.environment}"
         
         // Deploy all stages in sequence
-        def stages = [1, 2, 3, 4, 5, 6, 7, 8]
+        def stages = [1, 2, 3, 4, 5, 6, 7, 8, 9]
         if (project.environment != 'local') {
-            stages << 9  // Add Stage 9 for staging/production
+            stages << 10  // Add Stage 10 for staging/production
         }
         
         stages.each { stageNum ->

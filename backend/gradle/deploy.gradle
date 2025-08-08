@@ -67,7 +67,7 @@ task createMigrationsConfigMap {
 
     doLast {
         def migrationsDir = file('resources/migrations')
-        def outputFile = file('../k8s/base/stage-6/migrations-configmap.yaml')
+        def outputFile = file('../k8s/base/stage-5/migrations-configmap.yaml')
 
         if (!migrationsDir.exists()) {
             throw new GradleException("Migrations directory not found: ${migrationsDir.absolutePath}")
@@ -168,7 +168,7 @@ task prepareRemoteImage {
 // Helper function to generate image tag patch
 def generateImageTagPatchForEnvironment(env, imageName) {
     def overlayDir = "../k8s/overlays/${env}"
-    def patchFile = file("${overlayDir}/stage-6/patches/backend-image-tag-patch.yaml")
+    def patchFile = file("${overlayDir}/stage-7/patches/backend-image-tag-patch.yaml")
 
     // Create the patch directory if it doesn't exist
     patchFile.parentFile.mkdirs()

@@ -12,6 +12,10 @@ The Congen application uses Keycloak for authentication and authorization with a
 - **User Management**: Centralized user account management
 - **Registration Flow**: Secure user registration through Keycloak
 
+### Database Configuration
+
+Keycloak uses the same PostgreSQL cluster as the backend application but with a separate database (`keycloak` vs `congen`). This ensures that Keycloak data is included in PostgreSQL backups, providing complete data protection for both application and authentication data.
+
 ## Architecture
 
 ### Components

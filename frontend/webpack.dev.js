@@ -15,7 +15,7 @@ module.exports = merge(common, {
   mode: 'development',
 
   // Better source maps for development
-  devtool: 'eval-cheap-module-source-map',
+  devtool: 'source-map',
 
   output: {
     sourceMapFilename: '[name].map',

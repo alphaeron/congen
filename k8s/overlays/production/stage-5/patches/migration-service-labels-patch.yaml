@@ -10,4 +10,4 @@ spec:
       - name: migration-service
         env:
         - name: MIGRATION_LABELS
-          value: "production" 
+          value: "prod"
