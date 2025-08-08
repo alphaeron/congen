@@ -5,7 +5,6 @@ import { MemoryRouter } from 'react-router';
 import { ExerciseCard } from './ExerciseCard';
 import { EXERCISE, EXERCISE_MUSCLE, EXERCISE_EQUIPMENT } from '../__mocks__/data';
 
-
 describe('ExerciseCard component', () => {
   beforeEach(() => {
     render(

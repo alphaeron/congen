@@ -1,4 +1,3 @@
-
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Chip from '@mui/material/Chip';
@@ -20,7 +19,6 @@ import { useApiGet } from '../api/hooks';
 import { getIndividualMuscle } from '../api/muscle';
 import type { Exercise, ExerciseEquipment, ExerciseMuscle, Equipment, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
-
 
 /**
  * Props for the ExerciseDetails component.

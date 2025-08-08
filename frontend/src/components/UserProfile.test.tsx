@@ -8,7 +8,6 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 import { deleteUser } from '../api/user';
 
-
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
 

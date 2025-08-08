@@ -17,11 +17,11 @@ import org.springframework.test.context.TestPropertySource
 @SpringBootTest
 @TestPropertySource(
     properties = [
-        "CORS_ALLOWED_ORIGINS=http://localhost:3000,https://example.com",
-        "CORS_ALLOWED_METHODS=GET,POST,PUT,DELETE",
-        "CORS_ALLOWED_HEADERS=Content-Type,Authorization",
-        "CORS_EXPOSED_HEADERS=X-Total-Count",
-        "CORS_MAX_AGE=3600",
+        "cors.allowed-origins=http://localhost:3000,https://example.com",
+        "cors.allowed-methods=GET,POST,PUT,DELETE",
+        "cors.allowed-headers=Content-Type,Authorization",
+        "cors.exposed-headers=X-Total-Count",
+        "cors.max-age=3600",
         "spring.profiles.active=test",
         "congen.keycloak.client.id=congen-client",
         "congen.keycloak.client.secret=test-secret",

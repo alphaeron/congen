@@ -4,6 +4,7 @@ const webpack = require('webpack');
 const TerserPlugin = require('terser-webpack-plugin');
 const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 const RobotstxtPlugin = require('robotstxt-webpack-plugin');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 module.exports = {
   entry: {
@@ -19,6 +20,81 @@ module.exports = {
     new RobotstxtPlugin({
       filePath: path.resolve(__dirname, 'public/robots.txt'),
     }),
+
+    // Bundle analyzer (always enabled)
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      analyzerHost: '127.0.0.1',
+      analyzerPort: 8888,
+      reportFilename: 'bundle-report.html',
+      defaultSizes: 'parsed',
+      openAnalyzer: false,
+      generateStatsFile: true,
+      statsFilename: 'bundle-stats.json',
+      statsOptions: {
+        source: false,
+        modules: true,
+        chunks: true,
+        assets: true,
+        children: false,
+      },
+      logLevel: 'info',
+    }),
+
+    // Common bundle size reporter
+    new (class BundleSizeReporter {
+      apply(compiler) {
+        compiler.hooks.done.tap('BundleSizeReporter', stats => {
+          const chunkGraph = stats.compilation.chunkGraph;
+          const chunks = Array.from(stats.compilation.chunks);
+          const isProduction = stats.compilation.options.mode === 'production';
+
+          console.log(`\n📦 ${isProduction ? 'Production' : 'Development'} Bundle Size Report:`);
+          console.log('='.repeat(50));
+
+          // Report main chunks
+          chunks.forEach(chunk => {
+            if (chunk.name) {
+              const size = chunkGraph.getChunkSize(chunk);
+              if (isProduction) {
+                const gzippedSize = this.getGzippedSize(size);
+                console.log(
+                  `📄 ${chunk.name}: ${this.formatSize(size)} (${this.formatSize(gzippedSize)} gzipped)`
+                );
+              } else {
+                console.log(`📄 ${chunk.name}: ${this.formatSize(size)}`);
+              }
+            }
+          });
+
+          // Report total
+          const totalSize = chunks.reduce((sum, chunk) => sum + chunkGraph.getChunkSize(chunk), 0);
+          if (isProduction) {
+            const totalGzipped = this.getGzippedSize(totalSize);
+            console.log('─'.repeat(50));
+            console.log(
+              `📊 Total: ${this.formatSize(totalSize)} (${this.formatSize(totalGzipped)} gzipped)`
+            );
+          } else {
+            console.log('─'.repeat(50));
+            console.log(`📊 Total: ${this.formatSize(totalSize)}`);
+          }
+          console.log('='.repeat(50));
+        });
+      }
+
+      getGzippedSize(size) {
+        return Math.round(size * 0.3); // Rough estimate
+      }
+
+      formatSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+      }
+    })(),
   ],
 
   module: {

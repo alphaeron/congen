@@ -1,4 +1,3 @@
-
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -24,7 +23,6 @@ import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { useApiGet } from '../api/hooks';
 import { getMuscles } from '../api/muscle';
 import type { Equipment, Exercise, Muscle } from '../api/types';
-
 
 import '../styles/Form.css';
 

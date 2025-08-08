@@ -1,5 +1,6 @@
 package com.congen
 
+import com.congen.components.RateLimitFilter
 import com.fasterxml.jackson.databind.ObjectMapper
 import dasniko.testcontainers.keycloak.KeycloakContainer
 import io.vertx.sqlclient.SqlClient
@@ -206,8 +207,13 @@ abstract class BaseIntegrationTest {
     @Qualifier("postgresDBWriter")
     protected lateinit var sqlClient: SqlClient
 
+    @Autowired
+    protected lateinit var rateLimitFilter: RateLimitFilter
+
     @BeforeEach
     open fun setUp() {
+        // Reset rate limiting state before each test to ensure isolation
+        rateLimitFilter.resetRateLimitState()
         // Database cleanup will be handled after Spring context is initialized
     }
 

@@ -4,7 +4,6 @@ import React from 'react';
 import { LoginPage } from './LoginPage';
 import { useAuth } from '../contexts/AuthContext';
 
-
 // Mock the useAuth hook
 jest.mock('../contexts/AuthContext');
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;

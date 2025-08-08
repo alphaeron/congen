@@ -1,26 +1,17 @@
-WarmupManager for backend (BigDecimal?, cache)
-
-Object storage for assets
-
-Frontend tests
-
-rate limiting
-
 backend caching
+
+WarmupManager for backend (BigDecimal?, cache)
 
 workout generation algorithm flowchart
 
-optimize webpack bundle
+xss prevention in frontend
+
+Is all keycloak data stored in postgres?  If so, then backing up postgres will take care of backups for keycloak, right?
+
+We need to to encrypt data and make sure we have GDPR level restrictions on whatever data we are storing.
 
 
 
-Need to include visualization page to track exercise history, tooltip if estimated from 1rm to show set scheme for it.
-
-Backups for keycloak
-
-Need an application status page
-
-Generate database
 
 Do user pages first
 
@@ -33,6 +24,8 @@ Program creation
 Program preferences
 Current program
 
+Need to include visualization page to track exercise history, tooltip if estimated from 1rm to show set scheme for it.
+
 Workout generation flow
 Users enter preferences
 
@@ -40,7 +33,7 @@ Program page and viewing this day /week’s workouts,
 Calendar view to place workout days?
 View past workouts
 
-We need to to encrypt data and make sure we have GDPR level restrictions on whatever data we are storing.
+Generate database
 
 Fluxionary (whoop data ingestion)
 “Fluxionary" (invented)
@@ -53,7 +46,7 @@ Health metric visualization impact on performance page.
 
 hashicorp vault for staging/production
 
-
+assets, and object storage for assets
 
 
 

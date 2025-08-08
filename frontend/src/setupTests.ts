@@ -6,6 +6,11 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as never;
 
+// Configure React testing environment for concurrent features
+import { configure } from '@testing-library/react';
+
+configure({ asyncUtilTimeout: 5000 });
+
 // Set up window.location for React Router tests
 Object.defineProperty(window, 'location', {
   value: {

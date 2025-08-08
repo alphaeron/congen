@@ -13,7 +13,6 @@ import {
 } from '../__mocks__/data';
 import { ENDPOINT } from '../api/endpoint';
 
-
 describe('ExerciseDetails component', () => {
   const queryClient = new QueryClient({
     defaultOptions: {

@@ -2,6 +2,8 @@ package com.congen.components
 
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.core.Ordered
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
@@ -41,6 +43,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE) // Run before Spring Security's CORS handling
 class SecurityHeadersFilter(
     @Value("\${spring.profiles.active:local}")
     private val activeProfile: String,
@@ -70,11 +73,11 @@ class SecurityHeadersFilter(
     ): Mono<Void> {
         val response = exchange.response
 
-        // Security headers for all environments
-        response.headers.add("X-Content-Type-Options", "nosniff")
-        response.headers.add("X-Frame-Options", "DENY")
-        response.headers.add("X-XSS-Protection", "1; mode=block")
-        response.headers.add("Referrer-Policy", "strict-origin-when-cross-origin")
+        // Security headers for all environments - force override any existing values
+        response.headers.set("X-Content-Type-Options", "nosniff")
+        response.headers.set("X-Frame-Options", "DENY")
+        response.headers.set("X-XSS-Protection", "1; mode=block")
+        response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
 
         // Additional security headers for production
         if (isProduction) {

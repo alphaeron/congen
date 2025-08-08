@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router';
 import { LoadingSpinner } from './LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 
-
 /**
  * Simplified AuthCallback component that handles OIDC authentication callback.
  * Detects new users and redirects them to profile creation.

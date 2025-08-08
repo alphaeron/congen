@@ -1,5 +1,3 @@
-
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SnackbarProvider } from 'notistack';
 import * as React from 'react';

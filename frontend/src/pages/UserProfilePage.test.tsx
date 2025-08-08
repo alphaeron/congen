@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router';
 import { UserProfilePage } from './UserProfilePage';
 import type { User } from '../api/types';
 
-
 // Mock the auth context
 const mockUser: User = {
   keycloak_id: 'test-user-id',

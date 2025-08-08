@@ -13,25 +13,132 @@ const defaultHtmlPluginConfig = {
 
 module.exports = merge(common, {
   mode: 'development',
-  devtool: 'source-map',
+
+  // Better source maps for development
+  devtool: 'eval-cheap-module-source-map',
+
   output: {
     sourceMapFilename: '[name].map',
+    // Development-specific output settings
+    filename: '[name].js',
+    chunkFilename: '[name].chunk.js',
+    publicPath: '/',
   },
+
+  // Enhanced development server configuration
   devServer: {
-    static: path.resolve(__dirname, 'dist'),
+    static: {
+      directory: path.resolve(__dirname, 'dist'),
+      publicPath: '/',
+    },
     port: 3000,
+    host: 'localhost',
+    open: true,
+    hot: true, // Enable hot module replacement
+    liveReload: true,
+    compress: true, // Enable gzip compression for dev server
+    historyApiFallback: true, // Enable SPA routing
+    client: {
+      overlay: {
+        errors: true,
+        warnings: false, // Don't overlay warnings
+      },
+      progress: true,
+    },
+    // Development-specific headers
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+      'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization',
+    },
+    // Better error reporting
+    setupMiddlewares: (middlewares, devServer) => {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined');
+      }
+
+      // Log when server starts
+      console.log('🚀 Development server starting...');
+
+      return middlewares;
+    },
   },
+
   plugins: [
     new HtmlWebpackPlugin({
       ...defaultHtmlPluginConfig,
+      // Development-specific HTML options
+      minify: false, // Don't minify HTML in development
     }),
   ],
+
   module: {
     rules: [
       {
-        test: /.css$/,
-        use: ['style-loader', 'css-loader'],
+        test: /\.css$/,
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: true, // Enable source maps for CSS
+              importLoaders: 1,
+            },
+          },
+        ],
       },
     ],
+  },
+
+  // Development-specific optimizations
+  optimization: {
+    // Disable minification in development for faster builds
+    minimize: false,
+    // Keep module names for better debugging
+    moduleIds: 'named',
+    chunkIds: 'named',
+    // Split chunks for better development experience
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        // Separate vendor chunks for faster rebuilds
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: 10,
+        },
+        // Separate React for faster development
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          name: 'react',
+          chunks: 'all',
+          priority: 20,
+        },
+      },
+    },
+    // Keep runtime in a separate chunk
+    runtimeChunk: 'single',
+  },
+
+  // Development-specific performance settings
+  performance: {
+    hints: false, // Disable performance hints in development
+  },
+
+  // Development-specific resolve settings
+  resolve: {
+    ...common.resolve,
+    // Add development-specific aliases if needed
+    alias: {
+      ...common.resolve.alias,
+      // Add any development-specific aliases here
+    },
+  },
+
+  // Development-specific experiments
+  experiments: {
+    // Enable top-level await for development
+    topLevelAwait: true,
   },
 });

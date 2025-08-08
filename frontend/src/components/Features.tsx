@@ -1,4 +1,3 @@
-
 import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';

@@ -49,12 +49,14 @@ import { MemoryRouter } from 'react-router';
 import { AuthProvider, useAuth } from './AuthContext';
 
 // Get the mocked functions
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const endpointModule = require('../api/endpoint') as jest.Mocked<typeof import('../api/endpoint')>;
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const userModule = require('../api/user') as jest.Mocked<typeof import('../api/user')>;
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const authUtilsModule = require('../common/authUtils') as jest.Mocked<
+
+const endpointModule = jest.requireMock('../api/endpoint') as jest.Mocked<
+  typeof import('../api/endpoint')
+>;
+
+const userModule = jest.requireMock('../api/user') as jest.Mocked<typeof import('../api/user')>;
+
+const authUtilsModule = jest.requireMock('../common/authUtils') as jest.Mocked<
   typeof import('../common/authUtils')
 >;
 

@@ -18,7 +18,6 @@ import { useAuth } from '../contexts/AuthContext';
 
 import type { SelectChangeEvent } from '@mui/material';
 
-
 export const ProfileCreationForm: React.FC = () => {
   const { createProfile, isLoading, error, clearError } = useAuth();
   const oidcAuth = useOidcAuth();

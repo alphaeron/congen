@@ -7,7 +7,6 @@ import { ProtectedRoute } from './ProtectedRoute';
 import type { User } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
 
-
 // Mock dependencies
 jest.mock('../contexts/AuthContext');
 jest.mock('./LoadingSpinner');

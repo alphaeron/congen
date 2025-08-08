@@ -104,8 +104,13 @@ class OpenApiConfig(
 
                         ## Rate Limiting
 
-                        API requests are rate-limited to ensure fair usage. Please respect the rate limits
-                        and implement appropriate retry logic in your applications.
+                        API requests are rate-limited to prevent DDoS attacks and ensure fair usage:
+                        - **IP-based limits**: 100 requests per minute per IP address
+                        - **User-based limits**: 50 requests per minute per authenticated user
+                        - **Payload limits**: Maximum 1MB request size
+                        - **Request timeouts**: 10-second request timeout
+
+                        Please respect the rate limits and implement appropriate retry logic with exponential backoff.
 
                         ## Error Handling
 

@@ -5,7 +5,6 @@ import { alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
 import type { Theme, ThemeOptions } from '@mui/material/styles';
 
-
 declare module '@mui/material-pigment-css' {
   interface ThemeArgs {
     theme: Theme;
