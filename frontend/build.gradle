@@ -8,7 +8,24 @@ description = 'Conjugate Workout Generator Frontend'
 // Get environment from project property, default to 'local'
 ext.environment = project.hasProperty('environment') ? project.environment : 'local'
 
-// Environment-aware build task using gradle-node-plugin built-in tasks
+// Custom npm tasks with environment variables
+task npmBuildWithEnv(type: com.github.gradle.node.npm.task.NpmTask) {
+    group = 'build'
+    description = 'Build for production with environment variables'
+    dependsOn npm_install
+    npmCommand = ['run', 'build']
+    environment = ['REACT_APP_DEPLOYMENT_ENVIRONMENT': project.environment]
+}
+
+task npmDevBuildWithEnv(type: com.github.gradle.node.npm.task.NpmTask) {
+    group = 'build'
+    description = 'Build for development with environment variables'
+    dependsOn npm_install
+    npmCommand = ['run', 'devbuild']
+    environment = ['REACT_APP_DEPLOYMENT_ENVIRONMENT': project.environment]
+}
+
+// Environment-aware build task using custom npm tasks with environment variables
 task buildApp {
     group = 'build'
     description = 'Build the application (uses environment to determine build type)'
@@ -16,10 +33,14 @@ task buildApp {
 
     def buildType = (project.environment == 'production') ? 'production' : 'debug'
 
+    doFirst {
+        println "🌍 Building frontend for environment: ${project.environment}"
+    }
+
     if (buildType == 'production') {
-        dependsOn npm_run_build
+        dependsOn npmBuildWithEnv
     } else {
-        dependsOn npm_run_devbuild
+        dependsOn npmDevBuildWithEnv
     }
 
     inputs.dir('src')

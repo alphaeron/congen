@@ -157,13 +157,6 @@ export const ProfileCreationForm: React.FC = () => {
       <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
         Please provide your fitness information to complete your account setup.
       </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
       <TextField
         margin="normal"
         required

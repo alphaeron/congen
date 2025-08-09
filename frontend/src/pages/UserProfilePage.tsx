@@ -23,8 +23,8 @@ export const UserProfilePage: React.FC = () => {
     return <LoadingSpinner />;
   }
 
-  // If there's an error, show error message
-  if (error) {
+  // If there's an error that's not "Profile not found", show just the error
+  if (error && !error.includes('Profile not found')) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Alert severity="error">{error}</Alert>
@@ -32,7 +32,7 @@ export const UserProfilePage: React.FC = () => {
     );
   }
 
-  // If user doesn't have a profile, show the creation form
+  // If user doesn't have a profile (or we got "Profile not found" error), show the creation form
   if (!user) {
     return (
       <Container component="main" maxWidth="sm">
