@@ -18,10 +18,6 @@ spec:
         app: migration-service
     spec:
       serviceAccountName: congen-service-account
-      initContainers:
-      - name: wait-for-postgres
-        image: mirror.gcr.io/busybox:1.35
-        command: ['sh', '-c', 'timeout 180 sh -c "until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done; echo postgres is ready;" || (echo "Timeout waiting for postgres"; exit 1)']
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000

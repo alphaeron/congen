@@ -15,3 +15,7 @@ patches:
   target:
     kind: Deployment
     name: migration-service
+- path: patches/keycloak-migrations-job-patch.yaml
+  target:
+    kind: Job
+    name: keycloak-migrations
