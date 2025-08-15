@@ -20,8 +20,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
     override fun setUp() {
         super.setUp()
         // Create a test user with real Keycloak authentication
-        val unique = System.nanoTime()
-        val userName = "GdprIntegrationTest User $unique"
         userToken = getValidToken("user")
         testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
     }

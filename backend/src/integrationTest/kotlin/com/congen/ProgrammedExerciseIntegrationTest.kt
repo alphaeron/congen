@@ -7,6 +7,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     fun `should create programmed exercise`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
@@ -39,6 +40,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     fun `should get programmed exercise by id`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
@@ -88,6 +90,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     fun `should get all programmed exercises`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
@@ -125,6 +128,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     fun `should get programmed exercises by stage`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
@@ -163,6 +167,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     fun `should update programmed exercise`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
@@ -213,6 +218,7 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
     fun `should delete programmed exercise`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
         val workoutId =
             IntegrationTestHelpers.createTestProgrammedWorkout(
