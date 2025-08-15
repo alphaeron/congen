@@ -29,19 +29,6 @@ class ApiPrefixIntegrationTest : BaseIntegrationTest() {
     }
 
     /**
-     * Tests that user endpoint is accessible with API prefix and authentication.
-     */
-    @Test
-    fun `user endpoint should be accessible with API prefix`() {
-        val token = getValidToken("service")
-        webTestClient.get()
-            .uri("/api/v1/user/")
-            .header("Authorization", "Bearer $token")
-            .exchange()
-            .expectStatus().isOk
-    }
-
-    /**
      * Tests that program endpoint is accessible with API prefix and authentication.
      */
     @Test

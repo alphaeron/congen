@@ -100,31 +100,6 @@ class UserControllerTest {
     }
 
     @Test
-    fun `getAll should return all users`() {
-        // Given
-        val now = Instant.now()
-        val users =
-            listOf(
-                User(
-                    keycloakId = KEYCLOAK_USER_ID,
-                    name = NAME,
-                    createdAt = now,
-                    updatedAt = now
-                )
-            )
-        whenever(userService.getAllUsers()).thenReturn(Mono.just(users))
-
-        // When
-        val result = userController.getAll()
-
-        // Then
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(users))
-            .verifyComplete()
-        verify(userService).getAllUsers()
-    }
-
-    @Test
     fun `getCurrentUser should return current user profile`() {
         // Given
         val now = Instant.now()

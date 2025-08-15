@@ -62,19 +62,6 @@ class UserDALTest {
     }
 
     @Test
-    fun `selectUsers should return list of users`() {
-        whenever(postgresClient.select<User>("SELECT * FROM \"user\""))
-            .thenReturn(Mono.just(users))
-
-        val result = userDAL.selectUsers()
-
-        StepVerifier.create(result)
-            .expectNext(users)
-            .verifyComplete()
-        verify(postgresClient).select<User>("SELECT * FROM \"user\"")
-    }
-
-    @Test
     fun `insertUser should return inserted user`() {
         val insertUser = mockUser(keycloakId = "0")
         val mockRow = mapOf("id" to 1)

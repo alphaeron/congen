@@ -111,20 +111,4 @@ class UserServiceTest {
             .verifyComplete()
         verify(userDAL).selectUserByKeycloakId(keycloakId)
     }
-
-    @Test
-    fun `getAllUsers should return all users successfully`() {
-        // Given
-        val users = listOf(testUser)
-        whenever(userDAL.selectUsers()).thenReturn(Mono.just(users))
-
-        // When
-        val result = userService.getAllUsers()
-
-        // Then
-        StepVerifier.create(result)
-            .expectNext(users)
-            .verifyComplete()
-        verify(userDAL).selectUsers()
-    }
 }

@@ -104,58 +104,6 @@ class UserController(
     }
 
     /**
-     * Retrieves all users in the system.
-     *
-     * This endpoint allows retrieving all user profiles in the system.
-     * The user must be authenticated and have admin privileges.
-     *
-     * @return List of all users
-     *
-     * @throws DatabaseException if database operation fails
-     */
-    @GetMapping("/")
-    @PreAuthorize("hasRole('admin') or hasRole('service')")
-    @Operation(
-        summary = "Get all users",
-        description =
-            "Retrieves all user profiles in the system. " +
-                "Only users with admin or service roles can access this endpoint."
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "All users retrieved successfully",
-                content = [Content(schema = io.swagger.v3.oas.annotations.media.Schema(implementation = Array<User>::class))]
-            ),
-            ApiResponse(
-                responseCode = "401",
-                description = "Unauthorized - user not authenticated"
-            ),
-            ApiResponse(
-                responseCode = "403",
-                description = "Forbidden - user not authorized"
-            ),
-            ApiResponse(
-                responseCode = "500",
-                description = "Internal server error"
-            )
-        ]
-    )
-    fun getAll(): Mono<ResponseEntity<List<User>>> {
-        return userService.getAllUsers()
-            .map { ResponseEntity.ok(it) }
-            .onErrorResume(DatabaseException::class.java) { e ->
-                logger.error("Database error getting all users", e)
-                Mono.just(ResponseEntity.internalServerError().build())
-            }
-            .onErrorResume { e ->
-                logger.error("Unexpected error getting all users", e)
-                Mono.just(ResponseEntity.internalServerError().build())
-            }
-    }
-
-    /**
      * Retrieves the current authenticated user's profile.
      *
      * This endpoint allows authenticated users to retrieve their own profile information.

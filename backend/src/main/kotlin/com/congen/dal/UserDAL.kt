@@ -88,19 +88,6 @@ class UserDAL(
     }
 
     /**
-     * Retrieves all users from the database.
-     *
-     * This method queries the database for all user records and returns
-     * them as a list. If no users exist, an empty list is returned.
-     *
-     * @return Mono containing a list of all users
-     */
-    fun selectUsers(): Mono<List<User>> {
-        logger.debug("Selecting all users")
-        return postgresClient.select("SELECT * FROM \"user\"")
-    }
-
-    /**
      * Inserts a new user into the database with encryption and audit logging.
      *
      * This method validates the user data, encrypts sensitive personal information,

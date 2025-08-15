@@ -75,13 +75,4 @@ class UserService(
             .doOnSuccess { logger.debug("Found user by Keycloak ID: {}", keycloakId) }
             .doOnError { e -> logger.error("Error getting user by Keycloak ID: {}", keycloakId, e) }
     }
-
-    /**
-     * Retrieves all users in the system.
-     *
-     * @return List of all users
-     */
-    fun getAllUsers(): Mono<List<User>> {
-        return userDAL.selectUsers()
-    }
 }
