@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
 import com.congen.service.GdprComplianceService
@@ -40,7 +41,6 @@ class ProgramControllerTest {
     @Mock
     private lateinit var keycloakUtil: KeycloakUtil
 
-    @Mock
     private lateinit var gdprComplianceService: GdprComplianceService
 
     private lateinit var programController: ProgramController
@@ -60,17 +60,13 @@ class ProgramControllerTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
+        gdprComplianceService = createGdprComplianceServiceSpy()
         programController = ProgramController(programService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID.toString()))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        
-        // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
+    
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 

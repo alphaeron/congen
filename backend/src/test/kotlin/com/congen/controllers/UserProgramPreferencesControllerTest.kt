@@ -6,6 +6,7 @@ import com.congen.mockUserProgramPreferences
 import com.congen.model.UserProgramPreferences
 import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
+import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -48,7 +49,7 @@ class UserProgramPreferencesControllerTest {
     fun setUp() {
         userProgramPreferencesDAL = mock()
         keycloakUtil = mock()
-        gdprComplianceService = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         userProgramPreferencesController = UserProgramPreferencesController(userProgramPreferencesDAL, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
@@ -56,16 +57,11 @@ class UserProgramPreferencesControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
 
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test
     fun `save should return saved user program preferences`() {
-        val now = Instant.now()
         val userProgramPreferences =
             mockUserProgramPreferences(
                 userId = USER_ID,
@@ -89,7 +85,6 @@ class UserProgramPreferencesControllerTest {
 
     @Test
     fun `getByUser should return user program preferences when found`() {
-        val now = Instant.now()
         val userProgramPreferences =
             mockUserProgramPreferences(
                 userId = USER_ID,

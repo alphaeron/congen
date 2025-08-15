@@ -7,6 +7,7 @@ import com.congen.service.GdprComplianceService
 import com.congen.service.UserOneRepMaxService
 import com.congen.util.KeycloakUtil
 import com.congen.util.ValidationUtil
+import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -62,14 +63,10 @@ class UserOneRepMaxControllerTest {
         userOneRepMaxService = mock()
         validationUtil = mock()
         keycloakUtil = mock()
-        gdprComplianceService = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         userOneRepMaxController = UserOneRepMaxController(userOneRepMaxDAL, userOneRepMaxService, validationUtil, keycloakUtil, gdprComplianceService)
 
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 

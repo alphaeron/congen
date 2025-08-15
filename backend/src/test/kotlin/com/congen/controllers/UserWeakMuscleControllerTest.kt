@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.UserWeakMuscle
 import com.congen.service.GdprComplianceService
+import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -25,14 +26,10 @@ class UserWeakMuscleControllerTest {
     @BeforeEach
     fun setUp() {
         dal = mock()
-        gdprComplianceService = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         controller = UserWeakMuscleController(dal, gdprComplianceService)
 
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 

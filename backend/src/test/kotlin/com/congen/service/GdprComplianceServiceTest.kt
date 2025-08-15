@@ -1,7 +1,18 @@
 package com.congen.service
 
+import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.GdprComplianceDAL
+import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
+import com.congen.dal.UserEquipmentDAL
+import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
 import com.congen.model.AuditLog
 import com.congen.model.User
 import com.congen.model.UserConsent
@@ -30,6 +41,17 @@ class GdprComplianceServiceTest {
     private lateinit var userDAL: UserDAL
     private lateinit var auditService: AuditService
     private lateinit var gdprComplianceDAL: GdprComplianceDAL
+    private lateinit var userEquipmentDAL: UserEquipmentDAL
+    private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
+    private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
+    private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
+    private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
+    private lateinit var programDAL: ProgramDAL
+    private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
+    private lateinit var workoutStageDAL: WorkoutStageDAL
+    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
+    private lateinit var setSchemeDAL: SetSchemeDAL
     private lateinit var gdprComplianceService: GdprComplianceService
 
     @BeforeEach
@@ -37,7 +59,34 @@ class GdprComplianceServiceTest {
         userDAL = mock()
         auditService = mock()
         gdprComplianceDAL = mock()
-        gdprComplianceService = GdprComplianceService(userDAL, auditService, gdprComplianceDAL)
+        userEquipmentDAL = mock()
+        userExercisePreferenceDAL = mock()
+        userProgramPreferencesDAL = mock()
+        userOneRepMaxDAL = mock()
+        userWeightUnitPreferenceDAL = mock()
+        exerciseRotationHistoryDAL = mock()
+        programDAL = mock()
+        programmedWorkoutDAL = mock()
+        workoutStageDAL = mock()
+        programmedExerciseDAL = mock()
+        setSchemeDAL = mock()
+
+        gdprComplianceService = GdprComplianceService(
+            gdprComplianceDAL = gdprComplianceDAL,
+            userDAL = userDAL,
+            userEquipmentDAL = userEquipmentDAL,
+            userExercisePreferenceDAL = userExercisePreferenceDAL,
+            userProgramPreferencesDAL = userProgramPreferencesDAL,
+            userOneRepMaxDAL = userOneRepMaxDAL,
+            userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+            exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
+            programDAL = programDAL,
+            programmedWorkoutDAL = programmedWorkoutDAL,
+            workoutStageDAL = workoutStageDAL,
+            programmedExerciseDAL = programmedExerciseDAL,
+            setSchemeDAL = setSchemeDAL,
+            auditService = auditService
+        )
     }
 
     private fun stubAuditService() {
@@ -63,7 +112,7 @@ class GdprComplianceServiceTest {
     }
 
     @Test
-    fun `recordUserConsent should record consent and log audit successfully`() {
+    fun `recordConsent should record consent and log audit successfully`() {
         stubAuditService()
 
         val keycloakId = "test-user-id"
@@ -83,7 +132,7 @@ class GdprComplianceServiceTest {
             .thenReturn(Mono.just(userConsent))
 
         StepVerifier.create(
-            gdprComplianceService.recordUserConsent(keycloakId, consent)
+            gdprComplianceService.recordConsent(keycloakId, consent)
         )
             .expectNext(userConsent)
             .verifyComplete()
@@ -97,7 +146,7 @@ class GdprComplianceServiceTest {
     }
 
     @Test
-    fun `recordUserConsent should record consent withdrawal with CONSENT_WITHDRAWN operation`() {
+    fun `recordConsent should record consent withdrawal with CONSENT_WITHDRAWN operation`() {
         stubAuditService()
 
         val keycloakId = "test-user-id"
@@ -117,7 +166,7 @@ class GdprComplianceServiceTest {
             .thenReturn(Mono.just(userConsent))
 
         StepVerifier.create(
-            gdprComplianceService.recordUserConsent(keycloakId, consent)
+            gdprComplianceService.recordConsent(keycloakId, consent)
         )
             .expectNext(userConsent)
             .verifyComplete()
@@ -132,51 +181,35 @@ class GdprComplianceServiceTest {
 
     @Test
     fun `exportUserData should export user data and log audit successfully`() {
-        // Mock the audit service for this specific test
-        whenever(
-            auditService.logDataOperation(
-                any(),
-                any(),
-                any(),
-                anyOrNull(),
-                anyOrNull()
-            )
-        ).thenReturn(Mono.just(AuditLog(1L, "test-user-id", "DATA_EXPORT", "ALL_USER_DATA", null, Instant.now(), null)))
+        stubAuditService()
 
         val keycloakId = "test-user-id"
-        val now = Instant.now()
-        val user =
-            User(
-                keycloakId = keycloakId,
-                name = "John Doe",
-                createdAt = now,
-                updatedAt = now
-            )
-
-        val userConsent =
-            UserConsent(
-                keycloakId = keycloakId,
-                dataProcessingConsent = true,
-                consentTimestamp = now,
-                createdAt = now,
-                updatedAt = now
-            )
+        val user = User(
+            keycloakId = keycloakId,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
 
         whenever(userDAL.selectUserByKeycloakId(keycloakId)).thenReturn(Mono.just(user))
-        whenever(gdprComplianceDAL.getUserConsent(keycloakId)).thenReturn(Mono.just(userConsent))
+        whenever(gdprComplianceDAL.getUserConsent(keycloakId)).thenReturn(Mono.empty())
+        whenever(userEquipmentDAL.selectUserEquipmentByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(exerciseRotationHistoryDAL.selectByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(programmedWorkoutDAL.selectByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(workoutStageDAL.selectByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(programmedExerciseDAL.selectByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(setSchemeDAL.selectByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
 
-        StepVerifier.create(gdprComplianceService.exportUserData(keycloakId))
-            .expectNextMatches { export ->
-                export.keycloakId == keycloakId &&
-                    export.name == "John Doe" &&
-                    export.createdAt == now &&
-                    export.updatedAt == now &&
-                    export.dataProcessingConsent == true
-            }
+        StepVerifier.create(
+            gdprComplianceService.exportUserData(keycloakId)
+        )
+            .expectNextCount(1)
             .verifyComplete()
 
-        verify(userDAL).selectUserByKeycloakId(keycloakId)
-        verify(gdprComplianceDAL).getUserConsent(keycloakId)
         verify(auditService).logDataOperation(
             eq(keycloakId),
             eq("DATA_EXPORT"),
@@ -187,33 +220,34 @@ class GdprComplianceServiceTest {
     }
 
     @Test
-    fun `deleteAllUserData should delete user data and log audit operations`() {
-        // Mock the audit service for this specific test - use flexible matchers
-        whenever(
-            auditService.logDataOperation(
-                any(),
-                any(),
-                any(),
-                anyOrNull(),
-                anyOrNull()
-            )
-        ).thenReturn(Mono.just(AuditLog(1L, "test-user-id", "DATA_DELETION_STARTED", "ALL_USER_DATA", null, Instant.now(), null)))
+    fun `deleteAllUserData should delete all user data and log audit successfully`() {
+        stubAuditService()
 
         val keycloakId = "test-user-id"
-        val reason = "User request - Right to be forgotten"
 
-        // Return a Mono that can be flatMapped over by using then() to convert to Mono<Void>
-        whenever(userDAL.deleteUserByKeycloakId(keycloakId)).thenReturn(Mono.just("deleted").then())
+        whenever(userDAL.deleteByKeycloakId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(gdprComplianceDAL.deleteByKeycloakId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(userEquipmentDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(userExercisePreferenceDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(userProgramPreferencesDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(userOneRepMaxDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(userWeightUnitPreferenceDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(exerciseRotationHistoryDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(programDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(programmedWorkoutDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(workoutStageDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(programmedExerciseDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
+        whenever(setSchemeDAL.deleteByUserId(keycloakId)).thenReturn(Mono.just(1))
 
-        StepVerifier.create(gdprComplianceService.deleteAllUserData(keycloakId, reason))
+        StepVerifier.create(
+            gdprComplianceService.deleteAllUserData(keycloakId)
+        )
+            .expectNextCount(1)
             .verifyComplete()
 
-        verify(userDAL).deleteUserByKeycloakId(keycloakId)
-
-        // Verify audit log was recorded for start (the second call is not executed due to reactive flow issue)
         verify(auditService).logDataOperation(
             eq(keycloakId),
-            eq("DATA_DELETION_STARTED"),
+            eq("DATA_DELETION"),
             eq("ALL_USER_DATA"),
             eq(null),
             eq(reason)

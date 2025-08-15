@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
@@ -47,6 +48,7 @@ class ConjugateWorkoutGeneratorControllerTest {
         conjugateWorkoutGeneratorService = mock()
         programService = mock()
         keycloakUtil = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         conjugateWorkoutGeneratorController =
             ConjugateWorkoutGeneratorController(
                 conjugateWorkoutGeneratorService,
@@ -60,10 +62,6 @@ class ConjugateWorkoutGeneratorControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
 
         testProgram =

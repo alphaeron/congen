@@ -1,6 +1,6 @@
 package com.congen.controllers
 
-import com.congen.dal.WorkoutStageDAL
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
@@ -17,9 +17,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -30,22 +27,22 @@ import reactor.test.StepVerifier
 import java.time.Instant
 import java.util.stream.Stream
 
+/**
+ * Unit tests for WorkoutStageController.
+ *
+ * These tests verify the REST API endpoints for workout stage operations,
+ * including CRUD operations and error handling.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
 class WorkoutStageControllerTest {
-    @Mock
-    private lateinit var workoutStageDAL: WorkoutStageDAL
-
-    @Mock
-    private lateinit var programService: ProgramService
-
-    @Mock
-    private lateinit var programmedWorkoutService: ProgrammedWorkoutService
-
-    @Mock
-    private lateinit var gdprComplianceService: GdprComplianceService
-
-    private lateinit var workoutStageController: WorkoutStageController
     private lateinit var workoutStageService: WorkoutStageService
+    private lateinit var programService: ProgramService
+    private lateinit var programmedWorkoutService: ProgrammedWorkoutService
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
+    private lateinit var workoutStageController: WorkoutStageController
 
     private val currentUserId = "test-keycloak-user-id"
 
@@ -58,8 +55,9 @@ class WorkoutStageControllerTest {
         private const val STAGE_TYPE_ID_2 = 2
         private const val POSITION_1 = 1
         private const val POSITION_2 = 2
-        private const val WARMUP_NAME = "Warmup"
+        private const val WARMUP_NAME = "Warm-up"
         private const val MAIN_WORK_NAME = "Main Work"
+        private const val COOLDOWN_NAME = "Cool-down"
         private const val NON_EXISTENT_ID = 999L
 
         @JvmStatic
@@ -197,23 +195,18 @@ class WorkoutStageControllerTest {
 
     @BeforeEach
     fun setUp() {
-        MockitoAnnotations.openMocks(this)
         workoutStageService = mock()
         programService = mock()
         programmedWorkoutService = mock()
         keycloakUtil = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil, gdprComplianceService)
+
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        
-        // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent<Any>(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
-        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test
@@ -250,8 +243,8 @@ class WorkoutStageControllerTest {
         // Mock the security checks for all not found scenarios
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        whenever(workoutStageService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
-        whenever(programmedWorkoutService.selectProgrammedWorkoutById(anyLong())).thenReturn(
+        whenever(workoutStageService.isOwner(any(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(any())).thenReturn(
             Mono.just(
                 ProgrammedWorkout(
                     id = PROGRAMMED_WORKOUT_ID,
@@ -263,8 +256,8 @@ class WorkoutStageControllerTest {
                 )
             )
         )
-        whenever(programService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
-        whenever(programmedWorkoutService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+        whenever(programService.isOwner(any(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.isOwner(any(), any())).thenReturn(Mono.just(true))
 
         val result = testAction(workoutStageController, workoutStageService)
         StepVerifier.create(result)
@@ -285,8 +278,8 @@ class WorkoutStageControllerTest {
         // Mock the security checks for all error scenarios
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        whenever(workoutStageService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
-        whenever(programmedWorkoutService.selectProgrammedWorkoutById(anyLong())).thenReturn(
+        whenever(workoutStageService.isOwner(any(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(any())).thenReturn(
             Mono.just(
                 ProgrammedWorkout(
                     id = PROGRAMMED_WORKOUT_ID,
@@ -298,8 +291,8 @@ class WorkoutStageControllerTest {
                 )
             )
         )
-        whenever(programService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
-        whenever(programmedWorkoutService.isOwner(anyLong(), any())).thenReturn(Mono.just(true))
+        whenever(programService.isOwner(any(), any())).thenReturn(Mono.just(true))
+        whenever(programmedWorkoutService.isOwner(any(), any())).thenReturn(Mono.just(true))
 
         val result = testAction(workoutStageController, workoutStageService)
         if (expectError) {

@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.exceptions.DatabaseException
 import com.congen.model.ExerciseRotationHistory
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
@@ -47,17 +49,13 @@ class ExerciseRotationHistoryControllerTest {
         exerciseRotationHistoryDAL = mock()
         exerciseRotationHistoryService = mock()
         keycloakUtil = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         exerciseRotationHistoryController = ExerciseRotationHistoryController(exerciseRotationHistoryService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         
-        // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 

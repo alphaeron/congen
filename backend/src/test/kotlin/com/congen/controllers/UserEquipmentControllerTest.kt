@@ -5,6 +5,7 @@ import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserEquipment
 import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
+import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -45,7 +46,7 @@ class UserEquipmentControllerTest {
     fun setUp() {
         userEquipmentDAL = mock()
         keycloakUtil = mock()
-        gdprComplianceService = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
@@ -53,10 +54,6 @@ class UserEquipmentControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
 
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 

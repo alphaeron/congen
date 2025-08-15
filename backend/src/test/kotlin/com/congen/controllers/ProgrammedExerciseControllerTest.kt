@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
@@ -67,6 +68,7 @@ class ProgrammedExerciseControllerTest {
         programmedExerciseService = mock()
         workoutStageService = mock()
         keycloakUtil = mock()
+        gdprComplianceService = createGdprComplianceServiceSpy()
         programmedExerciseController = ProgrammedExerciseController(programmedExerciseService, workoutStageService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
@@ -74,10 +76,6 @@ class ProgrammedExerciseControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
 
         testProgrammedExercise =

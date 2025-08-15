@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.mockSetScheme
 import com.congen.model.SetScheme
 import com.congen.service.GdprComplianceService
@@ -39,7 +40,6 @@ class SetSchemeControllerTest {
     @Mock
     private lateinit var programmedExerciseService: ProgrammedExerciseService
 
-    @Mock
     private lateinit var gdprComplianceService: GdprComplianceService
 
     private lateinit var setSchemeController: SetSchemeController
@@ -61,6 +61,7 @@ class SetSchemeControllerTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
+        gdprComplianceService = createGdprComplianceServiceSpy()
         setSchemeController = SetSchemeController(setSchemeService, keycloakUtil, programmedExerciseService, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
@@ -68,10 +69,6 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.withUserConsent(any<String>(), any())).thenAnswer { invocation ->
-            val callback = invocation.getArgument<() -> Mono<*>>(1)
-            callback()
-        }
         whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
