@@ -51,7 +51,7 @@ class GdprControllerTest {
             )
         `when`(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         `when`(
-            gdprComplianceService.recordUserConsent(
+            gdprComplianceService.recordConsent(
                 eq(keycloakId),
                 eq(consent)
             )
@@ -67,7 +67,7 @@ class GdprControllerTest {
             .verifyComplete()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(gdprComplianceService).recordUserConsent(
+        verify(gdprComplianceService).recordConsent(
             eq(keycloakId),
             eq(consent)
         )
@@ -88,7 +88,7 @@ class GdprControllerTest {
             )
         `when`(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         `when`(
-            gdprComplianceService.recordUserConsent(
+            gdprComplianceService.recordConsent(
                 eq(keycloakId),
                 eq(consent)
             )
@@ -142,6 +142,15 @@ class GdprControllerTest {
                 updatedAt = Instant.now(),
                 dataProcessingConsent = true,
                 consentTimestamp = Instant.now(),
+                userEquipment = emptyList(),
+                userExercisePreferences = emptyList(),
+                userProgramPreferences = null,
+                userOneRepMax = emptyList(),
+                userWeightUnitPreferences = emptyList(),
+                exerciseRotationHistory = emptyList(),
+                trainingPrograms = emptyList(),
+                auditLogs = emptyList(),
+                dataRetentionPolicies = emptyList(),
                 exportTimestamp = Instant.now()
             )
 
@@ -174,6 +183,15 @@ class GdprControllerTest {
                 updatedAt = Instant.now(),
                 dataProcessingConsent = true,
                 consentTimestamp = Instant.now(),
+                userEquipment = emptyList(),
+                userExercisePreferences = emptyList(),
+                userProgramPreferences = null,
+                userOneRepMax = emptyList(),
+                userWeightUnitPreferences = emptyList(),
+                exerciseRotationHistory = emptyList(),
+                trainingPrograms = emptyList(),
+                auditLogs = emptyList(),
+                dataRetentionPolicies = emptyList(),
                 exportTimestamp = Instant.now()
             )
 
@@ -194,10 +212,7 @@ class GdprControllerTest {
 
         `when`(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         `when`(
-            gdprComplianceService.deleteAllUserData(
-                keycloakId = keycloakId,
-                reason = "User request via GDPR endpoint - Right to be forgotten"
-            )
+            gdprComplianceService.deleteAllPersonalData(keycloakId)
         ).thenReturn(Mono.empty())
 
         StepVerifier.create(gdprController.deleteAllPersonalData(confirmation))
@@ -208,10 +223,7 @@ class GdprControllerTest {
             .verifyComplete()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(gdprComplianceService).deleteAllUserData(
-            keycloakId = keycloakId,
-            reason = "User request via GDPR endpoint - Right to be forgotten"
-        )
+        verify(gdprComplianceService).deleteAllPersonalData(keycloakId)
     }
 
     @Test
@@ -224,10 +236,7 @@ class GdprControllerTest {
 
         // Verify that no services were called with invalid confirmation
         verify(keycloakUtil, never()).getCurrentUserId()
-        verify(gdprComplianceService, never()).deleteAllUserData(
-            any(),
-            any()
-        )
+        verify(gdprComplianceService, never()).deleteAllPersonalData(any())
     }
 
     @Test

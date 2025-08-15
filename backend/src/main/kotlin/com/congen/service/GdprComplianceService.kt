@@ -164,7 +164,7 @@ class GdprComplianceService(
                             .map { exercises ->
                                 WorkoutStageExport(
                                     id = stage.id,
-                                    stageTypeId = stage.stageTypeId,
+                                    stageTypeId = stage.stageTypeId.toLong(),
                                     position = stage.position,
                                     name = stage.name,
                                     createdAt = stage.createdAt,

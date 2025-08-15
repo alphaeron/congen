@@ -1,4 +1,19 @@
-implement user consent exception
+in the integration tests helpers, add a create user consent helper if it doesn't exist.
+
+Ensure the integration tests call that with the appropriate user making the request in the test so consent is there for validation.
+
+updateUserConsent needs to just use the returning from the query
+
+use actual data types instead of new export data types for consistency.
+
+
+Ensure the unit and integration tests are up to date with the changes needed for gdpr validation
+
+is there any gdpr functionality that is missing
+
+is the gdpr functionality completely exposed in the frontend?
+
+
 
 user controllers should also allow admin/service deletion
 

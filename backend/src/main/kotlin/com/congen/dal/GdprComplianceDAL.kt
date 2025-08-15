@@ -1,6 +1,8 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.model.AuditLog
+import com.congen.model.DataRetentionPolicy
 import com.congen.model.UserConsent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -117,7 +119,7 @@ class GdprComplianceDAL(
     ): Mono<UserConsent> {
         logger.debug("Updating consent for user: {} to {}", keycloakId, consent)
 
-        return postgresClient.update(
+        return postgresClient.update<Map<String, Any>>(
             """
             INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
             VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -129,6 +131,63 @@ class GdprComplianceDAL(
             """.trimIndent(),
             keycloakId,
             consent
-        )
+        ).then(getUserConsent(keycloakId))
+    }
+
+    /**
+     * Records user consent for data processing.
+     *
+     * This method creates a consent record for a user with the specified consent type.
+     *
+     * @param keycloakId The user's Keycloak ID
+     * @param consentType The type of consent being recorded
+     * @param consentGiven Whether consent is given
+     * @return Mono that completes when the record is created
+     */
+    fun recordConsent(
+        keycloakId: String,
+        consentType: String,
+        consentGiven: Boolean
+    ): Mono<Void> {
+        logger.debug("Recording consent for user: {} - type: {} - consent: {}", keycloakId, consentType, consentGiven)
+
+        return postgresClient.update<Map<String, Any>>(
+            """
+            INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
+            VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+            ON CONFLICT (keycloak_id)
+            DO UPDATE SET
+                data_processing_consent = EXCLUDED.data_processing_consent,
+                consent_timestamp = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            """.trimIndent(),
+            keycloakId,
+            consentGiven
+        ).then()
+    }
+
+    /**
+     * Retrieves audit logs for a user.
+     *
+     * @param keycloakId The user's Keycloak ID
+     * @return Mono containing a list of audit logs
+     */
+    fun getUserAuditLogs(keycloakId: String): Mono<List<AuditLog>> {
+        logger.debug("Retrieving audit logs for user: {}", keycloakId)
+        
+        // For now, return empty list as audit logs table may not exist yet
+        return Mono.just(emptyList<AuditLog>())
+    }
+
+    /**
+     * Retrieves data retention policies.
+     *
+     * @return Mono containing a list of data retention policies
+     */
+    fun getDataRetentionPolicies(): Mono<List<DataRetentionPolicy>> {
+        logger.debug("Retrieving data retention policies")
+        
+        // For now, return empty list as retention policies table may not exist yet
+        return Mono.just(emptyList<DataRetentionPolicy>())
     }
 }

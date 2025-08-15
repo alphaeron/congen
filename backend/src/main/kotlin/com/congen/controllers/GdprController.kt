@@ -101,7 +101,7 @@ class GdprController(
             .flatMap { requestingUserId ->
                 logger.info("Recording consent for user: {} - consent: {}", requestingUserId, consent)
                 // User can only modify their own consent (implicit check since we use their ID)
-                gdprComplianceService.recordUserConsent(requestingUserId, consent)
+                gdprComplianceService.recordConsent(requestingUserId, consent)
                     .map { userConsentRecord ->
                         // Return the complete consent record from the database
                         ResponseEntity.ok(userConsentRecord)
@@ -250,12 +250,10 @@ class GdprController(
             .flatMap { requestingUserId ->
                 logger.warn("Deleting all personal data for user: {}", requestingUserId)
                 // User can only delete their own data (implicit check since we use their ID)
-                gdprComplianceService.deleteAllUserData(
-                    keycloakId = requestingUserId,
-                    reason = "User request via GDPR endpoint - Right to be forgotten"
-                ).thenReturn(
-                    ResponseEntity.ok().build<Void>()
-                )
+                gdprComplianceService.deleteAllPersonalData(requestingUserId)
+                    .thenReturn(
+                        ResponseEntity.ok().build<Void>()
+                    )
             }
             .doOnError { error ->
                 logger.error("Failed to delete all personal data", error)

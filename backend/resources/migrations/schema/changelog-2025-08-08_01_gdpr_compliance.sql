@@ -12,7 +12,6 @@ CREATE TABLE gdpr_audit_log (
   performed_by VARCHAR(255), -- User who performed the operation
   timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
   additional_info TEXT, -- Additional context or details
-  CONSTRAINT fk_gdpr_audit_log_user FOREIGN KEY(keycloak_id) REFERENCES "user"(keycloak_id) ON DELETE CASCADE
 );
 
 -- Create indexes for audit log queries

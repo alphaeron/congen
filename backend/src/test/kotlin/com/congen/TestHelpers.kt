@@ -495,3 +495,46 @@ fun <T : Any> assertFluxEmpty(flux: Flux<T>) {
     StepVerifier.create(flux)
         .verifyComplete()
 }
+
+/**
+ * Creates a spy of GdprComplianceService with all dependencies mocked.
+ * This helper function constructs all the required mocks for the GdprComplianceService
+ * and returns a spy of the service for testing purposes.
+ *
+ * @return A spy of GdprComplianceService with all dependencies mocked
+ */
+fun createGdprComplianceServiceSpy(): com.congen.service.GdprComplianceService {
+    val gdprComplianceDAL = org.mockito.kotlin.mock<com.congen.dal.GdprComplianceDAL>()
+    val userDAL = org.mockito.kotlin.mock<com.congen.dal.UserDAL>()
+    val userEquipmentDAL = org.mockito.kotlin.mock<com.congen.dal.UserEquipmentDAL>()
+    val userExercisePreferenceDAL = org.mockito.kotlin.mock<com.congen.dal.UserExercisePreferenceDAL>()
+    val userProgramPreferencesDAL = org.mockito.kotlin.mock<com.congen.dal.UserProgramPreferencesDAL>()
+    val userOneRepMaxDAL = org.mockito.kotlin.mock<com.congen.dal.UserOneRepMaxDAL>()
+    val userWeightUnitPreferenceDAL = org.mockito.kotlin.mock<com.congen.dal.UserWeightUnitPreferenceDAL>()
+    val exerciseRotationHistoryDAL = org.mockito.kotlin.mock<com.congen.dal.ExerciseRotationHistoryDAL>()
+    val programDAL = org.mockito.kotlin.mock<com.congen.dal.ProgramDAL>()
+    val programmedWorkoutDAL = org.mockito.kotlin.mock<com.congen.dal.ProgrammedWorkoutDAL>()
+    val workoutStageDAL = org.mockito.kotlin.mock<com.congen.dal.WorkoutStageDAL>()
+    val programmedExerciseDAL = org.mockito.kotlin.mock<com.congen.dal.ProgrammedExerciseDAL>()
+    val setSchemeDAL = org.mockito.kotlin.mock<com.congen.dal.SetSchemeDAL>()
+    val auditService = org.mockito.kotlin.mock<com.congen.service.AuditService>()
+
+    val gdprComplianceService = com.congen.service.GdprComplianceService(
+        gdprComplianceDAL = gdprComplianceDAL,
+        userDAL = userDAL,
+        userEquipmentDAL = userEquipmentDAL,
+        userExercisePreferenceDAL = userExercisePreferenceDAL,
+        userProgramPreferencesDAL = userProgramPreferencesDAL,
+        userOneRepMaxDAL = userOneRepMaxDAL,
+        userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+        exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
+        programDAL = programDAL,
+        programmedWorkoutDAL = programmedWorkoutDAL,
+        workoutStageDAL = workoutStageDAL,
+        programmedExerciseDAL = programmedExerciseDAL,
+        setSchemeDAL = setSchemeDAL,
+        auditService = auditService
+    )
+
+    return org.mockito.kotlin.spy(gdprComplianceService)
+}
