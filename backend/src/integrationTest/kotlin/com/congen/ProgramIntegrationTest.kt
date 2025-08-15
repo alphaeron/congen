@@ -133,6 +133,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should delete program`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId =
             IntegrationTestHelpers.createTestProgram(
                 webTestClient,
@@ -166,6 +168,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get programs by user id without filter`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program 1", token = token)
         // Create second program as inactive to avoid unique constraint violation
         webTestClient.post()
@@ -188,6 +192,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get active programs by user id`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Active Program", token = token)
 
         webTestClient.get()
@@ -205,6 +211,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get inactive programs by user id`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
 
         // Deactivate the program
@@ -229,6 +237,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should deactivate other programs when creating new active program`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Create first program (should be active by default)
         val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
@@ -265,6 +275,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should create inactive program without deactivating others`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Create first program (should be active by default)
         val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
