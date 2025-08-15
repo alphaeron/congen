@@ -11,7 +11,6 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
     override fun setUp() {
         super.setUp()
         // Create a single test user to avoid keycloak_user_id conflicts
-        val unique = System.nanoTime()
         userToken = getValidToken("user")
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Create user consent for GDPR compliance
@@ -103,13 +102,13 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
 
         // Update preferences
         webTestClient.patch()
-            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=75")
+            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=4&session_time_length_in_minutes=75")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.user_id").isEqualTo(userId)
-            .jsonPath("$.program_days_per_week").isEqualTo(5)
+            .jsonPath("$.program_days_per_week").isEqualTo(4)
             .jsonPath("$.session_time_length_in_minutes").isEqualTo(75)
 
         // Verify updated preferences
@@ -120,7 +119,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.user_id").isEqualTo(userId)
-            .jsonPath("$.program_days_per_week").isEqualTo(5)
+            .jsonPath("$.program_days_per_week").isEqualTo(4)
             .jsonPath("$.session_time_length_in_minutes").isEqualTo(75)
     }
 }
