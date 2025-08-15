@@ -218,6 +218,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
         // Create a single test user for this test
         val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment and program preferences
@@ -281,6 +283,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
         // Create a single test user for this test
         val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment, program preferences, and one rep maxes
@@ -343,6 +347,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
         // Create a single test user for this test
         val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment, program preferences, and one rep maxes
