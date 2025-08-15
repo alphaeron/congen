@@ -19,6 +19,8 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
         // Ensure a user exists before each test and use the same token throughout
         testToken = getValidToken("user")
         testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = testToken)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, testToken)
     }
 
     @Test
