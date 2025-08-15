@@ -1,5 +1,7 @@
 We also need to make sure they have the test cases to validate that the consent is working as expected when no consent exists
 
+println removal
+
 in the integration tests helpers, add a create user consent helper if it doesn't exist.
 
 gdprComplianceDAL.recordConsent is unused?

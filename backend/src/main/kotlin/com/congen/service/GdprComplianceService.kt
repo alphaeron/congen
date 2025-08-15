@@ -366,6 +366,7 @@ class GdprComplianceService(
         return gdprComplianceDAL.getUserConsent(keycloakId)
             .map { it.dataProcessingConsent }
             .onErrorReturn(false)
+            .defaultIfEmpty(false)
     }
 
     /**
