@@ -37,6 +37,15 @@ interface KeycloakUtil {
      * @return Mono emitting true if the user has the role, false otherwise
      */
     fun hasRole(role: String): Mono<Boolean>
+
+    /**
+     * Gets the user's full name from the JWT token claims.
+     * Attempts to construct the name from given_name and family_name,
+     * falls back to the name claim if available.
+     *
+     * @return Mono emitting the user's full name, or empty if not available
+     */
+    fun getCurrentUserName(): Mono<String>
 }
 
 /**
@@ -75,4 +84,23 @@ class KeycloakUtilImpl : KeycloakUtil {
             }
 
     override fun hasRole(role: String): Mono<Boolean> = getCurrentUserRoles().map { it.contains(role) }
+
+    override fun getCurrentUserName(): Mono<String> =
+        ReactiveSecurityContextHolder.getContext()
+            .mapNotNull { ctx ->
+                val auth = ctx.authentication as? JwtAuthenticationToken
+                val jwt = auth?.token as? Jwt
+                val claims = jwt?.claims ?: return@mapNotNull null
+
+                // Try to construct name from given_name and family_name
+                val givenName = claims["given_name"] as? String
+                val familyName = claims["family_name"] as? String
+
+                if (!givenName.isNullOrBlank() && !familyName.isNullOrBlank()) {
+                    "$givenName $familyName".trim()
+                } else {
+                    // Fallback to the name claim
+                    claims["name"] as? String
+                }
+            }
 }

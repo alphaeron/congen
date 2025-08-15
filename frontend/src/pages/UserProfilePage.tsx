@@ -1,8 +1,7 @@
-import { Container, Alert } from '@mui/material';
-import React from 'react';
+import { Container, Alert, CircularProgress, Typography } from '@mui/material';
+import React, { useEffect } from 'react';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
-import { ProfileCreationForm } from '../components/ProfileCreationForm';
 import { UserProfile } from '../components/UserProfile';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -10,21 +9,28 @@ import { useAuth } from '../contexts/AuthContext';
  * User profile page component.
  *
  * Handles routing and data gathering for the user profile page.
- * Shows profile creation form if user doesn't have a profile,
+ * Automatically creates user profile from Keycloak information if needed,
  * otherwise shows the UserProfile component for the interface.
  *
  * @return User profile page component
  */
 export const UserProfilePage: React.FC = () => {
-  const { user, isLoading, error } = useAuth();
+  const { user, isLoading, error, clearError } = useAuth();
 
-  // Show loading spinner while checking authentication status
+  // Clear any errors when component mounts
+  useEffect(() => {
+    if (error) {
+      clearError();
+    }
+  }, [error, clearError]);
+
+  // Show loading spinner while checking authentication status or creating profile
   if (isLoading) {
     return <LoadingSpinner />;
   }
 
-  // If there's an error that's not "Profile not found", show just the error
-  if (error && !error.includes('Profile not found')) {
+  // If there's an error, show the error
+  if (error) {
     return (
       <Container maxWidth="md" sx={{ mt: 4 }}>
         <Alert severity="error">{error}</Alert>
@@ -32,11 +38,17 @@ export const UserProfilePage: React.FC = () => {
     );
   }
 
-  // If user doesn't have a profile (or we got "Profile not found" error), show the creation form
+  // If user doesn't have a profile yet, show a loading message
   if (!user) {
     return (
-      <Container component="main" maxWidth="sm">
-        <ProfileCreationForm />
+      <Container component="main" maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
+        <CircularProgress sx={{ mb: 2 }} />
+        <Typography variant="h6" component="h1" gutterBottom>
+          Creating Your Profile
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Your profile is being created automatically using your Keycloak information...
+        </Typography>
       </Container>
     );
   }

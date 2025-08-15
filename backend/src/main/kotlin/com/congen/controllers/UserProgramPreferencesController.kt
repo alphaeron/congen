@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.model.UserProgramPreferences
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -58,6 +59,7 @@ import reactor.core.publisher.Mono
 class UserProgramPreferencesController(
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
     private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -103,9 +105,18 @@ class UserProgramPreferencesController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Saving user program preferences: {}", userId)
-                userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-                    .map { ResponseEntity.ok(it) }
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Saving user program preferences: {}", userId)
+                        userProgramPreferencesDAL.insertUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+                            .map { ResponseEntity.ok(it) }
+                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only create preferences for themselves"))
             }
@@ -145,14 +156,23 @@ class UserProgramPreferencesController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                userProgramPreferencesDAL.selectUserProgramPreferences(userId)
-                    .map {
-                        logger.debug("Found user program preferences: {}", userId)
-                        ResponseEntity.ok(it)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userProgramPreferencesDAL.selectUserProgramPreferences(userId)
+                            .map {
+                                logger.debug("Found user program preferences: {}", userId)
+                                ResponseEntity.ok(it)
+                            }
+                            .doOnError { e ->
+                                logger.error("Error getting user program preferences: {}", userId, e)
+                            }
                     }
-                    .doOnError { e ->
-                        logger.error("Error getting user program preferences: {}", userId, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own preferences"))
             }
@@ -200,12 +220,14 @@ class UserProgramPreferencesController(
     ): Mono<ResponseEntity<UserProgramPreferences>> {
         return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
             if (currentUserId == userId) {
-                logger.info("Updating user program preferences: {}", userId)
-                userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error("Error updating user program preferences: {} - {}", userId, programDaysPerWeek, e)
-                    }
+                gdprComplianceService.withUserConsent(currentUserId) {
+                    logger.info("Updating user program preferences: {}", userId)
+                    userProgramPreferencesDAL.updateUserProgramPreferences(userId, programDaysPerWeek, sessionTimeLengthInMinutes)
+                        .map { ResponseEntity.ok(it) }
+                        .doOnError { e ->
+                            logger.error("Error updating user program preferences: {} - {}", userId, programDaysPerWeek, e)
+                        }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only update their own preferences"))
             }
@@ -242,12 +264,14 @@ class UserProgramPreferencesController(
     ): Mono<ResponseEntity<UserProgramPreferences>> {
         return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
             if (currentUserId == userId) {
-                logger.info("Deleting user program preferences: {}", userId)
-                userProgramPreferencesDAL.deleteUserProgramPreferences(userId)
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error("Error deleting user program preferences: {}", userId, e)
-                    }
+                gdprComplianceService.withUserConsent(currentUserId) {
+                    logger.info("Deleting user program preferences: {}", userId)
+                    userProgramPreferencesDAL.deleteUserProgramPreferences(userId)
+                        .map { ResponseEntity.ok(it) }
+                        .doOnError { e ->
+                            logger.error("Error deleting user program preferences: {}", userId, e)
+                        }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only delete their own preferences"))
             }

@@ -7,7 +7,6 @@ import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
 import com.congen.model.User
 import com.congen.model.UserOneRepMax
-import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -21,9 +20,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 object IntegrationTestHelpers {
     // Common test data constants
     const val TEST_USER_NAME = "Integration Test User"
-    const val TEST_USER_AGE = 30
-    const val TEST_USER_HEIGHT = 180.0
-    const val TEST_USER_WEIGHT = 75.0
 
     const val TEST_EQUIPMENT_NAME = "bench"
     const val TEST_EQUIPMENT_DESCRIPTION = "A bench with a foam pad, commonly used for the bench press or other similar exercises."
@@ -62,35 +58,24 @@ object IntegrationTestHelpers {
      * Creates a test user via the API and returns the user's Keycloak ID.
      * This function works with the new authentication flow that uses Keycloak user IDs.
      * The Keycloak user ID is automatically extracted from the JWT token.
+     * The controller extracts user info from the JWT token.
+     *
+     * @param webTestClient The WebTestClient to use for API calls
+     * @param token The JWT token to use for authentication (optional)
+     * @return The Keycloak ID of the created user
      */
     fun createTestUser(
         webTestClient: WebTestClient,
-        name: String = TEST_USER_NAME,
-        age: Int = TEST_USER_AGE,
-        height: Double = TEST_USER_HEIGHT,
-        weight: Double = TEST_USER_WEIGHT,
-        unit: WeightUnit? = null,
         token: String? = null,
     ): String {
-        val baseUri =
-            "/api/v1/user/?name=$name" +
-                "&age=$age" +
-                "&height=$height" +
-                "&weight=$weight"
+        val baseUri = "/api/v1/user/"
 
         // Add authorization header - use provided token or get a default one
         val authToken = token ?: BaseIntegrationTest.getDefaultTestToken()
 
-        val finalUri =
-            if (unit != null) {
-                "$baseUri&unit=${unit.name}"
-            } else {
-                baseUri
-            }
-
         val request =
             webTestClient.post()
-                .uri(finalUri)
+                .uri(baseUri)
 
         request.header("Authorization", "Bearer $authToken")
 
@@ -110,16 +95,38 @@ object IntegrationTestHelpers {
     }
 
     /**
-     * Retrieves a test user by Keycloak ID via the API.
+     * Creates consent for the authenticated user.
+     *
+     * @param webTestClient The WebTestClient to use for API calls
+     * @param token The JWT token to use for authentication
+     * @param hasConsent Whether the user has given consent for data processing (defaults to true)
+     */
+    fun createUserConsent(
+        webTestClient: WebTestClient,
+        token: String,
+        hasConsent: Boolean = true,
+    ) {
+        val consentRequest =
+            webTestClient.post()
+                .uri("/api/v1/gdpr/consent?consent=$hasConsent")
+                .header("Authorization", "Bearer $token")
+
+        consentRequest
+            .exchange()
+            .expectStatus().isOk()
+    }
+
+    /**
+     * Retrieves the current test user's profile via the API.
+     * Uses the /me endpoint which returns the profile of the authenticated user.
      */
     fun getTestUser(
         webTestClient: WebTestClient,
-        keycloakId: String,
         token: String? = null
     ): User {
         val request =
             webTestClient.get()
-                .uri("/api/v1/user/$keycloakId")
+                .uri("/api/v1/user/me")
 
         // Add authorization header if token is provided
         if (token != null) {

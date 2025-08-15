@@ -12,7 +12,7 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
         // Create a single test user to avoid keycloak_user_id conflicts
         val unique = System.nanoTime()
         val serviceToken = getValidToken("service")
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = serviceToken)
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = serviceToken)
     }
 
     @Test

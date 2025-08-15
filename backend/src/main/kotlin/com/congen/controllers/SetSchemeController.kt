@@ -1,9 +1,11 @@
 package com.congen.controllers
 
 import com.congen.model.SetScheme
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgrammedExerciseService
 import com.congen.service.SetSchemeService
 import com.congen.util.KeycloakUtil
+import reactor.core.publisher.Flux
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -59,6 +61,7 @@ class SetSchemeController(
     private val setSchemeService: SetSchemeService,
     private val keycloakUtil: KeycloakUtil,
     private val programmedExerciseService: ProgrammedExerciseService,
+    private val gdprComplianceService: GdprComplianceService,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -110,27 +113,15 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val setSchemeMono =
-                if (isAdminOrService) {
-                    setSchemeService.createSetScheme(
-                        programmedExerciseId,
-                        setNumber,
-                        isAmrap,
-                        isEmom,
-                        useTempo,
-                        eccentricTempo,
-                        isometricTempo,
-                        concentricTempo,
-                        targetWeight,
-                        performedWeight,
-                        targetRepCount,
-                        performedRepCount,
-                        restSeconds,
-                        unit
-                    )
-                } else {
-                    programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        programmedExerciseService.getOwner(programmedExerciseId)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.createSetScheme(
                                 programmedExerciseId,
                                 setNumber,
@@ -146,13 +137,14 @@ class SetSchemeController(
                                 performedRepCount,
                                 restSeconds,
                                 unit
-                            )
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                            ).map { ResponseEntity.ok(it) }
+                                .doOnError { e -> logger.error("Error creating set scheme", e) }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
                 }
-            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+            }
         }
     }
 
@@ -174,19 +166,24 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val setSchemeMono =
-                if (isAdminOrService) {
-                    setSchemeService.selectSetSchemeById(id)
-                } else {
-                    setSchemeService.isOwner(id, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            setSchemeService.isOwner(id, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        setSchemeService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.selectSetSchemeById(id)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this set scheme"))
+                                .map { ResponseEntity.ok(it) }
+                                .doOnError { e -> logger.error("Error retrieving set scheme", e) }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this set scheme"))
                 }
-            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+            }
         }
     }
 
@@ -205,13 +202,27 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val setSchemeMono =
-                if (isAdminOrService) {
-                    setSchemeService.selectSetSchemes()
-                } else {
+            if (isAdminOrService) {
+                setSchemeService.selectSetSchemes()
+                    .flatMap { setSchemes ->
+                        Flux.fromIterable(setSchemes)
+                            .flatMap { setScheme ->
+                                setSchemeService.getOwner(setScheme.id)
+                                    .flatMap { ownerId ->
+                                        gdprComplianceService.hasUserConsent(ownerId)
+                                            .filter { hasConsent -> hasConsent }
+                                            .map { setScheme }
+                                    }
+                            }
+                            .collectList()
+                    }
+                    .map { setSchemes -> ResponseEntity.ok(setSchemes) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
                     setSchemeService.selectSetSchemesByUserId(userId)
+                        .map { setSchemes -> ResponseEntity.ok(setSchemes) }
                 }
-            setSchemeMono.map { ResponseEntity.ok(it) }
+            }
         }
     }
 
@@ -233,19 +244,24 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val setSchemeMono =
-                if (isAdminOrService) {
-                    setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
-                } else {
-                    programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        programmedExerciseService.getOwner(programmedExerciseId)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                                .map { setSchemes -> ResponseEntity.ok(setSchemes) }
+                                .doOnError { e -> logger.error("Error retrieving set schemes for exercise", e) }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
                 }
-            setSchemeMono.map { setSchemes -> ResponseEntity.ok(setSchemes) }
+            }
         }
     }
 
@@ -296,33 +312,17 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val setSchemeMono =
-                if (isAdminOrService) {
-                    setSchemeService.updateSetSchemeWithUnit(
-                        id,
-                        programmedExerciseId,
-                        setNumber,
-                        isAmrap,
-                        isEmom,
-                        useTempo,
-                        eccentricTempo,
-                        isometricTempo,
-                        concentricTempo,
-                        targetWeight,
-                        performedWeight,
-                        targetRepCount,
-                        performedRepCount,
-                        restSeconds,
-                        unit,
-                    )
-                } else {
-                    setSchemeService.isOwner(
-                        id,
-                        userId
-                    ).zipWith(programmedExerciseService.isOwner(programmedExerciseId, userId)) { isSchemeOwner, isExerciseOwner ->
-                        isSchemeOwner && isExerciseOwner
-                    }.flatMap { hasAccess ->
-                        if (hasAccess) {
+            setSchemeService.isOwner(id, userId).zipWith(programmedExerciseService.isOwner(programmedExerciseId, userId)) { isSchemeOwner, isExerciseOwner ->
+                isSchemeOwner && isExerciseOwner
+            }.flatMap { hasAccess ->
+                if (isAdminOrService || hasAccess) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        setSchemeService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.updateSetSchemeWithUnit(
                                 id,
                                 programmedExerciseId,
@@ -339,17 +339,18 @@ class SetSchemeController(
                                 performedRepCount,
                                 restSeconds,
                                 unit,
-                            )
-                        } else {
-                            Mono.error(
-                                AccessDeniedException(
-                                    "Access denied: User is not the owner of this set scheme and programmed exercise"
-                                )
-                            )
+                            ).map { ResponseEntity.ok(it) }
+                                .doOnError { e -> logger.error("Error updating set scheme", e) }
                         }
                     }
+                } else {
+                    Mono.error(
+                        AccessDeniedException(
+                            "Access denied: User is not the owner of this set scheme and programmed exercise"
+                        )
+                    )
                 }
-            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+            }
         }
     }
 
@@ -371,19 +372,24 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val setSchemeMono =
-                if (isAdminOrService) {
-                    setSchemeService.deleteSetScheme(id)
-                } else {
-                    setSchemeService.isOwner(id, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            setSchemeService.isOwner(id, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        setSchemeService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.deleteSetScheme(id)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this set scheme"))
+                                .map { ResponseEntity.ok(it) }
+                                .doOnError { e -> logger.error("Error deleting set scheme", e) }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this set scheme"))
                 }
-            setSchemeMono.map { setScheme -> ResponseEntity.ok(setScheme) }
+            }
         }
     }
 }

@@ -31,6 +31,12 @@ class KeycloakUtilTest {
     }
 
     @Test
+    fun `should have getCurrentUserName method`() {
+        val result = keycloakUtil.getCurrentUserName()
+        assertNotNull(result)
+    }
+
+    @Test
     fun `getCurrentUserId should return Mono`() {
         val result = keycloakUtil.getCurrentUserId()
         assertNotNull(result)
@@ -45,6 +51,12 @@ class KeycloakUtilTest {
     @Test
     fun `hasRole should return Mono`() {
         val result = keycloakUtil.hasRole("admin")
+        assertNotNull(result)
+    }
+
+    @Test
+    fun `getCurrentUserName should return Mono`() {
+        val result = keycloakUtil.getCurrentUserName()
         assertNotNull(result)
     }
 }

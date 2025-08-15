@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.mockSetScheme
 import com.congen.model.SetScheme
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgrammedExerciseService
 import com.congen.service.SetSchemeService
 import com.congen.util.KeycloakUtil
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
@@ -37,6 +39,9 @@ class SetSchemeControllerTest {
     @Mock
     private lateinit var programmedExerciseService: ProgrammedExerciseService
 
+    @Mock
+    private lateinit var gdprComplianceService: GdprComplianceService
+
     private lateinit var setSchemeController: SetSchemeController
 
     companion object {
@@ -56,11 +61,18 @@ class SetSchemeControllerTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        setSchemeController = SetSchemeController(setSchemeService, keycloakUtil, programmedExerciseService)
+        setSchemeController = SetSchemeController(setSchemeService, keycloakUtil, programmedExerciseService, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

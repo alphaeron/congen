@@ -5,22 +5,6 @@ import org.springframework.http.HttpStatus
 
 class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
     @Test
-    fun `should handle validation exception with 422 status`() {
-        val token = getValidToken("user")
-        // Test validation exception by providing invalid user data
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=TestUser&age=0&height=175.0&weight=70.0" +
-                    "&email=test.${System.nanoTime()}@example.com&password=testpassword123"
-            )
-            .header("Authorization", "Bearer $token")
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").isEqualTo("User age must be between 1 and 150, got: 0")
-    }
-
-    @Test
     fun `should handle no results found exception with 404 status`() {
         val token = getValidToken("service")
         // Test no results found exception by trying to get a non-existent user
@@ -40,15 +24,11 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
         val userId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
-                name = "Test User for 404",
-                age = 25,
-                height = 175.0,
-                weight = 70.0,
                 token = token
             )
 
         // Verify user exists
-        val user = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
+        val user = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
         assert(user.keycloakId == userId)
 
         // Test getting a non-existent user
@@ -67,15 +47,14 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
         // Test multiple validation errors
         webTestClient.post()
             .uri(
-                "/api/v1/user/?name=TestUser&age=0&height=0&weight=0" +
-                    "&email=test.${System.nanoTime()}@example.com&password=testpassword123"
+                "/api/v1/user/?name="
             )
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { errorMessage ->
-                errorMessage.contains("User age must be between 1 and 150")
+                errorMessage.contains("User name must not be empty")
             }
     }
 

@@ -4,6 +4,7 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
@@ -53,6 +54,7 @@ class ConjugateWorkoutGeneratorController(
     private val conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService,
     private val programService: ProgramService,
     private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -103,28 +105,32 @@ class ConjugateWorkoutGeneratorController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programMono =
-                if (isAdminOrService) {
-                    conjugateWorkoutGeneratorService.generateNextWeek(programId)
-                } else {
-                    programService.isOwner(programId, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            programService.isOwner(programId, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        programService.getOwner(programId)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             conjugateWorkoutGeneratorService.generateNextWeek(programId)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                                .map { program -> ResponseEntity.ok(program) }
+                                .doOnError(NoResultsFoundException::class.java) { error ->
+                                    logger.error("Error generating workout program for program: {}", programId, error)
+                                }
+                                .doOnError(ValidationException::class.java) { error ->
+                                    logger.error("Validation error generating workout program for program: {}", programId, error)
+                                }
+                                .doOnError { error ->
+                                    logger.error("Unexpected error generating workout program for program: {}", programId, error)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
                 }
-            programMono.map { program -> ResponseEntity.ok(program) }
-                .doOnError(NoResultsFoundException::class.java) { error ->
-                    logger.error("Error generating workout program for program: {}", programId, error)
-                }
-                .doOnError(ValidationException::class.java) { error ->
-                    logger.error("Validation error generating workout program for program: {}", programId, error)
-                }
-                .doOnError { error ->
-                    logger.error("Unexpected error generating workout program for program: {}", programId, error)
-                }
+            }
         }
     }
 }

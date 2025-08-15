@@ -5,6 +5,7 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
 import com.congen.model.Program
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
@@ -29,6 +30,7 @@ class ConjugateWorkoutGeneratorControllerTest {
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
     private lateinit var programService: ProgramService
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var conjugateWorkoutGeneratorController: ConjugateWorkoutGeneratorController
 
     private lateinit var testProgram: Program
@@ -49,12 +51,20 @@ class ConjugateWorkoutGeneratorControllerTest {
             ConjugateWorkoutGeneratorController(
                 conjugateWorkoutGeneratorService,
                 programService,
-                keycloakUtil
+                keycloakUtil,
+                gdprComplianceService
             )
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
 
         testProgram =
             Program(

@@ -197,6 +197,10 @@ abstract class BaseIntegrationTest {
             registry.add("KEYCLOAK_CLIENT_ID") { "congen-backend" }
             registry.add("KEYCLOAK_CLIENT_SECRET") { "congen-backend-secret" }
             registry.add("KEYCLOAK_SERVICE_ACCOUNT_USERNAME") { "service-account-congen-backend" }
+
+            registry.add("congen.encryption.key") { "dGVzdC1lbmNyeXB0aW9uLWtleS1mb3ItaW50ZWdyYXQ=" }
+            registry.add("congen.gdpr.audit-enabled") { "true" }
+            registry.add("congen.gdpr.data-retention-check-enabled") { "true" }
         }
     }
 
@@ -322,25 +326,35 @@ abstract class BaseIntegrationTest {
         val client = HttpClient.newHttpClient()
         val requestBody: String
 
-        if (role == "user") {
-            // Use password grant type for user operations
-            val username = "testuser-${System.nanoTime()}"
-            val password = "testpassword"
+        when (role) {
+            "user" -> {
+                // Use password grant type for user operations
+                val username = "testuser-${System.nanoTime()}"
+                val password = "testpassword"
 
-            // Create a fresh test user to avoid required actions issues
-            val finalUsername =
-                try {
-                    createTestUserInKeycloak(username, password)
-                    username
-                } catch (e: Exception) {
-                    // If user creation fails, fall back to the pre-configured user
-                    "testuser"
-                }
+                // Create a fresh test user to avoid required actions issues
+                val finalUsername =
+                    try {
+                        createTestUserInKeycloak(username, password)
+                        username
+                    } catch (e: Exception) {
+                        // If user creation fails, fall back to the pre-configured user
+                        "testuser"
+                    }
 
-            requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$finalUsername&password=$password"
-        } else {
-            // Use client credentials grant type for service operations
-            requestBody = "grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret"
+                requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret" +
+                    "&username=$finalUsername&password=$password"
+            }
+            "admin" -> {
+                // Use password grant type for admin operations
+                val username = "admin"
+                val password = "admin"
+                requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password"
+            }
+            else -> {
+                // Use client credentials grant type for service operations
+                requestBody = "grant_type=client_credentials&client_id=$clientId&client_secret=$clientSecret"
+            }
         }
 
         val request =

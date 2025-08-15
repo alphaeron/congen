@@ -2,7 +2,9 @@ package com.congen.controllers
 
 import com.congen.model.ExerciseRotationHistory
 import com.congen.service.ExerciseRotationHistoryService
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
+import reactor.core.publisher.Flux
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -60,7 +62,8 @@ import reactor.core.publisher.Mono
 )
 class ExerciseRotationHistoryController(
     private val exerciseRotationHistoryService: ExerciseRotationHistoryService,
-    private val keycloakUtil: KeycloakUtil
+    private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ExerciseRotationHistoryController::class.java)
@@ -136,20 +139,29 @@ class ExerciseRotationHistoryController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             val hasAccess = isAdminOrService || currentUserId == userId
             if (hasAccess) {
-                exerciseRotationHistoryService.insert(userId, exerciseName, isAccessory)
-                    .map { savedRecord ->
-                        logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
-                        ResponseEntity.ok(savedRecord)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        exerciseRotationHistoryService.insert(userId, exerciseName, isAccessory)
+                            .map { savedRecord ->
+                                logger.debug("Saved exercise rotation history with id: {}", savedRecord.id)
+                                ResponseEntity.ok(savedRecord)
+                            }
+                            .doOnError { e ->
+                                logger.error(
+                                    "Error saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
+                                    userId,
+                                    exerciseName,
+                                    isAccessory,
+                                    e,
+                                )
+                            }
                     }
-                    .doOnError { e ->
-                        logger.error(
-                            "Error saving exercise rotation history: userId={}, exerciseName={}, isAccessory={}",
-                            userId,
-                            exerciseName,
-                            isAccessory,
-                            e,
-                        )
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only access their own exercise rotation history"))
             }
@@ -202,25 +214,30 @@ class ExerciseRotationHistoryController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val exerciseRotationHistoryMono =
-                if (isAdminOrService) {
-                    exerciseRotationHistoryService.selectById(id)
-                } else {
-                    exerciseRotationHistoryService.selectById(id)
-                        .flatMap { record ->
-                            if (record.userId == userId) {
+            exerciseRotationHistoryService.selectById(id)
+                .flatMap { record ->
+                    val hasAccess = isAdminOrService || record.userId == userId
+                    if (hasAccess) {
+                        val consentUserIdMono = if (isAdminOrService) {
+                            Mono.just(record.userId)
+                        } else {
+                            Mono.just(userId)
+                        }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
                                 Mono.just(record)
-                            } else {
-                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history"))
+                                    .map {
+                                        logger.debug("Found exercise rotation history record: {}", it.id)
+                                        ResponseEntity.ok(it)
+                                    }
+                                    .doOnError { e ->
+                                        logger.error("Error getting exercise rotation history by id: {}", id, e)
+                                    }
                             }
                         }
-                }
-            exerciseRotationHistoryMono.map { record ->
-                logger.debug("Found exercise rotation history record: {}", record.id)
-                ResponseEntity.ok(record)
-            }
-                .doOnError { e ->
-                    logger.error("Error getting exercise rotation history by id: {}", id, e)
+                    } else {
+                        Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history"))
+                    }
                 }
         }
     }
@@ -267,14 +284,23 @@ class ExerciseRotationHistoryController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val exerciseRotationHistoryMono =
-                if (isAdminOrService) {
-                    exerciseRotationHistoryService.selectByIsAccessory(isAccessory)
-                } else {
+            if (isAdminOrService) {
+                exerciseRotationHistoryService.selectByIsAccessory(isAccessory)
+                    .flatMap { records ->
+                        Flux.fromIterable(records)
+                            .flatMap { record ->
+                                gdprComplianceService.hasUserConsent(record.userId)
+                                    .filter { hasConsent -> hasConsent }
+                                    .map { record }
+                            }
+                            .collectList()
+                    }
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
                     exerciseRotationHistoryService.selectByUserId(userId, isAccessory)
+                        .map { ResponseEntity.ok(it) }
                 }
-            exerciseRotationHistoryMono.map { records ->
-                ResponseEntity.ok(records)
             }
         }
     }
@@ -313,14 +339,23 @@ class ExerciseRotationHistoryController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val exerciseRotationHistoryMono =
-                if (isAdminOrService) {
-                    exerciseRotationHistoryService.selectAll()
-                } else {
+            if (isAdminOrService) {
+                exerciseRotationHistoryService.selectAll()
+                    .flatMap { records ->
+                        Flux.fromIterable(records)
+                            .flatMap { record ->
+                                gdprComplianceService.hasUserConsent(record.userId)
+                                    .filter { hasConsent -> hasConsent }
+                                    .map { record }
+                            }
+                            .collectList()
+                    }
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
                     exerciseRotationHistoryService.selectByUserId(userId)
+                        .map { ResponseEntity.ok(it) }
                 }
-            exerciseRotationHistoryMono.map { records ->
-                ResponseEntity.ok(records)
             }
         }
     }
@@ -420,21 +455,30 @@ class ExerciseRotationHistoryController(
                 }
             hasAccess.flatMap { hasAccess ->
                 if (hasAccess) {
-                    exerciseRotationHistoryService.update(id, userId, exerciseName, isAccessory)
-                        .map { updatedRecord ->
-                            logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
-                            ResponseEntity.ok(updatedRecord)
+                    val consentUserIdMono = if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
+                            exerciseRotationHistoryService.update(id, userId, exerciseName, isAccessory)
+                                .map { updatedRecord ->
+                                    logger.debug("Updated exercise rotation history record: {}", updatedRecord.id)
+                                    ResponseEntity.ok(updatedRecord)
+                                }
+                                .doOnError { e ->
+                                    logger.error(
+                                        "Error updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
+                                        id,
+                                        userId,
+                                        exerciseName,
+                                        isAccessory,
+                                        e,
+                                    )
+                                }
                         }
-                        .doOnError { e ->
-                            logger.error(
-                                "Error updating exercise rotation history: id={}, userId={}, exerciseName={}, isAccessory={}",
-                                id,
-                                userId,
-                                exerciseName,
-                                isAccessory,
-                                e,
-                            )
-                        }
+                    }
                 } else {
                     Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history record"))
                 }
@@ -493,25 +537,29 @@ class ExerciseRotationHistoryController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val exerciseRotationHistoryMono =
-                if (isAdminOrService) {
-                    exerciseRotationHistoryService.deleteById(id)
-                } else {
-                    exerciseRotationHistoryService.isOwner(id, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            exerciseRotationHistoryService.isOwner(id, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        exerciseRotationHistoryService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             exerciseRotationHistoryService.deleteById(id)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history"))
+                                .map { deletedRecord ->
+                                    logger.debug("Deleted exercise rotation history record: {}", deletedRecord.id)
+                                    ResponseEntity.ok(deletedRecord)
+                                }
+                                .doOnError { e ->
+                                    logger.error("Error deleting exercise rotation history: {}", id, e)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this exercise rotation history"))
                 }
-            exerciseRotationHistoryMono.map { deletedRecord ->
-                logger.debug("Deleted exercise rotation history record: {}", deletedRecord.id)
-                ResponseEntity.ok(deletedRecord)
             }
-                .doOnError { e ->
-                    logger.error("Error deleting exercise rotation history: {}", id, e)
-                }
         }
     }
 }

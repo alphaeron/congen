@@ -6,71 +6,26 @@ import type { User } from './types';
  *
  * Creates a user profile in the application database after successful Keycloak registration.
  * The user must be authenticated and the profile will be linked to their Keycloak user ID.
+ * User information (name) is automatically extracted from the JWT token.
  *
- * @param name The user's full name
- * @param age The user's age in years
- * @param height The user's height in centimeters
- * @param weight The user's weight in kilograms
- * @param unit The weight unit (optional, defaults to KG)
  * @return The created user profile
  */
-export const createUserProfile = (
-  name: string,
-  age: number,
-  height: number,
-  weight: number,
-  unit?: string
-): Promise<User> => {
-  const params = new URLSearchParams({
-    name,
-    age: age.toString(),
-    height: height.toString(),
-    weight: weight.toString(),
-  });
-
-  if (unit) {
-    params.append('unit', unit);
-  }
-
+export const createUserProfile = (): Promise<User> => {
   return REQUEST({
     method: 'POST',
-    url: `/user/?${params.toString()}`,
+    url: '/user/',
   });
 };
 
 /**
- * Get user profile by ID.
- *
- * @param userId The user ID (Keycloak ID)
- * @return The user profile
- */
-export const getUserById = (userId: string): Promise<User> =>
-  REQUEST({
-    method: 'GET',
-    url: `/user/${userId}`,
-  });
-
-/**
  * Get current user profile.
  *
- * @return The current user's profile
+ * Retrieves the current authenticated user's profile.
+ *
+ * @return The current user profile
  */
 export const getCurrentUser = (): Promise<User> =>
   REQUEST({
     method: 'GET',
     url: '/user/me',
-  });
-
-/**
- * Delete a user account.
- *
- * Permanently removes a user from the system. This action cannot be undone.
- *
- * @param userId The user ID (Keycloak ID) to delete
- * @return The deleted user profile
- */
-export const deleteUser = (userId: string): Promise<User> =>
-  REQUEST({
-    method: 'DELETE',
-    url: `/user/${userId}`,
   });

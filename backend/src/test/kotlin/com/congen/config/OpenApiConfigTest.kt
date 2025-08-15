@@ -148,10 +148,7 @@ class OpenApiConfigTest {
 
         // Then
         assertNotNull(description)
-        assert(description!!.contains("User age: 1-150 years"))
-        assert(description.contains("User weight: 0.01-1000 kg"))
-        assert(description.contains("User height: 0.01-300 cm"))
-        assert(description.contains("Program days per week: 2, 3, or 4 days"))
+        assert(description!!.contains("Program days per week: 2, 3, or 4 days"))
     }
 
     @Test

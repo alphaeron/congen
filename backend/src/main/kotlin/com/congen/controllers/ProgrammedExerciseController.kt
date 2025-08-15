@@ -1,9 +1,11 @@
 package com.congen.controllers
 
 import com.congen.model.ProgrammedExercise
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgrammedExerciseService
 import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
+import reactor.core.publisher.Flux
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -58,7 +60,8 @@ import reactor.core.publisher.Mono
 class ProgrammedExerciseController(
     private val programmedExerciseService: ProgrammedExerciseService,
     private val workoutStageService: WorkoutStageService,
-    private val keycloakUtil: KeycloakUtil
+    private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -90,31 +93,35 @@ class ProgrammedExerciseController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programmedExerciseMono =
-                if (isAdminOrService) {
-                    programmedExerciseService.insertProgrammedExercise(workoutStageId, exerciseName, position, notes)
-                } else {
-                    workoutStageService.isOwner(workoutStageId, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            workoutStageService.isOwner(workoutStageId, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        workoutStageService.getOwner(workoutStageId)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             programmedExerciseService.insertProgrammedExercise(workoutStageId, exerciseName, position, notes)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                                .map { savedExercise ->
+                                    logger.debug("Saved programmed exercise with id: {}", savedExercise.id)
+                                    ResponseEntity.ok(savedExercise)
+                                }
+                                .doOnError { e ->
+                                    logger.error(
+                                        "Error saving programmed exercise: {} for stage: {} at position: {}",
+                                        exerciseName,
+                                        workoutStageId,
+                                        position,
+                                        e,
+                                    )
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
                 }
-            programmedExerciseMono.map { savedExercise ->
-                logger.debug("Saved programmed exercise with id: {}", savedExercise.id)
-                ResponseEntity.ok(savedExercise)
             }
-                .doOnError { e ->
-                    logger.error(
-                        "Error saving programmed exercise: {} for stage: {} at position: {}",
-                        exerciseName,
-                        workoutStageId,
-                        position,
-                        e,
-                    )
-                }
         }
     }
 
@@ -136,25 +143,29 @@ class ProgrammedExerciseController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programmedExerciseMono =
-                if (isAdminOrService) {
-                    programmedExerciseService.selectProgrammedExerciseById(id)
-                } else {
-                    programmedExerciseService.isOwner(id, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            programmedExerciseService.isOwner(id, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        programmedExerciseService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             programmedExerciseService.selectProgrammedExerciseById(id)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                                .map {
+                                    logger.debug("Found programmed exercise: {}", id)
+                                    ResponseEntity.ok(it)
+                                }
+                                .doOnError { e ->
+                                    logger.error("Error getting programmed exercise: {}", id, e)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
                 }
-            programmedExerciseMono.map {
-                logger.debug("Found programmed exercise: {}", id)
-                ResponseEntity.ok(it)
             }
-                .doOnError { e ->
-                    logger.error("Error getting programmed exercise: {}", id, e)
-                }
         }
     }
 
@@ -213,13 +224,27 @@ class ProgrammedExerciseController(
             val userId = tuple.t1
             val roles = tuple.t2
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programmedExerciseMono =
-                if (isAdminOrService) {
-                    programmedExerciseService.selectProgrammedExercises()
-                } else {
+            if (isAdminOrService) {
+                programmedExerciseService.selectProgrammedExercises()
+                    .flatMap { programmedExercises ->
+                        Flux.fromIterable(programmedExercises)
+                            .flatMap { programmedExercise ->
+                                programmedExerciseService.getOwner(programmedExercise.id)
+                                    .flatMap { ownerId ->
+                                        gdprComplianceService.hasUserConsent(ownerId)
+                                            .filter { hasConsent -> hasConsent }
+                                            .map { programmedExercise }
+                                    }
+                            }
+                            .collectList()
+                    }
+                    .map { programmedExercises -> ResponseEntity.ok(programmedExercises) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
                     programmedExerciseService.selectProgrammedExercisesByUserId(userId)
+                        .map { programmedExercises -> ResponseEntity.ok(programmedExercises) }
                 }
-            programmedExerciseMono.map { ResponseEntity.ok(it) }
+            }
         }
     }
 
@@ -251,32 +276,36 @@ class ProgrammedExerciseController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programmedExerciseMono =
-                if (isAdminOrService) {
-                    programmedExerciseService.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
-                } else {
-                    workoutStageService.isOwner(
-                        workoutStageId,
-                        userId
-                    ).zipWith(programmedExerciseService.isOwner(id, userId)) { isStageOwner, isExerciseOwner ->
-                        isStageOwner && isExerciseOwner
-                    }.flatMap { hasAccess ->
-                        if (hasAccess) {
+            workoutStageService.isOwner(
+                workoutStageId,
+                userId
+            ).zipWith(programmedExerciseService.isOwner(id, userId)) { isStageOwner, isExerciseOwner ->
+                isStageOwner && isExerciseOwner
+            }.flatMap { hasAccess ->
+                if (isAdminOrService || hasAccess) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        programmedExerciseService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             programmedExerciseService.updateProgrammedExercise(id, workoutStageId, exerciseName, position, notes)
-                        } else {
-                            Mono.error(
-                                AccessDeniedException("Access denied: User is not the owner of this workout stage and programmed exercise")
-                            )
+                                .map {
+                                    logger.debug("Updated programmed exercise: {}", id)
+                                    ResponseEntity.ok(it)
+                                }
+                                .doOnError { e ->
+                                    logger.error("Error updating programmed exercise: {}", id, e)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(
+                        AccessDeniedException("Access denied: User is not the owner of this workout stage and programmed exercise")
+                    )
                 }
-            programmedExerciseMono.map {
-                logger.debug("Updated programmed exercise: {}", id)
-                ResponseEntity.ok(it)
             }
-                .doOnError { e ->
-                    logger.error("Error updating programmed exercise: {}", id, e)
-                }
         }
     }
 
@@ -299,25 +328,29 @@ class ProgrammedExerciseController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programmedExerciseMono =
-                if (isAdminOrService) {
-                    programmedExerciseService.deleteProgrammedExercise(id)
-                } else {
-                    programmedExerciseService.isOwner(id, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            programmedExerciseService.isOwner(id, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        programmedExerciseService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             programmedExerciseService.deleteProgrammedExercise(id)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
+                                .map {
+                                    logger.debug("Deleted programmed exercise: {}", id)
+                                    ResponseEntity.ok(it)
+                                }
+                                .doOnError { e ->
+                                    logger.error("Error deleting programmed exercise: {}", id, e)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed exercise"))
                 }
-            programmedExerciseMono.map {
-                logger.debug("Deleted programmed exercise: {}", id)
-                ResponseEntity.ok(it)
             }
-                .doOnError { e ->
-                    logger.error("Error deleting programmed exercise: {}", id, e)
-                }
         }
     }
 }

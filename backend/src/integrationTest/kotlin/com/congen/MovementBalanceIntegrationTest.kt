@@ -86,8 +86,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         val token = getValidToken("user")
 
         // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User", token = token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, testUserId, token = token)
+        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment, program preferences, and one rep maxes
         setupUserEquipment(testUser.keycloakId, token)
@@ -151,8 +151,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         val token = getValidToken("user")
 
         // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User", token = token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, testUserId, token = token)
+        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment, program preferences, and one rep maxes
         setupUserEquipment(testUser.keycloakId, token)
@@ -213,8 +213,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         val token = getValidToken("user")
 
         // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User", token = token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, testUserId, token = token)
+        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment and program preferences
         setupUserEquipment(testUser.keycloakId, token)
@@ -276,8 +276,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         val token = getValidToken("user")
 
         // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User", token = token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, testUserId, token = token)
+        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment, program preferences, and one rep maxes
         setupUserEquipment(testUser.keycloakId, token)
@@ -338,8 +338,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         val token = getValidToken("user")
 
         // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User", token = token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, testUserId, token = token)
+        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Setup user equipment, program preferences, and one rep maxes
         setupUserEquipment(testUser.keycloakId, token)

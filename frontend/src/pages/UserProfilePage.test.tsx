@@ -9,9 +9,6 @@ import type { User } from '../api/types';
 const mockUser: User = {
   keycloak_id: 'test-user-id',
   name: 'John Doe',
-  age: 30,
-  height: 175,
-  weight: 80,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
   roles: ['user'],
@@ -54,9 +51,6 @@ describe('UserProfilePage', () => {
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('30 years old')).toBeInTheDocument();
-    expect(screen.getByText('175 cm')).toBeInTheDocument();
-    expect(screen.getByText('80 kg')).toBeInTheDocument();
   });
 
   it('should show deactivate account button when user exists', () => {

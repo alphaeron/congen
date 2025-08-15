@@ -14,7 +14,7 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
         val unique = System.nanoTime()
         val token = getValidToken("service")
         // Create a single test user to avoid keycloak_user_id conflicts
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, "WeakMuscle User $unique", token = token)
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test

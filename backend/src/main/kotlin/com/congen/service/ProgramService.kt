@@ -20,6 +20,17 @@ class ProgramService(
     private val programDAL: ProgramDAL,
 ) {
     /**
+     * Gets the owner of the program.
+     *
+     * @param programId The ID of the program
+     * @return Mono<String> The Keycloak user ID of the owner
+     */
+    fun getOwner(programId: Long): Mono<String> {
+        return programDAL.selectProgramById(programId)
+            .map { program -> program.userId }
+    }
+
+    /**
      * Checks if a user is the owner of a specific program.
      *
      * This method is used by Spring Security's @PreAuthorize annotation
@@ -33,8 +44,8 @@ class ProgramService(
         programId: Long,
         userId: String
     ): Mono<Boolean> {
-        return programDAL.selectProgramById(programId)
-            .map { program -> program.userId == userId }
+        return getOwner(programId)
+            .map { ownerId -> ownerId == userId }
             .onErrorReturn(false)
     }
 

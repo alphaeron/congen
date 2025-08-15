@@ -4,6 +4,7 @@ import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.ProgrammedExercise
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgrammedExerciseService
 import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
@@ -40,6 +41,7 @@ class ProgrammedExerciseControllerTest {
     private lateinit var programmedExerciseService: ProgrammedExerciseService
     private lateinit var workoutStageService: WorkoutStageService
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
 
     private val now = Instant.now()
     private val objectMapper = ObjectMapper()
@@ -65,11 +67,18 @@ class ProgrammedExerciseControllerTest {
         programmedExerciseService = mock()
         workoutStageService = mock()
         keycloakUtil = mock()
-        programmedExerciseController = ProgrammedExerciseController(programmedExerciseService, workoutStageService, keycloakUtil)
+        programmedExerciseController = ProgrammedExerciseController(programmedExerciseService, workoutStageService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
 
         testProgrammedExercise =
             ProgrammedExercise(

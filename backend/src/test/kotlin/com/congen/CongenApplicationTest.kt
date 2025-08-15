@@ -31,7 +31,10 @@ import org.springframework.test.context.TestPropertySource
         "KEYCLOAK_REALM=congen",
         "JWT_ISSUER_URI=http://localhost:8080/realms/congen",
         "JWT_JWK_SET_URI=http://localhost:8080/realms/congen/protocol/openid-connect/certs",
-        "JWT_AUDIENCES=congen-backend"
+        "JWT_AUDIENCES=congen-backend",
+        "congen.gdpr.audit-enabled=true",
+        "congen.gdpr.data-retention-check-enabled=true",
+        "ENCRYPTION_KEY=MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI="
     ]
 )
 class CongenApplicationTest {

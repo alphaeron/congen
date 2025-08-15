@@ -2,11 +2,13 @@ package com.congen.controllers
 
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.model.ProgrammedWorkout
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.service.ProgrammedWorkoutService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -28,6 +30,7 @@ class ProgrammedWorkoutControllerTest {
     private lateinit var programmedWorkoutService: ProgrammedWorkoutService
     private lateinit var programService: ProgramService
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var programmedWorkoutController: ProgrammedWorkoutController
 
     companion object {
@@ -50,11 +53,19 @@ class ProgrammedWorkoutControllerTest {
         programmedWorkoutService = mock()
         programService = mock()
         keycloakUtil = mock()
-        programmedWorkoutController = ProgrammedWorkoutController(programmedWorkoutService, programService, keycloakUtil)
+        gdprComplianceService = mock()
+        programmedWorkoutController = ProgrammedWorkoutController(programmedWorkoutService, programService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

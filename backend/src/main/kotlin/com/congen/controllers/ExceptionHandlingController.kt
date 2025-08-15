@@ -5,6 +5,7 @@ import com.congen.exceptions.InvalidResultException
 import com.congen.exceptions.InvalidWeightUnitException
 import com.congen.exceptions.KeycloakException
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.UserConsentException
 import com.congen.exceptions.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -94,7 +95,7 @@ public class ExceptionHandlingController {
      * with the validation error message.
      *
      * @param exception The ValidationException that was thrown
-     * @return ResponseEntity with HTTP 422 status and error details
+     * @return ResponseEntity with HTTP 422 status and error deƒtails
      */
     @ExceptionHandler(ValidationException::class)
     fun handleValidationException(exception: ValidationException): ResponseEntity<Map<String, String>> {
@@ -102,6 +103,22 @@ public class ExceptionHandlingController {
         return ResponseEntity.status(
             HttpStatus.UNPROCESSABLE_ENTITY,
         ).body(mapOf("error" to (exception.message ?: "Unknown validation error")))
+    }
+
+    /**
+     * Handles UserConsentException by returning HTTP 400 Bad Request.
+     *
+     * This method handles cases where user consent is required but not provided
+     * for data processing operations under GDPR compliance.
+     *
+     * @param exception The UserConsentException that was thrown
+     * @return ResponseEntity with HTTP 400 status and error message
+     */
+    @ExceptionHandler(UserConsentException::class)
+    fun handleUserConsentException(exception: UserConsentException): ResponseEntity<Map<String, String>> {
+        logger.warn("User consent required but not provided: {}", exception.message ?: "Missing consent")
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(mapOf("error" to (exception.message ?: "User consent required for data processing")))
     }
 
     /**

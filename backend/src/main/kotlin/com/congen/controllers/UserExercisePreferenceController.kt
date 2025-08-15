@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.model.UserExercisePreference
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -58,6 +59,7 @@ import reactor.core.publisher.Mono
 class UserExercisePreferenceController(
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
     private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -103,18 +105,27 @@ class UserExercisePreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
-                userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error(
-                            "Error saving user exercise preference: userId={}, exerciseName={}, shouldAvoid={}",
-                            userId,
-                            exerciseName,
-                            shouldAvoid,
-                            e
-                        )
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
+                        userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error(
+                                    "Error saving user exercise preference: userId={}, exerciseName={}, shouldAvoid={}",
+                                    userId,
+                                    exerciseName,
+                                    shouldAvoid,
+                                    e
+                                )
+                            }
                     }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only create preferences for themselves"))
             }
@@ -154,14 +165,23 @@ class UserExercisePreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
-                    .map { preferences ->
-                        logger.debug("Found exercise preferences for user: {}", userId)
-                        ResponseEntity.ok(preferences)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
+                            .map { preferences ->
+                                logger.debug("Found exercise preferences for user: {}", userId)
+                                ResponseEntity.ok(preferences)
+                            }
+                            .doOnError { e ->
+                                logger.error("Error getting exercise preferences for user: {}", userId, e)
+                            }
                     }
-                    .doOnError { e ->
-                        logger.error("Error getting exercise preferences for user: {}", userId, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own exercise preferences"))
             }
@@ -204,12 +224,21 @@ class UserExercisePreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Deleting user exercise preference: {} - {}", userId, exerciseName)
-                userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error("Error deleting user exercise preference: {} - {}", userId, exerciseName, e)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Deleting user exercise preference: {} - {}", userId, exerciseName)
+                        userExercisePreferenceDAL.deleteUserExercisePreference(userId, exerciseName)
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error("Error deleting user exercise preference: {} - {}", userId, exerciseName, e)
+                            }
                     }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only delete their own exercise preferences"))
             }

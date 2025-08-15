@@ -1,13 +1,14 @@
+implement user consent exception
+
+user controllers should also allow admin/service deletion
+
 backend caching
 
 WarmupManager for backend (BigDecimal?, cache)
 
-workout generation algorithm flowchart
+restructure userprofile to use tabs, and side bar, for better navigation
 
-xss prevention in frontend
-
-We need to to encrypt data and make sure we have GDPR level restrictions on whatever data we are storing.
-
+Supersets
 
 
 
@@ -46,6 +47,12 @@ hashicorp vault for staging/production
 
 assets, and object storage for assets
 
+congen database for congen?  Or maybe aws terraform will handle that.
+
+Write a gradle task to check for all component updates and apply them
+
+workout generation algorithm flowchart
+
 
 
 I don't like the style of the current app.
@@ -53,3 +60,5 @@ I don't like the style of the current app.
 I want the theme to look like @https://www.whoop.com/us/en/  and @https://www.trainheroic.com/
 
 Update the theme, style files and any other changes needed to make the style look like those sites but be distinct enough for my own app
+
+update privacy policy contact email

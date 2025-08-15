@@ -103,7 +103,7 @@ class PostgresClientTest {
     fun `should execute update query successfully`() {
         // Given
         val query = "UPDATE users SET name = \$1 WHERE id = \$2"
-        val expectedResult = mockUser(keycloakId = "1", name = "New Name", age = 30)
+        val expectedResult = mockUser(keycloakId = "1", name = "New Name")
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
@@ -121,7 +121,7 @@ class PostgresClientTest {
             row.toJson()
         ).thenReturn(
             JsonObject(
-                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "New Name", age = 30), Map::class.java) as Map<String, Any>)
+                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "New Name"), Map::class.java) as Map<String, Any>)
             )
         )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
@@ -140,7 +140,7 @@ class PostgresClientTest {
     fun `should execute updateLiteral query successfully`() {
         // Given
         val query = "UPDATE users SET name = 'New Name' WHERE id = 1 RETURNING *"
-        val expectedResult = mockUser(keycloakId = "1", name = "New Name", age = 30)
+        val expectedResult = mockUser(keycloakId = "1", name = "New Name")
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
@@ -158,7 +158,7 @@ class PostgresClientTest {
             row.toJson()
         ).thenReturn(
             JsonObject(
-                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "New Name", age = 30), Map::class.java) as Map<String, Any>)
+                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "New Name"), Map::class.java) as Map<String, Any>)
             )
         )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
@@ -176,8 +176,8 @@ class PostgresClientTest {
     @Test
     fun `should handle query with multiple parameters`() {
         // Given
-        val query = "SELECT * FROM users WHERE age > \$1 AND city = \$2"
-        val expectedResult = listOf(mockUser(keycloakId = "1", age = 30))
+        val query = "SELECT * FROM users WHERE name = \$1 AND city = \$2"
+        val expectedResult = listOf(mockUser(keycloakId = "1"))
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
@@ -193,7 +193,7 @@ class PostgresClientTest {
         objectMapper.disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
         whenever(
             row.toJson()
-        ).thenReturn(JsonObject((objectMapper.convertValue(mockUser(keycloakId = "1", age = 30), Map::class.java) as Map<String, Any>)))
+        ).thenReturn(JsonObject((objectMapper.convertValue(mockUser(keycloakId = "1"), Map::class.java) as Map<String, Any>)))
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
@@ -235,7 +235,7 @@ class PostgresClientTest {
     fun `should return individual result from selectIndividual`() {
         // Given
         val query = "SELECT * FROM users WHERE id = \$1"
-        val expectedResult = mockUser(keycloakId = "1", name = "John", age = 30)
+        val expectedResult = mockUser(keycloakId = "1", name = "John")
         val row = mock<Row>()
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
@@ -253,7 +253,7 @@ class PostgresClientTest {
             row.toJson()
         ).thenReturn(
             JsonObject(
-                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "John", age = 30), Map::class.java) as Map<String, Any>)
+                (objectMapper.convertValue(mockUser(keycloakId = "1", name = "John"), Map::class.java) as Map<String, Any>)
             )
         )
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
@@ -298,7 +298,7 @@ class PostgresClientTest {
     @Test
     fun `should throw InvalidResultException when selectIndividual returns multiple results`() {
         // Given
-        val query = "SELECT * FROM users WHERE age > \$1"
+        val query = "SELECT * FROM users WHERE name = \$1"
         val row1 = mock<Row>()
         val row2 = mock<Row>()
         val rowSet = mock<RowSet<Row>>()

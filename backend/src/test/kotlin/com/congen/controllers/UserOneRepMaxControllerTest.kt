@@ -3,6 +3,7 @@ package com.congen.controllers
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.exceptions.DatabaseException
 import com.congen.model.UserOneRepMax
+import com.congen.service.GdprComplianceService
 import com.congen.service.UserOneRepMaxService
 import com.congen.util.KeycloakUtil
 import com.congen.util.ValidationUtil
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -38,6 +40,7 @@ class UserOneRepMaxControllerTest {
     private lateinit var userOneRepMaxService: UserOneRepMaxService
     private lateinit var validationUtil: ValidationUtil
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var userOneRepMaxController: UserOneRepMaxController
 
     companion object {
@@ -59,7 +62,15 @@ class UserOneRepMaxControllerTest {
         userOneRepMaxService = mock()
         validationUtil = mock()
         keycloakUtil = mock()
-        userOneRepMaxController = UserOneRepMaxController(userOneRepMaxDAL, userOneRepMaxService, validationUtil, keycloakUtil)
+        gdprComplianceService = mock()
+        userOneRepMaxController = UserOneRepMaxController(userOneRepMaxDAL, userOneRepMaxService, validationUtil, keycloakUtil, gdprComplianceService)
+
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

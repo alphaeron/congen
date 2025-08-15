@@ -92,6 +92,14 @@ class ProgrammedExerciseService(
         programmedExerciseDAL.selectProgrammedExercisesByUserId(userId)
 
     /**
+     * Gets the owner of the programmed exercise.
+     *
+     * @param programmedExerciseId The ID of the programmed exercise
+     * @return Mono<String> The Keycloak user ID of the owner
+     */
+    fun getOwner(programmedExerciseId: Long): Mono<String> = getUserIdFromProgrammedExercise(programmedExerciseId)
+
+    /**
      * Checks if the given user is the owner of the programmed exercise.
      *
      * @param programmedExerciseId The ID of the programmed exercise
@@ -102,8 +110,8 @@ class ProgrammedExerciseService(
         programmedExerciseId: Long,
         userId: String
     ): Mono<Boolean> {
-        return getUserIdFromProgrammedExercise(programmedExerciseId)
-            .map { ownerUserId -> ownerUserId == userId }
+        return getOwner(programmedExerciseId)
+            .map { ownerId -> ownerId == userId }
             .onErrorReturn(false)
     }
 }

@@ -84,6 +84,17 @@ class ExerciseRotationHistoryService(
     fun deleteByUserId(userId: String): Mono<Int> = exerciseRotationHistoryDAL.deleteByUserId(userId)
 
     /**
+     * Gets the owner of the exercise rotation history record.
+     *
+     * @param historyId The ID of the exercise rotation history record
+     * @return Mono<String> The Keycloak user ID of the owner
+     */
+    fun getOwner(historyId: Long): Mono<String> {
+        return exerciseRotationHistoryDAL.selectById(historyId)
+            .map { record -> record.userId.toString() }
+    }
+
+    /**
      * Checks if the given user is the owner of the exercise rotation history record.
      *
      * @param historyId The ID of the exercise rotation history record
@@ -94,8 +105,8 @@ class ExerciseRotationHistoryService(
         historyId: Long,
         userId: String
     ): Mono<Boolean> {
-        return exerciseRotationHistoryDAL.selectById(historyId)
-            .map { record -> record.userId.toString() == userId }
+        return getOwner(historyId)
+            .map { ownerId -> ownerId == userId }
             .onErrorReturn(false)
     }
 }

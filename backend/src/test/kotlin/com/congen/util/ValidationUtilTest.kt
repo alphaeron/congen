@@ -15,63 +15,6 @@ import kotlin.test.assertEquals
 
 class ValidationUtilTest {
     @Test
-    fun `validateUserAge should pass for valid ages`() {
-        assertDoesNotThrow { ValidationUtil.validateUserAge(1) }
-        assertDoesNotThrow { ValidationUtil.validateUserAge(25) }
-        assertDoesNotThrow { ValidationUtil.validateUserAge(150) }
-    }
-
-    @Test
-    fun `validateUserAge should throw for invalid ages`() {
-        val exception1 = assertThrows<ValidationException> { ValidationUtil.validateUserAge(0) }
-        assertEquals("User age must be between 1 and 150, got: 0", exception1.message)
-
-        val exception2 = assertThrows<ValidationException> { ValidationUtil.validateUserAge(151) }
-        assertEquals("User age must be between 1 and 150, got: 151", exception2.message)
-
-        val exception3 = assertThrows<ValidationException> { ValidationUtil.validateUserAge(-1) }
-        assertEquals("User age must be between 1 and 150, got: -1", exception3.message)
-    }
-
-    @Test
-    fun `validateUserHeight should pass for valid heights`() {
-        assertDoesNotThrow { ValidationUtil.validateUserHeight(BigDecimal("0.01")) }
-        assertDoesNotThrow { ValidationUtil.validateUserHeight(BigDecimal("175.5")) }
-        assertDoesNotThrow { ValidationUtil.validateUserHeight(BigDecimal("300")) }
-    }
-
-    @Test
-    fun `validateUserHeight should throw for invalid heights`() {
-        val exception1 = assertThrows<ValidationException> { ValidationUtil.validateUserHeight(BigDecimal.ZERO) }
-        assertEquals("User height must be between 0.01 and 300 cm, got: 0", exception1.message)
-
-        val exception2 = assertThrows<ValidationException> { ValidationUtil.validateUserHeight(BigDecimal("300.01")) }
-        assertEquals("User height must be between 0.01 and 300 cm, got: 300.01", exception2.message)
-
-        val exception3 = assertThrows<ValidationException> { ValidationUtil.validateUserHeight(BigDecimal("-1")) }
-        assertEquals("User height must be between 0.01 and 300 cm, got: -1", exception3.message)
-    }
-
-    @Test
-    fun `validateUserWeight should pass for valid weights`() {
-        assertDoesNotThrow { ValidationUtil.validateUserWeight(BigDecimal("0.01")) }
-        assertDoesNotThrow { ValidationUtil.validateUserWeight(BigDecimal("80.5")) }
-        assertDoesNotThrow { ValidationUtil.validateUserWeight(BigDecimal("1000")) }
-    }
-
-    @Test
-    fun `validateUserWeight should throw for invalid weights`() {
-        val exception1 = assertThrows<ValidationException> { ValidationUtil.validateUserWeight(BigDecimal.ZERO) }
-        assertEquals("User weight must be between 0.01 and 1000 kg, got: 0", exception1.message)
-
-        val exception2 = assertThrows<ValidationException> { ValidationUtil.validateUserWeight(BigDecimal("1000.01")) }
-        assertEquals("User weight must be between 0.01 and 1000 kg, got: 1000.01", exception2.message)
-
-        val exception3 = assertThrows<ValidationException> { ValidationUtil.validateUserWeight(BigDecimal("-1")) }
-        assertEquals("User weight must be between 0.01 and 1000 kg, got: -1", exception3.message)
-    }
-
-    @Test
     fun `validateProgramDaysPerWeek should pass for valid days`() {
         assertDoesNotThrow { ValidationUtil.validateProgramDaysPerWeek(2) }
         assertDoesNotThrow { ValidationUtil.validateProgramDaysPerWeek(3) }
@@ -366,46 +309,6 @@ class ValidationUtilTest {
                 "To change program frequency, the user must start a new program.",
             exception3.message
         )
-    }
-
-    @Test
-    fun `validateUserWeightWithUnit should pass for valid weights in KG`() {
-        val mockUnitConverter = createMockUnitConverter()
-        assertDoesNotThrow {
-            ValidationUtil.validateUserWeightWithUnit(BigDecimal("80.5"), WeightUnit.KG, mockUnitConverter)
-        }
-    }
-
-    @Test
-    fun `validateUserWeightWithUnit should pass for valid weights in LBS`() {
-        val mockUnitConverter = createMockUnitConverter()
-        // Mock conversion: 100 lbs -> 45.36 kg (valid)
-        whenever(mockUnitConverter.toKg(BigDecimal("100"), WeightUnit.LBS)).thenReturn(BigDecimal("45.36"))
-
-        assertDoesNotThrow {
-            ValidationUtil.validateUserWeightWithUnit(BigDecimal("100"), WeightUnit.LBS, mockUnitConverter)
-        }
-    }
-
-    @Test
-    fun `validateUserWeightWithUnit should throw for invalid unit`() {
-        val mockUnitConverter = createMockUnitConverter()
-        assertThrows<InvalidWeightUnitException> {
-            WeightUnit.fromString("INVALID")
-        }
-    }
-
-    @Test
-    fun `validateUserWeightWithUnit should throw for weight too high after conversion`() {
-        val mockUnitConverter = createMockUnitConverter()
-        // Mock conversion: 2500 lbs -> 1134 kg (too high)
-        whenever(mockUnitConverter.toKg(BigDecimal("2500"), WeightUnit.LBS)).thenReturn(BigDecimal("1134"))
-
-        val exception =
-            assertThrows<ValidationException> {
-                ValidationUtil.validateUserWeightWithUnit(BigDecimal("2500"), WeightUnit.LBS, mockUnitConverter)
-            }
-        assertEquals("User weight must be between 0.01 and 1000 kg, got: 1134", exception.message)
     }
 
     @Test

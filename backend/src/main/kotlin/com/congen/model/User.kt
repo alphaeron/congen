@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import io.swagger.v3.oas.annotations.media.Schema
-import java.math.BigDecimal
 import java.time.Instant
 
 /**
@@ -18,7 +17,7 @@ import java.time.Instant
  * ## User Profile Information
  *
  * Users contain:
- * - **Personal Details**: Name, age, height, weight
+ * - **Personal Details**: Name
  * - **Fitness Preferences**: Equipment preferences, exercise preferences
  * - **Program Data**: Associated workout programs and preferences
  * - **Authentication**: Linked to Keycloak for secure access
@@ -26,9 +25,6 @@ import java.time.Instant
  * ## Validation Rules
  *
  * - **Name**: Required, non-empty string (1-255 characters)
- * - **Age**: 1-150 years
- * - **Height**: 0.01-300 cm
- * - **Weight**: 0.01-1000 kg
  *
  * ## Keycloak Integration
  *
@@ -39,9 +35,6 @@ import java.time.Instant
  *
  * @property keycloakId Unique Keycloak identifier for the user (primary key)
  * @property name User's full name
- * @property age User's age in years
- * @property height User's height in centimeters
- * @property weight User's weight in kilograms
  * @property createdAt Timestamp when the user was created
  * @property updatedAt Timestamp when the user was last updated
  *
@@ -52,7 +45,7 @@ import java.time.Instant
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
     description = "A user profile in the workout generation system",
-    example = "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", name=\"John Doe\", age=30, height=175.5, weight=80.0)",
+    example = "User(keycloakId=\"123e4567-e89b-12d3-a456-426614174000\", name=\"John Doe\")",
 )
 data class User(
     /** Unique Keycloak identifier for the user (primary key). */
@@ -70,24 +63,6 @@ data class User(
         maxLength = 255,
     )
     @param:JsonProperty("name") val name: String,
-    /** User's age in years. */
-    @Schema(
-        description = "User's age in years",
-        example = "30",
-    )
-    @param:JsonProperty("age") val age: Int,
-    /** User's height in centimeters. */
-    @Schema(
-        description = "User's height in centimeters",
-        example = "175.5",
-    )
-    @param:JsonProperty("height") val height: BigDecimal,
-    /** User's weight in kilograms. */
-    @Schema(
-        description = "User's weight in kilograms",
-        example = "80.0",
-    )
-    @param:JsonProperty("weight") val weight: BigDecimal,
     /** Timestamp when the user was created. */
     @Schema(
         description = "Timestamp when the user was created",

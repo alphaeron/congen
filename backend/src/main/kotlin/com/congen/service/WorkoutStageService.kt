@@ -88,6 +88,26 @@ class WorkoutStageService(
     fun deleteWorkoutStage(id: Long): Mono<WorkoutStage> = workoutStageDAL.deleteWorkoutStage(id)
 
     /**
+     * Gets the owner of the workout stage.
+     *
+     * This traces the relationship chain:
+     * WorkoutStage → ProgrammedWorkout → Program → User
+     *
+     * @param workoutStageId The ID of the workout stage
+     * @return Mono<String> The Keycloak user ID of the owner
+     */
+    fun getOwner(workoutStageId: Long): Mono<String> {
+        return workoutStageDAL.selectWorkoutStageById(workoutStageId)
+            .flatMap { workoutStage ->
+                programmedWorkoutDAL.selectProgrammedWorkoutById(workoutStage.programmedWorkoutId)
+            }
+            .flatMap { programmedWorkout ->
+                programDAL.selectProgramById(programmedWorkout.programId)
+            }
+            .map { program -> program.userId.toString() }
+    }
+
+    /**
      * Checks if the given user is the owner of the workout stage.
      *
      * This traces the relationship chain:
@@ -101,14 +121,8 @@ class WorkoutStageService(
         workoutStageId: Long,
         userId: String
     ): Mono<Boolean> {
-        return workoutStageDAL.selectWorkoutStageById(workoutStageId)
-            .flatMap { workoutStage ->
-                programmedWorkoutDAL.selectProgrammedWorkoutById(workoutStage.programmedWorkoutId)
-            }
-            .flatMap { programmedWorkout ->
-                programDAL.selectProgramById(programmedWorkout.programId)
-            }
-            .map { program -> program.userId.toString() == userId }
+        return getOwner(workoutStageId)
+            .map { ownerId -> ownerId == userId }
             .onErrorReturn(false)
     }
 }

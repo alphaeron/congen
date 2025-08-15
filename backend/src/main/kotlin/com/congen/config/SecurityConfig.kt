@@ -48,8 +48,12 @@ class SecurityConfig {
             .csrf { it.disable() }
             .authorizeExchange { exchanges ->
                 exchanges
-                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow all OPTIONS requests for CORS
+                    // Allow all OPTIONS requests for CORS
+                    .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // Allow health check endpoints without authentication
                     .pathMatchers("/api/v1/health/**").permitAll()
+                    // Allow privacy policy endpoint without authentication
+                    .pathMatchers("/api/v1/gdpr/privacy_policy").permitAll()
                     .anyExchange().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->

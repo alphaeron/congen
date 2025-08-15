@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserEquipmentDAL
 import com.congen.model.UserEquipment
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -58,6 +59,7 @@ import reactor.core.publisher.Mono
 class UserEquipmentController(
     private val userEquipmentDAL: UserEquipmentDAL,
     private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -110,12 +112,21 @@ class UserEquipmentController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Saving user equipment: {} - {}", userId, equipmentName)
-                userEquipmentDAL.insertUserEquipment(userId, equipmentName)
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error("Error saving user equipment: userId={}, equipmentName={}", userId, equipmentName, e)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Saving user equipment: {} - {}", userId, equipmentName)
+                        userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error("Error saving user equipment: userId={}, equipmentName={}", userId, equipmentName, e)
+                            }
                     }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only create equipment for themselves"))
             }
@@ -155,14 +166,23 @@ class UserEquipmentController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                userEquipmentDAL.selectUserEquipmentByUser(userId)
-                    .map { equipment ->
-                        logger.debug("Found {} equipment items for user: {}", equipment.size, userId)
-                        ResponseEntity.ok(equipment)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userEquipmentDAL.selectUserEquipmentByUser(userId)
+                            .map { equipment ->
+                                logger.debug("Found {} equipment items for user: {}", equipment.size, userId)
+                                ResponseEntity.ok(equipment)
+                            }
+                            .doOnError { e ->
+                                logger.error("Error getting user equipment for user: {}", userId, e)
+                            }
                     }
-                    .doOnError { e ->
-                        logger.error("Error getting user equipment for user: {}", userId, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own equipment"))
             }
@@ -215,12 +235,21 @@ class UserEquipmentController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Deleting user equipment: {} - {}", userId, equipmentName)
-                userEquipmentDAL.deleteUserEquipment(userId, equipmentName)
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error("Error deleting user equipment: {} - {}", userId, equipmentName, e)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Deleting user equipment: {} - {}", userId, equipmentName)
+                        userEquipmentDAL.deleteUserEquipment(userId, equipmentName)
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error("Error deleting user equipment: {} - {}", userId, equipmentName, e)
+                            }
                     }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only delete their own equipment"))
             }
@@ -273,16 +302,25 @@ class UserEquipmentController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Saving bulk user equipment: {} - {}", userId, equipmentNames)
-                Flux.fromIterable(equipmentNames)
-                    .flatMap { equipmentName ->
-                        userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Saving bulk user equipment: {} - {}", userId, equipmentNames)
+                        Flux.fromIterable(equipmentNames)
+                            .flatMap { equipmentName ->
+                                userEquipmentDAL.insertUserEquipment(userId, equipmentName)
+                            }
+                            .collectList()
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
+                            }
                     }
-                    .collectList()
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error("Error saving bulk user equipment: {} - {}", userId, equipmentNames, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only create equipment for themselves"))
             }

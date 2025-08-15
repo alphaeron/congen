@@ -16,12 +16,6 @@ import java.math.BigDecimal
  *
  * ## Validation Categories
  *
- * ### User Validations
- * - [validateUserAge] - Validates user age (1-150 years)
- * - [validateUserHeight] - Validates user height (0.01-300 cm)
- * - [validateUserWeight] - Validates user weight (0.01-1000 kg)
- * - [validateUserWeightWithUnit] - Validates user weight with unit conversion (0.01-1000 kg equivalent)
- *
  * ### Program Preferences Validations
  * - [validateProgramDaysPerWeek] - Validates program days per week (2, 3, or 4)
  * - [validateSessionTimeLength] - Validates session duration (15-300 minutes)
@@ -48,13 +42,9 @@ import java.math.BigDecimal
  * ## Usage
  *
  * ```kotlin
- * // Validate user data
- * ValidationUtil.validateUserAge(25)
- * ValidationUtil.validateUserHeight(BigDecimal("175.5"))
- * ValidationUtil.validateUserWeight(BigDecimal("80.0"))
- *
- * // Validate with unit conversion
- * val weightInKg = ValidationUtil.validateUserWeightWithUnit(BigDecimal("176.0"), WeightUnit.LBS, unitConverter)
+ * // Validate program preferences
+ * ValidationUtil.validateProgramDaysPerWeek(3)
+ * ValidationUtil.validateSessionTimeLength(60)
  *
  * // Validate program preferences
  * ValidationUtil.validateProgramDaysPerWeek(3)
@@ -73,58 +63,6 @@ import java.math.BigDecimal
 @Component
 object ValidationUtil {
     private val logger = LoggerFactory.getLogger(ValidationUtil::class.java)
-
-    /**
-     * Validates user age to ensure it's within acceptable bounds.
-     *
-     * Age must be between 1 and 150 years. This range covers typical
-     * human lifespans while allowing for edge cases and data entry errors.
-     *
-     * @param age The age to validate in years
-     * @throws ValidationException if age is not within valid range (1-150)
-     *
-     * @example
-     * ```kotlin
-     * ValidationUtil.validateUserAge(25)  // Valid
-     * ValidationUtil.validateUserAge(0)   // Throws ValidationException
-     * ValidationUtil.validateUserAge(151) // Throws ValidationException
-     * ```
-     */
-    fun validateUserAge(age: Int) {
-        if (age <= 0 || age > 150) {
-            val message = "User age must be between 1 and 150, got: $age"
-            logger.error(message)
-            throw ValidationException(message)
-        }
-    }
-
-    /**
-     * Validates user height to ensure it matches DB constraints.
-     * Height must be > 0 and <= 300 (cm).
-     * @param height Height in centimeters
-     * @throws ValidationException if height is not in (0, 300]
-     */
-    fun validateUserHeight(height: BigDecimal) {
-        if (height <= BigDecimal.ZERO || height > BigDecimal("300")) {
-            val message = "User height must be between 0.01 and 300 cm, got: $height"
-            logger.error(message)
-            throw ValidationException(message)
-        }
-    }
-
-    /**
-     * Validates user weight to ensure it matches DB constraints.
-     * Weight must be > 0 and <= 1000 (kg).
-     * @param weight Weight in kilograms
-     * @throws ValidationException if weight is not in (0, 1000]
-     */
-    fun validateUserWeight(weight: BigDecimal) {
-        if (weight <= BigDecimal.ZERO || weight > BigDecimal("1000")) {
-            val message = "User weight must be between 0.01 and 1000 kg, got: $weight"
-            logger.error(message)
-            throw ValidationException(message)
-        }
-    }
 
     /**
      * Validates one rep max value for user_one_rep_max (DB: > 0 and <= 1000 kg).
@@ -356,26 +294,6 @@ object ValidationUtil {
     }
 
     /**
-     * Validates user weight with unit conversion to ensure it matches DB constraints.
-     * Weight must be > 0 and <= 1000 kg equivalent after conversion.
-     *
-     * @param weight Weight value in the specified unit
-     * @param unit The unit of the weight value
-     * @param unitConverter Utility for unit conversions
-     * @return The weight converted to kg if validation passes
-     * @throws ValidationException if weight is not in valid range after conversion to kg
-     */
-    fun validateUserWeightWithUnit(
-        weight: BigDecimal,
-        unit: WeightUnit,
-        unitConverter: UnitConverter
-    ): BigDecimal {
-        val weightInKg = unitConverter.toKg(weight, unit)
-        validateUserWeight(weightInKg)
-        return weightInKg
-    }
-
-    /**
      * Validates one rep max value with unit conversion for user_one_rep_max (DB: > 0 and <= 1000 kg equivalent).
      *
      * @param oneRepMax One rep max value in the specified unit
@@ -432,5 +350,30 @@ object ValidationUtil {
         val weightInKg = unitConverter.toKg(weight, unit)
         validatePerformedWeight(weightInKg)
         return weightInKg
+    }
+
+    /**
+     * Validates user name for user profiles.
+     *
+     * User names must be non-null, non-empty, and contain at least one non-whitespace character.
+     * This ensures that user profiles have meaningful names and prevents empty or whitespace-only names.
+     *
+     * @param name The user's full name to validate
+     * @throws ValidationException if name is null, empty, or contains only whitespace
+     *
+     * @example
+     * ```kotlin
+     * ValidationUtil.validateUserName("John Doe")     // Valid
+     * ValidationUtil.validateUserName("")            // Throws ValidationException
+     * ValidationUtil.validateUserName("   ")         // Throws ValidationException
+     * ValidationUtil.validateUserName(null)          // Throws ValidationException
+     * ```
+     */
+    fun validateUserName(name: String?) {
+        if (name.isNullOrBlank()) {
+            val message = "User name must not be empty"
+            logger.error(message)
+            throw ValidationException(message)
+        }
     }
 }

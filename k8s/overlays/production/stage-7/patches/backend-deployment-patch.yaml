@@ -33,6 +33,10 @@ spec:
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "production"
+        - name: GDPR_AUDIT_ENABLED
+          value: "true"
+        - name: DATA_RETENTION_CHECK_ENABLED
+          value: "true"
         securityContext:
           runAsNonRoot: true
           runAsUser: 1000

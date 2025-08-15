@@ -48,10 +48,62 @@ export interface Muscle {
 export interface User {
   keycloak_id: string;
   name: string;
-  age: number;
-  height: number;
-  weight: number;
   created_at: string;
   updated_at: string;
   roles?: string[];
 } // end interface User
+
+/**
+ * User consent record for GDPR compliance.
+ * This matches the backend UserConsent model.
+ */
+export interface UserConsent {
+  keycloak_id: string;
+  data_processing_consent: boolean;
+  consent_timestamp?: string;
+  updated_at: string;
+} // end interface UserConsent
+
+/**
+ * User data export structure for GDPR data portability.
+ */
+export interface UserDataExport {
+  personal_data: {
+    profile: Record<string, unknown>;
+    preferences: Record<string, unknown>;
+    exercise_history: Record<string, unknown>[];
+    programs: Record<string, unknown>[];
+  };
+  metadata: {
+    exported_at: string;
+    data_types: string[];
+    total_records: number;
+  };
+} // end interface UserDataExport
+
+/**
+ * Privacy policy response structure with GDPR compliance information.
+ */
+export interface PrivacyPolicy {
+  data_controller: {
+    name: string;
+    contact: string;
+    dpo?: string;
+  };
+  data_processing: {
+    purposes: string[];
+    legal_basis: string[];
+    data_types: string[];
+    retention_periods: Record<string, string>;
+  };
+  user_rights: {
+    access: string;
+    rectification: string;
+    erasure: string;
+    portability: string;
+    objection: string;
+    complaint: string;
+  };
+  last_updated: string;
+  version: string;
+} // end interface PrivacyPolicy

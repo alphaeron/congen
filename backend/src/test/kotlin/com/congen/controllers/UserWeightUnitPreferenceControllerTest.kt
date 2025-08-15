@@ -6,9 +6,11 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockUserWeightUnitPreference
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -34,6 +36,7 @@ import reactor.test.StepVerifier
 class UserWeightUnitPreferenceControllerTest {
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var userWeightUnitPreferenceController: UserWeightUnitPreferenceController
 
     private val currentUserId = "b226d772-c063-4974-ae08-ab64134abbcf"
@@ -42,11 +45,19 @@ class UserWeightUnitPreferenceControllerTest {
     fun setUp() {
         userWeightUnitPreferenceDAL = mock()
         keycloakUtil = mock()
-        userWeightUnitPreferenceController = UserWeightUnitPreferenceController(userWeightUnitPreferenceDAL, keycloakUtil)
+        gdprComplianceService = mock()
+        userWeightUnitPreferenceController = UserWeightUnitPreferenceController(userWeightUnitPreferenceDAL, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

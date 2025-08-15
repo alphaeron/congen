@@ -21,7 +21,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
 
     private fun setupTestEntities() {
         val token = getValidToken("service")
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "SetScheme User" + System.nanoTime(), token = token)
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = token)
         programId =
             IntegrationTestHelpers.createTestProgram(

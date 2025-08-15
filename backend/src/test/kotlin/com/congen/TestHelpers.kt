@@ -41,18 +41,12 @@ fun sampleInstant(): Instant = Instant.parse("2024-01-01T00:00:00Z")
 fun mockUser(
     keycloakId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
     name: String = "John Doe",
-    age: Int = 30,
-    height: BigDecimal = BigDecimal("180.5"),
-    weight: BigDecimal = BigDecimal("75.0"),
     createdAt: Instant = sampleInstant(),
     updatedAt: Instant = sampleInstant()
 ): User =
     User(
         keycloakId = keycloakId,
         name = name,
-        age = age,
-        height = height,
-        weight = weight,
         createdAt = createdAt,
         updatedAt = updatedAt
     )

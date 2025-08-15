@@ -532,6 +532,33 @@
       ],
       "notBefore": 0,
       "groups": []
+    },
+    {
+      "id": "admin-user-id-5678",
+      "username": "admin",
+      "email": "admin@example.com",
+      "emailVerified": true,
+      "createdTimestamp": 1753495994255,
+      "enabled": true,
+      "totp": false,
+      "disableableCredentialTypes": [],
+      "requiredActions": [],
+      "realmRoles": [
+        "admin",
+        "default-roles-congen"
+      ],
+      "clientRoles": {},
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "notBefore": 0,
+      "groups": [],
+      "firstName": "Admin",
+      "lastName": "User"
     }
   ],
   "scopeMappings": [

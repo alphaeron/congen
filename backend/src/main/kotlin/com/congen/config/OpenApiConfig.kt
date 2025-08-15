@@ -120,9 +120,6 @@ class OpenApiConfig(
                         ## Data Validation
 
                         All input data is validated according to business rules:
-                        - User age: 1-150 years
-                        - User weight: 0.01-1000 kg
-                        - User height: 0.01-300 cm
                         - Program days per week: 2, 3, or 4 days
                         - Exercise parameters: Valid ranges for reps, sets, weights, etc.
 

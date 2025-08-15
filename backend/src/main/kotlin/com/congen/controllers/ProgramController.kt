@@ -1,8 +1,10 @@
 package com.congen.controllers
 
 import com.congen.model.Program
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
+import reactor.core.publisher.Flux
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -61,6 +63,7 @@ import reactor.core.publisher.Mono
 class ProgramController(
     private val programService: ProgramService,
     private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -105,16 +108,25 @@ class ProgramController(
         return keycloakUtil.getCurrentUserId().flatMap { keycloakId ->
             keycloakUtil.getCurrentUserRoles().flatMap { roles ->
                 if (roles.contains("admin") || roles.contains("service") || userId == keycloakId) {
-                    logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
-                    val startingCurrentWeekNumber = 1
-                    programService.createProgram(userId, name, startingCurrentWeekNumber, isActive)
-                        .map { savedProgram ->
-                            logger.debug("Saved program with id: {}", savedProgram.id)
-                            ResponseEntity.ok(savedProgram)
+                    val consentUserIdMono = if (roles.contains("admin") || roles.contains("service")) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(keycloakId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
+                            logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
+                            val startingCurrentWeekNumber = 1
+                            programService.createProgram(userId, name, startingCurrentWeekNumber, isActive)
+                                .map { savedProgram ->
+                                    logger.debug("Saved program with id: {}", savedProgram.id)
+                                    ResponseEntity.ok(savedProgram)
+                                }
+                                .doOnError { e ->
+                                    logger.error("Error saving program: {} for user {}", name, userId, e)
+                                }
                         }
-                        .doOnError { e ->
-                            logger.error("Error saving program: {} for user {}", name, userId, e)
-                        }
+                    }
                 } else {
                     Mono.error(AccessDeniedException("User not authorized to create programs for other users"))
                 }
@@ -163,25 +175,30 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programMono =
-                if (isAdminOrService) {
-                    programService.getProgramById(id)
-                } else {
-                    programService.getProgramById(id)
-                        .flatMap { program ->
-                            if (program.userId == userId) {
+            programService.getProgramById(id)
+                .flatMap { program ->
+                    val hasAccess = isAdminOrService || program.userId == userId
+                    if (hasAccess) {
+                        val consentUserIdMono = if (isAdminOrService) {
+                            Mono.just(program.userId)
+                        } else {
+                            Mono.just(userId)
+                        }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
                                 Mono.just(program)
-                            } else {
-                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                                    .map {
+                                        logger.debug("Found program: {}", id)
+                                        ResponseEntity.ok(it)
+                                    }
+                                    .doOnError { e ->
+                                        logger.error("Error getting program: {}", id, e)
+                                    }
                             }
                         }
-                }
-            programMono.map {
-                logger.debug("Found program: {}", id)
-                ResponseEntity.ok(it)
-            }
-                .doOnError { e ->
-                    logger.error("Error getting program: {}", id, e)
+                    } else {
+                        Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                    }
                 }
         }
     }
@@ -214,14 +231,23 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programMono =
-                if (isAdminOrService) {
-                    programService.getAllPrograms()
-                } else {
+            if (isAdminOrService) {
+                programService.getAllPrograms()
+                    .flatMap { programs ->
+                        Flux.fromIterable(programs)
+                            .flatMap { program ->
+                                gdprComplianceService.hasUserConsent(program.userId)
+                                    .filter { hasConsent -> hasConsent }
+                                    .map { program }
+                            }
+                            .collectList()
+                    }
+                    .map { programs -> ResponseEntity.ok(programs) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
                     programService.getProgramsByUserId(userId, null)
+                        .map { programs -> ResponseEntity.ok(programs) }
                 }
-            programMono.map { programs ->
-                ResponseEntity.ok(programs)
             }
         }
     }
@@ -341,25 +367,30 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programMono =
-                if (isAdminOrService) {
-                    programService.updateProgram(id, name, currentWeekNumber, isActive)
-                } else {
-                    programService.getProgramById(id)
-                        .flatMap { program ->
-                            if (program.userId == userId) {
+            programService.getProgramById(id)
+                .flatMap { program ->
+                    val hasAccess = isAdminOrService || program.userId == userId
+                    if (hasAccess) {
+                        val consentUserIdMono = if (isAdminOrService) {
+                            Mono.just(program.userId)
+                        } else {
+                            Mono.just(userId)
+                        }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
                                 programService.updateProgram(id, name, currentWeekNumber, isActive)
-                            } else {
-                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                                    .map {
+                                        logger.debug("Updated program: {}", id)
+                                        ResponseEntity.ok(it)
+                                    }
+                                    .doOnError { e ->
+                                        logger.error("Error updating program: {}", id, e)
+                                    }
                             }
                         }
-                }
-            programMono.map {
-                logger.debug("Updated program: {}", id)
-                ResponseEntity.ok(it)
-            }
-                .doOnError { e ->
-                    logger.error("Error updating program: {}", id, e)
+                    } else {
+                        Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                    }
                 }
         }
     }
@@ -406,25 +437,30 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val programMono =
-                if (isAdminOrService) {
-                    programService.deleteProgram(id)
-                } else {
-                    programService.getProgramById(id)
-                        .flatMap { program ->
-                            if (program.userId == userId) {
+            programService.getProgramById(id)
+                .flatMap { program ->
+                    val hasAccess = isAdminOrService || program.userId == userId
+                    if (hasAccess) {
+                        val consentUserIdMono = if (isAdminOrService) {
+                            Mono.just(program.userId)
+                        } else {
+                            Mono.just(userId)
+                        }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
                                 programService.deleteProgram(id)
-                            } else {
-                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                                    .map {
+                                        logger.debug("Deleted program: {}", id)
+                                        ResponseEntity.ok(it)
+                                    }
+                                    .doOnError { e ->
+                                        logger.error("Error deleting program: {}", id, e)
+                                    }
                             }
                         }
-                }
-            programMono.map {
-                logger.debug("Deleted program: {}", id)
-                ResponseEntity.ok(it)
-            }
-                .doOnError { e ->
-                    logger.error("Error deleting program: {}", id, e)
+                    } else {
+                        Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
+                    }
                 }
         }
     }

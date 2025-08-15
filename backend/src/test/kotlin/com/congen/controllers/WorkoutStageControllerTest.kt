@@ -7,6 +7,7 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockWorkoutStage
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.WorkoutStage
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.service.ProgrammedWorkoutService
 import com.congen.service.WorkoutStageService
@@ -38,6 +39,9 @@ class WorkoutStageControllerTest {
 
     @Mock
     private lateinit var programmedWorkoutService: ProgrammedWorkoutService
+
+    @Mock
+    private lateinit var gdprComplianceService: GdprComplianceService
 
     private lateinit var workoutStageController: WorkoutStageController
     private lateinit var workoutStageService: WorkoutStageService
@@ -198,11 +202,18 @@ class WorkoutStageControllerTest {
         programService = mock()
         programmedWorkoutService = mock()
         keycloakUtil = mock()
-        workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil)
+        workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent<Any>(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

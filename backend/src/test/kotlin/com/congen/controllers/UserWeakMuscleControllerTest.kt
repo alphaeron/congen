@@ -2,8 +2,10 @@ package com.congen.controllers
 
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.UserWeakMuscle
+import com.congen.service.GdprComplianceService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -17,12 +19,21 @@ import java.time.Instant
  */
 class UserWeakMuscleControllerTest {
     private lateinit var dal: UserWeakMuscleDAL
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var controller: UserWeakMuscleController
 
     @BeforeEach
     fun setUp() {
         dal = mock()
-        controller = UserWeakMuscleController(dal)
+        gdprComplianceService = mock()
+        controller = UserWeakMuscleController(dal, gdprComplianceService)
+
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -177,7 +178,7 @@ class HealthCheckServiceTest {
             WebClientResponseException.create(
                 HttpStatus.SERVICE_UNAVAILABLE.value(),
                 "Service Unavailable",
-                org.springframework.http.HttpHeaders(),
+                HttpHeaders(),
                 ByteArray(0),
                 null
             )

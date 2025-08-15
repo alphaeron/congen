@@ -1,10 +1,12 @@
 package com.congen.controllers
 
+import com.congen.exceptions.DatabaseException
+import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.service.UserService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
@@ -12,77 +14,43 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
-import java.math.BigDecimal
 
 /**
- * REST controller for managing user operations.
+ * REST controller for user management operations.
  *
- * This controller provides endpoints for creating, reading, updating, and deleting
- * user profiles. Users represent individuals who use the workout generation system
- * and can have associated preferences, equipment, and program selections.
- *
- * ## User Model
- *
- * Users contain basic profile information including:
- * - Personal details (name, age, height, weight)
- * - Fitness preferences and goals
- * - Associated equipment and exercise preferences
- *
- * ## Validation Rules
- *
- * - **Name**: Required, non-empty string
- * - **Age**: 1-150 years
- * - **Height**: 0.01-300 cm
- * - **Weight**: 0.01-1000 kg
- *
- * ## Error Handling
- *
- * - `400 Bad Request`: Invalid input data
- * - `404 Not Found`: User not found
- * - `422 Unprocessable Entity`: Validation errors
- * - `500 Internal Server Error`: Database or system errors
+ * Provides endpoints for creating, retrieving, updating, and managing user profiles.
+ * All operations require proper authentication and authorization.
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/user")
-@Tag(
-    name = "User Management",
-    description = "Operations for managing user profiles and preferences",
-)
+@RequestMapping("/api/v1/user")
+@Tag(name = "User Management", description = "APIs for managing user profiles")
 class UserController(
     private val userService: UserService,
-    private val keycloakUtil: KeycloakUtil,
+    private val keycloakUtil: KeycloakUtil
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserController::class.java)
     }
 
     /**
-     * Creates a new user profile (public registration endpoint).
+     * Creates a new user profile after Keycloak registration.
      *
      * This endpoint allows public user registration. It creates a user profile
      * in the application database linked to the authenticated user's Keycloak ID.
      * The user must be authenticated and the profile will be linked to their Keycloak user ID.
+     * User information (name) is automatically extracted from the JWT token.
      *
-     * @param name The user's full name
-     * @param age The user's age in years
-     * @param height The user's height in centimeters
-     * @param weight The user's weight in kilograms
-     * @param unit The weight unit (optional, defaults to KG)
      * @return The created user with assigned ID and timestamps
      *
-     * @throws ValidationException if user data fails validation
+     * @throws ValidationException if user data fails validation or name is not available
      * @throws DatabaseException if database operation fails
      */
     @PostMapping("/")
@@ -90,175 +58,56 @@ class UserController(
     @Operation(
         summary = "Create user profile after Keycloak registration",
         description =
-            "Creates a user profile in the application database after successful Keycloak registration. " +
-                "The user must be authenticated and the profile will be linked to their Keycloak user ID.",
+            "Creates a user profile using information automatically extracted from the JWT token. " +
+                "The user must be authenticated and the profile will be linked to their Keycloak user ID."
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
                 description = "User profile created successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
+                content = [Content(schema = io.swagger.v3.oas.annotations.media.Schema(implementation = User::class))]
             ),
             ApiResponse(
-                responseCode = "422",
-                description = "Validation error",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-        ],
-    )
-    fun save(
-        @Parameter(
-            description = "User's full name",
-            required = true,
-            example = "John Doe",
-        )
-        @RequestParam name: String,
-        @Parameter(
-            description = "User's age in years",
-            required = true,
-            example = "30",
-        )
-        @RequestParam age: Int,
-        @Parameter(
-            description = "User's height in centimeters",
-            required = true,
-            example = "175.5",
-        )
-        @RequestParam height: BigDecimal,
-        @Parameter(
-            description = "User's weight in kilograms",
-            required = true,
-            example = "80.0",
-        )
-        @RequestParam weight: BigDecimal,
-        @RequestParam(required = false, defaultValue = "KG") unit: String?,
-    ): Mono<ResponseEntity<User>> {
-        logger.info("Creating user profile for authenticated user: {}", name)
-        return keycloakUtil.getCurrentUserId()
-            .flatMap { keycloakUserId ->
-                userService.createUser(
-                    keycloakUserId,
-                    name,
-                    age,
-                    height,
-                    weight,
-                    unit
-                )
-            }
-            .map { savedUser ->
-                logger.debug("Created user profile with keycloak id: {}", savedUser.keycloakId)
-                ResponseEntity.ok(savedUser)
-            }
-    }
-
-    /**
-     * Retrieves the current user's profile.
-     *
-     * This endpoint fetches the profile information of the currently authenticated user.
-     * The user is identified by their Keycloak user ID from the authentication context.
-     *
-     * @return The current user's profile
-     */
-    @GetMapping("/me")
-    @PreAuthorize("isAuthenticated()")
-    @Operation(
-        summary = "Get current user profile",
-        description = "Retrieves the profile information of the currently authenticated user.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "Current user profile retrieved successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
+                responseCode = "400",
+                description = "Bad request - validation error or name not available from token"
             ),
             ApiResponse(
-                responseCode = "404",
-                description = "Current user not found in database",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
             ),
-        ],
+            ApiResponse(
+                responseCode = "409",
+                description = "Conflict - user profile already exists"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
     )
-    fun getCurrentUser(): Mono<ResponseEntity<User>> {
-        return keycloakUtil.getCurrentUserId()
-            .flatMap { keycloakUserId ->
-                logger.debug("Getting current user profile for Keycloak user ID: {}", keycloakUserId)
-                userService.getUserByKeycloakId(keycloakUserId)
-            }
+    fun createUser(): Mono<ResponseEntity<User>> {
+        return userService.createUser()
             .map { ResponseEntity.ok(it) }
-    }
-
-    /**
-     * Retrieves a user by their Keycloak identifier.
-     *
-     * This endpoint fetches a specific user's profile information by their Keycloak ID.
-     * If the user is not found, a 404 error will be returned.
-     *
-     * @param keycloakId The Keycloak identifier of the user to retrieve
-     * @return The user profile if found, or 404 if not found
-     */
-    @GetMapping("/{keycloakId}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #keycloakId == principal.subject")
-    @Operation(
-        summary = "Get user by Keycloak ID",
-        description = "Retrieves a specific user's profile information by their Keycloak identifier.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "User found successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-            ApiResponse(
-                responseCode = "404",
-                description = "User not found",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-        ],
-    )
-    fun get(
-        @Parameter(
-            description = "Keycloak identifier of the user",
-            required = true,
-            example = "123e4567-e89b-12d3-a456-426614174000",
-        )
-        @PathVariable("keycloakId") keycloakId: String,
-    ): Mono<ResponseEntity<User>> {
-        return userService.getUserByKeycloakId(keycloakId)
-            .map { ResponseEntity.ok(it) }
+            .onErrorResume(ValidationException::class.java) { e ->
+                logger.warn("Validation error creating user: {}", e.message)
+                Mono.just(ResponseEntity.badRequest().build())
+            }
+            .onErrorResume(DatabaseException::class.java) { e ->
+                logger.error("Database error creating user", e)
+                Mono.just(ResponseEntity.internalServerError().build())
+            }
+            .onErrorResume { e ->
+                logger.error("Unexpected error creating user", e)
+                Mono.just(ResponseEntity.internalServerError().build())
+            }
     }
 
     /**
      * Retrieves all users in the system.
      *
-     * This endpoint returns a list of all user profiles. The response includes
-     * basic user information for each user in the system.
+     * This endpoint allows retrieving all user profiles in the system.
+     * The user must be authenticated and have admin privileges.
      *
      * @return List of all users
      *
@@ -268,160 +117,96 @@ class UserController(
     @PreAuthorize("hasRole('admin') or hasRole('service')")
     @Operation(
         summary = "Get all users",
-        description = "Retrieves a list of all user profiles in the system.",
+        description =
+            "Retrieves all user profiles in the system. " +
+                "Only users with admin or service roles can access this endpoint."
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "Users retrieved successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
+                description = "All users retrieved successfully",
+                content = [Content(schema = io.swagger.v3.oas.annotations.media.Schema(implementation = Array<User>::class))]
             ),
-        ],
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
+            ),
+            ApiResponse(
+                responseCode = "403",
+                description = "Forbidden - user not authorized"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
     )
     fun getAll(): Mono<ResponseEntity<List<User>>> {
-        logger.debug("Getting all users")
         return userService.getAllUsers()
             .map { ResponseEntity.ok(it) }
+            .onErrorResume(DatabaseException::class.java) { e ->
+                logger.error("Database error getting all users", e)
+                Mono.just(ResponseEntity.internalServerError().build())
+            }
+            .onErrorResume { e ->
+                logger.error("Unexpected error getting all users", e)
+                Mono.just(ResponseEntity.internalServerError().build())
+            }
     }
 
     /**
-     * Updates an existing user profile.
+     * Retrieves the current authenticated user's profile.
      *
-     * This endpoint updates a user's profile information. The user must exist
-     * and have a valid Keycloak ID. All provided fields will be updated.
+     * This endpoint allows authenticated users to retrieve their own profile information.
+     * The user must be authenticated and can only access their own profile.
      *
-     * @param keycloakId The Keycloak identifier of the user to update
-     * @param name The updated user's full name
-     * @param age The updated user's age in years
-     * @param height The updated user's height in centimeters
-     * @param weight The updated user's weight in kilograms
-     * @return The updated user profile
+     * @return The current user's profile
      *
-     * @throws ValidationException if user data fails validation
-     * @throws DatabaseException if database operation fails
+     * @throws NoResultsFoundException if user profile does not exist
      */
-    @PatchMapping("/{keycloakId}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #keycloakId == principal.subject")
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
     @Operation(
-        summary = "Update user",
+        summary = "Get current user profile",
         description =
-            "Updates an existing user's profile information. " +
-                "The user must exist and have a valid Keycloak ID.",
+            "Retrieves the current authenticated user's profile. " +
+                "The user must be authenticated and can only access their own profile."
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "User updated successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
+                description = "Current user profile retrieved successfully",
+                content = [Content(schema = io.swagger.v3.oas.annotations.media.Schema(implementation = User::class))]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
             ),
             ApiResponse(
                 responseCode = "404",
-                description = "User not found",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-        ],
-    )
-    fun update(
-        @Parameter(
-            description = "Keycloak identifier of the user to update",
-            required = true,
-            example = "123e4567-e89b-12d3-a456-426614174000",
-        )
-        @PathVariable("keycloakId") keycloakId: String,
-        @Parameter(
-            description = "User's full name",
-            required = true,
-            example = "John Doe",
-        )
-        @RequestParam name: String,
-        @Parameter(
-            description = "User's age in years",
-            required = true,
-            example = "30",
-        )
-        @RequestParam age: Int,
-        @Parameter(
-            description = "User's height in centimeters",
-            required = true,
-            example = "175.5",
-        )
-        @RequestParam height: BigDecimal,
-        @Parameter(
-            description = "User's weight in kilograms",
-            required = true,
-            example = "80.0",
-        )
-        @RequestParam weight: BigDecimal,
-        @RequestParam(required = false, defaultValue = "KG") unit: String?,
-    ): Mono<ResponseEntity<User>> {
-        return userService.updateUser(keycloakId, name, age, height, weight, unit)
-            .map { ResponseEntity.ok(it) }
-    }
-
-    /**
-     * Deletes a user profile.
-     *
-     * This endpoint permanently removes a user from the system. This action
-     * cannot be undone and will also remove associated preferences and data.
-     *
-     * @param keycloakId The Keycloak identifier of the user to delete
-     * @return Confirmation of deletion
-     *
-     * @throws DatabaseException if database operation fails
-     */
-    @DeleteMapping("/{keycloakId}")
-    @PreAuthorize("hasRole('admin') or hasRole('service') or #keycloakId == principal.subject")
-    @Operation(
-        summary = "Delete user",
-        description =
-            "Permanently removes a user from the system. " +
-                "This action cannot be undone and will also remove associated preferences and data.",
-    )
-    @ApiResponses(
-        value = [
-            ApiResponse(
-                responseCode = "200",
-                description = "User deleted successfully",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
+                description = "Not found - user profile does not exist"
             ),
             ApiResponse(
-                responseCode = "404",
-                description = "User not found",
-                content = [
-                    Content(
-                        mediaType = "application/json",
-                    ),
-                ],
-            ),
-        ],
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
     )
-    fun delete(
-        @Parameter(
-            description = "Keycloak identifier of the user to delete",
-            required = true,
-            example = "123e4567-e89b-12d3-a456-426614174000",
-        )
-        @PathVariable("keycloakId") keycloakId: String,
-    ): Mono<ResponseEntity<User>> {
-        return userService.deleteUser(keycloakId)
+    fun getCurrentUser(): Mono<ResponseEntity<User>> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakUserId ->
+                userService.getUserByKeycloakId(keycloakUserId)
+            }
             .map { ResponseEntity.ok(it) }
+            .onErrorResume(NoResultsFoundException::class.java) { e ->
+                logger.warn("User profile not found for current user: {}", e.message)
+                Mono.just(ResponseEntity.notFound().build())
+            }
+            .onErrorResume { e ->
+                logger.error("Unexpected error getting current user", e)
+                Mono.just(ResponseEntity.internalServerError().build())
+            }
     }
 }

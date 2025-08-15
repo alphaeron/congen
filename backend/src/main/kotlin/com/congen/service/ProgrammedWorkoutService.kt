@@ -95,11 +95,25 @@ class ProgrammedWorkoutService(
         programmedWorkoutId: Long,
         userId: String
     ): Mono<Boolean> {
+        return getOwner(programmedWorkoutId)
+            .map { ownerId -> ownerId == userId }
+            .onErrorReturn(false)
+    }
+
+    /**
+     * Gets the owner of the programmed workout.
+     *
+     * This traces the relationship chain:
+     * ProgrammedWorkout → Program → User
+     *
+     * @param programmedWorkoutId The ID of the programmed workout
+     * @return Mono<String> The Keycloak user ID of the owner
+     */
+    fun getOwner(programmedWorkoutId: Long): Mono<String> {
         return programmedWorkoutDAL.selectProgrammedWorkoutById(programmedWorkoutId)
             .flatMap { programmedWorkout ->
                 programDAL.selectProgramById(programmedWorkout.programId)
             }
-            .map { program -> program.userId == userId }
-            .onErrorReturn(false)
+            .map { program -> program.userId }
     }
 }

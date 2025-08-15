@@ -5,8 +5,8 @@ import { BrowserRouter } from 'react-router';
 
 import { UserProfile } from './UserProfile';
 import { ENDPOINT } from '../api/endpoint';
+import { deleteAllPersonalData } from '../api/gdpr';
 import type { User } from '../api/types';
-import { deleteUser } from '../api/user';
 
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
@@ -14,9 +14,6 @@ const mock = new MockAdapter(ENDPOINT);
 const mockUser: User = {
   keycloak_id: 'test-user-id',
   name: 'John Doe',
-  age: 30,
-  height: 175,
-  weight: 80,
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
   roles: ['user'],
@@ -56,9 +53,6 @@ describe('UserProfile', () => {
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('30 years old')).toBeInTheDocument();
-    expect(screen.getByText('175 cm')).toBeInTheDocument();
-    expect(screen.getByText('80 kg')).toBeInTheDocument();
   });
 
   it('should show deactivate account button', () => {
@@ -119,22 +113,16 @@ describe('UserProfile', () => {
     expect(response.data.message).toBe('test');
   });
 
-  it('should verify deleteUser function works with axios mock', async () => {
-    // Test that the deleteUser function works with the axios mock
-    mock.onDelete('/user/test-user-id').reply(200, mockUser);
+  it('should verify deleteAllPersonalData function works with axios mock', async () => {
+    // Test that the deleteAllPersonalData function works with the axios mock
+    mock.onPost('/gdpr/delete_all_data').reply(200);
 
-    const result = await deleteUser('test-user-id');
-    expect(result).toEqual(mockUser);
+    const result = await deleteAllPersonalData('DELETE_ALL_MY_DATA');
+    expect(result.status).toBe(200);
+    expect(result.data).toBeUndefined();
   });
 
-  // Note: The component's delete functionality appears to not be making HTTP requests
-  // in the test environment. This could be due to:
-  // 1. The component not actually calling the deleteUser function
-  // 2. The deleteUser function not being properly imported/mocked
-  // 3. The URL path being different than expected
-  //
+  // Note: The component's delete functionality now uses GDPR deleteAllPersonalData
   // The axios-mock-adapter is set up correctly and working (as verified by the tests above),
-  // and the deleteUser function works correctly with the mock.
-  // The issue appears to be that the component's delete button click handler is not
-  // actually calling the deleteUser function in the test environment.
+  // and the deleteAllPersonalData function works correctly with the mock.
 });

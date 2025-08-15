@@ -22,15 +22,11 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         val userId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
-                name = "Test User",
-                age = 25,
-                height = 175.0,
-                weight = 80.0,
                 token = token
             )
 
         // Retrieve the user to get the full response with timestamps
-        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
+        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Verify the user was created with valid timestamps
         assertNotNull(userResponse.keycloakId)
@@ -87,15 +83,11 @@ class DateTimeSerializationIntegrationTest : BaseIntegrationTest() {
         val userId =
             IntegrationTestHelpers.createTestUser(
                 webTestClient = webTestClient,
-                name = "Test User 3",
-                age = 35,
-                height = 170.0,
-                weight = 75.0,
                 token = token
             )
 
         // Retrieve the user to get the full response with timestamps
-        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, userId, token = token)
+        val userResponse = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
 
         // Verify the timestamp has microsecond precision (6 decimal places)
         val createdAtString = userResponse.createdAt.toString()

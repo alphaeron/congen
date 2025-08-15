@@ -12,7 +12,7 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
         // Create a unique user for each test
         val unique = System.nanoTime()
         val token = getValidToken("user")
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = token)
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
     }
 
     @Test

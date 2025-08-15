@@ -425,6 +425,22 @@ class SetSchemeService(
     }
 
     /**
+     * Gets the owner of the set scheme.
+     *
+     * This traces the relationship chain:
+     * SetScheme → ProgrammedExercise → WorkoutStage → ProgrammedWorkout → Program → User
+     *
+     * @param setSchemeId The ID of the set scheme
+     * @return Mono<String> The Keycloak user ID of the owner
+     */
+    fun getOwner(setSchemeId: Long): Mono<String> {
+        return setSchemeDAL.selectSetSchemeById(setSchemeId)
+            .flatMap { setScheme ->
+                programmedExerciseDAL.getUserIdFromProgrammedExercise(setScheme.programmedExerciseId)
+            }
+    }
+
+    /**
      * Checks if the given user is the owner of the set scheme.
      *
      * This traces the relationship chain:
@@ -438,11 +454,8 @@ class SetSchemeService(
         setSchemeId: Long,
         userId: String
     ): Mono<Boolean> {
-        return setSchemeDAL.selectSetSchemeById(setSchemeId)
-            .flatMap { setScheme ->
-                programmedExerciseDAL.getUserIdFromProgrammedExercise(setScheme.programmedExerciseId)
-            }
-            .map { ownerUserId -> ownerUserId == userId }
+        return getOwner(setSchemeId)
+            .map { ownerId -> ownerId == userId }
             .onErrorReturn(false)
     }
 }

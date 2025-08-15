@@ -3,7 +3,6 @@ package com.congen.model
 import com.congen.mockUser
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 import java.time.Instant
 
 class UserTest {
@@ -15,18 +14,12 @@ class UserTest {
             mockUser(
                 keycloakId = "test-keycloak-id",
                 name = "John Doe",
-                age = 30,
-                height = BigDecimal("180.5"),
-                weight = BigDecimal("75.0"),
                 createdAt = now,
                 updatedAt = now
             )
 
         assertEquals("test-keycloak-id", user.keycloakId)
         assertEquals("John Doe", user.name)
-        assertEquals(30, user.age)
-        assertEquals(BigDecimal("180.5"), user.height)
-        assertEquals(BigDecimal("75.0"), user.weight)
         assertEquals(now, user.createdAt)
         assertEquals(now, user.updatedAt)
     }

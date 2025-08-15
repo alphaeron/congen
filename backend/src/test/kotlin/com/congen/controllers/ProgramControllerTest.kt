@@ -2,12 +2,14 @@ package com.congen.controllers
 
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
@@ -38,6 +40,9 @@ class ProgramControllerTest {
     @Mock
     private lateinit var keycloakUtil: KeycloakUtil
 
+    @Mock
+    private lateinit var gdprComplianceService: GdprComplianceService
+
     private lateinit var programController: ProgramController
 
     companion object {
@@ -55,11 +60,18 @@ class ProgramControllerTest {
     @BeforeEach
     fun setUp() {
         MockitoAnnotations.openMocks(this)
-        programController = ProgramController(programService, keycloakUtil)
+        programController = ProgramController(programService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID.toString()))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     private fun createTestProgram(

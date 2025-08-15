@@ -21,8 +21,9 @@ import {
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { GdprComplianceSection } from './GdprComplianceSection';
+import { deleteAllPersonalData } from '../api/gdpr';
 import type { User } from '../api/types';
-import { deleteUser } from '../api/user';
 import { useAuth } from '../contexts/AuthContext';
 
 interface UserProfileProps {
@@ -54,7 +55,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
     setError(null);
 
     try {
-      await deleteUser(user.keycloak_id);
+      await deleteAllPersonalData('DELETE_ALL_MY_DATA');
       setDeleteDialogOpen(false);
       // Logout after successful deletion
       await logout();
@@ -127,37 +128,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
           </Card>
         </Grid>
 
-        {/* Personal Information */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Personal Information
-              </Typography>
-              <Divider sx={{ mb: 2 }} />
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Age
-                </Typography>
-                <Typography variant="body1">{user.age} years old</Typography>
-              </Box>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Height
-                </Typography>
-                <Typography variant="body1">{user.height} cm</Typography>
-              </Box>
-
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Weight
-                </Typography>
-                <Typography variant="body1">{user.weight} kg</Typography>
-              </Box>
-            </CardContent>
-          </Card>
+        {/* GDPR Compliance Section */}
+        <Grid item xs={12}>
+          <GdprComplianceSection />
         </Grid>
 
         {/* Account Management */}

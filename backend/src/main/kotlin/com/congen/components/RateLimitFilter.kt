@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.context.SecurityContext
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebFilter
@@ -222,7 +223,7 @@ class RateLimitFilter(
     }
 
     private fun getUserId(exchange: ServerWebExchange): String? {
-        return exchange.getAttribute<org.springframework.security.core.context.SecurityContext>("SPRING_SECURITY_CONTEXT")?.let { context ->
+        return exchange.getAttribute<SecurityContext>("SPRING_SECURITY_CONTEXT")?.let { context ->
             context.authentication?.name
         }
     }

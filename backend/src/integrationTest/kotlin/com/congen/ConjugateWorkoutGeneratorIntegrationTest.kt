@@ -20,7 +20,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     private fun createTestUserAndProgram(): Pair<String, Long> {
         val unique = System.nanoTime()
         val userToken = getValidToken("user")
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = userToken)
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Use service token for program creation to bypass authorization issues
         val serviceToken = getValidToken("service")
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = serviceToken)
@@ -30,7 +30,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     private fun createTestUserAndProgramWithToken(): Triple<String, Long, String> {
         val unique = System.nanoTime()
         val userToken = getValidToken("user")
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, "Test User $unique", token = userToken)
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Use service token for program creation to bypass authorization issues
         val serviceToken = getValidToken("service")
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = serviceToken)

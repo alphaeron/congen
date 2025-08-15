@@ -24,6 +24,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
 import { LoginPage } from './pages/LoginPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import ConGenIcon from './resources/congen-icon.svg';
@@ -48,6 +49,11 @@ const ProfileLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWith
   (props, ref) => <Link to="/profile" {...props} ref={ref} />
 );
 ProfileLink.displayName = 'ProfileLink';
+
+const PrivacyPolicyLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithRef<'a'>>(
+  (props, ref) => <Link to="/privacy_policy" {...props} ref={ref} />
+);
+PrivacyPolicyLink.displayName = 'PrivacyPolicyLink';
 
 /**
  * The main application content.
@@ -136,6 +142,9 @@ function AppContent(): React.ReactElement {
                   <MenuItem sx={{ py: '6px', px: '12px' }} component={ExercisesLink}>
                     Exercises
                   </MenuItem>
+                  <MenuItem sx={{ py: '6px', px: '12px' }} component={PrivacyPolicyLink}>
+                    Privacy
+                  </MenuItem>
                 </Box>
               </AuthorizedElement>
             </Box>
@@ -182,6 +191,7 @@ function AppContent(): React.ReactElement {
                 >
                   <AuthorizedElement requireAuth={false}>
                     <MenuItem component={ExercisesLink}>Exercises</MenuItem>
+                    <MenuItem component={PrivacyPolicyLink}>Privacy Policy</MenuItem>
                   </AuthorizedElement>
                   <Divider />
                   <AuthorizedElement
@@ -240,6 +250,14 @@ function AppContent(): React.ReactElement {
           />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/privacy_policy"
+            element={
+              <ProtectedRoute requireAuth={false}>
+                <PrivacyPolicyPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </Container>
     </ThemeProvider>

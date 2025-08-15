@@ -1,13 +1,14 @@
 package com.congen.controllers
 
+import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.service.UserService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -16,7 +17,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.math.BigDecimal
 import java.time.Instant
 
 @TestPropertySource(
@@ -35,12 +35,6 @@ class UserControllerTest {
         private const val NON_EXISTENT_KEYCLOAK_USER_ID = "non-existent-keycloak-user-id"
         private const val NAME = "John Doe"
         private const val JANE_NAME = "Jane Smith"
-        private const val AGE = 30
-        private const val JANE_AGE = 25
-        private const val HEIGHT = "180.5"
-        private const val JANE_HEIGHT = "165.0"
-        private const val WEIGHT = "75.0"
-        private const val JANE_WEIGHT = "60.0"
     }
 
     @BeforeEach
@@ -51,228 +45,98 @@ class UserControllerTest {
     }
 
     @Test
-    fun `save should create user profile after Keycloak registration`() {
+    fun `createUser should create user profile from Keycloak information successfully`() {
         // Given
-        val keycloakUserId = "test-keycloak-user-id"
-        val name = "John Doe"
-        val age = 30
-        val height = BigDecimal("175.5")
-        val weight = BigDecimal("80.0")
-        val unit = "KG"
+        val now = Instant.now()
         val expectedUser =
             User(
-                keycloakId = keycloakUserId,
-                name = name,
-                age = age,
-                height = height,
-                weight = BigDecimal("80.0"),
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+                keycloakId = "test-keycloak-user-id",
+                name = "Test User",
+                createdAt = now,
+                updatedAt = now
             )
-
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakUserId))
-        whenever(
-            userService.createUser(
-                eq(keycloakUserId),
-                eq(name),
-                eq(age),
-                eq(height),
-                eq(weight),
-                eq(unit)
-            )
-        ).thenReturn(Mono.just(expectedUser))
+        whenever(userService.createUser()).thenReturn(Mono.just(expectedUser))
 
         // When
-        val result = userController.save(name, age, height, weight, unit)
+        val result = userController.createUser()
 
         // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
-
-        verify(keycloakUtil).getCurrentUserId()
-        verify(userService).createUser(
-            keycloakUserId,
-            name,
-            age,
-            height,
-            weight,
-            unit
-        )
+        verify(userService).createUser()
     }
 
     @Test
-    fun `get should return user when found`() {
-        val now = Instant.now()
-        val user =
-            User(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
+    fun `createUser should propagate validation error`() {
+        // Given
+        val validationException = ValidationException("User name not available from Keycloak token")
+        whenever(userService.createUser()).thenReturn(Mono.error(validationException))
 
-        whenever(userService.getUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(user))
+        // When
+        val result = userController.createUser()
 
-        val result = userController.get(KEYCLOAK_USER_ID)
-
+        // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(user))
+            .expectNext(ResponseEntity.badRequest().build<User>())
             .verifyComplete()
+        verify(userService).createUser()
+    }
 
-        verify(userService).getUserByKeycloakId(KEYCLOAK_USER_ID)
+    @Test
+    fun `createUser should propagate database error`() {
+        // Given
+        val databaseException = DatabaseException("Database connection failed")
+        whenever(userService.createUser()).thenReturn(Mono.error(databaseException))
+
+        // When
+        val result = userController.createUser()
+
+        // Then
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.internalServerError().build<User>())
+            .verifyComplete()
+        verify(userService).createUser()
     }
 
     @Test
     fun `getAll should return all users`() {
+        // Given
         val now = Instant.now()
         val users =
             listOf(
                 User(
                     keycloakId = KEYCLOAK_USER_ID,
                     name = NAME,
-                    age = AGE,
-                    height = BigDecimal(HEIGHT),
-                    weight = BigDecimal(WEIGHT),
-                    createdAt = now,
-                    updatedAt = now
-                ),
-                User(
-                    keycloakId = KEYCLOAK_USER_ID_2,
-                    name = JANE_NAME,
-                    age = JANE_AGE,
-                    height = BigDecimal(JANE_HEIGHT),
-                    weight = BigDecimal(JANE_WEIGHT),
                     createdAt = now,
                     updatedAt = now
                 )
             )
-
         whenever(userService.getAllUsers()).thenReturn(Mono.just(users))
 
+        // When
         val result = userController.getAll()
 
+        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(users))
             .verifyComplete()
-
         verify(userService).getAllUsers()
-    }
-
-    @Test
-    fun `update should return updated user`() {
-        val now = Instant.now()
-        val user =
-            User(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
-
-        whenever(userService.updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
-            .thenReturn(Mono.just(user))
-
-        val result = userController.update(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
-
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(user))
-            .verifyComplete()
-
-        verify(userService).updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
-    }
-
-    @Test
-    fun `delete should return deleted user`() {
-        val now = Instant.now()
-        val user =
-            User(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
-
-        whenever(userService.deleteUser(KEYCLOAK_USER_ID)).thenReturn(Mono.just(user))
-
-        val result = userController.delete(KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectNext(ResponseEntity.ok(user))
-            .verifyComplete()
-
-        verify(userService).deleteUser(KEYCLOAK_USER_ID)
-    }
-
-    @Test
-    fun `should return 404 when user not found`() {
-        val error = NoResultsFoundException("Not found")
-        whenever(userService.getUserByKeycloakId(NON_EXISTENT_KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
-
-        val result = userController.get(NON_EXISTENT_KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectError(NoResultsFoundException::class.java)
-            .verify()
-
-        verify(userService).getUserByKeycloakId(NON_EXISTENT_KEYCLOAK_USER_ID)
-    }
-
-    @Test
-    fun `should return 404 when updating non-existent user`() {
-        val error = NoResultsFoundException("Not found")
-        whenever(userService.updateUser(NON_EXISTENT_KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG"))
-            .thenReturn(Mono.error(error))
-
-        val result = userController.update(NON_EXISTENT_KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
-
-        StepVerifier.create(result)
-            .expectError(NoResultsFoundException::class.java)
-            .verify()
-
-        verify(userService).updateUser(NON_EXISTENT_KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
-    }
-
-    @Test
-    fun `should return 404 when deleting non-existent user`() {
-        val error = NoResultsFoundException("Not found")
-        whenever(userService.deleteUser(NON_EXISTENT_KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
-
-        val result = userController.delete(NON_EXISTENT_KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectError(NoResultsFoundException::class.java)
-            .verify()
-
-        verify(userService).deleteUser(NON_EXISTENT_KEYCLOAK_USER_ID)
     }
 
     @Test
     fun `getCurrentUser should return current user profile`() {
         // Given
-        val keycloakUserId = "test-keycloak-user-id"
         val now = Instant.now()
         val expectedUser =
             User(
-                keycloakId = keycloakUserId,
+                keycloakId = KEYCLOAK_USER_ID,
                 name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakUserId))
-        whenever(userService.getUserByKeycloakId(keycloakUserId)).thenReturn(Mono.just(expectedUser))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(KEYCLOAK_USER_ID))
+        whenever(userService.getUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(expectedUser))
 
         // When
         val result = userController.getCurrentUser()
@@ -282,26 +146,25 @@ class UserControllerTest {
             .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
         verify(keycloakUtil).getCurrentUserId()
-        verify(userService).getUserByKeycloakId(keycloakUserId)
+        verify(userService).getUserByKeycloakId(KEYCLOAK_USER_ID)
     }
 
     @Test
     fun `getCurrentUser should return 404 when user not found in database`() {
         // Given
-        val keycloakUserId = "test-keycloak-user-id"
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakUserId))
-        whenever(userService.getUserByKeycloakId(keycloakUserId))
-            .thenReturn(Mono.error(NoResultsFoundException("User not found")))
+        val error = NoResultsFoundException("User not found")
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(KEYCLOAK_USER_ID))
+        whenever(userService.getUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
 
         // When
         val result = userController.getCurrentUser()
 
         // Then
         StepVerifier.create(result)
-            .expectError(NoResultsFoundException::class.java)
-            .verify()
+            .expectNext(ResponseEntity.notFound().build<User>())
+            .verifyComplete()
         verify(keycloakUtil).getCurrentUserId()
-        verify(userService).getUserByKeycloakId(keycloakUserId)
+        verify(userService).getUserByKeycloakId(KEYCLOAK_USER_ID)
     }
 
     @Test
@@ -315,8 +178,8 @@ class UserControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectError(RuntimeException::class.java)
-            .verify()
+            .expectNext(ResponseEntity.internalServerError().build<User>())
+            .verifyComplete()
         verify(keycloakUtil).getCurrentUserId()
         verify(userService, never()).getUserByKeycloakId(any())
     }

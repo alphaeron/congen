@@ -4,6 +4,7 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -68,6 +69,7 @@ import reactor.core.publisher.Mono
 class UserWeightUnitPreferenceController(
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -113,18 +115,27 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Upserting user weight unit preference: {} - {} - {}", userId, exerciseName, preferredUnit)
-                userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(userId, exerciseName, WeightUnit.fromString(preferredUnit))
-                    .map { ResponseEntity.ok(it) }
-                    .doOnError { e ->
-                        logger.error(
-                            "Error upserting user weight unit preference: userId={}, exerciseName={}, preferredUnit={}",
-                            userId,
-                            exerciseName,
-                            preferredUnit,
-                            e
-                        )
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Upserting user weight unit preference: {} - {} - {}", userId, exerciseName, preferredUnit)
+                        userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(userId, exerciseName, WeightUnit.fromString(preferredUnit))
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error(
+                                    "Error upserting user weight unit preference: userId={}, exerciseName={}, preferredUnit={}",
+                                    userId,
+                                    exerciseName,
+                                    preferredUnit,
+                                    e
+                                )
+                            }
                     }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only update their own weight unit preferences"))
             }
@@ -164,14 +175,23 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                return@flatMap userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
-                    .map { preferences ->
-                        logger.debug("Found {} weight unit preferences for user: {}", preferences.size, userId)
-                        ResponseEntity.ok(preferences)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
+                            .map { preferences ->
+                                logger.debug("Found {} weight unit preferences for user: {}", preferences.size, userId)
+                                ResponseEntity.ok(preferences)
+                            }
+                            .doOnError { e ->
+                                logger.error("Error getting user weight unit preferences for user: {}", userId, e)
+                            }
                     }
-                    .doOnError { e ->
-                        logger.error("Error getting user weight unit preferences for user: {}", userId, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own weight unit preferences"))
             }
@@ -219,18 +239,27 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                return@flatMap userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
-                    .map { preference ->
-                        logger.debug("Found weight unit preference for user: {} and exercise: {}", userId, exerciseName)
-                        ResponseEntity.ok(preference)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
+                            .map { preference ->
+                                logger.debug("Found weight unit preference for user: {} and exercise: {}", userId, exerciseName)
+                                ResponseEntity.ok(preference)
+                            }
+                            .onErrorResume(NoResultsFoundException::class.java) {
+                                logger.warn("Weight unit preference not found for user: {} and exercise: {}", userId, exerciseName)
+                                Mono.just(ResponseEntity.notFound().build())
+                            }
+                            .doOnError { e ->
+                                logger.error("Error getting weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
+                            }
                     }
-                    .onErrorResume(NoResultsFoundException::class.java) {
-                        logger.warn("Weight unit preference not found for user: {} and exercise: {}", userId, exerciseName)
-                        Mono.just(ResponseEntity.notFound().build())
-                    }
-                    .doOnError { e ->
-                        logger.error("Error getting weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own weight unit preferences"))
             }
@@ -278,15 +307,24 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                logger.info("Deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName)
-                return@flatMap userWeightUnitPreferenceDAL.deleteUserWeightUnitPreference(userId, exerciseName)
-                    .map { preference ->
-                        logger.debug("Deleted weight unit preference for user: {} and exercise: {}", userId, exerciseName)
-                        ResponseEntity.ok(preference)
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        logger.info("Deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName)
+                        userWeightUnitPreferenceDAL.deleteUserWeightUnitPreference(userId, exerciseName)
+                            .map { preference ->
+                                logger.debug("Deleted weight unit preference for user: {} and exercise: {}", userId, exerciseName)
+                                ResponseEntity.ok(preference)
+                            }
+                            .doOnError { e ->
+                                logger.error("Error deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
+                            }
                     }
-                    .doOnError { e ->
-                        logger.error("Error deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
-                    }
+                }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only delete their own weight unit preferences"))
             }

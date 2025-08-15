@@ -26,11 +26,11 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
         token4 = getValidToken("user")
         token5 = getValidToken("user")
 
-        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 1 $unique", token = token1)
-        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 2 $unique", token = token2)
-        userId3 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 3 $unique", token = token3)
-        userId4 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 4 $unique", token = token4)
-        userId5 = IntegrationTestHelpers.createTestUser(webTestClient, "Test User 5 $unique", token = token5)
+        userId1 = IntegrationTestHelpers.createTestUser(webTestClient, token = token1)
+        userId2 = IntegrationTestHelpers.createTestUser(webTestClient, token = token2)
+        userId3 = IntegrationTestHelpers.createTestUser(webTestClient, token = token3)
+        userId4 = IntegrationTestHelpers.createTestUser(webTestClient, token = token4)
+        userId5 = IntegrationTestHelpers.createTestUser(webTestClient, token = token5)
         // Exercises already exist in migrations
     }
 

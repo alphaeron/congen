@@ -2,17 +2,29 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.mockUser
+import com.congen.model.AuditLog
 import com.congen.model.User
+import com.congen.service.AuditService
+import com.congen.util.EncryptionUtil
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.time.Instant
+import org.mockito.kotlin.any as anyKotlin
 
 class UserDALTest {
     private lateinit var postgresClient: PostgresClient
+    private lateinit var encryptionUtil: EncryptionUtil
+    private lateinit var auditService: AuditService
     private lateinit var userDAL: UserDAL
 
     private val user = mockUser()
@@ -21,20 +33,32 @@ class UserDALTest {
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
-        userDAL = UserDAL(postgresClient)
+        encryptionUtil = mock()
+        auditService = mock()
+        userDAL = UserDAL(postgresClient, encryptionUtil, auditService)
     }
 
     @Test
     fun `selectUserByKeycloakId should return user`() {
-        whenever(postgresClient.selectIndividual<User>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
-            .thenReturn(Mono.just(user))
+        val mockRow =
+            mapOf(
+                "keycloak_id" to user.keycloakId,
+                "name" to user.name,
+                "created_at" to java.time.Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to java.time.Instant.parse("2024-01-01T00:00:00Z")
+            )
+        whenever(postgresClient.selectIndividual<Map<String, Any>>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
+            .thenReturn(Mono.just(mockRow))
+        whenever(encryptionUtil.decrypt(user.name)).thenReturn(user.name)
+        whenever(auditService.logDataAccess(user.keycloakId, "USER_PROFILE", "SYSTEM"))
+            .thenReturn(Mono.just(AuditLog(1L, user.keycloakId, "DATA_ACCESS", "USER_PROFILE", "SYSTEM", Instant.now(), null)))
 
         val result = userDAL.selectUserByKeycloakId(user.keycloakId)
 
         StepVerifier.create(result)
             .expectNext(user)
             .verifyComplete()
-        verify(postgresClient).selectIndividual<User>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
+        verify(postgresClient).selectIndividual<Map<String, Any>>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
     }
 
     @Test
@@ -53,61 +77,56 @@ class UserDALTest {
     @Test
     fun `insertUser should return inserted user`() {
         val insertUser = mockUser(keycloakId = "0")
+        val mockRow = mapOf("id" to 1)
+        whenever(encryptionUtil.encrypt(insertUser.name)).thenReturn("encrypted_name")
         whenever(
-            postgresClient.update<User>(
+            postgresClient.update<Map<String, Any>>(
                 """
                 INSERT INTO "user"
-                    (keycloak_id, name, age, height, weight)
+                    (keycloak_id, name)
                 VALUES
-                    ($1, $2, $3, $4, $5)
+                    ($1, $2)
                 """.trimIndent(),
                 insertUser.keycloakId,
-                insertUser.name,
-                insertUser.age,
-                insertUser.height,
-                insertUser.weight,
+                "encrypted_name"
             ),
-        ).thenReturn(Mono.just(insertUser))
+        ).thenReturn(Mono.just(mockRow))
+        whenever(
+            auditService.logDataOperation(
+                anyKotlin(),
+                anyKotlin(),
+                anyKotlin(),
+                anyOrNull(),
+                anyOrNull()
+            )
+        ).thenReturn(Mono.just(AuditLog(1L, insertUser.keycloakId, "DATA_CREATION", "USER_PROFILE", null, Instant.now(), null)))
 
-        val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name, insertUser.age, insertUser.height, insertUser.weight)
+        val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name)
 
         StepVerifier.create(result)
-            .expectNext(insertUser)
+            .assertNext { returnedUser ->
+                assertEquals(insertUser.keycloakId, returnedUser.keycloakId)
+                assertEquals(insertUser.name, returnedUser.name)
+            }
             .verifyComplete()
-        verify(postgresClient).update<User>(
-            """
-            INSERT INTO "user"
-                (keycloak_id, name, age, height, weight)
-            VALUES
-                ($1, $2, $3, $4, $5)
-            """.trimIndent(),
-            insertUser.keycloakId,
-            insertUser.name,
-            insertUser.age,
-            insertUser.height,
-            insertUser.weight,
-        )
     }
 
     @Test
     fun `updateUser should return updated user`() {
-        val updatedUser = mockUser(age = 31)
+        val updatedUser = mockUser()
         whenever(
             postgresClient.update<User>(
                 """
                 UPDATE "user"
-                SET name=$2, age=$3, height=$4, weight=$5, updated_at=NOW()
+                SET name=$2, updated_at=NOW()
                 WHERE keycloak_id=$1
                 """.trimIndent(),
                 updatedUser.keycloakId,
-                updatedUser.name,
-                updatedUser.age,
-                updatedUser.height,
-                updatedUser.weight,
+                updatedUser.name
             ),
         ).thenReturn(Mono.just(updatedUser))
 
-        val result = userDAL.updateUser(updatedUser.keycloakId, updatedUser.name, updatedUser.age, updatedUser.height, updatedUser.weight)
+        val result = userDAL.updateUser(updatedUser.keycloakId, updatedUser.name)
 
         StepVerifier.create(result)
             .expectNext(updatedUser)
@@ -115,14 +134,11 @@ class UserDALTest {
         verify(postgresClient).update<User>(
             """
             UPDATE "user"
-            SET name=$2, age=$3, height=$4, weight=$5, updated_at=NOW()
+            SET name=$2, updated_at=NOW()
             WHERE keycloak_id=$1
             """.trimIndent(),
             updatedUser.keycloakId,
-            updatedUser.name,
-            updatedUser.age,
-            updatedUser.height,
-            updatedUser.weight,
+            updatedUser.name
         )
     }
 
@@ -137,5 +153,42 @@ class UserDALTest {
             .expectNext(user)
             .verifyComplete()
         verify(postgresClient).update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
+    }
+
+    @Test
+    fun `userExists should return true when user exists`() {
+        val keycloakId = "test-user-123"
+        val mockResult: Map<String, Any> = mapOf("?column?" to 1)
+
+        `when`(
+            postgresClient.selectIndividual<Map<String, Any>>(
+                "SELECT 1 FROM \"user\" WHERE keycloak_id = $1",
+                keycloakId
+            )
+        ).thenReturn(Mono.just(mockResult))
+
+        StepVerifier.create(userDAL.userExists(keycloakId))
+            .assertNext { exists ->
+                assertTrue(exists)
+            }
+            .verifyComplete()
+    }
+
+    @Test
+    fun `userExists should return false when user does not exist`() {
+        val keycloakId = "non-existent-user"
+
+        `when`(
+            postgresClient.selectIndividual<Map<String, Any>>(
+                "SELECT 1 FROM \"user\" WHERE keycloak_id = $1",
+                keycloakId
+            )
+        ).thenReturn(Mono.error(RuntimeException("User not found")))
+
+        StepVerifier.create(userDAL.userExists(keycloakId))
+            .assertNext { exists ->
+                assertFalse(exists)
+            }
+            .verifyComplete()
     }
 }

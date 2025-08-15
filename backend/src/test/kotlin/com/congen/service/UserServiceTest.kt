@@ -2,13 +2,13 @@ package com.congen.service
 
 import com.congen.client.KeycloakClient
 import com.congen.dal.UserDAL
-import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.ValidationException
-import com.congen.mockUser
-import com.congen.model.WeightUnit
+import com.congen.model.User
+import com.congen.util.KeycloakUtil
 import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.eq
@@ -17,324 +17,114 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.math.BigDecimal
 import java.time.Instant
-import kotlin.test.assertEquals
 
-/**
- * Unit tests for UserService.
- *
- * These tests verify the business logic for user operations,
- * including validation, conversion, and DAL interactions.
- *
- * @author Congen Development Team
- * @since 1.0.0
- */
 @ExtendWith(MockitoExtension::class)
 class UserServiceTest {
-    private lateinit var userService: UserService
     private lateinit var userDAL: UserDAL
     private lateinit var unitConverter: UnitConverter
     private lateinit var keycloakClient: KeycloakClient
+    private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var userService: UserService
 
-    companion object {
-        private const val KEYCLOAK_USER_ID = "test-keycloak-user-id"
-        private const val KEYCLOAK_USER_ID_2 = "test-keycloak-user-id-2"
-        private const val NAME = "John Doe"
-        private const val JANE_NAME = "Jane Smith"
-        private const val AGE = 30
-        private const val JANE_AGE = 25
-        private const val HEIGHT = "180.5"
-        private const val JANE_HEIGHT = "165.0"
-        private const val WEIGHT = "75.0"
-        private const val JANE_WEIGHT = "60.0"
-    }
+    private val now = Instant.now()
+    private val testUser =
+        User(
+            keycloakId = "test-keycloak-id",
+            name = "Test User",
+            createdAt = now,
+            updatedAt = now
+        )
 
     @BeforeEach
     fun setUp() {
         userDAL = mock()
         unitConverter = mock()
         keycloakClient = mock()
-        userService = UserService(userDAL, unitConverter, keycloakClient)
+        keycloakUtil = mock()
+        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil)
     }
 
     @Test
-    fun `createUser should create user successfully`() {
-        val now = Instant.now()
-        val user =
-            mockUser(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
+    fun `createUser should create user from Keycloak information successfully`() {
+        // Given
+        val keycloakId = "test-keycloak-id"
+        val name = "Test User"
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
+        whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(name))
+        whenever(userDAL.insertUser(eq(keycloakId), eq(name))).thenReturn(Mono.just(testUser))
 
-        // Mock unit conversion for KG (no conversion needed)
-        whenever(unitConverter.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
-            .thenReturn(BigDecimal(WEIGHT))
-        whenever(userDAL.insertUser(eq(KEYCLOAK_USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT))))
-            .thenReturn(Mono.just(user))
+        // When
+        val result = userService.createUser()
 
-        val result = userService.createUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
-
+        // Then
         StepVerifier.create(result)
-            .expectNext(user)
+            .expectNext(testUser)
             .verifyComplete()
-
-        verify(userDAL).insertUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT))
+        verify(keycloakUtil).getCurrentUserId()
+        verify(keycloakUtil).getCurrentUserName()
+        verify(userDAL).insertUser(keycloakId, name)
     }
 
     @Test
-    fun `createUser should convert weight from LBS to KG`() {
-        val now = Instant.now()
-        val weightInLbs = BigDecimal("150.0")
-        val weightInKg = BigDecimal("68.04")
-        val user =
-            mockUser(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = weightInKg,
-                createdAt = now,
-                updatedAt = now
-            )
+    fun `createUser should throw ValidationException when name is not available`() {
+        // Given
+        val keycloakId = "test-keycloak-id"
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
+        whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.empty())
 
-        whenever(unitConverter.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
-            .thenReturn(weightInKg)
-        whenever(userDAL.insertUser(eq(KEYCLOAK_USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(weightInKg)))
-            .thenReturn(Mono.just(user))
+        // When & Then
+        assertThrows<ValidationException> {
+            userService.createUser().block()
+        }
+        verify(keycloakUtil).getCurrentUserId()
+        verify(keycloakUtil).getCurrentUserName()
+    }
 
-        val result = userService.createUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), weightInLbs, "LBS")
+    @Test
+    fun `createUser should throw ValidationException when name is blank`() {
+        // Given
+        val keycloakId = "test-keycloak-id"
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
+        whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(""))
 
+        // When & Then
+        assertThrows<ValidationException> {
+            userService.createUser().block()
+        }
+        verify(keycloakUtil).getCurrentUserId()
+        verify(keycloakUtil).getCurrentUserName()
+    }
+
+    @Test
+    fun `getUserByKeycloakId should return user successfully`() {
+        // Given
+        val keycloakId = "test-keycloak-id"
+        whenever(userDAL.selectUserByKeycloakId(keycloakId)).thenReturn(Mono.just(testUser))
+
+        // When
+        val result = userService.getUserByKeycloakId(keycloakId)
+
+        // Then
         StepVerifier.create(result)
-            .expectNext(user)
+            .expectNext(testUser)
             .verifyComplete()
-
-        verify(unitConverter).toKg(weightInLbs, WeightUnit.LBS)
-        verify(userDAL).insertUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), weightInKg)
+        verify(userDAL).selectUserByKeycloakId(keycloakId)
     }
 
     @Test
-    fun `createUser should throw ValidationException when validation fails`() {
-        val invalidWeight = BigDecimal("-10.0")
-        val convertedWeight = BigDecimal("-10.0") // Invalid weight after conversion
-
-        whenever(unitConverter.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
-            .thenReturn(convertedWeight)
-
-        val result = userService.createUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")
-
-        StepVerifier.create(result)
-            .expectErrorSatisfies { ex ->
-                assert(ex is ValidationException)
-                assertEquals("User weight must be between 0.01 and 1000 kg, got: -10.0", ex.message)
-            }
-            .verify()
-    }
-
-    @Test
-    fun `getUserByKeycloakId should return user when found`() {
-        val now = Instant.now()
-        val user =
-            mockUser(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
-
-        whenever(userDAL.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(user))
-
-        val result = userService.getUserByKeycloakId(KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectNext(user)
-            .verifyComplete()
-
-        verify(userDAL).selectUserByKeycloakId(KEYCLOAK_USER_ID)
-    }
-
-    @Test
-    fun `getUserByKeycloakId should propagate error when user not found`() {
-        val error = DatabaseException("User not found")
-        whenever(userDAL.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
-
-        val result = userService.getUserByKeycloakId(KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectErrorSatisfies { ex ->
-                assert(ex is DatabaseException)
-                assertEquals("User not found", ex.message)
-            }
-            .verify()
-
-        verify(userDAL).selectUserByKeycloakId(KEYCLOAK_USER_ID)
-    }
-
-    @Test
-    fun `getAllUsers should return all users`() {
-        val now = Instant.now()
-        val users =
-            listOf(
-                mockUser(
-                    keycloakId = KEYCLOAK_USER_ID,
-                    name = NAME,
-                    age = AGE,
-                    height = BigDecimal(HEIGHT),
-                    weight = BigDecimal(WEIGHT),
-                    createdAt = now,
-                    updatedAt = now
-                ),
-                mockUser(
-                    keycloakId = KEYCLOAK_USER_ID_2,
-                    name = JANE_NAME,
-                    age = JANE_AGE,
-                    height = BigDecimal(JANE_HEIGHT),
-                    weight = BigDecimal(JANE_WEIGHT),
-                    createdAt = now,
-                    updatedAt = now
-                )
-            )
-
+    fun `getAllUsers should return all users successfully`() {
+        // Given
+        val users = listOf(testUser)
         whenever(userDAL.selectUsers()).thenReturn(Mono.just(users))
 
+        // When
         val result = userService.getAllUsers()
 
+        // Then
         StepVerifier.create(result)
             .expectNext(users)
             .verifyComplete()
-
         verify(userDAL).selectUsers()
-    }
-
-    @Test
-    fun `updateUser should update user successfully`() {
-        val now = Instant.now()
-        val user =
-            mockUser(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
-
-        // Mock unit conversion for KG (no conversion needed)
-        whenever(unitConverter.toKg(eq(BigDecimal(WEIGHT)), eq(WeightUnit.KG)))
-            .thenReturn(BigDecimal(WEIGHT))
-        whenever(userDAL.updateUser(eq(KEYCLOAK_USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(BigDecimal(WEIGHT))))
-            .thenReturn(Mono.just(user))
-
-        val result = userService.updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT), "KG")
-
-        StepVerifier.create(result)
-            .expectNext(user)
-            .verifyComplete()
-
-        verify(userDAL).updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), BigDecimal(WEIGHT))
-    }
-
-    @Test
-    fun `updateUser should convert weight from LBS to KG`() {
-        val now = Instant.now()
-        val weightInLbs = BigDecimal("150.0")
-        val weightInKg = BigDecimal("68.04")
-        val user =
-            mockUser(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = weightInKg,
-                createdAt = now,
-                updatedAt = now
-            )
-
-        whenever(unitConverter.toKg(eq(weightInLbs), eq(WeightUnit.LBS)))
-            .thenReturn(weightInKg)
-        whenever(userDAL.updateUser(eq(KEYCLOAK_USER_ID), eq(NAME), eq(AGE), eq(BigDecimal(HEIGHT)), eq(weightInKg)))
-            .thenReturn(Mono.just(user))
-
-        val result = userService.updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), weightInLbs, "LBS")
-
-        StepVerifier.create(result)
-            .expectNext(user)
-            .verifyComplete()
-
-        verify(unitConverter).toKg(weightInLbs, WeightUnit.LBS)
-        verify(userDAL).updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), weightInKg)
-    }
-
-    @Test
-    fun `updateUser should throw ValidationException when validation fails`() {
-        val invalidWeight = BigDecimal("-10.0")
-        val convertedWeight = BigDecimal("-10.0") // Invalid weight after conversion
-
-        whenever(unitConverter.toKg(eq(invalidWeight), eq(WeightUnit.KG)))
-            .thenReturn(convertedWeight)
-
-        val result = userService.updateUser(KEYCLOAK_USER_ID, NAME, AGE, BigDecimal(HEIGHT), invalidWeight, "KG")
-
-        StepVerifier.create(result)
-            .expectErrorSatisfies { ex ->
-                assert(ex is ValidationException)
-                assertEquals("User weight must be between 0.01 and 1000 kg, got: -10.0", ex.message)
-            }
-            .verify()
-    }
-
-    @Test
-    fun `deleteUser should delete user successfully`() {
-        val now = Instant.now()
-        val user =
-            mockUser(
-                keycloakId = KEYCLOAK_USER_ID,
-                name = NAME,
-                age = AGE,
-                height = BigDecimal(HEIGHT),
-                weight = BigDecimal(WEIGHT),
-                createdAt = now,
-                updatedAt = now
-            )
-
-        whenever(userDAL.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(user))
-        whenever(keycloakClient.deleteUser(KEYCLOAK_USER_ID)).thenReturn(Mono.empty())
-        whenever(userDAL.deleteUser(KEYCLOAK_USER_ID)).thenReturn(Mono.just(user))
-
-        val result = userService.deleteUser(KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectNext(user)
-            .verifyComplete()
-
-        verify(userDAL).selectUserByKeycloakId(KEYCLOAK_USER_ID)
-        verify(keycloakClient).deleteUser(KEYCLOAK_USER_ID)
-        verify(userDAL).deleteUser(KEYCLOAK_USER_ID)
-    }
-
-    @Test
-    fun `deleteUser should propagate error when user not found`() {
-        val error = DatabaseException("User not found")
-        whenever(userDAL.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
-
-        val result = userService.deleteUser(KEYCLOAK_USER_ID)
-
-        StepVerifier.create(result)
-            .expectErrorSatisfies { ex ->
-                assert(ex is DatabaseException)
-                assertEquals("User not found", ex.message)
-            }
-            .verify()
-
-        verify(userDAL).selectUserByKeycloakId(KEYCLOAK_USER_ID)
     }
 }

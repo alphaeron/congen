@@ -48,7 +48,7 @@ class ExceptionHandlingControllerTest {
     @Test
     fun `handleValidationException should return 422 status with error message`() {
         // Given
-        val errorMessage = "User age must be between 1 and 150, got: 0"
+        val errorMessage = "Name must be between 1 and 255 characters, got: 0"
         val exception = ValidationException(errorMessage)
 
         // When

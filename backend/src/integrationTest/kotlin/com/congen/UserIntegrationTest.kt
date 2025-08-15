@@ -14,7 +14,7 @@ class UserIntegrationTest : BaseIntegrationTest() {
         val unique = System.nanoTime()
         val userName = "UserIntegrationTest User $unique"
         val token = getValidToken("user")
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, userName, token = token)
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         // Use minimal reference data instead of full data for faster tests
         IntegrationTestHelpers.createMinimalReferenceDataForUser(webTestClient, userId, token = token)
         this.testUserName = userName
@@ -31,7 +31,6 @@ class UserIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(".keycloak_id").isEqualTo(userId)
             .jsonPath(".name").isEqualTo(testUserName)
-            .jsonPath(".age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
     }
 
     @Test

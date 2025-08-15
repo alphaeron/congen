@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.model.WeightUnit
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -48,134 +47,15 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
             .jsonPath("$.name").isEqualTo(testUserName)
-            .jsonPath("$.age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
-            .jsonPath("$.height").isEqualTo(IntegrationTestHelpers.TEST_USER_HEIGHT)
-            .jsonPath("$.weight").isEqualTo(IntegrationTestHelpers.TEST_USER_WEIGHT)
     }
 
     @Test
     fun `should return 401 when not authenticated`() {
         webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
+            .uri("/api/v1/user/?name=$testUserName")
             .contentType(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNAUTHORIZED)
-    }
-
-    @Test
-    fun `should return 422 when user age is 0`() {
-        val token = getValidToken("user")
-
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=0" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .header("Authorization", "Bearer $token")
-            .contentType(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User age must be between 1 and 150"))
-            }
-    }
-
-    @Test
-    fun `should return 422 when user age is 151`() {
-        val token = getValidToken("user")
-
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=151" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .header("Authorization", "Bearer $token")
-            .contentType(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User age must be between 1 and 150"))
-            }
-    }
-
-    @Test
-    fun `should return 422 when user height is 0`() {
-        val token = getValidToken("user")
-
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=0" +
-                    "&weight=${IntegrationTestHelpers.TEST_USER_WEIGHT}"
-            )
-            .header("Authorization", "Bearer $token")
-            .contentType(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User height must be between 0.01 and 300 cm"))
-            }
-    }
-
-    @Test
-    fun `should return 422 when user weight is 0`() {
-        val token = getValidToken("user")
-
-        webTestClient.post()
-            .uri(
-                "/api/v1/user/?name=$testUserName" +
-                    "&age=${IntegrationTestHelpers.TEST_USER_AGE}" +
-                    "&height=${IntegrationTestHelpers.TEST_USER_HEIGHT}" +
-                    "&weight=0"
-            )
-            .header("Authorization", "Bearer $token")
-            .contentType(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-            .expectBody()
-            .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("User weight must be between 0.01 and 1000 kg"))
-            }
-    }
-
-    @Test
-    fun `should create user profile with weight conversion from LBS to KG`() {
-        val token = getValidToken("user")
-        val weightInLbs = 150.0
-        val expectedWeightInKg = 68.04
-
-        val keycloakId =
-            IntegrationTestHelpers.createTestUser(
-                webTestClient = webTestClient,
-                name = testUserName,
-                weight = weightInLbs,
-                token = token,
-                unit = WeightUnit.LBS
-            )
-
-        // Verify the user profile was created successfully with weight conversion
-        webTestClient.get()
-            .uri("/api/v1/user/me")
-            .header("Authorization", "Bearer $token")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
-            .jsonPath("$.name").isEqualTo(testUserName)
-            .jsonPath("$.weight").isEqualTo(expectedWeightInKg)
     }
 
     @Test
@@ -199,59 +79,6 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(".keycloak_id").isEqualTo(keycloakId)
             .jsonPath(".name").isEqualTo(testUserName)
-            .jsonPath(".age").isEqualTo(IntegrationTestHelpers.TEST_USER_AGE)
-    }
-
-    @Test
-    fun `should delete user`() {
-        val userToken = getValidToken("user")
-
-        // Create user profile first
-        val keycloakId =
-            IntegrationTestHelpers.createTestUser(
-                webTestClient = webTestClient,
-                name = testUserName,
-                token = userToken
-            )
-
-        // Verify user exists in database
-        webTestClient.get()
-            .uri("/api/v1/user/$keycloakId")
-            .header("Authorization", "Bearer $userToken")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
-
-        // Delete the user using service account token (admin privileges)
-        val serviceToken = getValidToken("service")
-        webTestClient.delete()
-            .uri("/api/v1/user/$keycloakId")
-            .header("Authorization", "Bearer $serviceToken")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.keycloak_id").isEqualTo(keycloakId)
-            .jsonPath("$.name").isEqualTo(testUserName)
-
-        // Verify user is deleted from database by trying to access the user by Keycloak ID
-        webTestClient.get()
-            .uri("/api/v1/user/$keycloakId")
-            .header("Authorization", "Bearer $serviceToken")
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
-    }
-
-    @Test
-    fun `should return 404 when deleting non-existent user`() {
-        val serviceToken = getValidToken("service")
-        val nonExistentKeycloakId = "non-existent-keycloak-id"
-
-        webTestClient.delete()
-            .uri("/api/v1/user/$nonExistentKeycloakId")
-            .header("Authorization", "Bearer $serviceToken")
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.NOT_FOUND)
     }
 
     @Test

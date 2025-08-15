@@ -4,9 +4,11 @@ import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.exceptions.DatabaseException
 import com.congen.model.ExerciseRotationHistory
 import com.congen.service.ExerciseRotationHistoryService
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.springframework.http.ResponseEntity
@@ -27,6 +29,7 @@ class ExerciseRotationHistoryControllerTest {
     private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
     private lateinit var exerciseRotationHistoryService: ExerciseRotationHistoryService
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var exerciseRotationHistoryController: ExerciseRotationHistoryController
 
     companion object {
@@ -44,11 +47,18 @@ class ExerciseRotationHistoryControllerTest {
         exerciseRotationHistoryDAL = mock()
         exerciseRotationHistoryService = mock()
         keycloakUtil = mock()
-        exerciseRotationHistoryController = ExerciseRotationHistoryController(exerciseRotationHistoryService, keycloakUtil)
+        exerciseRotationHistoryController = ExerciseRotationHistoryController(exerciseRotationHistoryService, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

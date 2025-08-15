@@ -2,6 +2,7 @@ package com.congen.controllers
 
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.UserWeakMuscle
+import com.congen.service.GdprComplianceService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -35,6 +36,7 @@ import reactor.core.publisher.Mono
 )
 class UserWeakMuscleController(
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserWeakMuscleController::class.java)
@@ -66,11 +68,13 @@ class UserWeakMuscleController(
         @RequestParam("muscle_name") muscleName: String,
     ): Mono<ResponseEntity<UserWeakMuscle>> {
         logger.info("Adding user weak muscle: {} - {}", userId, muscleName)
-        return userWeakMuscleDAL.insertUserWeakMuscle(userId, muscleName)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error adding user weak muscle: {} - {}", userId, muscleName, e)
-            }
+        return gdprComplianceService.withUserConsent(userId) {
+            userWeakMuscleDAL.insertUserWeakMuscle(userId, muscleName)
+                .map { ResponseEntity.ok(it) }
+                .doOnError { e ->
+                    logger.error("Error adding user weak muscle: {} - {}", userId, muscleName, e)
+                }
+        }
     }
 
     /**
@@ -91,8 +95,10 @@ class UserWeakMuscleController(
         @Parameter(description = "User ID", required = true, example = "b226d772-c063-4974-ae08-ab64134abbcf")
         @PathVariable("user_id") userId: String,
     ): Mono<ResponseEntity<List<UserWeakMuscle>>> {
-        return userWeakMuscleDAL.selectUserWeakMusclesByUser(userId)
-            .map { ResponseEntity.ok(it) }
+        return gdprComplianceService.withUserConsent(userId) {
+            userWeakMuscleDAL.selectUserWeakMusclesByUser(userId)
+                .map { ResponseEntity.ok(it) }
+        }
     }
 
     /**
@@ -121,10 +127,12 @@ class UserWeakMuscleController(
         @RequestParam("muscle_name") muscleName: String,
     ): Mono<ResponseEntity<UserWeakMuscle>> {
         logger.info("Deleting user weak muscle: {} - {}", userId, muscleName)
-        return userWeakMuscleDAL.deleteUserWeakMuscle(userId, muscleName)
-            .map { ResponseEntity.ok(it) }
-            .doOnError { e ->
-                logger.error("Error deleting user weak muscle: {} - {}", userId, muscleName, e)
-            }
+        return gdprComplianceService.withUserConsent(userId) {
+            userWeakMuscleDAL.deleteUserWeakMuscle(userId, muscleName)
+                .map { ResponseEntity.ok(it) }
+                .doOnError { e ->
+                    logger.error("Error deleting user weak muscle: {} - {}", userId, muscleName, e)
+                }
+        }
     }
 }

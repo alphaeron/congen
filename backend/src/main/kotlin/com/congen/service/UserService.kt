@@ -4,13 +4,12 @@ import com.congen.client.KeycloakClient
 import com.congen.dal.UserDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
-import com.congen.model.WeightUnit
+import com.congen.util.KeycloakUtil
 import com.congen.util.UnitConverter
 import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.math.BigDecimal
 
 /**
  * Service for user business logic: validation, conversion, and DAL operations.
@@ -23,7 +22,8 @@ import java.math.BigDecimal
 class UserService(
     private val userDAL: UserDAL,
     private val unitConverter: UnitConverter,
-    private val keycloakClient: KeycloakClient
+    private val keycloakClient: KeycloakClient,
+    private val keycloakUtil: KeycloakUtil
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserService::class.java)
@@ -31,36 +31,40 @@ class UserService(
 
     /**
      * Creates a new user profile after Keycloak registration.
-     * This method is called after a user has registered through Keycloak
-     * and we need to create their profile in our database.
+     * This method automatically extracts user information from the JWT token
+     * and creates their profile in our database.
      *
-     * @param keycloakId The Keycloak user ID
-     * @param name The user's full name
-     * @param age The user's age in years
-     * @param height The user's height in centimeters
-     * @param weight The user's weight in kilograms
-     * @param unit The weight unit (optional, defaults to KG)
      * @return The created user profile
-     * @throws ValidationException if validation fails
+     * @throws ValidationException if validation fails or name is not available
      */
-    fun createUser(
-        keycloakId: String,
-        name: String,
-        age: Int,
-        height: BigDecimal,
-        weight: BigDecimal,
-        unit: String?
-    ): Mono<User> {
-        logger.info("Creating user profile after Keycloak registration: {}", name)
-        return Mono.fromCallable {
-            val weightUnit = WeightUnit.fromString(unit)
-            ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
-        }
-            .flatMap { weightInKg ->
-                userDAL.insertUser(keycloakId, name, age, height, weightInKg)
+    fun createUser(): Mono<User> {
+        logger.info("Creating user profile from Keycloak information")
+
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakId ->
+                keycloakUtil.getCurrentUserName()
+                    .switchIfEmpty(Mono.error(ValidationException("User name not available from Keycloak token")))
+                    .flatMap { name ->
+                        if (name.isNullOrBlank()) {
+                            Mono.error(ValidationException("User name not available from Keycloak token"))
+                        } else {
+                            logger.info("Creating user profile after Keycloak registration: {}", name)
+
+                            // Validate user name
+                            ValidationUtil.validateUserName(name)
+
+                            userDAL.insertUser(keycloakId, name)
+                                .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }
+                                .doOnError { e -> logger.error("Error creating user profile: {}", name, e) }
+                        }
+                    }
             }
-            .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }
-            .doOnError { e -> logger.error("Error creating user profile: {}", name, e) }
+            .doOnSuccess { user ->
+                if (user != null) {
+                    logger.debug("Created user profile from Keycloak with ID: {}", user.keycloakId)
+                }
+            }
+            .doOnError { e -> logger.error("Error creating user profile from Keycloak", e) }
     }
 
     /**
@@ -73,49 +77,11 @@ class UserService(
     }
 
     /**
-     * Retrieves all users.
+     * Retrieves all users in the system.
+     *
+     * @return List of all users
      */
     fun getAllUsers(): Mono<List<User>> {
-        logger.debug("Getting all users")
         return userDAL.selectUsers()
-    }
-
-    /**
-     * Updates an existing user after validation and unit conversion.
-     * @throws ValidationException if validation fails
-     */
-    fun updateUser(
-        keycloakId: String,
-        name: String,
-        age: Int,
-        height: BigDecimal,
-        weight: BigDecimal,
-        unit: String?
-    ): Mono<User> {
-        logger.info("Updating user with Keycloak ID: {}", keycloakId)
-        return Mono.fromCallable {
-            val weightUnit = WeightUnit.fromString(unit)
-            ValidationUtil.validateUserWeightWithUnit(weight, weightUnit, unitConverter)
-        }
-            .flatMap { weightInKg ->
-                userDAL.updateUser(keycloakId, name, age, height, weightInKg)
-            }
-            .doOnSuccess { logger.debug("Updated user with Keycloak ID: {}", keycloakId) }
-            .doOnError { e -> logger.error("Error updating user with Keycloak ID: {}", keycloakId, e) }
-    }
-
-    /**
-     * Deletes a user by their Keycloak ID.
-     */
-    fun deleteUser(keycloakId: String): Mono<User> {
-        logger.info("Deleting user with Keycloak ID: {}", keycloakId)
-        return userDAL.selectUserByKeycloakId(keycloakId)
-            .flatMap {
-                // Delete from Keycloak first, then from database
-                keycloakClient.deleteUser(keycloakId)
-                    .then(userDAL.deleteUser(keycloakId))
-            }
-            .doOnSuccess { logger.debug("Deleted user with Keycloak ID: {}", keycloakId) }
-            .doOnError { e -> logger.error("Error deleting user with Keycloak ID: {}", keycloakId, e) }
     }
 }

@@ -3,9 +3,11 @@ package com.congen.controllers
 import com.congen.dal.UserEquipmentDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserEquipment
+import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -30,6 +32,7 @@ import java.time.Instant
 class UserEquipmentControllerTest {
     private lateinit var userEquipmentDAL: UserEquipmentDAL
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var userEquipmentController: UserEquipmentController
 
     companion object {
@@ -42,11 +45,19 @@ class UserEquipmentControllerTest {
     fun setUp() {
         userEquipmentDAL = mock()
         keycloakUtil = mock()
-        userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil)
+        gdprComplianceService = mock()
+        userEquipmentController = UserEquipmentController(userEquipmentDAL, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+
+        // Mock GDPR compliance service for all tests
+        whenever(gdprComplianceService.withUserConsent(any<String>(), any<() -> Mono<*>>())).thenAnswer { invocation ->
+            val callback = invocation.getArgument<() -> Mono<*>>(1)
+            callback()
+        }
+        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
     }
 
     @Test

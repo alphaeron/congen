@@ -1,461 +1,273 @@
-jest.mock('../api/user', () => ({
-  createUserProfile: jest.fn(),
-  getCurrentUser: jest.fn(),
-}));
-
-jest.mock('../api/endpoint', () => ({
-  setTokenGetter: jest.fn(),
-}));
-
-// Mock authUtils
-const mockDecodeToken = jest.fn();
-jest.mock('../common/authUtils', () => ({
-  decodeToken: jest.fn(),
-}));
-
-// Mock react-router
-const mockNavigate = jest.fn();
-jest.mock('react-router', () => ({
-  ...jest.requireActual('react-router'),
-  useNavigate: () => mockNavigate,
-}));
-
-// Mock react-oidc-context
-const mockOidcAuth: {
-  user: unknown;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: unknown;
-  signinRedirect: jest.Mock;
-  removeUser: jest.Mock;
-} = {
-  user: null,
-  isAuthenticated: false,
-  isLoading: false,
-  error: null,
-  signinRedirect: jest.fn(),
-  removeUser: jest.fn(),
-};
-
-jest.mock('react-oidc-context', () => ({
-  useAuth: () => mockOidcAuth,
-}));
-
 import { render, screen, waitFor, act } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter } from 'react-router';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
 
-// Import after mocks are set up
 import { AuthProvider, useAuth } from './AuthContext';
+import type { User } from '../api/types';
+import { createUserProfile, getCurrentUser } from '../api/user';
 
-// Get the mocked functions
+// Mock the API functions
+jest.mock('../api/user');
+const mockCreateUserProfile = createUserProfile as jest.MockedFunction<typeof createUserProfile>;
+const mockGetCurrentUser = getCurrentUser as jest.MockedFunction<typeof getCurrentUser>;
 
-const endpointModule = jest.requireMock('../api/endpoint') as jest.Mocked<
-  typeof import('../api/endpoint')
->;
+// Mock react-oidc-context
+jest.mock('react-oidc-context');
+const mockUseOidcAuth = useOidcAuth as jest.MockedFunction<typeof useOidcAuth>;
 
-const userModule = jest.requireMock('../api/user') as jest.Mocked<typeof import('../api/user')>;
+const mockUser: User = {
+  keycloak_id: 'test-id',
+  name: 'Test User',
+  created_at: '2023-01-01T00:00:00Z',
+  updated_at: '2023-01-01T00:00:00Z',
+};
 
-const authUtilsModule = jest.requireMock('../common/authUtils') as jest.Mocked<
-  typeof import('../common/authUtils')
->;
-
-// Test component to access auth context
 const TestComponent: React.FC = () => {
-  const auth = useAuth();
+  const { user, isAuthenticated, isLoading, error, login, logout, clearError } = useAuth();
   return (
     <div>
-      <div data-testid="isAuthenticated">{auth.isAuthenticated.toString()}</div>
-      <div data-testid="isLoading">{auth.isLoading.toString()}</div>
-      <div data-testid="error">{auth.error || 'no-error'}</div>
-      <div data-testid="user">{auth.user ? JSON.stringify(auth.user) : 'no-user'}</div>
-      <button onClick={() => auth.login()}>Login</button>
-      <button onClick={() => auth.logout()}>Logout</button>
-      <button
-        onClick={() =>
-          auth.createProfile({
-            name: 'Test User',
-            age: 25,
-            height: 180,
-            weight: 80,
-            unit: 'metric',
-          })
-        }
-      >
-        Register
-      </button>
-      <button onClick={() => auth.clearError()}>Clear Error</button>
+      <div data-testid="user">{user ? user.name : 'No user'}</div>
+      <div data-testid="isAuthenticated">{isAuthenticated.toString()}</div>
+      <div data-testid="isLoading">{isLoading.toString()}</div>
+      <div data-testid="error">{error || 'No error'}</div>
+      <button onClick={login}>Login</button>
+      <button onClick={logout}>Logout</button>
+      <button onClick={clearError}>Clear Error</button>
     </div>
   );
 };
 
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <MemoryRouter>
-    <AuthProvider>{children}</AuthProvider>
-  </MemoryRouter>
-);
-
 describe('AuthContext', () => {
+  let originalConsoleError: typeof console.error;
+
   beforeEach(() => {
     jest.clearAllMocks();
-    mockOidcAuth.user = null;
-    mockOidcAuth.isAuthenticated = false;
-    mockOidcAuth.isLoading = false;
-    mockOidcAuth.error = null;
-    mockDecodeToken.mockReturnValue({ roles: [] });
+    // Suppress console.error during tests
+    originalConsoleError = console.error;
+    console.error = jest.fn();
+
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
   });
 
-  describe('useAuth hook', () => {
-    it('should throw error when used outside AuthProvider', () => {
-      expect(() => {
-        render(<TestComponent />);
-      }).toThrow('useAuth must be used within an AuthProvider');
-    });
-
-    it('should provide auth context when used within AuthProvider', () => {
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('isAuthenticated')).toBeInTheDocument();
-      expect(screen.getByTestId('isLoading')).toBeInTheDocument();
-      expect(screen.getByTestId('error')).toBeInTheDocument();
-      expect(screen.getByTestId('user')).toBeInTheDocument();
-    });
+  afterEach(() => {
+    // Restore console.error
+    console.error = originalConsoleError;
   });
 
-  describe('token getter registration', () => {
-    it('should register token getter when OIDC user changes', () => {
-      mockOidcAuth.user = {
-        access_token: 'test-token',
-        profile: { name: 'Test User' },
-      };
+  it('should provide authentication context', () => {
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
 
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      expect(endpointModule.setTokenGetter).toHaveBeenCalledWith(expect.any(Function));
-    });
-
-    it('should register null token getter when no OIDC user', () => {
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      expect(endpointModule.setTokenGetter).toHaveBeenCalledWith(expect.any(Function));
-    });
+    expect(screen.getByTestId('user')).toHaveTextContent('No user');
+    expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
+    expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
+    expect(screen.getByTestId('error')).toHaveTextContent('No error');
   });
 
-  describe('user profile synchronization', () => {
-    it('should sync user profile when OIDC user is authenticated', async () => {
-      const mockUser = {
-        keycloak_id: 'test-user-id',
-        name: 'Test User',
-        age: 25,
-        height: 180,
-        weight: 80,
-        roles: ['user'],
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      };
+  it('should handle login', async () => {
+    const mockSigninRedirect = jest.fn();
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: null,
+      signinRedirect: mockSigninRedirect,
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      mockOidcAuth.user = {
-        access_token: 'test-token',
-        profile: { name: 'Test User' },
-      };
-      mockOidcAuth.isAuthenticated = true;
-      userModule.getCurrentUser.mockResolvedValue(mockUser);
-      authUtilsModule.decodeToken.mockReturnValue({
-        realm_access: { roles: ['admin'] },
-      });
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
 
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
+    await act(async () => {
+      screen.getByText('Login').click();
+    });
+    expect(mockSigninRedirect).toHaveBeenCalled();
+  });
 
-      await waitFor(() => {
-        expect(userModule.getCurrentUser).toHaveBeenCalled();
-      });
+  it('should handle login error', async () => {
+    const mockSigninRedirect = jest.fn().mockRejectedValue(new Error('Login failed'));
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: null,
+      signinRedirect: mockSigninRedirect,
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      await waitFor(() => {
-        const userElement = screen.getByTestId('user');
-        const userData = JSON.parse(userElement.textContent || '{}');
-        expect(userData.roles).toEqual(['admin']);
-      });
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Login').click();
     });
 
-    it('should handle backend profile fetch failure gracefully', async () => {
-      mockOidcAuth.user = { access_token: 'test-token', profile: { name: 'Test User' } };
-      mockOidcAuth.isAuthenticated = true;
-      userModule.getCurrentUser.mockRejectedValue(new Error('Backend error'));
-      authUtilsModule.decodeToken.mockReturnValue({
-        realm_access: { roles: ['user'] },
-      });
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      await waitFor(() => {
-        expect(userModule.getCurrentUser).toHaveBeenCalled();
-      });
-
-      await waitFor(() => {
-        const userElement = screen.getByTestId('user');
-        expect(userElement.textContent).toBe('no-user');
-      });
-    });
-
-    it('should clear user when OIDC user is not authenticated', () => {
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      expect(screen.getByTestId('user')).toHaveTextContent('no-user');
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).toHaveTextContent('Login failed. Please try again.');
     });
   });
 
-  describe('error handling', () => {
-    it('should set error when OIDC error occurs', () => {
-      mockOidcAuth.error = { message: 'OIDC error' };
+  it('should handle logout', async () => {
+    const mockRemoveUser = jest.fn();
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: {} as Record<string, unknown>,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: mockRemoveUser,
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
 
-      expect(screen.getByTestId('error')).toHaveTextContent('OIDC error');
+    await act(async () => {
+      screen.getByText('Logout').click();
+    });
+    expect(mockRemoveUser).toHaveBeenCalled();
+  });
+
+  it('should handle logout error', async () => {
+    const mockRemoveUser = jest.fn().mockRejectedValue(new Error('Logout failed'));
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: {} as Record<string, unknown>,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: mockRemoveUser,
+    } as unknown as ReturnType<typeof useOidcAuth>);
+
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
+
+    await act(async () => {
+      screen.getByText('Logout').click();
     });
 
-    it('should clear error when clearError is called', () => {
-      mockOidcAuth.error = { message: 'OIDC error' };
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      const clearErrorButton = screen.getByText('Clear Error');
-      act(() => {
-        clearErrorButton.click();
-      });
-
-      expect(screen.getByTestId('error')).toHaveTextContent('no-error');
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).toHaveTextContent('Logout failed. Please try again.');
     });
   });
 
-  describe('login functionality', () => {
-    it('should call OIDC signinRedirect when login is called', async () => {
-      mockOidcAuth.signinRedirect.mockResolvedValue(undefined);
+  it('should clear error', async () => {
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: new Error('Test error'),
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
 
-      const loginButton = screen.getByText('Login');
-      await act(async () => {
-        loginButton.click();
-      });
-
-      expect(mockOidcAuth.signinRedirect).toHaveBeenCalled();
+    await act(async () => {
+      screen.getByText('Clear Error').click();
     });
 
-    it('should handle login errors', async () => {
-      const loginError = new Error('Login failed');
-      mockOidcAuth.signinRedirect.mockRejectedValue(loginError);
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      const loginButton = screen.getByText('Login');
-      await act(async () => {
-        loginButton.click();
-      });
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error')).toHaveTextContent('Login failed');
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId('error')).toHaveTextContent('No error');
     });
   });
 
-  describe('logout functionality', () => {
-    it('should call OIDC removeUser when logout is called', async () => {
-      mockOidcAuth.removeUser.mockResolvedValue(undefined);
+  it('should sync user profile when authenticated', async () => {
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: {} as Record<string, unknown>,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
+    mockGetCurrentUser.mockResolvedValue(mockUser);
 
+    await act(async () => {
       render(
-        <TestWrapper>
+        <AuthProvider>
           <TestComponent />
-        </TestWrapper>
+        </AuthProvider>
       );
-
-      const logoutButton = screen.getByText('Logout');
-      await act(async () => {
-        logoutButton.click();
-      });
-
-      expect(mockOidcAuth.removeUser).toHaveBeenCalled();
     });
 
-    it('should handle logout errors gracefully', async () => {
-      const logoutError = new Error('Logout failed');
-      mockOidcAuth.removeUser.mockRejectedValue(logoutError);
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      const logoutButton = screen.getByText('Logout');
-      await act(async () => {
-        logoutButton.click();
-      });
-
-      // Should not throw error, just log it
-      expect(mockOidcAuth.removeUser).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('Test User');
     });
   });
 
-  describe('registration functionality', () => {
-    it('should register user and sync profile', async () => {
-      const mockNewUser = {
-        keycloak_id: 'test-user-id',
-        name: 'Test User',
-        age: 25,
-        height: 180,
-        weight: 80,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      };
-      userModule.createUserProfile.mockResolvedValue(mockNewUser);
-      userModule.getCurrentUser.mockResolvedValue(mockNewUser);
+  it('should automatically create profile when user not found', async () => {
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: {} as Record<string, unknown>,
+      error: null,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
+    // First call returns 404, second call creates profile
+    mockGetCurrentUser
+      .mockRejectedValueOnce({ response: { status: 404 } })
+      .mockResolvedValueOnce(mockUser);
+    mockCreateUserProfile.mockResolvedValue(mockUser);
+
+    await act(async () => {
       render(
-        <TestWrapper>
+        <AuthProvider>
           <TestComponent />
-        </TestWrapper>
+        </AuthProvider>
       );
-
-      const registerButton = screen.getByText('Register');
-      await act(async () => {
-        registerButton.click();
-      });
-
-      expect(userModule.createUserProfile).toHaveBeenCalledWith('Test User', 25, 180, 80, 'metric');
-      expect(userModule.getCurrentUser).toHaveBeenCalled();
-
-      // Should not navigate - that's handled by routing configuration
-      expect(mockNavigate).not.toHaveBeenCalled();
     });
 
-    it('should handle registration errors', async () => {
-      const registrationError = { response: { data: { message: 'Registration failed' } } };
-      userModule.createUserProfile.mockRejectedValue(registrationError);
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      const registerButton = screen.getByText('Register');
-      await act(async () => {
-        registerButton.click();
-      });
-
-      await waitFor(() => {
-        expect(screen.getByTestId('error')).toHaveTextContent('Profile creation failed');
-      });
+    await waitFor(() => {
+      expect(screen.getByTestId('user')).toHaveTextContent('Test User');
     });
-
-    it('should handle profile sync failure after registration', async () => {
-      const mockNewUser = {
-        keycloak_id: 'test-user-id',
-        name: 'Test User',
-        age: 25,
-        height: 180,
-        weight: 80,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      };
-      userModule.createUserProfile.mockResolvedValue(mockNewUser);
-      userModule.getCurrentUser.mockRejectedValue(new Error('Profile sync failed'));
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      const registerButton = screen.getByText('Register');
-      await act(async () => {
-        registerButton.click();
-      });
-
-      expect(userModule.createUserProfile).toHaveBeenCalled();
-      expect(userModule.getCurrentUser).toHaveBeenCalled();
-
-      // Should not navigate - that's handled by routing configuration
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
+    expect(mockCreateUserProfile).toHaveBeenCalled();
   });
 
-  describe('loading states', () => {
-    it('should reflect OIDC loading state', () => {
-      mockOidcAuth.isLoading = true;
+  it('should handle OIDC errors', () => {
+    const oidcError = new Error('OIDC error');
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: false,
+      user: null,
+      error: oidcError,
+      signinRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
 
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
+    render(
+      <AuthProvider>
+        <TestComponent />
+      </AuthProvider>
+    );
 
-      expect(screen.getByTestId('isLoading')).toHaveTextContent('true');
-    });
-
-    it('should reflect OIDC authentication state', () => {
-      mockOidcAuth.isAuthenticated = true;
-      mockOidcAuth.user = { access_token: 'test-token' };
-      userModule.getCurrentUser.mockResolvedValue({
-        keycloak_id: 'test-user-id',
-        name: 'Test User',
-        age: 25,
-        height: 180,
-        weight: 80,
-        created_at: '2023-01-01T00:00:00Z',
-        updated_at: '2023-01-01T00:00:00Z',
-      });
-
-      render(
-        <TestWrapper>
-          <TestComponent />
-        </TestWrapper>
-      );
-
-      // Wait for the user profile to be loaded
-      return waitFor(() => {
-        expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('true');
-      });
-    });
+    expect(screen.getByTestId('error')).toHaveTextContent('OIDC error');
   });
 });

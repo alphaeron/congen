@@ -1,10 +1,12 @@
 package com.congen.controllers
 
 import com.congen.model.WorkoutStage
+import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.service.ProgrammedWorkoutService
 import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
+import reactor.core.publisher.Flux
 import io.swagger.v3.oas.annotations.Parameter
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -61,7 +63,8 @@ class WorkoutStageController(
     private val workoutStageService: WorkoutStageService,
     private val programService: ProgramService,
     private val programmedWorkoutService: ProgrammedWorkoutService,
-    private val keycloakUtil: KeycloakUtil
+    private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -97,38 +100,40 @@ class WorkoutStageController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val workoutStageMono =
-                if (isAdminOrService) {
-                    workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
-                } else {
-                    // First check if the programmed workout exists, then check ownership
-                    programmedWorkoutService.selectProgrammedWorkoutById(programmedWorkoutId)
-                        .flatMap { programmedWorkout ->
-                            programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
-                                if (isOwner) {
+            programmedWorkoutService.selectProgrammedWorkoutById(programmedWorkoutId)
+                .flatMap { programmedWorkout ->
+                    programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
+                        if (isAdminOrService || isOwner) {
+                            val consentUserIdMono = if (isAdminOrService) {
+                                programService.getOwner(programmedWorkout.programId)
+                            } else {
+                                Mono.just(userId)
+                            }
+                            consentUserIdMono.flatMap { ownerId ->
+                                gdprComplianceService.withUserConsent(ownerId) {
                                     workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
-                                } else {
-                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                                        .map {
+                                            logger.debug("Saved workout stage with id: {}", it.id)
+                                            ResponseEntity.ok(it)
+                                        }
+                                        .doOnError { e ->
+                                            logger.error(
+                                                "Error saving workout stage for workout: {}, position: {}, name: {}",
+                                                programmedWorkoutId,
+                                                position,
+                                                name,
+                                                e,
+                                            )
+                                        }
                                 }
                             }
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
                         }
-                        .doOnError { e ->
-                            logger.error("Error checking ownership for workout stage creation: {}", programmedWorkoutId, e)
-                        }
+                    }
                 }
-
-            workoutStageMono.map {
-                logger.debug("Saved workout stage with id: {}", it.id)
-                ResponseEntity.ok(it)
-            }
                 .doOnError { e ->
-                    logger.error(
-                        "Error saving workout stage for workout: {}, position: {}, name: {}",
-                        programmedWorkoutId,
-                        position,
-                        name,
-                        e,
-                    )
+                    logger.error("Error checking ownership for workout stage creation: {}", programmedWorkoutId, e)
                 }
         }
     }
@@ -151,29 +156,31 @@ class WorkoutStageController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val workoutStageMono =
-                if (isAdminOrService) {
-                    workoutStageService.selectWorkoutStageById(id)
-                } else {
-                    // First check if the workout stage exists, then check ownership
-                    workoutStageService.selectWorkoutStageById(id)
-                        .flatMap { workoutStage ->
-                            workoutStageService.isOwner(workoutStage.id, userId).flatMap { isOwner ->
-                                if (isOwner) {
+            workoutStageService.selectWorkoutStageById(id)
+                .flatMap { workoutStage ->
+                    workoutStageService.isOwner(workoutStage.id, userId).flatMap { isOwner ->
+                        if (isAdminOrService || isOwner) {
+                            val consentUserIdMono = if (isAdminOrService) {
+                                workoutStageService.getOwner(workoutStage.id)
+                            } else {
+                                Mono.just(userId)
+                            }
+                            consentUserIdMono.flatMap { ownerId ->
+                                gdprComplianceService.withUserConsent(ownerId) {
                                     Mono.just(workoutStage)
-                                } else {
-                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                                        .map {
+                                            logger.debug("Found workout stage: {}", id)
+                                            ResponseEntity.ok(it)
+                                        }
+                                        .doOnError { e ->
+                                            logger.error("Error getting workout stage: {}", id, e)
+                                        }
                                 }
                             }
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
                         }
-                }
-
-            workoutStageMono.map {
-                logger.debug("Found workout stage: {}", id)
-                ResponseEntity.ok(it)
-            }
-                .doOnError { e ->
-                    logger.error("Error getting workout stage: {}", id, e)
+                    }
                 }
         }
     }
@@ -193,13 +200,27 @@ class WorkoutStageController(
             val userId = tuple.t1
             val roles = tuple.t2
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val workoutStageMono =
-                if (isAdminOrService) {
-                    workoutStageService.selectWorkoutStages()
-                } else {
+            if (isAdminOrService) {
+                workoutStageService.selectWorkoutStages()
+                    .flatMap { workoutStages ->
+                        Flux.fromIterable(workoutStages)
+                            .flatMap { workoutStage ->
+                                workoutStageService.getOwner(workoutStage.id)
+                                    .flatMap { ownerId ->
+                                        gdprComplianceService.hasUserConsent(ownerId)
+                                            .filter { hasConsent -> hasConsent }
+                                            .map { workoutStage }
+                                    }
+                            }
+                            .collectList()
+                    }
+                    .map { ResponseEntity.ok(it) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
                     workoutStageService.selectWorkoutStagesByUserId(userId)
+                        .map { ResponseEntity.ok(it) }
                 }
-            workoutStageMono.map { ResponseEntity.ok(it) }
+            }
         }
     }
 
@@ -221,33 +242,35 @@ class WorkoutStageController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val workoutStageMono =
-                if (isAdminOrService) {
-                    workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
-                } else {
-                    // First check if the programmed workout exists, then check ownership
-                    programmedWorkoutService.selectProgrammedWorkoutById(programmedWorkoutId)
-                        .flatMap { programmedWorkout ->
-                            programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
-                                if (isOwner) {
+            programmedWorkoutService.selectProgrammedWorkoutById(programmedWorkoutId)
+                .flatMap { programmedWorkout ->
+                    programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
+                        if (isAdminOrService || isOwner) {
+                            val consentUserIdMono = if (isAdminOrService) {
+                                programService.getOwner(programmedWorkout.programId)
+                            } else {
+                                Mono.just(userId)
+                            }
+                            consentUserIdMono.flatMap { ownerId ->
+                                gdprComplianceService.withUserConsent(ownerId) {
                                     logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
                                     workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId)
-                                } else {
-                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                                        .map {
+                                            logger.debug("Found {} workout stages for programmed workout: {}", it.size, programmedWorkoutId)
+                                            ResponseEntity.ok(it)
+                                        }
+                                        .doOnError { e ->
+                                            logger.error("Error getting workout stages for programmed workout: {}", programmedWorkoutId, e)
+                                        }
                                 }
                             }
+                        } else {
+                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
                         }
-                        .doOnError { e ->
-                            logger.error("Error checking ownership for workout stages: {}", programmedWorkoutId, e)
-                        }
+                    }
                 }
-
-            workoutStageMono.map {
-                logger.debug("Found {} workout stages for programmed workout: {}", it.size, programmedWorkoutId)
-                ResponseEntity.ok(it)
-            }
                 .doOnError { e ->
-                    logger.error("Error getting workout stages for programmed workout: {}", programmedWorkoutId, e)
+                    logger.error("Error checking ownership for workout stages: {}", programmedWorkoutId, e)
                 }
         }
     }
@@ -283,32 +306,29 @@ class WorkoutStageController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val workoutStageMono =
-                if (isAdminOrService) {
-                    workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
-                } else {
-                    workoutStageService.isOwner(id, userId).flatMap { isWorkoutStageOwner ->
-                        if (isWorkoutStageOwner) {
-                            programmedWorkoutService.isOwner(programmedWorkoutId, userId).flatMap { isProgrammedWorkoutOwner ->
-                                if (isProgrammedWorkoutOwner) {
-                                    workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
-                                } else {
-                                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+            workoutStageService.isOwner(id, userId).flatMap { isWorkoutStageOwner ->
+                if (isAdminOrService || isWorkoutStageOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        workoutStageService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
+                            workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
+                                .map {
+                                    logger.debug("Updated workout stage: {}", id)
+                                    ResponseEntity.ok(it)
                                 }
-                            }
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                                .doOnError { e ->
+                                    logger.error("Error updating workout stage: {}", id, e)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
                 }
-
-            workoutStageMono.map {
-                logger.debug("Updated workout stage: {}", id)
-                ResponseEntity.ok(it)
             }
-                .doOnError { e ->
-                    logger.error("Error updating workout stage: {}", id, e)
-                }
         }
     }
 
@@ -330,27 +350,29 @@ class WorkoutStageController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            val workoutStageMono =
-                if (isAdminOrService) {
-                    workoutStageService.deleteWorkoutStage(id)
-                } else {
-                    // First check if the workout stage exists, then check ownership
-                    workoutStageService.isOwner(id, userId).flatMap { isOwner ->
-                        if (isOwner) {
+            workoutStageService.isOwner(id, userId).flatMap { isOwner ->
+                if (isAdminOrService || isOwner) {
+                    val consentUserIdMono = if (isAdminOrService) {
+                        workoutStageService.getOwner(id)
+                    } else {
+                        Mono.just(userId)
+                    }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
                             workoutStageService.deleteWorkoutStage(id)
-                        } else {
-                            Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
+                                .map {
+                                    logger.debug("Deleted workout stage: {}", id)
+                                    ResponseEntity.ok(it)
+                                }
+                                .doOnError { e ->
+                                    logger.error("Error deleting workout stage: {}", id, e)
+                                }
                         }
                     }
+                } else {
+                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this workout stage"))
                 }
-
-            workoutStageMono.map {
-                logger.debug("Deleted workout stage: {}", id)
-                ResponseEntity.ok(it)
             }
-                .doOnError { e ->
-                    logger.error("Error deleting workout stage: {}", id, e)
-                }
         }
     }
 }
