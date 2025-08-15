@@ -123,14 +123,15 @@ class ProgramDAL(
      * @param userId The Keycloak user ID whose programs should be deactivated
      * @return Mono that completes when deactivation is done (or when no programs exist)
      */
-    private fun deactivateProgramsForUser(userId: String): Mono<Void> {
+    private fun deactivateProgramsForUser(userId: String): Mono<Unit> {
         return postgresClient.updateLiteral<Any>(
             "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
             Any::class,
             userId
-        ).then().onErrorResume(NoResultsFoundException::class.java) {
-            logger.debug("No programs found to deactivate for user {}", userId)
-            Mono.empty()
+        ).then(Mono.just(Unit))
+        .onErrorResume(NoResultsFoundException::class.java) {
+            logger.warn("No programs found to deactivate for user {}", userId)
+            Mono.just(Unit)
         }
     }
 

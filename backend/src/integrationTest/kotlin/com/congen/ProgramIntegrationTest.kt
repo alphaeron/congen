@@ -151,7 +151,6 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.id").isEqualTo(programId)
             .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.name").isEqualTo(IntegrationTestHelpers.TEST_PROGRAM_NAME)
-            .jsonPath("$.is_active").isEqualTo(true)
     }
 
     @Test
@@ -242,7 +241,18 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Create first program (should be active by default)
         val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
-
+        // Verify the first program is active
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId1)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+        
         // Create second program (should deactivate the first one)
         val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program", token = token)
 

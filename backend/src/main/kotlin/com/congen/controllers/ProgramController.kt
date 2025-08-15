@@ -122,9 +122,6 @@ class ProgramController(
                                     logger.debug("Saved program with id: {}", savedProgram.id)
                                     ResponseEntity.ok(savedProgram)
                                 }
-                                .doOnError { e ->
-                                    logger.error("Error saving program: {} for user {}", name, userId, e)
-                                }
                         }
                     }
                 } else {
@@ -190,9 +187,6 @@ class ProgramController(
                                     .map {
                                         logger.debug("Found program: {}", id)
                                         ResponseEntity.ok(it)
-                                    }
-                                    .doOnError { e ->
-                                        logger.error("Error getting program: {}", id, e)
                                     }
                             }
                         }
@@ -298,9 +292,6 @@ class ProgramController(
                 logger.debug("Found {} programs for user: {}", programs.size, userId)
                 ResponseEntity.ok(programs)
             }
-            .doOnError { e ->
-                logger.error("Error getting programs for user: {}", userId, e)
-            }
     }
 
     /**
@@ -383,9 +374,6 @@ class ProgramController(
                                         logger.debug("Updated program: {}", id)
                                         ResponseEntity.ok(it)
                                     }
-                                    .doOnError { e ->
-                                        logger.error("Error updating program: {}", id, e)
-                                    }
                             }
                         }
                     } else {
@@ -452,9 +440,6 @@ class ProgramController(
                                     .map {
                                         logger.debug("Deleted program: {}", id)
                                         ResponseEntity.ok(it)
-                                    }
-                                    .doOnError { e ->
-                                        logger.error("Error deleting program: {}", id, e)
                                     }
                             }
                         }
