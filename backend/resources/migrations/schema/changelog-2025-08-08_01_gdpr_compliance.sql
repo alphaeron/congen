@@ -11,7 +11,7 @@ CREATE TABLE gdpr_audit_log (
   data_type VARCHAR(100) NOT NULL, -- Type of data involved
   performed_by VARCHAR(255), -- User who performed the operation
   timestamp TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  additional_info TEXT, -- Additional context or details
+  additional_info TEXT -- Additional context or details
 );
 
 -- Create indexes for audit log queries

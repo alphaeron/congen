@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/api/v1/user")
+@RequestMapping("/user")
 @Tag(name = "User Management", description = "APIs for managing user profiles")
 class UserController(
     private val userService: UserService,
