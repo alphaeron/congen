@@ -2,14 +2,11 @@ package com.congen
 
 import com.congen.model.SetScheme
 import com.congen.model.WorkoutStageType
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 
 class SetSchemeIntegrationTest : BaseIntegrationTest() {
-    private val objectMapper = ObjectMapper().registerKotlinModule()
     private var programId: Long = 0
     private var programmedExerciseId: Long = 0
     private lateinit var userToken: String
@@ -23,6 +20,7 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
     private fun setupTestEntities() {
         userToken = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
+        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
         programId =
             IntegrationTestHelpers.createTestProgram(
