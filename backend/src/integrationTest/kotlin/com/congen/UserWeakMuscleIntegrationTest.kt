@@ -6,20 +6,20 @@ import org.springframework.http.HttpMethod
 
 class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
     private var userId: String = ""
+    private lateinit var userToken: String
     private val muscleNames = listOf("hamstrings", "glutes", "lats")
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
         val unique = System.nanoTime()
-        val token = getValidToken("service")
+        userToken = getValidToken("user")
         // Create a single test user to avoid keycloak_user_id conflicts
-        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
     }
 
     @Test
     fun `should add and retrieve user weak muscle`() {
-        val token = getValidToken("service")
         // Add weak muscle
         webTestClient.post()
             .uri { uriBuilder ->
@@ -29,14 +29,14 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
                     .queryParam("muscle_name", muscleNames[0])
                     .build()
             }
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
 
         // Retrieve weak muscles
         webTestClient.get()
             .uri("/api/v1/user_weak_muscle/$userId")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -48,7 +48,6 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should get user weak muscles by user id`() {
-        val token = getValidToken("service")
         // Add weak muscle
         webTestClient.post()
             .uri { uriBuilder ->
@@ -58,14 +57,14 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
                     .queryParam("muscle_name", muscleNames[1])
                     .build()
             }
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
 
         // Retrieve
         webTestClient.get()
             .uri("/api/v1/user_weak_muscle/$userId")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -76,7 +75,6 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should delete user weak muscle`() {
-        val token = getValidToken("service")
         // Add weak muscle
         webTestClient.post()
             .uri { uriBuilder ->
@@ -86,7 +84,7 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
                     .queryParam("muscle_name", muscleNames[2])
                     .build()
             }
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
 
@@ -98,17 +96,17 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
                     .queryParam("muscle_name", muscleNames[2])
                     .build()
             }
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.muscle_name").isEqualTo(muscleNames[2])
 
-        // Should be empty after delete
+        // Verify deletion
         webTestClient.get()
             .uri("/api/v1/user_weak_muscle/$userId")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk
             .expectBody()

@@ -121,44 +121,47 @@ class ProgrammedWorkoutController(
      * Retrieves a programmed workout by its unique identifier.
      *
      * This endpoint fetches a programmed workout from the database using the provided ID.
-     * If no programmed workout exists with the given ID, an error response is returned.
+     * If no programmed workout exists with the given ID, a 404 Not Found response is returned.
      *
      * @param id The unique identifier of the programmed workout to retrieve
-     * @return Mono containing the programmed workout if found
+     * @return Mono containing the programmed workout if found, or 404 if not found
      */
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     fun get(
         @PathVariable("id") id: Long,
     ): Mono<ResponseEntity<ProgrammedWorkout>> {
-        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
-            Pair(userId, roles)
-        }.flatMap { (userId, roles) ->
-            val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            programmedWorkoutService.isOwner(id, userId).flatMap { isOwner ->
-                if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programmedWorkoutService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
-                    consentUserIdMono.flatMap { ownerId ->
-                        gdprComplianceService.withUserConsent(ownerId) {
-                            programmedWorkoutService.selectProgrammedWorkoutById(id)
-                                .map {
-                                    logger.debug("Found programmed workout: {}", id)
-                                    ResponseEntity.ok(it)
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles())
+            .flatMap { tuple ->
+                val userId = tuple.t1
+                val roles = tuple.t2
+                val isAdminOrService = roles.contains("admin") || roles.contains("service")
+                
+                // First check if the programmed workout exists
+                programmedWorkoutService.selectProgrammedWorkoutById(id)
+                    .flatMap { programmedWorkout ->
+                        // Programmed workout exists, now check ownership
+                        programmedWorkoutService.isOwner(id, userId).flatMap { isOwner ->
+                            if (isAdminOrService || isOwner) {
+                                val consentUserIdMono = if (isAdminOrService) {
+                                    programmedWorkoutService.getOwner(id)
+                                } else {
+                                    Mono.just(userId)
                                 }
-                                .doOnError { e ->
-                                    logger.error("Error getting programmed workout: {}", id, e)
+                                consentUserIdMono.flatMap { ownerId ->
+                                    gdprComplianceService.withUserConsent(ownerId) {
+                                        Mono.just(ResponseEntity.ok(programmedWorkout))
+                                    }
                                 }
+                            } else {
+                                Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
+                            }
                         }
                     }
-                } else {
-                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this programmed workout"))
-                }
+                    .doOnError { e ->
+                        logger.error("Error getting programmed workout: {}", id, e)
+                    }
             }
-        }
     }
 
     /**

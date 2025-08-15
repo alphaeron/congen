@@ -37,6 +37,8 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
                 name = testUserName,
                 token = token
             )
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Verify the user profile was created successfully
         webTestClient.get()
@@ -69,6 +71,8 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
                 name = testUserName,
                 token = token
             )
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Then get user by Keycloak ID
         webTestClient.get()

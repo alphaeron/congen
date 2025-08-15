@@ -14,6 +14,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should create program`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         webTestClient.post()
             .uri("/api/v1/program/?user_id=$userId&name=${IntegrationTestHelpers.TEST_PROGRAM_NAME}")
             .header("Authorization", "Bearer $token")
@@ -30,6 +32,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get program by id`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId =
             IntegrationTestHelpers.createTestProgram(
                 webTestClient,
@@ -66,6 +70,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should get all programs`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = token)
         // Create second program as inactive to avoid unique constraint violation
         webTestClient.post()
@@ -87,6 +93,8 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
     fun `should update program`() {
         val token = getValidToken("user")
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // First create a program
         val programId =
