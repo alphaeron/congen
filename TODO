@@ -2,6 +2,8 @@ We also need to make sure they have the test cases to validate that the consent 
 
 in the integration tests helpers, add a create user consent helper if it doesn't exist.
 
+gdprComplianceDAL.recordConsent is unused?
+
 can we remove the service tokens from the integration tests now that they are unused?
 
 Ensure the integration tests call that with the appropriate user making the request in the test so consent is there for validation.

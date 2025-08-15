@@ -222,13 +222,7 @@ class GdprComplianceService(
             operation = if (consent) "CONSENT_GIVEN" else "CONSENT_WITHDRAWN",
             dataType = "USER_CONSENT"
         ).then(
-            gdprComplianceDAL.recordConsent(
-                keycloakId = keycloakId,
-                consentType = "data_processing",
-                consentGiven = consent
-            ).then(
-                gdprComplianceDAL.updateUserConsent(keycloakId, consent)
-            )
+            gdprComplianceDAL.updateUserConsent(keycloakId, consent)
         ).doOnSuccess { userConsentRecord ->
             logger.info(
                 "Successfully recorded consent for user: {} - consent: {}",

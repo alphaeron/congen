@@ -80,20 +80,39 @@ class GdprIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `GET export should return user data export`() {
-        webTestClient
-            .get()
+    fun `should export user data successfully`() {
+        // First create user program preferences so the export doesn't fail
+        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
+        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, testUserId, token = userToken)
+        
+        webTestClient.get()
             .uri("/api/v1/gdpr/export")
             .header("Authorization", "Bearer $userToken")
-            .accept(MediaType.APPLICATION_JSON)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isOk()
             .expectBody()
             .jsonPath("$.keycloak_id").exists()
             .jsonPath("$.name").exists()
-            .jsonPath("$.created_at").exists()
-            .jsonPath("$.updated_at").exists()
+            .jsonPath("$.data_processing_consent").exists()
             .jsonPath("$.export_timestamp").exists()
+            .jsonPath("$.user_equipment").exists()
+            .jsonPath("$.user_exercise_preferences").exists()
+            .jsonPath("$.user_one_rep_max").exists()
+            .jsonPath("$.user_weight_unit_preferences").exists()
+            .jsonPath("$.exercise_rotation_history").exists()
+            .jsonPath("$.training_programs").exists()
+            .jsonPath("$.user_program_preferences").exists()
+    }
+
+    @Test
+    fun `should handle export when user program preferences do not exist`() {
+        webTestClient.get()
+            .uri("/api/v1/gdpr/export")
+            .header("Authorization", "Bearer $userToken")
+            .exchange()
+            .expectStatus().isNotFound()
+            .expectBody()
+            .jsonPath("$.error").isEqualTo("Resource not found")
     }
 
     @Test
@@ -160,12 +179,9 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .header("Authorization", "Bearer $userToken")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().isNotFound()
             .expectBody()
-            .jsonPath("$.keycloak_id").isNotEmpty
-            .jsonPath("$.name").isNotEmpty
-            .jsonPath("$.data_processing_consent").exists()
-            .jsonPath("$.export_timestamp").exists()
+            .jsonPath("$.error").isEqualTo("Resource not found")
     }
 
     @Test

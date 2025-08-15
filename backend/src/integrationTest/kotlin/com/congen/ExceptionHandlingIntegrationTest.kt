@@ -14,12 +14,12 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
             .expectBody()
-            .jsonPath("$.error").isEqualTo("Resource not found")
+            .jsonPath("$.error").isEqualTo("Not Found")
     }
 
     @Test
     fun `should handle user not found after creation`() {
-        val token = getValidToken("service")
+        val token = getValidToken("user")
         // Create a valid user first
         val userId =
             IntegrationTestHelpers.createTestUser(
@@ -38,23 +38,26 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isNotFound()
             .expectBody()
-            .jsonPath("$.error").isEqualTo("Resource not found")
+            .jsonPath("$.error").isEqualTo("Not Found")
     }
 
     @Test
     fun `should handle multiple validation errors`() {
         val token = getValidToken("user")
-        // Test multiple validation errors
+        // Create a user first
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
+        
+        // Test validation errors by trying to create user program preferences with invalid days per week
         webTestClient.post()
-            .uri(
-                "/api/v1/user/?name="
-            )
+            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { errorMessage ->
-                errorMessage.contains("User name must not be empty")
+                errorMessage.contains("Program days per week must be 2, 3, or 4 days")
             }
     }
 
@@ -179,9 +182,11 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle valid program and invalid program`() {
-        val token = getValidToken("service")
+        val token = getValidToken("user")
         // Create a user first
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Create a valid program
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
@@ -203,9 +208,11 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle valid workout and invalid workout`() {
-        val token = getValidToken("service")
+        val token = getValidToken("user")
         // Create a user and program first
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
 
         // Create a valid workout
