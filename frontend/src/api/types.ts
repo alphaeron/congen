@@ -68,18 +68,109 @@ export interface UserConsent {
  * User data export structure for GDPR data portability.
  */
 export interface UserDataExport {
-  personal_data: {
-    profile: Record<string, unknown>;
-    preferences: Record<string, unknown>;
-    exercise_history: Record<string, unknown>[];
-    programs: Record<string, unknown>[];
-  };
-  metadata: {
-    exported_at: string;
-    data_types: string[];
-    total_records: number;
-  };
+  keycloak_id: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  data_processing_consent: boolean;
+  consent_timestamp?: string;
+  export_timestamp: string;
+  user_equipment: Record<string, unknown>[];
+  user_exercise_preferences: Record<string, unknown>[];
+  user_program_preferences?: Record<string, unknown>;
+  user_one_rep_max: Record<string, unknown>[];
+  user_weight_unit_preferences: Record<string, unknown>[];
+  exercise_rotation_history: Record<string, unknown>[];
+  training_programs: ProgramWithWorkouts[];
+  audit_logs: Record<string, unknown>[];
+  data_retention_policies: Record<string, unknown>[];
 } // end interface UserDataExport
+
+/**
+ * Program with complete workout hierarchy for export.
+ */
+export interface ProgramWithWorkouts {
+  program: {
+    id: number;
+    user_id: string;
+    name: string;
+    current_week_number: number;
+    created_at: string;
+    updated_at: string;
+    is_active: boolean;
+  };
+  workouts: ProgrammedWorkoutWithStages[];
+} // end interface ProgramWithWorkouts
+
+/**
+ * Programmed workout with complete stage hierarchy for export.
+ */
+export interface ProgrammedWorkoutWithStages {
+  workout: {
+    id: number;
+    program_id: number;
+    day_number: number;
+    name: string;
+    created_at: string;
+    updated_at: string;
+  };
+  stages: WorkoutStageWithExercises[];
+} // end interface ProgrammedWorkoutWithStages
+
+/**
+ * Workout stage with complete exercise hierarchy for export.
+ */
+export interface WorkoutStageWithExercises {
+  stage: {
+    id: number;
+    programmed_workout_id: number;
+    stage_type_id: number;
+    position: number;
+    name: string;
+    created_at: string;
+    updated_at: string;
+  };
+  exercises: ProgrammedExerciseWithSetSchemes[];
+} // end interface WorkoutStageWithExercises
+
+/**
+ * Programmed exercise with complete set scheme hierarchy for export.
+ */
+export interface ProgrammedExerciseWithSetSchemes {
+  exercise: {
+    id: number;
+    workout_stage_id: number;
+    exercise_name: string;
+    position: number;
+    notes?: string;
+    created_at: string;
+    updated_at: string;
+  };
+  set_schemes: SetScheme[];
+} // end interface ProgrammedExerciseWithSetSchemes
+
+/**
+ * Set scheme for a programmed exercise.
+ */
+export interface SetScheme {
+  id: number;
+  programmed_exercise_id: number;
+  set_number: number;
+  is_amrap: boolean;
+  is_emom: boolean;
+  use_tempo: boolean;
+  eccentric_tempo?: string;
+  isometric_tempo?: string;
+  concentric_tempo?: string;
+  target_weight?: number;
+  performed_weight?: number;
+  target_rep_count?: number;
+  performed_rep_count?: number;
+  rest_seconds?: number;
+  created_at: string;
+  updated_at: string;
+  band_weight_lbs?: Record<string, unknown>;
+} // end interface SetScheme
 
 /**
  * Privacy policy response structure with GDPR compliance information.

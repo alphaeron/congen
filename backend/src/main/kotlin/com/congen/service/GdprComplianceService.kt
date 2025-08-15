@@ -15,15 +15,15 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.model.Program
 import com.congen.model.ProgrammedExercise
-import com.congen.model.ProgrammedExerciseExport
 import com.congen.model.ProgrammedWorkout
-import com.congen.model.SetSchemeExport
-import com.congen.model.TrainingProgramExport
+import com.congen.model.SetScheme
 import com.congen.model.UserConsent
 import com.congen.model.UserDataExport
-import com.congen.model.WorkoutExport
 import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageExport
+import com.congen.model.ProgramWithWorkouts
+import com.congen.model.ProgrammedWorkoutWithStages
+import com.congen.model.WorkoutStageWithExercises
+import com.congen.model.ProgrammedExerciseWithSetSchemes
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
@@ -100,50 +100,24 @@ class GdprComplianceService(
     }
 
     /**
-     * Helper function to fetch set schemes for an exercise and convert to export format.
+     * Helper function to fetch set schemes for an exercise.
      */
-    private fun fetchSetSchemesForExercise(exercise: ProgrammedExercise): Mono<List<SetSchemeExport>> {
+    private fun fetchSetSchemesForExercise(exercise: ProgrammedExercise): Mono<List<SetScheme>> {
         return setSchemeDAL.selectSetSchemesByProgrammedExerciseId(exercise.id)
-            .map { setSchemes ->
-                setSchemes.map { setScheme ->
-                    SetSchemeExport(
-                        id = setScheme.id,
-                        setNumber = setScheme.setNumber,
-                        isAmrap = setScheme.isAmrap,
-                        isEmom = setScheme.isEmom,
-                        useTempo = setScheme.useTempo,
-                        eccentricTempo = setScheme.eccentricTempo,
-                        isometricTempo = setScheme.isometricTempo,
-                        concentricTempo = setScheme.concentricTempo,
-                        targetWeight = setScheme.targetWeight,
-                        performedWeight = setScheme.performedWeight,
-                        targetRepCount = setScheme.targetRepCount,
-                        performedRepCount = setScheme.performedRepCount,
-                        restSeconds = setScheme.restSeconds,
-                        createdAt = setScheme.createdAt,
-                        updatedAt = setScheme.updatedAt
-                    )
-                }
-            }
     }
 
     /**
-     * Helper function to fetch exercises for a stage and convert to export format.
+     * Helper function to fetch exercises for a stage.
      */
-    private fun fetchExercisesForStage(stage: WorkoutStage): Mono<List<ProgrammedExerciseExport>> {
+    private fun fetchExercisesForStage(stage: WorkoutStage): Mono<List<ProgrammedExerciseWithSetSchemes>> {
         return programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(stage.id)
             .flatMap { exercises ->
                 Flux.fromIterable(exercises)
                     .flatMap { exercise ->
                         fetchSetSchemesForExercise(exercise)
                             .map { setSchemes ->
-                                ProgrammedExerciseExport(
-                                    id = exercise.id,
-                                    exerciseName = exercise.exerciseName,
-                                    position = exercise.position,
-                                    notes = exercise.notes,
-                                    createdAt = exercise.createdAt,
-                                    updatedAt = exercise.updatedAt,
+                                ProgrammedExerciseWithSetSchemes(
+                                    exercise = exercise,
                                     setSchemes = setSchemes
                                 )
                             }
@@ -153,22 +127,17 @@ class GdprComplianceService(
     }
 
     /**
-     * Helper function to fetch stages for a workout and convert to export format.
+     * Helper function to fetch stages for a workout.
      */
-    private fun fetchStagesForWorkout(workout: ProgrammedWorkout): Mono<List<WorkoutStageExport>> {
+    private fun fetchStagesForWorkout(workout: ProgrammedWorkout): Mono<List<WorkoutStageWithExercises>> {
         return workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(workout.id)
             .flatMap { stages ->
                 Flux.fromIterable(stages)
                     .flatMap { stage ->
                         fetchExercisesForStage(stage)
                             .map { exercises ->
-                                WorkoutStageExport(
-                                    id = stage.id,
-                                    stageTypeId = stage.stageTypeId.toLong(),
-                                    position = stage.position,
-                                    name = stage.name,
-                                    createdAt = stage.createdAt,
-                                    updatedAt = stage.updatedAt,
+                                WorkoutStageWithExercises(
+                                    stage = stage,
                                     exercises = exercises
                                 )
                             }
@@ -178,21 +147,17 @@ class GdprComplianceService(
     }
 
     /**
-     * Helper function to fetch workouts for a program and convert to export format.
+     * Helper function to fetch workouts for a program.
      */
-    private fun fetchWorkoutsForProgram(program: Program): Mono<List<WorkoutExport>> {
+    private fun fetchWorkoutsForProgram(program: Program): Mono<List<ProgrammedWorkoutWithStages>> {
         return programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(program.id)
             .flatMap { workouts ->
                 Flux.fromIterable(workouts)
                     .flatMap { workout ->
                         fetchStagesForWorkout(workout)
                             .map { stages ->
-                                WorkoutExport(
-                                    id = workout.id,
-                                    dayNumber = workout.dayNumber,
-                                    name = workout.name,
-                                    createdAt = workout.createdAt,
-                                    updatedAt = workout.updatedAt,
+                                ProgrammedWorkoutWithStages(
+                                    workout = workout,
                                     stages = stages
                                 )
                             }
@@ -312,12 +277,8 @@ class GdprComplianceService(
                                         .flatMap { program ->
                                             fetchWorkoutsForProgram(program)
                                                 .map { workouts ->
-                                                    TrainingProgramExport(
-                                                        id = program.id,
-                                                        name = program.name,
-                                                        currentWeekNumber = program.currentWeekNumber,
-                                                        createdAt = program.createdAt,
-                                                        updatedAt = program.updatedAt,
+                                                    ProgramWithWorkouts(
+                                                        program = program,
                                                         workouts = workouts
                                                     )
                                                 }

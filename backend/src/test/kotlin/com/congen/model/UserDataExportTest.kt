@@ -1,6 +1,7 @@
 package com.congen.model
 
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
 import java.time.Instant
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -100,12 +101,17 @@ class UserDataExportTest {
     @Test
     fun `should create UserDataExport with training programs`() {
         val now = Instant.now()
-        val trainingProgram = TrainingProgramExport(
+        val program = Program(
             id = 1L,
+            userId = "test-user-id",
             name = "Test Program",
             currentWeekNumber = 1,
             createdAt = now,
             updatedAt = now,
+            isActive = true
+        )
+        val programWithWorkouts = ProgramWithWorkouts(
+            program = program,
             workouts = emptyList()
         )
 
@@ -122,21 +128,22 @@ class UserDataExportTest {
             userOneRepMax = emptyList(),
             userWeightUnitPreferences = emptyList(),
             exerciseRotationHistory = emptyList(),
-            trainingPrograms = listOf(trainingProgram),
+            trainingPrograms = listOf(programWithWorkouts),
             auditLogs = emptyList(),
             dataRetentionPolicies = emptyList(),
             exportTimestamp = now
         )
 
         assertEquals(1, userDataExport.trainingPrograms.size)
-        assertEquals("Test Program", userDataExport.trainingPrograms[0].name)
+        assertEquals("Test Program", userDataExport.trainingPrograms[0].program.name)
     }
 
     @Test
     fun `should create UserDataExport with complete workout structure`() {
         val now = Instant.now()
-        val setScheme = SetSchemeExport(
+        val setScheme = SetScheme(
             id = 1L,
+            programmedExerciseId = 1L,
             setNumber = 1,
             isAmrap = false,
             isEmom = false,
@@ -150,45 +157,67 @@ class UserDataExportTest {
             performedRepCount = null,
             restSeconds = 60,
             createdAt = now,
-            updatedAt = now
+            updatedAt = now,
+            band = null
         )
 
-        val programmedExercise = ProgrammedExerciseExport(
+        val programmedExercise = ProgrammedExercise(
             id = 1L,
+            workoutStageId = 1L,
             exerciseName = "Bench Press",
             position = 1,
             notes = "Test exercise",
             createdAt = now,
-            updatedAt = now,
+            updatedAt = now
+        )
+
+        val programmedExerciseWithSetSchemes = ProgrammedExerciseWithSetSchemes(
+            exercise = programmedExercise,
             setSchemes = listOf(setScheme)
         )
 
-        val workoutStage = WorkoutStageExport(
+        val workoutStage = WorkoutStage(
             id = 1L,
-            stageTypeId = 1L,
+            programmedWorkoutId = 1L,
+            stageTypeId = 1,
             position = 1,
             name = "Main",
             createdAt = now,
-            updatedAt = now,
-            exercises = listOf(programmedExercise)
+            updatedAt = now
         )
 
-        val workout = WorkoutExport(
+        val workoutStageWithExercises = WorkoutStageWithExercises(
+            stage = workoutStage,
+            exercises = listOf(programmedExerciseWithSetSchemes)
+        )
+
+        val programmedWorkout = ProgrammedWorkout(
             id = 1L,
+            programId = 1L,
             dayNumber = 1,
             name = "Push Day",
             createdAt = now,
-            updatedAt = now,
-            stages = listOf(workoutStage)
+            updatedAt = now
         )
 
-        val trainingProgram = TrainingProgramExport(
+        val programmedWorkoutWithStages = ProgrammedWorkoutWithStages(
+            workout = programmedWorkout,
+            stages = listOf(workoutStageWithExercises)
+        )
+
+        val program = Program(
             id = 1L,
+            userId = "test-user-id",
             name = "Test Program",
             currentWeekNumber = 1,
             createdAt = now,
             updatedAt = now,
-            workouts = listOf(workout)
+            isActive = true
+        )
+
+        val programWithWorkouts = ProgramWithWorkouts(
+            program = program,
+            workouts = listOf(programmedWorkoutWithStages)
         )
 
         val userDataExport = UserDataExport(
@@ -204,7 +233,7 @@ class UserDataExportTest {
             userOneRepMax = emptyList(),
             userWeightUnitPreferences = emptyList(),
             exerciseRotationHistory = emptyList(),
-            trainingPrograms = listOf(trainingProgram),
+            trainingPrograms = listOf(programWithWorkouts),
             auditLogs = emptyList(),
             dataRetentionPolicies = emptyList(),
             exportTimestamp = now

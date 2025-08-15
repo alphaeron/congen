@@ -90,7 +90,7 @@ data class UserDataExport(
     /** User's exercise rotation history. */
     @param:JsonProperty("exercise_rotation_history") val exerciseRotationHistory: List<Any>,
     /** User's training programs. */
-    @param:JsonProperty("training_programs") val trainingPrograms: List<TrainingProgramExport>,
+    @param:JsonProperty("training_programs") val trainingPrograms: List<ProgramWithWorkouts>,
     /** Audit logs for data access. */
     @param:JsonProperty("audit_logs") val auditLogs: List<Any>,
     /** Data retention policies. */
@@ -98,82 +98,96 @@ data class UserDataExport(
 )
 
 /**
- * Represents a training program in the user data export.
+ * Represents a training program with complete workout hierarchy for export purposes.
+ *
+ * This model extends the base Program model to include the complete workout structure
+ * with stages, exercises, and set schemes for GDPR data portability exports.
+ *
+ * @property workouts Complete list of programmed workouts with their stages, exercises, and set schemes
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TrainingProgramExport(
-    @param:JsonProperty("id") val id: Long,
-    @param:JsonProperty("name") val name: String,
-    @param:JsonProperty("current_week_number") val currentWeekNumber: Int,
-    @param:JsonProperty("created_at") val createdAt: Instant,
-    @param:JsonProperty("updated_at") val updatedAt: Instant,
-    @param:JsonProperty("workouts") val workouts: List<WorkoutExport>
+@Schema(
+    description = "A training program with complete workout hierarchy for export",
+    example = "ProgramWithWorkouts(id=1, name=\"Beginner Strength Program\", workouts=[...])",
+)
+data class ProgramWithWorkouts(
+    /** The base program information. */
+    val program: Program,
+    /** Complete list of programmed workouts with their stages, exercises, and set schemes. */
+    @param:JsonProperty("workouts") val workouts: List<ProgrammedWorkoutWithStages>
 )
 
 /**
- * Represents a workout in the user data export.
+ * Represents a programmed workout with complete stage hierarchy for export purposes.
+ *
+ * This model extends the base ProgrammedWorkout model to include the complete stage structure
+ * with exercises and set schemes.
+ *
+ * @property stages Complete list of workout stages with their exercises and set schemes
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class WorkoutExport(
-    @param:JsonProperty("id") val id: Long,
-    @param:JsonProperty("day_number") val dayNumber: Int,
-    @param:JsonProperty("name") val name: String,
-    @param:JsonProperty("created_at") val createdAt: Instant,
-    @param:JsonProperty("updated_at") val updatedAt: Instant,
-    @param:JsonProperty("stages") val stages: List<WorkoutStageExport>
+@Schema(
+    description = "A programmed workout with complete stage hierarchy for export",
+    example = "ProgrammedWorkoutWithStages(id=1, name=\"Upper Body Strength\", stages=[...])",
+)
+data class ProgrammedWorkoutWithStages(
+    /** The base programmed workout information. */
+    val workout: ProgrammedWorkout,
+    /** Complete list of workout stages with their exercises and set schemes. */
+    @param:JsonProperty("stages") val stages: List<WorkoutStageWithExercises>
 )
 
 /**
- * Represents a workout stage in the user data export.
+ * Represents a workout stage with complete exercise hierarchy for export purposes.
+ *
+ * This model extends the base WorkoutStage model to include the complete exercise structure
+ * with set schemes.
+ *
+ * @property exercises Complete list of programmed exercises with their set schemes
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class WorkoutStageExport(
-    @param:JsonProperty("id") val id: Long,
-    @param:JsonProperty("stage_type_id") val stageTypeId: Long,
-    @param:JsonProperty("position") val position: Int,
-    @param:JsonProperty("name") val name: String,
-    @param:JsonProperty("created_at") val createdAt: Instant,
-    @param:JsonProperty("updated_at") val updatedAt: Instant,
-    @param:JsonProperty("exercises") val exercises: List<ProgrammedExerciseExport>
+@Schema(
+    description = "A workout stage with complete exercise hierarchy for export",
+    example = "WorkoutStageWithExercises(id=1, name=\"Main\", exercises=[...])",
+)
+data class WorkoutStageWithExercises(
+    /** The base workout stage information. */
+    val stage: WorkoutStage,
+    /** Complete list of programmed exercises with their set schemes. */
+    @param:JsonProperty("exercises") val exercises: List<ProgrammedExerciseWithSetSchemes>
 )
 
 /**
- * Represents a programmed exercise in the user data export.
+ * Represents a programmed exercise with complete set scheme hierarchy for export purposes.
+ *
+ * This model extends the base ProgrammedExercise model to include the complete set scheme structure.
+ *
+ * @property setSchemes Complete list of set schemes for this exercise
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ProgrammedExerciseExport(
-    @param:JsonProperty("id") val id: Long,
-    @param:JsonProperty("exercise_name") val exerciseName: String,
-    @param:JsonProperty("position") val position: Int,
-    @param:JsonProperty("notes") val notes: String?,
-    @param:JsonProperty("created_at") val createdAt: Instant,
-    @param:JsonProperty("updated_at") val updatedAt: Instant,
-    @param:JsonProperty("set_schemes") val setSchemes: List<SetSchemeExport>
+@Schema(
+    description = "A programmed exercise with complete set scheme hierarchy for export",
+    example = "ProgrammedExerciseWithSetSchemes(id=1, exerciseName=\"Bench Press\", setSchemes=[...])",
 )
-
-/**
- * Represents a set scheme in the user data export.
- */
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class SetSchemeExport(
-    @param:JsonProperty("id") val id: Long,
-    @param:JsonProperty("set_number") val setNumber: Int,
-    @param:JsonProperty("is_amrap") val isAmrap: Boolean,
-    @param:JsonProperty("is_emom") val isEmom: Boolean,
-    @param:JsonProperty("use_tempo") val useTempo: Boolean,
-    @param:JsonProperty("eccentric_tempo") val eccentricTempo: String?,
-    @param:JsonProperty("isometric_tempo") val isometricTempo: String?,
-    @param:JsonProperty("concentric_tempo") val concentricTempo: String?,
-    @param:JsonProperty("target_weight") val targetWeight: java.math.BigDecimal?,
-    @param:JsonProperty("performed_weight") val performedWeight: java.math.BigDecimal?,
-    @param:JsonProperty("target_rep_count") val targetRepCount: Int?,
-    @param:JsonProperty("performed_rep_count") val performedRepCount: Int?,
-    @param:JsonProperty("rest_seconds") val restSeconds: Int?,
-    @param:JsonProperty("created_at") val createdAt: Instant,
-    @param:JsonProperty("updated_at") val updatedAt: Instant
+data class ProgrammedExerciseWithSetSchemes(
+    /** The base programmed exercise information. */
+    val exercise: ProgrammedExercise,
+    /** Complete list of set schemes for this exercise. */
+    @param:JsonProperty("set_schemes") val setSchemes: List<SetScheme>
 )
