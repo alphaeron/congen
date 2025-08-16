@@ -10,6 +10,7 @@ import com.congen.util.KeycloakUtil
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -56,7 +57,7 @@ class ExerciseRotationHistoryControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         
-        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
     }
 
     @Test

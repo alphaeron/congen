@@ -18,6 +18,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -202,7 +203,7 @@ class WorkoutStageControllerTest {
         gdprComplianceService = createGdprComplianceServiceSpy()
         workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil, gdprComplianceService)
 
-        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))

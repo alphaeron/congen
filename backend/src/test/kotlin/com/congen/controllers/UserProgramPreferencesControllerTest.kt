@@ -10,6 +10,7 @@ import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -53,11 +54,11 @@ class UserProgramPreferencesControllerTest {
         userProgramPreferencesController = UserProgramPreferencesController(userProgramPreferencesDAL, keycloakUtil, gdprComplianceService)
 
         // Mock KeycloakUtil methods for all tests
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        doReturn(Mono.just("test-keycloak-user-id")).whenever(keycloakUtil).getCurrentUserId()
+        doReturn(Mono.just(setOf("user"))).whenever(keycloakUtil).getCurrentUserRoles()
 
         // Mock GDPR compliance service for all tests
-        whenever(gdprComplianceService.hasUserConsent(any<String>())).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
     }
 
     @Test
