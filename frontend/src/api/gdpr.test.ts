@@ -194,5 +194,219 @@ describe('GDPR API', () => {
       expect(response.data).toEqual(mockResponse);
       expect(mock.history.get).toHaveLength(1);
     });
+
+    it('should handle privacy policy API errors', async () => {
+      mock.onGet('/gdpr/privacy_policy').reply(500, { message: 'Service unavailable' });
+
+      try {
+        await getPrivacyPolicy();
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { message: string } } };
+        expect(axiosError.response.status).toBe(500);
+        expect(axiosError.response.data.message).toBe('Service unavailable');
+      }
+    });
+  });
+
+  describe('error handling', () => {
+    it('should handle network errors for recordConsent', async () => {
+      mock.onPost('/gdpr/consent').networkError();
+
+      try {
+        await recordConsent(true);
+      } catch (error: unknown) {
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toContain('Network Error');
+      }
+    });
+
+    it('should handle network errors for getConsentStatus', async () => {
+      mock.onGet('/gdpr/consent').networkError();
+
+      try {
+        await getConsentStatus();
+      } catch (error: unknown) {
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toContain('Network Error');
+      }
+    });
+
+    it('should handle network errors for exportUserData', async () => {
+      mock.onGet('/gdpr/export').networkError();
+
+      try {
+        await exportUserData();
+      } catch (error: unknown) {
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toContain('Network Error');
+      }
+    });
+
+    it('should handle network errors for deleteAllPersonalData', async () => {
+      mock.onDelete('/gdpr/delete_all_data').networkError();
+
+      try {
+        await deleteAllPersonalData('DELETE_ALL_MY_DATA');
+      } catch (error: unknown) {
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toContain('Network Error');
+      }
+    });
+
+    it('should handle timeout errors', async () => {
+      mock.onGet('/gdpr/consent').timeout();
+
+      try {
+        await getConsentStatus();
+      } catch (error: unknown) {
+        const axiosError = error as { code: string };
+        expect(axiosError.code).toBe('ECONNABORTED');
+      }
+    });
+
+    it('should handle malformed JSON responses', async () => {
+      mock.onGet('/gdpr/consent').reply(200, 'invalid json');
+
+      try {
+        await getConsentStatus();
+      } catch (error: unknown) {
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toContain('Unexpected token');
+      }
+    });
+
+    it('should handle 401 unauthorized responses', async () => {
+      mock.onGet('/gdpr/consent').reply(401, { message: 'Unauthorized' });
+
+      try {
+        await getConsentStatus();
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { message: string } } };
+        expect(axiosError.response.status).toBe(401);
+        expect(axiosError.response.data.message).toBe('Unauthorized');
+      }
+    });
+
+    it('should handle 403 forbidden responses', async () => {
+      mock.onGet('/gdpr/export').reply(403, { message: 'Forbidden' });
+
+      try {
+        await exportUserData();
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { message: string } } };
+        expect(axiosError.response.status).toBe(403);
+        expect(axiosError.response.data.message).toBe('Forbidden');
+      }
+    });
+
+    it('should handle 404 not found responses', async () => {
+      mock.onGet('/gdpr/consent').reply(404, { message: 'User not found' });
+
+      try {
+        await getConsentStatus();
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { message: string } } };
+        expect(axiosError.response.status).toBe(404);
+        expect(axiosError.response.data.message).toBe('User not found');
+      }
+    });
+
+    it('should handle 429 rate limit responses', async () => {
+      mock.onPost('/gdpr/consent').reply(429, { message: 'Too many requests' });
+
+      try {
+        await recordConsent(true);
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { message: string } } };
+        expect(axiosError.response.status).toBe(429);
+        expect(axiosError.response.data.message).toBe('Too many requests');
+      }
+    });
+
+    it('should handle 503 service unavailable responses', async () => {
+      mock.onDelete('/gdpr/delete_all_data').reply(503, { message: 'Service temporarily unavailable' });
+
+      try {
+        await deleteAllPersonalData('DELETE_ALL_MY_DATA');
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { message: string } } };
+        expect(axiosError.response.status).toBe(503);
+        expect(axiosError.response.data.message).toBe('Service temporarily unavailable');
+      }
+    });
+  });
+
+  describe('validation edge cases', () => {
+    it('should handle empty consent response', async () => {
+      const emptyResponse: UserConsent = {
+        keycloak_id: '',
+        data_processing_consent: false,
+        consent_timestamp: undefined,
+        updated_at: '',
+      };
+      mock.onGet('/gdpr/consent').reply(200, emptyResponse);
+
+      const response = await getConsentStatus();
+
+      expect(response.status).toBe(200);
+      expect(response.data).toEqual(emptyResponse);
+    });
+
+    it('should handle export with minimal data', async () => {
+      const minimalExport: UserDataExport = {
+        keycloak_id: 'test-user-123',
+        name: 'Test User',
+        created_at: '2023-08-09T10:15:30Z',
+        updated_at: '2023-08-09T10:15:30Z',
+        data_processing_consent: false,
+        consent_timestamp: undefined,
+        export_timestamp: '2023-08-09T10:15:30Z',
+        user_equipment: [],
+        user_exercise_preferences: [],
+        user_program_preferences: undefined,
+        user_one_rep_max: [],
+        user_weight_unit_preferences: [],
+        exercise_rotation_history: [],
+        training_programs: [],
+        audit_logs: [],
+        data_retention_policies: [],
+      };
+      mock.onGet('/gdpr/export').reply(200, minimalExport);
+
+      const response = await exportUserData();
+
+      expect(response.status).toBe(200);
+      expect(response.data).toEqual(minimalExport);
+    });
+
+    it('should handle very long confirmation text', async () => {
+      const longConfirmation = 'DELETE_ALL_MY_DATA'.repeat(100);
+      mock.onDelete('/gdpr/delete_all_data').reply(config => {
+        expect(config.params).toEqual({ confirmation: longConfirmation });
+        return [200];
+      });
+
+      const response = await deleteAllPersonalData(longConfirmation);
+
+      expect(response.status).toBe(200);
+      expect(mock.history.delete[0].params).toEqual({ confirmation: longConfirmation });
+    });
+
+    it('should handle special characters in confirmation text', async () => {
+      const specialConfirmation = 'DELETE_ALL_MY_DATA_!@#$%^&*()';
+      mock.onDelete('/gdpr/delete_all_data').reply(422, {
+        error: "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'",
+      });
+
+      try {
+        await deleteAllPersonalData(specialConfirmation);
+      } catch (error: unknown) {
+        const axiosError = error as { response: { status: number; data: { error: string } } };
+        expect(axiosError.response.status).toBe(422);
+        expect(axiosError.response.data.error).toBe(
+          "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'"
+        );
+      }
+    });
   });
 });

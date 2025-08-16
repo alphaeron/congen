@@ -1,16 +1,11 @@
-can we remove the service tokens from the integration tests now that they are unused?
+frontend test fixes
 
-Ensure the integration tests call that with the appropriate user making the request in the test so consent is there for validation.
+Acan we remove the service tokens from the integration tests now that they are unused?
 
 
-
+GDPR_TODO
 
 Ensure the unit and integration tests are up to date with the changes needed for gdpr validation
-
-is there any gdpr functionality that is missing
-
-is the gdpr functionality completely exposed in the frontend?
-
 
 
 user controllers should also allow admin/service deletion

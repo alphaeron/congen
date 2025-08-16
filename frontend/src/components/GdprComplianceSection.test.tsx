@@ -1,4 +1,3 @@
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MockAdapter from 'axios-mock-adapter';
@@ -8,7 +7,6 @@ import { BrowserRouter } from 'react-router';
 import { GdprComplianceSection } from './GdprComplianceSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { UserConsent } from '../api/types';
-import { getTheme } from '../theme';
 
 // Mock the endpoint
 const mock = new MockAdapter(ENDPOINT);
@@ -18,15 +16,6 @@ const mockConsentStatus: UserConsent = {
   data_processing_consent: true,
   consent_timestamp: '2023-08-09T10:15:30Z',
   updated_at: '2023-08-09T10:15:30Z',
-};
-
-const renderWithProviders = (component: React.ReactElement) => {
-  const theme = createTheme(getTheme('light'));
-  return render(
-    <BrowserRouter>
-      <ThemeProvider theme={theme}>{component}</ThemeProvider>
-    </BrowserRouter>
-  );
 };
 
 describe('GdprComplianceSection', () => {
@@ -41,7 +30,11 @@ describe('GdprComplianceSection', () => {
   it('should render GDPR compliance section with consent status', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     // Check loading state
     expect(screen.getByText('Loading GDPR compliance status...')).toBeInTheDocument();
@@ -68,7 +61,11 @@ describe('GdprComplianceSection', () => {
     mock.onPost('/gdpr/consent').reply(200, { success: true, message: 'Consent withdrawn' });
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
@@ -125,7 +122,11 @@ describe('GdprComplianceSection', () => {
     document.body.removeChild = mockRemoveChild;
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Export Data')).toBeInTheDocument();
@@ -149,7 +150,11 @@ describe('GdprComplianceSection', () => {
     mock.onDelete('/gdpr/delete_all_data').reply(200, { success: true, message: 'Data deleted' });
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
@@ -184,7 +189,11 @@ describe('GdprComplianceSection', () => {
 
     mock.onGet('/gdpr/consent').reply(200, withdrawnConsentStatus);
 
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Consent Withdrawn')).toBeInTheDocument();
@@ -195,7 +204,11 @@ describe('GdprComplianceSection', () => {
   it('should handle loading state', () => {
     mock.onGet('/gdpr/consent').reply(() => new Promise(() => {})); // Never resolves
 
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     expect(screen.getByText('Loading GDPR compliance status...')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -204,7 +217,11 @@ describe('GdprComplianceSection', () => {
   it('should handle error state', async () => {
     mock.onGet('/gdpr/consent').reply(500, { message: 'Server error' });
 
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Server error')).toBeInTheDocument();
@@ -215,7 +232,11 @@ describe('GdprComplianceSection', () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
@@ -235,11 +256,226 @@ describe('GdprComplianceSection', () => {
   it('should have privacy policy link', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
-    renderWithProviders(<GdprComplianceSection />);
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
 
     await waitFor(() => {
       const privacyPolicyLink = screen.getByText('View Policy').closest('a');
       expect(privacyPolicyLink).toHaveAttribute('href', '/privacy_policy');
+    });
+  });
+
+  it('should handle API errors during consent update', async () => {
+    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
+    mock.onPost('/gdpr/consent').reply(500, { message: 'Database connection failed' });
+
+    const user = userEvent.setup();
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
+    });
+
+    // Click withdraw consent
+    await user.click(screen.getByRole('button', { name: 'Withdraw Consent' }));
+
+    // Select withdraw option and confirm
+    await user.click(screen.getByLabelText('I withdraw consent for data processing'));
+    await user.click(screen.getByText('Confirm'));
+
+    // Check error message appears
+    await waitFor(() => {
+      expect(screen.getByText('Database connection failed')).toBeInTheDocument();
+    });
+
+    // Dialog should remain open for user to retry
+    expect(screen.getByRole('heading', { name: 'Withdraw Consent' })).toBeInTheDocument();
+  });
+
+  it('should handle API errors during data export', async () => {
+    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
+    mock.onGet('/gdpr/export').reply(500, { message: 'Export service unavailable' });
+
+    const user = userEvent.setup();
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Export Data')).toBeInTheDocument();
+    });
+
+    // Click export data
+    await user.click(screen.getByText('Export Data'));
+
+    // Check error message appears
+    await waitFor(() => {
+      expect(screen.getByText('Export service unavailable')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle API errors during data deletion', async () => {
+    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
+    mock.onDelete('/gdpr/delete_all_data').reply(500, { message: 'Deletion service unavailable' });
+
+    const user = userEvent.setup();
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
+    });
+
+    // Click delete all data
+    await user.click(screen.getByRole('button', { name: 'Delete All Data' }));
+
+    // Type confirmation
+    await user.type(screen.getByPlaceholderText('DELETE_ALL_MY_DATA'), 'DELETE_ALL_MY_DATA');
+
+    // Confirm deletion
+    await user.click(screen.getByRole('button', { name: 'Delete All Data' }));
+
+    // Check error message appears
+    await waitFor(() => {
+      expect(screen.getByText('Deletion service unavailable')).toBeInTheDocument();
+    });
+
+    // Dialog should remain open for user to retry
+    expect(screen.getByText('Delete All Personal Data')).toBeInTheDocument();
+  });
+
+  it('should show success messages for successful operations', async () => {
+    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
+    mock.onPost('/gdpr/consent').reply(200, { success: true });
+
+    const user = userEvent.setup();
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
+    });
+
+    // Click withdraw consent
+    await user.click(screen.getByRole('button', { name: 'Withdraw Consent' }));
+
+    // Select withdraw option and confirm
+    await user.click(screen.getByLabelText('I withdraw consent for data processing'));
+    await user.click(screen.getByText('Confirm'));
+
+    // Check success message appears
+    await waitFor(() => {
+      expect(screen.getByText('Consent withdrawn successfully')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle network errors gracefully', async () => {
+    mock.onGet('/gdpr/consent').reply(() => {
+      throw new Error('Network error');
+    });
+
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load consent status')).toBeInTheDocument();
+    });
+  });
+
+  it('should validate consent timestamp display', async () => {
+    const consentWithTimestamp: UserConsent = {
+      keycloak_id: 'test-user-123',
+      data_processing_consent: true,
+      consent_timestamp: '2023-08-09T10:15:30Z',
+      updated_at: '2023-08-09T10:15:30Z',
+    };
+
+    mock.onGet('/gdpr/consent').reply(200, consentWithTimestamp);
+
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/Last updated:/)).toBeInTheDocument();
+    });
+  });
+
+  it('should handle consent status without timestamp', async () => {
+    const consentWithoutTimestamp: UserConsent = {
+      keycloak_id: 'test-user-123',
+      data_processing_consent: false,
+      consent_timestamp: undefined,
+      updated_at: '2023-08-09T10:15:30Z',
+    };
+
+    mock.onGet('/gdpr/consent').reply(200, consentWithoutTimestamp);
+
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Consent Withdrawn')).toBeInTheDocument();
+      expect(screen.getByText('Give Consent')).toBeInTheDocument();
+    });
+
+    // Should not show timestamp when consent is withdrawn
+    expect(screen.queryByText(/Last updated:/)).not.toBeInTheDocument();
+  });
+
+  it('should close success and error snackbars', async () => {
+    mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
+    mock.onPost('/gdpr/consent').reply(200, { success: true });
+
+    const user = userEvent.setup();
+    render(
+      <BrowserRouter>
+        <GdprComplianceSection />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
+    });
+
+    // Trigger success message
+    await user.click(screen.getByRole('button', { name: 'Withdraw Consent' }));
+    await user.click(screen.getByLabelText('I withdraw consent for data processing'));
+    await user.click(screen.getByText('Confirm'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Consent withdrawn successfully')).toBeInTheDocument();
+    });
+
+    // Close success snackbar
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    await user.click(closeButton);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Consent withdrawn successfully')).not.toBeInTheDocument();
     });
   });
 });
