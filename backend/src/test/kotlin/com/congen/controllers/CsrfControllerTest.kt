@@ -1,14 +1,16 @@
 package com.congen.controllers
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest
-import org.springframework.http.MediaType
-import org.springframework.security.test.context.support.WithMockUser
+import org.mockito.kotlin.any
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.security.web.csrf.CsrfToken
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
+import reactor.test.StepVerifier
 
 /**
  * Unit tests for CsrfController.
@@ -18,42 +20,69 @@ import reactor.core.publisher.Mono
  * @author Congen Development Team
  * @since 1.0.0
  */
-@WebFluxTest(CsrfController::class)
 class CsrfControllerTest {
 
-    @Autowired
-    private lateinit var webTestClient: WebTestClient
+    private lateinit var csrfController: CsrfController
+    private lateinit var mockExchange: ServerWebExchange
+    private lateinit var mockCsrfToken: CsrfToken
+
+    @BeforeEach
+    fun setUp() {
+        csrfController = CsrfController()
+        mockExchange = mock()
+        mockCsrfToken = mock()
+    }
 
     @Test
     fun `should return CSRF token when available`() {
-        webTestClient.get()
-            .uri("/api/v1/csrf")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.token").exists()
+        // Given
+        val tokenValue = "test-csrf-token"
+        whenever(mockCsrfToken.token).thenReturn(tokenValue)
+        whenever(mockExchange.getAttribute<CsrfToken>(CsrfToken::class.java.name)).thenReturn(mockCsrfToken)
+
+        // When
+        val result = csrfController.getCsrfToken(mockExchange)
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { response ->
+                response.statusCode == HttpStatus.OK &&
+                response.body?.get("token") == tokenValue
+            }
+            .verifyComplete()
     }
 
     @Test
-    fun `should return empty token when CSRF protection is disabled`() {
-        // This test verifies that the endpoint works even when CSRF protection is disabled
-        webTestClient.get()
-            .uri("/api/v1/csrf")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody()
-            .jsonPath("$.token").isEqualTo("")
+    fun `should return error when CSRF token is not available`() {
+        // Given
+        whenever(mockExchange.getAttribute<CsrfToken?>(CsrfToken::class.java.name)).thenReturn(null)
+
+        // When
+        val result = csrfController.getCsrfToken(mockExchange)
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { response ->
+                response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
+                response.body?.get("error") == "CSRF token not available"
+            }
+            .verifyComplete()
     }
 
     @Test
-    fun `should return JSON content type`() {
-        webTestClient.get()
-            .uri("/api/v1/csrf")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isOk()
-            .expectHeader().contentType(MediaType.APPLICATION_JSON)
+    fun `should handle null CSRF token attribute`() {
+        // Given
+        whenever(mockExchange.getAttribute<CsrfToken?>(CsrfToken::class.java.name)).thenReturn(null)
+
+        // When
+        val result = csrfController.getCsrfToken(mockExchange)
+
+        // Then
+        StepVerifier.create(result)
+            .expectNextMatches { response ->
+                response.statusCode == HttpStatus.INTERNAL_SERVER_ERROR &&
+                response.body?.get("error") == "CSRF token not available"
+            }
+            .verifyComplete()
     }
 }

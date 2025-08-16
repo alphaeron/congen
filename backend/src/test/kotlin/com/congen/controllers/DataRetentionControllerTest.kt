@@ -59,7 +59,7 @@ class DataRetentionControllerTest {
         val retentionPeriodDays = 1825
         val description = "Updated to 5 years"
 
-        val mockPolicy = DataRetentionPolicy(dataType, retentionPeriodDays, description ?: "Updated policy")
+        val mockPolicy = DataRetentionPolicy(dataType, retentionPeriodDays, description)
         `when`(dataRetentionService.updateRetentionPolicy(dataType, retentionPeriodDays, description))
             .thenReturn(Mono.just(mockPolicy))
 

@@ -4,7 +4,7 @@ import com.congen.dal.DataRetentionDAL
 import com.congen.model.DataCleanupResult
 import com.congen.model.DataRetentionPolicy
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -40,19 +40,17 @@ import java.time.Instant
  *
  * @property dataRetentionDAL Data access layer for retention operations
  * @property auditService Service for logging cleanup operations
+ * @property dataRetentionEnabled Whether data retention cleanup is enabled
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 @Service
-@ConditionalOnProperty(
-    name = ["congen.gdpr.data-retention-check-enabled"],
-    havingValue = "true",
-    matchIfMissing = false
-)
 class DataRetentionService(
     private val dataRetentionDAL: DataRetentionDAL,
-    private val auditService: AuditService
+    private val auditService: AuditService,
+    @Value("\${congen.gdpr.data-retention-check-enabled}")
+    private val dataRetentionEnabled: Boolean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(DataRetentionService::class.java)
@@ -69,6 +67,11 @@ class DataRetentionService(
      */
     @Scheduled(cron = "0 0 2 * * ?", zone = "UTC")
     fun performDailyDataCleanup() {
+        if (!dataRetentionEnabled) {
+            logger.debug("Data retention cleanup is disabled, skipping daily cleanup")
+            return
+        }
+
         logger.info("Starting daily data retention cleanup at {}", Instant.now())
 
         cleanupExpiredData()
@@ -100,6 +103,11 @@ class DataRetentionService(
      * @return Mono containing cleanup results
      */
     fun cleanupExpiredData(): Mono<List<DataCleanupResult>> {
+        if (!dataRetentionEnabled) {
+            logger.debug("Data retention cleanup is disabled, returning empty results")
+            return Mono.just(emptyList())
+        }
+
         logger.info("Executing data retention cleanup")
 
         return dataRetentionDAL.executeCleanupExpiredData()

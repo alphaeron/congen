@@ -98,7 +98,7 @@ class GdprComplianceServiceTest {
                 anyOrNull(),
                 anyOrNull()
             )
-        ).thenReturn(Mono.just(AuditLog(1L, "test-user-id", "DATA_EXPORT", "ALL_USER_DATA", null, Instant.now(), null)))
+        ).thenReturn(Mono.just(Unit))
 
         whenever(
             auditService.logConsentChange(
@@ -106,9 +106,7 @@ class GdprComplianceServiceTest {
                 any(),
                 any()
             )
-        ).thenReturn(
-            Mono.just(AuditLog(1L, "test-user-id", "CONSENT_GIVEN", "data_processing", null, Instant.now(), "Consent: true"))
-        )
+        ).thenReturn(Mono.just(Unit))
     }
 
     @Test
@@ -263,7 +261,7 @@ class GdprComplianceServiceTest {
                 anyOrNull(),
                 anyOrNull()
             )
-        ).thenReturn(Mono.just(AuditLog(1L, "test-user-id", "DATA_DELETION_STARTED", "ALL_USER_DATA", null, Instant.now(), null)))
+        ).thenReturn(Mono.just(Unit))
 
         whenever(
             auditService.logDataOperation(
@@ -273,7 +271,7 @@ class GdprComplianceServiceTest {
                 anyOrNull(),
                 anyOrNull()
             )
-        ).thenReturn(Mono.just(AuditLog(3L, "test-user-id", "DATA_DELETION_FAILED", "ALL_USER_DATA", null, Instant.now(), null)))
+        ).thenReturn(Mono.just(Unit))
 
         val keycloakId = "test-user-id"
         val error = RuntimeException("Database error")

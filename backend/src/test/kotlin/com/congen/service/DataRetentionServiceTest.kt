@@ -33,7 +33,7 @@ class DataRetentionServiceTest {
     fun setUp() {
         dataRetentionDAL = mock()
         auditService = mock()
-        dataRetentionService = DataRetentionService(dataRetentionDAL, auditService)
+        dataRetentionService = DataRetentionService(dataRetentionDAL, auditService, true)
     }
 
     private fun stubAuditService() {
@@ -45,7 +45,7 @@ class DataRetentionServiceTest {
                 anyOrNull(),
                 anyOrNull()
             )
-        ).thenReturn(Mono.just(AuditLog(1L, null, "DATA_RETENTION_CLEANUP", "ALL_DATA_TYPES", null, Instant.now(), null)))
+        ).thenReturn(Mono.just(Unit))
     }
 
     @Test
@@ -149,7 +149,7 @@ class DataRetentionServiceTest {
                 anyOrNull(),
                 anyOrNull()
             )
-        ).thenReturn(Mono.just(AuditLog(1L, null, "RETENTION_POLICY_UPDATE", "USER_CONSENT", null, Instant.now(), null)))
+        ).thenReturn(Mono.just(Unit))
 
         val dataType = "USER_CONSENT"
         val retentionPeriodDays = 2555 // 7 years

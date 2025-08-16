@@ -30,7 +30,7 @@ class AuditServiceTest {
     @BeforeEach
     fun setUp() {
         postgresClient = mock()
-        auditService = AuditService(postgresClient)
+        auditService = AuditService(postgresClient, true)
     }
 
     @Test
@@ -50,8 +50,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, operation, dataType, userId, Instant.now(), additionalInfo)))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo))
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logDataOperation(
@@ -62,17 +62,11 @@ class AuditServiceTest {
                 additionalInfo = additionalInfo
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == operation &&
-                    auditLog.dataType == dataType &&
-                    auditLog.performedBy == userId &&
-                    auditLog.additionalInfo == additionalInfo
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         // Verify that the database was called with the audit log insert
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo)
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo)
     }
 
     @Test
@@ -90,8 +84,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, operation, dataType, null, Instant.now(), null)))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, null, null))
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logDataOperation(
@@ -100,17 +94,11 @@ class AuditServiceTest {
                 dataType = dataType
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == operation &&
-                    auditLog.dataType == dataType &&
-                    auditLog.performedBy == null &&
-                    auditLog.additionalInfo == null
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         // Verify that the database was called with nulls for optional parameters
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null)
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, operation, dataType, null, null)
     }
 
     @Test
@@ -128,7 +116,7 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock database error
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, null, null))
             .thenReturn(Mono.error(RuntimeException("Database error")))
 
         StepVerifier.create(
@@ -157,8 +145,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, "DATA_ACCESS", dataType, adminUser, Instant.now(), null)))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null))
+            .thenReturn(Mono.just(Unit))
 
         // Admin access should be logged
         StepVerifier.create(
@@ -168,16 +156,11 @@ class AuditServiceTest {
                 accessedBy = adminUser
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == "DATA_ACCESS" &&
-                    auditLog.dataType == dataType &&
-                    auditLog.performedBy == adminUser
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         // Verify admin access was logged
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null)
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null)
     }
 
     @Test
@@ -193,10 +176,11 @@ class AuditServiceTest {
                 accessedBy = keycloakId
             )
         )
+            .expectNext(Unit)
             .verifyComplete()
 
         // Verify no database call was made for self-access
-        verify(postgresClient, never()).update<AuditLog>(
+        verify(postgresClient, never()).update<Unit>(
             any(),
             any(),
             any(),
@@ -221,8 +205,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true"))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, "CONSENT_GIVEN", consentType, null, Instant.now(), "Consent: true")))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true"))
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logConsentChange(
@@ -231,15 +215,10 @@ class AuditServiceTest {
                 consentGiven = consentGiven
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == "CONSENT_GIVEN" &&
-                    auditLog.dataType == consentType &&
-                    auditLog.additionalInfo == "Consent: true"
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true")
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true")
     }
 
     @Test
@@ -257,8 +236,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false"))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, "CONSENT_WITHDRAWN", consentType, null, Instant.now(), "Consent: false")))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false"))
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logConsentChange(
@@ -267,15 +246,10 @@ class AuditServiceTest {
                 consentGiven = consentGiven
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == "CONSENT_WITHDRAWN" &&
-                    auditLog.dataType == consentType &&
-                    auditLog.additionalInfo == "Consent: false"
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false")
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false")
     }
 
     @Test
@@ -294,8 +268,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, "DATA_MODIFICATION", dataType, adminUser, Instant.now(), changes)))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes))
+            .thenReturn(Mono.just(Unit))
 
         // Admin modification should be logged
         StepVerifier.create(
@@ -306,16 +280,10 @@ class AuditServiceTest {
                 changes = changes
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == "DATA_MODIFICATION" &&
-                    auditLog.dataType == dataType &&
-                    auditLog.performedBy == adminUser &&
-                    auditLog.additionalInfo == changes
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes)
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes)
     }
 
     @Test
@@ -333,10 +301,11 @@ class AuditServiceTest {
                 changes = changes
             )
         )
+            .expectNext(Unit)
             .verifyComplete()
 
         // Verify no database call was made for self-modification
-        verify(postgresClient, never()).update<AuditLog>(
+        verify(postgresClient, never()).update<Unit>(
             any(),
             any(),
             any(),
@@ -362,7 +331,7 @@ class AuditServiceTest {
 
         // Mock the database call to return success
         whenever(
-            postgresClient.update<AuditLog>(
+            postgresClient.update<Unit>(
                 expectedQuery,
                 keycloakId,
                 "SECURITY_VIOLATION",
@@ -371,19 +340,7 @@ class AuditServiceTest {
                 "Severity: HIGH - Multiple failed login attempts"
             )
         )
-            .thenReturn(
-                Mono.just(
-                    AuditLog(
-                        1L,
-                        keycloakId,
-                        "SECURITY_VIOLATION",
-                        "SECURITY",
-                        null,
-                        Instant.now(),
-                        "Severity: HIGH - Multiple failed login attempts"
-                    )
-                )
-            )
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logSecurityViolation(
@@ -392,17 +349,12 @@ class AuditServiceTest {
                 severity = severity
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == "SECURITY_VIOLATION" &&
-                    auditLog.dataType == "SECURITY" &&
-                    auditLog.additionalInfo == "Severity: HIGH - Multiple failed login attempts"
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         verify(
             postgresClient
-        ).update<AuditLog>(
+        ).update<Unit>(
             expectedQuery,
             keycloakId,
             "SECURITY_VIOLATION",
@@ -426,7 +378,7 @@ class AuditServiceTest {
 
         // Mock the database call to return success
         whenever(
-            postgresClient.update<AuditLog>(
+            postgresClient.update<Unit>(
                 expectedQuery,
                 "UNKNOWN",
                 "SECURITY_VIOLATION",
@@ -435,19 +387,7 @@ class AuditServiceTest {
                 "Severity: HIGH - Unauthorized access attempt"
             )
         )
-            .thenReturn(
-                Mono.just(
-                    AuditLog(
-                        1L,
-                        "UNKNOWN",
-                        "SECURITY_VIOLATION",
-                        "SECURITY",
-                        null,
-                        Instant.now(),
-                        "Severity: HIGH - Unauthorized access attempt"
-                    )
-                )
-            )
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logSecurityViolation(
@@ -455,17 +395,12 @@ class AuditServiceTest {
                 violation = violation
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == "UNKNOWN" &&
-                    auditLog.operation == "SECURITY_VIOLATION" &&
-                    auditLog.dataType == "SECURITY" &&
-                    auditLog.additionalInfo == "Severity: HIGH - Unauthorized access attempt"
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         verify(
             postgresClient
-        ).update<AuditLog>(expectedQuery, "UNKNOWN", "SECURITY_VIOLATION", "SECURITY", null, "Severity: HIGH - Unauthorized access attempt")
+        ).update<Unit>(expectedQuery, "UNKNOWN", "SECURITY_VIOLATION", "SECURITY", null, "Severity: HIGH - Unauthorized access attempt")
     }
 
     @Test
@@ -482,7 +417,7 @@ class AuditServiceTest {
 
         // Mock the database call to return success
         whenever(
-            postgresClient.update<AuditLog>(
+            postgresClient.update<Unit>(
                 expectedQuery,
                 "user-id",
                 "SECURITY_VIOLATION",
@@ -491,19 +426,7 @@ class AuditServiceTest {
                 "Severity: HIGH - Suspicious activity detected"
             )
         )
-            .thenReturn(
-                Mono.just(
-                    AuditLog(
-                        1L,
-                        "user-id",
-                        "SECURITY_VIOLATION",
-                        "SECURITY",
-                        null,
-                        Instant.now(),
-                        "Severity: HIGH - Suspicious activity detected"
-                    )
-                )
-            )
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logSecurityViolation(
@@ -511,17 +434,12 @@ class AuditServiceTest {
                 violation = violation
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == "user-id" &&
-                    auditLog.operation == "SECURITY_VIOLATION" &&
-                    auditLog.dataType == "SECURITY" &&
-                    auditLog.additionalInfo == "Severity: HIGH - Suspicious activity detected"
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         verify(
             postgresClient
-        ).update<AuditLog>(
+        ).update<Unit>(
             expectedQuery,
             "user-id",
             "SECURITY_VIOLATION",
@@ -552,8 +470,8 @@ class AuditServiceTest {
 
         // Mock the database call for each operation type
         operations.forEach { operation ->
-            whenever(postgresClient.update<AuditLog>(expectedQuery, "test-user", operation, "USER_DATA", null, null))
-                .thenReturn(Mono.just(AuditLog(1L, "test-user", operation, "USER_DATA", null, Instant.now(), null)))
+            whenever(postgresClient.update<Unit>(expectedQuery, "test-user", operation, "USER_DATA", null, null))
+                .thenReturn(Mono.just(Unit))
         }
 
         operations.forEach { operation ->
@@ -564,17 +482,13 @@ class AuditServiceTest {
                     dataType = "USER_DATA"
                 )
             )
-                .expectNextMatches { auditLog ->
-                    auditLog.keycloakId == "test-user" &&
-                        auditLog.operation == operation &&
-                        auditLog.dataType == "USER_DATA"
-                }
+                .expectNext(Unit)
                 .verifyComplete()
         }
 
         // Verify all operations were logged
         operations.forEach { operation ->
-            verify(postgresClient).update<AuditLog>(expectedQuery, "test-user", operation, "USER_DATA", null, null)
+            verify(postgresClient).update<Unit>(expectedQuery, "test-user", operation, "USER_DATA", null, null)
         }
     }
 
@@ -596,8 +510,8 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock the database call to return success
-        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo))
-            .thenReturn(Mono.just(AuditLog(1L, keycloakId, operation, dataType, null, Instant.now(), additionalInfo)))
+        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo))
+            .thenReturn(Mono.just(Unit))
 
         StepVerifier.create(
             auditService.logDataOperation(
@@ -607,15 +521,10 @@ class AuditServiceTest {
                 additionalInfo = additionalInfo
             )
         )
-            .expectNextMatches { auditLog ->
-                auditLog.keycloakId == keycloakId &&
-                    auditLog.operation == operation &&
-                    auditLog.dataType == dataType &&
-                    auditLog.additionalInfo == additionalInfo
-            }
+            .expectNext(Unit)
             .verifyComplete()
 
         // Verify the database was called with the expected parameters
-        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo)
+        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo)
     }
 }

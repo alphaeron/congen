@@ -51,7 +51,7 @@ class UserDALTest {
             .thenReturn(Mono.just(mockRow))
         whenever(encryptionUtil.decrypt(user.name)).thenReturn(user.name)
         whenever(auditService.logDataAccess(user.keycloakId, "USER_PROFILE", "SYSTEM"))
-            .thenReturn(Mono.just(AuditLog(1L, user.keycloakId, "DATA_ACCESS", "USER_PROFILE", "SYSTEM", Instant.now(), null)))
+            .thenReturn(Mono.just(Unit))
 
         val result = userDAL.selectUserByKeycloakId(user.keycloakId)
 
@@ -86,7 +86,7 @@ class UserDALTest {
                 anyOrNull(),
                 anyOrNull()
             )
-        ).thenReturn(Mono.just(AuditLog(1L, insertUser.keycloakId, "DATA_CREATION", "USER_PROFILE", null, Instant.now(), null)))
+        ).thenReturn(Mono.just(Unit))
 
         val result = userDAL.insertUser(insertUser.keycloakId, insertUser.name)
 

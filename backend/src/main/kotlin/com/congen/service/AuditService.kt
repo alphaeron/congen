@@ -3,7 +3,7 @@ package com.congen.service
 import com.congen.client.PostgresClient
 import com.congen.model.AuditLog
 import org.slf4j.LoggerFactory
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.time.Instant
@@ -38,18 +38,16 @@ import java.time.Instant
  * - **ERROR**: Failed operations, security violations
  *
  * @property postgresClient Client for database audit log storage
+ * @property auditEnabled Whether audit logging is enabled
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 @Service
-@ConditionalOnProperty(
-    name = ["congen.gdpr.audit-enabled"],
-    havingValue = "true",
-    matchIfMissing = false
-)
 class AuditService(
-    private val postgresClient: PostgresClient
+    private val postgresClient: PostgresClient,
+    @Value("\${congen.gdpr.audit-enabled}")
+    private val auditEnabled: Boolean
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AuditService::class.java)
@@ -76,7 +74,11 @@ class AuditService(
         dataType: String,
         userId: String? = null,
         additionalInfo: String? = null
-    ): Mono<AuditLog> {
+    ): Mono<Unit> {
+        if (!auditEnabled) {
+            return Mono.just(Unit)
+        }
+
         val logMessage =
             buildAuditLogMessage(
                 keycloakId = keycloakId,
@@ -125,18 +127,23 @@ class AuditService(
         keycloakId: String,
         dataType: String,
         accessedBy: String
-    ): Mono<AuditLog> {
+    ): Mono<Unit> {
+        if (!auditEnabled) {
+            return Mono.just(Unit)
+        }
+
         // Only log if this is admin access or significant data access
-        if (accessedBy != keycloakId) {
-            return logDataOperation(
+        return if (accessedBy != keycloakId) {
+            logDataOperation(
                 keycloakId = keycloakId,
                 operation = "DATA_ACCESS",
                 dataType = dataType,
                 userId = accessedBy
             )
+        } else {
+            // Skip logging for users accessing their own data (routine operation)
+            Mono.just(Unit)
         }
-        // Skip logging for users accessing their own data (routine operation)
-        return Mono.empty()
     }
 
     /**
@@ -155,14 +162,18 @@ class AuditService(
         keycloakId: String,
         consentType: String,
         consentGiven: Boolean
-    ): Mono<AuditLog> {
-        val operation = if (consentGiven) "CONSENT_GIVEN" else "CONSENT_WITHDRAWN"
-        return logDataOperation(
+    ): Mono<Unit> {
+        return if (!auditEnabled) {
+            Mono.just(Unit)
+        } else {
+            val operation = if (consentGiven) "CONSENT_GIVEN" else "CONSENT_WITHDRAWN"
+            logDataOperation(
             keycloakId = keycloakId,
             operation = operation,
             dataType = consentType,
             additionalInfo = "Consent: $consentGiven"
-        )
+            )
+        }
     }
 
     /**
@@ -183,19 +194,24 @@ class AuditService(
         dataType: String,
         modifiedBy: String,
         changes: String
-    ): Mono<AuditLog> {
+    ): Mono<Unit> {
+        if (!auditEnabled) {
+            return Mono.just(Unit)
+        }
+
         // Only log if this is admin modification or significant change
-        if (modifiedBy != keycloakId) {
-            return logDataOperation(
+        return if (modifiedBy != keycloakId) {
+            logDataOperation(
                 keycloakId = keycloakId,
                 operation = "DATA_MODIFICATION",
                 dataType = dataType,
                 userId = modifiedBy,
-                additionalInfo = changes
+                additionalInfo = changes,
             )
+        } else {
+            // Skip logging for users modifying their own data (routine operation)
+            Mono.just(Unit)
         }
-        // Skip logging for users modifying their own data (routine operation)
-        return Mono.empty()
     }
 
     /**
@@ -213,13 +229,17 @@ class AuditService(
         keycloakId: String?,
         violation: String,
         severity: String = "HIGH"
-    ): Mono<AuditLog> {
-        return logDataOperation(
-            keycloakId = keycloakId ?: "UNKNOWN",
-            operation = "SECURITY_VIOLATION",
-            dataType = "SECURITY",
-            additionalInfo = "Severity: $severity - $violation"
-        )
+    ): Mono<Unit> {
+        return if (!auditEnabled) {
+            Mono.just(Unit)
+        } else {
+            logDataOperation(
+                keycloakId = keycloakId ?: "UNKNOWN",
+                operation = "SECURITY_VIOLATION",
+                dataType = "SECURITY",
+                additionalInfo = "Severity: $severity - $violation",
+            )
+        }
     }
 
     /**

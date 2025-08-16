@@ -22,7 +22,7 @@ class SecurityConfigTest {
 
     @BeforeEach
     fun setUp() {
-        securityConfig = SecurityConfig()
+        securityConfig = SecurityConfig(true)
     }
 
     @Test
