@@ -281,7 +281,7 @@ class GdprComplianceServiceTest {
         whenever(userDAL.deleteUserByKeycloakId(keycloakId)).thenReturn(Mono.error(error))
 
         StepVerifier.create(gdprComplianceService.deleteAllPersonalData(keycloakId))
-            .verifyComplete()
+            .verifyError(RuntimeException::class.java)
 
         verify(userDAL).deleteUserByKeycloakId(keycloakId)
 
@@ -303,28 +303,30 @@ class GdprComplianceServiceTest {
     }
 
     @Test
-    fun `hasUserConsent should return true when user has consent`() {
+    fun `getUserConsent should return true when user has consent`() {
         val keycloakId = "test-user-id"
+        val userConsent = UserConsent(keycloakId, true, Instant.now(), Instant.now(), Instant.now())
 
-        whenever(gdprComplianceDAL.hasUserConsent(keycloakId)).thenReturn(Mono.just(true))
+        whenever(gdprComplianceDAL.getUserConsent(keycloakId)).thenReturn(Mono.just(userConsent))
 
         StepVerifier.create(gdprComplianceService.hasUserConsent(keycloakId))
             .expectNext(true)
             .verifyComplete()
 
-        verify(gdprComplianceDAL).hasUserConsent(keycloakId)
+        verify(gdprComplianceDAL).getUserConsent(keycloakId)
     }
 
     @Test
-    fun `hasUserConsent should return false when user has no consent`() {
+    fun `getUserConsent should return false when user has no consent`() {
         val keycloakId = "test-user-id"
+        val userConsent = UserConsent(keycloakId, false, Instant.now(), Instant.now(), Instant.now())
 
-        whenever(gdprComplianceDAL.hasUserConsent(keycloakId)).thenReturn(Mono.just(false))
+        whenever(gdprComplianceDAL.getUserConsent(keycloakId)).thenReturn(Mono.just(userConsent))
 
         StepVerifier.create(gdprComplianceService.hasUserConsent(keycloakId))
             .expectNext(false)
             .verifyComplete()
 
-        verify(gdprComplianceDAL).hasUserConsent(keycloakId)
+        verify(gdprComplianceDAL).getUserConsent(keycloakId)
     }
 }
