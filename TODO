@@ -1,5 +1,3 @@
-user controllers should also allow admin/service deletion
-
 backend caching
 
 WarmupManager for backend (BigDecimal?, cache)

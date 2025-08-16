@@ -78,11 +78,21 @@ class UserOneRepMaxController(
         @PathVariable("user_id") userId: String,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<List<UserOneRepMax>>> {
-        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
-            if (currentUserId == userId) {
-                gdprComplianceService.withUserConsent(currentUserId) {
-                    userOneRepMaxService.getAllByUser(userId, unit)
-                        .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userOneRepMaxService.getAllByUser(userId, unit)
+                            .map { ResponseEntity.ok(it) }
+                    }
                 }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own one rep maxes"))
@@ -105,11 +115,21 @@ class UserOneRepMaxController(
         @PathVariable("exercise_name") exerciseName: String,
         @RequestParam(required = false) unit: String?
     ): Mono<ResponseEntity<UserOneRepMax>> {
-        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
-            if (currentUserId == userId) {
-                gdprComplianceService.withUserConsent(currentUserId) {
-                    userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
-                        .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
+                            .map { ResponseEntity.ok(it) }
+                    }
                 }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only view their own one rep maxes"))
@@ -183,11 +203,29 @@ class UserOneRepMaxController(
         @PathVariable("user_id") userId: String,
         @PathVariable("exercise_name") exerciseName: String
     ): Mono<ResponseEntity<UserOneRepMax>> {
-        return keycloakUtil.getCurrentUserId().flatMap { currentUserId ->
-            if (currentUserId == userId) {
-                gdprComplianceService.withUserConsent(currentUserId) {
-                    userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
-                        .map { ResponseEntity.ok(it) }
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { currentUserId, roles ->
+            Pair(currentUserId, roles)
+        }.flatMap { (currentUserId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService || currentUserId == userId) {
+                val consentUserIdMono = if (isAdminOrService) {
+                    Mono.just(userId)
+                } else {
+                    Mono.just(currentUserId)
+                }
+                consentUserIdMono.flatMap { ownerId ->
+                    gdprComplianceService.withUserConsent(ownerId) {
+                        userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
+                            .map { ResponseEntity.ok(it) }
+                            .doOnError { e ->
+                                logger.error(
+                                    "Error deleting user one rep max: userId={}, exerciseName={}",
+                                    userId,
+                                    exerciseName,
+                                    e
+                                )
+                            }
+                    }
                 }
             } else {
                 Mono.error(AccessDeniedException("Access denied: User can only delete their own one rep maxes"))
