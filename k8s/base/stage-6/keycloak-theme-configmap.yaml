@@ -6,351 +6,213 @@ metadata:
 data:
   # Theme properties file
   "theme.properties": |
-    parent=base
+    parent=keycloak
     import=common/keycloak
     styles=css/congen.css
-    scripts=js/congen.js
-    templates=congen.ftl
   
-  # Custom CSS for Congen branding
+  # CSS with light/dark mode support matching TypeScript app theme
   "css-congen.css": |
-    /* Override problematic fonts with system fonts */
+    /* CSS Variables for light/dark mode matching TypeScript app */
+    :root {
+      /* Light mode colors from theme.tsx */
+      --background-color: #f9fafc;
+      --text-color: #202020;
+      --text-secondary: #55585e;
+      --link-color: #2236cc;
+      --button-color: #2236cc;
+      --button-hover-color: #1b2a9e;
+      --card-background: #ffffff;
+      --card-border: #e2e8f0;
+      --form-background: #ffffff;
+      --form-border: #c8ccd2;
+      --form-border-focus: #2236cc;
+      --form-shadow: rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Dark mode colors from theme.tsx */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background-color: #202020;
+        --text-color: #ffffff;
+        --text-secondary: #a2a6ad;
+        --link-color: #7a9cf0;
+        --button-color: #4d6fe0;
+        --button-hover-color: #2236cc;
+        --card-background: #28292c;
+        --card-border: #4a5568;
+        --form-background: #28292c;
+        --form-border: #4a5568;
+        --form-border-focus: #4d6fe0;
+        --form-shadow: rgba(0, 0, 0, 0.4);
+      }
+    }
+    
+    /* Smooth transitions */
+    * {
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    /* Remove background images and set proper background */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    }
-    
-    /* Center the main login container */
-    #kc-form-wrapper {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-    }
-    
-    /* Center the card container */
-    .card-pf {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      max-width: 400px;
-    }
-    
-    .kc-logo-text {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      font-size: 2rem;
-      font-weight: 700;
-      color: #2236CC;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    
-    .kc-form-group {
-      margin-bottom: 1rem;
-    }
-    
-    .kc-form-control {
-      border-radius: 8px;
-      border: 1px solid #E5E7EB;
-      padding: 12px 16px;
-      font-size: 1rem;
-      transition: border-color 0.2s ease;
-    }
-    
-    .kc-form-control:focus {
-      border-color: #2236CC;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(34, 54, 204, 0.1);
-    }
-    
-    /* Reduce whitespace in form elements */
-    .form-group {
-      margin-bottom: 0.75rem;
-    }
-    
-    .form-group label {
-      margin-bottom: 0.25rem;
-    }
-    
-    .checkbox {
-      margin-top: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .checkbox label {
-      margin-bottom: 0;
-    }
-    
-    /* Reduce spacing in the main form container */
-    #kc-form {
-      padding: 0;
-    }
-    
-    /* Reduce spacing in the main content area */
-    #kc-content {
-      padding: 1rem 0;
-    }
-    
-    .kc-button {
-      background: linear-gradient(135deg, #2236CC 0%, #1E40AF 100%);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-weight: 600;
-      padding: 12px 24px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      width: 100%;
-    }
-    
-    .kc-button:hover {
-      background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(34, 54, 204, 0.3);
-    }
-    
-    .kc-button:active {
-      transform: translateY(0);
-    }
-    
-    .kc-card {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      padding: 1.5rem;
-      max-width: 400px;
-      width: 100%;
-      margin: 0 auto;
-    }
-    
-    .kc-header {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    
-    .kc-header img {
-      width: 72px;
-      height: auto;
-      margin-bottom: 1rem;
-    }
-    
-    .kc-form {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      width: 100%;
-    }
-    
-    /* Ensure the main form container is centered */
-    #kc-form {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-    }
-    
-    .kc-form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: #374151;
-    }
-    
-    .kc-form-group input {
-      width: 100%;
-      box-sizing: border-box;
-    }
-    
-    .kc-form-options {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 1rem;
-    }
-    
-    .kc-form-options a {
-      color: #2236CC;
-      text-decoration: none;
-      font-size: 0.875rem;
-    }
-    
-    .kc-form-options a:hover {
-      text-decoration: underline;
-    }
-    
-    .kc-info-area {
-      background: #F3F4F6;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      border-left: 4px solid #2236CC;
-    }
-    
-    .kc-info-area p {
+      background-color: var(--background-color) !important;
+      background-image: none !important;
+      color: var(--text-color) !important;
       margin: 0;
-      color: #374151;
-      font-size: 0.875rem;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
     }
     
-    .kc-alert {
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1.5rem;
-      border: 1px solid;
+    /* Remove background images from login page */
+    .login-pf body {
+      background-color: var(--background-color) !important;
+      background-image: none !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
     
-    .kc-alert-error {
-      background: #FEF2F2;
-      border-color: #FECACA;
-      color: #DC2626;
+    /* Remove background images from all containers */
+    .login-pf,
+    .login-pf .container,
+    .login-pf .container-fluid {
+      background-color: var(--background-color) !important;
+      background-image: none !important;
     }
     
-    .kc-alert-success {
-      background: #F0FDF4;
-      border-color: #BBF7D0;
-      color: #16A34A;
+    /* Style the login card with proper background and rounded corners */
+    .card-pf {
+      background-color: var(--card-background) !important;
+      background-image: none !important;
+      border: 1px solid var(--card-border) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 4px 16px var(--form-shadow) !important;
+      padding: 2rem !important;
+      max-width: 400px !important;
+      width: 100% !important;
     }
     
-    .kc-alert-warning {
-      background: #FFFBEB;
-      border-color: #FED7AA;
-      color: #D97706;
+    /* Ensure form text is visible */
+    .card-pf-heading,
+    .card-pf-body,
+    .form-group label,
+    .help-block,
+    .text-muted,
+    .control-label {
+      color: var(--text-color) !important;
     }
     
-    .kc-social-area {
-      margin-top: 2rem;
-      text-align: center;
+    /* Style form inputs with rounded corners and proper colors */
+    .form-control {
+      background-color: var(--form-background) !important;
+      border: 1px solid var(--form-border) !important;
+      border-radius: 10px !important;
+      color: var(--text-color) !important;
+      padding: 12px 16px !important;
+      font-size: 14px !important;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
     }
     
-    .kc-social-area p {
-      color: #6B7280;
-      margin-bottom: 1rem;
+    .form-control:focus {
+      outline: none !important;
+      border-color: var(--form-border-focus) !important;
+      box-shadow: 0 0 0 4px rgba(34, 54, 204, 0.1) !important;
+      background-color: var(--form-background) !important;
+      color: var(--text-color) !important;
     }
     
-    .kc-social-area a {
-      display: inline-block;
-      margin: 0 0.5rem;
-      padding: 8px 16px;
-      border: 1px solid #D1D5DB;
-      border-radius: 6px;
-      text-decoration: none;
-      color: #374151;
-      transition: all 0.2s ease;
+    .form-control::placeholder {
+      color: var(--text-secondary) !important;
     }
     
-    .kc-social-area a:hover {
-      border-color: #2236CC;
-      color: #2236CC;
+    /* Style buttons with rounded corners and proper colors */
+    .btn-primary {
+      background: linear-gradient(to bottom, #4d6fe0, #1b2a9e) !important;
+      color: #f0f4ff !important;
+      border: 1px solid #16227a !important;
+      border-radius: 10px !important;
+      padding: 12px 24px !important;
+      font-size: 14px !important;
+      font-weight: 500 !important;
+      cursor: pointer !important;
+      transition: all 0.3s ease !important;
+      text-transform: none !important;
+      box-shadow: inset 0 1px rgba(122, 156, 240, 0.4) !important;
     }
-  
-  # Custom JavaScript for enhanced UX
-  "js-congen.js": |
-    document.addEventListener('DOMContentLoaded', function() {
-      // Add smooth transitions
-      const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
-      inputs.forEach(input => {
-        input.classList.add('kc-form-control');
-      });
-      
-      // Add button styling
-      const buttons = document.querySelectorAll('input[type="submit"], button[type="submit"]');
-      buttons.forEach(button => {
-        button.classList.add('kc-button');
-      });
-      
-      // Add form styling
-      const forms = document.querySelectorAll('form');
-      forms.forEach(form => {
-        form.classList.add('kc-form');
-      });
-      
-      // Add card styling to main container
-      const mainContainer = document.querySelector('#kc-form-buttons')?.closest('.card-pf');
-      if (mainContainer) {
-        mainContainer.classList.add('kc-card');
+    
+    .btn-primary:hover {
+      background: #4d6fe0 !important;
+      box-shadow: 0 0 0 1px rgba(122, 156, 240, 0.5) !important;
+    }
+    
+    .btn-primary:active {
+      transform: scale(0.98) !important;
+    }
+    
+    /* Style links */
+    a {
+      color: var(--link-color) !important;
+      text-decoration: none !important;
+      font-weight: 500 !important;
+      transition: color 0.3s ease !important;
+    }
+    
+    a:hover {
+      color: var(--button-hover-color) !important;
+    }
+    
+    /* Style alert messages */
+    .alert {
+      padding: 12px 16px !important;
+      border-radius: 8px !important;
+      margin-bottom: 1rem !important;
+      font-size: 14px !important;
+      color: var(--text-color) !important;
+    }
+    
+    .alert-error {
+      background-color: rgba(211, 47, 47, 0.1) !important;
+      border: 1px solid rgba(211, 47, 47, 0.3) !important;
+      color: #d32f2f !important;
+    }
+    
+    .alert-warning {
+      background-color: rgba(247, 181, 56, 0.1) !important;
+      border: 1px solid rgba(247, 181, 56, 0.3) !important;
+      color: #f7b538 !important;
+    }
+    
+    .alert-info {
+      background-color: rgba(34, 54, 204, 0.1) !important;
+      border: 1px solid rgba(34, 54, 204, 0.3) !important;
+      color: var(--link-color) !important;
+    }
+    
+    /* Dark mode specific adjustments */
+    @media (prefers-color-scheme: dark) {
+      .btn-primary {
+        background: linear-gradient(to bottom, #4d6fe0, #2236cc) !important;
+        border-color: #16227a !important;
+        box-shadow: inset 0 1px rgba(122, 156, 240, 0.4) !important;
       }
       
-      // Add header styling
-      const header = document.querySelector('.card-pf-heading');
-      if (header) {
-        header.classList.add('kc-header');
+      .btn-primary:hover {
+        background: #2236cc !important;
+        box-shadow: 0 0 0 1px rgba(122, 156, 240, 0.5) !important;
       }
-    });
-  
-  # Custom FreeMarker template for login page
-  "ftl-congen.ftl": |
-    <#import "template.ftl" as layout>
-    <@layout.registrationLayout displayInfo=social.displayInfo displayWide=(realm.password && social.providers??); section>
-        <#if section = "header">
-            <div class="kc-header">
-                <img src="${url.resourcesPath}/img-congen-icon.svg" alt="ConGen" />
-                <div class="kc-logo-text">ConGen</div>
-            </div>
-        <#elseif section = "form">
-            <div id="kc-form">
-                <div id="kc-form-wrapper">
-                    <#if realm.password>
-                        <form id="kc-form-login" onsubmit="login.disabled = true; return true;" action="${url.loginAction}" method="post">
-                            <div class="kc-form-group">
-                                <label for="username" class="control-label">${msg("username")}</label>
-                                <input tabindex="1" id="username" class="kc-form-control" name="username" value="${(login.username!'')}"  type="text" autofocus autocomplete="off"
-                                       aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"
-                                />
-                            </div>
-
-                            <div class="kc-form-group">
-                                <label for="password" class="control-label">${msg("password")}</label>
-                                <input tabindex="2" id="password" class="kc-form-control" name="password" type="password" autocomplete="off"
-                                       aria-invalid="<#if messagesPerField.existsError('username','password')>true</#if>"
-                                />
-                            </div>
-
-                            <div class="kc-form-options">
-                                <#if realm.rememberMe && !usernameEditDisabled??>
-                                    <div class="checkbox">
-                                        <label>
-                                            <#if login.rememberMe??>
-                                                <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox" checked> ${msg("rememberMe")}
-                                            <#else>
-                                                <input tabindex="3" id="rememberMe" name="rememberMe" type="checkbox"> ${msg("rememberMe")}
-                                            </#if>
-                                        </label>
-                                    </div>
-                                </#if>
-                                <div>
-                                    <#if realm.resetPasswordAllowed>
-                                        <span><a tabindex="5" href="${url.loginResetCredentialsUrl}">${msg("doForgotPassword")}</a></span>
-                                    </#if>
-                                </div>
-                            </div>
-
-                            <div id="kc-form-buttons" class="kc-form-group">
-                                <input type="hidden" id="id-hidden-input" name="credentialId" <#if auth.selectedCredential?has_content>value="${auth.selectedCredential}"</#if>/>
-                                <input tabindex="4" class="kc-button" name="login" id="kc-login" type="submit" value="${msg("doLogIn")}"/>
-                            </div>
-                        </form>
-                    </#if>
-                </div>
-            </div>
-
-        <#elseif section = "info" >
-            <#if realm.password && realm.registrationAllowed && !registrationDisabled??>
-                <div id="kc-registration">
-                    <span>${msg("noAccount")} <a tabindex="6" href="${url.registrationUrl}">${msg("doRegister")}</a></span>
-                </div>
-            </#if>
-        </#if>
-    </@layout.registrationLayout>
-  
-  # Congen icon SVG
-  "img-congen-icon.svg": |
-    <svg width="72" height="72" viewBox="0 0 72 72" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="72" height="72" rx="16" fill="#2236CC"/>
-      <path d="M18 36C18 25.5066 26.5066 17 37 17C47.4934 17 56 25.5066 56 36C56 46.4934 47.4934 55 37 55C26.5066 55 18 46.4934 18 36Z" fill="white"/>
-      <path d="M28 28C28 26.8954 28.8954 26 30 26H44C45.1046 26 46 26.8954 46 28V44C46 45.1046 45.1046 46 44 46H30C28.8954 46 28 45.1046 28 44V28Z" fill="#2236CC"/>
-      <path d="M32 32H42V34H32V32Z" fill="white"/>
-      <path d="M32 36H42V38H32V36Z" fill="white"/>
-      <path d="M32 40H38V42H32V40Z" fill="white"/>
-    </svg> 
+      
+      .alert-error {
+        background-color: rgba(211, 47, 47, 0.2) !important;
+        border-color: rgba(211, 47, 47, 0.4) !important;
+      }
+      
+      .alert-warning {
+        background-color: rgba(247, 181, 56, 0.2) !important;
+        border-color: rgba(247, 181, 56, 0.4) !important;
+      }
+      
+      .alert-info {
+        background-color: rgba(122, 156, 240, 0.2) !important;
+        border-color: rgba(122, 156, 240, 0.4) !important;
+      }
+    } 
