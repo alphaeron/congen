@@ -22,12 +22,9 @@ CREATE INDEX idx_gdpr_audit_log_data_type ON gdpr_audit_log(data_type);
 
 -- Create data retention policy table for GDPR compliance
 CREATE TABLE data_retention_policy (
-  id SERIAL PRIMARY KEY,
   data_type VARCHAR(100) NOT NULL UNIQUE,
   retention_period_days INTEGER NOT NULL,
-  description TEXT,
-  created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  description TEXT
 );
 
 -- Insert default retention policies

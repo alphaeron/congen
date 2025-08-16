@@ -97,7 +97,7 @@ class AuditService(
         }
 
         // Store in database for persistent audit trail
-        return postgresClient.update(
+        return postgresClient.update<AuditLog>(
             """
             INSERT INTO gdpr_audit_log
                 (keycloak_id, operation, data_type, performed_by, additional_info)
@@ -109,7 +109,9 @@ class AuditService(
             dataType,
             userId,
             additionalInfo
-        )
+        ).flatMap {
+            Mono.just(Unit)
+        }
     }
 
     /**

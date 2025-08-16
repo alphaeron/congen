@@ -99,37 +99,6 @@ class UserDALTest {
     }
 
     @Test
-    fun `updateUser should return updated user`() {
-        val updatedUser = mockUser()
-        whenever(
-            postgresClient.update<User>(
-                """
-                UPDATE "user"
-                SET name=$2, updated_at=NOW()
-                WHERE keycloak_id=$1
-                """.trimIndent(),
-                updatedUser.keycloakId,
-                updatedUser.name
-            ),
-        ).thenReturn(Mono.just(updatedUser))
-
-        val result = userDAL.updateUser(updatedUser.keycloakId, updatedUser.name)
-
-        StepVerifier.create(result)
-            .expectNext(updatedUser)
-            .verifyComplete()
-        verify(postgresClient).update<User>(
-            """
-            UPDATE "user"
-            SET name=$2, updated_at=NOW()
-            WHERE keycloak_id=$1
-            """.trimIndent(),
-            updatedUser.keycloakId,
-            updatedUser.name
-        )
-    }
-
-    @Test
     fun `deleteUser should return deleted user`() {
         whenever(postgresClient.update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
             .thenReturn(Mono.just(user))

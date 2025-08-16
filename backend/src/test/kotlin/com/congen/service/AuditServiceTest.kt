@@ -49,9 +49,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = operation,
+            dataType = dataType,
+            performedBy = userId,
+            timestamp = Instant.now(),
+            additionalInfo = additionalInfo
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logDataOperation(
@@ -66,7 +76,7 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify that the database was called with the audit log insert
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo)
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo)
     }
 
     @Test
@@ -83,9 +93,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = operation,
+            dataType = dataType,
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = null
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, null, null))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logDataOperation(
@@ -98,7 +118,7 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify that the database was called with nulls for optional parameters
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, operation, dataType, null, null)
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null)
     }
 
     @Test
@@ -116,7 +136,7 @@ class AuditServiceTest {
             """.trimIndent()
 
         // Mock database error
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, null, null))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null))
             .thenReturn(Mono.error(RuntimeException("Database error")))
 
         StepVerifier.create(
@@ -144,9 +164,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = "DATA_ACCESS",
+            dataType = dataType,
+            performedBy = adminUser,
+            timestamp = Instant.now(),
+            additionalInfo = null
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null))
+            .thenReturn(Mono.just(mockAuditLog))
 
         // Admin access should be logged
         StepVerifier.create(
@@ -160,7 +190,7 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify admin access was logged
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null)
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null)
     }
 
     @Test
@@ -180,7 +210,7 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify no database call was made for self-access
-        verify(postgresClient, never()).update<Unit>(
+        verify(postgresClient, never()).update<AuditLog>(
             any(),
             any(),
             any(),
@@ -204,9 +234,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = "CONSENT_GIVEN",
+            dataType = consentType,
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = "Consent: true"
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true"))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true"))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logConsentChange(
@@ -218,7 +258,7 @@ class AuditServiceTest {
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true")
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true")
     }
 
     @Test
@@ -235,9 +275,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = "CONSENT_WITHDRAWN",
+            dataType = consentType,
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = "Consent: false"
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false"))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false"))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logConsentChange(
@@ -249,7 +299,7 @@ class AuditServiceTest {
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false")
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false")
     }
 
     @Test
@@ -267,9 +317,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = "DATA_MODIFICATION",
+            dataType = dataType,
+            performedBy = adminUser,
+            timestamp = Instant.now(),
+            additionalInfo = changes
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes))
+            .thenReturn(Mono.just(mockAuditLog))
 
         // Admin modification should be logged
         StepVerifier.create(
@@ -283,7 +343,7 @@ class AuditServiceTest {
             .expectNext(Unit)
             .verifyComplete()
 
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes)
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes)
     }
 
     @Test
@@ -305,7 +365,7 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify no database call was made for self-modification
-        verify(postgresClient, never()).update<Unit>(
+        verify(postgresClient, never()).update<AuditLog>(
             any(),
             any(),
             any(),
@@ -329,9 +389,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = "SECURITY_VIOLATION",
+            dataType = "SECURITY",
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = "Severity: HIGH - Multiple failed login attempts"
+        )
+
         // Mock the database call to return success
         whenever(
-            postgresClient.update<Unit>(
+            postgresClient.update<AuditLog>(
                 expectedQuery,
                 keycloakId,
                 "SECURITY_VIOLATION",
@@ -340,7 +410,7 @@ class AuditServiceTest {
                 "Severity: HIGH - Multiple failed login attempts"
             )
         )
-            .thenReturn(Mono.just(Unit))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logSecurityViolation(
@@ -354,7 +424,7 @@ class AuditServiceTest {
 
         verify(
             postgresClient
-        ).update<Unit>(
+        ).update<AuditLog>(
             expectedQuery,
             keycloakId,
             "SECURITY_VIOLATION",
@@ -376,9 +446,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = "UNKNOWN",
+            operation = "SECURITY_VIOLATION",
+            dataType = "SECURITY",
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = "Severity: HIGH - Unauthorized access attempt"
+        )
+
         // Mock the database call to return success
         whenever(
-            postgresClient.update<Unit>(
+            postgresClient.update<AuditLog>(
                 expectedQuery,
                 "UNKNOWN",
                 "SECURITY_VIOLATION",
@@ -387,7 +467,7 @@ class AuditServiceTest {
                 "Severity: HIGH - Unauthorized access attempt"
             )
         )
-            .thenReturn(Mono.just(Unit))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logSecurityViolation(
@@ -400,7 +480,7 @@ class AuditServiceTest {
 
         verify(
             postgresClient
-        ).update<Unit>(expectedQuery, "UNKNOWN", "SECURITY_VIOLATION", "SECURITY", null, "Severity: HIGH - Unauthorized access attempt")
+        ).update<AuditLog>(expectedQuery, "UNKNOWN", "SECURITY_VIOLATION", "SECURITY", null, "Severity: HIGH - Unauthorized access attempt")
     }
 
     @Test
@@ -415,9 +495,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = "user-id",
+            operation = "SECURITY_VIOLATION",
+            dataType = "SECURITY",
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = "Severity: HIGH - Suspicious activity detected"
+        )
+
         // Mock the database call to return success
         whenever(
-            postgresClient.update<Unit>(
+            postgresClient.update<AuditLog>(
                 expectedQuery,
                 "user-id",
                 "SECURITY_VIOLATION",
@@ -426,7 +516,7 @@ class AuditServiceTest {
                 "Severity: HIGH - Suspicious activity detected"
             )
         )
-            .thenReturn(Mono.just(Unit))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logSecurityViolation(
@@ -439,7 +529,7 @@ class AuditServiceTest {
 
         verify(
             postgresClient
-        ).update<Unit>(
+        ).update<AuditLog>(
             expectedQuery,
             "user-id",
             "SECURITY_VIOLATION",
@@ -470,8 +560,17 @@ class AuditServiceTest {
 
         // Mock the database call for each operation type
         operations.forEach { operation ->
-            whenever(postgresClient.update<Unit>(expectedQuery, "test-user", operation, "USER_DATA", null, null))
-                .thenReturn(Mono.just(Unit))
+            val mockAuditLog = AuditLog(
+                id = 1L,
+                keycloakId = "test-user",
+                operation = operation,
+                dataType = "USER_DATA",
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = null
+            )
+            whenever(postgresClient.update<AuditLog>(expectedQuery, "test-user", operation, "USER_DATA", null, null))
+                .thenReturn(Mono.just(mockAuditLog))
         }
 
         operations.forEach { operation ->
@@ -488,7 +587,7 @@ class AuditServiceTest {
 
         // Verify all operations were logged
         operations.forEach { operation ->
-            verify(postgresClient).update<Unit>(expectedQuery, "test-user", operation, "USER_DATA", null, null)
+            verify(postgresClient).update<AuditLog>(expectedQuery, "test-user", operation, "USER_DATA", null, null)
         }
     }
 
@@ -509,9 +608,19 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
+        val mockAuditLog = AuditLog(
+            id = 1L,
+            keycloakId = keycloakId,
+            operation = operation,
+            dataType = dataType,
+            performedBy = null,
+            timestamp = Instant.now(),
+            additionalInfo = additionalInfo
+        )
+
         // Mock the database call to return success
-        whenever(postgresClient.update<Unit>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo))
-            .thenReturn(Mono.just(Unit))
+        whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo))
+            .thenReturn(Mono.just(mockAuditLog))
 
         StepVerifier.create(
             auditService.logDataOperation(
@@ -525,6 +634,6 @@ class AuditServiceTest {
             .verifyComplete()
 
         // Verify the database was called with the expected parameters
-        verify(postgresClient).update<Unit>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo)
+        verify(postgresClient).update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo)
     }
 }

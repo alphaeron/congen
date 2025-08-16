@@ -137,36 +137,6 @@ class UserDAL(
     }
 
     /**
-     * Updates an existing user in the database.
-     *
-     * This method validates the user data and updates the user record
-     * with the specified Keycloak ID. All user properties are validated before
-     * the update operation.
-     *
-     * @param keycloakId The Keycloak identifier of the user to update
-     * @param name The updated user's full name
-     * @return Mono containing the updated user
-     * @throws ValidationException if user data fails validation
-     * @throws NoResultsFoundException if no user exists with the given Keycloak ID
-     */
-    fun updateUser(
-        keycloakId: String,
-        name: String
-    ): Mono<User> {
-        logger.debug("Updating user with Keycloak ID: {}", keycloakId)
-
-        return postgresClient.update(
-            """
-            UPDATE "user"
-            SET name=$2, updated_at=NOW()
-            WHERE keycloak_id=$1
-            """.trimIndent(),
-            keycloakId,
-            name
-        )
-    }
-
-    /**
      * Deletes a user from the database.
      *
      * This method removes the user record with the specified Keycloak ID from

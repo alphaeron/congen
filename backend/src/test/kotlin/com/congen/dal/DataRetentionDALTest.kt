@@ -126,8 +126,7 @@ class DataRetentionDALTest {
                 ON CONFLICT (data_type)
                 DO UPDATE SET
                     retention_period_days = EXCLUDED.retention_period_days,
-                    description = EXCLUDED.description,
-                    updated_at = CURRENT_TIMESTAMP
+                    description = EXCLUDED.description
                 """.trimIndent(),
                 dataType,
                 retentionPeriodDays,
@@ -150,8 +149,7 @@ class DataRetentionDALTest {
             ON CONFLICT (data_type)
             DO UPDATE SET
                 retention_period_days = EXCLUDED.retention_period_days,
-                description = EXCLUDED.description,
-                updated_at = CURRENT_TIMESTAMP
+                description = EXCLUDED.description
             """.trimIndent(),
             dataType,
             retentionPeriodDays,
