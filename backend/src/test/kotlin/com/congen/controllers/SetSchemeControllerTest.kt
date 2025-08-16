@@ -65,13 +65,6 @@ class SetSchemeControllerTest {
         MockitoAnnotations.openMocks(this)
         gdprComplianceService = createGdprComplianceServiceSpy()
         setSchemeController = SetSchemeController(setSchemeService, keycloakUtil, programmedExerciseService, gdprComplianceService)
-
-        // Mock KeycloakUtil methods for all tests
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        
-        // Mock GDPR compliance service for all tests
-        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
     }
 
     @Test
@@ -106,6 +99,9 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.just(setSchemes))
+        whenever(setSchemeService.getOwner(SCHEME_ID_1)).thenReturn(Mono.just("owner1"))
+        whenever(setSchemeService.getOwner(SCHEME_ID_2)).thenReturn(Mono.just("owner2"))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -139,6 +135,7 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(setSchemeService.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(userSetSchemes))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -182,6 +179,9 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(setSchemeService.selectSetSchemes()).thenReturn(Mono.just(allSetSchemes))
+        whenever(setSchemeService.getOwner(SCHEME_ID_1)).thenReturn(Mono.just("owner1"))
+        whenever(setSchemeService.getOwner(SCHEME_ID_2)).thenReturn(Mono.just("owner2"))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -202,6 +202,7 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(setSchemeService.selectSetSchemesByUserId(userId)).thenReturn(Mono.just(emptyList))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -222,6 +223,7 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(setSchemeService.selectSetSchemesByUserId(userId)).thenReturn(Mono.error(databaseError))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = setSchemeController.getAll()
         StepVerifier.create(result)
@@ -244,8 +246,12 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemeById(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = setSchemeController.get(SCHEME_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -254,8 +260,12 @@ class SetSchemeControllerTest {
 
     @Test
     fun `should return empty when set scheme not found`() {
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(setSchemeService.isOwner(NON_EXISTENT_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemeById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = setSchemeController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectComplete()
@@ -276,6 +286,8 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
             setSchemeService.createSetScheme(
@@ -295,6 +307,8 @@ class SetSchemeControllerTest {
                 "KG"
             )
         ).thenReturn(Mono.just(setScheme))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result =
             setSchemeController.save(
                 PROGRAMMED_EXERCISE_ID,
@@ -331,6 +345,8 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
@@ -352,6 +368,8 @@ class SetSchemeControllerTest {
                 "KG"
             )
         ).thenReturn(Mono.just(setScheme))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result =
             setSchemeController.update(
                 SCHEME_ID_1,
@@ -389,8 +407,12 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.deleteSetScheme(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = setSchemeController.delete(SCHEME_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -423,8 +445,12 @@ class SetSchemeControllerTest {
                     updatedAt = now
                 )
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)).thenReturn(Mono.just(setSchemes))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = setSchemeController.getByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)
         StepVerifier.create(result)
             .assertNext { resp ->
@@ -449,6 +475,8 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
             setSchemeService.createSetScheme(
@@ -468,6 +496,8 @@ class SetSchemeControllerTest {
                 "LBS"
             )
         ).thenReturn(Mono.just(setScheme))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result =
             setSchemeController.save(
                 PROGRAMMED_EXERCISE_ID,
@@ -505,6 +535,8 @@ class SetSchemeControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
@@ -526,6 +558,8 @@ class SetSchemeControllerTest {
                 "LBS"
             )
         ).thenReturn(Mono.just(setScheme))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result =
             setSchemeController.update(
                 SCHEME_ID_1,
