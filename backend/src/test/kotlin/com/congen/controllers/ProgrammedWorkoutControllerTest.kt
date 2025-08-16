@@ -51,13 +51,6 @@ class ProgrammedWorkoutControllerTest {
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
         programmedWorkoutController = ProgrammedWorkoutController(programmedWorkoutService, programService, keycloakUtil, gdprComplianceService)
-
-        // Mock KeycloakUtil methods for all tests
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-
-        // Mock GDPR compliance service for all tests
-        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
     }
 
     @Test
@@ -88,6 +81,9 @@ class ProgrammedWorkoutControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(programmedWorkoutService.selectProgrammedWorkouts()).thenReturn(Mono.just(programmedWorkouts))
+        whenever(programmedWorkoutService.getOwner(WORKOUT_ID_1)).thenReturn(Mono.just("owner1"))
+        whenever(programmedWorkoutService.getOwner(WORKOUT_ID_2)).thenReturn(Mono.just("owner2"))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
@@ -116,6 +112,7 @@ class ProgrammedWorkoutControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId)).thenReturn(Mono.just(userWorkouts))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
@@ -152,6 +149,9 @@ class ProgrammedWorkoutControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(programmedWorkoutService.selectProgrammedWorkouts()).thenReturn(Mono.just(allWorkouts))
+        whenever(programmedWorkoutService.getOwner(WORKOUT_ID_1)).thenReturn(Mono.just("owner1"))
+        whenever(programmedWorkoutService.getOwner(WORKOUT_ID_2)).thenReturn(Mono.just("owner2"))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
@@ -169,6 +169,7 @@ class ProgrammedWorkoutControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId)).thenReturn(Mono.just(emptyList))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
@@ -186,6 +187,7 @@ class ProgrammedWorkoutControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(programmedWorkoutService.selectProgrammedWorkoutsByUserId(userId)).thenReturn(Mono.error(databaseError))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
@@ -206,8 +208,12 @@ class ProgrammedWorkoutControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(programmedWorkoutService.isOwner(WORKOUT_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedWorkoutService.selectProgrammedWorkoutById(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
+        whenever(programmedWorkoutService.isOwner(WORKOUT_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.get(WORKOUT_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
@@ -217,10 +223,11 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should return not found when programmed workout not found`() {
-        whenever(programmedWorkoutService.isOwner(WORKOUT_ID_2, "test-keycloak-user-id")).thenReturn(Mono.just(true))
-        whenever(
-            programmedWorkoutService.selectProgrammedWorkoutById(WORKOUT_ID_2)
-        ).thenReturn(Mono.error(RuntimeException("Not found")))
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
+        whenever(programmedWorkoutService.selectProgrammedWorkoutById(WORKOUT_ID_2))
+            .thenReturn(Mono.error(RuntimeException("Not found")))
+        
         val result = programmedWorkoutController.get(WORKOUT_ID_2)
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
@@ -241,10 +248,13 @@ class ProgrammedWorkoutControllerTest {
                 updatedAt = now
             )
         val savedProgrammedWorkout = programmedWorkout.copy(id = WORKOUT_ID_1)
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
-        whenever(
-            programmedWorkoutService.insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, WORKOUT_NAME_1)
-        ).thenReturn(Mono.just(savedProgrammedWorkout))
+        whenever(programmedWorkoutService.insertProgrammedWorkout(PROGRAM_ID, DAY_NUMBER_1, WORKOUT_NAME_1))
+            .thenReturn(Mono.just(savedProgrammedWorkout))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.save(PROGRAM_ID, DAY_NUMBER_1, WORKOUT_NAME_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(savedProgrammedWorkout))
@@ -264,11 +274,14 @@ class ProgrammedWorkoutControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.isOwner(WORKOUT_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
-        whenever(
-            programmedWorkoutService.updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, WORKOUT_NAME_2)
-        ).thenReturn(Mono.just(programmedWorkout))
+        whenever(programmedWorkoutService.updateProgrammedWorkout(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, WORKOUT_NAME_2))
+            .thenReturn(Mono.just(programmedWorkout))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.update(WORKOUT_ID_1, PROGRAM_ID, DAY_NUMBER_2, WORKOUT_NAME_2)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
@@ -278,11 +291,14 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should return not found when updating non-existent programmed workout`() {
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.isOwner(WORKOUT_ID_2, "test-keycloak-user-id")).thenReturn(Mono.just(true))
-        whenever(
-            programmedWorkoutService.updateProgrammedWorkout(WORKOUT_ID_2, PROGRAM_ID, DAY_NUMBER_1, WORKOUT_NAME_1)
-        ).thenReturn(Mono.error(RuntimeException("Not found")))
+        whenever(programmedWorkoutService.updateProgrammedWorkout(WORKOUT_ID_2, PROGRAM_ID, DAY_NUMBER_1, WORKOUT_NAME_1))
+            .thenReturn(Mono.error(RuntimeException("Not found")))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.update(WORKOUT_ID_2, PROGRAM_ID, DAY_NUMBER_1, WORKOUT_NAME_1)
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
@@ -302,8 +318,12 @@ class ProgrammedWorkoutControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedWorkoutService.isOwner(WORKOUT_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.deleteProgrammedWorkout(WORKOUT_ID_1)).thenReturn(Mono.just(programmedWorkout))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.delete(WORKOUT_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkout))
@@ -313,8 +333,12 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should return not found when deleting non-existent programmed workout`() {
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedWorkoutService.isOwner(WORKOUT_ID_2, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.deleteProgrammedWorkout(WORKOUT_ID_2)).thenReturn(Mono.error(RuntimeException("Not found")))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.delete(WORKOUT_ID_2)
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
@@ -344,8 +368,12 @@ class ProgrammedWorkoutControllerTest {
                     updatedAt = now
                 )
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.selectProgrammedWorkoutsByProgramId(PROGRAM_ID)).thenReturn(Mono.just(programmedWorkouts))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.getByProgramId(PROGRAM_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programmedWorkouts))
@@ -355,8 +383,12 @@ class ProgrammedWorkoutControllerTest {
 
     @Test
     fun `should return empty list when no programmed workouts for program`() {
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.selectProgrammedWorkoutsByProgramId(PROGRAM_ID)).thenReturn(Mono.just(emptyList()))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
+        
         val result = programmedWorkoutController.getByProgramId(PROGRAM_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(emptyList<ProgrammedWorkout>()))
@@ -372,6 +404,7 @@ class ProgrammedWorkoutControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(programmedWorkoutService.selectProgrammedWorkouts()).thenReturn(Mono.error(RuntimeException("Database error")))
+        
         val result = programmedWorkoutController.getAll()
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
