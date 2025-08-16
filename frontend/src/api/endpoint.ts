@@ -23,7 +23,23 @@ export const setTokenGetter = (getter: () => string | null) => {
   getToken = getter;
 };
 
-// Add interceptor to inject JWT if available
+// CSRF token management
+let csrfToken: string | null = null;
+
+// Function to fetch CSRF token from server
+const fetchCsrfToken = async (): Promise<string | null> => {
+  try {
+    const response = await axios.get(`${BACKEND_URL}/api/v1/csrf`, {
+      withCredentials: true,
+    });
+    return response.data.token;
+  } catch (error) {
+    console.warn('Failed to fetch CSRF token:', error);
+    return null;
+  }
+};
+
+// Add interceptor to inject JWT and CSRF token if available
 ENDPOINT.interceptors.request.use(async config => {
   let headers = config.headers;
   // Convert to AxiosHeaders if not already
@@ -33,6 +49,16 @@ ENDPOINT.interceptors.request.use(async config => {
 
   // Force preflight requests by adding custom headers
   headers.set('X-Requested-With', 'XMLHttpRequest');
+
+  // Add CSRF token for state-changing operations
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase() || '')) {
+    if (!csrfToken) {
+      csrfToken = await fetchCsrfToken();
+    }
+    if (csrfToken) {
+      headers.set('X-CSRF-TOKEN', csrfToken);
+    }
+  }
 
   if (getToken) {
     const token = getToken();
@@ -59,13 +85,20 @@ ENDPOINT.interceptors.request.use(async config => {
   return config;
 });
 
-// Add response interceptor to handle token refresh on 401 errors
+// Add response interceptor to handle token refresh on 401 errors and CSRF token refresh on 403 errors
 ENDPOINT.interceptors.response.use(
   response => response,
   async error => {
     if (error.response?.status === 401) {
       // The OIDC library should handle token refresh automatically
       // If this persists, the user will need to re-authenticate
+    } else if (error.response?.status === 403 && error.response?.data?.error?.includes('CSRF')) {
+      // CSRF token expired or invalid, fetch a new one
+      csrfToken = await fetchCsrfToken();
+      // Retry the original request
+      if (csrfToken && error.config) {
+        return ENDPOINT(error.config);
+      }
     }
     return Promise.reject(error);
   }

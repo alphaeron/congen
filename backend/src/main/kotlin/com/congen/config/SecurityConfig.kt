@@ -48,6 +48,10 @@ class SecurityConfig {
         return http
             .csrf { csrf -> 
                 csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())
+                    .ignoringRequestMatchers(
+                        "/api/v1/health/**",
+                        "/api/v1/gdpr/privacy_policy"
+                    )
             }
             .authorizeExchange { exchanges ->
                 exchanges
