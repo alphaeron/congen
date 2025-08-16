@@ -445,6 +445,7 @@ class WorkoutStageControllerTest {
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
         whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.error(databaseError))
 
         val result = workoutStageController.getAll()
