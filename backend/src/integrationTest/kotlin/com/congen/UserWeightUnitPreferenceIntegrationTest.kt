@@ -26,6 +26,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         super.setUp()
         userToken = getValidToken("user")
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
     }
 
     @Test

@@ -12,6 +12,11 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter
 import org.springframework.security.web.server.SecurityWebFilterChain
 import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
+import org.springframework.security.web.server.csrf.CsrfToken
+import org.springframework.web.server.ServerWebExchange
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher
+import reactor.core.publisher.Mono
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.cors.reactive.CorsConfigurationSource
 
 /**
@@ -28,7 +33,10 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity(useAuthorizationManager = true)
-class SecurityConfig {
+class SecurityConfig(
+    @Value("\${spring.security.csrf.enabled:true}")
+    private val csrfEnabled: Boolean
+) {
     /**
      * Configures the security filter chain for the API.
      *
@@ -47,11 +55,20 @@ class SecurityConfig {
     ): SecurityWebFilterChain {
         return http
             .csrf { csrf -> 
-                csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())
-                    .ignoringRequestMatchers(
-                        "/api/v1/health/**",
-                        "/api/v1/gdpr/privacy_policy"
-                    )
+                if (csrfEnabled) {
+                    csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())
+                        .requireCsrfProtectionMatcher { exchange ->
+                            val path = exchange.request.path.value()
+                            // Ignore CSRF for health and privacy policy endpoints
+                            if (path.startsWith("/api/v1/health/") || path == "/api/v1/gdpr/privacy_policy") {
+                                ServerWebExchangeMatcher.MatchResult.notMatch()
+                            } else {
+                                ServerWebExchangeMatcher.MatchResult.match()
+                            }
+                        }
+                } else {
+                    csrf.disable()
+                }
             }
             .authorizeExchange { exchanges ->
                 exchanges

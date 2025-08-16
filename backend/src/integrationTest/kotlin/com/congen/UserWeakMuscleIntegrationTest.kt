@@ -12,10 +12,11 @@ class UserWeakMuscleIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        val unique = System.nanoTime()
         userToken = getValidToken("user")
         // Create a single test user to avoid keycloak_user_id conflicts
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
     }
 
     @Test
