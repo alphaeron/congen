@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter
 import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.csrf.CookieServerCsrfTokenRepository
 import org.springframework.web.cors.reactive.CorsConfigurationSource
 
 /**
@@ -45,7 +46,9 @@ class SecurityConfig {
         corsConfigurationSource: CorsConfigurationSource
     ): SecurityWebFilterChain {
         return http
-            .csrf { it.disable() }
+            .csrf { csrf -> 
+                csrf.csrfTokenRepository(CookieServerCsrfTokenRepository.withHttpOnlyFalse())
+            }
             .authorizeExchange { exchanges ->
                 exchanges
                     // Allow all OPTIONS requests for CORS

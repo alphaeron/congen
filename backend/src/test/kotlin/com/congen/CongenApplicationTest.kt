@@ -34,7 +34,14 @@ import org.springframework.test.context.TestPropertySource
         "JWT_AUDIENCES=congen-backend",
         "congen.gdpr.audit-enabled=true",
         "congen.gdpr.data-retention-check-enabled=true",
-        "ENCRYPTION_KEY=MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI="
+        "ENCRYPTION_KEY=MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=",
+        "congen.postgres.writer.host=localhost",
+        "congen.postgres.reader.host=localhost",
+        "congen.postgres.port=5432",
+        "congen.postgres.username=postgres",
+        "congen.postgres.password=postgres",
+        "congen.postgres.db-name=postgres",
+        "congen.postgres.ssl-mode=false"
     ]
 )
 class CongenApplicationTest {
