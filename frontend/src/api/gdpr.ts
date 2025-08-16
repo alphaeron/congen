@@ -41,7 +41,7 @@ export async function exportUserData(): Promise<AxiosResponse<UserDataExport>> {
  * @returns Promise that resolves when deletion is complete
  */
 export async function deleteAllPersonalData(confirmation: string): Promise<AxiosResponse<void>> {
-  return ENDPOINT.post('/gdpr/delete_all_data', null, {
+  return ENDPOINT.delete('/gdpr/delete_all_data', {
     params: { confirmation },
   });
 }

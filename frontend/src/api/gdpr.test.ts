@@ -47,7 +47,7 @@ describe('GDPR API', () => {
       const mockResponse: UserConsent = {
         keycloak_id: 'test-user-123',
         data_processing_consent: false,
-        consent_timestamp: null,
+        consent_timestamp: undefined,
         updated_at: '2023-08-09T10:15:30Z',
       };
       mock.onPost('/gdpr/consent').reply(config => {
@@ -85,7 +85,7 @@ describe('GDPR API', () => {
       const mockResponse: UserConsent = {
         keycloak_id: 'test-user-123',
         data_processing_consent: false,
-        consent_timestamp: null,
+        consent_timestamp: undefined,
         updated_at: '2023-08-09T10:15:30Z',
       };
       mock.onGet('/gdpr/consent').reply(200, mockResponse);
@@ -100,17 +100,22 @@ describe('GDPR API', () => {
   describe('exportUserData', () => {
     it('should export user data', async () => {
       const mockResponse: UserDataExport = {
-        personal_data: {
-          profile: { name: 'Test User', email: 'test@example.com' },
-          preferences: { units: 'KG' },
-          exercise_history: [],
-          programs: [],
-        },
-        metadata: {
-          exported_at: '2023-08-09T10:15:30Z',
-          data_types: ['profile', 'preferences', 'exercise_history', 'programs'],
-          total_records: 1,
-        },
+        keycloak_id: 'test-user-123',
+        name: 'Test User',
+        created_at: '2023-08-09T10:15:30Z',
+        updated_at: '2023-08-09T10:15:30Z',
+        data_processing_consent: true,
+        consent_timestamp: '2023-08-09T10:15:30Z',
+        export_timestamp: '2023-08-09T10:15:30Z',
+        user_equipment: [],
+        user_exercise_preferences: [],
+        user_program_preferences: {},
+        user_one_rep_max: [],
+        user_weight_unit_preferences: [],
+        exercise_rotation_history: [],
+        training_programs: [],
+        audit_logs: [],
+        data_retention_policies: [],
       };
       mock.onGet('/gdpr/export').reply(200, mockResponse);
 
@@ -124,7 +129,7 @@ describe('GDPR API', () => {
 
   describe('deleteAllPersonalData', () => {
     it('should delete all personal data with correct confirmation', async () => {
-      mock.onPost('/gdpr/delete_all_data').reply(config => {
+      mock.onDelete('/gdpr/delete_all_data').reply(config => {
         expect(config.params).toEqual({ confirmation: 'DELETE_ALL_MY_DATA' });
         return [200];
       });
@@ -133,12 +138,12 @@ describe('GDPR API', () => {
 
       expect(response.status).toBe(200);
       expect(response.data).toBeUndefined();
-      expect(mock.history.post).toHaveLength(1);
-      expect(mock.history.post[0].params).toEqual({ confirmation: 'DELETE_ALL_MY_DATA' });
+      expect(mock.history.delete).toHaveLength(1);
+      expect(mock.history.delete[0].params).toEqual({ confirmation: 'DELETE_ALL_MY_DATA' });
     });
 
     it('should reject deletion with incorrect confirmation', async () => {
-      mock.onPost('/gdpr/delete_all_data').reply(422, {
+      mock.onDelete('/gdpr/delete_all_data').reply(422, {
         error: "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'",
       });
 

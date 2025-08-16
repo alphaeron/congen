@@ -115,7 +115,7 @@ describe('UserProfile', () => {
 
   it('should verify deleteAllPersonalData function works with axios mock', async () => {
     // Test that the deleteAllPersonalData function works with the axios mock
-    mock.onPost('/gdpr/delete_all_data').reply(200);
+    mock.onDelete('/gdpr/delete_all_data').reply(200);
 
     const result = await deleteAllPersonalData('DELETE_ALL_MY_DATA');
     expect(result.status).toBe(200);

@@ -60,7 +60,7 @@ describe('GdprComplianceSection', () => {
     // Check GDPR actions
     expect(screen.getByText('Export Your Data')).toBeInTheDocument();
     expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
-    expect(screen.getByText('Delete All Data')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
   });
 
   it('should handle consent withdrawal', async () => {
@@ -71,14 +71,14 @@ describe('GdprComplianceSection', () => {
     renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
-      expect(screen.getByText('Withdraw Consent')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
     });
 
     // Click withdraw consent
-    await user.click(screen.getByText('Withdraw Consent'));
+    await user.click(screen.getByRole('button', { name: 'Withdraw Consent' }));
 
     // Check dialog opens
-    expect(screen.getByText('Withdraw Consent')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Withdraw Consent' })).toBeInTheDocument();
     expect(screen.getByText('I withdraw consent for data processing')).toBeInTheDocument();
 
     // Select withdraw option and confirm
@@ -114,7 +114,7 @@ describe('GdprComplianceSection', () => {
     const originalCreateElement = document.createElement;
     document.createElement = jest.fn(tagName => {
       if (tagName === 'a') {
-        return mockLink as HTMLAnchorElement;
+        return mockLink as unknown as HTMLAnchorElement;
       }
       return originalCreateElement.call(document, tagName);
     });
@@ -152,11 +152,11 @@ describe('GdprComplianceSection', () => {
     renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
-      expect(screen.getByText('Delete All Data')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
     });
 
     // Click delete all data
-    await user.click(screen.getByText('Delete All Data'));
+    await user.click(screen.getByRole('button', { name: 'Delete All Data' }));
 
     // Check dialog opens
     expect(screen.getByText('Delete All Personal Data')).toBeInTheDocument();
@@ -178,7 +178,7 @@ describe('GdprComplianceSection', () => {
     const withdrawnConsentStatus: UserConsent = {
       keycloak_id: 'test-user-123',
       data_processing_consent: false,
-      consent_timestamp: null,
+      consent_timestamp: undefined,
       updated_at: '2023-08-09T10:15:30Z',
     };
 
@@ -218,11 +218,11 @@ describe('GdprComplianceSection', () => {
     renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
-      expect(screen.getByText('Delete All Data')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
     });
 
     // Click delete all data
-    await user.click(screen.getByText('Delete All Data'));
+    await user.click(screen.getByRole('button', { name: 'Delete All Data' }));
 
     // Type incorrect confirmation
     await user.type(screen.getByPlaceholderText('DELETE_ALL_MY_DATA'), 'WRONG_TEXT');
