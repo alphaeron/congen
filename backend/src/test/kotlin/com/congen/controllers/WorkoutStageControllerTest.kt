@@ -202,12 +202,6 @@ class WorkoutStageControllerTest {
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
         workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil, gdprComplianceService)
-
-        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-
-        // Mock KeycloakUtil methods for all tests
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
     }
 
     @Test
@@ -223,8 +217,11 @@ class WorkoutStageControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(workoutStageService.selectWorkoutStageById(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(workoutStage))
         whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID_1, currentUserId)).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.get(WORKOUT_STAGE_ID_1)
         StepVerifier.create(result)
@@ -259,6 +256,7 @@ class WorkoutStageControllerTest {
         )
         whenever(programService.isOwner(any(), any())).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.isOwner(any(), any())).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = testAction(workoutStageController, workoutStageService)
         StepVerifier.create(result)
@@ -294,6 +292,7 @@ class WorkoutStageControllerTest {
         )
         whenever(programService.isOwner(any(), any())).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.isOwner(any(), any())).thenReturn(Mono.just(true))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = testAction(workoutStageController, workoutStageService)
         if (expectError) {
@@ -338,6 +337,9 @@ class WorkoutStageControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(workoutStages))
+        whenever(workoutStageService.getOwner(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just("owner1"))
+        whenever(workoutStageService.getOwner(WORKOUT_STAGE_ID_2)).thenReturn(Mono.just("owner2"))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
@@ -367,6 +369,7 @@ class WorkoutStageControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(userWorkoutStages))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
@@ -405,6 +408,9 @@ class WorkoutStageControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(allWorkoutStages))
+        whenever(workoutStageService.getOwner(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just("owner1"))
+        whenever(workoutStageService.getOwner(WORKOUT_STAGE_ID_2)).thenReturn(Mono.just("owner2"))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
@@ -422,6 +428,7 @@ class WorkoutStageControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
         whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(emptyList))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.getAll()
         StepVerifier.create(result)
@@ -497,9 +504,12 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
 
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedWorkoutService.selectProgrammedWorkoutById(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(programmedWorkout))
         whenever(programService.isOwner(PROGRAM_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(workoutStages))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
         StepVerifier.create(result)
@@ -528,6 +538,7 @@ class WorkoutStageControllerTest {
         whenever(programService.isOwner(PROGRAM_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(workoutStageService.selectWorkoutStagesByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID))
             .thenReturn(Mono.error(DatabaseException("Database connection failed")))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.getByProgrammedWorkoutId(PROGRAMMED_WORKOUT_ID)
         StepVerifier.create(result)
@@ -560,6 +571,8 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
 
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedWorkoutService.selectProgrammedWorkoutById(PROGRAMMED_WORKOUT_ID)).thenReturn(Mono.just(programmedWorkout))
         whenever(programService.isOwner(PROGRAM_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(
@@ -570,6 +583,7 @@ class WorkoutStageControllerTest {
                 name = WARMUP_NAME
             )
         ).thenReturn(Mono.just(createdStage))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.save(PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_1, POSITION_1, WARMUP_NAME)
         StepVerifier.create(result)
@@ -597,6 +611,8 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
 
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID_1, currentUserId)).thenReturn(Mono.just(true))
         whenever(programmedWorkoutService.isOwner(PROGRAMMED_WORKOUT_ID, currentUserId)).thenReturn(Mono.just(true))
         whenever(
@@ -608,6 +624,7 @@ class WorkoutStageControllerTest {
                 name = MAIN_WORK_NAME
             )
         ).thenReturn(Mono.just(updatedStage))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.update(WORKOUT_STAGE_ID_1, PROGRAMMED_WORKOUT_ID, STAGE_TYPE_ID_2, POSITION_2, MAIN_WORK_NAME)
         StepVerifier.create(result)
@@ -636,8 +653,11 @@ class WorkoutStageControllerTest {
                 updatedAt = now
             )
 
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))
+        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID_1, currentUserId)).thenReturn(Mono.just(true))
         whenever(workoutStageService.deleteWorkoutStage(WORKOUT_STAGE_ID_1)).thenReturn(Mono.just(deletedStage))
+        doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
 
         val result = workoutStageController.delete(WORKOUT_STAGE_ID_1)
         StepVerifier.create(result)
@@ -646,86 +666,4 @@ class WorkoutStageControllerTest {
         verify(workoutStageService).deleteWorkoutStage(WORKOUT_STAGE_ID_1)
     }
 
-    @Test
-    fun `getAll returns all items for admin`() {
-        val userId = "1"
-        val roles = setOf("admin")
-        val stages =
-            listOf(
-                mockWorkoutStage(id = 1L),
-                mockWorkoutStage(id = 2L)
-            )
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(stages))
-
-        val result = workoutStageController.getAll()
-        StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.body!!.size == 2)
-                assert(response.body!!.containsAll(stages))
-            }
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getAll returns all items for service`() {
-        val userId = "1"
-        val roles = setOf("service")
-        val stages =
-            listOf(
-                mockWorkoutStage(id = 1L),
-                mockWorkoutStage(id = 2L)
-            )
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStages()).thenReturn(Mono.just(stages))
-
-        val result = workoutStageController.getAll()
-        StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.body!!.size == 2)
-                assert(response.body!!.containsAll(stages))
-            }
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getAll returns only owned items for regular user`() {
-        val userId = "1"
-        val roles = setOf("user")
-        val stages =
-            listOf(
-                mockWorkoutStage(id = 1L),
-                mockWorkoutStage(id = 2L)
-            )
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(stages))
-
-        val result = workoutStageController.getAll()
-        StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.body!!.size == 2)
-                assert(response.body!!.containsAll(stages))
-            }
-            .verifyComplete()
-    }
-
-    @Test
-    fun `getAll returns empty for regular user with no owned items`() {
-        val userId = "3"
-        val roles = setOf("user")
-        val stages = emptyList<WorkoutStage>()
-        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
-        whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(workoutStageService.selectWorkoutStagesByUserId(userId)).thenReturn(Mono.just(stages))
-
-        val result = workoutStageController.getAll()
-        StepVerifier.create(result)
-            .assertNext { response ->
-                assert(response.body!!.isEmpty())
-            }
-            .verifyComplete()
-    }
 }
