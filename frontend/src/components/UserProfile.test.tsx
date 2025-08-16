@@ -42,33 +42,61 @@ describe('UserProfile', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mock.reset();
+    
+    // Mock GDPR API calls that GdprComplianceSection makes
+    mock.onGet('/gdpr/consent').reply(200, {
+      keycloak_id: 'test-user-id',
+      data_processing_consent: true,
+      consent_timestamp: '2023-08-09T10:15:30Z',
+      updated_at: '2023-08-09T10:15:30Z',
+    });
   });
 
   afterAll(() => {
     mock.restore();
   });
 
-  it('should render user profile information', () => {
+  it('should render user profile information', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
+    
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
   });
 
-  it('should show deactivate account button', () => {
+  it('should show deactivate account button', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
+    
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
   });
 
-  it('should show edit profile button', () => {
+  it('should show edit profile button', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     expect(screen.getByText('Edit Profile')).toBeInTheDocument();
+    
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
   });
 
-  it('should open delete confirmation dialog when deactivate button is clicked', () => {
+  it('should open delete confirmation dialog when deactivate button is clicked', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
 
     const deactivateButton = screen.getAllByText('Deactivate Account')[0];
     fireEvent.click(deactivateButton);
@@ -83,6 +111,11 @@ describe('UserProfile', () => {
   it('should close dialog when cancel is clicked', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
+
     const deactivateButton = screen.getAllByText('Deactivate Account')[0];
     fireEvent.click(deactivateButton);
 
@@ -96,8 +129,13 @@ describe('UserProfile', () => {
     });
   });
 
-  it('should call onEditProfile when edit button is clicked', () => {
+  it('should call onEditProfile when edit button is clicked', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
 
     const editButton = screen.getByText('Edit Profile');
     fireEvent.click(editButton);

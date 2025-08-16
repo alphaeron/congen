@@ -45,6 +45,7 @@ describe('UserProfilePage', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       logout: jest.fn(),
+      clearError: jest.fn(),
     });
 
     renderWithProviders(<UserProfilePage />);
@@ -57,6 +58,7 @@ describe('UserProfilePage', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       logout: jest.fn(),
+      clearError: jest.fn(),
     });
 
     renderWithProviders(<UserProfilePage />);
@@ -68,6 +70,7 @@ describe('UserProfilePage', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       logout: jest.fn(),
+      clearError: jest.fn(),
     });
 
     renderWithProviders(<UserProfilePage />);
@@ -80,6 +83,7 @@ describe('UserProfilePage', () => {
       user: null,
       error: 'User information not available. Please log in to view your profile.',
       logout: jest.fn(),
+      clearError: jest.fn(),
     });
 
     renderWithProviders(<UserProfilePage />);

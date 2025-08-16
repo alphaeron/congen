@@ -9,7 +9,9 @@ global.TextDecoder = TextDecoder as never;
 // Configure React testing environment for concurrent features
 import { configure } from '@testing-library/react';
 
-configure({ asyncUtilTimeout: 5000 });
+configure({ 
+  asyncUtilTimeout: 5000,
+});
 
 // Set up window.location for React Router tests
 Object.defineProperty(window, 'location', {
@@ -37,3 +39,21 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 });
+
+// Mock ResizeObserver for tests
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock IntersectionObserver for tests
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock URL.createObjectURL and URL.revokeObjectURL for tests
+global.URL.createObjectURL = jest.fn(() => 'mock-url');
+global.URL.revokeObjectURL = jest.fn();

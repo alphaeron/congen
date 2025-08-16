@@ -1,12 +1,4 @@
-frontend test fixes
-
-Acan we remove the service tokens from the integration tests now that they are unused?
-
-
-GDPR_TODO
-
-Ensure the unit and integration tests are up to date with the changes needed for gdpr validation
-
+are there any missing security vulnerabilities we need to address
 
 user controllers should also allow admin/service deletion
 
@@ -16,7 +8,7 @@ WarmupManager for backend (BigDecimal?, cache)
 
 restructure userprofile to use tabs, and side bar, for better navigation
 
-Supersets
+GDPR_TODO
 
 
 
@@ -46,6 +38,8 @@ Fluxionary (whoop data ingestion)
 “Fluxionary" (invented)
 * From "flux" (flow of data) + "revolutionary" — a playful, futuristic mashup.
 * Suggests dynamic fun, innovation, and constant movement.
+
+Supersets
 
 Liftalizer (video analysis) service
 

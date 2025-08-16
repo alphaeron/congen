@@ -133,6 +133,7 @@ const config = {
   // Options that will be passed to the testEnvironment
   testEnvironmentOptions: {
     customExportConditions: ['react-jsx'],
+    url: 'http://localhost:3000',
   },
 
   // Adds a location field to test results
