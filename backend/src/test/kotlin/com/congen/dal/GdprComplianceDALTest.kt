@@ -117,7 +117,7 @@ class GdprComplianceDALTest {
         val mockUserConsent = UserConsent(keycloakId, consent, Instant.now(), Instant.now(), Instant.now())
 
         `when`(
-            postgresClient.update<Map<String, Any>>(
+            postgresClient.update<UserConsent>(
                 """
                 INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
                 VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -130,17 +130,6 @@ class GdprComplianceDALTest {
                 keycloakId,
                 consent
             )
-        ).thenReturn(Mono.just(mapOf("keycloak_id" to keycloakId)))
-
-        `when`(
-            postgresClient.selectIndividual<UserConsent>(
-                """
-                SELECT keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at
-                FROM user_consent
-                WHERE keycloak_id = $1
-                """.trimIndent(),
-                keycloakId
-            )
         ).thenReturn(Mono.just(mockUserConsent))
 
         StepVerifier.create(gdprComplianceDAL.updateUserConsent(keycloakId, consent))
@@ -151,7 +140,7 @@ class GdprComplianceDALTest {
             }
             .verifyComplete()
 
-        verify(postgresClient).update<Map<String, Any>>(
+        verify(postgresClient).update<UserConsent>(
             """
             INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
             VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -172,7 +161,7 @@ class GdprComplianceDALTest {
         val consent = true
 
         `when`(
-            postgresClient.update<Map<String, Any>>(
+            postgresClient.update<UserConsent>(
                 """
                 INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
                 VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -186,18 +175,6 @@ class GdprComplianceDALTest {
                 consent
             )
         ).thenReturn(Mono.error(RuntimeException("Database error")))
-
-        // Mock the selectIndividual call that getUserConsent makes
-        `when`(
-            postgresClient.selectIndividual<UserConsent>(
-                """
-                SELECT keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at
-                FROM user_consent
-                WHERE keycloak_id = $1
-                """.trimIndent(),
-                keycloakId
-            )
-        ).thenReturn(Mono.error(RuntimeException("User not found")))
 
         StepVerifier.create(gdprComplianceDAL.updateUserConsent(keycloakId, consent))
             .verifyError(RuntimeException::class.java)

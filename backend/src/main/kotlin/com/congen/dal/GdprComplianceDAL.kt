@@ -119,7 +119,7 @@ class GdprComplianceDAL(
     ): Mono<UserConsent> {
         logger.debug("Updating consent for user: {} to {}", keycloakId, consent)
 
-        return postgresClient.update<Map<String, Any>>(
+        return postgresClient.update(
             """
             INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
             VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
@@ -131,39 +131,7 @@ class GdprComplianceDAL(
             """.trimIndent(),
             keycloakId,
             consent
-        ).then(getUserConsent(keycloakId))
-    }
-
-    /**
-     * Records user consent for data processing.
-     *
-     * This method creates a consent record for a user with the specified consent type.
-     *
-     * @param keycloakId The user's Keycloak ID
-     * @param consentType The type of consent being recorded
-     * @param consentGiven Whether consent is given
-     * @return Mono that completes when the record is created
-     */
-    fun recordConsent(
-        keycloakId: String,
-        consentType: String,
-        consentGiven: Boolean
-    ): Mono<Void> {
-        logger.debug("Recording consent for user: {} - type: {} - consent: {}", keycloakId, consentType, consentGiven)
-
-        return postgresClient.update<Map<String, Any>>(
-            """
-            INSERT INTO user_consent (keycloak_id, data_processing_consent, consent_timestamp, created_at, updated_at)
-            VALUES ($1, $2, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON CONFLICT (keycloak_id)
-            DO UPDATE SET
-                data_processing_consent = EXCLUDED.data_processing_consent,
-                consent_timestamp = CURRENT_TIMESTAMP,
-                updated_at = CURRENT_TIMESTAMP
-            """.trimIndent(),
-            keycloakId,
-            consentGiven
-        ).then()
+        )
     }
 
     /**
