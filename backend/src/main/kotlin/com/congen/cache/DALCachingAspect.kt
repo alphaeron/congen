@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
+import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -148,10 +149,9 @@ class DALCachingAspect(
      */
     @Around("@annotation(cacheEvict)")
     fun evictCache(joinPoint: ProceedingJoinPoint, cacheEvict: CacheEvict): Any? {
-        val method = joinPoint.signature.declaringType.getMethod(
-            joinPoint.signature.name,
-            *joinPoint.args.map { it?.javaClass }.toTypedArray()
-        )
+        // Get the method signature directly from the join point
+        val methodSignature = joinPoint.signature as MethodSignature
+        val method = methodSignature.method
         
         val entityName = getEntityName(method, cacheEvict)
         val invalidationKeys = cacheKeyGenerator.generateInvalidationKeys(
