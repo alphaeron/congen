@@ -34,14 +34,14 @@ class ReactiveMemcachedCacheTest {
         val value = TestData("test", 123)
         val ttl = Duration.ofMinutes(30)
 
-        whenever(memcachedClient.set(eq("congen:$key"), eq(1800), any<String>()))
+        whenever(memcachedClient.set(eq("congen:$key"), eq(1800), any()))
             .thenReturn(true)
 
         StepVerifier.create(reactiveCache.set(key, value, ttl))
             .expectNext(true)
             .verifyComplete()
 
-        verify(memcachedClient).set(eq("congen:$key"), eq(1800), any<String>())
+        verify(memcachedClient).set(eq("congen:$key"), eq(1800), any())
     }
 
     @Test
@@ -53,7 +53,7 @@ class ReactiveMemcachedCacheTest {
         whenever(memcachedClient.get("congen:$key"))
             .thenReturn(jsonValue)
 
-        StepVerifier.create(reactiveCache.get(key, TestData::class.java))
+        StepVerifier.create(reactiveCache.get(key, TestData::class))
             .expectNext(expectedValue)
             .verifyComplete()
     }
@@ -65,7 +65,7 @@ class ReactiveMemcachedCacheTest {
         whenever(memcachedClient.get("congen:$key"))
             .thenReturn(null)
 
-        StepVerifier.create(reactiveCache.get(key, TestData::class.java))
+        StepVerifier.create(reactiveCache.get(key, TestData::class))
             .verifyComplete()
     }
 

@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.ExerciseMuscle
 import org.slf4j.LoggerFactory
@@ -59,6 +64,11 @@ class ExerciseMuscleDAL(
      * @return Mono containing the exercise-muscle relationship if found
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_muscle"
+    )
     fun selectExerciseMuscle(
         exerciseName: String,
         muscleName: String,
@@ -80,6 +90,11 @@ class ExerciseMuscleDAL(
      * @param exerciseName The name of the exercise
      * @return Mono containing a list of exercise-muscle relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_muscle"
+    )
     fun selectExerciseMuscleByExercise(exerciseName: String): Mono<List<ExerciseMuscle>> {
         logger.debug("Selecting muscles for exercise: {}", exerciseName)
         return postgresClient.select(
@@ -97,6 +112,11 @@ class ExerciseMuscleDAL(
      * @param muscleName The name of the muscle
      * @return Mono containing a list of exercise-muscle relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_muscle"
+    )
     fun selectExerciseMuscleByMuscle(muscleName: String): Mono<List<ExerciseMuscle>> {
         logger.debug("Selecting exercises for muscle: {}", muscleName)
         return postgresClient.select(
@@ -113,6 +133,11 @@ class ExerciseMuscleDAL(
      *
      * @return Mono containing a list of all exercise-muscle relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "exercise_muscle"
+    )
     fun selectAllExerciseMuscle(): Mono<List<ExerciseMuscle>> {
         logger.debug("Selecting all exercise muscle relationships")
         return postgresClient.select("SELECT * FROM exercise_muscle")
@@ -129,6 +154,10 @@ class ExerciseMuscleDAL(
      * @return Mono containing the created exercise-muscle relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "exercise_muscle"
+    )
     fun insertExerciseMuscle(
         exerciseName: String,
         muscleName: String
@@ -157,6 +186,10 @@ class ExerciseMuscleDAL(
      * @return Mono containing the deleted exercise-muscle relationship
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "exercise_muscle"
+    )
     fun deleteExerciseMuscle(
         exerciseName: String,
         muscleName: String,

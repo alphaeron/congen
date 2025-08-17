@@ -1,4 +1,6 @@
-ReactiveMemcachedCache to client/MemcachedClient?
+ReactiveMemcachedCache and other utilities to cache directory.
+
+Move cache directory into utility?
 
 1. implement caching for all the dals.
 #. ensure that all service method names match the underlying dal method name for consistency.

@@ -66,6 +66,9 @@ dependencies {
     // Memcached for caching
     implementation 'com.googlecode.xmemcached:xmemcached:2.4.8'
 
+    // Spring AOP for caching
+    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.5'
+
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.12'
 }

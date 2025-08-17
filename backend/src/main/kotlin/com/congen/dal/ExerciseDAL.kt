@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.Exercise
 import com.congen.model.MovementType
@@ -60,6 +65,11 @@ class ExerciseDAL(
      * @return Mono containing the exercise if found
      * @throws NoResultsFoundException when exercise with the specified name doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
+        entityName = "exercise"
+    )
     fun selectExerciseByName(exerciseName: String): Mono<Exercise> {
         logger.debug("Selecting exercise by name: {}", exerciseName)
         return postgresClient.selectIndividual(
@@ -76,6 +86,11 @@ class ExerciseDAL(
      *
      * @return Mono containing a list of all exercises
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "exercise"
+    )
     fun selectExercises(): Mono<List<Exercise>> {
         logger.debug("Selecting all exercises")
         return postgresClient.select("SELECT * FROM exercise")
@@ -96,6 +111,10 @@ class ExerciseDAL(
      * @return Mono containing the created exercise
      * @throws DatabaseException when the exercise name already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "exercise"
+    )
     fun insertExercise(
         name: String,
         description: String,
@@ -137,6 +156,10 @@ class ExerciseDAL(
      * @return Mono containing the updated exercise
      * @throws NoResultsFoundException when exercise with the specified name doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "exercise"
+    )
     fun updateExercise(
         name: String,
         description: String,
@@ -172,6 +195,10 @@ class ExerciseDAL(
      * @return Mono containing the deleted exercise
      * @throws NoResultsFoundException when exercise with the specified name doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "exercise"
+    )
     fun deleteExercise(exerciseName: String): Mono<Exercise> {
         logger.debug("Deleting exercise: {}", exerciseName)
         return postgresClient.update(

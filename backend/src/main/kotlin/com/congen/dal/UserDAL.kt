@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.User
 import com.congen.service.AuditService
@@ -66,6 +71,11 @@ class UserDAL(
      * @return Mono containing the decrypted user if found
      * @throws NoResultsFoundException if no user exists with the given Keycloak ID
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user"
+    )
     fun selectUserByKeycloakId(keycloakId: String): Mono<User> {
         logger.debug("Selecting user by Keycloak ID: {}", keycloakId)
 
@@ -98,6 +108,10 @@ class UserDAL(
      * @return Mono containing the inserted user with decrypted data
      * @throws ValidationException if user data fails validation
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user"
+    )
     fun insertUser(
         keycloakId: String,
         name: String
@@ -147,6 +161,10 @@ class UserDAL(
      * @return Mono containing the deleted user
      * @throws NoResultsFoundException if no user exists with the given Keycloak ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user"
+    )
     fun deleteUser(keycloakId: String): Mono<User> {
         logger.debug("Deleting user with Keycloak ID: {}", keycloakId)
         return postgresClient.update(
@@ -183,6 +201,10 @@ class UserDAL(
      * @param keycloakId The user's Keycloak ID
      * @return Mono that completes when user is deleted
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user"
+    )
     fun deleteUserByKeycloakId(keycloakId: String): Mono<Void> {
         logger.warn("Deleting all data for user: {}", keycloakId)
         return postgresClient.update<Map<String, Any>>(
