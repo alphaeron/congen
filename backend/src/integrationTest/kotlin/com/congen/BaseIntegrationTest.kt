@@ -210,8 +210,8 @@ abstract class BaseIntegrationTest {
             // Memcached properties
             registry.add("memcached.host") { memcached.host }
             registry.add("memcached.port") { memcached.getMappedPort(11211) }
-            registry.add("memcached.connection-pool-size") { 10 }
-            registry.add("memcached.op-timeout") { 5000L }
+            registry.add("memcached.connection-pool-size") { 1 }
+            registry.add("memcached.op-timeout") { 1000L }
             registry.add("memcached.max-queued-noreply") { 1000 }
         }
     }

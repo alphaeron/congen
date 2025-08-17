@@ -10,6 +10,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.context.ApplicationListener
+import org.springframework.context.event.ContextClosedEvent
 import java.io.IOException
 
 /**
@@ -62,7 +64,7 @@ class MemcachedConfig(
      * The properties for configuring Memcached connections.
      */
     private val props: MemcachedProperties
-) {
+) : ApplicationListener<ContextClosedEvent> {
     companion object {
         private val logger = LoggerFactory.getLogger(MemcachedConfig::class.java)
     }
@@ -97,9 +99,29 @@ class MemcachedConfig(
         // Enable failure mode for better reliability
         builder.setFailureMode(true)
 
+        // Disable session healing to prevent reconnection attempts
+        builder.setEnableHealSession(true)
+
         val client = builder.build()
 
         logger.info("Memcached client initialized successfully")
         return client
+    }
+
+    /**
+     * Handles application context shutdown to gracefully close Memcached client.
+     * This is called when Spring's application context is closing, which is the proper
+     * lifecycle event for cleanup operations.
+     */
+    override fun onApplicationEvent(event: ContextClosedEvent) {
+        try {
+            logger.info("Application context closing, shutting down Memcached client...")
+            // Get the Memcached client bean and shut it down immediately
+            val client = event.applicationContext.getBean(MemcachedClient::class.java)
+            client.shutdown()
+            logger.info("Memcached client shutdown complete")
+        } catch (e: Exception) {
+            logger.warn("Error during Memcached client shutdown", e)
+        }
     }
 }
