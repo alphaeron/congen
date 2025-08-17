@@ -50,10 +50,10 @@ class ReactiveMemcachedCacheTest {
         val expectedValue = TestData("test", 123)
         val jsonValue = objectMapper.writeValueAsString(expectedValue)
 
-        whenever(memcachedClient.get("congen:$key"))
+        whenever(memcachedClient.get<String>("congen:$key"))
             .thenReturn(jsonValue)
 
-        StepVerifier.create(reactiveCache.get(key, TestData::class))
+        StepVerifier.create(reactiveCache.get<TestData>(key))
             .expectNext(expectedValue)
             .verifyComplete()
     }
@@ -62,10 +62,10 @@ class ReactiveMemcachedCacheTest {
     fun `get should return empty when key not found`() {
         val key = "test:key"
 
-        whenever(memcachedClient.get("congen:$key"))
+        whenever(memcachedClient.get<String>("congen:$key"))
             .thenReturn(null)
 
-        StepVerifier.create(reactiveCache.get(key, TestData::class))
+        StepVerifier.create(reactiveCache.get<TestData>(key))
             .verifyComplete()
     }
 

@@ -4,6 +4,7 @@ import com.congen.cache.annotation.Cacheable
 import com.congen.cache.annotation.CacheEvict
 import com.congen.util.ReactiveMemcachedCache
 import com.congen.util.CacheMissException
+import com.fasterxml.jackson.core.type.TypeReference
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.lang.reflect.Method
+import java.lang.reflect.ParameterizedType
 
 /**
  * Spring AOP aspect for transparent DAL caching.
@@ -86,31 +88,21 @@ class DALCachingAspect(
                 // Handle reactive results
                 result.flatMap { value ->
                     if (value != null) {
-                        // Try to get from cache first, if miss then cache the result
-                        reactiveCache.get<Any>(cacheKey)
-                            .onErrorResume { throwable ->
-                                if (throwable is CacheMissException) {
-                                    // Cache miss - cache the result and return it
-                                    reactiveCache.set(cacheKey, value, ttl)
-                                        .doOnSuccess { success ->
-                                            if (success) {
-                                                logger.debug("Successfully cached result for key: {}", cacheKey)
-                                            } else {
-                                                logger.warn("Failed to cache result for key: {}", cacheKey)
-                                            }
-                                        }
-                                        .doOnError { error ->
-                                            logger.error("Error caching result for key: {}", cacheKey, error)
-                                        }
-                                        .then(Mono.just(value))
+                        // Cache the result asynchronously and return the original value
+                        reactiveCache.set(cacheKey, value, ttl)
+                            .doOnSuccess { success ->
+                                if (success) {
+                                    logger.debug("Successfully cached result for key: {}", cacheKey)
                                 } else {
-                                    // Re-throw other exceptions
-                                    Mono.error(throwable)
+                                    logger.warn("Failed to cache result for key: {}", cacheKey)
                                 }
                             }
-                            .doOnNext { _ ->
-                                logger.debug("Cache hit for key: {}", cacheKey)
+                            .doOnError { error ->
+                                logger.error("Error caching result for key: {}", cacheKey, error)
                             }
+                            .subscribe()
+                        
+                        Mono.just(value)
                     } else {
                         Mono.just(value)
                     }

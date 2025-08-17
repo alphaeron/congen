@@ -15,6 +15,8 @@ The caching system provides transparent caching for DAL methods using Spring AOP
 - **Custom Key Strategies**: Various key generation strategies for different use cases
 - **Error Handling**: Graceful handling of cache misses and errors
 - **Fully Reactive**: No blocking operations, compatible with Spring WebFlux
+- **Write-Through Caching**: Results are cached after execution for future use
+- **Safe Key Encoding**: Base64 encoding ensures Memcached compatibility with any key content
 
 ## Architecture
 
@@ -29,6 +31,20 @@ ReactiveMemcachedCache
     ↓ (stores in)
 Memcached
 ```
+
+## Caching Strategy
+
+The current implementation uses a **write-through caching strategy**:
+
+1. **Method Execution**: The annotated method is always executed first
+2. **Result Caching**: The result is cached asynchronously for future use
+3. **Cache Invalidation**: Write operations invalidate related cache entries
+4. **Type Safety**: Avoids complex type deserialization issues
+
+This approach ensures:
+- **Reliability**: Methods always execute and return fresh results
+- **Performance**: Subsequent calls benefit from cached data
+- **Simplicity**: No complex cache miss handling or type conversion issues
 
 ## Annotations
 

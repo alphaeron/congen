@@ -2,6 +2,8 @@ ReactiveMemcachedCache and other utilities to cache directory.
 
 Move cache directory into utility?
 
+CacheMissException into the exceptions directory.
+
 1. implement caching for all the dals.
 #. ensure that all service method names match the underlying dal method name for consistency.
 #. User services everywhere instead of using the dals directly.

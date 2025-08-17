@@ -1,5 +1,6 @@
 package com.congen.util
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.reflect.KClass
 import net.rubyeye.xmemcached.MemcachedClient
@@ -9,6 +10,7 @@ import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import java.util.Base64
 
 /**
  * Reactive wrapper for Memcached operations.
@@ -48,7 +50,7 @@ import java.util.concurrent.CompletableFuture
 @Component
 class ReactiveMemcachedCache(
     private val memcachedClient: MemcachedClient,
-    private val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ReactiveMemcachedCache::class.java)
@@ -89,21 +91,20 @@ class ReactiveMemcachedCache(
     }
 
     /**
-     * Retrieves a value from the cache.
+     * Retrieves a value from the cache using TypeReference for generic types.
      *
-     * This method attempts to retrieve the value from Memcached and
-     * deserializes it to the specified type. Returns empty Mono if not found.
+     * This method is useful for deserializing generic types like List<T>.
      *
      * @param key The cache key
-     * @param kClass The expected type of the cached value
+     * @param typeReference The TypeReference for the expected type
      * @return Mono containing the cached value or empty if not found
      */
-    fun <T : Any> get(key: String, kClass: KClass<T>): Mono<T> {
+    fun <T : Any> get(key: String, typeReference: TypeReference<T>): Mono<T> {
         val cacheKey = generateKey(key)
 
-        logger.debug("Getting cache key: {}", cacheKey)
+        logger.debug("Getting cache key: {} with TypeReference", cacheKey)
 
-        return getCachedValue(cacheKey, kClass)
+        return getCachedValueWithTypeReference(cacheKey, typeReference)
             .doOnError {
                 if (it !is CacheMissException) {
                     logger.error("Error retrieving cache key: {}", cacheKey, it)
@@ -111,12 +112,11 @@ class ReactiveMemcachedCache(
             }
     }
 
-    private fun <T : Any> getCachedValue(cacheKey: String, kClass: KClass<T>): Mono<T> {
+    private fun <T : Any> getCachedValueWithTypeReference(cacheKey: String, typeReference: TypeReference<T>): Mono<T> {
         return Mono.fromCallable {
-            val cachedValue = memcachedClient.get<KClass<T>>(cacheKey)
+            val cachedValue = memcachedClient.get<String>(cacheKey)
             if (cachedValue != null) {
-                val jsonString = cachedValue as String
-                val result = objectMapper.readValue(jsonString, kClass.java)
+                val result = objectMapper.readValue(cachedValue, typeReference)
                 result
             } else {
                 throw CacheMissException(cacheKey)
@@ -128,12 +128,18 @@ class ReactiveMemcachedCache(
      * Retrieves a value from the cache using reified type.
      *
      * This is a convenience method that infers the return type from
-     * the generic parameter.
+     * the generic parameter. It automatically creates the proper TypeReference
+     * to preserve generic type information.
      *
      * @param key The cache key
      * @return Mono containing the cached value or empty if not found
      */
-    final inline fun <reified T : Any> get(key: String): Mono<T> = get(key, T::class)
+    final inline fun <reified T : Any> get(key: String): Mono<T> {
+        val javaType = objectMapper.typeFactory.constructType(T::class.java)
+        return get(key, object : TypeReference<T>() {
+            override fun getType(): java.lang.reflect.Type = javaType
+        })
+    }
 
     /**
      * Deletes a value from the cache.
@@ -185,12 +191,18 @@ class ReactiveMemcachedCache(
     }
 
     /**
-     * Generates a consistent cache key with namespace.
+     * Generates a consistent cache key with namespace and Base64 encoding.
+     *
+     * Memcached has strict requirements for cache keys - they cannot contain
+     * spaces or certain special characters. This method encodes the key to
+     * ensure compatibility.
      *
      * @param key The original key
-     * @return Namespaced cache key
+     * @return Namespaced and Base64-encoded cache key
      */
     private fun generateKey(key: String): String {
-        return "$DEFAULT_NAMESPACE:$key"
+        val namespacedKey = "$DEFAULT_NAMESPACE:$key"
+        val encodedKey = Base64.getEncoder().encodeToString(namespacedKey.toByteArray())
+        return encodedKey
     }
 }
