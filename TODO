@@ -1,3 +1,19 @@
+That looks better, there are just a few tweaks I want to make.
+
+1. remove the Congen header on the page, just leave the login form
+2. When the text fields are active there is a choppy blue padding added, make it more smoth
+3. On the register page the register text is not centered in the form.
+4. Use the same font that the keycloak application is using in theme.tsx for consistency
+
+
+
+
+
+
+
+
+
+
 backend caching
 
 WarmupManager for backend (BigDecimal?, cache)

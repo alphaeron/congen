@@ -12,6 +12,9 @@ data:
   
   # CSS with light/dark mode support matching TypeScript app theme
   "css-congen.css": |
+    /* Import Inter font from Google Fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
     /* CSS Variables for light/dark mode matching TypeScript app */
     :root {
       /* Light mode colors from theme.tsx */
@@ -49,7 +52,12 @@ data:
     
     /* Smooth transitions */
     * {
-      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease !important;
+    }
+    
+    /* Apply Inter font globally */
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
     }
     
     /* Remove background images and set proper background */
@@ -59,7 +67,6 @@ data:
       color: var(--text-color) !important;
       margin: 0;
       padding: 0;
-      font-family: 'Inter', sans-serif;
     }
     
     /* Remove background images from login page */
@@ -80,6 +87,14 @@ data:
       background-image: none !important;
     }
     
+    /* Hide the Congen header only on login page, not registration */
+    .login-pf .card-pf-heading,
+    .login-pf .kc-logo-text,
+    .login-pf .kc-header,
+    .login-pf .kc-logo-text span {
+      display: none !important;
+    }
+    
     /* Style the login card with proper background and rounded corners */
     .card-pf {
       background-color: var(--card-background) !important;
@@ -93,7 +108,6 @@ data:
     }
     
     /* Ensure form text is visible */
-    .card-pf-heading,
     .card-pf-body,
     .form-group label,
     .help-block,
@@ -103,30 +117,59 @@ data:
     }
     
     /* Style form inputs with rounded corners and proper colors */
-    .form-control {
+    .form-control,
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    input[type="number"],
+    input[type="tel"],
+    input[type="url"],
+    input[type="search"],
+    textarea,
+    select {
       background-color: var(--form-background) !important;
       border: 1px solid var(--form-border) !important;
       border-radius: 10px !important;
       color: var(--text-color) !important;
       padding: 12px 16px !important;
       font-size: 14px !important;
-      transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-family: 'Inter', sans-serif !important;
+      outline: none !important;
+      box-sizing: border-box !important;
     }
     
-    .form-control:focus {
+    /* Smooth focus state with gradual transition and rounded outline */
+    .form-control:focus,
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="email"]:focus,
+    input[type="number"]:focus,
+    input[type="tel"]:focus,
+    input[type="url"]:focus,
+    input[type="search"]:focus,
+    textarea:focus,
+    select:focus {
       outline: none !important;
       border-color: var(--form-border-focus) !important;
-      box-shadow: 0 0 0 4px rgba(34, 54, 204, 0.1) !important;
+      border-width: 2px !important;
+      box-shadow: 0 0 0 4px rgba(34, 54, 204, 0.15) !important;
       background-color: var(--form-background) !important;
       color: var(--text-color) !important;
+      transform: translateY(-1px) !important;
+      border-radius: 10px !important;
     }
     
-    .form-control::placeholder {
+    .form-control::placeholder,
+    input::placeholder,
+    textarea::placeholder {
       color: var(--text-secondary) !important;
     }
     
     /* Style buttons with rounded corners and proper colors */
-    .btn-primary {
+    .btn-primary,
+    button[type="submit"],
+    input[type="submit"] {
       background: linear-gradient(to bottom, #4d6fe0, #1b2a9e) !important;
       color: #f0f4ff !important;
       border: 1px solid #16227a !important;
@@ -135,17 +178,24 @@ data:
       font-size: 14px !important;
       font-weight: 500 !important;
       cursor: pointer !important;
-      transition: all 0.3s ease !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
       text-transform: none !important;
       box-shadow: inset 0 1px rgba(122, 156, 240, 0.4) !important;
+      font-family: 'Inter', sans-serif !important;
+      outline: none !important;
     }
     
-    .btn-primary:hover {
+    .btn-primary:hover,
+    button[type="submit"]:hover,
+    input[type="submit"]:hover {
       background: #4d6fe0 !important;
       box-shadow: 0 0 0 1px rgba(122, 156, 240, 0.5) !important;
+      transform: translateY(-1px) !important;
     }
     
-    .btn-primary:active {
+    .btn-primary:active,
+    button[type="submit"]:active,
+    input[type="submit"]:active {
       transform: scale(0.98) !important;
     }
     
@@ -155,6 +205,7 @@ data:
       text-decoration: none !important;
       font-weight: 500 !important;
       transition: color 0.3s ease !important;
+      font-family: 'Inter', sans-serif !important;
     }
     
     a:hover {
@@ -168,6 +219,7 @@ data:
       margin-bottom: 1rem !important;
       font-size: 14px !important;
       color: var(--text-color) !important;
+      font-family: 'Inter', sans-serif !important;
     }
     
     .alert-error {
@@ -188,15 +240,56 @@ data:
       color: var(--link-color) !important;
     }
     
+    /* Center the register text on registration page */
+    .card-pf-heading h1,
+    .card-pf-heading h2,
+    .card-pf-heading h3,
+    .card-pf-heading h4,
+    .card-pf-heading h5,
+    .card-pf-heading h6,
+    .card-pf-heading .card-pf-title {
+      text-align: center !important;
+      font-family: 'Inter', sans-serif !important;
+      color: var(--text-color) !important;
+      margin-bottom: 1.5rem !important;
+    }
+    
+    /* Override Keycloak's default focus styles */
+    .form-control:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none !important;
+      border-color: var(--form-border-focus) !important;
+      border-width: 2px !important;
+      box-shadow: 0 0 0 4px rgba(34, 54, 204, 0.15) !important;
+      background-color: var(--form-background) !important;
+      color: var(--text-color) !important;
+      transform: translateY(-1px) !important;
+      border-radius: 10px !important;
+    }
+    
+    /* Remove any default browser focus styles */
+    .form-control:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: none !important;
+    }
+    
     /* Dark mode specific adjustments */
     @media (prefers-color-scheme: dark) {
-      .btn-primary {
+      .btn-primary,
+      button[type="submit"],
+      input[type="submit"] {
         background: linear-gradient(to bottom, #4d6fe0, #2236cc) !important;
         border-color: #16227a !important;
         box-shadow: inset 0 1px rgba(122, 156, 240, 0.4) !important;
       }
       
-      .btn-primary:hover {
+      .btn-primary:hover,
+      button[type="submit"]:hover,
+      input[type="submit"]:hover {
         background: #2236cc !important;
         box-shadow: 0 0 0 1px rgba(122, 156, 240, 0.5) !important;
       }
