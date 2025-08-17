@@ -13,8 +13,6 @@ Move cache directory into utility?
 
 do we want a separate scheduler for memcached operations?
 
-we should not block in any operations to be fully reactive
-
 use the elasticache bean if we're using elasticache?
 
 WarmupManager for backend (BigDecimal?, cache)

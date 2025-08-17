@@ -25,6 +25,7 @@ import java.lang.reflect.Method
  * - **Automatic Invalidation**: Cache entries are invalidated on write operations
  * - **Error Handling**: Graceful handling of cache misses and errors
  * - **Logging**: Comprehensive logging for debugging and monitoring
+ * - **Fully Reactive**: No blocking operations, compatible with Spring WebFlux
  *
  * ## Usage
  *
@@ -78,36 +79,47 @@ class DALCachingAspect(
         logger.debug("Cache lookup for key: {} with TTL: {}", cacheKey, ttl)
         
         return try {
-            // Try to get from cache first
-            val cachedResult = reactiveCache.get<Any>(cacheKey).block()
-            logger.debug("Cache hit for key: {}", cacheKey)
-            cachedResult
-        } catch (e: CacheMissException) {
-            logger.debug("Cache miss for key: {}", cacheKey)
-            
-            // Execute the method and cache the result
+            // Execute the method first to get the result
             val result = joinPoint.proceed()
             
             if (result is Mono<*>) {
-                result.doOnNext { value ->
+                // Handle reactive results
+                result.flatMap { value ->
                     if (value != null) {
-                        reactiveCache.set(cacheKey, value, ttl)
-                            .doOnSuccess { success ->
-                                if (success) {
-                                    logger.debug("Successfully cached result for key: {}", cacheKey)
+                        // Try to get from cache first, if miss then cache the result
+                        reactiveCache.get<Any>(cacheKey)
+                            .onErrorResume { throwable ->
+                                if (throwable is CacheMissException) {
+                                    // Cache miss - cache the result and return it
+                                    reactiveCache.set(cacheKey, value, ttl)
+                                        .doOnSuccess { success ->
+                                            if (success) {
+                                                logger.debug("Successfully cached result for key: {}", cacheKey)
+                                            } else {
+                                                logger.warn("Failed to cache result for key: {}", cacheKey)
+                                            }
+                                        }
+                                        .doOnError { error ->
+                                            logger.error("Error caching result for key: {}", cacheKey, error)
+                                        }
+                                        .then(Mono.just(value))
                                 } else {
-                                    logger.warn("Failed to cache result for key: {}", cacheKey)
+                                    // Re-throw other exceptions
+                                    Mono.error(throwable)
                                 }
                             }
-                            .doOnError { error ->
-                                logger.error("Error caching result for key: {}", cacheKey, error)
+                            .doOnNext { _ ->
+                                logger.debug("Cache hit for key: {}", cacheKey)
                             }
-                            .subscribe()
+                    } else {
+                        Mono.just(value)
                     }
                 }
             } else {
                 // Handle non-reactive results
                 if (result != null) {
+                    // For non-reactive results, we need to handle caching differently
+                    // Since we can't block in reactive context, we'll cache asynchronously
                     reactiveCache.set(cacheKey, result, ttl)
                         .doOnSuccess { success ->
                             if (success) {
@@ -121,9 +133,8 @@ class DALCachingAspect(
                         }
                         .subscribe()
                 }
+                result
             }
-            
-            result
         } catch (e: Exception) {
             logger.error("Error in cache method execution for key: {}", cacheKey, e)
             throw e

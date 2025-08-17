@@ -14,6 +14,7 @@ The caching system provides transparent caching for DAL methods using Spring AOP
 - **Flexible TTL**: Different TTL values for different types of data
 - **Custom Key Strategies**: Various key generation strategies for different use cases
 - **Error Handling**: Graceful handling of cache misses and errors
+- **Fully Reactive**: No blocking operations, compatible with Spring WebFlux
 
 ## Architecture
 
