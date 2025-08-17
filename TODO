@@ -1,24 +1,30 @@
-That looks better, there are just a few tweaks I want to make.
+ReactiveMemcachedCache to client/MemcachedClient?
 
-1. remove the Congen header on the page, just leave the login form
-2. When the text fields are active there is a choppy blue padding added, make it more smoth
-3. On the register page the register text is not centered in the form.
-4. Use the same font that the keycloak application is using in theme.tsx for consistency
-
-
-
-
-
+1. implement caching for all the dals.
+#. ensure that all service method names match the underlying dal method name for consistency.
+#. User services everywhere instead of using the dals directly.
+#. double-check DALs are only used in the service directory.
+2. Update unit tests.
+3. Add a memcached configuration to application.properties and the integration test testcontains
+4. add a memcached deployment to the local environmental overlay like is done for postgres.
 
 
+do we want a separate scheduler for memcached operations?
 
+we should not block in any operations to be fully reactive
 
-
-backend caching
+use the elasticache bean if we're using elasticache?
 
 WarmupManager for backend (BigDecimal?, cache)
 
 restructure userprofile to use tabs, and side bar, for better navigation
+
+
+
+
+
+
+set keycloak favicon to congen icon for consistency
 
 
 

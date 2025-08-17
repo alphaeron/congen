@@ -56,4 +56,10 @@ Expected Outcome:
 - All existing functionality preserved
 - Clean, maintainable codebase
 
+Existing files to reuse in the implementation:
+1. backend/src/main/kotlin/com/congen/config/MemcachedConfig.kt - ✅ REUSE - Provides Memcached client configuration
+2. backend/src/main/kotlin/com/congen/util/ReactiveMemcachedCache.kt - ✅ REUSE - Core caching utility for Memcached operations
+3. backend/src/main/kotlin/com/congen/util/CacheMissException.kt - ✅ REUSE - Exception for cache misses
+4. backend/src/test/kotlin/com/congen/util/ReactiveMemcachedCacheTest.kt - ✅ REUSE - Tests for the caching utility
+
 Please implement this Spring AOP caching solution with the least possible impact on existing code while providing comprehensive caching functionality.
