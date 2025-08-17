@@ -19,6 +19,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.MountableFile
+import com.buralotech.oss.testcontainers.memcached.MemcachedContainer
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -80,6 +81,8 @@ abstract class BaseIntegrationTest {
                 .withEnv("KC_HTTP_ENABLED", "true")
                 .withEnv("KC_HTTP_RELATIVE_PATH", "/")
 
+        private val memcached = MemcachedContainer("1.6.39-alpine")
+
         /**
          * Gets a default test token for integration tests.
          * This is a static method that can be called from IntegrationTestHelpers.
@@ -123,11 +126,13 @@ abstract class BaseIntegrationTest {
         fun startContainers() {
             postgres.start()
             keycloak.start()
+            memcached.start()
         }
 
         @JvmStatic
         @AfterAll
         fun stopContainers() {
+            memcached.stop()
             keycloak.stop()
             postgres.stop()
         }
@@ -201,6 +206,13 @@ abstract class BaseIntegrationTest {
             registry.add("congen.encryption.key") { "dGVzdC1lbmNyeXB0aW9uLWtleS1mb3ItaW50ZWdyYXQ=" }
             registry.add("congen.gdpr.audit-enabled") { "true" }
             registry.add("congen.gdpr.data-retention-check-enabled") { "true" }
+
+            // Memcached properties
+            registry.add("memcached.host") { memcached.host }
+            registry.add("memcached.port") { memcached.getMappedPort(11211) }
+            registry.add("memcached.connection-pool-size") { 10 }
+            registry.add("memcached.op-timeout") { 5000L }
+            registry.add("memcached.max-queued-noreply") { 1000 }
         }
     }
 
