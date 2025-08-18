@@ -71,10 +71,9 @@ class DALCachingAspect(
      */
     @Around("@annotation(cacheable)")
     fun cacheMethod(joinPoint: ProceedingJoinPoint, cacheable: Cacheable): Any? {
-        val method = joinPoint.signature.declaringType.getMethod(
-            joinPoint.signature.name,
-            *joinPoint.args.map { it?.javaClass }.toTypedArray()
-        )
+        // Get the method signature directly from the join point
+        val methodSignature = joinPoint.signature as MethodSignature
+        val method = methodSignature.method
         
         val cacheKey = cacheKeyGenerator.generateKey(method, joinPoint.args, cacheable)
         val ttl = cacheable.ttl.duration
