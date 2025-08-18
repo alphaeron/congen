@@ -3,7 +3,7 @@ package com.congen.cache
 import com.congen.cache.annotation.Cacheable
 import com.congen.cache.annotation.CacheEvict
 import com.congen.util.ReactiveMemcachedCache
-import com.congen.util.CacheMissException
+import com.congen.exceptions.CacheMissException
 import com.fasterxml.jackson.core.type.TypeReference
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around

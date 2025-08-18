@@ -1,5 +1,6 @@
 package com.congen.util
 
+import com.congen.exceptions.CacheMissException
 import com.fasterxml.jackson.databind.ObjectMapper
 import net.rubyeye.xmemcached.MemcachedClient
 import org.junit.jupiter.api.BeforeEach

@@ -1,4 +1,4 @@
-package com.congen.util
+package com.congen.exceptions
 
 /**
  * Exception thrown when a cache key is not found.
