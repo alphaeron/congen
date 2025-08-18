@@ -169,14 +169,15 @@ class GdprComplianceService(
     /**
      * Records user consent for data processing (GDPR Article 7).
      *
-     * This method records the user's consent status for data processing.
-     * The consent is logged for audit purposes and stored with a timestamp.
+     * This method records whether a user has given or withdrawn consent for data processing.
+     * The consent status is stored with a timestamp and logged for audit purposes.
+     * This operation is required for GDPR compliance and data protection regulations.
      *
      * @param keycloakId The user's Keycloak ID
      * @param consent Whether the user has given consent
      * @return Mono containing the updated consent record
      */
-    fun recordConsent(
+    fun updateUserConsent(
         keycloakId: String,
         consent: Boolean
     ): Mono<UserConsent> {

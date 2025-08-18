@@ -122,7 +122,7 @@ class SetSchemeController(
                     }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
-                            setSchemeService.createSetScheme(
+                            setSchemeService.insertSetScheme(
                                 programmedExerciseId,
                                 setNumber,
                                 isAmrap,

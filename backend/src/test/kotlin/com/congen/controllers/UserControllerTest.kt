@@ -55,7 +55,7 @@ class UserControllerTest {
                 createdAt = now,
                 updatedAt = now
             )
-        whenever(userService.createUser()).thenReturn(Mono.just(expectedUser))
+        whenever(userService.insertUser()).thenReturn(Mono.just(expectedUser))
 
         // When
         val result = userController.createUser()
@@ -64,14 +64,14 @@ class UserControllerTest {
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
-        verify(userService).createUser()
+        verify(userService).insertUser()
     }
 
     @Test
     fun `createUser should propagate validation error`() {
         // Given
         val validationException = ValidationException("User name not available from Keycloak token")
-        whenever(userService.createUser()).thenReturn(Mono.error(validationException))
+        whenever(userService.insertUser()).thenReturn(Mono.error(validationException))
 
         // When
         val result = userController.createUser()
@@ -80,14 +80,14 @@ class UserControllerTest {
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
             .verify()
-        verify(userService).createUser()
+        verify(userService).insertUser()
     }
 
     @Test
     fun `createUser should propagate database error`() {
         // Given
         val databaseException = DatabaseException("Database connection failed")
-        whenever(userService.createUser()).thenReturn(Mono.error(databaseException))
+        whenever(userService.insertUser()).thenReturn(Mono.error(databaseException))
 
         // When
         val result = userController.createUser()
@@ -96,7 +96,7 @@ class UserControllerTest {
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
-        verify(userService).createUser()
+        verify(userService).insertUser()
     }
 
     @Test
@@ -111,7 +111,7 @@ class UserControllerTest {
                 updatedAt = now
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(KEYCLOAK_USER_ID))
-        whenever(userService.getUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(expectedUser))
+        whenever(userService.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(expectedUser))
 
         // When
         val result = userController.getCurrentUser()
@@ -121,7 +121,7 @@ class UserControllerTest {
             .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
         verify(keycloakUtil).getCurrentUserId()
-        verify(userService).getUserByKeycloakId(KEYCLOAK_USER_ID)
+        verify(userService).selectUserByKeycloakId(KEYCLOAK_USER_ID)
     }
 
     @Test
@@ -129,7 +129,7 @@ class UserControllerTest {
         // Given
         val error = NoResultsFoundException("User not found")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(KEYCLOAK_USER_ID))
-        whenever(userService.getUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
+        whenever(userService.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
 
         // When
         val result = userController.getCurrentUser()
@@ -139,7 +139,7 @@ class UserControllerTest {
             .expectError(NoResultsFoundException::class.java)
             .verify()
         verify(keycloakUtil).getCurrentUserId()
-        verify(userService).getUserByKeycloakId(KEYCLOAK_USER_ID)
+        verify(userService).selectUserByKeycloakId(KEYCLOAK_USER_ID)
     }
 
     @Test
@@ -156,6 +156,6 @@ class UserControllerTest {
             .expectError(RuntimeException::class.java)
             .verify()
         verify(keycloakUtil).getCurrentUserId()
-        verify(userService, never()).getUserByKeycloakId(any())
+        verify(userService, never()).selectUserByKeycloakId(any())
     }
 }

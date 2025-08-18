@@ -90,7 +90,7 @@ class UserOneRepMaxController(
                 }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        userOneRepMaxService.getAllByUser(userId, unit)
+                        userOneRepMaxService.selectUserOneRepMaxByUser(userId, unit)
                             .map { ResponseEntity.ok(it) }
                     }
                 }
@@ -127,7 +127,7 @@ class UserOneRepMaxController(
                 }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        userOneRepMaxService.getByUserAndExercise(userId, exerciseName, unit)
+                        userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, unit)
                             .map { ResponseEntity.ok(it) }
                     }
                 }
@@ -170,7 +170,7 @@ class UserOneRepMaxController(
                 }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        userOneRepMaxService.upsertOneRepMax(userId, exerciseName, oneRepMax, unit)
+                        userOneRepMaxService.upsertUserOneRepMax(userId, exerciseName, oneRepMax, unit)
                             .map { ResponseEntity.ok(it) }
                             .doOnError { e ->
                                 logger.error(
@@ -215,7 +215,7 @@ class UserOneRepMaxController(
                 }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        userOneRepMaxService.deleteOneRepMax(userId, exerciseName)
+                        userOneRepMaxService.deleteUserOneRepMax(userId, exerciseName)
                             .map { ResponseEntity.ok(it) }
                             .doOnError { e ->
                                 logger.error(

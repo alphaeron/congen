@@ -130,7 +130,7 @@ class GdprComplianceServiceTest {
             .thenReturn(Mono.just(userConsent))
 
         StepVerifier.create(
-            gdprComplianceService.recordConsent(keycloakId, consent)
+            gdprComplianceService.updateUserConsent(keycloakId, consent)
         )
             .expectNext(userConsent)
             .verifyComplete()
@@ -166,7 +166,7 @@ class GdprComplianceServiceTest {
             .thenReturn(Mono.just(userConsent))
 
         StepVerifier.create(
-            gdprComplianceService.recordConsent(keycloakId, consent)
+            gdprComplianceService.updateUserConsent(keycloakId, consent)
         )
             .expectNext(userConsent)
             .verifyComplete()

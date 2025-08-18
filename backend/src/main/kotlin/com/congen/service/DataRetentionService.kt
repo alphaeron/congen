@@ -74,7 +74,7 @@ class DataRetentionService(
 
         logger.info("Starting daily data retention cleanup at {}", Instant.now())
 
-        cleanupExpiredData()
+        executeCleanupExpiredData()
             .doOnSuccess { results ->
                 logger.info("Daily data cleanup completed successfully")
                 results.forEach { result ->
@@ -102,7 +102,7 @@ class DataRetentionService(
      *
      * @return Mono containing cleanup results
      */
-    fun cleanupExpiredData(): Mono<List<DataCleanupResult>> {
+    fun executeCleanupExpiredData(): Mono<List<DataCleanupResult>> {
         if (!dataRetentionEnabled) {
             logger.debug("Data retention cleanup is disabled, returning empty results")
             return Mono.just(emptyList())
@@ -130,7 +130,7 @@ class DataRetentionService(
      *
      * @return Mono containing list of retention policies
      */
-    fun getRetentionPolicies(): Mono<List<DataRetentionPolicy>> {
+    fun getAllRetentionPolicies(): Mono<List<DataRetentionPolicy>> {
         return dataRetentionDAL.getAllRetentionPolicies()
     }
 
@@ -142,7 +142,7 @@ class DataRetentionService(
      * @param description Optional description of the policy
      * @return Mono that completes when policy is updated
      */
-    fun updateRetentionPolicy(
+    fun upsertRetentionPolicy(
         dataType: String,
         retentionPeriodDays: Int,
         description: String? = null

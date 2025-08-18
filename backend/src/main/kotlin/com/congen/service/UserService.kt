@@ -37,7 +37,7 @@ class UserService(
      * @return The created user profile
      * @throws ValidationException if validation fails or name is not available
      */
-    fun createUser(): Mono<User> {
+    fun insertUser(): Mono<User> {
         logger.info("Creating user profile from Keycloak information")
 
         return keycloakUtil.getCurrentUserId()
@@ -70,7 +70,7 @@ class UserService(
     /**
      * Retrieves a user by their Keycloak ID.
      */
-    fun getUserByKeycloakId(keycloakId: String): Mono<User> {
+    fun selectUserByKeycloakId(keycloakId: String): Mono<User> {
         return userDAL.selectUserByKeycloakId(keycloakId)
             .doOnSuccess { logger.debug("Found user by Keycloak ID: {}", keycloakId) }
             .doOnError { e -> logger.error("Error getting user by Keycloak ID: {}", keycloakId, e) }

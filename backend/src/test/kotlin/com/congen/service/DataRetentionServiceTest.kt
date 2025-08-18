@@ -56,7 +56,7 @@ class DataRetentionServiceTest {
         whenever(dataRetentionDAL.executeCleanupExpiredData())
             .thenReturn(Mono.just(emptyList()))
 
-        StepVerifier.create(dataRetentionService.cleanupExpiredData())
+        StepVerifier.create(dataRetentionService.executeCleanupExpiredData())
             .expectNext(emptyList())
             .verifyComplete()
 
@@ -76,7 +76,7 @@ class DataRetentionServiceTest {
     fun `getRetentionPolicies should return all policies`() {
         whenever(dataRetentionDAL.getAllRetentionPolicies()).thenReturn(Mono.just(emptyList()))
 
-        StepVerifier.create(dataRetentionService.getRetentionPolicies())
+        StepVerifier.create(dataRetentionService.getAllRetentionPolicies())
             .expectNext(emptyList())
             .verifyComplete()
 
@@ -166,7 +166,7 @@ class DataRetentionServiceTest {
         whenever(dataRetentionDAL.upsertRetentionPolicy(dataType, retentionPeriodDays, description))
             .thenReturn(Mono.just(mockPolicy))
 
-        StepVerifier.create(dataRetentionService.updateRetentionPolicy(dataType, retentionPeriodDays, description))
+        StepVerifier.create(dataRetentionService.upsertRetentionPolicy(dataType, retentionPeriodDays, description))
             .expectNext(mockPolicy)
             .verifyComplete()
 

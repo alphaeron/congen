@@ -126,7 +126,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
             .thenReturn(Mono.empty())
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 any(),
                 any(),
                 any(),
@@ -195,7 +195,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
             .thenReturn(Mono.empty())
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 any(),
                 any(),
                 any(),
@@ -297,7 +297,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
             .thenReturn(Mono.empty())
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 any(),
                 any(),
                 any(),

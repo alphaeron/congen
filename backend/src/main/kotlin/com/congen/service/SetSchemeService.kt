@@ -84,7 +84,7 @@ class SetSchemeService(
      * @param band The band information for Dynamic Effort exercises
      * @return Mono containing the created set scheme with weights in requested unit
      */
-    fun createSetScheme(
+    fun insertSetScheme(
         programmedExerciseId: Long,
         setNumber: Int,
         isAmrap: Boolean,

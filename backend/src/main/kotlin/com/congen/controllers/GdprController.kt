@@ -101,7 +101,7 @@ class GdprController(
             .flatMap { requestingUserId ->
                 logger.info("Recording consent for user: {} - consent: {}", requestingUserId, consent)
                 // User can only modify their own consent (implicit check since we use their ID)
-                gdprComplianceService.recordConsent(requestingUserId, consent)
+                gdprComplianceService.updateUserConsent(requestingUserId, consent)
                     .map { userConsentRecord ->
                         // Return the complete consent record from the database
                         ResponseEntity.ok(userConsentRecord)

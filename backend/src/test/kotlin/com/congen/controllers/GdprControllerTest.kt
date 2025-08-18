@@ -51,7 +51,7 @@ class GdprControllerTest {
             )
         `when`(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         `when`(
-            gdprComplianceService.recordConsent(
+            gdprComplianceService.updateUserConsent(
                 eq(keycloakId),
                 eq(consent)
             )
@@ -67,7 +67,7 @@ class GdprControllerTest {
             .verifyComplete()
 
         verify(keycloakUtil).getCurrentUserId()
-        verify(gdprComplianceService).recordConsent(
+        verify(gdprComplianceService).updateUserConsent(
             eq(keycloakId),
             eq(consent)
         )
@@ -88,7 +88,7 @@ class GdprControllerTest {
             )
         `when`(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         `when`(
-            gdprComplianceService.recordConsent(
+            gdprComplianceService.updateUserConsent(
                 eq(keycloakId),
                 eq(consent)
             )

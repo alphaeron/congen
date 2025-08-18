@@ -211,7 +211,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     @Test
     fun `generateNextWeek should handle program not found`() {
         // Given
-        whenever(programService.getProgramById(PROGRAM_ID)).thenReturn(Mono.empty())
+        whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.empty())
 
         // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -231,7 +231,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 2)
         val exercises = createSampleExercises()
 
-        whenever(programService.getProgramById(programId)).thenReturn(Mono.just(program))
+        whenever(programService.selectProgramById(programId)).thenReturn(Mono.just(program))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
@@ -330,7 +330,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 3)
         val exercises = createSampleExercises()
 
-        whenever(programService.getProgramById(programId)).thenReturn(Mono.just(program))
+        whenever(programService.selectProgramById(programId)).thenReturn(Mono.just(program))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
@@ -431,7 +431,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         val programPreferences = mockUserProgramPreferences(programDaysPerWeek = 4)
         val exercises = createSampleExercises()
 
-        whenever(programService.getProgramById(programId)).thenReturn(Mono.just(program))
+        whenever(programService.selectProgramById(programId)).thenReturn(Mono.just(program))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(emptyList()))
@@ -545,7 +545,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         programPreferences: UserProgramPreferences,
         rotationHistory: List<ExerciseRotationHistory>
     ) {
-        whenever(programService.getProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
+        whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(mockProgram()))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(any())).thenReturn(Mono.just(programPreferences))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(any())).thenReturn(Mono.just(preferences))

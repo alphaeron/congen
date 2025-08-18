@@ -969,7 +969,7 @@ abstract class WorkoutStageGenerationService(
     ): Mono<Void> {
         return Flux.fromIterable(setSchemes)
             .flatMap { scheme ->
-                setSchemeService.createSetScheme(
+                setSchemeService.insertSetScheme(
                     programmedExerciseId = programmedExerciseId,
                     setNumber = scheme.setNumber,
                     isAmrap = scheme.isAmrap,

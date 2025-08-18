@@ -55,7 +55,7 @@ class UserServiceTest {
         whenever(userDAL.insertUser(eq(keycloakId), eq(name))).thenReturn(Mono.just(testUser))
 
         // When
-        val result = userService.createUser()
+        val result = userService.insertUser()
 
         // Then
         StepVerifier.create(result)
@@ -75,7 +75,7 @@ class UserServiceTest {
 
         // When & Then
         assertThrows<ValidationException> {
-            userService.createUser().block()
+            userService.insertUser().block()
         }
         verify(keycloakUtil).getCurrentUserId()
         verify(keycloakUtil).getCurrentUserName()
@@ -90,7 +90,7 @@ class UserServiceTest {
 
         // When & Then
         assertThrows<ValidationException> {
-            userService.createUser().block()
+            userService.insertUser().block()
         }
         verify(keycloakUtil).getCurrentUserId()
         verify(keycloakUtil).getCurrentUserName()
@@ -103,7 +103,7 @@ class UserServiceTest {
         whenever(userDAL.selectUserByKeycloakId(keycloakId)).thenReturn(Mono.just(testUser))
 
         // When
-        val result = userService.getUserByKeycloakId(keycloakId)
+        val result = userService.selectUserByKeycloakId(keycloakId)
 
         // Then
         StepVerifier.create(result)

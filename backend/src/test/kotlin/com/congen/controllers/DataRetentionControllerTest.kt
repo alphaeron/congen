@@ -38,7 +38,7 @@ class DataRetentionControllerTest {
                 DataRetentionPolicy("CONSENT_RECORDS", 2555, "Consent records retained for 7 years")
             )
 
-        `when`(dataRetentionService.getRetentionPolicies()).thenReturn(Mono.just(policies))
+        `when`(dataRetentionService.getAllRetentionPolicies()).thenReturn(Mono.just(policies))
 
         StepVerifier.create(dataRetentionController.getRetentionPolicies())
             .assertNext { response ->
@@ -50,7 +50,7 @@ class DataRetentionControllerTest {
             }
             .verifyComplete()
 
-        verify(dataRetentionService).getRetentionPolicies()
+        verify(dataRetentionService).getAllRetentionPolicies()
     }
 
     @Test
@@ -60,7 +60,7 @@ class DataRetentionControllerTest {
         val description = "Updated to 5 years"
 
         val mockPolicy = DataRetentionPolicy(dataType, retentionPeriodDays, description)
-        `when`(dataRetentionService.updateRetentionPolicy(dataType, retentionPeriodDays, description))
+        `when`(dataRetentionService.upsertRetentionPolicy(dataType, retentionPeriodDays, description))
             .thenReturn(Mono.just(mockPolicy))
 
         StepVerifier.create(dataRetentionController.updateRetentionPolicy(dataType, retentionPeriodDays, description))
@@ -73,7 +73,7 @@ class DataRetentionControllerTest {
             }
             .verifyComplete()
 
-        verify(dataRetentionService).updateRetentionPolicy(dataType, retentionPeriodDays, description)
+        verify(dataRetentionService).upsertRetentionPolicy(dataType, retentionPeriodDays, description)
     }
 
     @Test
@@ -90,7 +90,7 @@ class DataRetentionControllerTest {
             .verifyComplete()
 
         // Verify service was not called with invalid input
-        verify(dataRetentionService, never()).updateRetentionPolicy(
+        verify(dataRetentionService, never()).upsertRetentionPolicy(
             any(),
             any(),
             any()
@@ -146,7 +146,7 @@ class DataRetentionControllerTest {
                 DataCleanupResult("CONSENT_RECORDS", 25)
             )
 
-        `when`(dataRetentionService.cleanupExpiredData()).thenReturn(Mono.just(cleanupResults))
+        `when`(dataRetentionService.executeCleanupExpiredData()).thenReturn(Mono.just(cleanupResults))
 
         StepVerifier.create(dataRetentionController.triggerManualCleanup())
             .assertNext { response ->
@@ -162,6 +162,6 @@ class DataRetentionControllerTest {
             }
             .verifyComplete()
 
-        verify(dataRetentionService).cleanupExpiredData()
+        verify(dataRetentionService).executeCleanupExpiredData()
     }
 }

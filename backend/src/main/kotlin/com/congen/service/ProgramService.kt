@@ -56,7 +56,7 @@ class ProgramService(
      * @return Mono containing the program if found
      * @throws NoResultsFoundException if no program exists with the given ID
      */
-    fun getProgramById(id: Long): Mono<Program> {
+    fun selectProgramById(id: Long): Mono<Program> {
         return programDAL.selectProgramById(id)
     }
 
@@ -65,7 +65,7 @@ class ProgramService(
      *
      * @return Mono containing a list of all programs
      */
-    fun getAllPrograms(): Mono<List<Program>> {
+    fun selectPrograms(): Mono<List<Program>> {
         return programDAL.selectPrograms()
     }
 
@@ -76,7 +76,7 @@ class ProgramService(
      * @param isActive Optional filter for active status. If null, returns all programs for the user
      * @return Mono containing a list of programs for the user
      */
-    fun getProgramsByUserId(
+    fun selectProgramsByUserId(
         userId: String,
         isActive: Boolean? = null
     ): Mono<List<Program>> {
@@ -93,7 +93,7 @@ class ProgramService(
      * @return Mono containing the inserted program
      * @throws NoResultsFoundException if the insert operation fails
      */
-    fun createProgram(
+    fun insertProgram(
         userId: String,
         name: String,
         currentWeekNumber: Int,

@@ -1,6 +1,3 @@
-#. ensure that all service method names match the underlying dal method name for consistency.
-
-
 use the elasticache bean if we're using elasticache?
 
 WarmupManager for backend (BigDecimal?, cache)

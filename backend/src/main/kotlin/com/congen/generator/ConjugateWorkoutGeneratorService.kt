@@ -95,7 +95,7 @@ class ConjugateWorkoutGeneratorService(
     fun generateNextWeek(programId: Long): Mono<Program> {
         logger.info("Generating next week for program {}", programId)
 
-        return programService.getProgramById(programId)
+        return programService.selectProgramById(programId)
             .flatMap { program ->
                 Mono.zip(
                     exerciseDAL.selectExercises(),

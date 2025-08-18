@@ -124,7 +124,7 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
 
         val result =
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 programmedExerciseId = programmedExerciseId,
                 setNumber = setNumber,
                 isAmrap = false,
@@ -255,7 +255,7 @@ class SetSchemeServiceTest {
         ).thenReturn(Mono.just(setScheme))
 
         val result =
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 programmedExerciseId = programmedExerciseId,
                 setNumber = setNumber,
                 isAmrap = false,

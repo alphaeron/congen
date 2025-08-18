@@ -46,7 +46,10 @@ import org.springframework.test.context.TestPropertySource
         "memcached.port=11211",
         "memcached.connection-pool-size=10",
         "memcached.op-timeout=1000",
-        "memcached.max-queued-noreply=100"
+        "memcached.max-queued-noreply=100",
+        "memcached.scheduler-thread-pool-size=4",
+        "memcached.scheduler-queue-capacity=1000",
+        "memcached.scheduler-thread-name-prefix=memcached-scheduler-"
     ]
 )
 class CongenApplicationTest {

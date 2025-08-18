@@ -229,9 +229,9 @@ class WorkoutStageGenerationServiceTest {
         whenever(setSchemeDAL.selectSetSchemesByProgrammedExerciseId(any()))
             .thenReturn(Mono.just(emptyList()))
 
-        // Mock the setSchemeService.createSetScheme method
+        // Mock the setSchemeService.insertSetScheme method
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 // programmedExerciseId: Long
                 any(),
                 // setNumber: Int
@@ -296,7 +296,7 @@ class WorkoutStageGenerationServiceTest {
             eq(1),
             eq(null)
         )
-        verify(setSchemeService).createSetScheme(
+        verify(setSchemeService).insertSetScheme(
             any(),
             any(),
             any(),
@@ -445,9 +445,9 @@ class WorkoutStageGenerationServiceTest {
         whenever(setSchemeDAL.selectSetSchemesByProgrammedExerciseId(any()))
             .thenReturn(Mono.just(emptyList()))
 
-        // Mock the setSchemeService.createSetScheme method
+        // Mock the setSchemeService.insertSetScheme method
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 // programmedExerciseId: Long
                 any(),
                 // setNumber: Int
@@ -512,7 +512,7 @@ class WorkoutStageGenerationServiceTest {
             eq(1),
             eq(null)
         )
-        verify(setSchemeService).createSetScheme(
+        verify(setSchemeService).insertSetScheme(
             any(),
             any(),
             any(),

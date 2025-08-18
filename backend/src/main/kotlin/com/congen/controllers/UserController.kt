@@ -87,7 +87,7 @@ class UserController(
         ]
     )
     fun createUser(): Mono<ResponseEntity<User>> {
-        return userService.createUser()
+        return userService.insertUser()
             .map { ResponseEntity.ok(it) }
     }
 
@@ -133,7 +133,7 @@ class UserController(
     fun getCurrentUser(): Mono<ResponseEntity<User>> {
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakUserId ->
-                userService.getUserByKeycloakId(keycloakUserId)
+                userService.selectUserByKeycloakId(keycloakUserId)
             }
             .map { ResponseEntity.ok(it) }
     }

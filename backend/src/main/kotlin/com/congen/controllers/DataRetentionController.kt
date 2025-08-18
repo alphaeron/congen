@@ -82,7 +82,7 @@ class DataRetentionController(
     fun getRetentionPolicies(): Mono<ResponseEntity<List<DataRetentionPolicy>>> {
         logger.debug("Retrieving all data retention policies")
 
-        return dataRetentionService.getRetentionPolicies()
+        return dataRetentionService.getAllRetentionPolicies()
             .map { policies ->
                 ResponseEntity.ok(policies)
             }
@@ -145,7 +145,7 @@ class DataRetentionController(
 
         logger.info("Updating retention policy for {} to {} days", dataType, retentionPeriodDays)
 
-        return dataRetentionService.updateRetentionPolicy(dataType, retentionPeriodDays.toInt(), description)
+        return dataRetentionService.upsertRetentionPolicy(dataType, retentionPeriodDays.toInt(), description)
             .map { policy ->
                 ResponseEntity.ok(policy)
             }
@@ -263,7 +263,7 @@ class DataRetentionController(
     fun triggerManualCleanup(): Mono<ResponseEntity<ManualCleanupResponse>> {
         logger.warn("Manual data cleanup triggered by admin")
 
-        return dataRetentionService.cleanupExpiredData()
+        return dataRetentionService.executeCleanupExpiredData()
             .map { results ->
                 val totalDeleted = results.sumOf { it.count }
                 ResponseEntity.ok(

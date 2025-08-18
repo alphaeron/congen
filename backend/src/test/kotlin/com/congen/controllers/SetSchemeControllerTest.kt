@@ -290,7 +290,7 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 PROGRAMMED_EXERCISE_ID,
                 SET_NUMBER_1,
                 false,
@@ -479,7 +479,7 @@ class SetSchemeControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(
-            setSchemeService.createSetScheme(
+            setSchemeService.insertSetScheme(
                 PROGRAMMED_EXERCISE_ID,
                 SET_NUMBER_1,
                 false,

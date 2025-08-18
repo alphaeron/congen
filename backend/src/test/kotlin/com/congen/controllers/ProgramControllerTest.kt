@@ -98,22 +98,22 @@ class ProgramControllerTest {
     @Test
     fun `get should return program when found`() {
         val program = createTestProgram(PROGRAM_ID_1, USER_ID.toString(), CONJUGATE_PROGRAM_NAME)
-        whenever(programService.getProgramById(PROGRAM_ID_1)).thenReturn(Mono.just(program))
+        whenever(programService.selectProgramById(PROGRAM_ID_1)).thenReturn(Mono.just(program))
         val result = programController.get(PROGRAM_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(program))
             .verifyComplete()
-        verify(programService).getProgramById(PROGRAM_ID_1)
+        verify(programService).selectProgramById(PROGRAM_ID_1)
     }
 
     @Test
     fun `get should return not found when program not found`() {
         whenever(
-            programService.getProgramById(NON_EXISTENT_ID)
+            programService.selectProgramById(NON_EXISTENT_ID)
         ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM program WHERE id=$1")))
         val result = programController.get(NON_EXISTENT_ID)
         StepVerifier.create(result).expectError(NoResultsFoundException::class.java).verify()
-        verify(programService).getProgramById(NON_EXISTENT_ID)
+        verify(programService).selectProgramById(NON_EXISTENT_ID)
     }
 
     @Test
@@ -125,12 +125,12 @@ class ProgramControllerTest {
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("1"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("admin")))
-        whenever(programService.getAllPrograms()).thenReturn(Mono.just(programs))
+        whenever(programService.selectPrograms()).thenReturn(Mono.just(programs))
         val result = programController.getAll()
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programs))
             .verifyComplete()
-        verify(programService).getAllPrograms()
+        verify(programService).selectPrograms()
     }
 
     @Test
@@ -144,7 +144,7 @@ class ProgramControllerTest {
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programService.getAllPrograms()).thenReturn(Mono.just(programs))
+        whenever(programService.selectPrograms()).thenReturn(Mono.just(programs))
 
         val result = programController.getAll()
         StepVerifier.create(result)
@@ -152,7 +152,7 @@ class ProgramControllerTest {
                 assert(response.body == programs)
             }
             .verifyComplete()
-        verify(programService).getAllPrograms()
+        verify(programService).selectPrograms()
     }
 
     @Test
@@ -166,7 +166,7 @@ class ProgramControllerTest {
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programService.getAllPrograms()).thenReturn(Mono.just(programs))
+        whenever(programService.selectPrograms()).thenReturn(Mono.just(programs))
 
         val result = programController.getAll()
         StepVerifier.create(result)
@@ -174,7 +174,7 @@ class ProgramControllerTest {
                 assert(response.body == programs)
             }
             .verifyComplete()
-        verify(programService).getAllPrograms()
+        verify(programService).selectPrograms()
     }
 
     @Test
@@ -188,7 +188,7 @@ class ProgramControllerTest {
             )
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programService.getProgramsByUserId(userId, null)).thenReturn(Mono.just(programs))
+        whenever(programService.selectProgramsByUserId(userId, null)).thenReturn(Mono.just(programs))
 
         val result = programController.getAll()
         StepVerifier.create(result)
@@ -196,7 +196,7 @@ class ProgramControllerTest {
                 assert(response.body == programs)
             }
             .verifyComplete()
-        verify(programService).getProgramsByUserId(userId, null)
+        verify(programService).selectProgramsByUserId(userId, null)
     }
 
     @Test
@@ -206,7 +206,7 @@ class ProgramControllerTest {
         val programs = emptyList<Program>()
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(userId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(roles))
-        whenever(programService.getProgramsByUserId(userId, null)).thenReturn(Mono.just(programs))
+        whenever(programService.selectProgramsByUserId(userId, null)).thenReturn(Mono.just(programs))
 
         val result = programController.getAll()
         StepVerifier.create(result)
@@ -214,7 +214,7 @@ class ProgramControllerTest {
                 assert(response.body!!.isEmpty())
             }
             .verifyComplete()
-        verify(programService).getProgramsByUserId(userId, null)
+        verify(programService).selectProgramsByUserId(userId, null)
     }
 
     @Test
@@ -225,7 +225,7 @@ class ProgramControllerTest {
                 USER_ID.toString(),
                 UPDATED_PROGRAM_NAME
             ).copy(currentWeekNumber = UPDATED_WEEK)
-        whenever(programService.getProgramById(PROGRAM_ID_2)).thenReturn(Mono.just(updatedProgram))
+        whenever(programService.selectProgramById(PROGRAM_ID_2)).thenReturn(Mono.just(updatedProgram))
         whenever(programService.updateProgram(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK, true)).thenReturn(Mono.just(updatedProgram))
         val result = programController.update(PROGRAM_ID_2, UPDATED_PROGRAM_NAME, UPDATED_WEEK, true)
         StepVerifier.create(result)
@@ -237,17 +237,17 @@ class ProgramControllerTest {
     @Test
     fun `update should return not found when program not found`() {
         whenever(
-            programService.getProgramById(NON_EXISTENT_ID)
+            programService.selectProgramById(NON_EXISTENT_ID)
         ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM program WHERE id=$1")))
         val result = programController.update(NON_EXISTENT_ID, UPDATED_PROGRAM_NAME, CURRENT_WEEK, true)
         StepVerifier.create(result).expectError(NoResultsFoundException::class.java).verify()
-        verify(programService).getProgramById(NON_EXISTENT_ID)
+        verify(programService).selectProgramById(NON_EXISTENT_ID)
     }
 
     @Test
     fun `delete should return deleted program when found`() {
         val program = createTestProgram(PROGRAM_ID_1, USER_ID.toString(), CONJUGATE_PROGRAM_NAME)
-        whenever(programService.getProgramById(PROGRAM_ID_1)).thenReturn(Mono.just(program))
+        whenever(programService.selectProgramById(PROGRAM_ID_1)).thenReturn(Mono.just(program))
         whenever(programService.deleteProgram(PROGRAM_ID_1)).thenReturn(Mono.just(program))
         val result = programController.delete(PROGRAM_ID_1)
         StepVerifier.create(result)
@@ -259,11 +259,11 @@ class ProgramControllerTest {
     @Test
     fun `delete should return not found when program not found`() {
         whenever(
-            programService.getProgramById(NON_EXISTENT_ID)
+            programService.selectProgramById(NON_EXISTENT_ID)
         ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM program WHERE id=$1")))
         val result = programController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result).expectError(NoResultsFoundException::class.java).verify()
-        verify(programService).getProgramById(NON_EXISTENT_ID)
+        verify(programService).selectProgramById(NON_EXISTENT_ID)
     }
 
     @Test
@@ -273,33 +273,33 @@ class ProgramControllerTest {
                 createTestProgram(PROGRAM_ID_1, USER_ID.toString(), CONJUGATE_PROGRAM_NAME),
                 createTestProgram(PROGRAM_ID_2, USER_ID.toString(), FIVE_THREE_ONE_PROGRAM).copy(isActive = false)
             )
-        whenever(programService.getProgramsByUserId(USER_ID.toString(), null)).thenReturn(Mono.just(programs))
+        whenever(programService.selectProgramsByUserId(USER_ID.toString(), null)).thenReturn(Mono.just(programs))
         val result = programController.getByUserId(USER_ID.toString(), null)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(programs))
             .verifyComplete()
-        verify(programService).getProgramsByUserId(USER_ID.toString(), null)
+        verify(programService).selectProgramsByUserId(USER_ID.toString(), null)
     }
 
     @Test
     fun `getByUserId should return active programs for user`() {
         val activePrograms = listOf(createTestProgram(PROGRAM_ID_1, USER_ID.toString(), CONJUGATE_PROGRAM_NAME))
-        whenever(programService.getProgramsByUserId(USER_ID.toString(), true)).thenReturn(Mono.just(activePrograms))
+        whenever(programService.selectProgramsByUserId(USER_ID.toString(), true)).thenReturn(Mono.just(activePrograms))
         val result = programController.getByUserId(USER_ID.toString(), true)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(activePrograms))
             .verifyComplete()
-        verify(programService).getProgramsByUserId(USER_ID.toString(), true)
+        verify(programService).selectProgramsByUserId(USER_ID.toString(), true)
     }
 
     @Test
     fun `getByUserId should return inactive programs for user`() {
         val inactivePrograms = listOf(createTestProgram(PROGRAM_ID_2, USER_ID.toString(), FIVE_THREE_ONE_PROGRAM).copy(isActive = false))
-        whenever(programService.getProgramsByUserId(USER_ID.toString(), false)).thenReturn(Mono.just(inactivePrograms))
+        whenever(programService.selectProgramsByUserId(USER_ID.toString(), false)).thenReturn(Mono.just(inactivePrograms))
         val result = programController.getByUserId(USER_ID.toString(), false)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(inactivePrograms))
             .verifyComplete()
-        verify(programService).getProgramsByUserId(USER_ID.toString(), false)
+        verify(programService).selectProgramsByUserId(USER_ID.toString(), false)
     }
 }

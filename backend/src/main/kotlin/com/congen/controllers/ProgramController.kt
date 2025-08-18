@@ -117,7 +117,7 @@ class ProgramController(
                         gdprComplianceService.withUserConsent(ownerId) {
                             logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
                             val startingCurrentWeekNumber = 1
-                            programService.createProgram(userId, name, startingCurrentWeekNumber, isActive)
+                            programService.insertProgram(userId, name, startingCurrentWeekNumber, isActive)
                                 .map { savedProgram ->
                                     logger.debug("Saved program with id: {}", savedProgram.id)
                                     ResponseEntity.ok(savedProgram)
@@ -172,7 +172,7 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            programService.getProgramById(id)
+            programService.selectProgramById(id)
                 .flatMap { program ->
                     val hasAccess = isAdminOrService || program.userId == userId
                     if (hasAccess) {
@@ -226,7 +226,7 @@ class ProgramController(
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService) {
-                programService.getAllPrograms()
+                programService.selectPrograms()
                     .flatMap { programs ->
                         Flux.fromIterable(programs)
                             .flatMap { program ->
@@ -239,7 +239,7 @@ class ProgramController(
                     .map { programs -> ResponseEntity.ok(programs) }
             } else {
                 gdprComplianceService.withUserConsent(userId) {
-                    programService.getProgramsByUserId(userId, null)
+                    programService.selectProgramsByUserId(userId, null)
                         .map { programs -> ResponseEntity.ok(programs) }
                 }
             }
@@ -287,7 +287,7 @@ class ProgramController(
         @RequestParam(name = "is_active", required = false) isActive: Boolean? = null,
     ): Mono<ResponseEntity<List<Program>>> {
         logger.debug("Getting programs for user: {} with isActive filter: {}", userId, isActive)
-        return programService.getProgramsByUserId(userId, isActive)
+        return programService.selectProgramsByUserId(userId, isActive)
             .map { programs ->
                 logger.debug("Found {} programs for user: {}", programs.size, userId)
                 ResponseEntity.ok(programs)
@@ -358,7 +358,7 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            programService.getProgramById(id)
+            programService.selectProgramById(id)
                 .flatMap { program ->
                     val hasAccess = isAdminOrService || program.userId == userId
                     if (hasAccess) {
@@ -425,7 +425,7 @@ class ProgramController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            programService.getProgramById(id)
+            programService.selectProgramById(id)
                 .flatMap { program ->
                     val hasAccess = isAdminOrService || program.userId == userId
                     if (hasAccess) {

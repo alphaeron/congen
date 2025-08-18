@@ -92,7 +92,7 @@ class UserOneRepMaxServiceTest {
         whenever(userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weight)).thenReturn(createMockMono(oneRepMax))
 
         // When
-        val result = service.upsertOneRepMax(userId, exerciseName, weight, "kg")
+        val result = service.upsertUserOneRepMax(userId, exerciseName, weight, "kg")
 
         // Then
         assertMonoSuccess(result, oneRepMax)
@@ -108,7 +108,7 @@ class UserOneRepMaxServiceTest {
         whenever(userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weightInKg)).thenReturn(createMockMono(oneRepMax))
 
         // When
-        val result = service.upsertOneRepMax(userId, exerciseName, weightInLbs, "lbs")
+        val result = service.upsertUserOneRepMax(userId, exerciseName, weightInLbs, "lbs")
 
         // Then
         assertMonoSuccess(result, oneRepMax)
@@ -131,7 +131,7 @@ class UserOneRepMaxServiceTest {
         whenever(unitConverter.fromKg(eq(oneRepMaxes[2].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight3)
 
         // When
-        val result = service.getAllByUser(userId, null)
+        val result = service.selectUserOneRepMaxByUser(userId, null)
 
         // Then
         StepVerifier.create(result)
@@ -155,7 +155,7 @@ class UserOneRepMaxServiceTest {
         whenever(unitConverter.fromKg(oneRepMax.oneRepMax, WeightUnit.LBS)).thenReturn(convertedWeight)
 
         // When
-        val result = service.getByUserAndExercise(userId, exerciseName, null)
+        val result = service.selectUserOneRepMax(userId, exerciseName, null)
 
         // Then
         StepVerifier.create(result)
@@ -171,7 +171,7 @@ class UserOneRepMaxServiceTest {
         whenever(userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)).thenReturn(createMockMono(oneRepMax))
 
         // When
-        val result = service.deleteOneRepMax(userId, exerciseName)
+        val result = service.deleteUserOneRepMax(userId, exerciseName)
 
         // Then
         assertMonoSuccess(result, oneRepMax)
@@ -186,7 +186,7 @@ class UserOneRepMaxServiceTest {
 
         // When & Then
         assertMonoError(
-            service.getByUserAndExercise(userId, exerciseName, null),
+            service.selectUserOneRepMax(userId, exerciseName, null),
             NoResultsFoundException::class.java
         )
     }

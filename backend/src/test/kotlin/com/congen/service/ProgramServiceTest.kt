@@ -77,7 +77,7 @@ class ProgramServiceTest {
     fun `getProgramById should delegate to DAL`() {
         whenever(programDAL.selectProgramById(1L)).thenReturn(Mono.just(testProgram))
 
-        val result = programService.getProgramById(1L)
+        val result = programService.selectProgramById(1L)
 
         StepVerifier.create(result)
             .expectNext(testProgram)
@@ -90,7 +90,7 @@ class ProgramServiceTest {
         val programs = listOf(testProgram)
         whenever(programDAL.selectPrograms()).thenReturn(Mono.just(programs))
 
-        val result = programService.getAllPrograms()
+        val result = programService.selectPrograms()
 
         StepVerifier.create(result)
             .expectNext(programs)
@@ -103,7 +103,7 @@ class ProgramServiceTest {
         val programs = listOf(testProgram)
         whenever(programDAL.selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", null)).thenReturn(Mono.just(programs))
 
-        val result = programService.getProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf")
+        val result = programService.selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf")
 
         StepVerifier.create(result)
             .expectNext(programs)
@@ -116,7 +116,7 @@ class ProgramServiceTest {
         val programs = listOf(testProgram)
         whenever(programDAL.selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", true)).thenReturn(Mono.just(programs))
 
-        val result = programService.getProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", true)
+        val result = programService.selectProgramsByUserId("b226d772-c063-4974-ae08-ab64134abbcf", true)
 
         StepVerifier.create(result)
             .expectNext(programs)
@@ -130,7 +130,7 @@ class ProgramServiceTest {
             programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
         ).thenReturn(Mono.just(testProgram))
 
-        val result = programService.createProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        val result = programService.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
 
         StepVerifier.create(result)
             .expectNext(testProgram)
@@ -144,7 +144,7 @@ class ProgramServiceTest {
             programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
         ).thenReturn(Mono.just(testProgram))
 
-        val result = programService.createProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1)
+        val result = programService.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1)
 
         StepVerifier.create(result)
             .expectNext(testProgram)
