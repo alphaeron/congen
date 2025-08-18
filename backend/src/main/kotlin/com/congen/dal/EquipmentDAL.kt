@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.Equipment
 import org.slf4j.LoggerFactory
@@ -57,6 +62,11 @@ class EquipmentDAL(
      * @return Mono containing the equipment if found
      * @throws NoResultsFoundException when equipment with the specified name doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
+        entityName = "equipment"
+    )
     fun selectEquipmentByName(equipmentName: String): Mono<Equipment> {
         logger.debug("Selecting equipment by name: {}", equipmentName)
         return postgresClient.selectIndividual(
@@ -73,6 +83,11 @@ class EquipmentDAL(
      *
      * @return Mono containing a list of all equipment
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "equipment"
+    )
     fun selectEquipment(): Mono<List<Equipment>> {
         logger.debug("Selecting all equipment")
         return postgresClient.select("SELECT * FROM equipment")
@@ -89,6 +104,10 @@ class EquipmentDAL(
      * @return Mono containing the created equipment
      * @throws DatabaseException when the equipment name already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "equipment"
+    )
     fun insertEquipment(
         name: String,
         description: String
@@ -116,6 +135,10 @@ class EquipmentDAL(
      * @return Mono containing the updated equipment
      * @throws NoResultsFoundException when equipment with the specified name doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "equipment"
+    )
     fun updateEquipment(equipment: Equipment): Mono<Equipment> {
         logger.debug("Updating equipment: {}", equipment.name)
         return postgresClient.update(
@@ -139,6 +162,10 @@ class EquipmentDAL(
      * @return Mono containing the deleted equipment
      * @throws NoResultsFoundException when equipment with the specified name doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "equipment"
+    )
     fun deleteEquipment(equipmentName: String): Mono<Equipment> {
         logger.debug("Deleting equipment: {}", equipmentName)
         return postgresClient.update(

@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.WorkoutStage
 import com.congen.util.ValidationUtil
@@ -67,6 +72,11 @@ class WorkoutStageDAL(
      * @return Mono containing the workout stage if found
      * @throws NoResultsFoundException if no workout stage exists with the given ID
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "workout_stage"
+    )
     fun selectWorkoutStageById(id: Long): Mono<WorkoutStage> {
         logger.debug("Selecting workout stage by id: {}", id)
         return postgresClient.selectIndividual(
@@ -84,6 +94,11 @@ class WorkoutStageDAL(
      * @param programmedWorkoutId The unique identifier of the programmed workout
      * @return Mono containing a list of workout stages for the workout
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "workout_stage"
+    )
     fun selectWorkoutStagesByProgrammedWorkoutId(programmedWorkoutId: Long): Mono<List<WorkoutStage>> {
         logger.debug("Selecting workout stages by programmed workout id: {}", programmedWorkoutId)
         return postgresClient.select(
@@ -101,6 +116,11 @@ class WorkoutStageDAL(
      *
      * @return Mono containing a list of all workout stages
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "workout_stage"
+    )
     fun selectWorkoutStages(): Mono<List<WorkoutStage>> {
         logger.debug("Selecting all workout stages")
         return postgresClient.select("SELECT * FROM workout_stage ORDER BY programmed_workout_id, position")
@@ -117,6 +137,11 @@ class WorkoutStageDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of workout stages owned by the user
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "workout_stage"
+    )
     fun selectWorkoutStagesByUserId(userId: String): Mono<List<WorkoutStage>> {
         logger.debug("Selecting workout stages by user id: {}", userId)
         return postgresClient.select(
@@ -146,6 +171,10 @@ class WorkoutStageDAL(
      * @return Mono containing the inserted workout stage with generated ID
      * @throws ValidationException if workout stage data fails validation
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "workout_stage"
+    )
     fun insertWorkoutStage(
         programmedWorkoutId: Long,
         stageTypeId: Int,
@@ -187,6 +216,10 @@ class WorkoutStageDAL(
      * @throws ValidationException if workout stage data fails validation
      * @throws NoResultsFoundException if no workout stage exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "workout_stage"
+    )
     fun updateWorkoutStage(
         id: Long,
         programmedWorkoutId: Long,
@@ -224,6 +257,11 @@ class WorkoutStageDAL(
      * @param position The position of the stage within the workout
      * @return Mono containing the existing workout stage if found, or empty if not found
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "workout_stage"
+    )
     fun selectWorkoutStageByWorkoutIdAndPosition(
         programmedWorkoutId: Long,
         position: Int
@@ -248,6 +286,10 @@ class WorkoutStageDAL(
      * @return Mono containing the deleted workout stage
      * @throws NoResultsFoundException if no workout stage exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "workout_stage"
+    )
     fun deleteWorkoutStage(id: Long): Mono<WorkoutStage> {
         logger.debug("Deleting workout stage: {}", id)
         return postgresClient.update(

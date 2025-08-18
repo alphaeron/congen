@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
@@ -60,6 +65,11 @@ class UserWeightUnitPreferenceDAL(
      * @return Mono containing the user-exercise unit preference if found
      * @throws NoResultsFoundException when the preference doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "user_weight_unit_preference"
+    )
     fun selectUserWeightUnitPreference(
         userId: String,
         exerciseName: String,
@@ -81,6 +91,11 @@ class UserWeightUnitPreferenceDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-exercise unit preferences
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_weight_unit_preference"
+    )
     fun selectUserWeightUnitPreferencesByUser(userId: String): Mono<List<UserWeightUnitPreference>> {
         logger.debug("Selecting weight unit preferences for user: {}", userId)
         return postgresClient.select(
@@ -101,6 +116,10 @@ class UserWeightUnitPreferenceDAL(
      * @return Mono containing the created user-exercise unit preference
      * @throws DatabaseException when the preference already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_weight_unit_preference"
+    )
     fun insertUserWeightUnitPreference(
         userId: String,
         exerciseName: String,
@@ -132,6 +151,10 @@ class UserWeightUnitPreferenceDAL(
      * @return Mono containing the updated user-exercise unit preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_weight_unit_preference"
+    )
     fun updateUserWeightUnitPreference(
         userId: String,
         exerciseName: String,
@@ -162,6 +185,10 @@ class UserWeightUnitPreferenceDAL(
      * @return Mono containing the created or updated user-exercise unit preference
      * @throws DatabaseException when database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_weight_unit_preference"
+    )
     fun upsertUserWeightUnitPreference(
         userId: String,
         exerciseName: String,
@@ -196,6 +223,10 @@ class UserWeightUnitPreferenceDAL(
      * @return Mono containing the deleted user-exercise unit preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_weight_unit_preference"
+    )
     fun deleteUserWeightUnitPreference(
         userId: String,
         exerciseName: String,

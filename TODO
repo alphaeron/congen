@@ -4,10 +4,7 @@ Move cache directory into utility?
 
 CacheMissException into the exceptions directory.
 
-1. implement caching for all the dals.
 #. ensure that all service method names match the underlying dal method name for consistency.
-#. User services everywhere instead of using the dals directly.
-#. double-check DALs are only used in the service directory.
 2. Update unit tests.
 3. Add a memcached configuration to application.properties and the integration test testcontains
 4. add a memcached deployment to the local environmental overlay like is done for postgres.

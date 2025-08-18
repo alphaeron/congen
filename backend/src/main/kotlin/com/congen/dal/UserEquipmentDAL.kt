@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.UserEquipment
 import org.slf4j.LoggerFactory
@@ -55,6 +60,11 @@ class UserEquipmentDAL(
      * @return Mono containing the user-equipment relationship if found
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "user_equipment"
+    )
     fun selectUserEquipment(
         userId: String,
         equipmentName: String,
@@ -76,6 +86,11 @@ class UserEquipmentDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-equipment relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_equipment"
+    )
     fun selectUserEquipmentByUser(userId: String): Mono<List<UserEquipment>> {
         logger.debug("Selecting equipment for user: {}", userId)
         return postgresClient.select(
@@ -95,6 +110,10 @@ class UserEquipmentDAL(
      * @return Mono containing the created user-equipment relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_equipment"
+    )
     fun insertUserEquipment(
         userId: String,
         equipmentName: String,
@@ -123,6 +142,10 @@ class UserEquipmentDAL(
      * @return Mono containing the deleted user-equipment relationship
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_equipment"
+    )
     fun deleteUserEquipment(
         userId: String,
         equipmentName: String,

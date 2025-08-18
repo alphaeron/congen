@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.ExerciseRotationHistory
 import com.congen.util.ValidationUtil
@@ -53,6 +58,11 @@ class ExerciseRotationHistoryDAL(
      * @return Mono containing the exercise rotation history record if found
      * @throws NoResultsFoundException if no record exists with the given ID
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "exercise_rotation_history"
+    )
     fun selectById(id: Long): Mono<ExerciseRotationHistory> {
         logger.debug("Selecting exercise rotation history by id: {}", id)
         return postgresClient.selectIndividual(
@@ -69,6 +79,11 @@ class ExerciseRotationHistoryDAL(
      *
      * @return Mono containing a list of all exercise rotation history records
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "exercise_rotation_history"
+    )
     fun selectAll(): Mono<List<ExerciseRotationHistory>> {
         logger.debug("Selecting all exercise rotation history records")
         return postgresClient.select("SELECT * FROM exercise_rotation_history ORDER BY created_at DESC")
@@ -83,6 +98,11 @@ class ExerciseRotationHistoryDAL(
      * @param isAccessory Whether to filter by accessory exercises
      * @return Mono containing a list of exercise rotation history records for the accessory type
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "exercise_rotation_history"
+    )
     fun selectByIsAccessory(isAccessory: Boolean): Mono<List<ExerciseRotationHistory>> {
         logger.debug("Selecting exercise rotation history by isAccessory: {}", isAccessory)
         return postgresClient.select(
@@ -98,6 +118,11 @@ class ExerciseRotationHistoryDAL(
      * @param isAccessory Optional filter for accessory exercises
      * @return Mono containing a list of exercise rotation history records for the user
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "exercise_rotation_history"
+    )
     fun selectByUserId(
         userId: String,
         isAccessory: Boolean? = null
@@ -129,6 +154,10 @@ class ExerciseRotationHistoryDAL(
      * @return Mono containing the inserted exercise rotation history record with generated ID
      * @throws ValidationException if exercise rotation history data fails validation
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "exercise_rotation_history"
+    )
     fun insert(
         userId: String,
         exerciseName: String,
@@ -168,6 +197,10 @@ class ExerciseRotationHistoryDAL(
      * @throws ValidationException if exercise rotation history data fails validation
      * @throws NoResultsFoundException if no record exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "exercise_rotation_history"
+    )
     fun update(
         id: Long,
         userId: String,
@@ -199,6 +232,10 @@ class ExerciseRotationHistoryDAL(
      * @return Mono containing the deleted exercise rotation history record
      * @throws NoResultsFoundException if no record exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "exercise_rotation_history"
+    )
     fun deleteById(id: Long): Mono<ExerciseRotationHistory> {
         logger.debug("Deleting exercise rotation history: {}", id)
         return postgresClient.update(
@@ -217,6 +254,10 @@ class ExerciseRotationHistoryDAL(
      * @return Mono containing the number of deleted records
      * @throws NoResultsFoundException if no records exist for the given user ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "exercise_rotation_history"
+    )
     fun deleteByUserId(userId: String): Mono<Int> {
         logger.debug("Deleting exercise rotation history for user: {}", userId)
         return postgresClient.update(

@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
@@ -64,6 +69,11 @@ class ProgramDAL(
      * @return Mono containing the program if found
      * @throws NoResultsFoundException if no program exists with the given ID
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "program"
+    )
     fun selectProgramById(id: Long): Mono<Program> {
         logger.debug("Selecting program by id: {}", id)
         return postgresClient.selectIndividual(
@@ -81,6 +91,11 @@ class ProgramDAL(
      *
      * @return Mono containing a list of all programs
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "program"
+    )
     fun selectPrograms(): Mono<List<Program>> {
         logger.debug("Selecting all programs")
         return postgresClient.select("SELECT * FROM program ORDER BY name")
@@ -97,6 +112,11 @@ class ProgramDAL(
      * @param isActive Optional filter for active status. If null, returns all programs for the user
      * @return Mono containing a list of programs for the user
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "program"
+    )
     fun selectProgramsByUserId(
         userId: String,
         isActive: Boolean? = null
@@ -123,6 +143,10 @@ class ProgramDAL(
      * @param userId The Keycloak user ID whose programs should be deactivated
      * @return Mono that completes when deactivation is done (or when no programs exist)
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "program"
+    )
     private fun deactivateProgramsForUser(userId: String): Mono<Unit> {
         return postgresClient.updateLiteral<Any>(
             "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
@@ -151,6 +175,10 @@ class ProgramDAL(
      * @return Mono containing the inserted program
      * @throws NoResultsFoundException if the deactivation or insert operation fails due to missing records
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "program"
+    )
     fun insertProgram(
         userId: String,
         name: String,
@@ -197,6 +225,10 @@ class ProgramDAL(
      * @return Mono containing the updated program
      * @throws NoResultsFoundException if no program exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "program"
+    )
     fun updateProgram(
         id: Long,
         name: String,
@@ -230,6 +262,10 @@ class ProgramDAL(
      * @return Mono containing the deleted program
      * @throws NoResultsFoundException if no program exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "program"
+    )
     fun deleteProgram(id: Long): Mono<Program> {
         logger.debug("Deleting program: {}", id)
         return postgresClient.update(

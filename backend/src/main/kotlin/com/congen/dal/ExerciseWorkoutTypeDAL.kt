@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
@@ -61,6 +66,11 @@ class ExerciseWorkoutTypeDAL(
      * @return Mono containing the exercise-workout type relationship if found
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_workout_type"
+    )
     fun selectExerciseWorkoutType(
         exerciseName: String,
         movementType: MovementType,
@@ -84,6 +94,11 @@ class ExerciseWorkoutTypeDAL(
      * @param exerciseName The name of the exercise
      * @return Mono containing a list of exercise-workout type relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_workout_type"
+    )
     fun selectExerciseWorkoutTypesByExercise(exerciseName: String): Mono<List<ExerciseWorkoutType>> {
         logger.debug("Selecting workout types for exercise: {}", exerciseName)
         return postgresClient.select(
@@ -100,6 +115,11 @@ class ExerciseWorkoutTypeDAL(
      *
      * @return Mono containing a list of all exercise-workout type relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "exercise_workout_type"
+    )
     fun selectAllExerciseWorkoutTypes(): Mono<List<ExerciseWorkoutType>> {
         logger.debug("Selecting all exercise workout type relationships")
         return postgresClient.select("SELECT * FROM exercise_workout_type")
@@ -117,6 +137,10 @@ class ExerciseWorkoutTypeDAL(
      * @return Mono containing the created exercise-workout type relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "exercise_workout_type"
+    )
     fun insertExerciseWorkoutType(
         exerciseName: String,
         movementType: MovementType,
@@ -153,6 +177,10 @@ class ExerciseWorkoutTypeDAL(
      * @return Mono containing the deleted exercise-workout type relationship
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "exercise_workout_type"
+    )
     fun deleteExerciseWorkoutType(
         exerciseName: String,
         movementType: MovementType,
@@ -176,6 +204,11 @@ class ExerciseWorkoutTypeDAL(
      * @param movementType The movement type (push, pull, squat, hinge, etc.)
      * @return Mono containing a list of exercise-workout type relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_workout_type"
+    )
     fun selectExerciseWorkoutTypesByMovementType(movementType: MovementType): Mono<List<ExerciseWorkoutType>> {
         logger.debug("Selecting workout types for movementType: {}", movementType)
         return postgresClient.select(

@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.AuditLog
 import com.congen.model.DataRetentionPolicy
@@ -52,6 +57,11 @@ class GdprComplianceDAL(
      * @param keycloakId The user's Keycloak ID
      * @return Mono containing the consent status (true if consent given, false otherwise)
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_consent"
+    )
     fun hasUserConsent(keycloakId: String): Mono<Boolean> {
         logger.debug("Querying consent status for user: {}", keycloakId)
 
@@ -78,6 +88,11 @@ class GdprComplianceDAL(
      * @param keycloakId The user's Keycloak ID
      * @return Mono containing the user consent record, or empty if user not found
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_consent"
+    )
     fun getUserConsent(keycloakId: String): Mono<UserConsent> {
         logger.debug("Retrieving full consent record for user: {}", keycloakId)
 
@@ -113,6 +128,10 @@ class GdprComplianceDAL(
      * @param consent Whether consent is given (true) or withdrawn (false)
      * @return Mono containing the updated user consent
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_consent"
+    )
     fun updateUserConsent(
         keycloakId: String,
         consent: Boolean
@@ -140,6 +159,11 @@ class GdprComplianceDAL(
      * @param keycloakId The user's Keycloak ID
      * @return Mono containing a list of audit logs
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "audit_log"
+    )
     fun getUserAuditLogs(keycloakId: String): Mono<List<AuditLog>> {
         logger.debug("Retrieving audit logs for user: {}", keycloakId)
         
@@ -152,6 +176,11 @@ class GdprComplianceDAL(
      *
      * @return Mono containing a list of data retention policies
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "data_retention_policy"
+    )
     fun getDataRetentionPolicies(): Mono<List<DataRetentionPolicy>> {
         logger.debug("Retrieving data retention policies")
         

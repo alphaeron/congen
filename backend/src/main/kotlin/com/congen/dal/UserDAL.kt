@@ -174,28 +174,6 @@ class UserDAL(
     }
 
     /**
-     * Checks if a user exists in the system.
-     *
-     * This is a lightweight check to verify user existence without retrieving
-     * sensitive data.
-     *
-     * @param keycloakId The user's Keycloak ID
-     * @return Mono containing true if user exists, false otherwise
-     */
-    fun userExists(keycloakId: String): Mono<Boolean> {
-        logger.debug("Checking if user exists: {}", keycloakId)
-
-        return postgresClient.selectIndividual<Map<String, Any>>(
-            "SELECT 1 FROM \"user\" WHERE keycloak_id = $1",
-            keycloakId
-        ).map { true }
-            .onErrorReturn(false)
-            .doOnSuccess { exists ->
-                logger.debug("User {} exists: {}", keycloakId, exists)
-            }
-    }
-
-    /**
      * Deletes a user by Keycloak ID for GDPR right to erasure.
      *
      * @param keycloakId The user's Keycloak ID

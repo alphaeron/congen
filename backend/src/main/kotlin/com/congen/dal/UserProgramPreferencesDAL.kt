@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.UserProgramPreferences
 import com.congen.util.ValidationUtil
@@ -58,6 +63,11 @@ class UserProgramPreferencesDAL(
      * @return Mono containing the user program preferences if found
      * @throws NoResultsFoundException when the preferences don't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_program_preferences"
+    )
     fun selectUserProgramPreferences(userId: String): Mono<UserProgramPreferences> {
         logger.debug("Selecting program preferences for user: {}", userId)
         return postgresClient.selectIndividual(
@@ -78,6 +88,10 @@ class UserProgramPreferencesDAL(
      * @return Mono containing the created user program preferences
      * @throws DatabaseException when the preferences already exist or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_program_preferences"
+    )
     fun insertUserProgramPreferences(
         userId: String,
         programDaysPerWeek: Int,
@@ -117,6 +131,10 @@ class UserProgramPreferencesDAL(
      * @throws NoResultsFoundException when the preferences don't exist
      * @throws ValidationException when program days per week cannot be changed due to existing workouts
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_program_preferences"
+    )
     fun updateUserProgramPreferences(
         userId: String,
         programDaysPerWeek: Int,
@@ -178,6 +196,10 @@ class UserProgramPreferencesDAL(
      * @return Mono containing the deleted user program preferences
      * @throws NoResultsFoundException when the preferences don't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_program_preferences"
+    )
     fun deleteUserProgramPreferences(userId: String): Mono<UserProgramPreferences> {
         logger.debug("Deleting user program preferences: {}", userId)
         return postgresClient.update(

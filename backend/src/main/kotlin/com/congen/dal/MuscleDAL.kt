@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.Muscle
 import org.slf4j.LoggerFactory
@@ -57,6 +62,11 @@ class MuscleDAL(
      * @return Mono containing the muscle if found
      * @throws NoResultsFoundException when muscle with the specified name doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
+        entityName = "muscle"
+    )
     fun selectMuscleByName(muscleName: String): Mono<Muscle> {
         logger.debug("Selecting muscle by name: {}", muscleName)
         return postgresClient.selectIndividual(
@@ -73,6 +83,11 @@ class MuscleDAL(
      *
      * @return Mono containing a list of all muscles
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "muscle"
+    )
     fun selectMuscles(): Mono<List<Muscle>> {
         logger.debug("Selecting all muscles")
         return postgresClient.select("SELECT * FROM muscle")
@@ -89,6 +104,10 @@ class MuscleDAL(
      * @return Mono containing the created muscle
      * @throws DatabaseException when the muscle name already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "muscle"
+    )
     fun insertMuscle(
         name: String,
         description: String
@@ -117,6 +136,10 @@ class MuscleDAL(
      * @return Mono containing the updated muscle
      * @throws NoResultsFoundException when muscle with the specified name doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "muscle"
+    )
     fun updateMuscle(
         name: String,
         description: String
@@ -143,6 +166,10 @@ class MuscleDAL(
      * @return Mono containing the deleted muscle
      * @throws NoResultsFoundException when muscle with the specified name doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "muscle"
+    )
     fun deleteMuscle(muscleName: String): Mono<Muscle> {
         logger.debug("Deleting muscle: {}", muscleName)
         return postgresClient.update(

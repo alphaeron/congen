@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.Band
 import com.congen.model.SetScheme
@@ -86,6 +91,11 @@ class SetSchemeDAL(
      * @return Mono containing the set scheme if found
      * @throws NoResultsFoundException if no set scheme exists with the given ID
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "set_scheme"
+    )
     fun selectSetSchemeById(id: Long): Mono<SetScheme> {
         logger.debug("Selecting set scheme by id: {}", id)
         return postgresClient.selectIndividual(
@@ -103,6 +113,11 @@ class SetSchemeDAL(
      * @param programmedExerciseId The unique identifier of the programmed exercise
      * @return Mono containing a list of set schemes for the exercise
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "set_scheme"
+    )
     fun selectSetSchemesByProgrammedExerciseId(programmedExerciseId: Long): Mono<List<SetScheme>> {
         logger.debug("Selecting set schemes by programmed exercise id: {}", programmedExerciseId)
         return postgresClient.select(
@@ -120,6 +135,11 @@ class SetSchemeDAL(
      *
      * @return Mono containing a list of all set schemes
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "set_scheme"
+    )
     fun selectSetSchemes(): Mono<List<SetScheme>> {
         logger.debug("Selecting all set schemes")
         return postgresClient.select("SELECT * FROM set_scheme ORDER BY programmed_exercise_id, set_number")
@@ -136,6 +156,11 @@ class SetSchemeDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of set schemes owned by the user
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "set_scheme"
+    )
     fun selectSetSchemesByUserId(userId: String): Mono<List<SetScheme>> {
         logger.debug("Selecting set schemes by user id: {}", userId)
         return postgresClient.select(
@@ -177,6 +202,10 @@ class SetSchemeDAL(
      * @return Mono containing the inserted set scheme with generated ID
      * @throws ValidationException if set scheme data fails validation
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "set_scheme"
+    )
     fun insertSetScheme(
         programmedExerciseId: Long,
         setNumber: Int,
@@ -258,6 +287,10 @@ class SetSchemeDAL(
      * @throws ValidationException if set scheme data fails validation
      * @throws NoResultsFoundException if no set scheme exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "set_scheme"
+    )
     fun updateSetScheme(
         id: Long,
         programmedExerciseId: Long,
@@ -331,6 +364,10 @@ class SetSchemeDAL(
      * @return Mono containing the deleted set scheme
      * @throws NoResultsFoundException if no set scheme exists with the given ID
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "set_scheme"
+    )
     fun deleteSetScheme(id: Long): Mono<SetScheme> {
         logger.debug("Deleting set scheme: {}", id)
         return postgresClient.update(

@@ -1,5 +1,8 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
@@ -54,6 +57,11 @@ class WorkoutStageTypeDAL(
      * @return Mono containing the workout stage type if found
      * @throws NoResultsFoundException when the workout stage type doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "workout_stage_type"
+    )
     fun selectWorkoutStageTypeById(id: Int): Mono<WorkoutStageType> {
         logger.debug("Selecting workout stage type by id: {}", id)
         return postgresClient.selectIndividual(
@@ -72,6 +80,11 @@ class WorkoutStageTypeDAL(
      * @return Mono containing the workout stage type if found
      * @throws NoResultsFoundException when the workout stage type doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
+        entityName = "workout_stage_type"
+    )
     fun selectWorkoutStageTypeByEnum(stageType: WorkoutStageTypeEnum): Mono<WorkoutStageType> {
         logger.debug("Selecting workout stage type by enum: {}", stageType)
         return postgresClient.selectIndividual(
@@ -88,6 +101,11 @@ class WorkoutStageTypeDAL(
      *
      * @return Mono containing a list of all workout stage types
      */
+    @Cacheable(
+        ttl = CacheTTL.LONG_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "workout_stage_type"
+    )
     fun selectWorkoutStageTypes(): Mono<List<WorkoutStageType>> {
         logger.debug("Selecting all workout stage types")
         return postgresClient.select("SELECT * FROM workout_stage_type ORDER BY name")

@@ -110,41 +110,4 @@ class UserDALTest {
             .verifyComplete()
         verify(postgresClient).update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
     }
-
-    @Test
-    fun `userExists should return true when user exists`() {
-        val keycloakId = "test-user-123"
-        val mockResult: Map<String, Any> = mapOf("?column?" to 1)
-
-        `when`(
-            postgresClient.selectIndividual<Map<String, Any>>(
-                "SELECT 1 FROM \"user\" WHERE keycloak_id = $1",
-                keycloakId
-            )
-        ).thenReturn(Mono.just(mockResult))
-
-        StepVerifier.create(userDAL.userExists(keycloakId))
-            .assertNext { exists ->
-                assertTrue(exists)
-            }
-            .verifyComplete()
-    }
-
-    @Test
-    fun `userExists should return false when user does not exist`() {
-        val keycloakId = "non-existent-user"
-
-        `when`(
-            postgresClient.selectIndividual<Map<String, Any>>(
-                "SELECT 1 FROM \"user\" WHERE keycloak_id = $1",
-                keycloakId
-            )
-        ).thenReturn(Mono.error(RuntimeException("User not found")))
-
-        StepVerifier.create(userDAL.userExists(keycloakId))
-            .assertNext { exists ->
-                assertFalse(exists)
-            }
-            .verifyComplete()
-    }
 }

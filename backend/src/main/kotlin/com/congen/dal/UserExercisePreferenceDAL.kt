@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
@@ -57,6 +62,11 @@ class UserExercisePreferenceDAL(
      * @return Mono containing the user-exercise preference if found
      * @throws NoResultsFoundException when the preference doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "user_exercise_preference"
+    )
     fun selectUserExercisePreference(
         userId: String,
         exerciseName: String,
@@ -78,6 +88,11 @@ class UserExercisePreferenceDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-exercise preferences
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_exercise_preference"
+    )
     fun selectUserExercisePreferencesByUser(userId: String): Mono<List<UserExercisePreference>> {
         logger.debug("Selecting exercise preferences for user: {}", userId)
         return postgresClient.select(
@@ -98,6 +113,10 @@ class UserExercisePreferenceDAL(
      * @return Mono containing the created user-exercise preference
      * @throws DatabaseException when the preference already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_exercise_preference"
+    )
     fun insertUserExercisePreference(
         userId: String,
         exerciseName: String,
@@ -129,6 +148,10 @@ class UserExercisePreferenceDAL(
      * @return Mono containing the updated user-exercise preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_exercise_preference"
+    )
     fun updateUserExercisePreference(
         userId: String,
         exerciseName: String,
@@ -158,6 +181,10 @@ class UserExercisePreferenceDAL(
      * @return Mono containing the deleted user-exercise preference
      * @throws NoResultsFoundException when the preference doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_exercise_preference"
+    )
     fun deleteUserExercisePreference(
         userId: String,
         exerciseName: String,

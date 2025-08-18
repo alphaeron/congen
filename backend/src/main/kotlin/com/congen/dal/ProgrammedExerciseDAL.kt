@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.ProgrammedExercise
 import org.slf4j.LoggerFactory
@@ -59,6 +64,11 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the programmed exercise if found
      * @throws NoResultsFoundException when programmed exercise with the specified ID doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "programmed_exercise"
+    )
     fun selectProgrammedExerciseById(id: Long): Mono<ProgrammedExercise> {
         logger.debug("Selecting programmed exercise by id: {}", id)
         return postgresClient.selectIndividual(
@@ -76,6 +86,11 @@ class ProgrammedExerciseDAL(
      * @param workoutStageId The unique identifier of the workout stage
      * @return Mono containing a list of programmed exercises
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "programmed_exercise"
+    )
     fun selectProgrammedExercisesByWorkoutStageId(workoutStageId: Long): Mono<List<ProgrammedExercise>> {
         logger.debug("Selecting programmed exercises by workout stage id: {}", workoutStageId)
         return postgresClient.select(
@@ -92,6 +107,11 @@ class ProgrammedExerciseDAL(
      *
      * @return Mono containing a list of all programmed exercises
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "programmed_exercise"
+    )
     fun selectProgrammedExercises(): Mono<List<ProgrammedExercise>> {
         logger.debug("Selecting all programmed exercises")
         return postgresClient.select("SELECT * FROM programmed_exercise ORDER BY position")
@@ -110,6 +130,10 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the created programmed exercise with generated ID
      * @throws DatabaseException when database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "programmed_exercise"
+    )
     fun insertProgrammedExercise(
         workoutStageId: Long,
         exerciseName: String,
@@ -145,6 +169,10 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the updated programmed exercise
      * @throws NoResultsFoundException when programmed exercise with the specified ID doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "programmed_exercise"
+    )
     fun updateProgrammedExercise(
         id: Long,
         workoutStageId: Long,
@@ -177,6 +205,10 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the deleted programmed exercise
      * @throws NoResultsFoundException when programmed exercise with the specified ID doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "programmed_exercise"
+    )
     fun deleteProgrammedExercise(id: Long): Mono<ProgrammedExercise> {
         logger.debug("Deleting programmed exercise: {}", id)
         return postgresClient.update(
@@ -196,6 +228,11 @@ class ProgrammedExerciseDAL(
      * @param exerciseName The name of the exercise
      * @return Mono containing the existing programmed exercise if found, or empty if not found
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "programmed_exercise"
+    )
     fun selectProgrammedExerciseByStageIdAndExerciseName(
         workoutStageId: Long,
         exerciseName: String
@@ -216,6 +253,11 @@ class ProgrammedExerciseDAL(
      * @param userId The Keycloak user ID
      * @return Mono containing a list of programmed exercises for the user
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "programmed_exercise"
+    )
     fun selectProgrammedExercisesByUserId(userId: String): Mono<List<ProgrammedExercise>> {
         logger.debug("Selecting programmed exercises by user id: {}", userId)
         return postgresClient.select(
@@ -242,6 +284,11 @@ class ProgrammedExerciseDAL(
      * @return Mono containing the user ID
      * @throws NoResultsFoundException when the relationship chain cannot be traced
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "programmed_exercise"
+    )
     fun getUserIdFromProgrammedExercise(programmedExerciseId: Long): Mono<String> {
         logger.debug("Getting user ID for programmed exercise: {}", programmedExerciseId)
         return postgresClient.selectIndividual<Map<String, Any>>(

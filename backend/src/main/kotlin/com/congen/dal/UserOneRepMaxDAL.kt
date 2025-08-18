@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.UserOneRepMax
 import com.congen.util.ValidationUtil
@@ -59,6 +64,11 @@ class UserOneRepMaxDAL(
      * @return Mono containing the user-exercise 1RM if found
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "user_one_rep_max"
+    )
     fun selectUserOneRepMax(
         userId: String,
         exerciseName: String,
@@ -80,6 +90,11 @@ class UserOneRepMaxDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of user-exercise 1RM values
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_one_rep_max"
+    )
     fun selectUserOneRepMaxByUser(userId: String): Mono<List<UserOneRepMax>> {
         logger.debug("Selecting one rep max values for user: {}", userId)
         return postgresClient.select(
@@ -100,6 +115,10 @@ class UserOneRepMaxDAL(
      * @return Mono containing the created user-exercise 1RM
      * @throws DatabaseException when the 1RM already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_one_rep_max"
+    )
     fun insertUserOneRepMax(
         userId: String,
         exerciseName: String,
@@ -133,6 +152,10 @@ class UserOneRepMaxDAL(
      * @return Mono containing the updated user-exercise 1RM
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_one_rep_max"
+    )
     fun updateUserOneRepMax(
         userId: String,
         exerciseName: String,
@@ -165,6 +188,10 @@ class UserOneRepMaxDAL(
      * @return Mono containing the created or updated user-exercise 1RM
      * @throws DatabaseException when database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_one_rep_max"
+    )
     fun upsertUserOneRepMax(
         userId: String,
         exerciseName: String,
@@ -201,6 +228,10 @@ class UserOneRepMaxDAL(
      * @return Mono containing the deleted user-exercise 1RM
      * @throws NoResultsFoundException when the 1RM doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "user_one_rep_max"
+    )
     fun deleteUserOneRepMax(
         userId: String,
         exerciseName: String,

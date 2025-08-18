@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.UserWeakMuscle
 import org.slf4j.LoggerFactory
@@ -27,6 +32,11 @@ class UserWeakMuscleDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of UserWeakMuscle
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "user_weak_muscle"
+    )
     fun selectUserWeakMusclesByUser(userId: String): Mono<List<UserWeakMuscle>> {
         logger.debug("Selecting weak muscles for user: {}", userId)
         return postgresClient.select(
@@ -42,6 +52,10 @@ class UserWeakMuscleDAL(
      * @param muscleName The name of the weak muscle group
      * @return Mono containing the created UserWeakMuscle
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_weak_muscle"
+    )
     fun insertUserWeakMuscle(
         userId: String,
         muscleName: String
@@ -64,6 +78,10 @@ class UserWeakMuscleDAL(
      * @param muscleName The name of the weak muscle group
      * @return Mono containing the deleted UserWeakMuscle
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "user_weak_muscle"
+    )
     fun deleteUserWeakMuscle(
         userId: String,
         muscleName: String

@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.ExerciseEquipment
 import org.slf4j.LoggerFactory
@@ -59,6 +64,11 @@ class ExerciseEquipmentDAL(
      * @return Mono containing the exercise-equipment relationship if found
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_equipment"
+    )
     fun selectExerciseEquipment(
         exerciseName: String,
         equipmentName: String,
@@ -80,6 +90,11 @@ class ExerciseEquipmentDAL(
      * @param exerciseName The name of the exercise
      * @return Mono containing a list of exercise-equipment relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_equipment"
+    )
     fun selectExerciseEquipmentByExercise(exerciseName: String): Mono<List<ExerciseEquipment>> {
         logger.debug("Selecting equipment for exercise: {}", exerciseName)
         return postgresClient.select(
@@ -97,6 +112,11 @@ class ExerciseEquipmentDAL(
      * @param equipmentName The name of the equipment
      * @return Mono containing a list of exercise-equipment relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.RELATIONSHIP,
+        entityName = "exercise_equipment"
+    )
     fun selectExerciseEquipmentByEquipment(equipmentName: String): Mono<List<ExerciseEquipment>> {
         logger.debug("Selecting exercises for equipment: {}", equipmentName)
         return postgresClient.select(
@@ -113,6 +133,11 @@ class ExerciseEquipmentDAL(
      *
      * @return Mono containing a list of all exercise-equipment relationships
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "exercise_equipment"
+    )
     fun selectAllExerciseEquipment(): Mono<List<ExerciseEquipment>> {
         logger.debug("Selecting all exercise equipment relationships")
         return postgresClient.select("SELECT * FROM exercise_equipment")
@@ -129,6 +154,10 @@ class ExerciseEquipmentDAL(
      * @return Mono containing the created exercise-equipment relationship
      * @throws DatabaseException when the relationship already exists or database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "exercise_equipment"
+    )
     fun insertExerciseEquipment(
         exerciseName: String,
         equipmentName: String
@@ -157,6 +186,10 @@ class ExerciseEquipmentDAL(
      * @return Mono containing the deleted exercise-equipment relationship
      * @throws NoResultsFoundException when the relationship doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
+        entityName = "exercise_equipment"
+    )
     fun deleteExerciseEquipment(
         exerciseName: String,
         equipmentName: String,

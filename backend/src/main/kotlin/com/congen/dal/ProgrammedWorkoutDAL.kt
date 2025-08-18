@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.ProgrammedWorkout
 import com.congen.util.ValidationUtil
@@ -59,6 +64,11 @@ class ProgrammedWorkoutDAL(
      * @return Mono containing the programmed workout if found
      * @throws NoResultsFoundException when programmed workout with the specified ID doesn't exist
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "programmed_workout"
+    )
     fun selectProgrammedWorkoutById(id: Long): Mono<ProgrammedWorkout> {
         logger.debug("Selecting programmed workout by id: {}", id)
         return postgresClient.selectIndividual(
@@ -76,6 +86,11 @@ class ProgrammedWorkoutDAL(
      * @param programId The unique identifier of the program
      * @return Mono containing a list of programmed workouts
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "programmed_workout"
+    )
     fun selectProgrammedWorkoutsByProgramId(programId: Long): Mono<List<ProgrammedWorkout>> {
         logger.debug("Selecting programmed workouts by program id: {}", programId)
         return postgresClient.select(
@@ -92,6 +107,11 @@ class ProgrammedWorkoutDAL(
      *
      * @return Mono containing a list of all programmed workouts
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "programmed_workout"
+    )
     fun selectProgrammedWorkouts(): Mono<List<ProgrammedWorkout>> {
         logger.debug("Selecting all programmed workouts")
         return postgresClient.select("SELECT * FROM programmed_workout ORDER BY program_id, day_number")
@@ -107,6 +127,11 @@ class ProgrammedWorkoutDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing a list of programmed workouts owned by the user
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "programmed_workout"
+    )
     fun selectProgrammedWorkoutsByUserId(userId: String): Mono<List<ProgrammedWorkout>> {
         logger.debug("Selecting programmed workouts by user id: {}", userId)
         return postgresClient.select(
@@ -134,6 +159,10 @@ class ProgrammedWorkoutDAL(
      * @return Mono containing the created programmed workout with generated ID
      * @throws DatabaseException when database operation fails
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "programmed_workout"
+    )
     fun insertProgrammedWorkout(
         programId: Long,
         dayNumber: Int,
@@ -171,6 +200,10 @@ class ProgrammedWorkoutDAL(
      * @return Mono containing the updated programmed workout
      * @throws NoResultsFoundException when programmed workout with the specified ID doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "programmed_workout"
+    )
     fun updateProgrammedWorkout(
         id: Long,
         programId: Long,
@@ -204,6 +237,11 @@ class ProgrammedWorkoutDAL(
      * @param userId The Keycloak identifier of the user
      * @return Mono containing true if the user has workouts, false otherwise
      */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "programmed_workout"
+    )
     fun hasUserExistingWorkouts(userId: String): Mono<Boolean> {
         logger.debug("Checking if user has existing workouts: {}", userId)
         // Explicit type
@@ -232,6 +270,10 @@ class ProgrammedWorkoutDAL(
      * @return Mono containing the deleted programmed workout
      * @throws NoResultsFoundException when programmed workout with the specified ID doesn't exist
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "programmed_workout"
+    )
     fun deleteProgrammedWorkout(id: Long): Mono<ProgrammedWorkout> {
         logger.debug("Deleting programmed workout: {}", id)
         return postgresClient.update(

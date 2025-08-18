@@ -1,5 +1,10 @@
 package com.congen.dal
 
+import com.congen.cache.annotation.Cacheable
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.CacheTTL
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheInvalidationStrategy
 import com.congen.client.PostgresClient
 import com.congen.model.DataCleanupResult
 import com.congen.model.DataRetentionPolicy
@@ -43,6 +48,10 @@ class DataRetentionDAL(
      *
      * @return Mono containing list of cleanup results by data type
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "data_retention_policy"
+    )
     fun executeCleanupExpiredData(): Mono<List<DataCleanupResult>> {
         logger.debug("Executing cleanup for all data types")
 
@@ -103,6 +112,11 @@ class DataRetentionDAL(
      *
      * @return Mono containing list of all retention policies
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.LIST_QUERY,
+        entityName = "data_retention_policy"
+    )
     fun getAllRetentionPolicies(): Mono<List<DataRetentionPolicy>> {
         logger.debug("Retrieving all retention policies")
 
@@ -123,6 +137,10 @@ class DataRetentionDAL(
      * @param description Optional description of the policy
      * @return Mono containing the updated policy
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "data_retention_policy"
+    )
     fun upsertRetentionPolicy(
         dataType: String,
         retentionPeriodDays: Int,
@@ -159,6 +177,11 @@ class DataRetentionDAL(
      *
      * @return Mono containing the estimated count
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "audit_log_cleanup_estimate"
+    )
     fun estimateAuditLogCleanup(): Mono<Int> {
         logger.debug("Estimating audit log cleanup impact")
 
@@ -182,6 +205,11 @@ class DataRetentionDAL(
      *
      * @return Mono containing the estimated count
      */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "consent_history_cleanup_estimate"
+    )
     fun estimateConsentHistoryCleanup(): Mono<Int> {
         logger.debug("Estimating consent history cleanup impact")
 
@@ -206,6 +234,10 @@ class DataRetentionDAL(
      * @param dataType The type of data to clean up
      * @return Mono containing the cleanup result
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+        entityName = "data_retention_policy"
+    )
     fun executeCleanupForDataType(dataType: String): Mono<DataCleanupResult> {
         logger.debug("Executing cleanup for data type: {}", dataType)
 
@@ -225,6 +257,11 @@ class DataRetentionDAL(
      * @param dataType The data type to get the policy for
      * @return Mono containing the retention policy, or empty if not found
      */
+    @Cacheable(
+        ttl = CacheTTL.MEDIUM_TERM,
+        keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
+        entityName = "data_retention_policy"
+    )
     fun getRetentionPolicy(dataType: String): Mono<DataRetentionPolicy> {
         logger.debug("Retrieving retention policy for: {}", dataType)
 
@@ -247,6 +284,10 @@ class DataRetentionDAL(
      * @param dataType The data type to remove the policy for
      * @return Mono that completes when policy is deleted
      */
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.ENTITY_BY_NAME,
+        entityName = "data_retention_policy"
+    )
     fun deleteRetentionPolicy(dataType: String): Mono<Void> {
         logger.debug("Deleting retention policy for: {}", dataType)
 
