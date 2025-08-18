@@ -5,7 +5,7 @@ import com.congen.cache.annotation.CacheEvict
 import com.congen.dal.ExerciseDAL
 import com.congen.model.Exercise
 import com.congen.model.MovementType
-import com.congen.util.ReactiveMemcachedCache
+import com.congen.cache.ReactiveMemcachedCache
 import com.congen.exceptions.CacheMissException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.aspectj.lang.reflect.MethodSignature

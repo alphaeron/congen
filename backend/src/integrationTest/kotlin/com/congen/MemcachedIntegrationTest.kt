@@ -1,6 +1,6 @@
 package com.congen
 
-import com.congen.util.ReactiveMemcachedCache
+import com.congen.cache.ReactiveMemcachedCache
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

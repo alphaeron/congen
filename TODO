@@ -1,10 +1,4 @@
-ReactiveMemcachedCache and other utilities to cache directory.
-
-Move cache directory into utility?
-
 #. ensure that all service method names match the underlying dal method name for consistency.
-2. Update unit tests.
-3. Add a memcached configuration to application.properties and the integration test testcontains
 4. add a memcached deployment to the local environmental overlay like is done for postgres.
 
 

@@ -1,4 +1,4 @@
-package com.congen.util
+package com.congen.cache
 
 import com.congen.exceptions.CacheMissException
 import com.fasterxml.jackson.core.type.TypeReference
