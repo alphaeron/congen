@@ -41,7 +41,12 @@ import org.springframework.test.context.TestPropertySource
         "congen.postgres.username=postgres",
         "congen.postgres.password=postgres",
         "congen.postgres.db-name=postgres",
-        "congen.postgres.ssl-mode=false"
+        "congen.postgres.ssl-mode=false",
+        "memcached.host=localhost",
+        "memcached.port=11211",
+        "memcached.connection-pool-size=10",
+        "memcached.op-timeout=1000",
+        "memcached.max-queued-noreply=100"
     ]
 )
 class CongenApplicationTest {

@@ -13,6 +13,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.test.StepVerifier
 import java.time.Duration
+import java.util.Base64
 
 @ExtendWith(MockitoExtension::class)
 class ReactiveMemcachedCacheTest {
@@ -33,54 +34,59 @@ class ReactiveMemcachedCacheTest {
         val key = "test:key"
         val value = TestData("test", 123)
         val ttl = Duration.ofMinutes(30)
+        val encodedKey = Base64.getEncoder().encodeToString("congen:$key".toByteArray())
 
-        whenever(memcachedClient.set(eq("congen:$key"), eq(1800), any()))
+        whenever(memcachedClient.set(eq(encodedKey), eq(1800), any()))
             .thenReturn(true)
 
         StepVerifier.create(reactiveCache.set(key, value, ttl))
             .expectNext(true)
             .verifyComplete()
 
-        verify(memcachedClient).set(eq("congen:$key"), eq(1800), any())
+        verify(memcachedClient).set(eq(encodedKey), eq(1800), any())
     }
 
     @Test
     fun `get should retrieve value from cache`() {
         val key = "test:key"
-        val expectedValue = TestData("test", 123)
-        val jsonValue = objectMapper.writeValueAsString(expectedValue)
+        val expectedValue = "test-string"
+        val jsonValue = "\"$expectedValue\""
+        val encodedKey = Base64.getEncoder().encodeToString("congen:$key".toByteArray())
 
-        whenever(memcachedClient.get<String>("congen:$key"))
+        whenever(memcachedClient.get<String>(encodedKey))
             .thenReturn(jsonValue)
 
-        StepVerifier.create(reactiveCache.get<TestData>(key))
+        StepVerifier.create(reactiveCache.get<String>(key))
             .expectNext(expectedValue)
             .verifyComplete()
     }
 
     @Test
-    fun `get should return empty when key not found`() {
+    fun `get should throw CacheMissException when key not found`() {
         val key = "test:key"
+        val encodedKey = Base64.getEncoder().encodeToString("congen:$key".toByteArray())
 
-        whenever(memcachedClient.get<String>("congen:$key"))
+        whenever(memcachedClient.get<String>(encodedKey))
             .thenReturn(null)
 
         StepVerifier.create(reactiveCache.get<TestData>(key))
-            .verifyComplete()
+            .expectError(CacheMissException::class.java)
+            .verify()
     }
 
     @Test
     fun `delete should remove value from cache`() {
         val key = "test:key"
+        val encodedKey = Base64.getEncoder().encodeToString("congen:$key".toByteArray())
 
-        whenever(memcachedClient.delete("congen:$key"))
+        whenever(memcachedClient.delete(encodedKey))
             .thenReturn(true)
 
         StepVerifier.create(reactiveCache.delete(key))
             .expectNext(true)
             .verifyComplete()
 
-        verify(memcachedClient).delete("congen:$key")
+        verify(memcachedClient).delete(encodedKey)
     }
 
     @Test
@@ -88,15 +94,16 @@ class ReactiveMemcachedCacheTest {
         val key = "test:key"
         val delta = 5L
         val expectedValue = 10L
+        val encodedKey = Base64.getEncoder().encodeToString("congen:$key".toByteArray())
 
-        whenever(memcachedClient.incr("congen:$key", delta))
+        whenever(memcachedClient.incr(encodedKey, delta))
             .thenReturn(expectedValue)
 
         StepVerifier.create(reactiveCache.increment(key, delta))
             .expectNext(expectedValue)
             .verifyComplete()
 
-        verify(memcachedClient).incr("congen:$key", delta)
+        verify(memcachedClient).incr(encodedKey, delta)
     }
 
     data class TestData(
