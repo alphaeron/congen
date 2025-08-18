@@ -453,8 +453,8 @@ class ExerciseRotationHistoryController(
                         isOwner && isUserOwner
                     }
                 }
-            hasAccess.flatMap { hasAccess ->
-                if (hasAccess) {
+            hasAccess.flatMap { hasResourceAccess ->
+                if (hasResourceAccess) {
                     val consentUserIdMono = if (isAdminOrService) {
                         Mono.just(userId)
                     } else {

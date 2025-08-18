@@ -89,18 +89,6 @@ class UserController(
     fun createUser(): Mono<ResponseEntity<User>> {
         return userService.createUser()
             .map { ResponseEntity.ok(it) }
-            .onErrorResume(ValidationException::class.java) { e ->
-                logger.warn("Validation error creating user: {}", e.message)
-                Mono.just(ResponseEntity.badRequest().build())
-            }
-            .onErrorResume(DatabaseException::class.java) { e ->
-                logger.error("Database error creating user", e)
-                Mono.just(ResponseEntity.internalServerError().build())
-            }
-            .onErrorResume { e ->
-                logger.error("Unexpected error creating user", e)
-                Mono.just(ResponseEntity.internalServerError().build())
-            }
     }
 
     /**
@@ -148,13 +136,5 @@ class UserController(
                 userService.getUserByKeycloakId(keycloakUserId)
             }
             .map { ResponseEntity.ok(it) }
-            .onErrorResume(NoResultsFoundException::class.java) { e ->
-                logger.warn("User profile not found for current user: {}", e.message)
-                Mono.just(ResponseEntity.notFound().build())
-            }
-            .onErrorResume { e ->
-                logger.error("Unexpected error getting current user", e)
-                Mono.just(ResponseEntity.internalServerError().build())
-            }
     }
 }

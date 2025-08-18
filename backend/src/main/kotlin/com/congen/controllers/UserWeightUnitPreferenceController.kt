@@ -251,10 +251,6 @@ class UserWeightUnitPreferenceController(
                                 logger.debug("Found weight unit preference for user: {} and exercise: {}", userId, exerciseName)
                                 ResponseEntity.ok(preference)
                             }
-                            .onErrorResume(NoResultsFoundException::class.java) {
-                                logger.warn("Weight unit preference not found for user: {} and exercise: {}", userId, exerciseName)
-                                Mono.just(ResponseEntity.notFound().build())
-                            }
                             .doOnError { e ->
                                 logger.error("Error getting weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
                             }

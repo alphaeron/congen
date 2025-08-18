@@ -165,10 +165,6 @@ class ExerciseController(
                 logger.debug("Found exercise: {}", name)
                 ResponseEntity.ok(it)
             }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Exercise not found: {}", name)
-                Mono.just(ResponseEntity.notFound().build())
-            }
             .doOnError { e ->
                 logger.error("Error getting exercise: {}", name, e)
             }
@@ -223,10 +219,6 @@ class ExerciseController(
                         }
                     }
             }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Exercise not found: {}", name)
-                Mono.just(ResponseEntity.notFound().build())
-            }
             .doOnError { e ->
                 logger.error("Error getting muscles for exercise: {}", name, e)
             }
@@ -280,10 +272,6 @@ class ExerciseController(
                             Mono.just(ResponseEntity.ok(equipment))
                         }
                     }
-            }
-            .onErrorResume(NoResultsFoundException::class.java) {
-                logger.warn("Exercise not found: {}", name)
-                Mono.just(ResponseEntity.notFound().build())
             }
             .doOnError { e ->
                 logger.error("Error getting equipment for exercise: {}", name, e)
