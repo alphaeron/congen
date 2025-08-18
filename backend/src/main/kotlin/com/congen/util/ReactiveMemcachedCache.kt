@@ -135,10 +135,7 @@ class ReactiveMemcachedCache(
      * @return Mono containing the cached value or empty if not found
      */
     final inline fun <reified T : Any> get(key: String): Mono<T> {
-        val javaType = objectMapper.typeFactory.constructType(T::class.java)
-        return get(key, object : TypeReference<T>() {
-            override fun getType(): java.lang.reflect.Type = javaType
-        })
+        return get(key, object : TypeReference<T>() {})
     }
 
     /**
