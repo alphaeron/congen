@@ -30,3 +30,12 @@ data:
   JWT_ISSUER_URI: "http://keycloak:8080/realms/congen"
   JWT_JWK_SET_URI: "http://keycloak:8080/realms/congen/protocol/openid-connect/certs"
   JWT_AUDIENCES: "congen-backend"
+  # Memcached Configuration
+  MEMCACHED_HOST: "memcached"
+  MEMCACHED_PORT: "11211"
+  MEMCACHED_CONNECTION_POOL_SIZE: "10"
+  MEMCACHED_OP_TIMEOUT: "1000"
+  MEMCACHED_MAX_QUEUED_NOREPLY: "1000"
+  MEMCACHED_SCHEDULER_THREAD_POOL_SIZE: "15"
+  MEMCACHED_SCHEDULER_QUEUE_CAPACITY: "1000"
+  MEMCACHED_SCHEDULER_THREAD_NAME_PREFIX: "memcached-scheduler"

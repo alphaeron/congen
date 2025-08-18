@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memcached
+  namespace: congen
+  labels:
+    app: memcached
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memcached
+  template:
+    metadata:
+      labels:
+        app: memcached
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 11211
+        fsGroup: 11211
+      containers:
+      - name: memcached
+        image: memcached:1.6.39-alpine
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 11211
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - containerPort: 11211
+        command:
+        - memcached
+        - -m
+        - "128"
+        - -c
+        - "1024"
+        - -t
+        - "4"
+        - -I
+        - "1m"
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        livenessProbe:
+          tcpSocket:
+            port: 11211
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 11211
+          initialDelaySeconds: 5
+          periodSeconds: 5

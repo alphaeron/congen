@@ -1,5 +1,4 @@
 #. ensure that all service method names match the underlying dal method name for consistency.
-4. add a memcached deployment to the local environmental overlay like is done for postgres.
 
 
 use the elasticache bean if we're using elasticache?

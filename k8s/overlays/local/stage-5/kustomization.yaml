@@ -9,6 +9,8 @@ resources:
   - postgres-service.yaml
   - postgres-configmap.yaml
   - postgres-pvc.yaml
+  - memcached-deployment.yaml
+  - memcached-service.yaml
 
 patches:
 - path: patches/migration-service-labels-patch.yaml
