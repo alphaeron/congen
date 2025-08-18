@@ -8,6 +8,7 @@ import net.rubyeye.xmemcached.MemcachedClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Scheduler
 import reactor.core.scheduler.Schedulers
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
@@ -25,6 +26,7 @@ import java.util.Base64
  * - **JSON Serialization**: Automatic serialization/deserialization of objects
  * - **Error Handling**: Graceful handling of cache misses and connection errors
  * - **Key Generation**: Consistent cache key generation with namespace support
+ * - **Custom Scheduler**: Uses dedicated scheduler for Memcached operations
  *
  * ## Usage
  *
@@ -44,6 +46,7 @@ import java.util.Base64
  *
  * @property memcachedClient The underlying Memcached client
  * @property objectMapper Jackson ObjectMapper for JSON serialization
+ * @property memcachedScheduler Dedicated scheduler for Memcached operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -51,7 +54,8 @@ import java.util.Base64
 @Component
 class ReactiveMemcachedCache(
     private val memcachedClient: MemcachedClient,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    private val memcachedScheduler: Scheduler
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ReactiveMemcachedCache::class.java)
@@ -78,7 +82,7 @@ class ReactiveMemcachedCache(
 
         return Mono.fromCallable {
             memcachedClient.set(cacheKey, expirySeconds, jsonValue)
-        }.subscribeOn(Schedulers.boundedElastic())
+        }.subscribeOn(memcachedScheduler)
             .doOnSuccess { success ->
                 if (success) {
                     logger.debug("Successfully cached key: {}", cacheKey)
@@ -122,7 +126,7 @@ class ReactiveMemcachedCache(
             } else {
                 throw CacheMissException(cacheKey)
             }
-        }.subscribeOn(Schedulers.boundedElastic())
+        }.subscribeOn(memcachedScheduler)
     }
 
     /**
@@ -152,7 +156,7 @@ class ReactiveMemcachedCache(
 
         return Mono.fromCallable {
             memcachedClient.delete(cacheKey)
-        }.subscribeOn(Schedulers.boundedElastic())
+        }.subscribeOn(memcachedScheduler)
             .doOnSuccess { success: Boolean ->
                 if (success) {
                     logger.debug("Successfully deleted cache key: {}", cacheKey)
@@ -179,7 +183,7 @@ class ReactiveMemcachedCache(
 
         return Mono.fromCallable {
             memcachedClient.incr(cacheKey, delta)
-        }.subscribeOn(Schedulers.boundedElastic())
+        }.subscribeOn(memcachedScheduler)
             .doOnSuccess { newValue: Long ->
                 logger.debug("Incremented cache key: {} to {}", cacheKey, newValue)
             }

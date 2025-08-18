@@ -2,8 +2,6 @@
 4. add a memcached deployment to the local environmental overlay like is done for postgres.
 
 
-do we want a separate scheduler for memcached operations?
-
 use the elasticache bean if we're using elasticache?
 
 WarmupManager for backend (BigDecimal?, cache)

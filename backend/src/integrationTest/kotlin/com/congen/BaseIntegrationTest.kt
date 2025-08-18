@@ -213,6 +213,9 @@ abstract class BaseIntegrationTest {
             registry.add("memcached.connection-pool-size") { 1 }
             registry.add("memcached.op-timeout") { 1000L }
             registry.add("memcached.max-queued-noreply") { 1000 }
+            registry.add("memcached.scheduler-thread-pool-size") { 2 }
+            registry.add("memcached.scheduler-queue-capacity") { 100 }
+            registry.add("memcached.scheduler-thread-name-prefix") { "test-memcached-scheduler" }
         }
     }
 

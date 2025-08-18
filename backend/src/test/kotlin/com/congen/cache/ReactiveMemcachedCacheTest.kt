@@ -12,6 +12,8 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import reactor.core.scheduler.Scheduler
+import reactor.core.scheduler.Schedulers
 import reactor.test.StepVerifier
 import java.time.Duration
 import java.util.Base64
@@ -23,11 +25,13 @@ class ReactiveMemcachedCacheTest {
 
     private lateinit var reactiveCache: ReactiveMemcachedCache
     private lateinit var objectMapper: ObjectMapper
+    private lateinit var testScheduler: Scheduler
 
     @BeforeEach
     fun setUp() {
         objectMapper = ObjectMapper()
-        reactiveCache = ReactiveMemcachedCache(memcachedClient, objectMapper)
+        testScheduler = Schedulers.boundedElastic()
+        reactiveCache = ReactiveMemcachedCache(memcachedClient, objectMapper, testScheduler)
     }
 
     @Test

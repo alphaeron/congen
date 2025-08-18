@@ -12,19 +12,28 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.context.ApplicationListener
 import org.springframework.context.event.ContextClosedEvent
+import reactor.core.scheduler.Scheduler
+import reactor.core.scheduler.Schedulers
 import java.io.IOException
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Configuration properties for Memcached client setup.
  *
  * This data class holds the configuration properties for the Memcached client,
- * including server connection details and performance tuning parameters.
+ * including server connection details, performance tuning parameters, and
+ * custom scheduler configuration.
  *
  * @property host Memcached server hostname
  * @property port Memcached server port
  * @property connectionPoolSize Number of connections in the pool
  * @property opTimeout Operation timeout in milliseconds
  * @property maxQueuedNoReply Maximum queued no-reply operations
+ * @property schedulerThreadPoolSize Number of threads in the custom scheduler pool
+ * @property schedulerQueueCapacity Maximum queue capacity for the scheduler
+ * @property schedulerThreadNamePrefix Prefix for scheduler thread names
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -35,7 +44,10 @@ data class MemcachedProperties(
     var port: Int = 11211,
     var connectionPoolSize: Int = 10,
     var opTimeout: Long = 5000,
-    var maxQueuedNoReply: Int = 1000
+    var maxQueuedNoReply: Int = 1000,
+    var schedulerThreadPoolSize: Int = 15,
+    var schedulerQueueCapacity: Int = 1000,
+    var schedulerThreadNamePrefix: String = "memcached-scheduler"
 )
 
 /**
@@ -106,6 +118,47 @@ class MemcachedConfig(
 
         logger.info("Memcached client initialized successfully")
         return client
+    }
+
+    /**
+     * Creates a custom thread factory for Memcached scheduler threads.
+     *
+     * This factory creates threads with configurable naming and proper
+     * daemon status for application lifecycle management.
+     *
+     * @return ThreadFactory for Memcached scheduler threads
+     */
+    private fun createMemcachedThreadFactory(): ThreadFactory {
+        val threadCounter = AtomicInteger(1)
+        return ThreadFactory { runnable ->
+            Thread(runnable, "${props.schedulerThreadNamePrefix}-${threadCounter.getAndIncrement()}").apply {
+                isDaemon = true
+            }
+        }
+    }
+
+    /**
+     * Creates a dedicated scheduler for Memcached operations.
+     *
+     * This scheduler is optimized for Memcached I/O operations with configurable
+     * thread pool size, queue capacity, and thread naming.
+     *
+     * @return Dedicated scheduler for Memcached operations
+     */
+    @Bean("memcachedScheduler")
+    fun memcachedScheduler(): Scheduler {
+        logger.info(
+            "Creating dedicated Memcached scheduler with {} threads, queue capacity: {}",
+            props.schedulerThreadPoolSize,
+            props.schedulerQueueCapacity
+        )
+        
+        val executorService = Executors.newFixedThreadPool(
+            props.schedulerThreadPoolSize,
+            createMemcachedThreadFactory()
+        )
+        
+        return Schedulers.fromExecutorService(executorService)
     }
 
     /**
