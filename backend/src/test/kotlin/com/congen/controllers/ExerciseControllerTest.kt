@@ -276,8 +276,8 @@ class ExerciseControllerTest {
         val result = exerciseController.get(NON_EXISTENT_EXERCISE)
 
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
 
         verify(exerciseDAL).selectExerciseByName(NON_EXISTENT_EXERCISE)
     }
@@ -381,8 +381,8 @@ class ExerciseControllerTest {
         val result = exerciseController.getMuscle(NON_EXISTENT_EXERCISE)
 
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
         verify(exerciseDAL).selectExerciseByName(NON_EXISTENT_EXERCISE)
     }
 
@@ -533,8 +533,8 @@ class ExerciseControllerTest {
         val result = exerciseController.getEquipment(NON_EXISTENT_EXERCISE)
 
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
         verify(exerciseDAL).selectExerciseByName(NON_EXISTENT_EXERCISE)
     }
 

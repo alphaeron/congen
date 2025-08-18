@@ -78,8 +78,8 @@ class UserControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.badRequest().build<User>())
-            .verifyComplete()
+            .expectError(ValidationException::class.java)
+            .verify()
         verify(userService).createUser()
     }
 
@@ -94,8 +94,8 @@ class UserControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.internalServerError().build<User>())
-            .verifyComplete()
+            .expectError(DatabaseException::class.java)
+            .verify()
         verify(userService).createUser()
     }
 
@@ -136,8 +136,8 @@ class UserControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build<User>())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
         verify(keycloakUtil).getCurrentUserId()
         verify(userService).getUserByKeycloakId(KEYCLOAK_USER_ID)
     }
@@ -153,8 +153,8 @@ class UserControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.internalServerError().build<User>())
-            .verifyComplete()
+            .expectError(RuntimeException::class.java)
+            .verify()
         verify(keycloakUtil).getCurrentUserId()
         verify(userService, never()).getUserByKeycloakId(any())
     }

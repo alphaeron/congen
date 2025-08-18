@@ -227,8 +227,8 @@ class UserWeightUnitPreferenceControllerTest {
 
         // Then
         StepVerifier.create(result)
-            .expectNext(ResponseEntity.notFound().build())
-            .verifyComplete()
+            .expectError(NoResultsFoundException::class.java)
+            .verify()
     }
 
     @Test
