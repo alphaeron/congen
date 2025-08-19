@@ -98,6 +98,33 @@ class UserDAL(
     }
 
     /**
+     * Retrieves random user keycloak IDs from the database for cache warming.
+     *
+     * This method queries the database for a specified number of random user
+     * keycloak IDs without fetching full user data. This method is primarily used
+     * for cache warming operations and is not cached since it's only used internally.
+     *
+     * @param numUsers The number of random user keycloak IDs to retrieve
+     * @return Mono containing a list of random user keycloak IDs
+     */
+    fun selectRandomUserIds(numUsers: Int): Mono<List<String>> {
+        logger.debug("Selecting {} random user keycloak IDs", numUsers)
+        return postgresClient.select<Map<String, Any>>(
+            "SELECT keycloak_id FROM \"user\" ORDER BY RANDOM() LIMIT $1",
+            numUsers
+        ).map { rows ->
+            rows.mapNotNull { row ->
+                try {
+                    row["keycloak_id"] as? String
+                } catch (e: Exception) {
+                    logger.warn("Failed to extract keycloak_id from row: {}", row, e)
+                    null
+                }
+            }
+        }
+    }
+
+    /**
      * Inserts a new user into the database with encryption and audit logging.
      *
      * This method validates the user data, encrypts sensitive personal information,

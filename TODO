@@ -1,6 +1,6 @@
-use the elasticache bean if we're using elasticache?
+aspectj instead of spring aspect
 
-WarmupManager for backend (BigDecimal?, cache)
+use the elasticache bean if we're using elasticache?
 
 restructure userprofile to use tabs, and side bar, for better navigation
 
