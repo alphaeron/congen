@@ -8,6 +8,7 @@ plugins {
     id 'org.jetbrains.dokka' version '1.9.20'
     id 'com.google.cloud.tools.jib' version '3.4.2'
     id 'com.palantir.git-version' version '3.0.0'
+    id 'io.freefair.aspectj' version '8.14'
 }
 
 java {
@@ -66,8 +67,9 @@ dependencies {
     // Memcached for caching
     implementation 'com.googlecode.xmemcached:xmemcached:2.4.8'
 
-    // Spring AOP for caching
-    implementation 'org.springframework.boot:spring-boot-starter-aop:3.2.5'
+    // AspectJ for compile-time weaving (used for cache implementation)
+    implementation 'org.aspectj:aspectjrt:1.9.24'
+    implementation 'org.aspectj:aspectjweaver:1.9.24'
 
     // Logging
     implementation 'org.slf4j:slf4j-api:2.0.12'

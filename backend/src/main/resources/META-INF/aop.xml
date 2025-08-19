@@ -1,0 +1,15 @@
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//EN" "http://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+<aspectj>
+    <!-- Include all aspects in the com.congen.cache package -->
+    <aspects>
+        <aspect name="com.congen.cache.DALCachingAspect"/>
+    </aspects>
+    
+    <!-- Include all classes in the com.congen.dal package for weaving -->
+    <weaver>
+        <include within="com.congen.dal.*"/>
+        <!-- Exclude test classes -->
+        <exclude within="*Test"/>
+        <exclude within="*Tests"/>
+    </weaver>
+</aspectj>

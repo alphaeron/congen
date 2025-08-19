@@ -12,10 +12,11 @@ import reactor.core.publisher.Mono
 import java.lang.reflect.Method
 
 /**
- * Spring AOP aspect for transparent DAL caching.
+ * AspectJ aspect for transparent DAL caching with compile-time weaving.
  *
  * This aspect intercepts method calls on DAL classes and provides transparent
  * caching functionality using the @Cacheable and @CacheEvict annotations.
+ * AspectJ compile-time weaving provides better performance than Spring AOP.
  *
  * ## Features
  *
@@ -25,6 +26,7 @@ import java.lang.reflect.Method
  * - **Error Handling**: Graceful handling of cache misses and errors
  * - **Logging**: Comprehensive logging for debugging and monitoring
  * - **Fully Reactive**: No blocking operations, compatible with Spring WebFlux
+ * - **Compile-time Weaving**: Better performance than runtime proxy-based AOP
  *
  * ## Usage
  *
