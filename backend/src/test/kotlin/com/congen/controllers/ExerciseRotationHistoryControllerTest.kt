@@ -51,12 +51,17 @@ class ExerciseRotationHistoryControllerTest {
         exerciseRotationHistoryService = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
-        exerciseRotationHistoryController = ExerciseRotationHistoryController(exerciseRotationHistoryService, keycloakUtil, gdprComplianceService)
+        exerciseRotationHistoryController =
+            ExerciseRotationHistoryController(
+                exerciseRotationHistoryService,
+                keycloakUtil,
+                gdprComplianceService
+            )
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        
+
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
     }
 

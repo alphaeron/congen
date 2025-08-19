@@ -48,7 +48,7 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, token)
-        
+
         // Test validation errors by trying to create user program preferences with invalid days per week
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")

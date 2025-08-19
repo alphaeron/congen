@@ -1,7 +1,6 @@
 package com.congen.service
 
 import com.congen.dal.DataRetentionDAL
-import com.congen.model.AuditLog
 import com.congen.model.DataRetentionPolicy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -13,7 +12,6 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import java.time.Instant
 
 /**
  * Test class for DataRetentionService.

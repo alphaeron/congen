@@ -31,7 +31,7 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
         userId3 = IntegrationTestHelpers.createTestUser(webTestClient, token = token3)
         userId4 = IntegrationTestHelpers.createTestUser(webTestClient, token = token4)
         userId5 = IntegrationTestHelpers.createTestUser(webTestClient, token = token5)
-        
+
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, token1)
         IntegrationTestHelpers.createUserConsent(webTestClient, token2)

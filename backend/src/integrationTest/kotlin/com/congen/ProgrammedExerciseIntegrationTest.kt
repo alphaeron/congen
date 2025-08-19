@@ -194,7 +194,12 @@ class ProgrammedExerciseIntegrationTest : BaseIntegrationTest() {
                 token = token
             )
         webTestClient.patch()
-            .uri("/api/v1/programmed_exercise/$exerciseId?workout_stage_id=$stageId&exercise_name=${IntegrationTestHelpers.TEST_EXERCISE_NAME}&position=2")
+            .uri(
+                "/api/v1/programmed_exercise/$exerciseId" +
+                    "?workout_stage_id=$stageId" +
+                    "&exercise_name=${IntegrationTestHelpers.TEST_EXERCISE_NAME}" +
+                    "&position=2"
+            )
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()

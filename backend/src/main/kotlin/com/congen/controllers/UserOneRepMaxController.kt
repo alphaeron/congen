@@ -83,11 +83,12 @@ class UserOneRepMaxController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userOneRepMaxService.selectUserOneRepMaxByUser(userId, unit)
@@ -120,11 +121,12 @@ class UserOneRepMaxController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, unit)
@@ -163,11 +165,12 @@ class UserOneRepMaxController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userOneRepMaxService.upsertUserOneRepMax(userId, exerciseName, oneRepMax, unit)
@@ -208,11 +211,12 @@ class UserOneRepMaxController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userOneRepMaxService.deleteUserOneRepMax(userId, exerciseName)

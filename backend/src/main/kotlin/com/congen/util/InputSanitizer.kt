@@ -27,14 +27,18 @@ import java.util.regex.Pattern
 class InputSanitizer {
     companion object {
         private val logger = LoggerFactory.getLogger(InputSanitizer::class.java)
-        
+
         // Patterns for detecting malicious content
         private val HTML_PATTERN = Pattern.compile("<[^>]*>", Pattern.CASE_INSENSITIVE)
         private val SCRIPT_TAG_PATTERN = Pattern.compile("<script[^>]*>.*?</script>", Pattern.CASE_INSENSITIVE or Pattern.DOTALL)
         private val SCRIPT_PATTERN = Pattern.compile("javascript:|vbscript:|onload=|onerror=|onclick=", Pattern.CASE_INSENSITIVE)
-        private val SQL_INJECTION_PATTERN = Pattern.compile("(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|vbscript)", Pattern.CASE_INSENSITIVE)
+        private val SQL_INJECTION_PATTERN =
+            Pattern.compile(
+                "(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|vbscript)",
+                Pattern.CASE_INSENSITIVE
+            )
         private val PATH_TRAVERSAL_PATTERN = Pattern.compile("(\\.\\./|\\.\\\\|%2e%2e%2f|%2e%2e%5c)", Pattern.CASE_INSENSITIVE)
-        
+
         // Maximum input lengths
         private const val MAX_STRING_LENGTH = 1000
         private const val MAX_NAME_LENGTH = 255
@@ -49,20 +53,23 @@ class InputSanitizer {
      * @return Sanitized string
      * @throws ValidationException if input contains malicious content
      */
-    fun sanitizeString(input: String?, fieldName: String): String? {
+    fun sanitizeString(
+        input: String?,
+        fieldName: String
+    ): String? {
         if (input == null) {
             return null
         }
 
         // Remove script tags and their content first
         var sanitized = SCRIPT_TAG_PATTERN.matcher(input).replaceAll("")
-        
+
         // Remove remaining HTML tags
         sanitized = HTML_PATTERN.matcher(sanitized).replaceAll("")
-        
+
         // Trim whitespace
         val trimmed = sanitized.trim()
-        
+
         // Check for malicious patterns in the trimmed content
         if (trimmed.isNotEmpty() && containsMaliciousContent(trimmed)) {
             val message = "Input contains potentially malicious content: $fieldName"
@@ -88,13 +95,16 @@ class InputSanitizer {
      * @return Sanitized name
      * @throws ValidationException if name is invalid
      */
-    fun sanitizeName(name: String?, fieldName: String): String? {
+    fun sanitizeName(
+        name: String?,
+        fieldName: String
+    ): String? {
         if (name.isNullOrBlank()) {
             return name
         }
 
         val sanitized = sanitizeString(name, fieldName)
-        
+
         // Additional name-specific validation
         if (sanitized != null && sanitized.length > MAX_NAME_LENGTH) {
             val message = "Name too long for field: $fieldName (max: $MAX_NAME_LENGTH)"
@@ -113,13 +123,16 @@ class InputSanitizer {
      * @return Sanitized URL
      * @throws ValidationException if URL is invalid
      */
-    fun sanitizeUrl(url: String?, fieldName: String): String? {
+    fun sanitizeUrl(
+        url: String?,
+        fieldName: String
+    ): String? {
         if (url.isNullOrBlank()) {
             return url
         }
 
         val sanitized = sanitizeString(url, fieldName)
-        
+
         if (sanitized != null) {
             // Check for path traversal
             if (PATH_TRAVERSAL_PATTERN.matcher(sanitized).find()) {
@@ -199,8 +212,8 @@ class InputSanitizer {
      */
     private fun containsMaliciousContent(input: String): Boolean {
         return SCRIPT_PATTERN.matcher(input).find() ||
-               SQL_INJECTION_PATTERN.matcher(input).find() ||
-               PATH_TRAVERSAL_PATTERN.matcher(input).find()
+            SQL_INJECTION_PATTERN.matcher(input).find() ||
+            PATH_TRAVERSAL_PATTERN.matcher(input).find()
     }
 
     /**

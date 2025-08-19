@@ -1,11 +1,11 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.exceptions.DatabaseQueryException
 import com.congen.mockUserExercisePreference
 import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
-import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any

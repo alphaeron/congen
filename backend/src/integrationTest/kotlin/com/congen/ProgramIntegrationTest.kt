@@ -252,7 +252,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.length()").isEqualTo(1)
             .jsonPath("$[0].id").isEqualTo(programId1)
             .jsonPath("$[0].is_active").isEqualTo(true)
-        
+
         // Create second program (should deactivate the first one)
         val programId2 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program", token = token)
 

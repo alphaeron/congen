@@ -3,15 +3,12 @@ package com.congen.cache
 import com.congen.exceptions.CacheMissException
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import kotlin.reflect.KClass
 import net.rubyeye.xmemcached.MemcachedClient
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Scheduler
-import reactor.core.scheduler.Schedulers
 import java.time.Duration
-import java.util.concurrent.CompletableFuture
 import java.util.Base64
 
 /**
@@ -73,7 +70,11 @@ class ReactiveMemcachedCache(
      * @param ttl Time-to-live duration
      * @return Mono that completes when the operation finishes
      */
-    fun <T> set(key: String, value: T, ttl: Duration): Mono<Boolean> {
+    fun <T> set(
+        key: String,
+        value: T,
+        ttl: Duration
+    ): Mono<Boolean> {
         val cacheKey = generateKey(key)
         val jsonValue = objectMapper.writeValueAsString(value)
         val expirySeconds = ttl.seconds.toInt()
@@ -104,7 +105,10 @@ class ReactiveMemcachedCache(
      * @param typeReference The TypeReference for the expected type
      * @return Mono containing the cached value or empty if not found
      */
-    fun <T : Any> get(key: String, typeReference: TypeReference<T>): Mono<T> {
+    fun <T : Any> get(
+        key: String,
+        typeReference: TypeReference<T>
+    ): Mono<T> {
         val cacheKey = generateKey(key)
 
         logger.debug("Getting cache key: {} with TypeReference", cacheKey)
@@ -117,7 +121,10 @@ class ReactiveMemcachedCache(
             }
     }
 
-    private fun <T : Any> getCachedValueWithTypeReference(cacheKey: String, typeReference: TypeReference<T>): Mono<T> {
+    private fun <T : Any> getCachedValueWithTypeReference(
+        cacheKey: String,
+        typeReference: TypeReference<T>
+    ): Mono<T> {
         return Mono.fromCallable {
             val cachedValue = memcachedClient.get<String>(cacheKey)
             if (cachedValue != null) {
@@ -176,7 +183,10 @@ class ReactiveMemcachedCache(
      * @param delta The amount to increment by
      * @return Mono containing the new value
      */
-    fun increment(key: String, delta: Long): Mono<Long> {
+    fun increment(
+        key: String,
+        delta: Long
+    ): Mono<Long> {
         val cacheKey = generateKey(key)
 
         logger.debug("Incrementing cache key: {} by {}", cacheKey, delta)

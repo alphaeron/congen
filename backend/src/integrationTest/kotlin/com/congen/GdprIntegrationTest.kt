@@ -82,7 +82,7 @@ class GdprIntegrationTest : BaseIntegrationTest() {
         // First create user program preferences so the export doesn't fail
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, testUserId, token = userToken)
-        
+
         webTestClient.get()
             .uri("/api/v1/gdpr/export")
             .header("Authorization", "Bearer $userToken")
@@ -293,20 +293,22 @@ class GdprIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle concurrent consent updates`() {
         // First request
-        val firstRequest = webTestClient
-            .post()
-            .uri("/api/v1/gdpr/consent?consent=true")
-            .header("Authorization", "Bearer $userToken")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
+        val firstRequest =
+            webTestClient
+                .post()
+                .uri("/api/v1/gdpr/consent?consent=true")
+                .header("Authorization", "Bearer $userToken")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
 
         // Second request
-        val secondRequest = webTestClient
-            .post()
-            .uri("/api/v1/gdpr/consent?consent=false")
-            .header("Authorization", "Bearer $userToken")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
+        val secondRequest =
+            webTestClient
+                .post()
+                .uri("/api/v1/gdpr/consent?consent=false")
+                .header("Authorization", "Bearer $userToken")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
 
         // Both should succeed
         firstRequest.expectStatus().isOk
@@ -349,7 +351,7 @@ class GdprIntegrationTest : BaseIntegrationTest() {
     fun `should handle data export with empty user data`() {
         // Create user consent but no other data
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-        
+
         webTestClient.get()
             .uri("/api/v1/gdpr/export")
             .header("Authorization", "Bearer $userToken")
@@ -358,8 +360,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath("$.error").isEqualTo("Resource not found")
     }
-
-
 
     @Test
     fun `should validate privacy policy structure`() {

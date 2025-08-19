@@ -1,5 +1,6 @@
 package com.congen
 
+import com.buralotech.oss.testcontainers.memcached.MemcachedContainer
 import com.congen.components.RateLimitFilter
 import com.fasterxml.jackson.databind.ObjectMapper
 import dasniko.testcontainers.keycloak.KeycloakContainer
@@ -19,7 +20,6 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.MountableFile
-import com.buralotech.oss.testcontainers.memcached.MemcachedContainer
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest

@@ -1,8 +1,8 @@
 package com.congen.cache.annotation
 
-import com.congen.cache.CacheTTL
-import com.congen.cache.CacheKeyStrategy
 import com.congen.cache.CacheInvalidationStrategy
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheTTL
 
 /**
  * Annotation for marking DAL methods that should be cached.

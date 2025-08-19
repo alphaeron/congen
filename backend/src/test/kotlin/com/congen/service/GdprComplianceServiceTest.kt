@@ -13,7 +13,6 @@ import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
-import com.congen.model.AuditLog
 import com.congen.model.User
 import com.congen.model.UserConsent
 import org.junit.jupiter.api.BeforeEach
@@ -71,22 +70,23 @@ class GdprComplianceServiceTest {
         programmedExerciseDAL = mock()
         setSchemeDAL = mock()
 
-        gdprComplianceService = GdprComplianceService(
-            gdprComplianceDAL = gdprComplianceDAL,
-            userDAL = userDAL,
-            userEquipmentDAL = userEquipmentDAL,
-            userExercisePreferenceDAL = userExercisePreferenceDAL,
-            userProgramPreferencesDAL = userProgramPreferencesDAL,
-            userOneRepMaxDAL = userOneRepMaxDAL,
-            userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-            exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
-            programDAL = programDAL,
-            programmedWorkoutDAL = programmedWorkoutDAL,
-            workoutStageDAL = workoutStageDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL,
-            auditService = auditService
-        )
+        gdprComplianceService =
+            GdprComplianceService(
+                gdprComplianceDAL = gdprComplianceDAL,
+                userDAL = userDAL,
+                userEquipmentDAL = userEquipmentDAL,
+                userExercisePreferenceDAL = userExercisePreferenceDAL,
+                userProgramPreferencesDAL = userProgramPreferencesDAL,
+                userOneRepMaxDAL = userOneRepMaxDAL,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+                exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
+                programDAL = programDAL,
+                programmedWorkoutDAL = programmedWorkoutDAL,
+                workoutStageDAL = workoutStageDAL,
+                programmedExerciseDAL = programmedExerciseDAL,
+                setSchemeDAL = setSchemeDAL,
+                auditService = auditService
+            )
     }
 
     private fun stubAuditService() {
@@ -186,12 +186,13 @@ class GdprComplianceServiceTest {
         stubAuditService()
 
         val keycloakId = "test-user-id"
-        val user = User(
-            keycloakId = keycloakId,
-            name = "Test User",
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val user =
+            User(
+                keycloakId = keycloakId,
+                name = "Test User",
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
 
         val userConsent = UserConsent(keycloakId, false, null, Instant.now(), Instant.now())
 
@@ -207,7 +208,7 @@ class GdprComplianceServiceTest {
         whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getUserAuditLogs(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getDataRetentionPolicies()).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock the nested calls for programs with workouts - these are called when programs exist
         whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(any())).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(any())).thenReturn(Mono.just(emptyList()))

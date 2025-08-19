@@ -107,11 +107,12 @@ class ConjugateWorkoutGeneratorController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             programService.isOwner(programId, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programService.getOwner(programId)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programService.getOwner(programId)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             conjugateWorkoutGeneratorService.generateNextWeek(programId)

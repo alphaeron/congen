@@ -324,7 +324,9 @@ describe('GDPR API', () => {
     });
 
     it('should handle 503 service unavailable responses', async () => {
-      mock.onDelete('/gdpr/delete_all_data').reply(503, { message: 'Service temporarily unavailable' });
+      mock
+        .onDelete('/gdpr/delete_all_data')
+        .reply(503, { message: 'Service temporarily unavailable' });
 
       try {
         await deleteAllPersonalData('DELETE_ALL_MY_DATA');

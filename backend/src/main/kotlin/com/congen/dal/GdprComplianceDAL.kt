@@ -1,10 +1,10 @@
 package com.congen.dal
 
-import com.congen.cache.annotation.Cacheable
-import com.congen.cache.annotation.CacheEvict
-import com.congen.cache.CacheTTL
-import com.congen.cache.CacheKeyStrategy
 import com.congen.cache.CacheInvalidationStrategy
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheTTL
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
 import com.congen.model.AuditLog
 import com.congen.model.DataRetentionPolicy
@@ -166,7 +166,7 @@ class GdprComplianceDAL(
     )
     fun getUserAuditLogs(keycloakId: String): Mono<List<AuditLog>> {
         logger.debug("Retrieving audit logs for user: {}", keycloakId)
-        
+
         // For now, return empty list as audit logs table may not exist yet
         return Mono.just(emptyList<AuditLog>())
     }
@@ -183,7 +183,7 @@ class GdprComplianceDAL(
     )
     fun getDataRetentionPolicies(): Mono<List<DataRetentionPolicy>> {
         logger.debug("Retrieving data retention policies")
-        
+
         // For now, return empty list as retention policies table may not exist yet
         return Mono.just(emptyList<DataRetentionPolicy>())
     }

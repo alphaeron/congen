@@ -70,7 +70,13 @@ class ProgrammedExerciseControllerTest {
         workoutStageService = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
-        programmedExerciseController = ProgrammedExerciseController(programmedExerciseService, workoutStageService, keycloakUtil, gdprComplianceService)
+        programmedExerciseController =
+            ProgrammedExerciseController(
+                programmedExerciseService,
+                workoutStageService,
+                keycloakUtil,
+                gdprComplianceService
+            )
 
         testProgrammedExercise =
             ProgrammedExercise(
@@ -92,7 +98,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.insertProgrammedExercise(any(), any(), any(), any()))
             .thenReturn(Mono.just(testProgrammedExercise))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.save(
                 workoutStageId = WORKOUT_STAGE_ID,
@@ -115,7 +121,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.insertProgrammedExercise(WORKOUT_STAGE_ID, BENCH_PRESS, POSITION_1, null))
             .thenReturn(Mono.just(exerciseWithNullNotes))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.save(
                 workoutStageId = WORKOUT_STAGE_ID,
@@ -137,7 +143,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.insertProgrammedExercise(any(), any(), any(), any()))
             .thenReturn(Mono.error(DatabaseQueryException("Validation error")))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.save(
                 workoutStageId = WORKOUT_STAGE_ID,
@@ -159,7 +165,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.insertProgrammedExercise(any(), any(), any(), any()))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.save(
                 workoutStageId = WORKOUT_STAGE_ID,
@@ -181,7 +187,7 @@ class ProgrammedExerciseControllerTest {
             .thenReturn(Mono.just(testProgrammedExercise))
         whenever(programmedExerciseService.isOwner(EXERCISE_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = programmedExerciseController.get(EXERCISE_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(testProgrammedExercise))
@@ -195,7 +201,7 @@ class ProgrammedExerciseControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.selectProgrammedExerciseById(NON_EXISTENT_ID))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        
+
         val result = programmedExerciseController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
@@ -209,7 +215,7 @@ class ProgrammedExerciseControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.selectProgrammedExerciseById(EXERCISE_ID_1))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
-        
+
         val result = programmedExerciseController.get(EXERCISE_ID_1)
         StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
@@ -233,7 +239,7 @@ class ProgrammedExerciseControllerTest {
         whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID))
             .thenReturn(Mono.just(exercises))
-        
+
         val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(exercises))
@@ -248,7 +254,7 @@ class ProgrammedExerciseControllerTest {
         whenever(workoutStageService.isOwner(WORKOUT_STAGE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(programmedExerciseService.selectProgrammedExercisesByWorkoutStageId(WORKOUT_STAGE_ID))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
-        
+
         val result = programmedExerciseController.getByStage(WORKOUT_STAGE_ID)
         StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
@@ -370,7 +376,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.updateProgrammedExercise(any(), any(), any(), any(), any()))
             .thenReturn(Mono.just(updatedExercise))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.update(
                 id = EXERCISE_ID_1,
@@ -403,7 +409,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.updateProgrammedExercise(EXERCISE_ID_1, WORKOUT_STAGE_ID, SQUAT, POSITION_2, null))
             .thenReturn(Mono.just(updatedExercise))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.update(
                 id = EXERCISE_ID_1,
@@ -424,7 +430,7 @@ class ProgrammedExerciseControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.selectProgrammedExerciseById(NON_EXISTENT_ID))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        
+
         val result =
             programmedExerciseController.update(
                 id = NON_EXISTENT_ID,
@@ -450,7 +456,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.updateProgrammedExercise(any(), any(), any(), any(), any()))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             programmedExerciseController.update(
                 id = EXERCISE_ID_1,
@@ -475,7 +481,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.deleteProgrammedExercise(EXERCISE_ID_1))
             .thenReturn(Mono.just(testProgrammedExercise))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = programmedExerciseController.delete(EXERCISE_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(testProgrammedExercise))
@@ -489,7 +495,7 @@ class ProgrammedExerciseControllerTest {
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(programmedExerciseService.selectProgrammedExerciseById(NON_EXISTENT_ID))
             .thenReturn(Mono.error(NoResultsFoundException("Not found")))
-        
+
         val result = programmedExerciseController.delete(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
@@ -507,7 +513,7 @@ class ProgrammedExerciseControllerTest {
         whenever(programmedExerciseService.deleteProgrammedExercise(EXERCISE_ID_1))
             .thenReturn(Mono.error(DatabaseQueryException("Database connection failed")))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = programmedExerciseController.delete(EXERCISE_ID_1)
         StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)

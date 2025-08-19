@@ -6,7 +6,6 @@ import com.congen.service.ProgramService
 import com.congen.service.ProgrammedWorkoutService
 import com.congen.service.WorkoutStageService
 import com.congen.util.KeycloakUtil
-import reactor.core.publisher.Flux
 import io.swagger.v3.oas.annotations.Parameter
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
@@ -20,6 +19,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -104,11 +104,12 @@ class WorkoutStageController(
                 .flatMap { programmedWorkout ->
                     programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
                         if (isAdminOrService || isOwner) {
-                            val consentUserIdMono = if (isAdminOrService) {
-                                programService.getOwner(programmedWorkout.programId)
-                            } else {
-                                Mono.just(userId)
-                            }
+                            val consentUserIdMono =
+                                if (isAdminOrService) {
+                                    programService.getOwner(programmedWorkout.programId)
+                                } else {
+                                    Mono.just(userId)
+                                }
                             consentUserIdMono.flatMap { ownerId ->
                                 gdprComplianceService.withUserConsent(ownerId) {
                                     workoutStageService.insertWorkoutStage(programmedWorkoutId, stageTypeId, position, name)
@@ -160,11 +161,12 @@ class WorkoutStageController(
                 .flatMap { workoutStage ->
                     workoutStageService.isOwner(workoutStage.id, userId).flatMap { isOwner ->
                         if (isAdminOrService || isOwner) {
-                            val consentUserIdMono = if (isAdminOrService) {
-                                workoutStageService.getOwner(workoutStage.id)
-                            } else {
-                                Mono.just(userId)
-                            }
+                            val consentUserIdMono =
+                                if (isAdminOrService) {
+                                    workoutStageService.getOwner(workoutStage.id)
+                                } else {
+                                    Mono.just(userId)
+                                }
                             consentUserIdMono.flatMap { ownerId ->
                                 gdprComplianceService.withUserConsent(ownerId) {
                                     Mono.just(workoutStage)
@@ -246,11 +248,12 @@ class WorkoutStageController(
                 .flatMap { programmedWorkout ->
                     programService.isOwner(programmedWorkout.programId, userId).flatMap { isOwner ->
                         if (isAdminOrService || isOwner) {
-                            val consentUserIdMono = if (isAdminOrService) {
-                                programService.getOwner(programmedWorkout.programId)
-                            } else {
-                                Mono.just(userId)
-                            }
+                            val consentUserIdMono =
+                                if (isAdminOrService) {
+                                    programService.getOwner(programmedWorkout.programId)
+                                } else {
+                                    Mono.just(userId)
+                                }
                             consentUserIdMono.flatMap { ownerId ->
                                 gdprComplianceService.withUserConsent(ownerId) {
                                     logger.debug("Getting workout stages for programmed workout: {}", programmedWorkoutId)
@@ -308,11 +311,12 @@ class WorkoutStageController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             workoutStageService.isOwner(id, userId).flatMap { isWorkoutStageOwner ->
                 if (isAdminOrService || isWorkoutStageOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        workoutStageService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            workoutStageService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             workoutStageService.updateWorkoutStage(id, programmedWorkoutId, stageTypeId, position, name)
@@ -352,11 +356,12 @@ class WorkoutStageController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             workoutStageService.isOwner(id, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        workoutStageService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            workoutStageService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             workoutStageService.deleteWorkoutStage(id)

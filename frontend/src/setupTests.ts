@@ -9,7 +9,7 @@ global.TextDecoder = TextDecoder as never;
 // Configure React testing environment for concurrent features
 import { configure } from '@testing-library/react';
 
-configure({ 
+configure({
   asyncUtilTimeout: 5000,
 });
 

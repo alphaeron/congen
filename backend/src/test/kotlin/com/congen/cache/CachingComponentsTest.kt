@@ -1,12 +1,10 @@
 package com.congen.cache
 
-import com.congen.cache.annotation.Cacheable
 import com.congen.cache.annotation.CacheEvict
-import com.congen.cache.CacheTTL
-import com.congen.cache.CacheKeyStrategy
-import com.congen.cache.CacheInvalidationStrategy
+import com.congen.cache.annotation.Cacheable
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 
 /**
  * Unit test for the caching system components.
@@ -18,17 +16,17 @@ import org.junit.jupiter.api.Assertions.*
  * @since 1.0.0
  */
 class CachingComponentsTest {
-
     @Test
     fun `should create cacheable annotation with all parameters`() {
         // Given & When
-        val cacheable = Cacheable(
-            ttl = CacheTTL.LONG_TERM,
-            keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
-            invalidationStrategy = CacheInvalidationStrategy.STANDARD,
-            entityName = "exercise"
-        )
-        
+        val cacheable =
+            Cacheable(
+                ttl = CacheTTL.LONG_TERM,
+                keyStrategy = CacheKeyStrategy.ENTITY_BY_NAME,
+                invalidationStrategy = CacheInvalidationStrategy.STANDARD,
+                entityName = "exercise"
+            )
+
         // Then
         assertEquals(CacheTTL.LONG_TERM, cacheable.ttl)
         assertEquals(CacheKeyStrategy.ENTITY_BY_NAME, cacheable.keyStrategy)
@@ -39,11 +37,12 @@ class CachingComponentsTest {
     @Test
     fun `should create cache evict annotation with parameters`() {
         // Given & When
-        val cacheEvict = CacheEvict(
-            invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
-            entityName = "user"
-        )
-        
+        val cacheEvict =
+            CacheEvict(
+                invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+                entityName = "user"
+            )
+
         // Then
         assertEquals(CacheInvalidationStrategy.USER_DATA, cacheEvict.invalidationStrategy)
         assertEquals("user", cacheEvict.entityName)

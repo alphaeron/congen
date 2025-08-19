@@ -375,7 +375,7 @@ object ValidationUtil {
             logger.error(message)
             throw ValidationException(message)
         }
-        
+
         // Use InputSanitizer for additional security validation
         InputSanitizer().sanitizeName(name, "user_name")
     }

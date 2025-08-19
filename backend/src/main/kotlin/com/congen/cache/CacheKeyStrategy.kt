@@ -20,16 +20,16 @@ package com.congen.cache
 enum class CacheKeyStrategy {
     /** Basic entity:methodName:params pattern */
     STANDARD,
-    
+
     /** For entities with name-based primary keys (e.g., exercises, equipment) */
     ENTITY_BY_NAME,
-    
+
     /** For user-specific data with user ID in key */
     USER_SPECIFIC,
-    
+
     /** For relationship tables with multiple entity references */
     RELATIONSHIP,
-    
+
     /** For list queries that return collections */
     LIST_QUERY
 }

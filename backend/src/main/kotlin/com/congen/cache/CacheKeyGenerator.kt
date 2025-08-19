@@ -23,7 +23,6 @@ import java.lang.reflect.Method
  */
 @Component
 class CacheKeyGenerator {
-
     /**
      * Generates a cache key based on the method, parameters, and cache configuration.
      *
@@ -32,9 +31,13 @@ class CacheKeyGenerator {
      * @param cacheable The cache configuration annotation
      * @return Generated cache key
      */
-    fun generateKey(method: Method, args: Array<Any?>, cacheable: Cacheable): String {
+    fun generateKey(
+        method: Method,
+        args: Array<Any?>,
+        cacheable: Cacheable
+    ): String {
         val entityName = getEntityName(method, cacheable)
-        
+
         return when (cacheable.keyStrategy) {
             CacheKeyStrategy.STANDARD -> generateStandardKey(entityName, method, args)
             CacheKeyStrategy.ENTITY_BY_NAME -> generateEntityByNameKey(entityName, args)
@@ -52,7 +55,11 @@ class CacheKeyGenerator {
      * @param args The method arguments
      * @return Standard cache key
      */
-    private fun generateStandardKey(entityName: String, method: Method, args: Array<Any?>): String {
+    private fun generateStandardKey(
+        entityName: String,
+        method: Method,
+        args: Array<Any?>
+    ): String {
         val methodName = method.name
         val params = args.joinToString(":") { it?.toString() ?: "null" }
         return "$entityName:$methodName:$params"
@@ -65,7 +72,10 @@ class CacheKeyGenerator {
      * @param args The method arguments
      * @return Entity by name cache key
      */
-    private fun generateEntityByNameKey(entityName: String, args: Array<Any?>): String {
+    private fun generateEntityByNameKey(
+        entityName: String,
+        args: Array<Any?>
+    ): String {
         val entityNameParam = args.firstOrNull()?.toString() ?: "unknown"
         return "$entityName:byName:$entityNameParam"
     }
@@ -78,7 +88,11 @@ class CacheKeyGenerator {
      * @param args The method arguments
      * @return User-specific cache key
      */
-    private fun generateUserSpecificKey(entityName: String, method: Method, args: Array<Any?>): String {
+    private fun generateUserSpecificKey(
+        entityName: String,
+        method: Method,
+        args: Array<Any?>
+    ): String {
         val userId = args.firstOrNull()?.toString() ?: "unknown"
         val methodName = method.name
         val remainingParams = args.drop(1).joinToString(":") { it?.toString() ?: "null" }
@@ -93,7 +107,11 @@ class CacheKeyGenerator {
      * @param args The method arguments
      * @return Relationship cache key
      */
-    private fun generateRelationshipKey(entityName: String, method: Method, args: Array<Any?>): String {
+    private fun generateRelationshipKey(
+        entityName: String,
+        method: Method,
+        args: Array<Any?>
+    ): String {
         val methodName = method.name
         val params = args.joinToString(":") { it?.toString() ?: "null" }
         return "$entityName:$methodName:$params"
@@ -107,7 +125,11 @@ class CacheKeyGenerator {
      * @param args The method arguments
      * @return List query cache key
      */
-    private fun generateListQueryKey(entityName: String, method: Method, args: Array<Any?>): String {
+    private fun generateListQueryKey(
+        entityName: String,
+        method: Method,
+        args: Array<Any?>
+    ): String {
         val methodName = method.name
         val params = args.joinToString(":") { it?.toString() ?: "null" }
         return "$entityName:list:$methodName:$params"
@@ -120,11 +142,14 @@ class CacheKeyGenerator {
      * @param cacheable The cache configuration annotation
      * @return Entity name
      */
-    private fun getEntityName(method: Method, cacheable: Cacheable): String {
+    private fun getEntityName(
+        method: Method,
+        cacheable: Cacheable
+    ): String {
         if (cacheable.entityName.isNotEmpty()) {
             return cacheable.entityName
         }
-        
+
         // Extract entity name from method name or class name
         val className = method.declaringClass.simpleName
         return when {

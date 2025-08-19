@@ -105,11 +105,12 @@ class UserProgramPreferencesController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Saving user program preferences: {}", userId)
@@ -156,11 +157,12 @@ class UserProgramPreferencesController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userProgramPreferencesDAL.selectUserProgramPreferences(userId)
@@ -223,11 +225,12 @@ class UserProgramPreferencesController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Updating user program preferences: {}", userId)
@@ -277,11 +280,12 @@ class UserProgramPreferencesController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Deleting user program preferences: {}", userId)

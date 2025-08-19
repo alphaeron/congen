@@ -4,7 +4,6 @@ import com.congen.exceptions.ValidationException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -114,12 +113,13 @@ class InputSanitizerTest {
 
     @Test
     fun `should validate file upload with valid parameters`() {
-        val result = sanitizer.validateFileUpload(
-            "test.jpg",
-            1024L,
-            setOf("jpg", "png", "gif"),
-            1048576L
-        )
+        val result =
+            sanitizer.validateFileUpload(
+                "test.jpg",
+                1024L,
+                setOf("jpg", "png", "gif"),
+                1048576L
+            )
         assertTrue(result)
     }
 
@@ -152,9 +152,11 @@ class InputSanitizerTest {
         assertThrows<ValidationException> {
             sanitizer.validateFileUpload(
                 "test.jpg",
-                2097152L, // 2MB
+                // 2MB
+                2097152L,
                 setOf("jpg", "png", "gif"),
-                1048576L  // 1MB limit
+                // 1MB limit
+                1048576L
             )
         }
     }

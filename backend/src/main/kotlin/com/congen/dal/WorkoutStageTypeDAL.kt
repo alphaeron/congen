@@ -1,8 +1,8 @@
 package com.congen.dal
 
-import com.congen.cache.annotation.Cacheable
-import com.congen.cache.CacheTTL
 import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheTTL
+import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum

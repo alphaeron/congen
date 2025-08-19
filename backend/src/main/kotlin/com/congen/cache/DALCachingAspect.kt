@@ -1,10 +1,7 @@
 package com.congen.cache
 
-import com.congen.cache.annotation.Cacheable
 import com.congen.cache.annotation.CacheEvict
-import com.congen.cache.ReactiveMemcachedCache
-import com.congen.exceptions.CacheMissException
-import com.fasterxml.jackson.core.type.TypeReference
+import com.congen.cache.annotation.Cacheable
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
@@ -13,7 +10,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.lang.reflect.Method
-import java.lang.reflect.ParameterizedType
 
 /**
  * Spring AOP aspect for transparent DAL caching.
@@ -70,20 +66,23 @@ class DALCachingAspect(
      * @return The method result (cached or fresh)
      */
     @Around("@annotation(cacheable)")
-    fun cacheMethod(joinPoint: ProceedingJoinPoint, cacheable: Cacheable): Any? {
+    fun cacheMethod(
+        joinPoint: ProceedingJoinPoint,
+        cacheable: Cacheable
+    ): Any? {
         // Get the method signature directly from the join point
         val methodSignature = joinPoint.signature as MethodSignature
         val method = methodSignature.method
-        
+
         val cacheKey = cacheKeyGenerator.generateKey(method, joinPoint.args, cacheable)
         val ttl = cacheable.ttl.duration
-        
+
         logger.debug("Cache lookup for key: {} with TTL: {}", cacheKey, ttl)
-        
+
         return try {
             // Execute the method first to get the result
             val result = joinPoint.proceed()
-            
+
             if (result is Mono<*>) {
                 // Handle reactive results
                 result.flatMap { value ->
@@ -101,7 +100,7 @@ class DALCachingAspect(
                                 logger.error("Error caching result for key: {}", cacheKey, error)
                             }
                             .subscribe()
-                        
+
                         Mono.just(value)
                     } else {
                         Mono.just(value)
@@ -147,29 +146,33 @@ class DALCachingAspect(
      * @return The method result
      */
     @Around("@annotation(cacheEvict)")
-    fun evictCache(joinPoint: ProceedingJoinPoint, cacheEvict: CacheEvict): Any? {
+    fun evictCache(
+        joinPoint: ProceedingJoinPoint,
+        cacheEvict: CacheEvict
+    ): Any? {
         // Get the method signature directly from the join point
         val methodSignature = joinPoint.signature as MethodSignature
         val method = methodSignature.method
-        
+
         val entityName = getEntityName(method, cacheEvict)
-        val invalidationKeys = cacheKeyGenerator.generateInvalidationKeys(
-            entityName,
-            cacheEvict.invalidationStrategy,
-            joinPoint.args
-        )
-        
+        val invalidationKeys =
+            cacheKeyGenerator.generateInvalidationKeys(
+                entityName,
+                cacheEvict.invalidationStrategy,
+                joinPoint.args
+            )
+
         logger.debug("Executing write operation with invalidation keys: {}", invalidationKeys)
-        
+
         return try {
             // Execute the write operation
             val result = joinPoint.proceed()
-            
+
             // Invalidate cache entries
             invalidationKeys.forEach { keyPattern ->
                 invalidateCacheEntries(keyPattern)
             }
-            
+
             result
         } catch (e: Exception) {
             logger.error("Error in cache eviction for keys: {}", invalidationKeys, e)
@@ -186,9 +189,9 @@ class DALCachingAspect(
         // For now, we'll use a simple approach to invalidate related keys
         // In a production environment, you might want to use a more sophisticated
         // approach with key indexing or pattern-based invalidation
-        
+
         logger.debug("Invalidating cache entries matching pattern: {}", keyPattern)
-        
+
         // This is a simplified invalidation - in practice, you might need
         // to implement pattern-based key discovery and deletion
         if (!keyPattern.contains("*")) {
@@ -216,11 +219,14 @@ class DALCachingAspect(
      * @param cacheEvict The cache eviction configuration
      * @return Entity name
      */
-    private fun getEntityName(method: Method, cacheEvict: CacheEvict): String {
+    private fun getEntityName(
+        method: Method,
+        cacheEvict: CacheEvict
+    ): String {
         if (cacheEvict.entityName.isNotEmpty()) {
             return cacheEvict.entityName
         }
-        
+
         // Extract entity name from method name or class name
         val className = method.declaringClass.simpleName
         return when {

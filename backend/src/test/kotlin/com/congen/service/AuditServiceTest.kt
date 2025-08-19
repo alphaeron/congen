@@ -49,15 +49,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = operation,
-            dataType = dataType,
-            performedBy = userId,
-            timestamp = Instant.now(),
-            additionalInfo = additionalInfo
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = operation,
+                dataType = dataType,
+                performedBy = userId,
+                timestamp = Instant.now(),
+                additionalInfo = additionalInfo
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, userId, additionalInfo))
@@ -93,15 +94,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = operation,
-            dataType = dataType,
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = null
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = operation,
+                dataType = dataType,
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = null
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, null))
@@ -164,15 +166,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = "DATA_ACCESS",
-            dataType = dataType,
-            performedBy = adminUser,
-            timestamp = Instant.now(),
-            additionalInfo = null
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = "DATA_ACCESS",
+                dataType = dataType,
+                performedBy = adminUser,
+                timestamp = Instant.now(),
+                additionalInfo = null
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_ACCESS", dataType, adminUser, null))
@@ -234,15 +237,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = "CONSENT_GIVEN",
-            dataType = consentType,
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = "Consent: true"
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = "CONSENT_GIVEN",
+                dataType = consentType,
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = "Consent: true"
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "CONSENT_GIVEN", consentType, null, "Consent: true"))
@@ -275,15 +279,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = "CONSENT_WITHDRAWN",
-            dataType = consentType,
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = "Consent: false"
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = "CONSENT_WITHDRAWN",
+                dataType = consentType,
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = "Consent: false"
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "CONSENT_WITHDRAWN", consentType, null, "Consent: false"))
@@ -317,15 +322,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = "DATA_MODIFICATION",
-            dataType = dataType,
-            performedBy = adminUser,
-            timestamp = Instant.now(),
-            additionalInfo = changes
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = "DATA_MODIFICATION",
+                dataType = dataType,
+                performedBy = adminUser,
+                timestamp = Instant.now(),
+                additionalInfo = changes
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, "DATA_MODIFICATION", dataType, adminUser, changes))
@@ -389,15 +395,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = "SECURITY_VIOLATION",
-            dataType = "SECURITY",
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = "Severity: HIGH - Multiple failed login attempts"
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = "SECURITY_VIOLATION",
+                dataType = "SECURITY",
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = "Severity: HIGH - Multiple failed login attempts"
+            )
 
         // Mock the database call to return success
         whenever(
@@ -446,15 +453,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = "UNKNOWN",
-            operation = "SECURITY_VIOLATION",
-            dataType = "SECURITY",
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = "Severity: HIGH - Unauthorized access attempt"
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = "UNKNOWN",
+                operation = "SECURITY_VIOLATION",
+                dataType = "SECURITY",
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = "Severity: HIGH - Unauthorized access attempt"
+            )
 
         // Mock the database call to return success
         whenever(
@@ -495,15 +503,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = "user-id",
-            operation = "SECURITY_VIOLATION",
-            dataType = "SECURITY",
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = "Severity: HIGH - Suspicious activity detected"
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = "user-id",
+                operation = "SECURITY_VIOLATION",
+                dataType = "SECURITY",
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = "Severity: HIGH - Suspicious activity detected"
+            )
 
         // Mock the database call to return success
         whenever(
@@ -560,15 +569,16 @@ class AuditServiceTest {
 
         // Mock the database call for each operation type
         operations.forEach { operation ->
-            val mockAuditLog = AuditLog(
-                id = 1L,
-                keycloakId = "test-user",
-                operation = operation,
-                dataType = "USER_DATA",
-                performedBy = null,
-                timestamp = Instant.now(),
-                additionalInfo = null
-            )
+            val mockAuditLog =
+                AuditLog(
+                    id = 1L,
+                    keycloakId = "test-user",
+                    operation = operation,
+                    dataType = "USER_DATA",
+                    performedBy = null,
+                    timestamp = Instant.now(),
+                    additionalInfo = null
+                )
             whenever(postgresClient.update<AuditLog>(expectedQuery, "test-user", operation, "USER_DATA", null, null))
                 .thenReturn(Mono.just(mockAuditLog))
         }
@@ -608,15 +618,16 @@ class AuditServiceTest {
                 ($1, $2, $3, $4, $5)
             """.trimIndent()
 
-        val mockAuditLog = AuditLog(
-            id = 1L,
-            keycloakId = keycloakId,
-            operation = operation,
-            dataType = dataType,
-            performedBy = null,
-            timestamp = Instant.now(),
-            additionalInfo = additionalInfo
-        )
+        val mockAuditLog =
+            AuditLog(
+                id = 1L,
+                keycloakId = keycloakId,
+                operation = operation,
+                dataType = dataType,
+                performedBy = null,
+                timestamp = Instant.now(),
+                additionalInfo = additionalInfo
+            )
 
         // Mock the database call to return success
         whenever(postgresClient.update<AuditLog>(expectedQuery, keycloakId, operation, dataType, null, additionalInfo))

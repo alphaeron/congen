@@ -1,10 +1,10 @@
 package com.congen.dal
 
-import com.congen.cache.annotation.Cacheable
-import com.congen.cache.annotation.CacheEvict
-import com.congen.cache.CacheTTL
-import com.congen.cache.CacheKeyStrategy
 import com.congen.cache.CacheInvalidationStrategy
+import com.congen.cache.CacheKeyStrategy
+import com.congen.cache.CacheTTL
+import com.congen.cache.annotation.CacheEvict
+import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
@@ -153,10 +153,10 @@ class ProgramDAL(
             Any::class,
             userId
         ).then(Mono.just(Unit))
-        .onErrorResume(NoResultsFoundException::class.java) {
-            logger.warn("No programs found to deactivate for user {}", userId)
-            Mono.just(Unit)
-        }
+            .onErrorResume(NoResultsFoundException::class.java) {
+                logger.warn("No programs found to deactivate for user {}", userId)
+                Mono.just(Unit)
+            }
     }
 
     /**

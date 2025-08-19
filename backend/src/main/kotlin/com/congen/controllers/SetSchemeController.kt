@@ -5,7 +5,6 @@ import com.congen.service.GdprComplianceService
 import com.congen.service.ProgrammedExerciseService
 import com.congen.service.SetSchemeService
 import com.congen.util.KeycloakUtil
-import reactor.core.publisher.Flux
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -115,11 +115,12 @@ class SetSchemeController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programmedExerciseService.getOwner(programmedExerciseId)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programmedExerciseService.getOwner(programmedExerciseId)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.insertSetScheme(
@@ -168,11 +169,12 @@ class SetSchemeController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             setSchemeService.isOwner(id, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        setSchemeService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            setSchemeService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.selectSetSchemeById(id)
@@ -246,11 +248,12 @@ class SetSchemeController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             programmedExerciseService.isOwner(programmedExerciseId, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programmedExerciseService.getOwner(programmedExerciseId)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programmedExerciseService.getOwner(programmedExerciseId)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.selectSetSchemesByProgrammedExerciseId(programmedExerciseId)
@@ -312,15 +315,19 @@ class SetSchemeController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            setSchemeService.isOwner(id, userId).zipWith(programmedExerciseService.isOwner(programmedExerciseId, userId)) { isSchemeOwner, isExerciseOwner ->
+            setSchemeService.isOwner(
+                id,
+                userId
+            ).zipWith(programmedExerciseService.isOwner(programmedExerciseId, userId)) { isSchemeOwner, isExerciseOwner ->
                 isSchemeOwner && isExerciseOwner
             }.flatMap { hasAccess ->
                 if (isAdminOrService || hasAccess) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        setSchemeService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            setSchemeService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.updateSetSchemeWithUnit(
@@ -374,11 +381,12 @@ class SetSchemeController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             setSchemeService.isOwner(id, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        setSchemeService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            setSchemeService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             setSchemeService.deleteSetScheme(id)

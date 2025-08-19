@@ -4,7 +4,6 @@ import com.congen.model.ExerciseRotationHistory
 import com.congen.service.ExerciseRotationHistoryService
 import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
-import reactor.core.publisher.Flux
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -23,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -139,11 +139,12 @@ class ExerciseRotationHistoryController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             val hasAccess = isAdminOrService || currentUserId == userId
             if (hasAccess) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         exerciseRotationHistoryService.insert(userId, exerciseName, isAccessory)
@@ -218,11 +219,12 @@ class ExerciseRotationHistoryController(
                 .flatMap { record ->
                     val hasAccess = isAdminOrService || record.userId == userId
                     if (hasAccess) {
-                        val consentUserIdMono = if (isAdminOrService) {
-                            Mono.just(record.userId)
-                        } else {
-                            Mono.just(userId)
-                        }
+                        val consentUserIdMono =
+                            if (isAdminOrService) {
+                                Mono.just(record.userId)
+                            } else {
+                                Mono.just(userId)
+                            }
                         consentUserIdMono.flatMap { ownerId ->
                             gdprComplianceService.withUserConsent(ownerId) {
                                 Mono.just(record)
@@ -455,11 +457,12 @@ class ExerciseRotationHistoryController(
                 }
             hasAccess.flatMap { hasResourceAccess ->
                 if (hasResourceAccess) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        Mono.just(userId)
-                    } else {
-                        Mono.just(currentUserId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            Mono.just(userId)
+                        } else {
+                            Mono.just(currentUserId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             exerciseRotationHistoryService.update(id, userId, exerciseName, isAccessory)
@@ -539,11 +542,12 @@ class ExerciseRotationHistoryController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             exerciseRotationHistoryService.isOwner(id, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        exerciseRotationHistoryService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            exerciseRotationHistoryService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             exerciseRotationHistoryService.deleteById(id)

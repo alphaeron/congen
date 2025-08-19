@@ -44,7 +44,10 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         return Pair(response.id, userToken)
     }
 
-    private fun getWorkoutStageTypeId(name: String, token: String): Long {
+    private fun getWorkoutStageTypeId(
+        name: String,
+        token: String
+    ): Long {
         val response =
             webTestClient.get()
                 .uri("/api/v1/workout_stage_type/name/$name")

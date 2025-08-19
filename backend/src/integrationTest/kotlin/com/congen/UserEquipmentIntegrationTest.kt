@@ -65,7 +65,12 @@ class UserEquipmentIntegrationTest : BaseIntegrationTest() {
     fun `should handle multiple equipment for same user`() {
         // Add multiple equipment for the same user
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME, token = userToken)
-        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, IntegrationTestHelpers.TEST_EQUIPMENT_NAME_2, token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(
+            webTestClient,
+            userId,
+            IntegrationTestHelpers.TEST_EQUIPMENT_NAME_2,
+            token = userToken
+        )
 
         // Get all equipment for the user
         webTestClient.get()

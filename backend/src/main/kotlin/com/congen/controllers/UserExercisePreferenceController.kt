@@ -105,11 +105,12 @@ class UserExercisePreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
@@ -165,11 +166,12 @@ class UserExercisePreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
@@ -224,11 +226,12 @@ class UserExercisePreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Deleting user exercise preference: {} - {}", userId, exerciseName)

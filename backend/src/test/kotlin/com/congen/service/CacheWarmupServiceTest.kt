@@ -1,58 +1,129 @@
 package com.congen.service
 
 import com.congen.config.CacheWarmupConfig
-import com.congen.dal.*
-import com.congen.model.*
+import com.congen.dal.EquipmentDAL
+import com.congen.dal.ExerciseDAL
+import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.ExerciseRotationHistoryDAL
+import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.GdprComplianceDAL
+import com.congen.dal.MuscleDAL
+import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
+import com.congen.dal.UserDAL
+import com.congen.dal.UserEquipmentDAL
+import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeakMuscleDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
+import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.model.Equipment
+import com.congen.model.Exercise
+import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
+import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
+import com.congen.model.Muscle
+import com.congen.model.User
+import com.congen.model.UserProgramPreferences
+import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.*
+import org.mockito.kotlin.any
+import org.mockito.kotlin.atLeastOnce
+import org.mockito.kotlin.never
+import org.mockito.kotlin.verify
+import org.mockito.kotlin.whenever
 import org.springframework.boot.ApplicationArguments
 import reactor.core.publisher.Mono
 import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class CacheWarmupServiceTest {
-
     @Mock private lateinit var exerciseDAL: ExerciseDAL
+
     @Mock private lateinit var equipmentDAL: EquipmentDAL
+
     @Mock private lateinit var muscleDAL: MuscleDAL
+
     @Mock private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
+
     @Mock private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
+
     @Mock private lateinit var workoutStageTypeDAL: WorkoutStageTypeDAL
+
     @Mock private lateinit var exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL
+
     @Mock private lateinit var programDAL: ProgramDAL
+
     @Mock private lateinit var userDAL: UserDAL
+
     @Mock private lateinit var userEquipmentDAL: UserEquipmentDAL
+
     @Mock private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
+
     @Mock private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
+
     @Mock private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
+
     @Mock private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
+
     @Mock private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
+
     @Mock private lateinit var gdprComplianceDAL: GdprComplianceDAL
+
     @Mock private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
+
     @Mock private lateinit var workoutStageDAL: WorkoutStageDAL
+
     @Mock private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
+
     @Mock private lateinit var setSchemeDAL: SetSchemeDAL
+
     @Mock private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
+
     @Mock private lateinit var cacheWarmupConfig: CacheWarmupConfig
+
     @Mock private lateinit var applicationArguments: ApplicationArguments
 
     private lateinit var cacheWarmupService: CacheWarmupService
 
     @BeforeEach
     fun setUp() {
-        cacheWarmupService = CacheWarmupService(
-            exerciseDAL, equipmentDAL, muscleDAL, exerciseMuscleDAL, exerciseEquipmentDAL,
-            workoutStageTypeDAL, exerciseWorkoutTypeDAL, programDAL, userDAL, userEquipmentDAL,
-            userExercisePreferenceDAL, userOneRepMaxDAL, userWeakMuscleDAL, userProgramPreferencesDAL,
-            userWeightUnitPreferenceDAL, gdprComplianceDAL, programmedWorkoutDAL, workoutStageDAL,
-            programmedExerciseDAL, setSchemeDAL, exerciseRotationHistoryDAL, cacheWarmupConfig
-        )
+        cacheWarmupService =
+            CacheWarmupService(
+                exerciseDAL,
+                equipmentDAL,
+                muscleDAL,
+                exerciseMuscleDAL,
+                exerciseEquipmentDAL,
+                workoutStageTypeDAL,
+                exerciseWorkoutTypeDAL,
+                programDAL,
+                userDAL,
+                userEquipmentDAL,
+                userExercisePreferenceDAL,
+                userOneRepMaxDAL,
+                userWeakMuscleDAL,
+                userProgramPreferencesDAL,
+                userWeightUnitPreferenceDAL,
+                gdprComplianceDAL,
+                programmedWorkoutDAL,
+                workoutStageDAL,
+                programmedExerciseDAL,
+                setSchemeDAL,
+                exerciseRotationHistoryDAL,
+                cacheWarmupConfig
+            )
     }
 
     @Test
@@ -124,8 +195,12 @@ class CacheWarmupServiceTest {
 
         listOf("Bench Press", "Squat").forEach { exerciseName ->
             whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(exerciseName)).thenReturn(Mono.just(exerciseMuscleRelationships))
-            whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)).thenReturn(Mono.just(exerciseEquipmentRelationships))
-            whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(exerciseName)).thenReturn(Mono.just(exerciseWorkoutTypeRelationships))
+            whenever(
+                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)
+            ).thenReturn(Mono.just(exerciseEquipmentRelationships))
+            whenever(
+                exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(exerciseName)
+            ).thenReturn(Mono.just(exerciseWorkoutTypeRelationships))
         }
 
         cacheWarmupService.run(applicationArguments)
@@ -157,9 +232,15 @@ class CacheWarmupServiceTest {
         whenever(equipmentDAL.selectEquipment()).thenReturn(Mono.just(listOf(createMockEquipment("Equipment"))))
         whenever(muscleDAL.selectMuscles()).thenReturn(Mono.just(listOf(createMockMuscle("Muscle"))))
         whenever(workoutStageTypeDAL.selectWorkoutStageTypes()).thenReturn(Mono.just(listOf(createMockWorkoutStageType())))
-        whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(any())).thenReturn(Mono.just(listOf(createMockExerciseMuscle("Exercise", "Muscle"))))
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())).thenReturn(Mono.just(listOf(createMockExerciseEquipment("Exercise", "Equipment"))))
-        whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(any())).thenReturn(Mono.just(listOf(createMockExerciseWorkoutType("Exercise", "Type"))))
+        whenever(
+            exerciseMuscleDAL.selectExerciseMuscleByExercise(any())
+        ).thenReturn(Mono.just(listOf(createMockExerciseMuscle("Exercise", "Muscle"))))
+        whenever(
+            exerciseEquipmentDAL.selectExerciseEquipmentByExercise(any())
+        ).thenReturn(Mono.just(listOf(createMockExerciseEquipment("Exercise", "Equipment"))))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(any())
+        ).thenReturn(Mono.just(listOf(createMockExerciseWorkoutType("Exercise", "Type"))))
 
         cacheWarmupService.run(applicationArguments)
 
@@ -195,7 +276,7 @@ class CacheWarmupServiceTest {
 
         // The run method is asynchronous, so we need to wait a bit for the operations to complete
         cacheWarmupService.run(applicationArguments)
-        
+
         // Wait a bit for the reactive operations to complete
         Thread.sleep(100)
 
@@ -211,12 +292,20 @@ class CacheWarmupServiceTest {
     @Test
     fun `should skip warmup when disabled in configuration`() {
         whenever(cacheWarmupConfig.enabled).thenReturn(false)
-        
+
         cacheWarmupService.run(applicationArguments)
 
         // Verify that no DAL methods were called since warmup is disabled
-        verifyNoInteractions(exerciseDAL, equipmentDAL, muscleDAL, exerciseMuscleDAL, 
-                           exerciseEquipmentDAL, workoutStageTypeDAL, exerciseWorkoutTypeDAL, programDAL)
+        verifyNoInteractions(
+            exerciseDAL,
+            equipmentDAL,
+            muscleDAL,
+            exerciseMuscleDAL,
+            exerciseEquipmentDAL,
+            workoutStageTypeDAL,
+            exerciseWorkoutTypeDAL,
+            programDAL
+        )
     }
 
     @Test
@@ -259,7 +348,7 @@ class CacheWarmupServiceTest {
 
         val userIds = listOf("user1")
         whenever(userDAL.selectRandomUserIds(2)).thenReturn(Mono.just(userIds))
-        
+
         // Mock all the user-related DAL calls
         val mockUser = createMockUser("user1")
         whenever(userDAL.selectUserByKeycloakId("user1")).thenReturn(Mono.just(mockUser))
@@ -267,7 +356,9 @@ class CacheWarmupServiceTest {
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser("user1")).thenReturn(Mono.just(listOf()))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences("user1")).thenReturn(Mono.just(createMockUserProgramPreferences("user1")))
+        whenever(
+            userProgramPreferencesDAL.selectUserProgramPreferences("user1")
+        ).thenReturn(Mono.just(createMockUserProgramPreferences("user1")))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(gdprComplianceDAL.hasUserConsent("user1")).thenReturn(Mono.just(true))
         whenever(programDAL.selectProgramsByUserId("user1")).thenReturn(Mono.just(listOf()))
@@ -279,7 +370,14 @@ class CacheWarmupServiceTest {
     }
 
     private fun createMockExercise(name: String): Exercise {
-        return Exercise(name = name, description = "Description for $name", movementType = MovementType.HORIZONTAL_PUSH, isUnilateral = false, isUpper = true, isAccessory = false)
+        return Exercise(
+            name = name,
+            description = "Description for $name",
+            movementType = MovementType.HORIZONTAL_PUSH,
+            isUnilateral = false,
+            isUpper = true,
+            isAccessory = false
+        )
     }
 
     private fun createMockEquipment(name: String): Equipment {
@@ -294,20 +392,25 @@ class CacheWarmupServiceTest {
         return WorkoutStageType(id = 1, name = WorkoutStageTypeEnum.WARMUP, createdAt = Instant.now())
     }
 
-    private fun createMockExerciseMuscle(exerciseName: String, muscleName: String): ExerciseMuscle {
+    private fun createMockExerciseMuscle(
+        exerciseName: String,
+        muscleName: String
+    ): ExerciseMuscle {
         return ExerciseMuscle(exerciseName = exerciseName, muscleName = muscleName)
     }
 
-    private fun createMockExerciseEquipment(exerciseName: String, equipmentName: String): ExerciseEquipment {
+    private fun createMockExerciseEquipment(
+        exerciseName: String,
+        equipmentName: String
+    ): ExerciseEquipment {
         return ExerciseEquipment(exerciseName = exerciseName, equipmentName = equipmentName)
     }
 
-    private fun createMockExerciseWorkoutType(exerciseName: String, workoutTypeName: String): ExerciseWorkoutType {
+    private fun createMockExerciseWorkoutType(
+        exerciseName: String,
+        workoutTypeName: String
+    ): ExerciseWorkoutType {
         return ExerciseWorkoutType(exerciseName = exerciseName, movementType = MovementType.HORIZONTAL_PUSH, workoutType = workoutTypeName)
-    }
-
-    private fun createMockProgram(name: String): Program {
-        return Program(id = 1L, userId = "test-user-id", name = name, currentWeekNumber = 1, createdAt = Instant.now(), updatedAt = Instant.now(), isActive = true)
     }
 
     private fun createMockUser(keycloakId: String): User {
@@ -315,10 +418,12 @@ class CacheWarmupServiceTest {
     }
 
     private fun createMockUserProgramPreferences(userId: String): UserProgramPreferences {
-        return UserProgramPreferences(userId = userId, programDaysPerWeek = 3, sessionTimeLengthInMinutes = 60, createdAt = Instant.now(), updatedAt = Instant.now())
+        return UserProgramPreferences(
+            userId = userId,
+            programDaysPerWeek = 3,
+            sessionTimeLengthInMinutes = 60,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
     }
-
-    private fun createMockGdprCompliance(userId: String): UserConsent {
-        return UserConsent(keycloakId = userId, dataProcessingConsent = true, consentTimestamp = Instant.now(), createdAt = Instant.now(), updatedAt = Instant.now())
-    }
-    }
+}

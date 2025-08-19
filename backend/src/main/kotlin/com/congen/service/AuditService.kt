@@ -170,10 +170,10 @@ class AuditService(
         } else {
             val operation = if (consentGiven) "CONSENT_GIVEN" else "CONSENT_WITHDRAWN"
             logDataOperation(
-            keycloakId = keycloakId,
-            operation = operation,
-            dataType = consentType,
-            additionalInfo = "Consent: $consentGiven"
+                keycloakId = keycloakId,
+                operation = operation,
+                dataType = consentType,
+                additionalInfo = "Consent: $consentGiven"
             )
         }
     }

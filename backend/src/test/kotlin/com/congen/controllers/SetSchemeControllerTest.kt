@@ -13,7 +13,6 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.http.HttpStatus
@@ -251,7 +250,7 @@ class SetSchemeControllerTest {
         whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemeById(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = setSchemeController.get(SCHEME_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -265,7 +264,7 @@ class SetSchemeControllerTest {
         whenever(setSchemeService.isOwner(NON_EXISTENT_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemeById(NON_EXISTENT_ID)).thenReturn(Mono.empty())
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = setSchemeController.get(NON_EXISTENT_ID)
         StepVerifier.create(result)
             .expectComplete()
@@ -308,7 +307,7 @@ class SetSchemeControllerTest {
             )
         ).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             setSchemeController.save(
                 PROGRAMMED_EXERCISE_ID,
@@ -369,7 +368,7 @@ class SetSchemeControllerTest {
             )
         ).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             setSchemeController.update(
                 SCHEME_ID_1,
@@ -412,7 +411,7 @@ class SetSchemeControllerTest {
         whenever(setSchemeService.isOwner(SCHEME_ID_1, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.deleteSetScheme(SCHEME_ID_1)).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = setSchemeController.delete(SCHEME_ID_1)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(setScheme))
@@ -450,7 +449,7 @@ class SetSchemeControllerTest {
         whenever(programmedExerciseService.isOwner(PROGRAMMED_EXERCISE_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
         whenever(setSchemeService.selectSetSchemesByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)).thenReturn(Mono.just(setSchemes))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result = setSchemeController.getByProgrammedExerciseId(PROGRAMMED_EXERCISE_ID)
         StepVerifier.create(result)
             .assertNext { resp ->
@@ -497,7 +496,7 @@ class SetSchemeControllerTest {
             )
         ).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             setSchemeController.save(
                 PROGRAMMED_EXERCISE_ID,
@@ -559,7 +558,7 @@ class SetSchemeControllerTest {
             )
         ).thenReturn(Mono.just(setScheme))
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         val result =
             setSchemeController.update(
                 SCHEME_ID_1,

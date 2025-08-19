@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
 import com.congen.service.GdprComplianceService
@@ -115,15 +114,20 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Upserting user weight unit preference: {} - {} - {}", userId, exerciseName, preferredUnit)
-                        userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(userId, exerciseName, WeightUnit.fromString(preferredUnit))
+                        userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(
+                            userId,
+                            exerciseName,
+                            WeightUnit.fromString(preferredUnit)
+                        )
                             .map { ResponseEntity.ok(it) }
                             .doOnError { e ->
                                 logger.error(
@@ -175,11 +179,12 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
@@ -239,11 +244,12 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
@@ -303,11 +309,12 @@ class UserWeightUnitPreferenceController(
         }.flatMap { (currentUserId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             if (isAdminOrService || currentUserId == userId) {
-                val consentUserIdMono = if (isAdminOrService) {
-                    Mono.just(userId)
-                } else {
-                    Mono.just(currentUserId)
-                }
+                val consentUserIdMono =
+                    if (isAdminOrService) {
+                        Mono.just(userId)
+                    } else {
+                        Mono.just(currentUserId)
+                    }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
                         logger.info("Deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName)
@@ -317,7 +324,12 @@ class UserWeightUnitPreferenceController(
                                 ResponseEntity.ok(preference)
                             }
                             .doOnError { e ->
-                                logger.error("Error deleting user weight unit preference for user: {} and exercise: {}", userId, exerciseName, e)
+                                logger.error(
+                                    "Error deleting user weight unit preference for user: {} and exercise: {}",
+                                    userId,
+                                    exerciseName,
+                                    e
+                                )
                             }
                     }
                 }

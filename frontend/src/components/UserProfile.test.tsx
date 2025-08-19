@@ -42,7 +42,7 @@ describe('UserProfile', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mock.reset();
-    
+
     // Mock GDPR API calls that GdprComplianceSection makes
     mock.onGet('/gdpr/consent').reply(200, {
       keycloak_id: 'test-user-id',
@@ -61,7 +61,7 @@ describe('UserProfile', () => {
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
-    
+
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('UserProfile', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
-    
+
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
@@ -83,7 +83,7 @@ describe('UserProfile', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     expect(screen.getByText('Edit Profile')).toBeInTheDocument();
-    
+
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();

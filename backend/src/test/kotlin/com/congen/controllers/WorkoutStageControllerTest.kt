@@ -201,7 +201,14 @@ class WorkoutStageControllerTest {
         programmedWorkoutService = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
-        workoutStageController = WorkoutStageController(workoutStageService, programService, programmedWorkoutService, keycloakUtil, gdprComplianceService)
+        workoutStageController =
+            WorkoutStageController(
+                workoutStageService,
+                programService,
+                programmedWorkoutService,
+                keycloakUtil,
+                gdprComplianceService
+            )
     }
 
     @Test
@@ -666,5 +673,4 @@ class WorkoutStageControllerTest {
             .verifyComplete()
         verify(workoutStageService).deleteWorkoutStage(WORKOUT_STAGE_ID_1)
     }
-
 }

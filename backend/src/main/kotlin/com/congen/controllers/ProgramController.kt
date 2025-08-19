@@ -4,7 +4,6 @@ import com.congen.model.Program
 import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
-import reactor.core.publisher.Flux
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -22,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -108,11 +108,12 @@ class ProgramController(
         return keycloakUtil.getCurrentUserId().flatMap { keycloakId ->
             keycloakUtil.getCurrentUserRoles().flatMap { roles ->
                 if (roles.contains("admin") || roles.contains("service") || userId == keycloakId) {
-                    val consentUserIdMono = if (roles.contains("admin") || roles.contains("service")) {
-                        Mono.just(userId)
-                    } else {
-                        Mono.just(keycloakId)
-                    }
+                    val consentUserIdMono =
+                        if (roles.contains("admin") || roles.contains("service")) {
+                            Mono.just(userId)
+                        } else {
+                            Mono.just(keycloakId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
@@ -176,11 +177,12 @@ class ProgramController(
                 .flatMap { program ->
                     val hasAccess = isAdminOrService || program.userId == userId
                     if (hasAccess) {
-                        val consentUserIdMono = if (isAdminOrService) {
-                            Mono.just(program.userId)
-                        } else {
-                            Mono.just(userId)
-                        }
+                        val consentUserIdMono =
+                            if (isAdminOrService) {
+                                Mono.just(program.userId)
+                            } else {
+                                Mono.just(userId)
+                            }
                         consentUserIdMono.flatMap { ownerId ->
                             gdprComplianceService.withUserConsent(ownerId) {
                                 Mono.just(program)
@@ -362,11 +364,12 @@ class ProgramController(
                 .flatMap { program ->
                     val hasAccess = isAdminOrService || program.userId == userId
                     if (hasAccess) {
-                        val consentUserIdMono = if (isAdminOrService) {
-                            Mono.just(program.userId)
-                        } else {
-                            Mono.just(userId)
-                        }
+                        val consentUserIdMono =
+                            if (isAdminOrService) {
+                                Mono.just(program.userId)
+                            } else {
+                                Mono.just(userId)
+                            }
                         consentUserIdMono.flatMap { ownerId ->
                             gdprComplianceService.withUserConsent(ownerId) {
                                 programService.updateProgram(id, name, currentWeekNumber, isActive)
@@ -429,11 +432,12 @@ class ProgramController(
                 .flatMap { program ->
                     val hasAccess = isAdminOrService || program.userId == userId
                     if (hasAccess) {
-                        val consentUserIdMono = if (isAdminOrService) {
-                            Mono.just(program.userId)
-                        } else {
-                            Mono.just(userId)
-                        }
+                        val consentUserIdMono =
+                            if (isAdminOrService) {
+                                Mono.just(program.userId)
+                            } else {
+                                Mono.just(userId)
+                            }
                         consentUserIdMono.flatMap { ownerId ->
                             gdprComplianceService.withUserConsent(ownerId) {
                                 programService.deleteProgram(id)

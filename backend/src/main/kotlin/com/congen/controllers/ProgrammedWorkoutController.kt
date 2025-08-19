@@ -5,7 +5,6 @@ import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.service.ProgrammedWorkoutService
 import com.congen.util.KeycloakUtil
-import reactor.core.publisher.Flux
 import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -93,11 +93,12 @@ class ProgrammedWorkoutController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             programService.isOwner(programId, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programService.getOwner(programId)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programService.getOwner(programId)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             programmedWorkoutService.insertProgrammedWorkout(programId, dayNumber, name)
@@ -136,18 +137,19 @@ class ProgrammedWorkoutController(
                 val userId = tuple.t1
                 val roles = tuple.t2
                 val isAdminOrService = roles.contains("admin") || roles.contains("service")
-                
+
                 // First check if the programmed workout exists
                 programmedWorkoutService.selectProgrammedWorkoutById(id)
                     .flatMap { programmedWorkout ->
                         // Programmed workout exists, now check ownership
                         programmedWorkoutService.isOwner(id, userId).flatMap { isOwner ->
                             if (isAdminOrService || isOwner) {
-                                val consentUserIdMono = if (isAdminOrService) {
-                                    programmedWorkoutService.getOwner(id)
-                                } else {
-                                    Mono.just(userId)
-                                }
+                                val consentUserIdMono =
+                                    if (isAdminOrService) {
+                                        programmedWorkoutService.getOwner(id)
+                                    } else {
+                                        Mono.just(userId)
+                                    }
                                 consentUserIdMono.flatMap { ownerId ->
                                     gdprComplianceService.withUserConsent(ownerId) {
                                         Mono.just(ResponseEntity.ok(programmedWorkout))
@@ -223,11 +225,12 @@ class ProgrammedWorkoutController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             programService.isOwner(programId, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programService.getOwner(programId)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programService.getOwner(programId)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
@@ -279,11 +282,12 @@ class ProgrammedWorkoutController(
                 isProgramOwner && isWorkoutOwner
             }.flatMap { hasAccess ->
                 if (isAdminOrService || hasAccess) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programmedWorkoutService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programmedWorkoutService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             programmedWorkoutService.updateProgrammedWorkout(id, programId, dayNumber, name)
@@ -323,11 +327,12 @@ class ProgrammedWorkoutController(
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
             programmedWorkoutService.isOwner(id, userId).flatMap { isOwner ->
                 if (isAdminOrService || isOwner) {
-                    val consentUserIdMono = if (isAdminOrService) {
-                        programmedWorkoutService.getOwner(id)
-                    } else {
-                        Mono.just(userId)
-                    }
+                    val consentUserIdMono =
+                        if (isAdminOrService) {
+                            programmedWorkoutService.getOwner(id)
+                        } else {
+                            Mono.just(userId)
+                        }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
                             programmedWorkoutService.deleteProgrammedWorkout(id)

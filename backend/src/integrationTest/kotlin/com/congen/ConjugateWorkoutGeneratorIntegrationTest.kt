@@ -17,17 +17,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // to ensure Spring context is fully initialized first
     }
 
-    private fun createTestUserAndProgram(): Pair<String, Long> {
-        val unique = System.nanoTime()
-        val userToken = getValidToken("user")
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-        // Use user token for program creation
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = userToken)
-        return Pair(userId, programId)
-    }
-
     private fun createTestUserAndProgramWithToken(): Triple<String, Long, String> {
         val unique = System.nanoTime()
         val userToken = getValidToken("user")

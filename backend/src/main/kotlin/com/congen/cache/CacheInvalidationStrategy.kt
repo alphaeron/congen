@@ -20,16 +20,16 @@ package com.congen.cache
 enum class CacheInvalidationStrategy {
     /** Standard entity invalidation on write operations */
     STANDARD,
-    
+
     /** Name-based entity invalidation for entities with name primary keys */
     ENTITY_BY_NAME,
-    
+
     /** User-specific invalidation for user-related data */
     USER_DATA,
-    
+
     /** Relationship invalidation for relationship tables */
     RELATIONSHIP,
-    
+
     /** Invalidate all list queries for an entity */
     LIST_QUERIES
 }

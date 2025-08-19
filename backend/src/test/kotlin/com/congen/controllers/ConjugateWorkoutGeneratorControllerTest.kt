@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.kotlin.doReturn
 import org.springframework.http.ResponseEntity
 import org.springframework.test.context.TestPropertySource
 import reactor.core.publisher.Mono
@@ -61,7 +61,7 @@ class ConjugateWorkoutGeneratorControllerTest {
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
-        
+
         // Mock GDPR compliance service for all tests - set up before any calls
         doReturn(Mono.just(true)).`when`(gdprComplianceService).hasUserConsent(any<String>())
 

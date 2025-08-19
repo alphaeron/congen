@@ -1,5 +1,6 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.createMockMono
 import com.congen.createMockMonoError
 import com.congen.dal.UserWeightUnitPreferenceDAL
@@ -8,7 +9,6 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockUserWeightUnitPreference
 import com.congen.service.GdprComplianceService
 import com.congen.util.KeycloakUtil
-import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -48,7 +48,12 @@ class UserWeightUnitPreferenceControllerTest {
         userWeightUnitPreferenceDAL = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
-        userWeightUnitPreferenceController = UserWeightUnitPreferenceController(userWeightUnitPreferenceDAL, keycloakUtil, gdprComplianceService)
+        userWeightUnitPreferenceController =
+            UserWeightUnitPreferenceController(
+                userWeightUnitPreferenceDAL,
+                keycloakUtil,
+                gdprComplianceService
+            )
 
         // Mock KeycloakUtil methods for all tests
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(currentUserId))

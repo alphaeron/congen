@@ -2,16 +2,12 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.mockUser
-import com.congen.model.AuditLog
 import com.congen.model.User
 import com.congen.service.AuditService
 import com.congen.util.EncryptionUtil
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify

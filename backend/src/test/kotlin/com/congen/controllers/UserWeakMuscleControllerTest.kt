@@ -1,9 +1,9 @@
 package com.congen.controllers
 
+import com.congen.createGdprComplianceServiceSpy
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.UserWeakMuscle
 import com.congen.service.GdprComplianceService
-import com.congen.createGdprComplianceServiceSpy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any

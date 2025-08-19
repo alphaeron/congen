@@ -1,33 +1,33 @@
 package com.congen.service
 
 import com.congen.config.CacheWarmupConfig
-import com.congen.dal.ExerciseDAL
 import com.congen.dal.EquipmentDAL
-import com.congen.dal.MuscleDAL
-import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
-import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.dal.ExerciseMuscleDAL
+import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.GdprComplianceDAL
+import com.congen.dal.MuscleDAL
 import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.GdprComplianceDAL
-import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.WorkoutStageDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.SetSchemeDAL
-import com.congen.dal.ExerciseRotationHistoryDAL
+import com.congen.dal.WorkoutStageTypeDAL
 import org.slf4j.LoggerFactory
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Mono
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 /**
  * Service responsible for warming up the application cache on startup.
@@ -65,7 +65,6 @@ class CacheWarmupService(
     private val exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL,
     private val cacheWarmupConfig: CacheWarmupConfig
 ) : ApplicationRunner {
-
     private val logger = LoggerFactory.getLogger(CacheWarmupService::class.java)
 
     /**
@@ -126,7 +125,7 @@ class CacheWarmupService(
      */
     private fun warmupReferenceData(): Mono<Unit> {
         logger.info("Warming up reference data (popular exercises, equipment, muscles)")
-        
+
         return Flux.merge(
             Flux.fromIterable(cacheWarmupConfig.popularExercises)
                 .flatMap { exerciseName ->
@@ -135,7 +134,6 @@ class CacheWarmupService(
                         .doOnError { logger.warn("Failed to warm up exercise: {}", exerciseName, it) }
                         .onErrorComplete()
                 },
-
             Flux.fromIterable(cacheWarmupConfig.popularEquipment)
                 .flatMap { equipmentName ->
                     equipmentDAL.selectEquipmentByName(equipmentName)
@@ -143,7 +141,6 @@ class CacheWarmupService(
                         .doOnError { logger.warn("Failed to warm up equipment: {}", equipmentName, it) }
                         .onErrorComplete()
                 },
-
             Flux.fromIterable(cacheWarmupConfig.popularMuscles)
                 .flatMap { muscleName ->
                     muscleDAL.selectMuscleByName(muscleName)
@@ -162,23 +159,20 @@ class CacheWarmupService(
      */
     private fun warmupFrequentlyAccessedLists(): Mono<Unit> {
         logger.info("Warming up frequently accessed lists")
-        
+
         return Flux.merge(
             exerciseDAL.selectExercises()
                 .doOnSuccess { logger.debug("Warmed up exercises list") }
                 .doOnError { logger.warn("Failed to warm up exercises list", it) }
                 .onErrorComplete(),
-
             equipmentDAL.selectEquipment()
                 .doOnSuccess { logger.debug("Warmed up equipment list") }
                 .doOnError { logger.warn("Failed to warm up equipment list", it) }
                 .onErrorComplete(),
-
             muscleDAL.selectMuscles()
                 .doOnSuccess { logger.debug("Warmed up muscles list") }
                 .doOnError { logger.warn("Failed to warm up muscles list", it) }
                 .onErrorComplete(),
-
             workoutStageTypeDAL.selectWorkoutStageTypes()
                 .doOnSuccess { logger.debug("Warmed up workout stage types list") }
                 .doOnError { logger.warn("Failed to warm up workout stage types list", it) }
@@ -195,7 +189,7 @@ class CacheWarmupService(
      */
     private fun warmupCoreRelationships(): Mono<Unit> {
         logger.info("Warming up core relationship data")
-        
+
         return Flux.fromIterable(cacheWarmupConfig.popularExercises)
             .flatMap { exerciseName ->
                 Flux.merge(
@@ -203,21 +197,20 @@ class CacheWarmupService(
                         .doOnSuccess { logger.debug("Warmed up exercise-muscle relationships for: {}", exerciseName) }
                         .doOnError { logger.warn("Failed to warm up exercise-muscle relationships for: {}", exerciseName, it) }
                         .onErrorComplete(),
-                    
                     exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)
                         .doOnSuccess { logger.debug("Warmed up exercise-equipment relationships for: {}", exerciseName) }
                         .doOnError { logger.warn("Failed to warm up exercise-equipment relationships for: {}", exerciseName, it) }
                         .onErrorComplete(),
-                    
                     exerciseWorkoutTypeDAL.selectExerciseWorkoutTypesByExercise(exerciseName)
                         .doOnSuccess { logger.debug("Warmed up exercise-workout type relationships for: {}", exerciseName) }
-                        .doOnError { error -> logger.warn("Failed to warm up exercise-workout type relationships for: {}", exerciseName, error) }
+                        .doOnError {
+                                error ->
+                            logger.warn("Failed to warm up exercise-workout type relationships for: {}", exerciseName, error)
+                        }
                         .onErrorComplete()
                 )
             }.then(Mono.just(Unit))
     }
-
-
 
     /**
      * Warms up user-specific data for a random set of users.
@@ -229,12 +222,12 @@ class CacheWarmupService(
      */
     private fun warmupUserData(): Mono<Unit> {
         logger.info("Warming up user-specific data")
-        
+
         // Get random user keycloak IDs to warm up
         return userDAL.selectRandomUserIds(cacheWarmupConfig.maxUsersToWarmup)
             .flatMap { userIds ->
                 logger.info("Warming up data for {} users", userIds.size)
-                
+
                 Flux.fromIterable(userIds)
                     .flatMap { userId -> warmupUserCompleteData(userId) }
                     .collectList()
@@ -269,7 +262,6 @@ class CacheWarmupService(
                 .doOnSuccess { logger.debug("Warmed up user profile for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user profile for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User programs
             programDAL.selectProgramsByUserId(userId)
                 .flatMap { programs ->
@@ -287,49 +279,41 @@ class CacheWarmupService(
                 .doOnSuccess { logger.debug("Warmed up user programs and related data for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user programs and related data for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User equipment
             userEquipmentDAL.selectUserEquipmentByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user equipment for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user equipment for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User exercise preferences
             userExercisePreferenceDAL.selectUserExercisePreferencesByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user exercise preferences for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user exercise preferences for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User one rep maxes
             userOneRepMaxDAL.selectUserOneRepMaxByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user one rep maxes for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user one rep maxes for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User weak muscles
             userWeakMuscleDAL.selectUserWeakMusclesByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user weak muscles for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user weak muscles for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User program preferences
             userProgramPreferencesDAL.selectUserProgramPreferences(userId)
                 .doOnSuccess { logger.debug("Warmed up user program preferences for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user program preferences for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User weight unit preferences
             userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user weight unit preferences for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user weight unit preferences for: {}", userId, it) }
                 .onErrorComplete(),
-            
             // User GDPR consent
             gdprComplianceDAL.hasUserConsent(userId)
                 .doOnSuccess { logger.debug("Warmed up user GDPR consent for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user GDPR consent for: {}", userId, it) }
                 .onErrorResume { Mono.just(false) },
-            
             // Exercise rotation history
             exerciseRotationHistoryDAL.selectByUserId(userId)
                 .doOnSuccess { logger.debug("Warmed up exercise rotation history for: {}", userId) }

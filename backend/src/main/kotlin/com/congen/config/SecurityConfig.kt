@@ -28,7 +28,6 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity(useAuthorizationManager = true)
 class SecurityConfig {
-
     /**
      * Configures the security filter chain for the API.
      *

@@ -43,7 +43,6 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "congen.cache.warmup")
 class CacheWarmupConfig {
-
     /**
      * Whether cache warmup is enabled.
      * Default: true
@@ -84,24 +83,44 @@ class CacheWarmupConfig {
      * List of popular exercises to warm up.
      * Default: Common compound exercises
      */
-    var popularExercises: List<String> = listOf(
-        "Bench Press", "Squat", "Deadlift", "Overhead Press", "Pull-up",
-        "Push-up", "Row", "Lunge", "Plank", "Burpee"
-    )
+    var popularExercises: List<String> =
+        listOf(
+            "Bench Press",
+            "Squat",
+            "Deadlift",
+            "Overhead Press",
+            "Pull-up",
+            "Push-up",
+            "Row",
+            "Lunge",
+            "Plank",
+            "Burpee"
+        )
 
     /**
      * List of popular equipment to warm up.
      * Default: Common gym equipment
      */
-    var popularEquipment: List<String> = listOf(
-        "Barbell", "Dumbbell", "Pull-up Bar", "Bench", "Squat Rack"
-    )
+    var popularEquipment: List<String> =
+        listOf(
+            "Barbell",
+            "Dumbbell",
+            "Pull-up Bar",
+            "Bench",
+            "Squat Rack"
+        )
 
     /**
      * List of popular muscles to warm up.
      * Default: Major muscle groups
      */
-    var popularMuscles: List<String> = listOf(
-        "Chest", "Back", "Legs", "Shoulders", "Arms", "Core"
-    )
+    var popularMuscles: List<String> =
+        listOf(
+            "Chest",
+            "Back",
+            "Legs",
+            "Shoulders",
+            "Arms",
+            "Core"
+        )
 }

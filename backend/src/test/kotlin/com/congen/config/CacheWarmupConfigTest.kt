@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import org.springframework.test.context.TestPropertySource
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -21,14 +19,13 @@ import kotlin.test.assertTrue
 @TestConfiguration
 @EnableConfigurationProperties(CacheWarmupConfig::class)
 class CacheWarmupConfigTest {
-
     @Test
     fun `should load default configuration properties correctly`() {
         // Given
         val context = AnnotationConfigApplicationContext()
         context.register(CacheWarmupConfigTest::class.java)
         context.refresh()
-        
+
         val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
 
         // Then
@@ -36,21 +33,21 @@ class CacheWarmupConfigTest {
         assertTrue(cacheWarmupConfig.warmupReferenceData)
         assertTrue(cacheWarmupConfig.warmupLists)
         assertTrue(cacheWarmupConfig.warmupRelationships)
-        
+
         // Verify default popular exercises
         assertTrue(cacheWarmupConfig.popularExercises.contains("Bench Press"))
         assertTrue(cacheWarmupConfig.popularExercises.contains("Squat"))
         assertTrue(cacheWarmupConfig.popularExercises.contains("Deadlift"))
-        
+
         // Verify default popular equipment
         assertTrue(cacheWarmupConfig.popularEquipment.contains("Barbell"))
         assertTrue(cacheWarmupConfig.popularEquipment.contains("Dumbbell"))
-        
+
         // Verify default popular muscles
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Chest"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Back"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Legs"))
-        
+
         context.close()
     }
 }
@@ -66,13 +63,12 @@ class CacheWarmupConfigTest {
 @TestConfiguration
 @EnableConfigurationProperties(CacheWarmupConfig::class)
 class CacheWarmupConfigDisabledTest {
-
     @Test
     fun `should load disabled configuration properties correctly`() {
         // Given
         val context = AnnotationConfigApplicationContext()
         context.register(CacheWarmupConfigDisabledTest::class.java)
-        
+
         // Set disabled properties
         context.environment.setActiveProfiles("test")
         context.environment.propertySources.addFirst(
@@ -86,9 +82,9 @@ class CacheWarmupConfigDisabledTest {
                 )
             )
         )
-        
+
         context.refresh()
-        
+
         val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
 
         // Then
@@ -96,7 +92,7 @@ class CacheWarmupConfigDisabledTest {
         assertFalse(cacheWarmupConfig.warmupReferenceData)
         assertFalse(cacheWarmupConfig.warmupLists)
         assertFalse(cacheWarmupConfig.warmupRelationships)
-        
+
         context.close()
     }
 }
@@ -113,14 +109,13 @@ class CacheWarmupConfigDisabledTest {
 @TestConfiguration
 @EnableConfigurationProperties(CacheWarmupConfig::class)
 class CacheWarmupConfigDefaultTest {
-
     @Test
     fun `should use default values when no properties specified`() {
         // Given
         val context = AnnotationConfigApplicationContext()
         context.register(CacheWarmupConfigDefaultTest::class.java)
         context.refresh()
-        
+
         val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
 
         // Then
@@ -128,21 +123,21 @@ class CacheWarmupConfigDefaultTest {
         assertTrue(cacheWarmupConfig.warmupReferenceData)
         assertTrue(cacheWarmupConfig.warmupLists)
         assertTrue(cacheWarmupConfig.warmupRelationships)
-        
+
         // Verify default popular exercises
         assertTrue(cacheWarmupConfig.popularExercises.contains("Bench Press"))
         assertTrue(cacheWarmupConfig.popularExercises.contains("Squat"))
         assertTrue(cacheWarmupConfig.popularExercises.contains("Deadlift"))
-        
+
         // Verify default popular equipment
         assertTrue(cacheWarmupConfig.popularEquipment.contains("Barbell"))
         assertTrue(cacheWarmupConfig.popularEquipment.contains("Dumbbell"))
-        
+
         // Verify default popular muscles
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Chest"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Back"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Legs"))
-        
+
         context.close()
     }
 }
