@@ -1,11 +1,10 @@
 package com.congen.config
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit.jupiter.SpringExtension
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -19,15 +18,19 @@ import kotlin.test.assertTrue
  * @author Congen Development Team
  * @since 1.0.0
  */
-@ExtendWith(SpringExtension::class)
-@SpringBootTest(classes = [CacheWarmupConfig::class])
+@TestConfiguration
+@EnableConfigurationProperties(CacheWarmupConfig::class)
 class CacheWarmupConfigTest {
-
-    @Autowired
-    private lateinit var cacheWarmupConfig: CacheWarmupConfig
 
     @Test
     fun `should load default configuration properties correctly`() {
+        // Given
+        val context = AnnotationConfigApplicationContext()
+        context.register(CacheWarmupConfigTest::class.java)
+        context.refresh()
+        
+        val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
+
         // Then
         assertTrue(cacheWarmupConfig.enabled)
         assertTrue(cacheWarmupConfig.warmupReferenceData)
@@ -47,6 +50,8 @@ class CacheWarmupConfigTest {
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Chest"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Back"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Legs"))
+        
+        context.close()
     }
 }
 
@@ -58,27 +63,41 @@ class CacheWarmupConfigTest {
  * @author Congen Development Team
  * @since 1.0.0
  */
-@ExtendWith(SpringExtension::class)
-@SpringBootTest(classes = [CacheWarmupConfig::class])
-@TestPropertySource(properties = [
-    "congen.cache.warmup.enabled=false",
-    "congen.cache.warmup.warmup-reference-data=false",
-    "congen.cache.warmup.warmup-lists=false",
-    "congen.cache.warmup.warmup-relationships=false",
-    "congen.cache.warmup.warmup-programs=false"
-])
+@TestConfiguration
+@EnableConfigurationProperties(CacheWarmupConfig::class)
 class CacheWarmupConfigDisabledTest {
-
-    @Autowired
-    private lateinit var cacheWarmupConfig: CacheWarmupConfig
 
     @Test
     fun `should load disabled configuration properties correctly`() {
+        // Given
+        val context = AnnotationConfigApplicationContext()
+        context.register(CacheWarmupConfigDisabledTest::class.java)
+        
+        // Set disabled properties
+        context.environment.setActiveProfiles("test")
+        context.environment.propertySources.addFirst(
+            org.springframework.core.env.MapPropertySource(
+                "test-properties",
+                mapOf(
+                    "congen.cache.warmup.enabled" to "false",
+                    "congen.cache.warmup.warmup-reference-data" to "false",
+                    "congen.cache.warmup.warmup-lists" to "false",
+                    "congen.cache.warmup.warmup-relationships" to "false"
+                )
+            )
+        )
+        
+        context.refresh()
+        
+        val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
+
         // Then
         assertFalse(cacheWarmupConfig.enabled)
         assertFalse(cacheWarmupConfig.warmupReferenceData)
         assertFalse(cacheWarmupConfig.warmupLists)
         assertFalse(cacheWarmupConfig.warmupRelationships)
+        
+        context.close()
     }
 }
 
@@ -91,15 +110,19 @@ class CacheWarmupConfigDisabledTest {
  * @author Congen Development Team
  * @since 1.0.0
  */
-@ExtendWith(SpringExtension::class)
-@SpringBootTest(classes = [CacheWarmupConfig::class])
+@TestConfiguration
+@EnableConfigurationProperties(CacheWarmupConfig::class)
 class CacheWarmupConfigDefaultTest {
-
-    @Autowired
-    private lateinit var cacheWarmupConfig: CacheWarmupConfig
 
     @Test
     fun `should use default values when no properties specified`() {
+        // Given
+        val context = AnnotationConfigApplicationContext()
+        context.register(CacheWarmupConfigDefaultTest::class.java)
+        context.refresh()
+        
+        val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
+
         // Then
         assertTrue(cacheWarmupConfig.enabled)
         assertTrue(cacheWarmupConfig.warmupReferenceData)
@@ -119,5 +142,7 @@ class CacheWarmupConfigDefaultTest {
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Chest"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Back"))
         assertTrue(cacheWarmupConfig.popularMuscles.contains("Legs"))
+        
+        context.close()
     }
 }
