@@ -216,6 +216,8 @@ abstract class BaseIntegrationTest {
             registry.add("memcached.scheduler-thread-pool-size") { 2 }
             registry.add("memcached.scheduler-queue-capacity") { 100 }
             registry.add("memcached.scheduler-thread-name-prefix") { "test-memcached-scheduler" }
+            registry.add("memcached.use-elasticache") { false }
+            registry.add("memcached.poll-config-interval-ms") { 30000L }
         }
     }
 

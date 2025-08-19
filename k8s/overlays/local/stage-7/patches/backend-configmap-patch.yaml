@@ -13,3 +13,5 @@ data:
   JWT_JWK_SET_URI: "http://keycloak:8080/realms/congen/protocol/openid-connect/certs"
   JWT_AUDIENCES: "congen-backend"
   CONGEN_KEYCLOAK_MANAGEMENT_URL: "http://keycloak:9000"
+  # Memcached Configuration for local environment
+  MEMCACHED_USE_ELASTICACHE: "false"

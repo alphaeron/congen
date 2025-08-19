@@ -3,6 +3,7 @@ package com.congen.config
 import net.rubyeye.xmemcached.MemcachedClient
 import net.rubyeye.xmemcached.MemcachedClientBuilder
 import net.rubyeye.xmemcached.XMemcachedClientBuilder
+import net.rubyeye.xmemcached.aws.AWSElasticCacheClientBuilder
 import net.rubyeye.xmemcached.utils.AddrUtil
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -34,6 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * @property schedulerThreadPoolSize Number of threads in the custom scheduler pool
  * @property schedulerQueueCapacity Maximum queue capacity for the scheduler
  * @property schedulerThreadNamePrefix Prefix for scheduler thread names
+ * @property useElasticache Whether to use AWS ElastiCache client instead of standard Memcached client
+ * @property pollConfigIntervalMs Poll interval in milliseconds for AWS ElastiCache configuration updates
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -47,7 +50,9 @@ data class MemcachedProperties(
     var maxQueuedNoReply: Int = 1000,
     var schedulerThreadPoolSize: Int = 15,
     var schedulerQueueCapacity: Int = 1000,
-    var schedulerThreadNamePrefix: String = "memcached-scheduler"
+    var schedulerThreadNamePrefix: String = "memcached-scheduler",
+    var useElasticache: Boolean = false,
+    var pollConfigIntervalMs: Long = 60000
 )
 
 /**
@@ -85,7 +90,8 @@ class MemcachedConfig(
      * Creates and configures the Memcached client.
      *
      * This method sets up the Memcached client with connection pooling,
-     * timeouts, and other performance optimizations.
+     * timeouts, and other performance optimizations. Based on the configuration,
+     * it will either create a standard Memcached client or an AWS ElastiCache client.
      *
      * @return Configured Memcached client instance
      * @throws IOException if client creation fails
@@ -93,8 +99,27 @@ class MemcachedConfig(
     @Bean
     @Primary
     fun memcachedClient(): MemcachedClient {
+        return if (props.useElasticache) {
+            logger.info("Using AWS ElastiCache client configuration")
+            createElasticacheClient()
+        } else {
+            logger.info("Using standard Memcached client configuration")
+            createStandardMemcachedClient()
+        }
+    }
+
+    /**
+     * Creates and configures a standard Memcached client.
+     *
+     * This method sets up a standard Memcached client with connection pooling,
+     * timeouts, and other performance optimizations.
+     *
+     * @return Configured standard Memcached client instance
+     * @throws IOException if client creation fails
+     */
+    private fun createStandardMemcachedClient(): MemcachedClient {
         val serverAddress = "${props.host}:${props.port}"
-        logger.info("Initializing Memcached client with server: {}", serverAddress)
+        logger.info("Initializing standard Memcached client with server: {}", serverAddress)
 
         val addressList = AddrUtil.getAddresses(serverAddress)
         val builder: MemcachedClientBuilder = XMemcachedClientBuilder(addressList)
@@ -111,12 +136,65 @@ class MemcachedConfig(
         // Enable failure mode for better reliability
         builder.setFailureMode(true)
 
-        // Disable session healing to prevent reconnection attempts
+        // Enable session healing for reconnection attempts
         builder.setEnableHealSession(true)
 
         val client = builder.build()
 
-        logger.info("Memcached client initialized successfully")
+        logger.info("Standard Memcached client initialized successfully")
+        return client
+    }
+
+    /**
+     * Creates and configures an AWS ElastiCache client.
+     *
+     * This method sets up an AWS ElastiCache client with AWS-specific optimizations
+     * including automatic node discovery, failover handling, and AWS-specific
+     * connection management.
+     *
+     * @return Configured AWS ElastiCache client instance
+     * @throws IOException if client creation fails
+     */
+    private fun createElasticacheClient(): MemcachedClient {
+        val serverAddress = "${props.host}:${props.port}"
+        logger.info("Initializing AWS ElastiCache client with server: {}", serverAddress)
+
+        val addressList = AddrUtil.getAddresses(serverAddress)
+        
+        // Use AWS ElastiCache client builder for AWS-specific optimizations
+        val builder = AWSElasticCacheClientBuilder(addressList)
+
+        // Configure connection pool for ElastiCache
+        builder.setConnectionPoolSize(props.connectionPoolSize)
+
+        // Configure timeouts optimized for ElastiCache
+        builder.setOpTimeout(props.opTimeout)
+
+        // Configure no-reply operations
+        builder.setMaxQueuedNoReplyOperations(props.maxQueuedNoReply)
+
+        // Enable failure mode for better reliability with ElastiCache
+        builder.setFailureMode(true)
+
+        // Enable session healing for automatic failover in ElastiCache
+        builder.setEnableHealSession(true)
+
+        // Set configuration polling interval for ElastiCache cluster updates
+        // Default is 60 seconds, but can be customized for different environments
+        builder.setPollConfigIntervalMs(props.pollConfigIntervalMs)
+            
+        logger.info("AWS ElastiCache configuration polling interval set to {} ms", props.pollConfigIntervalMs)
+
+        // AWS ElastiCache specific optimizations
+        // Note: The AWSElasticCacheClient automatically handles:
+        // - Node discovery and configuration polling
+        // - Automatic failover and load balancing
+        // - Cluster configuration updates
+        // - Connection management optimized for AWS infrastructure
+
+        val client = builder.build()
+
+        logger.info("AWS ElastiCache client initialized successfully with polling interval: {} ms", props.pollConfigIntervalMs)
         return client
     }
 
