@@ -29,6 +29,7 @@ import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import ConGenIcon from './resources/congen-icon.svg';
 import { getTheme } from './theme';
+import { alpha } from '@mui/material/styles';
 
 import './App.css';
 import './styles/menuButton.css';
@@ -91,7 +92,7 @@ function AppContent(): React.ReactElement {
         <AppBar
           position="static"
           sx={{
-            boxShadow: 0,
+            boxShadow: 'none',
             bgcolor: 'transparent',
             backgroundImage: 'none',
             mt: 2,
@@ -105,17 +106,19 @@ function AppContent(): React.ReactElement {
               alignItems: 'center',
               justifyContent: 'space-between',
               flexShrink: 0,
-              borderRadius: '999px',
-              bgcolor:
-                theme.palette.mode === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.4)',
-              backdropFilter: 'blur(24px)',
-              maxHeight: 40,
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow:
-                theme.palette.mode === 'light'
-                  ? `0 0 1px rgba(34, 54, 204, 0.1), 1px 1.5px 2px -1px rgba(34, 54, 204, 0.15), 4px 4px 12px -2.5px rgba(34, 54, 204, 0.15)`
-                  : '0 0 1px rgba(32, 32, 32, 0.7), 1px 1.5px 2px -1px rgba(32, 32, 32, 0.65), 4px 4px 12px -2.5px rgba(32, 32, 32, 0.65)',
+              borderRadius: '16px',
+              bgcolor: alpha(theme.palette.background.paper, 0.8),
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              boxShadow: theme.shadows[2],
+              maxHeight: 64,
+              px: 3,
+              py: 1,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                boxShadow: theme.shadows[4],
+                bgcolor: alpha(theme.palette.background.paper, 0.9),
+              },
             })}
           >
             <Box
@@ -123,91 +126,257 @@ function AppContent(): React.ReactElement {
                 flexGrow: 1,
                 display: 'flex',
                 alignItems: 'center',
-                ml: '-18px',
-                px: 0,
+                gap: 2,
               }}
             >
-              <img src={ConGenIcon} style={logoStyle} alt="ConGen" />
-              <Typography
-                variant="h6"
-                className="menuLogo menuLogoText"
-                noWrap={true}
-                component="a"
-                href="/"
-              >
-                ConGen
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <img src={ConGenIcon} style={logoStyle} alt="ConGen" />
+                <Typography
+                  variant="h6"
+                  className="menuLogo menuLogoText"
+                  noWrap={true}
+                  component="a"
+                  href="/"
+                  sx={{
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textDecoration: 'none',
+                    '&:hover': {
+                      textDecoration: 'none',
+                    },
+                  }}
+                >
+                  ConGen
+                </Typography>
+              </Box>
+              
               <AuthorizedElement requireAuth={false}>
-                <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-                  <MenuItem sx={{ py: '6px', px: '12px' }} component={ExercisesLink}>
+                <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+                  <MenuItem 
+                    sx={{ 
+                      py: 1, 
+                      px: 2,
+                      borderRadius: 2,
+                      fontWeight: 500,
+                      '&:hover': {
+                        bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                      },
+                    }} 
+                    component={ExercisesLink}
+                  >
                     Exercises
                   </MenuItem>
-                  <MenuItem sx={{ py: '6px', px: '12px' }} component={PrivacyPolicyLink}>
+                  <MenuItem 
+                    sx={{ 
+                      py: 1, 
+                      px: 2,
+                      borderRadius: 2,
+                      fontWeight: 500,
+                      '&:hover': {
+                        bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                      },
+                    }} 
+                    component={PrivacyPolicyLink}
+                  >
                     Privacy
                   </MenuItem>
                 </Box>
               </AuthorizedElement>
             </Box>
+            
             <Box
               sx={{
                 display: { xs: 'none', md: 'flex' },
-                gap: 0.5,
+                gap: 1,
                 alignItems: 'center',
               }}
             >
               <AuthorizedElement
                 fallback={
-                  <Button color="primary" variant="contained" component={Link} to="/login">
+                  <Button 
+                    color="primary" 
+                    variant="contained" 
+                    component={Link} 
+                    to="/login"
+                    sx={{
+                      borderRadius: 2,
+                      px: 3,
+                      py: 1,
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      boxShadow: theme => `0 4px 14px ${alpha(theme.palette.primary.main, 0.3)}`,
+                      '&:hover': {
+                        boxShadow: theme => `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
+                        transform: 'translateY(-1px)',
+                      },
+                    }}
+                  >
                     Sign in
                   </Button>
                 }
               >
-                <Button color="inherit" component={ProfileLink} sx={{ mr: 1 }}>
+                <Button 
+                  color="inherit" 
+                  component={ProfileLink} 
+                  sx={{ 
+                    mr: 1,
+                    borderRadius: 2,
+                    px: 2,
+                    py: 1,
+                    fontWeight: 500,
+                    textTransform: 'none',
+                    '&:hover': {
+                      bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                    },
+                  }}
+                >
                   Profile
                 </Button>
-                <Button color="inherit" onClick={logout} sx={{ ml: 1 }}>
+                <Button 
+                  color="inherit" 
+                  onClick={logout} 
+                  sx={{ 
+                    ml: 1,
+                    borderRadius: 2,
+                    px: 2,
+                    py: 1,
+                    fontWeight: 500,
+                    textTransform: 'none',
+                    '&:hover': {
+                      bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                    },
+                  }}
+                >
                   Sign Out
                 </Button>
               </AuthorizedElement>
             </Box>
+            
             <Box sx={{ display: { sm: '', md: 'none' } }}>
               <Button
                 variant="text"
                 color="primary"
                 aria-label="menu"
                 onClick={toggleDrawer(true)}
-                sx={{ minWidth: '30px', p: '4px' }}
+                sx={{ 
+                  minWidth: '40px', 
+                  p: 1,
+                  borderRadius: 2,
+                  '&:hover': {
+                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
               >
                 <MenuIcon />
               </Button>
-              <Drawer anchor="right" open={open} onClose={toggleDrawer(false)}>
+              <Drawer 
+                anchor="right" 
+                open={open} 
+                onClose={toggleDrawer(false)}
+                PaperProps={{
+                  sx: {
+                    bgcolor: 'background.paper',
+                    backdropFilter: 'blur(20px)',
+                    borderLeft: theme => `1px solid ${theme.palette.divider}`,
+                    width: '280px',
+                  },
+                }}
+              >
                 <Box
                   sx={{
-                    minWidth: '60dvw',
-                    p: 2,
-                    backgroundColor: 'background.paper',
-                    flexGrow: 1,
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
                   }}
                 >
                   <AuthorizedElement requireAuth={false}>
-                    <MenuItem component={ExercisesLink}>Exercises</MenuItem>
-                    <MenuItem component={PrivacyPolicyLink}>Privacy Policy</MenuItem>
+                    <MenuItem 
+                      component={ExercisesLink}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Exercises
+                    </MenuItem>
+                    <MenuItem 
+                      component={PrivacyPolicyLink}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Privacy Policy
+                    </MenuItem>
                   </AuthorizedElement>
-                  <Divider />
+                  <Divider sx={{ my: 2 }} />
                   <AuthorizedElement
                     fallback={
-                      <MenuItem component={Link} to="/login">
-                        <Button color="primary" variant="contained" sx={{ width: '100%' }}>
+                      <MenuItem 
+                        component={Link} 
+                        to="/login"
+                        sx={{
+                          borderRadius: 2,
+                          py: 1.5,
+                          '&:hover': {
+                            bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                          },
+                        }}
+                      >
+                        <Button 
+                          color="primary" 
+                          variant="contained" 
+                          sx={{ 
+                            width: '100%',
+                            borderRadius: 2,
+                            py: 1,
+                            fontWeight: 600,
+                            textTransform: 'none',
+                          }}
+                        >
                           Sign in
                         </Button>
                       </MenuItem>
                     }
                   >
-                    <MenuItem component={ProfileLink}>Profile</MenuItem>
-                    <MenuItem>
-                      <Button color="inherit" onClick={logout} sx={{ width: '100%' }}>
-                        Sign Out
-                      </Button>
+                    <MenuItem 
+                      component={ProfileLink}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Profile
+                    </MenuItem>
+                    <MenuItem 
+                      onClick={logout}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        color: 'error.main',
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                        },
+                      }}
+                    >
+                      Sign Out
                     </MenuItem>
                   </AuthorizedElement>
                 </Box>

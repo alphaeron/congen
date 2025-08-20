@@ -1,28 +1,37 @@
-.menuLogoText {
-  color: grey;
-  font-family: monospace !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.15rem !important;
-  margin-right: 0.125rem !important;
-  text-decoration: none !important;
+/* App-specific styles */
+.App {
+  text-align: center;
 }
 
-.menuLogoIcon {
-  margin-right: 0.5rem !important;
+/* Logo styles */
+.logoStyle {
+  width: 72px;
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* See https://mui.com/material-ui/customization/breakpoints/ for details on pixel values below */
-
-/* 1 px below next size up from xs. */
-@media (max-width: 599px) {
-  .menuLogo {
-    display: none !important;
-  }
+.logoStyle:hover {
+  transform: scale(1.05);
 }
 
-/* Any size above xs. */
-@media (min-width: 600px) {
-  .menuLogo {
-    display: flex !important;
+/* Menu button styles */
+.menuButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menuButton:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Dark mode menu button */
+@media (prefers-color-scheme: dark) {
+  .menuButton:hover {
+    background-color: rgba(255, 255, 255, 0.08);
   }
 }

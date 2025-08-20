@@ -1,6 +1,8 @@
+icon for profile/submenu for profile and sign out, icon to sign in too
+
 restructure userprofile to use tabs, and side bar, for better navigation
 
-
+keycloak style to match new app style
 
 
 
@@ -8,28 +10,7 @@ restructure userprofile to use tabs, and side bar, for better navigation
 set keycloak favicon to congen icon for consistency
 
 
-
-Do user pages first
-
-User profile page
-Progress
-Graph for 1rm
-Trends over time
-Statistics for progress
-Program creation
-Program preferences
-Current program
-
-Need to include visualization page to track exercise history, tooltip if estimated from 1rm to show set scheme for it.
-
-Workout generation flow
-Users enter preferences
-
-Program page and viewing this day /week’s workouts,
-Calendar view to place workout days?
-View past workouts
-
-Generate database
+generate database
 
 Fluxionary (whoop data ingestion)
 “Fluxionary" (invented)
@@ -53,11 +34,41 @@ Write a gradle task to check for all component updates and apply them
 workout generation algorithm flowchart
 
 
+https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
 
-I don't like the style of the current app.
 
-I want the theme to look like @https://www.whoop.com/us/en/  and @https://www.trainheroic.com/
-
-Update the theme, style files and any other changes needed to make the style look like those sites but be distinct enough for my own app
 
 update privacy policy contact email
+
+
+
+https://www.kaggle.com/datasets/niharika41298/gym-exercise-data
+
+https://github.com/yuhonas/free-exercise-db/blob/main/dist/exercises.json
+
+https://github.com/yuhonas/free-exercise-db
+
+https://www.kaggle.com/datasets/peshimaammuzammil/the-ultimate-gym-exercises-dataset-for-all-levels
+
+https://www.kaggle.com/datasets/rabieelkharoua/physical-therapy-exercises-dataset
+
+
+
+
+
+
+
+stop minikube
+delete it
+start minikube with --driver=docker
+do a full deployment using the gradle task deployAll
+Stop all currently running kubectl port-forward processes
+Port forward frontend, keycloak, and backend
+
+
+
+Run the integration tests one by one
+FIx each integration test individually.
+Once you have fixed one integration test, move onto the next.
+Iterate in this fashion, one by one, until all the integration tests pass.
+Do not run all the integration tests at once because it is too slow.

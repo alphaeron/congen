@@ -5,6 +5,7 @@ import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { alpha } from '@mui/material/styles';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -19,8 +20,8 @@ import '../styles/UndecoratedLink.css';
  */
 export interface ExerciseCardProps {
   exercise: Exercise;
-  equipment: string[];
-  muscles: string[];
+  equipment?: string[];
+  muscles?: string[];
 } // end interface ExerciseCardProps
 
 /**
@@ -31,53 +32,171 @@ export interface ExerciseCardProps {
  * @return The exercise card component.
  */
 export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<ExerciseCardProps> {
+  const { exercise, equipment = [], muscles = [] } = props;
+
   return (
-    <Box sx={{ minWidth: 275 }}>
-      <Card variant="outlined">
-        <CardContent>
-          <Link className="undecoratedLink" to={`/exercises/${props.exercise.name}`}>
-            <Typography color="text.secondary">{props.exercise.name}</Typography>
-          </Link>
-          <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
-            <Chip label={`${capitalizeEachWord(props.exercise.movement_type)}Exercise`} />
-            <BinaryTag isOn={props.exercise.is_upper} onText="Upper Body" offText="Lower Body" />
-            <BinaryTag
-              isOn={props.exercise.is_accessory}
-              onText="Accessory"
-              offText="Primary Movement"
+    <Card
+      variant="outlined"
+      sx={{
+        height: '100%',
+        borderRadius: 3,
+        background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
+        border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
+        backdropFilter: 'blur(20px)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        cursor: 'pointer',
+        overflow: 'hidden',
+        '&:hover': {
+          transform: 'translateY(-4px)',
+          boxShadow: theme => `0 20px 40px ${alpha(theme.palette.primary.main, 0.15)}`,
+          border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+        },
+      }}
+    >
+      <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Link 
+          className="undecoratedLink" 
+          to={`/exercises/${exercise.name}`}
+          style={{ textDecoration: 'none' }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontWeight: 600,
+              mb: 2,
+              color: 'text.primary',
+              lineHeight: 1.3,
+              '&:hover': {
+                color: 'primary.main',
+              },
+            }}
+          >
+            {exercise.name}
+          </Typography>
+        </Link>
+
+        <Stack spacing={2} sx={{ flex: 1 }}>
+          {/* Exercise Type */}
+          <Box>
+            <Chip 
+              label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
+              color="primary"
+              size="small"
+              sx={{ 
+                fontWeight: 600,
+                borderRadius: 2,
+              }}
+            />
+          </Box>
+
+          {/* Exercise Properties */}
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <BinaryTag 
+              isOn={exercise.is_upper} 
+              onText="Upper Body" 
+              offText="Lower Body" 
             />
             <BinaryTag
-              isOn={props.exercise.is_unilateral}
+              isOn={exercise.is_accessory}
+              onText="Accessory"
+              offText="Primary"
+            />
+            <BinaryTag
+              isOn={exercise.is_unilateral}
               onText="Unilateral"
               offText="Bilateral"
             />
           </Stack>
-          {props.equipment.length > 0 && (
-            <React.Fragment>
-              <Divider textAlign="left" sx={{ marginBottom: '12px' }}>
-                <Typography color="text.secondary">Equipment</Typography>
+
+          {/* Equipment Section */}
+          {equipment.length > 0 && (
+            <Box>
+              <Divider 
+                textAlign="left" 
+                sx={{ 
+                  mb: 1.5,
+                  '&::before': {
+                    borderTop: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                  },
+                  '&::after': {
+                    borderTop: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                  },
+                }}
+              >
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Equipment
+                </Typography>
               </Divider>
-              <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
-                {props.equipment.map(e => (
-                  <Chip label={`${capitalizeEachWord(e)}`} key={e} />
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {equipment.map(e => (
+                  <Chip 
+                    label={capitalizeEachWord(e)} 
+                    key={e}
+                    size="small"
+                    variant="outlined"
+                    sx={{ 
+                      borderRadius: 2,
+                      fontSize: '0.75rem',
+                    }}
+                  />
                 ))}
               </Stack>
-            </React.Fragment>
+            </Box>
           )}
-          {props.muscles.length > 0 && (
-            <React.Fragment>
-              <Divider textAlign="left" sx={{ marginBottom: '12px' }}>
-                <Typography color="text.secondary">Muscles</Typography>
+
+          {/* Muscles Section */}
+          {muscles.length > 0 && (
+            <Box>
+              <Divider 
+                textAlign="left" 
+                sx={{ 
+                  mb: 1.5,
+                  '&::before': {
+                    borderTop: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                  },
+                  '&::after': {
+                    borderTop: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                  },
+                }}
+              >
+                <Typography 
+                  variant="caption" 
+                  color="text.secondary"
+                  sx={{ 
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  Target Muscles
+                </Typography>
               </Divider>
-              <Stack direction="row" spacing={2} sx={{ marginBottom: '12px' }}>
-                {props.muscles.map(e => (
-                  <Chip label={`${capitalizeEachWord(e)}`} key={e} />
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {muscles.map(m => (
+                  <Chip 
+                    label={capitalizeEachWord(m)} 
+                    key={m}
+                    size="small"
+                    color="secondary"
+                    sx={{ 
+                      borderRadius: 2,
+                      fontSize: '0.75rem',
+                    }}
+                  />
                 ))}
               </Stack>
-            </React.Fragment>
+            </Box>
           )}
-        </CardContent>
-      </Card>
-    </Box>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 } // end component ExerciseCard
