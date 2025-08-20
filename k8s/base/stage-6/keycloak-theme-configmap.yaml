@@ -10,6 +10,20 @@ data:
     import=common/keycloak
     styles=css/congen.css
   
+  # Favicon - Congen icon (SVG format)
+  "favicon.svg": |
+    <?xml version="1.0" standalone="no"?>
+    <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN" "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+    <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet">
+    <g transform="translate(0.000000,320.000000) scale(0.100000,-0.100000)" fill="#0ea5e9" stroke="none">
+    <path d="M751 2386 c-45 -25 -50 -50 -51 -223 l0 -163 -60 0 c-71 0 -107 -15 -126 -51 -19 -37 -21 -653 -2 -694 17 -38 58 -55 128 -55 l60 0 0 -160 c0 -102 4 -168 12 -185 18 -39 57 -55 138 -55 81 0 120 16 138 55 17 37 17 1453 0 1490 -7 15 -24 33 -39 41 -36 18 -165 18 -198 0z"/>
+    <path d="M2251 2386 c-52 -29 -50 -9 -51 -783 0 -539 3 -729 12 -748 18 -39 57 -55 138 -55 81 0 120 16 138 55 8 17 12 83 12 185 l0 160 60 0 c70 0 111 17 128 55 19 41 17 657 -2 694 -19 36 -55 51 -126 51 l-60 0 0 160 c0 174 -7 203 -51 226 -36 18 -165 18 -198 0z"/>
+    <path d="M294 1746 l-34 -34 0 -112 0 -112 34 -34 c26 -26 42 -34 70 -34 l36 0 0 180 0 180 -36 0 c-28 0 -44 -8 -70 -34z"/>
+    <path d="M1100 1600 l0 -180 500 0 500 0 0 180 0 180 -500 0 -500 0 0 -180z"/>
+    <path d="M2800 1600 l0 -180 35 0 c24 0 45 9 67 29 l33 29 0 122 0 122 -33 29 c-22 20 -43 29 -67 29 l-35 0 0 -180z"/>
+    </g>
+    </svg>
+  
   # CSS with light/dark mode support matching TypeScript app theme
   "css-congen.css": |
     /* Import Inter font from Google Fonts */
@@ -18,35 +32,41 @@ data:
     /* CSS Variables for light/dark mode matching TypeScript app */
     :root {
       /* Light mode colors from theme.tsx */
-      --background-color: #f9fafc;
-      --text-color: #202020;
-      --text-secondary: #55585e;
-      --link-color: #2236cc;
-      --button-color: #2236cc;
-      --button-hover-color: #1b2a9e;
-      --card-background: #ffffff;
-      --card-border: #e2e8f0;
+      --background-color: #ffffff;
+      --text-color: #171717;
+      --text-secondary: #525252;
+      --link-color: #0ea5e9;
+      --button-color: #0ea5e9;
+      --button-hover-color: #0284c7;
+      --card-background: #fafafa;
+      --card-border: #e5e5e5;
       --form-background: #ffffff;
-      --form-border: #c8ccd2;
-      --form-border-focus: #2236cc;
+      --form-border: #d4d4d4;
+      --form-border-focus: #0ea5e9;
       --form-shadow: rgba(0, 0, 0, 0.1);
+      --error-color: #ef4444;
+      --success-color: #22c55e;
+      --warning-color: #f59e0b;
     }
     
     /* Dark mode colors from theme.tsx */
     @media (prefers-color-scheme: dark) {
       :root {
-        --background-color: #202020;
+        --background-color: #0a0a0a;
         --text-color: #ffffff;
-        --text-secondary: #a2a6ad;
-        --link-color: #7a9cf0;
-        --button-color: #4d6fe0;
-        --button-hover-color: #2236cc;
-        --card-background: #28292c;
-        --card-border: #4a5568;
-        --form-background: #28292c;
-        --form-border: #4a5568;
-        --form-border-focus: #4d6fe0;
+        --text-secondary: #a3a3a3;
+        --link-color: #38bdf8;
+        --button-color: #0ea5e9;
+        --button-hover-color: #0284c7;
+        --card-background: #111111;
+        --card-border: #404040;
+        --form-background: #111111;
+        --form-border: #404040;
+        --form-border-focus: #38bdf8;
         --form-shadow: rgba(0, 0, 0, 0.4);
+        --error-color: #f87171;
+        --success-color: #4ade80;
+        --warning-color: #fbbf24;
       }
     }
     
@@ -100,11 +120,12 @@ data:
       background-color: var(--card-background) !important;
       background-image: none !important;
       border: 1px solid var(--card-border) !important;
-      border-radius: 10px !important;
-      box-shadow: 0 4px 16px var(--form-shadow) !important;
-      padding: 2rem !important;
-      max-width: 400px !important;
+      border-radius: 16px !important;
+      box-shadow: 0 8px 32px var(--form-shadow) !important;
+      padding: 2.5rem !important;
+      max-width: 420px !important;
       width: 100% !important;
+      backdrop-filter: blur(20px) !important;
     }
     
     /* Ensure form text is visible */
@@ -128,15 +149,109 @@ data:
     textarea,
     select {
       background-color: var(--form-background) !important;
-      border: 1px solid var(--form-border) !important;
-      border-radius: 10px !important;
+      border: 2px solid var(--form-border) !important;
+      border-radius: 12px !important;
       color: var(--text-color) !important;
-      padding: 12px 16px !important;
-      font-size: 14px !important;
+      padding: 16px 20px !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
       font-family: 'Inter', sans-serif !important;
       outline: none !important;
       box-sizing: border-box !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    /* Fix password field styling and remove white corners */
+    input[type="password"] {
+      background-color: var(--form-background) !important;
+      border: 2px solid var(--form-border) !important;
+      border-radius: 12px !important;
+      color: var(--text-color) !important;
+      padding: 16px 20px !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-family: 'Inter', sans-serif !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    /* Fix password field container */
+    .form-group {
+      background: transparent !important;
+    }
+    
+    /* Fix password field wrapper */
+    .input-group {
+      background: transparent !important;
+    }
+    
+    /* Fix password field addon (the eye icon button) */
+    .input-group-addon {
+      background-color: var(--form-background) !important;
+      border: 2px solid var(--form-border) !important;
+      border-left: none !important;
+      border-radius: 0 12px 12px 0 !important;
+      color: var(--text-color) !important;
+      padding: 16px 20px !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      font-family: 'Inter', sans-serif !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    }
+    
+    /* Fix password field when in input group */
+    .input-group input[type="password"] {
+      border-right: none !important;
+      border-radius: 12px 0 0 12px !important;
+    }
+    
+    /* Style the eye icon properly */
+    .input-group-addon i,
+    .input-group-addon span,
+    .input-group-addon button {
+      background: transparent !important;
+      border: none !important;
+      color: var(--text-secondary) !important;
+      font-size: 16px !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 20px !important;
+      height: 20px !important;
+    }
+    
+    /* Hide the broken icon text */
+    .input-group-addon::before,
+    .input-group-addon::after {
+      content: "" !important;
+    }
+    
+    /* Replace with proper eye icon using CSS */
+    .input-group-addon button::before {
+      content: "👁" !important;
+      font-size: 16px !important;
+      line-height: 1 !important;
+    }
+    
+    /* Alternative: use a simple SVG eye icon */
+    .input-group-addon button::before {
+      content: "" !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: center !important;
+      background-size: 16px 16px !important;
+      display: block !important;
+      width: 16px !important;
+      height: 16px !important;
     }
     
     /* Smooth focus state with gradual transition and rounded outline */
@@ -153,11 +268,11 @@ data:
       outline: none !important;
       border-color: var(--form-border-focus) !important;
       border-width: 2px !important;
-      box-shadow: 0 0 0 4px rgba(34, 54, 204, 0.15) !important;
+      box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.15), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
       background-color: var(--form-background) !important;
       color: var(--text-color) !important;
-      transform: translateY(-1px) !important;
-      border-radius: 10px !important;
+      transform: translateY(-2px) !important;
+      border-radius: 12px !important;
     }
     
     .form-control::placeholder,
@@ -170,33 +285,35 @@ data:
     .btn-primary,
     button[type="submit"],
     input[type="submit"] {
-      background: linear-gradient(to bottom, #4d6fe0, #1b2a9e) !important;
-      color: #f0f4ff !important;
-      border: 1px solid #16227a !important;
-      border-radius: 10px !important;
-      padding: 12px 24px !important;
-      font-size: 14px !important;
-      font-weight: 500 !important;
+      background: linear-gradient(135deg, var(--button-color), var(--button-hover-color)) !important;
+      color: #ffffff !important;
+      border: none !important;
+      border-radius: 12px !important;
+      padding: 14px 28px !important;
+      font-size: 16px !important;
+      font-weight: 600 !important;
       cursor: pointer !important;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
       text-transform: none !important;
-      box-shadow: inset 0 1px rgba(122, 156, 240, 0.4) !important;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3) !important;
       font-family: 'Inter', sans-serif !important;
       outline: none !important;
+      letter-spacing: -0.01em !important;
     }
     
     .btn-primary:hover,
     button[type="submit"]:hover,
     input[type="submit"]:hover {
-      background: #4d6fe0 !important;
-      box-shadow: 0 0 0 1px rgba(122, 156, 240, 0.5) !important;
-      transform: translateY(-1px) !important;
+      background: linear-gradient(135deg, var(--button-hover-color), var(--button-color)) !important;
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4) !important;
+      transform: translateY(-2px) !important;
     }
     
     .btn-primary:active,
     button[type="submit"]:active,
     input[type="submit"]:active {
-      transform: scale(0.98) !important;
+      transform: translateY(0) scale(0.98) !important;
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3) !important;
     }
     
     /* Style links */
@@ -214,30 +331,38 @@ data:
     
     /* Style alert messages */
     .alert {
-      padding: 12px 16px !important;
-      border-radius: 8px !important;
-      margin-bottom: 1rem !important;
+      padding: 16px 20px !important;
+      border-radius: 12px !important;
+      margin-bottom: 1.5rem !important;
       font-size: 14px !important;
       color: var(--text-color) !important;
       font-family: 'Inter', sans-serif !important;
+      font-weight: 500 !important;
+      border: none !important;
     }
     
     .alert-error {
-      background-color: rgba(211, 47, 47, 0.1) !important;
-      border: 1px solid rgba(211, 47, 47, 0.3) !important;
-      color: #d32f2f !important;
+      background-color: rgba(239, 68, 68, 0.1) !important;
+      color: var(--error-color) !important;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1) !important;
     }
     
     .alert-warning {
-      background-color: rgba(247, 181, 56, 0.1) !important;
-      border: 1px solid rgba(247, 181, 56, 0.3) !important;
-      color: #f7b538 !important;
+      background-color: rgba(245, 158, 11, 0.1) !important;
+      color: var(--warning-color) !important;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1) !important;
     }
     
     .alert-info {
-      background-color: rgba(34, 54, 204, 0.1) !important;
-      border: 1px solid rgba(34, 54, 204, 0.3) !important;
+      background-color: rgba(14, 165, 233, 0.1) !important;
       color: var(--link-color) !important;
+      box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1) !important;
+    }
+    
+    .alert-success {
+      background-color: rgba(34, 197, 94, 0.1) !important;
+      color: var(--success-color) !important;
+      box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1) !important;
     }
     
     /* Center the register text on registration page */
@@ -282,30 +407,34 @@ data:
       .btn-primary,
       button[type="submit"],
       input[type="submit"] {
-        background: linear-gradient(to bottom, #4d6fe0, #2236cc) !important;
-        border-color: #16227a !important;
-        box-shadow: inset 0 1px rgba(122, 156, 240, 0.4) !important;
+        background: linear-gradient(135deg, var(--button-color), var(--button-hover-color)) !important;
+        box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3) !important;
       }
       
       .btn-primary:hover,
       button[type="submit"]:hover,
       input[type="submit"]:hover {
-        background: #2236cc !important;
-        box-shadow: 0 0 0 1px rgba(122, 156, 240, 0.5) !important;
+        background: linear-gradient(135deg, var(--button-hover-color), var(--button-color)) !important;
+        box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4) !important;
       }
       
       .alert-error {
-        background-color: rgba(211, 47, 47, 0.2) !important;
-        border-color: rgba(211, 47, 47, 0.4) !important;
+        background-color: rgba(248, 113, 113, 0.15) !important;
+        box-shadow: 0 2px 8px rgba(248, 113, 113, 0.15) !important;
       }
       
       .alert-warning {
-        background-color: rgba(247, 181, 56, 0.2) !important;
-        border-color: rgba(247, 181, 56, 0.4) !important;
+        background-color: rgba(251, 191, 36, 0.15) !important;
+        box-shadow: 0 2px 8px rgba(251, 191, 36, 0.15) !important;
       }
       
       .alert-info {
-        background-color: rgba(122, 156, 240, 0.2) !important;
-        border-color: rgba(122, 156, 240, 0.4) !important;
+        background-color: rgba(56, 189, 248, 0.15) !important;
+        box-shadow: 0 2px 8px rgba(56, 189, 248, 0.15) !important;
+      }
+      
+      .alert-success {
+        background-color: rgba(74, 222, 128, 0.15) !important;
+        box-shadow: 0 2px 8px rgba(74, 222, 128, 0.15) !important;
       }
     } 

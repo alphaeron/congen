@@ -1,18 +1,32 @@
-/dashboard url???
-
-restructure userprofile to use tabs, and side bar, for better navigation
+restructure userprofile to use tabs, and side bar on the left, for better navigation, for each section, for a modern display
 
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 
 
 
 
-keycloak style to match new app style
+assets, and object storage for assets
 
-set keycloak favicon to congen icon for consistency
+"how it works" on root spa with workout generation algorithm flowchart
+
+congen database for congen?  Or maybe aws terraform will handle that.
+
 
 
 generate database
+
+
+
+
+https://www.kaggle.com/datasets/niharika41298/gym-exercise-data
+
+https://github.com/yuhonas/free-exercise-db/blob/main/dist/exercises.json
+
+https://github.com/yuhonas/free-exercise-db
+
+https://www.kaggle.com/datasets/peshimaammuzammil/the-ultimate-gym-exercises-dataset-for-all-levels
+
+https://www.kaggle.com/datasets/rabieelkharoua/physical-therapy-exercises-dataset
 
 Fluxionary (whoop data ingestion)
 “Fluxionary" (invented)
@@ -27,13 +41,7 @@ Health metric visualization impact on performance page.
 
 hashicorp vault for staging/production
 
-assets, and object storage for assets
-
-congen database for congen?  Or maybe aws terraform will handle that.
-
 Write a gradle task to check for all component updates and apply them
-
-workout generation algorithm flowchart
 
 
 https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
@@ -41,18 +49,6 @@ https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_pra
 
 
 update privacy policy contact email
-
-
-
-https://www.kaggle.com/datasets/niharika41298/gym-exercise-data
-
-https://github.com/yuhonas/free-exercise-db/blob/main/dist/exercises.json
-
-https://github.com/yuhonas/free-exercise-db
-
-https://www.kaggle.com/datasets/peshimaammuzammil/the-ultimate-gym-exercises-dataset-for-all-levels
-
-https://www.kaggle.com/datasets/rabieelkharoua/physical-therapy-exercises-dataset
 
 
 

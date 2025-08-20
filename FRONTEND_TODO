@@ -8,6 +8,10 @@ You must not replicate business logic in the frontend — only call APIs and dis
 
 Ensure that unit tests cover the new frontend components and functionality.
 
+Reuse or update existing code where needed as opposed to creating duplicate code.
+
+KEEP THE IMPLEMENTATION, AND TESTS, DRY!!!
+
 🔍 Step 1: Backend Audit
 
 Begin by reviewing the backend codebase (or available documentation) to identify existing endpoints related to:
@@ -27,7 +31,11 @@ Map out what backend operations are already available and how they align with th
 🧩 Frontend Feature Requirements
 User Profile Page
 
-Display:
+Dashboard Display:
+
+Create a dashboard page at /dashboard.  The DashboardPage component in the pages directory should just handle routing, and the Dashboard component in the components directory should have all the ui code and other functionality, so there is a separation of concerns.
+
+the dashboard should have a sidebar on the left for navigating different portions.  this should match the setup of the user profile page so the layout is consistent.
 
 User progress over time
 
@@ -39,7 +47,7 @@ Key statistics (volume, frequency, PRs, etc.)
 
 Include tooltips or markers if data (e.g., sets or 1RM) is estimated
 
-Visualization Page
+Visualization Page, in the left sidebar.
 
 Track exercise history per lift
 
