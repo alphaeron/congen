@@ -1,11 +1,15 @@
 import { default as MenuIcon } from '@mui/icons-material/Menu';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AppBar from '@mui/material/AppBar';
+import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import CssBaseline from '@mui/material/CssBaseline';
 import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { alpha } from '@mui/material/styles';
@@ -65,10 +69,19 @@ function AppContent(): React.ReactElement {
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const mode = prefersDarkMode ? 'dark' : 'light';
   const [open, setOpen] = React.useState(false);
-  const { isLoading, logout } = useAuth();
+  const [userMenuAnchor, setUserMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const { isLoading, logout, isAuthenticated, user } = useAuth();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
+  };
+
+  const handleUserMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setUserMenuAnchor(event.currentTarget);
+  };
+
+  const handleUserMenuClose = () => {
+    setUserMenuAnchor(null);
   };
 
   const theme = createTheme(getTheme(mode));
@@ -194,65 +207,105 @@ function AppContent(): React.ReactElement {
                 alignItems: 'center',
               }}
             >
-              <AuthorizedElement
-                fallback={
-                  <Button
-                    color="primary"
-                    variant="contained"
+              <IconButton
+                onClick={handleUserMenuOpen}
+                sx={{
+                  p: 1,
+                  borderRadius: '50%',
+                  '&:hover': {
+                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                {isAuthenticated && user ? (
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: theme => alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.main',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  </Avatar>
+                ) : (
+                  <AccountCircleIcon
+                    sx={{
+                      fontSize: 32,
+                      color: 'text.primary',
+                    }}
+                  />
+                )}
+              </IconButton>
+              <Menu
+                anchorEl={userMenuAnchor}
+                open={Boolean(userMenuAnchor)}
+                onClose={handleUserMenuClose}
+                PaperProps={{
+                  sx: {
+                    mt: 1,
+                    minWidth: 180,
+                    borderRadius: 2,
+                    boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
+                    '& .MuiMenuItem-root': {
+                      borderRadius: 1,
+                      mx: 0.5,
+                      my: 0.25,
+                    },
+                  },
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                {isAuthenticated ? (
+                  <>
+                    <MenuItem
+                      component={ProfileLink}
+                      onClick={handleUserMenuClose}
+                      sx={{
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Profile
+                    </MenuItem>
+                    <Divider sx={{ my: 1 }} />
+                    <MenuItem
+                      onClick={() => {
+                        handleUserMenuClose();
+                        logout();
+                      }}
+                      sx={{
+                        fontWeight: 500,
+                        color: 'error.main',
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                        },
+                      }}
+                    >
+                      Sign Out
+                    </MenuItem>
+                  </>
+                ) : (
+                  <MenuItem
                     component={Link}
                     to="/login"
+                    onClick={handleUserMenuClose}
                     sx={{
-                      borderRadius: 2,
-                      px: 3,
-                      py: 1,
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      boxShadow: theme => `0 4px 14px ${alpha(theme.palette.primary.main, 0.3)}`,
+                      fontWeight: 500,
                       '&:hover': {
-                        boxShadow: theme => `0 6px 20px ${alpha(theme.palette.primary.main, 0.4)}`,
-                        transform: 'translateY(-1px)',
+                        bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                       },
                     }}
                   >
                     Sign in
-                  </Button>
-                }
-              >
-                <Button
-                  color="inherit"
-                  component={ProfileLink}
-                  sx={{
-                    mr: 1,
-                    borderRadius: 2,
-                    px: 2,
-                    py: 1,
-                    fontWeight: 500,
-                    textTransform: 'none',
-                    '&:hover': {
-                      bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                    },
-                  }}
-                >
-                  Profile
-                </Button>
-                <Button
-                  color="inherit"
-                  onClick={logout}
-                  sx={{
-                    ml: 1,
-                    borderRadius: 2,
-                    px: 2,
-                    py: 1,
-                    fontWeight: 500,
-                    textTransform: 'none',
-                    '&:hover': {
-                      bgcolor: theme => alpha(theme.palette.error.main, 0.08),
-                    },
-                  }}
-                >
-                  Sign Out
-                </Button>
-              </AuthorizedElement>
+                  </MenuItem>
+                )}
+              </Menu>
             </Box>
 
             <Box sx={{ display: { sm: '', md: 'none' } }}>
