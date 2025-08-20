@@ -37,8 +37,8 @@ export const FEATURE_ITEMS = [
 export function Features() {
   return (
     <Container
+      id="features"
       sx={{
-        id: 'features',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
