@@ -3,6 +3,7 @@ import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
+import { setTokenGetter } from '../api/endpoint';
 
 interface AuthContextType {
   user: User | null;
@@ -57,6 +58,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setError(null);
   };
 
+  // Set up token getter for API requests
+  useEffect(() => {
+    setTokenGetter(() => {
+      if (oidcAuth.user?.access_token) {
+        return oidcAuth.user.access_token;
+      }
+      return null;
+    });
+  }, [oidcAuth.user]);
+
   // Sync user profile when authentication state changes
   useEffect(() => {
     const syncUserProfile = async (): Promise<void> => {
@@ -66,15 +77,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(userProfile);
         } catch (error) {
           console.error('Error syncing user profile:', error);
+          
           // If user doesn't have a profile, create one automatically
+          // This handles both 404 status codes and "Resource not found" error messages
           if (
-            error &&
-            typeof error === 'object' &&
-            'response' in error &&
-            error.response &&
-            typeof error.response === 'object' &&
-            'status' in error.response &&
-            error.response.status === 404
+            (error &&
+              typeof error === 'object' &&
+              'response' in error &&
+              error.response &&
+              typeof error.response === 'object' &&
+              'status' in error.response &&
+              error.response.status === 404) ||
+            (error &&
+              typeof error === 'object' &&
+              'error' in error &&
+              typeof error.error === 'string' &&
+              error.error.includes('Resource not found'))
           ) {
             try {
               setIsLoading(true);

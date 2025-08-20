@@ -80,7 +80,14 @@ export const REQUEST = async <T>(options: AxiosRequestConfig): Promise<T> => {
   };
 
   const onError = (error: AxiosError) => {
-    return Promise.reject(error.response?.data);
+    // Provide better error information
+    if (error.response?.data) {
+      return Promise.reject(error.response.data);
+    } else if (error.message) {
+      return Promise.reject({ error: error.message });
+    } else {
+      return Promise.reject({ error: 'Unknown error occurred' });
+    }
   };
 
   return ENDPOINT(options).then(onSuccess).catch(onError);
