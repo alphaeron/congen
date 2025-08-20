@@ -1,7 +1,5 @@
 /dashboard url???
 
-consent when profile is created is this GDPR allowed, can we set it to true in the backend when account is created?
-
 restructure userprofile to use tabs, and side bar, for better navigation
 
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug

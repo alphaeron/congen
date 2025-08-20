@@ -34,6 +34,41 @@ The Congen application implements comprehensive GDPR compliance features to prot
 - **Consent Withdrawal**: `/api/v1/gdpr/consent` (POST with consent=false)
 - **Processing Stop**: Data processing stops when consent withdrawn
 
+## Consent Management
+
+### Account Creation and Implied Consent
+
+The application implements a two-tier consent approach that complies with GDPR requirements:
+
+#### 1. Implied Consent During Account Creation
+When users create an account through Keycloak registration, they implicitly consent to:
+- **Account Creation**: Processing necessary for account setup and authentication
+- **Basic Service Provision**: Essential data processing for service delivery
+- **Legal Basis**: Contract performance (GDPR Article 6.1.b)
+
+#### 2. Explicit Consent for Full Service
+After account creation, users automatically receive explicit consent for:
+- **Personalized Features**: Advanced workout generation and fitness tracking
+- **Data Processing**: All data processing activities beyond basic service provision
+- **Legal Basis**: Consent (GDPR Article 6.1.a)
+
+### Consent Implementation
+
+- **Automatic Consent Creation**: When a user profile is created, a consent record is automatically created with `data_processing_consent = true`
+- **Consent Withdrawal**: Users can withdraw consent at any time via `/api/v1/gdpr/consent` endpoint
+- **Processing Restrictions**: When consent is withdrawn, data processing stops for non-essential operations
+- **Audit Trail**: All consent changes are logged with timestamps
+
+### Legal Basis Documentation
+
+The privacy policy clearly documents the legal basis for data processing:
+
+1. **Contract Performance (Article 6.1.b)**: Account creation and basic service provision
+2. **Consent (Article 6.1.a)**: Additional data processing for personalized features  
+3. **Legitimate Interest (Article 6.1.f)**: Service improvement and security
+
+This approach ensures GDPR compliance while simplifying the user experience by reducing friction during account creation.
+
 ## Data Protection Features
 
 ### Encryption

@@ -23,7 +23,8 @@ class UserService(
     private val userDAL: UserDAL,
     private val unitConverter: UnitConverter,
     private val keycloakClient: KeycloakClient,
-    private val keycloakUtil: KeycloakUtil
+    private val keycloakUtil: KeycloakUtil,
+    private val gdprComplianceService: GdprComplianceService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserService::class.java)
@@ -32,7 +33,8 @@ class UserService(
     /**
      * Creates a new user profile after Keycloak registration.
      * This method automatically extracts user information from the JWT token
-     * and creates their profile in our database.
+     * and creates their profile in our database. It also automatically creates
+     * a consent record with true consent for basic service provision.
      *
      * @return The created user profile
      * @throws ValidationException if validation fails or name is not available
@@ -54,6 +56,11 @@ class UserService(
                             ValidationUtil.validateUserName(name)
 
                             userDAL.insertUser(keycloakId, name)
+                                .flatMap { user ->
+                                    // Automatically create consent record for basic service provision
+                                    gdprComplianceService.updateUserConsent(keycloakId, true)
+                                        .thenReturn(user)
+                                }
                                 .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }
                                 .doOnError { e -> logger.error("Error creating user profile: {}", name, e) }
                         }

@@ -293,20 +293,24 @@ class GdprController(
                     DataProcessing(
                         purposes =
                             listOf(
+                                "Account creation and user authentication",
                                 "Personalized workout generation",
                                 "Fitness tracking and progress monitoring",
                                 "Exercise preference management"
                             ),
                         legalBasis =
                             listOf(
-                                "Consent (GDPR Article 6.1.a)",
-                                "Legitimate interest for service provision"
+                                "Contract performance (GDPR Article 6.1.b) - Account creation and basic service provision",
+                                "Consent (GDPR Article 6.1.a) - Additional data processing for personalized features",
+                                "Legitimate interest (GDPR Article 6.1.f) - Service improvement and security"
                             ),
                         dataTypes =
                             listOf(
                                 "Personal identifiers (name)",
+                                "Authentication data (Keycloak ID)",
                                 "Fitness preferences and exercise data",
-                                "Equipment preferences"
+                                "Equipment preferences",
+                                "Consent records and audit logs"
                             ),
                         retentionPeriods =
                             mapOf(

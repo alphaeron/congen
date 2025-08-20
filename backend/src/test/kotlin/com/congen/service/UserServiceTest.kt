@@ -25,6 +25,7 @@ class UserServiceTest {
     private lateinit var unitConverter: UnitConverter
     private lateinit var keycloakClient: KeycloakClient
     private lateinit var keycloakUtil: KeycloakUtil
+    private lateinit var gdprComplianceService: GdprComplianceService
     private lateinit var userService: UserService
 
     private val now = Instant.now()
@@ -42,7 +43,8 @@ class UserServiceTest {
         unitConverter = mock()
         keycloakClient = mock()
         keycloakUtil = mock()
-        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil)
+        gdprComplianceService = mock()
+        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService)
     }
 
     @Test
@@ -53,6 +55,15 @@ class UserServiceTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(name))
         whenever(userDAL.insertUser(eq(keycloakId), eq(name))).thenReturn(Mono.just(testUser))
+        whenever(gdprComplianceService.updateUserConsent(eq(keycloakId), eq(true))).thenReturn(Mono.just(
+            com.congen.model.UserConsent(
+                keycloakId = keycloakId,
+                dataProcessingConsent = true,
+                consentTimestamp = now,
+                createdAt = now,
+                updatedAt = now
+            )
+        ))
 
         // When
         val result = userService.insertUser()
@@ -64,6 +75,7 @@ class UserServiceTest {
         verify(keycloakUtil).getCurrentUserId()
         verify(keycloakUtil).getCurrentUserName()
         verify(userDAL).insertUser(keycloakId, name)
+        verify(gdprComplianceService).updateUserConsent(keycloakId, true)
     }
 
     @Test

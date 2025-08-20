@@ -39,8 +39,6 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
                 webTestClient = webTestClient,
                 token = token
             )
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Verify the user profile was created successfully
         webTestClient.get()
@@ -94,8 +92,6 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
                 webTestClient = webTestClient,
                 token = token
             )
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
         // Then get user profile using /me endpoint
         webTestClient.get()
@@ -114,5 +110,26 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
             .uri("/api/v1/user/me")
             .exchange()
             .expectStatus().isUnauthorized()
+    }
+
+    @Test
+    fun `should automatically create consent record when user profile is created`() {
+        val token = getValidToken("user")
+
+        // Create user profile - this should automatically create consent
+        IntegrationTestHelpers.createTestUser(
+            webTestClient = webTestClient,
+            token = token
+        )
+
+        // Verify that consent was automatically created
+        webTestClient.get()
+            .uri("/api/v1/gdpr/consent")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$.data_processing_consent").isEqualTo(true)
+            .jsonPath("$.consent_timestamp").exists()
     }
 }
