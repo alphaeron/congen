@@ -8,6 +8,7 @@ import Divider from '@mui/material/Divider';
 import Drawer from '@mui/material/Drawer';
 import MenuItem from '@mui/material/MenuItem';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { alpha } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -29,7 +30,6 @@ import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import ConGenIcon from './resources/congen-icon.svg';
 import { getTheme } from './theme';
-import { alpha } from '@mui/material/styles';
 
 import './App.css';
 import './styles/menuButton.css';
@@ -152,33 +152,33 @@ function AppContent(): React.ReactElement {
                   ConGen
                 </Typography>
               </Box>
-              
+
               <AuthorizedElement requireAuth={false}>
                 <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-                  <MenuItem 
-                    sx={{ 
-                      py: 1, 
+                  <MenuItem
+                    sx={{
+                      py: 1,
                       px: 2,
                       borderRadius: 2,
                       fontWeight: 500,
                       '&:hover': {
                         bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                       },
-                    }} 
+                    }}
                     component={ExercisesLink}
                   >
                     Exercises
                   </MenuItem>
-                  <MenuItem 
-                    sx={{ 
-                      py: 1, 
+                  <MenuItem
+                    sx={{
+                      py: 1,
                       px: 2,
                       borderRadius: 2,
                       fontWeight: 500,
                       '&:hover': {
                         bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                       },
-                    }} 
+                    }}
                     component={PrivacyPolicyLink}
                   >
                     Privacy
@@ -186,7 +186,7 @@ function AppContent(): React.ReactElement {
                 </Box>
               </AuthorizedElement>
             </Box>
-            
+
             <Box
               sx={{
                 display: { xs: 'none', md: 'flex' },
@@ -196,10 +196,10 @@ function AppContent(): React.ReactElement {
             >
               <AuthorizedElement
                 fallback={
-                  <Button 
-                    color="primary" 
-                    variant="contained" 
-                    component={Link} 
+                  <Button
+                    color="primary"
+                    variant="contained"
+                    component={Link}
                     to="/login"
                     sx={{
                       borderRadius: 2,
@@ -218,10 +218,10 @@ function AppContent(): React.ReactElement {
                   </Button>
                 }
               >
-                <Button 
-                  color="inherit" 
-                  component={ProfileLink} 
-                  sx={{ 
+                <Button
+                  color="inherit"
+                  component={ProfileLink}
+                  sx={{
                     mr: 1,
                     borderRadius: 2,
                     px: 2,
@@ -235,10 +235,10 @@ function AppContent(): React.ReactElement {
                 >
                   Profile
                 </Button>
-                <Button 
-                  color="inherit" 
-                  onClick={logout} 
-                  sx={{ 
+                <Button
+                  color="inherit"
+                  onClick={logout}
+                  sx={{
                     ml: 1,
                     borderRadius: 2,
                     px: 2,
@@ -254,15 +254,15 @@ function AppContent(): React.ReactElement {
                 </Button>
               </AuthorizedElement>
             </Box>
-            
+
             <Box sx={{ display: { sm: '', md: 'none' } }}>
               <Button
                 variant="text"
                 color="primary"
                 aria-label="menu"
                 onClick={toggleDrawer(true)}
-                sx={{ 
-                  minWidth: '40px', 
+                sx={{
+                  minWidth: '40px',
                   p: 1,
                   borderRadius: 2,
                   '&:hover': {
@@ -272,9 +272,9 @@ function AppContent(): React.ReactElement {
               >
                 <MenuIcon />
               </Button>
-              <Drawer 
-                anchor="right" 
-                open={open} 
+              <Drawer
+                anchor="right"
+                open={open}
                 onClose={toggleDrawer(false)}
                 PaperProps={{
                   sx: {
@@ -294,7 +294,7 @@ function AppContent(): React.ReactElement {
                   }}
                 >
                   <AuthorizedElement requireAuth={false}>
-                    <MenuItem 
+                    <MenuItem
                       component={ExercisesLink}
                       sx={{
                         borderRadius: 2,
@@ -307,7 +307,7 @@ function AppContent(): React.ReactElement {
                     >
                       Exercises
                     </MenuItem>
-                    <MenuItem 
+                    <MenuItem
                       component={PrivacyPolicyLink}
                       sx={{
                         borderRadius: 2,
@@ -324,8 +324,8 @@ function AppContent(): React.ReactElement {
                   <Divider sx={{ my: 2 }} />
                   <AuthorizedElement
                     fallback={
-                      <MenuItem 
-                        component={Link} 
+                      <MenuItem
+                        component={Link}
                         to="/login"
                         sx={{
                           borderRadius: 2,
@@ -335,10 +335,10 @@ function AppContent(): React.ReactElement {
                           },
                         }}
                       >
-                        <Button 
-                          color="primary" 
-                          variant="contained" 
-                          sx={{ 
+                        <Button
+                          color="primary"
+                          variant="contained"
+                          sx={{
                             width: '100%',
                             borderRadius: 2,
                             py: 1,
@@ -351,7 +351,7 @@ function AppContent(): React.ReactElement {
                       </MenuItem>
                     }
                   >
-                    <MenuItem 
+                    <MenuItem
                       component={ProfileLink}
                       sx={{
                         borderRadius: 2,
@@ -364,7 +364,7 @@ function AppContent(): React.ReactElement {
                     >
                       Profile
                     </MenuItem>
-                    <MenuItem 
+                    <MenuItem
                       onClick={logout}
                       sx={{
                         borderRadius: 2,

@@ -1,6 +1,5 @@
 package com.congen.config
 
-import net.rubyeye.xmemcached.MemcachedClient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
@@ -61,14 +60,15 @@ class MemcachedConfigTest {
 
     @Test
     fun `should create standard memcached client when useElasticache is false`() {
-        val properties = MemcachedProperties(
-            host = "localhost",
-            port = 11211,
-            useElasticache = false
-        )
+        val properties =
+            MemcachedProperties(
+                host = "localhost",
+                port = 11211,
+                useElasticache = false
+            )
 
         val config = MemcachedConfig(properties)
-        
+
         // This test verifies that the client creation doesn't throw an exception
         // Note: We can't easily test the actual client creation without a running Memcached server
         // The test ensures the configuration logic works correctly
@@ -85,14 +85,15 @@ class MemcachedConfigTest {
 
     @Test
     fun `should create elasticache client when useElasticache is true`() {
-        val properties = MemcachedProperties(
-            host = "localhost",
-            port = 11211,
-            useElasticache = true
-        )
+        val properties =
+            MemcachedProperties(
+                host = "localhost",
+                port = 11211,
+                useElasticache = true
+            )
 
         val config = MemcachedConfig(properties)
-        
+
         // This test verifies that the ElastiCache client creation doesn't throw an exception
         // Note: We can't easily test the actual client creation without a running ElastiCache server
         // The test ensures the configuration logic works correctly
@@ -109,11 +110,12 @@ class MemcachedConfigTest {
 
     @Test
     fun `should use default useElasticache value when not specified`() {
-        val properties = MemcachedProperties(
-            host = "localhost",
-            port = 11211
-            // useElasticache not specified, should default to false
-        )
+        val properties =
+            MemcachedProperties(
+                host = "localhost",
+                port = 11211
+                // useElasticache not specified, should default to false
+            )
 
         // Verify the default value is false
         assert(!properties.useElasticache)
@@ -121,11 +123,12 @@ class MemcachedConfigTest {
 
     @Test
     fun `should use default pollConfigIntervalMs value when not specified`() {
-        val properties = MemcachedProperties(
-            host = "localhost",
-            port = 11211
-            // pollConfigIntervalMs not specified, should default to 60000
-        )
+        val properties =
+            MemcachedProperties(
+                host = "localhost",
+                port = 11211
+                // pollConfigIntervalMs not specified, should default to 60000
+            )
 
         // Verify the default value is 60000ms (60 seconds)
         assert(properties.pollConfigIntervalMs == 60000L)
@@ -133,11 +136,12 @@ class MemcachedConfigTest {
 
     @Test
     fun `should use custom pollConfigIntervalMs value when specified`() {
-        val properties = MemcachedProperties(
-            host = "localhost",
-            port = 11211,
-            pollConfigIntervalMs = 30000L
-        )
+        val properties =
+            MemcachedProperties(
+                host = "localhost",
+                port = 11211,
+                pollConfigIntervalMs = 30000L
+            )
 
         // Verify the custom value is set correctly
         assert(properties.pollConfigIntervalMs == 30000L)

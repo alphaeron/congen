@@ -160,7 +160,7 @@ class MemcachedConfig(
         logger.info("Initializing AWS ElastiCache client with server: {}", serverAddress)
 
         val addressList = AddrUtil.getAddresses(serverAddress)
-        
+
         // Use AWS ElastiCache client builder for AWS-specific optimizations
         val builder = AWSElasticCacheClientBuilder(addressList)
 
@@ -182,7 +182,7 @@ class MemcachedConfig(
         // Set configuration polling interval for ElastiCache cluster updates
         // Default is 60 seconds, but can be customized for different environments
         builder.setPollConfigIntervalMs(props.pollConfigIntervalMs)
-            
+
         logger.info("AWS ElastiCache configuration polling interval set to {} ms", props.pollConfigIntervalMs)
 
         // AWS ElastiCache specific optimizations

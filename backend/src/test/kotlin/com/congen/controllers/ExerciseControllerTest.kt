@@ -9,12 +9,9 @@ import com.congen.mockExercise
 import com.congen.mockExerciseEquipment
 import com.congen.mockExerciseMuscle
 import com.congen.model.Exercise
-import com.congen.model.ExerciseEquipment
-import com.congen.model.ExerciseMuscle
 import com.congen.model.MovementType
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever

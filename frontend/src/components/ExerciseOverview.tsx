@@ -3,18 +3,14 @@ import AlertTitle from '@mui/material/AlertTitle';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
-import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import FormLabel from '@mui/material/FormLabel';
 import Grid from '@mui/material/Grid2';
 import Paper from '@mui/material/Paper';
-import Radio from '@mui/material/Radio';
-import RadioGroup from '@mui/material/RadioGroup';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
 import { alpha } from '@mui/material/styles';
+import TextField from '@mui/material/TextField';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import Typography from '@mui/material/Typography';
 import * as React from 'react';
 
 import { ExerciseCard } from './ExerciseCard';
@@ -26,6 +22,7 @@ import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { useApiGet } from '../api/hooks';
 import { getMuscles } from '../api/muscle';
 import type { Equipment, Exercise, Muscle } from '../api/types';
+import { capitalizeEachWord } from '../common/utils';
 
 import '../styles/Form.css';
 
@@ -50,7 +47,6 @@ export function ExerciseOverview(): React.ReactElement {
   const {
     data: exercises,
     isLoading: isExercisesLoading,
-    error: exercisesError,
     isError: isExercisesError,
   } = useApiGet<Exercise[]>(['exercises'], getExercises, {
     enabled: true,
@@ -61,7 +57,6 @@ export function ExerciseOverview(): React.ReactElement {
   const {
     data: equipment,
     isLoading: isEquipmentLoading,
-    error: equipmentError,
     isError: isEquipmentError,
   } = useApiGet<Equipment[]>(['equipment'], getEquipment, {
     enabled: true,
@@ -72,7 +67,6 @@ export function ExerciseOverview(): React.ReactElement {
   const {
     data: muscles,
     isLoading: isMusclesLoading,
-    error: musclesError,
     isError: isMusclesError,
   } = useApiGet<Muscle[]>(['muscles'], getMuscles, {
     enabled: true,
@@ -96,7 +90,6 @@ export function ExerciseOverview(): React.ReactElement {
   const {
     data: exerciseEquipmentMap,
     isLoading: isExerciseEquipmentLoading,
-    error: exerciseEquipmentError,
     isError: isExerciseEquipmentError,
   } = useApiGet<Map<string, Set<string>>>(['exerciseEquipmentMap'], getExerciseEquipmentMap, {
     enabled: true,
@@ -120,7 +113,6 @@ export function ExerciseOverview(): React.ReactElement {
   const {
     data: exerciseMuscleMap,
     isLoading: isExerciseMuscleLoading,
-    error: exerciseMuscleError,
     isError: isExerciseMuscleError,
   } = useApiGet<Map<string, Set<string>>>(['exerciseMuscleMap'], getExerciseMuscleMap, {
     enabled: true,
@@ -205,18 +197,6 @@ export function ExerciseOverview(): React.ReactElement {
     isExerciseEquipmentError ||
     isExerciseMuscleError;
 
-  const handleIsUnilateralFilterChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    setIsUnilateralFilter((event.target as HTMLInputElement).value);
-  };
-
-  const handleIsAccessoryFilterChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    setIsAccessoryFilter((event.target as HTMLInputElement).value);
-  };
-
-  const handleIsUpperFilterChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
-    setIsUpperFilter((event.target as HTMLInputElement).value);
-  };
-
   if (isLoading) {
     return <LoadingSpinner message="Loading exercises..." />;
   }
@@ -237,9 +217,9 @@ export function ExerciseOverview(): React.ReactElement {
       <Stack spacing={4}>
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 2 }}>
-          <Typography 
-            variant="h3" 
-            sx={{ 
+          <Typography
+            variant="h3"
+            sx={{
               fontWeight: 700,
               mb: 2,
               background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
@@ -250,10 +230,10 @@ export function ExerciseOverview(): React.ReactElement {
           >
             Exercise Library
           </Typography>
-          <Typography 
-            variant="h6" 
+          <Typography
+            variant="h6"
             color="text.secondary"
-            sx={{ 
+            sx={{
               fontWeight: 400,
               opacity: 0.8,
             }}
@@ -267,7 +247,8 @@ export function ExerciseOverview(): React.ReactElement {
           sx={{
             p: 4,
             borderRadius: 3,
-            background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
+            background: theme =>
+              `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
             border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
             backdropFilter: 'blur(20px)',
             boxShadow: theme => `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
@@ -276,114 +257,191 @@ export function ExerciseOverview(): React.ReactElement {
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
             Filters
           </Typography>
-          
-          <Grid container spacing={3}>
-            <Grid xs={12} sm={6} md={3}>
-              <Autocomplete
-                options={movementTypes}
-                value={movementTypeFilter}
-                onChange={(_, newValue) => setMovementTypeFilter(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Movement Type"
-                    variant="outlined"
-                    fullWidth
-                  />
-                )}
-                clearOnBlur
-                selectOnFocus
-                handleHomeEndKeys
-              />
+
+          <Grid container spacing={4}>
+            {/* Autocomplete Filters - Stacked Vertically */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={3}>
+                <Autocomplete
+                  options={movementTypes}
+                  value={movementTypeFilter}
+                  onChange={(_, newValue) => setMovementTypeFilter(newValue)}
+                  getOptionLabel={option => capitalizeEachWord(option)}
+                  renderInput={params => (
+                    <TextField {...params} label="Movement Type" variant="outlined" fullWidth />
+                  )}
+                  clearOnBlur
+                  selectOnFocus
+                  handleHomeEndKeys
+                />
+
+                <Autocomplete
+                  options={equipment?.map(e => e.name) || []}
+                  value={exerciseEquipmentFilter}
+                  onChange={(_, newValue) => setExerciseEquipmentFilter(newValue)}
+                  renderInput={params => (
+                    <TextField {...params} label="Equipment" variant="outlined" fullWidth />
+                  )}
+                  clearOnBlur
+                  selectOnFocus
+                  handleHomeEndKeys
+                />
+
+                <Autocomplete
+                  options={muscles?.map(m => m.name) || []}
+                  value={exerciseMuscleFilter}
+                  onChange={(_, newValue) => setExerciseMuscleFilter(newValue)}
+                  renderInput={params => (
+                    <TextField {...params} label="Target Muscle" variant="outlined" fullWidth />
+                  )}
+                  clearOnBlur
+                  selectOnFocus
+                  handleHomeEndKeys
+                />
+              </Stack>
             </Grid>
-            
-            <Grid xs={12} sm={6} md={3}>
-              <Autocomplete
-                options={equipment?.map(e => e.name) || []}
-                value={exerciseEquipmentFilter}
-                onChange={(_, newValue) => setExerciseEquipmentFilter(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Equipment"
-                    variant="outlined"
-                    fullWidth
-                  />
-                )}
-                clearOnBlur
-                selectOnFocus
-                handleHomeEndKeys
-              />
-            </Grid>
-            
-            <Grid xs={12} sm={6} md={3}>
-              <Autocomplete
-                options={muscles?.map(m => m.name) || []}
-                value={exerciseMuscleFilter}
-                onChange={(_, newValue) => setExerciseMuscleFilter(newValue)}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Target Muscle"
-                    variant="outlined"
-                    fullWidth
-                  />
-                )}
-                clearOnBlur
-                selectOnFocus
-                handleHomeEndKeys
-              />
-            </Grid>
-            
-            <Grid xs={12} sm={6} md={3}>
-              <FormControl component="fieldset" fullWidth>
-                <FormLabel component="legend" sx={{ fontWeight: 500, mb: 1 }}>
-                  Unilateral
-                </FormLabel>
-                <RadioGroup
-                  value={isUnilateralFilter}
-                  onChange={handleIsUnilateralFilterChange}
-                  row
-                >
-                  <FormControlLabel value="Both" control={<Radio />} label="Both" />
-                  <FormControlLabel value="Unilateral" control={<Radio />} label="Unilateral" />
-                  <FormControlLabel value="Bilateral" control={<Radio />} label="Bilateral" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            
-            <Grid xs={12} sm={6} md={3}>
-              <FormControl component="fieldset" fullWidth>
-                <FormLabel component="legend" sx={{ fontWeight: 500, mb: 1 }}>
-                  Exercise Type
-                </FormLabel>
-                <RadioGroup
-                  value={isAccessoryFilter}
-                  onChange={handleIsAccessoryFilterChange}
-                  row
-                >
-                  <FormControlLabel value="Both" control={<Radio />} label="Both" />
-                  <FormControlLabel value="Primary" control={<Radio />} label="Primary" />
-                  <FormControlLabel value="Accessory" control={<Radio />} label="Accessory" />
-                </RadioGroup>
-              </FormControl>
-            </Grid>
-            
-            <Grid xs={12} sm={6} md={3}>
-              <FormControl component="fieldset" fullWidth>
-                <FormLabel component="legend" sx={{ fontWeight: 500, mb: 1 }}>
-                  Body Part
-                </FormLabel>
-                <RadioGroup
-                  value={isUpperFilter}
-                  onChange={handleIsUpperFilterChange}
-                  row
-                >
-                  <FormControlLabel value="Both" control={<Radio />} label="Both" />
-                  <FormControlLabel value="Upper" control={<Radio />} label="Upper" />
-                  <FormControlLabel value="Lower" control={<Radio />} label="Lower" />
-                </RadioGroup>
-              </FormControl>
+
+            {/* Toggle Button Filters - Modern Design */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Stack spacing={4}>
+                {/* Unilateral Filter */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
+                  >
+                    Movement Pattern
+                  </Typography>
+                  <ToggleButtonGroup
+                    value={isUnilateralFilter}
+                    exclusive
+                    onChange={(_, newValue) => newValue && setIsUnilateralFilter(newValue)}
+                    aria-label="movement pattern"
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        borderRadius: 2,
+                        border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                        '&.Mui-selected': {
+                          background: theme =>
+                            `linear-gradient(135deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.8)})`,
+                          color: 'white',
+                          '&:hover': {
+                            background: theme =>
+                              `linear-gradient(135deg, ${theme.palette.primary.main}, ${alpha(theme.palette.primary.main, 0.9)})`,
+                          },
+                        },
+                        '&:hover': {
+                          background: theme => alpha(theme.palette.primary.main, 0.1),
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="Both" aria-label="both">
+                      Both
+                    </ToggleButton>
+                    <ToggleButton value="Unilateral" aria-label="unilateral">
+                      Unilateral
+                    </ToggleButton>
+                    <ToggleButton value="Bilateral" aria-label="bilateral">
+                      Bilateral
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+
+                {/* Exercise Type Filter */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
+                  >
+                    Exercise Type
+                  </Typography>
+                  <ToggleButtonGroup
+                    value={isAccessoryFilter}
+                    exclusive
+                    onChange={(_, newValue) => newValue && setIsAccessoryFilter(newValue)}
+                    aria-label="exercise type"
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        borderRadius: 2,
+                        border: theme => `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                        '&.Mui-selected': {
+                          background: theme =>
+                            `linear-gradient(135deg, ${theme.palette.secondary.main}, ${alpha(theme.palette.secondary.main, 0.8)})`,
+                          color: 'white',
+                          '&:hover': {
+                            background: theme =>
+                              `linear-gradient(135deg, ${theme.palette.secondary.main}, ${alpha(theme.palette.secondary.main, 0.9)})`,
+                          },
+                        },
+                        '&:hover': {
+                          background: theme => alpha(theme.palette.secondary.main, 0.1),
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="Both" aria-label="both">
+                      Both
+                    </ToggleButton>
+                    <ToggleButton value="Primary" aria-label="primary">
+                      Primary
+                    </ToggleButton>
+                    <ToggleButton value="Accessory" aria-label="accessory">
+                      Accessory
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+
+                {/* Body Part Filter */}
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 600, mb: 2, color: 'text.primary' }}
+                  >
+                    Body Part
+                  </Typography>
+                  <ToggleButtonGroup
+                    value={isUpperFilter}
+                    exclusive
+                    onChange={(_, newValue) => newValue && setIsUpperFilter(newValue)}
+                    aria-label="body part"
+                    sx={{
+                      '& .MuiToggleButton-root': {
+                        textTransform: 'none',
+                        fontWeight: 500,
+                        borderRadius: 2,
+                        border: theme => `1px solid ${alpha(theme.palette.success.main, 0.2)}`,
+                        '&.Mui-selected': {
+                          background: theme =>
+                            `linear-gradient(135deg, ${theme.palette.success.main}, ${alpha(theme.palette.success.main, 0.8)})`,
+                          color: 'white',
+                          '&:hover': {
+                            background: theme =>
+                              `linear-gradient(135deg, ${theme.palette.success.main}, ${alpha(theme.palette.success.main, 0.9)})`,
+                          },
+                        },
+                        '&:hover': {
+                          background: theme => alpha(theme.palette.success.main, 0.1),
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="Both" aria-label="both">
+                      Both
+                    </ToggleButton>
+                    <ToggleButton value="Upper" aria-label="upper">
+                      Upper Body
+                    </ToggleButton>
+                    <ToggleButton value="Lower" aria-label="lower">
+                      Lower Body
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Box>
+              </Stack>
             </Grid>
           </Grid>
         </Paper>
@@ -393,14 +451,15 @@ export function ExerciseOverview(): React.ReactElement {
           <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
             Results ({exercisesToDisplay.length} exercises)
           </Typography>
-          
+
           {exercisesToDisplay.length === 0 ? (
             <Paper
               sx={{
                 p: 6,
                 textAlign: 'center',
                 borderRadius: 3,
-                background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
+                background: theme =>
+                  `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
                 border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
               }}
             >
@@ -413,8 +472,8 @@ export function ExerciseOverview(): React.ReactElement {
             </Paper>
           ) : (
             <Grid container spacing={3}>
-              {exercisesToDisplay.map((exercise) => (
-                <Grid xs={12} sm={6} md={4} lg={3} key={exercise.id}>
+              {exercisesToDisplay.map(exercise => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
                   <ExerciseCard exercise={exercise} />
                 </Grid>
               ))}

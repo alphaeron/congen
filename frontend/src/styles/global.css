@@ -30,7 +30,7 @@
   ::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
   }
-  
+
   ::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
   }
@@ -44,7 +44,11 @@
 }
 
 /* Smooth transitions for interactive elements */
-button, a, [role="button"], .MuiButton-root, .MuiCard-root {
+button,
+a,
+[role='button'],
+.MuiButton-root,
+.MuiCard-root {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
@@ -115,7 +119,8 @@ button, a, [role="button"], .MuiButton-root, .MuiCard-root {
 
 /* Loading animations */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -182,29 +187,65 @@ button, a, [role="button"], .MuiButton-root, .MuiCard-root {
 }
 
 /* Modern spacing utilities */
-.space-xs { margin: 0.5rem; }
-.space-sm { margin: 1rem; }
-.space-md { margin: 1.5rem; }
-.space-lg { margin: 2rem; }
-.space-xl { margin: 3rem; }
+.space-xs {
+  margin: 0.5rem;
+}
+.space-sm {
+  margin: 1rem;
+}
+.space-md {
+  margin: 1.5rem;
+}
+.space-lg {
+  margin: 2rem;
+}
+.space-xl {
+  margin: 3rem;
+}
 
 /* Modern border radius utilities */
-.rounded-sm { border-radius: 4px; }
-.rounded-md { border-radius: 8px; }
-.rounded-lg { border-radius: 12px; }
-.rounded-xl { border-radius: 16px; }
-.rounded-2xl { border-radius: 24px; }
+.rounded-sm {
+  border-radius: 4px;
+}
+.rounded-md {
+  border-radius: 8px;
+}
+.rounded-lg {
+  border-radius: 12px;
+}
+.rounded-xl {
+  border-radius: 16px;
+}
+.rounded-2xl {
+  border-radius: 24px;
+}
 
 /* Modern shadow utilities */
-.shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); }
-.shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-.shadow-lg { box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); }
-.shadow-xl { box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1); }
+.shadow-sm {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.shadow-md {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+.shadow-xl {
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.1);
+}
 
 /* Dark mode shadows */
 @media (prefers-color-scheme: dark) {
-  .shadow-sm { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
-  .shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4); }
-  .shadow-lg { box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4); }
-  .shadow-xl { box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4); }
+  .shadow-sm {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .shadow-md {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+  }
+  .shadow-lg {
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.4);
+  }
+  .shadow-xl {
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4);
+  }
 }

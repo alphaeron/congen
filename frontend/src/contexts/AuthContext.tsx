@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
+import { setTokenGetter } from '../api/endpoint';
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
-import { setTokenGetter } from '../api/endpoint';
 
 interface AuthContextType {
   user: User | null;
@@ -46,7 +46,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await oidcAuth.removeUser();
+      // Use signoutRedirect to properly logout and redirect to the post_logout_redirect_uri
+      await oidcAuth.signoutRedirect();
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
@@ -77,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(userProfile);
         } catch (error) {
           console.error('Error syncing user profile:', error);
-          
+
           // If user doesn't have a profile, create one automatically
           // This handles both 404 status codes and "Resource not found" error messages
           if (

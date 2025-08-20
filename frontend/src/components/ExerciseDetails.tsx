@@ -184,14 +184,28 @@ export function ExerciseDetails(
         <Grid container={true} spacing={2}>
           <Grid size={12}>
             <Stack direction="row" spacing={2}>
-              <Chip label={`${capitalizeEachWord(exercise.movement_type)} Exercise`} />
-              <BinaryTag isOn={exercise.is_upper} onText="Upper Body" offText="Lower Body" />
+              <Chip
+                label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
+                color="primary"
+              />
+              <BinaryTag
+                isOn={exercise.is_upper}
+                onText="Upper Body"
+                offText="Lower Body"
+                color="success"
+              />
               <BinaryTag
                 isOn={exercise.is_accessory}
                 onText="Accessory"
                 offText="Primary Movement"
+                color="secondary"
               />
-              <BinaryTag isOn={exercise.is_unilateral} onText="Unilateral" offText="Bilateral" />
+              <BinaryTag
+                isOn={exercise.is_unilateral}
+                onText="Unilateral"
+                offText="Bilateral"
+                color="primary"
+              />
             </Stack>
           </Grid>
           <Grid size={9}>

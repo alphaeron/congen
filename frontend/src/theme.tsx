@@ -126,9 +126,9 @@ const getDesignTokens = (mode: PaletteMode) => ({
     warning: {
       main: warning[500],
       dark: warning[700],
-      ...(mode === 'dark' && { 
-        main: warning[400], 
-        dark: warning[600] 
+      ...(mode === 'dark' && {
+        main: warning[400],
+        dark: warning[600],
       }),
     },
     error: {
@@ -308,8 +308,8 @@ export function getTheme(mode: PaletteMode): ThemeOptions {
         styleOverrides: {
           root: ({ theme }) => ({
             padding: '16px 20px',
-            '&:hover': { 
-              backgroundColor: alpha(theme.palette.primary.main, 0.04) 
+            '&:hover': {
+              backgroundColor: alpha(theme.palette.primary.main, 0.04),
             },
             '&.Mui-expanded': {
               minHeight: 56,
@@ -319,7 +319,7 @@ export function getTheme(mode: PaletteMode): ThemeOptions {
       },
       MuiAccordionDetails: {
         styleOverrides: {
-          root: { 
+          root: {
             padding: '0 20px 20px',
           },
         },

@@ -1,12 +1,12 @@
 import AutoFixHighRoundedIcon from '@mui/icons-material/AutoFixHighRounded';
 import ConstructionRoundedIcon from '@mui/icons-material/ConstructionRounded';
 import QueryStatsRoundedIcon from '@mui/icons-material/QueryStatsRounded';
-import { alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
+import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 
@@ -54,8 +54,8 @@ export function Features() {
           mb: 4,
         }}
       >
-        <Typography 
-          component="h2" 
+        <Typography
+          component="h2"
           variant="h3"
           sx={{
             fontWeight: 700,
@@ -68,10 +68,10 @@ export function Features() {
         >
           Features
         </Typography>
-        <Typography 
-          variant="h6" 
+        <Typography
+          variant="h6"
           color="text.secondary"
-          sx={{ 
+          sx={{
             fontWeight: 400,
             opacity: 0.8,
           }}
@@ -79,7 +79,7 @@ export function Features() {
           Everything you need to build the perfect conjugate workout program
         </Typography>
       </Box>
-      
+
       <Grid container spacing={4}>
         {FEATURE_ITEMS.map((item, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
@@ -88,7 +88,8 @@ export function Features() {
                 p: 4,
                 height: '100%',
                 borderRadius: 3,
-                background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
+                background: theme =>
+                  `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
                 border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
                 backdropFilter: 'blur(20px)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -101,7 +102,7 @@ export function Features() {
               }}
             >
               <Stack spacing={3} sx={{ height: '100%' }}>
-                <Box 
+                <Box
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -109,25 +110,30 @@ export function Features() {
                     width: 64,
                     height: 64,
                     borderRadius: 2,
-                    background: theme => `linear-gradient(135deg, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.1)}, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.05)})`,
-                    border: theme => `1px solid ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.2)}`,
-                    color: theme => theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main,
+                    background: theme =>
+                      `linear-gradient(135deg, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.1)}, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.05)})`,
+                    border: theme =>
+                      `1px solid ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.2)}`,
+                    color: theme =>
+                      theme.palette[item.color as keyof typeof theme.palette]?.main ||
+                      theme.palette.primary.main,
                     fontSize: '2rem',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     '&:hover': {
                       transform: 'scale(1.1)',
-                      background: theme => `linear-gradient(135deg, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.2)}, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.1)})`,
+                      background: theme =>
+                        `linear-gradient(135deg, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.2)}, ${alpha(theme.palette[item.color as keyof typeof theme.palette]?.main || theme.palette.primary.main, 0.1)})`,
                     },
                   }}
                 >
-                  {React.cloneElement(item.icon, { 
-                    sx: { fontSize: '2rem' } 
+                  {React.cloneElement(item.icon, {
+                    sx: { fontSize: '2rem' },
                   })}
                 </Box>
-                
+
                 <Box sx={{ flex: 1 }}>
-                  <Typography 
-                    variant="h5" 
+                  <Typography
+                    variant="h5"
                     fontWeight={600}
                     gutterBottom
                     sx={{
@@ -137,10 +143,10 @@ export function Features() {
                   >
                     {item.title}
                   </Typography>
-                  <Typography 
-                    variant="body1" 
+                  <Typography
+                    variant="body1"
                     color="text.secondary"
-                    sx={{ 
+                    sx={{
                       lineHeight: 1.6,
                       opacity: 0.8,
                     }}

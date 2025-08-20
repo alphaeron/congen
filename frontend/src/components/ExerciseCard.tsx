@@ -4,8 +4,8 @@ import CardContent from '@mui/material/CardContent';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { alpha } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
 import * as React from 'react';
 import { Link } from 'react-router';
 
@@ -40,7 +40,8 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
       sx={{
         height: '100%',
         borderRadius: 3,
-        background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
+        background: theme =>
+          `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
         border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
         backdropFilter: 'blur(20px)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -54,14 +55,14 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
       }}
     >
       <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
-        <Link 
-          className="undecoratedLink" 
+        <Link
+          className="undecoratedLink"
           to={`/exercises/${exercise.name}`}
           style={{ textDecoration: 'none' }}
         >
-          <Typography 
-            variant="h6" 
-            sx={{ 
+          <Typography
+            variant="h6"
+            sx={{
               fontWeight: 600,
               mb: 2,
               color: 'text.primary',
@@ -78,11 +79,11 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
         <Stack spacing={2} sx={{ flex: 1 }}>
           {/* Exercise Type */}
           <Box>
-            <Chip 
+            <Chip
               label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
               color="primary"
               size="small"
-              sx={{ 
+              sx={{
                 fontWeight: 600,
                 borderRadius: 2,
               }}
@@ -91,29 +92,32 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
 
           {/* Exercise Properties */}
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <BinaryTag 
-              isOn={exercise.is_upper} 
-              onText="Upper Body" 
-              offText="Lower Body" 
+            <BinaryTag
+              isOn={exercise.is_upper}
+              onText="Upper Body"
+              offText="Lower Body"
+              color="success"
             />
             <BinaryTag
               isOn={exercise.is_accessory}
               onText="Accessory"
               offText="Primary"
+              color="secondary"
             />
             <BinaryTag
               isOn={exercise.is_unilateral}
               onText="Unilateral"
               offText="Bilateral"
+              color="primary"
             />
           </Stack>
 
           {/* Equipment Section */}
           {equipment.length > 0 && (
             <Box>
-              <Divider 
-                textAlign="left" 
-                sx={{ 
+              <Divider
+                textAlign="left"
+                sx={{
                   mb: 1.5,
                   '&::before': {
                     borderTop: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
@@ -123,10 +127,10 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                   },
                 }}
               >
-                <Typography 
-                  variant="caption" 
+                <Typography
+                  variant="caption"
                   color="text.secondary"
-                  sx={{ 
+                  sx={{
                     fontWeight: 600,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
@@ -137,12 +141,12 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
               </Divider>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {equipment.map(e => (
-                  <Chip 
-                    label={capitalizeEachWord(e)} 
+                  <Chip
+                    label={capitalizeEachWord(e)}
                     key={e}
                     size="small"
                     variant="outlined"
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontSize: '0.75rem',
                     }}
@@ -155,9 +159,9 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
           {/* Muscles Section */}
           {muscles.length > 0 && (
             <Box>
-              <Divider 
-                textAlign="left" 
-                sx={{ 
+              <Divider
+                textAlign="left"
+                sx={{
                   mb: 1.5,
                   '&::before': {
                     borderTop: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
@@ -167,10 +171,10 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                   },
                 }}
               >
-                <Typography 
-                  variant="caption" 
+                <Typography
+                  variant="caption"
                   color="text.secondary"
-                  sx={{ 
+                  sx={{
                     fontWeight: 600,
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
@@ -181,12 +185,12 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
               </Divider>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {muscles.map(m => (
-                  <Chip 
-                    label={capitalizeEachWord(m)} 
+                  <Chip
+                    label={capitalizeEachWord(m)}
                     key={m}
                     size="small"
                     color="secondary"
-                    sx={{ 
+                    sx={{
                       borderRadius: 2,
                       fontSize: '0.75rem',
                     }}

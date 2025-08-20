@@ -134,38 +134,44 @@ class CacheWarmupServiceTest {
         whenever(cacheWarmupConfig.warmupReferenceData).thenReturn(true)
         whenever(cacheWarmupConfig.warmupLists).thenReturn(false)
         whenever(cacheWarmupConfig.warmupRelationships).thenReturn(false)
-        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf(
-            "Bench Press",
-            "Back Squat", 
-            "Deadlift",
-            "Overhead Press",
-            "Chin-Up",
-            "TRX Push-Up",
-            "Bent-Over Row",
-            "Split Squat",
-            "Front Squat",
-            "Landmine Row"
-        ))
-        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf(
-            "power bar",
-            "dumbbells",
-            "pull-up bar",
-            "bench",
-            "power rack"
-        ))
-        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf(
-            "pec major",
-            "lats",
-            "quadriceps",
-            "anterior deltoid",
-            "biceps",
-            "rectus abdominis"
-        ))
+        whenever(cacheWarmupConfig.popularExercises).thenReturn(
+            listOf(
+                "Bench Press",
+                "Back Squat",
+                "Deadlift",
+                "Overhead Press",
+                "Chin-Up",
+                "TRX Push-Up",
+                "Bent-Over Row",
+                "Split Squat",
+                "Front Squat",
+                "Landmine Row"
+            )
+        )
+        whenever(cacheWarmupConfig.popularEquipment).thenReturn(
+            listOf(
+                "power bar",
+                "dumbbells",
+                "pull-up bar",
+                "bench",
+                "power rack"
+            )
+        )
+        whenever(cacheWarmupConfig.popularMuscles).thenReturn(
+            listOf(
+                "pec major",
+                "lats",
+                "quadriceps",
+                "anterior deltoid",
+                "biceps",
+                "rectus abdominis"
+            )
+        )
 
         // Mock all popular exercises
         listOf(
             "Bench Press",
-            "Back Squat", 
+            "Back Squat",
             "Deadlift",
             "Overhead Press",
             "Chin-Up",
@@ -177,7 +183,7 @@ class CacheWarmupServiceTest {
         ).forEach { exerciseName ->
             whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(createMockExercise(exerciseName)))
         }
-        
+
         // Mock all popular equipment
         listOf(
             "power bar",
@@ -188,7 +194,7 @@ class CacheWarmupServiceTest {
         ).forEach { equipmentName ->
             whenever(equipmentDAL.selectEquipmentByName(equipmentName)).thenReturn(Mono.just(createMockEquipment(equipmentName)))
         }
-        
+
         // Mock all popular muscles
         listOf(
             "pec major",
@@ -206,7 +212,7 @@ class CacheWarmupServiceTest {
         // Verify all popular exercises were called
         listOf(
             "Bench Press",
-            "Back Squat", 
+            "Back Squat",
             "Deadlift",
             "Overhead Press",
             "Chin-Up",
@@ -216,7 +222,7 @@ class CacheWarmupServiceTest {
             "Front Squat",
             "Landmine Row"
         ).forEach { exerciseName -> verify(exerciseDAL).selectExerciseByName(exerciseName) }
-        
+
         // Verify all popular equipment were called
         listOf(
             "power bar",
@@ -225,7 +231,7 @@ class CacheWarmupServiceTest {
             "bench",
             "power rack"
         ).forEach { equipmentName -> verify(equipmentDAL).selectEquipmentByName(equipmentName) }
-        
+
         // Verify all popular muscles were called
         listOf(
             "pec major",

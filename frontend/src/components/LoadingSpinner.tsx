@@ -66,10 +66,10 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           },
         }}
       />
-      
+
       {message && (
-        <Typography 
-          variant="h6" 
+        <Typography
+          variant="h6"
           color="text.secondary"
           sx={{
             fontWeight: 500,

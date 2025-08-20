@@ -1,16 +1,16 @@
-import { alpha } from '@mui/material/styles';
+import { Stack } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Link from '@mui/material/Link';
+import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
-import { Stack } from '@mui/material';
 
 export function OpenSource() {
   return (
     <Container
-      id="opensource"
+      id="open-source"
       sx={{
         py: { xs: 8, sm: 12 },
         position: 'relative',
@@ -26,15 +26,16 @@ export function OpenSource() {
           textAlign: 'center',
           p: 4,
           borderRadius: 4,
-          background: theme => `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
+          background: theme =>
+            `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
           border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
           backdropFilter: 'blur(20px)',
           boxShadow: theme => `0 8px 32px ${alpha(theme.palette.primary.main, 0.1)}`,
         }}
       >
-        <Typography 
-          component="h2" 
-          variant="h3" 
+        <Typography
+          component="h2"
+          variant="h3"
           color="text.primary"
           sx={{
             fontWeight: 700,
@@ -47,11 +48,11 @@ export function OpenSource() {
         >
           ConGen is open source!
         </Typography>
-        
-        <Typography 
-          variant="h6" 
+
+        <Typography
+          variant="h6"
           color="text.secondary"
-          sx={{ 
+          sx={{
             mb: 2,
             fontWeight: 400,
             lineHeight: 1.6,
@@ -60,11 +61,11 @@ export function OpenSource() {
         >
           ConGen is open source software, meaning you can use and modify it!
         </Typography>
-        
-        <Typography 
-          variant="body1" 
+
+        <Typography
+          variant="body1"
           color="text.secondary"
-          sx={{ 
+          sx={{
             mb: 4,
             lineHeight: 1.6,
             opacity: 0.8,
@@ -72,7 +73,7 @@ export function OpenSource() {
         >
           That means no paying for trials, no subscriptions, and no limitations!
         </Typography>
-        
+
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="center">
           <Button
             variant="contained"
@@ -92,26 +93,6 @@ export function OpenSource() {
             }}
           >
             View License Details
-          </Button>
-          
-          <Button
-            variant="outlined"
-            component={Link}
-            href="https://github.com"
-            sx={{
-              borderRadius: 2,
-              px: 4,
-              py: 1.5,
-              fontWeight: 600,
-              textTransform: 'none',
-              borderWidth: 2,
-              '&:hover': {
-                borderWidth: 2,
-                transform: 'translateY(-1px)',
-              },
-            }}
-          >
-            View on GitHub
           </Button>
         </Stack>
       </Box>

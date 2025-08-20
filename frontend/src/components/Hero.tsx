@@ -1,4 +1,3 @@
-import { alpha } from '@mui/material';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Stack from '@mui/material/Stack';
@@ -16,9 +15,10 @@ export function Hero() {
         width: '100%',
         position: 'relative',
         overflow: 'hidden',
-        background: theme.palette.mode === 'light'
-          ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #bae6fd 50%, #7dd3fc 75%, #38bdf8 100%)'
-          : `linear-gradient(135deg, #0c4a6e 0%, #075985 25%, #0369a1 50%, #0284c7 75%, #0ea5e9 100%)`,
+        background:
+          theme.palette.mode === 'light'
+            ? 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #bae6fd 50%, #7dd3fc 75%, #38bdf8 100%)'
+            : `linear-gradient(135deg, #0c4a6e 0%, #075985 25%, #0369a1 50%, #0284c7 75%, #0ea5e9 100%)`,
         backgroundSize: '400% 400%',
         animation: 'gradientShift 15s ease infinite',
         '&::before': {
@@ -28,9 +28,10 @@ export function Hero() {
           left: 0,
           right: 0,
           bottom: 0,
-          background: theme.palette.mode === 'light'
-            ? 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)'
-            : 'radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.2) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.2) 0%, transparent 50%)',
+          background:
+            theme.palette.mode === 'light'
+              ? 'radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%)'
+              : 'radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.2) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.2) 0%, transparent 50%)',
           zIndex: 0,
         },
       })}
@@ -96,7 +97,7 @@ export function Hero() {
             animation: 'float4 9s ease-in-out infinite',
           }}
         />
-        
+
         {/* Grid pattern overlay */}
         <Box
           sx={{
@@ -105,7 +106,8 @@ export function Hero() {
             left: 0,
             width: '100%',
             height: '100%',
-            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0)',
+            backgroundImage:
+              'radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.1) 1px, transparent 0)',
             backgroundSize: '40px 40px',
             opacity: 0.3,
           }}
@@ -125,10 +127,10 @@ export function Hero() {
           zIndex: 1,
         }}
       >
-        <Stack 
-          spacing={4} 
-          useFlexGap 
-          sx={{ 
+        <Stack
+          spacing={4}
+          useFlexGap
+          sx={{
             width: { xs: '100%', sm: '80%', md: '70%' },
             textAlign: 'center',
             alignItems: 'center',
@@ -148,11 +150,11 @@ export function Hero() {
           >
             {headline}
           </Typography>
-          
+
           <Typography
             variant="h5"
             color="text.secondary"
-            sx={{ 
+            sx={{
               maxWidth: '600px',
               fontWeight: 400,
               lineHeight: 1.6,
@@ -164,13 +166,10 @@ export function Hero() {
           </Typography>
 
           {/* Call to action buttons */}
-          <Stack 
-            direction={{ xs: 'column', sm: 'row' }} 
-            spacing={2} 
-            sx={{ mt: 4 }}
-          >
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 4 }}>
             <Box
-              component="button"
+              component="a"
+              href="#features"
               sx={{
                 px: 4,
                 py: 2,
@@ -183,41 +182,20 @@ export function Hero() {
                 cursor: 'pointer',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 boxShadow: '0 8px 25px rgba(14, 165, 233, 0.3)',
+                textDecoration: 'none',
+                display: 'inline-block',
                 '&:hover': {
                   transform: 'translateY(-2px)',
                   boxShadow: '0 12px 35px rgba(14, 165, 233, 0.4)',
+                  textDecoration: 'none',
+                  color: 'white',
                 },
                 '&:active': {
                   transform: 'translateY(0)',
                 },
               }}
             >
-              Get Started
-            </Box>
-            
-            <Box
-              component="button"
-              sx={{
-                px: 4,
-                py: 2,
-                borderRadius: 3,
-                background: 'transparent',
-                color: 'primary.main',
-                border: '2px solid',
-                borderColor: 'primary.main',
-                fontSize: '1rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  background: 'primary.main',
-                  color: 'white',
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 25px rgba(14, 165, 233, 0.3)',
-                },
-              }}
-            >
-              Learn More
+              Explore Features
             </Box>
           </Stack>
         </Stack>
