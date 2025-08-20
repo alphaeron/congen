@@ -134,25 +134,107 @@ class CacheWarmupServiceTest {
         whenever(cacheWarmupConfig.warmupReferenceData).thenReturn(true)
         whenever(cacheWarmupConfig.warmupLists).thenReturn(false)
         whenever(cacheWarmupConfig.warmupRelationships).thenReturn(false)
-        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Squat", "Deadlift"))
-        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf("Barbell", "Dumbbell"))
-        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf("Chest", "Back"))
+        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf(
+            "Bench Press",
+            "Back Squat", 
+            "Deadlift",
+            "Overhead Press",
+            "Chin-Up",
+            "TRX Push-Up",
+            "Bent-Over Row",
+            "Split Squat",
+            "Front Squat",
+            "Landmine Row"
+        ))
+        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf(
+            "power bar",
+            "dumbbells",
+            "pull-up bar",
+            "bench",
+            "power rack"
+        ))
+        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf(
+            "pec major",
+            "lats",
+            "quadriceps",
+            "anterior deltoid",
+            "biceps",
+            "rectus abdominis"
+        ))
 
-        listOf("Bench Press", "Squat", "Deadlift").forEach { exerciseName ->
+        // Mock all popular exercises
+        listOf(
+            "Bench Press",
+            "Back Squat", 
+            "Deadlift",
+            "Overhead Press",
+            "Chin-Up",
+            "TRX Push-Up",
+            "Bent-Over Row",
+            "Split Squat",
+            "Front Squat",
+            "Landmine Row"
+        ).forEach { exerciseName ->
             whenever(exerciseDAL.selectExerciseByName(exerciseName)).thenReturn(Mono.just(createMockExercise(exerciseName)))
         }
-        listOf("Barbell", "Dumbbell").forEach { equipmentName ->
+        
+        // Mock all popular equipment
+        listOf(
+            "power bar",
+            "dumbbells",
+            "pull-up bar",
+            "bench",
+            "power rack"
+        ).forEach { equipmentName ->
             whenever(equipmentDAL.selectEquipmentByName(equipmentName)).thenReturn(Mono.just(createMockEquipment(equipmentName)))
         }
-        listOf("Chest", "Back").forEach { muscleName ->
+        
+        // Mock all popular muscles
+        listOf(
+            "pec major",
+            "lats",
+            "quadriceps",
+            "anterior deltoid",
+            "biceps",
+            "rectus abdominis"
+        ).forEach { muscleName ->
             whenever(muscleDAL.selectMuscleByName(muscleName)).thenReturn(Mono.just(createMockMuscle(muscleName)))
         }
 
         cacheWarmupService.run(applicationArguments)
 
-        listOf("Bench Press", "Squat", "Deadlift").forEach { exerciseName -> verify(exerciseDAL).selectExerciseByName(exerciseName) }
-        listOf("Barbell", "Dumbbell").forEach { equipmentName -> verify(equipmentDAL).selectEquipmentByName(equipmentName) }
-        listOf("Chest", "Back").forEach { muscleName -> verify(muscleDAL).selectMuscleByName(muscleName) }
+        // Verify all popular exercises were called
+        listOf(
+            "Bench Press",
+            "Back Squat", 
+            "Deadlift",
+            "Overhead Press",
+            "Chin-Up",
+            "TRX Push-Up",
+            "Bent-Over Row",
+            "Split Squat",
+            "Front Squat",
+            "Landmine Row"
+        ).forEach { exerciseName -> verify(exerciseDAL).selectExerciseByName(exerciseName) }
+        
+        // Verify all popular equipment were called
+        listOf(
+            "power bar",
+            "dumbbells",
+            "pull-up bar",
+            "bench",
+            "power rack"
+        ).forEach { equipmentName -> verify(equipmentDAL).selectEquipmentByName(equipmentName) }
+        
+        // Verify all popular muscles were called
+        listOf(
+            "pec major",
+            "lats",
+            "quadriceps",
+            "anterior deltoid",
+            "biceps",
+            "rectus abdominis"
+        ).forEach { muscleName -> verify(muscleDAL).selectMuscleByName(muscleName) }
     }
 
     @Test
@@ -188,13 +270,13 @@ class CacheWarmupServiceTest {
         whenever(cacheWarmupConfig.warmupReferenceData).thenReturn(false)
         whenever(cacheWarmupConfig.warmupLists).thenReturn(false)
         whenever(cacheWarmupConfig.warmupRelationships).thenReturn(true)
-        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Squat"))
+        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Back Squat"))
 
-        val exerciseMuscleRelationships = listOf(createMockExerciseMuscle("Bench Press", "Chest"))
-        val exerciseEquipmentRelationships = listOf(createMockExerciseEquipment("Bench Press", "Barbell"))
+        val exerciseMuscleRelationships = listOf(createMockExerciseMuscle("Bench Press", "pec major"))
+        val exerciseEquipmentRelationships = listOf(createMockExerciseEquipment("Bench Press", "power bar"))
         val exerciseWorkoutTypeRelationships = listOf(createMockExerciseWorkoutType("Bench Press", "Strength"))
 
-        listOf("Bench Press", "Squat").forEach { exerciseName ->
+        listOf("Bench Press", "Back Squat").forEach { exerciseName ->
             whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise(exerciseName)).thenReturn(Mono.just(exerciseMuscleRelationships))
             whenever(
                 exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exerciseName)
@@ -206,7 +288,7 @@ class CacheWarmupServiceTest {
 
         cacheWarmupService.run(applicationArguments)
 
-        listOf("Bench Press", "Squat").forEach { exerciseName ->
+        listOf("Bench Press", "Back Squat").forEach { exerciseName ->
             verify(exerciseMuscleDAL).selectExerciseMuscleByExercise(exerciseName)
             verify(exerciseEquipmentDAL).selectExerciseEquipmentByExercise(exerciseName)
             verify(exerciseWorkoutTypeDAL).selectExerciseWorkoutTypesByExercise(exerciseName)
@@ -220,15 +302,15 @@ class CacheWarmupServiceTest {
         whenever(cacheWarmupConfig.warmupReferenceData).thenReturn(true)
         whenever(cacheWarmupConfig.warmupLists).thenReturn(true)
         whenever(cacheWarmupConfig.warmupRelationships).thenReturn(true)
-        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Squat"))
-        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf("Barbell"))
-        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf("Chest"))
+        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Back Squat"))
+        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf("power bar"))
+        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf("pec major"))
 
         whenever(exerciseDAL.selectExerciseByName("Bench Press")).thenReturn(Mono.error(RuntimeException("Database error")))
-        whenever(exerciseDAL.selectExerciseByName("Squat")).thenReturn(Mono.just(createMockExercise("Squat")))
+        whenever(exerciseDAL.selectExerciseByName("Back Squat")).thenReturn(Mono.just(createMockExercise("Back Squat")))
 
-        whenever(equipmentDAL.selectEquipmentByName(any())).thenReturn(Mono.just(createMockEquipment("Barbell")))
-        whenever(muscleDAL.selectMuscleByName(any())).thenReturn(Mono.just(createMockMuscle("Chest")))
+        whenever(equipmentDAL.selectEquipmentByName(any())).thenReturn(Mono.just(createMockEquipment("power bar")))
+        whenever(muscleDAL.selectMuscleByName(any())).thenReturn(Mono.just(createMockMuscle("pec major")))
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(listOf(createMockExercise("Exercise"))))
         whenever(equipmentDAL.selectEquipment()).thenReturn(Mono.just(listOf(createMockEquipment("Equipment"))))
         whenever(muscleDAL.selectMuscles()).thenReturn(Mono.just(listOf(createMockMuscle("Muscle"))))
@@ -245,7 +327,7 @@ class CacheWarmupServiceTest {
 
         cacheWarmupService.run(applicationArguments)
 
-        verify(exerciseDAL).selectExerciseByName("Squat")
+        verify(exerciseDAL).selectExerciseByName("Back Squat")
         verify(exerciseDAL).selectExerciseByName("Bench Press")
         verify(exerciseDAL).selectExercises()
         verify(equipmentDAL).selectEquipment()
@@ -260,9 +342,9 @@ class CacheWarmupServiceTest {
         whenever(cacheWarmupConfig.warmupReferenceData).thenReturn(true)
         whenever(cacheWarmupConfig.warmupLists).thenReturn(true)
         whenever(cacheWarmupConfig.warmupRelationships).thenReturn(true)
-        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Squat", "Deadlift"))
-        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf("Barbell", "Dumbbell"))
-        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf("Chest", "Back"))
+        whenever(cacheWarmupConfig.popularExercises).thenReturn(listOf("Bench Press", "Back Squat", "Deadlift"))
+        whenever(cacheWarmupConfig.popularEquipment).thenReturn(listOf("power bar", "dumbbells"))
+        whenever(cacheWarmupConfig.popularMuscles).thenReturn(listOf("pec major", "lats"))
 
         whenever(exerciseDAL.selectExerciseByName(any())).thenReturn(Mono.error(RuntimeException("Error")))
         whenever(equipmentDAL.selectEquipmentByName(any())).thenReturn(Mono.error(RuntimeException("Error")))

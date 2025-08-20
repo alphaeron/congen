@@ -84,9 +84,9 @@ If no configuration is provided, the following defaults are used:
 - **warmup-lists**: `true`
 - **warmup-relationships**: `true`
 - **warmup-programs**: `true`
-- **popular-exercises**: `["Bench Press", "Squat", "Deadlift", "Overhead Press", "Pull-up", "Push-up", "Row", "Lunge", "Plank", "Burpee"]`
-- **popular-equipment**: `["Barbell", "Dumbbell", "Pull-up Bar", "Bench", "Squat Rack"]`
-- **popular-muscles**: `["Chest", "Back", "Legs", "Shoulders", "Arms", "Core"]`
+- **popular-exercises**: `["Bench Press", "Back Squat", "Deadlift", "Overhead Press", "Chin-Up", "TRX Push-Up", "Bent-Over Row", "Split Squat", "Front Squat", "Landmine Row"]`
+- **popular-equipment**: `["power bar", "dumbbells", "pull-up bar", "bench", "power rack"]`
+- **popular-muscles**: `["pec major", "lats", "quadriceps", "anterior deltoid", "biceps", "rectus abdominis"]`
 
 ## Usage Examples
 

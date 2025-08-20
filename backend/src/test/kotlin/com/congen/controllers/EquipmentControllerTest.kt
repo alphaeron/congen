@@ -28,11 +28,10 @@ class EquipmentControllerTest {
     private lateinit var equipmentController: EquipmentController
 
     companion object {
-        private const val EQUIPMENT_NAME = "Barbell"
-        private const val NON_EXISTENT_EQUIPMENT = "NonExistent"
-        private const val EXERCISE_NAME_1 = "Bench Press"
+        private const val EQUIPMENT_NAME = "power bar"
+        private const val EQUIPMENT_DESCRIPTION = "A barbell for weightlifting"
         private const val EXERCISE_NAME_2 = "Back Squat"
-        private const val DUMBBELL_NAME = "Dumbbell"
+        private const val DUMBBELL_NAME = "dumbbells"
         private const val DUMBBELL_DESCRIPTION = "A dumbbell for weightlifting"
     }
 
@@ -83,13 +82,13 @@ class EquipmentControllerTest {
     @Test
     fun `get should return not found when equipment not found`() {
         whenever(
-            equipmentDAL.selectEquipmentByName(NON_EXISTENT_EQUIPMENT)
+            equipmentDAL.selectEquipmentByName("NonExistent")
         ).thenReturn(Mono.error(NoResultsFoundException("SELECT * FROM equipment WHERE name=$1")))
 
-        val result = equipmentController.get(NON_EXISTENT_EQUIPMENT)
+        val result = equipmentController.get("NonExistent")
 
         StepVerifier.create(result).expectError(NoResultsFoundException::class.java).verify()
-        verify(equipmentDAL).selectEquipmentByName(NON_EXISTENT_EQUIPMENT)
+        verify(equipmentDAL).selectEquipmentByName("NonExistent")
     }
 
     @Test
@@ -97,7 +96,7 @@ class EquipmentControllerTest {
         val equipment = mockEquipment(name = EQUIPMENT_NAME)
         val exerciseEquipment =
             listOf(
-                mockExerciseEquipment(exerciseName = EXERCISE_NAME_1, equipmentName = EQUIPMENT_NAME),
+                mockExerciseEquipment(exerciseName = "Bench Press", equipmentName = EQUIPMENT_NAME),
                 mockExerciseEquipment(exerciseName = EXERCISE_NAME_2, equipmentName = EQUIPMENT_NAME)
             )
         whenever(equipmentDAL.selectEquipmentByName(EQUIPMENT_NAME)).thenReturn(Mono.just(equipment))
@@ -112,15 +111,15 @@ class EquipmentControllerTest {
 
     @Test
     fun `getExercise should return not found when no exercises found`() {
-        val equipment = mockEquipment(name = NON_EXISTENT_EQUIPMENT, description = "A non-existent equipment")
-        whenever(equipmentDAL.selectEquipmentByName(NON_EXISTENT_EQUIPMENT)).thenReturn(Mono.just(equipment))
-        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByEquipment(NON_EXISTENT_EQUIPMENT)).thenReturn(Mono.just(emptyList()))
+        val equipment = mockEquipment(name = "NonExistent", description = "A non-existent equipment")
+        whenever(equipmentDAL.selectEquipmentByName("NonExistent")).thenReturn(Mono.just(equipment))
+        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByEquipment("NonExistent")).thenReturn(Mono.just(emptyList()))
 
-        val result = equipmentController.getExercise(NON_EXISTENT_EQUIPMENT)
+        val result = equipmentController.getExercise("NonExistent")
 
         StepVerifier.create(result).expectNext(ResponseEntity.notFound().build()).verifyComplete()
-        verify(equipmentDAL).selectEquipmentByName(NON_EXISTENT_EQUIPMENT)
-        verify(exerciseEquipmentDAL).selectExerciseEquipmentByEquipment(NON_EXISTENT_EQUIPMENT)
+        verify(equipmentDAL).selectEquipmentByName("NonExistent")
+        verify(exerciseEquipmentDAL).selectExerciseEquipmentByEquipment("NonExistent")
     }
 
     @Test
@@ -167,15 +166,15 @@ class EquipmentControllerTest {
 
     @Test
     fun `getExercise should handle equipment not found error`() {
-        whenever(equipmentDAL.selectEquipmentByName(NON_EXISTENT_EQUIPMENT))
+        whenever(equipmentDAL.selectEquipmentByName("NonExistent"))
             .thenReturn(Mono.error(NoResultsFoundException("Equipment not found")))
 
-        val result = equipmentController.getExercise(NON_EXISTENT_EQUIPMENT)
+        val result = equipmentController.getExercise("NonExistent")
 
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
-        verify(equipmentDAL).selectEquipmentByName(NON_EXISTENT_EQUIPMENT)
+        verify(equipmentDAL).selectEquipmentByName("NonExistent")
     }
 
     @Test
@@ -213,7 +212,7 @@ class EquipmentControllerTest {
         val equipment = mockEquipment(name = EQUIPMENT_NAME)
         val singleExercise =
             listOf(
-                mockExerciseEquipment(exerciseName = EXERCISE_NAME_1, equipmentName = EQUIPMENT_NAME)
+                mockExerciseEquipment(exerciseName = "Bench Press", equipmentName = EQUIPMENT_NAME)
             )
         whenever(equipmentDAL.selectEquipmentByName(EQUIPMENT_NAME)).thenReturn(Mono.just(equipment))
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByEquipment(EQUIPMENT_NAME))
@@ -277,7 +276,7 @@ class EquipmentControllerTest {
         val equipment = mockEquipment(name = specialName)
         val exerciseEquipment =
             listOf(
-                mockExerciseEquipment(exerciseName = EXERCISE_NAME_1, equipmentName = specialName)
+                mockExerciseEquipment(exerciseName = "Bench Press", equipmentName = specialName)
             )
         whenever(equipmentDAL.selectEquipmentByName(specialName)).thenReturn(Mono.just(equipment))
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByEquipment(specialName))

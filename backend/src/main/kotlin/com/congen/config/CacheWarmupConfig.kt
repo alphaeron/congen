@@ -86,15 +86,15 @@ class CacheWarmupConfig {
     var popularExercises: List<String> =
         listOf(
             "Bench Press",
-            "Squat",
+            "Back Squat",
             "Deadlift",
             "Overhead Press",
-            "Pull-up",
-            "Push-up",
-            "Row",
-            "Lunge",
-            "Plank",
-            "Burpee"
+            "Chin-Up",
+            "TRX Push-Up",
+            "Bent-Over Row",
+            "Split Squat",
+            "Front Squat",
+            "Landmine Row"
         )
 
     /**
@@ -103,11 +103,11 @@ class CacheWarmupConfig {
      */
     var popularEquipment: List<String> =
         listOf(
-            "Barbell",
-            "Dumbbell",
-            "Pull-up Bar",
-            "Bench",
-            "Squat Rack"
+            "power bar",
+            "dumbbells",
+            "pull-up bar",
+            "bench",
+            "power rack"
         )
 
     /**
@@ -116,11 +116,11 @@ class CacheWarmupConfig {
      */
     var popularMuscles: List<String> =
         listOf(
-            "Chest",
-            "Back",
-            "Legs",
-            "Shoulders",
-            "Arms",
-            "Core"
+            "pec major",
+            "lats",
+            "quadriceps",
+            "anterior deltoid",
+            "biceps",
+            "rectus abdominis"
         )
 }

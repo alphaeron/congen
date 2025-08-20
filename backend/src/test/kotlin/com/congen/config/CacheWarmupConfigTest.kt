@@ -36,17 +36,17 @@ class CacheWarmupConfigTest {
 
         // Verify default popular exercises
         assertTrue(cacheWarmupConfig.popularExercises.contains("Bench Press"))
-        assertTrue(cacheWarmupConfig.popularExercises.contains("Squat"))
+        assertTrue(cacheWarmupConfig.popularExercises.contains("Back Squat"))
         assertTrue(cacheWarmupConfig.popularExercises.contains("Deadlift"))
 
         // Verify default popular equipment
-        assertTrue(cacheWarmupConfig.popularEquipment.contains("Barbell"))
-        assertTrue(cacheWarmupConfig.popularEquipment.contains("Dumbbell"))
+        assertTrue(cacheWarmupConfig.popularEquipment.contains("power bar"))
+        assertTrue(cacheWarmupConfig.popularEquipment.contains("dumbbells"))
 
         // Verify default popular muscles
-        assertTrue(cacheWarmupConfig.popularMuscles.contains("Chest"))
-        assertTrue(cacheWarmupConfig.popularMuscles.contains("Back"))
-        assertTrue(cacheWarmupConfig.popularMuscles.contains("Legs"))
+        assertTrue(cacheWarmupConfig.popularMuscles.contains("pec major"))
+        assertTrue(cacheWarmupConfig.popularMuscles.contains("lats"))
+        assertTrue(cacheWarmupConfig.popularMuscles.contains("quadriceps"))
 
         context.close()
     }
@@ -126,17 +126,17 @@ class CacheWarmupConfigDefaultTest {
 
         // Verify default popular exercises
         assertTrue(cacheWarmupConfig.popularExercises.contains("Bench Press"))
-        assertTrue(cacheWarmupConfig.popularExercises.contains("Squat"))
+        assertTrue(cacheWarmupConfig.popularExercises.contains("Back Squat"))
         assertTrue(cacheWarmupConfig.popularExercises.contains("Deadlift"))
 
         // Verify default popular equipment
-        assertTrue(cacheWarmupConfig.popularEquipment.contains("Barbell"))
-        assertTrue(cacheWarmupConfig.popularEquipment.contains("Dumbbell"))
+        assertTrue(cacheWarmupConfig.popularEquipment.contains("power bar"))
+        assertTrue(cacheWarmupConfig.popularEquipment.contains("dumbbells"))
 
         // Verify default popular muscles
-        assertTrue(cacheWarmupConfig.popularMuscles.contains("Chest"))
-        assertTrue(cacheWarmupConfig.popularMuscles.contains("Back"))
-        assertTrue(cacheWarmupConfig.popularMuscles.contains("Legs"))
+        assertTrue(cacheWarmupConfig.popularMuscles.contains("pec major"))
+        assertTrue(cacheWarmupConfig.popularMuscles.contains("lats"))
+        assertTrue(cacheWarmupConfig.popularMuscles.contains("quadriceps"))
 
         context.close()
     }
