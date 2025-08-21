@@ -3,8 +3,6 @@ restructure userprofile to use tabs, and side bar on the left, for better naviga
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 
 
-
-
 assets, and object storage for assets
 
 "how it works" on root spa with workout generation algorithm flowchart
@@ -50,8 +48,9 @@ https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_pra
 
 update privacy policy contact email
 
+add reloader config for keycloak so it restarts on configmap change
 
-
+simplify keycloak theme for only necessary changes
 
 
 

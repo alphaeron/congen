@@ -75,8 +75,8 @@ data:
       transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease !important;
     }
     
-    /* Apply Inter font globally */
-    * {
+    /* Apply Inter font globally, but exclude FontAwesome icons */
+    *:not(.fa):not(.fa-eye):not(.fa-eye-slash):not([class*="fa-"]) {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif !important;
     }
     
@@ -162,7 +162,30 @@ data:
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
     }
     
-    /* Fix password field styling and remove white corners */
+    /* Remove all custom password input styling to let Keycloak use defaults */
+    input[type="password"] {
+      /* Let Keycloak use its default styling for password fields */
+    }
+    
+    /* Force remove background from input group with maximum specificity */
+    .pf-c-input-group,
+    div.pf-c-input-group,
+    .form-group .pf-c-input-group,
+    .card-pf .pf-c-input-group,
+    .card-pf-body .pf-c-input-group,
+    .card-pf-body div.pf-c-input-group,
+    .form-group div.pf-c-input-group {
+      background: transparent !important;
+      background-color: transparent !important;
+      --pf-c-input-group--BackgroundColor: transparent !important;
+    }
+    
+    /* Also target the global variable at the root level */
+    :root {
+      --pf-global--BackgroundColor--100: transparent !important;
+    }
+    
+    /* Force password fields to match regular text fields exactly */
     input[type="password"] {
       background-color: var(--form-background) !important;
       border: 2px solid var(--form-border) !important;
@@ -178,43 +201,20 @@ data:
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
     }
     
-    /* Fix password field container */
-    .form-group {
-      background: transparent !important;
-    }
-    
-    /* Fix password field wrapper */
-    .input-group {
-      background: transparent !important;
-    }
-    
-    /* Fix password field addon (the eye icon button) */
+    /* Remove all custom input group styling to let Keycloak use defaults */
+    .input-group,
     .input-group-addon {
-      background-color: var(--form-background) !important;
-      border: 2px solid var(--form-border) !important;
-      border-left: none !important;
-      border-radius: 0 12px 12px 0 !important;
-      color: var(--text-color) !important;
-      padding: 16px 20px !important;
-      font-size: 16px !important;
-      font-weight: 500 !important;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      font-family: 'Inter', sans-serif !important;
-      outline: none !important;
-      box-sizing: border-box !important;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
     }
     
-    /* Fix password field when in input group */
-    .input-group input[type="password"] {
-      border-right: none !important;
-      border-radius: 12px 0 0 12px !important;
-    }
-    
-    /* Style the eye icon properly */
+    /* Remove all custom eye icon styling to let Keycloak use defaults */
+    .input-group-addon button,
     .input-group-addon i,
-    .input-group-addon span,
-    .input-group-addon button {
+    .input-group-addon span {
       background: transparent !important;
       border: none !important;
       color: var(--text-secondary) !important;
@@ -222,36 +222,40 @@ data:
       padding: 0 !important;
       margin: 0 !important;
       cursor: pointer !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      width: 20px !important;
-      height: 20px !important;
     }
     
-    /* Hide the broken icon text */
+    /* Remove all custom pseudo-elements */
     .input-group-addon::before,
-    .input-group-addon::after {
-      content: "" !important;
+    .input-group-addon::after,
+    .input-group-addon button::before,
+    .input-group-addon button::after {
+      content: none !important;
+      background-image: none !important;
     }
     
-    /* Replace with proper eye icon using CSS */
-    .input-group-addon button::before {
-      content: "👁" !important;
-      font-size: 16px !important;
+    /* Fix eye icon button styling */
+    .pf-c-button.pf-m-control {
+      background-color: transparent !important;
+      border: none !important;
+      color: var(--text-secondary) !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      --pf-c-button--after--BorderColor: transparent !important;
+    }
+    
+    /* Ensure FontAwesome icons display properly */
+    .fa,
+    .fa-eye,
+    .fa-eye-slash,
+    [class*="fa-"] {
+      font-family: "FontAwesome" !important;
+      font-style: normal !important;
+      font-weight: normal !important;
+      font-variant: normal !important;
+      text-transform: none !important;
       line-height: 1 !important;
-    }
-    
-    /* Alternative: use a simple SVG eye icon */
-    .input-group-addon button::before {
-      content: "" !important;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") !important;
-      background-repeat: no-repeat !important;
-      background-position: center !important;
-      background-size: 16px 16px !important;
-      display: block !important;
-      width: 16px !important;
-      height: 16px !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
     }
     
     /* Smooth focus state with gradual transition and rounded outline */
