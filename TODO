@@ -2,6 +2,8 @@ Implement change password functionality
 
 Fix dates: Member since January 21, 1970
 
+integration test all user profile sidebar functionality to make sure it works
+
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 
 
