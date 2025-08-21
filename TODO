@@ -1,4 +1,6 @@
-restructure userprofile to use tabs, and side bar on the left, for better navigation, for each section, for a modern display
+Implement change password functionality
+
+Fix dates: Member since January 21, 1970
 
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 

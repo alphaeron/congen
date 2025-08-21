@@ -237,7 +237,7 @@ export function GdprComplianceSection(): React.ReactElement {
                   Export Your Data
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Download all your personal data in JSON format (Article 20 - Data Portability)
+                  Download all your personal data in JSON format
                 </Typography>
               </Box>
               <Button
@@ -279,7 +279,7 @@ export function GdprComplianceSection(): React.ReactElement {
                   Delete All Data
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Permanently delete all your personal data (Article 17 - Right to be Forgotten)
+                  Permanently delete all your personal data
                 </Typography>
               </Box>
               <Button

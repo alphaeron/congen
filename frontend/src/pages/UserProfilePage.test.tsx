@@ -75,7 +75,7 @@ describe('UserProfilePage', () => {
 
     renderWithProviders(<UserProfilePage />);
 
-    expect(screen.getByText('Edit Profile')).toBeInTheDocument();
+    expect(screen.getAllByText('Edit Profile')[0]).toBeInTheDocument();
   });
 
   it('should show error alert when user is not available', () => {

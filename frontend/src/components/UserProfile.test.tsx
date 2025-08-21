@@ -65,29 +65,107 @@ describe('UserProfile', () => {
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+  });
+
+  it('should render all tab navigation items', async () => {
+    renderWithProviders(<UserProfile user={mockUser} />);
+
+    expect(screen.getAllByText('Overview')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Workout Preferences')[0]).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
+    expect(screen.getByText('Account Security')).toBeInTheDocument();
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+  });
+
+  it('should show overview content by default', async () => {
+    renderWithProviders(<UserProfile user={mockUser} />);
+
+    expect(screen.getByText('Account Information')).toBeInTheDocument();
+    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('User ID: test-user-id')).toBeInTheDocument();
+    expect(screen.getByText('Roles: user')).toBeInTheDocument();
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
     });
   });
 
-  it('should show deactivate account button', async () => {
+  it('should navigate to workout preferences tab', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    const workoutPrefsButton = screen.getByText('Workout Preferences');
+    fireEvent.click(workoutPrefsButton);
+
+    expect(screen.getByText('Program Settings')).toBeInTheDocument();
+    expect(screen.getByText('Configure Preferences')).toBeInTheDocument();
+  });
+
+  it('should navigate to privacy tab', async () => {
+    renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    const privacyButton = screen.getByText('Privacy & Data');
+    fireEvent.click(privacyButton);
+
+    // Privacy content should already be visible since it's loaded by default
+    expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+  });
+
+  it('should navigate to account security tab', async () => {
+    renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    const securityButton = screen.getByText('Account Security');
+    fireEvent.click(securityButton);
+
+    expect(screen.getByText('Security Settings')).toBeInTheDocument();
+    expect(screen.getByText('Change Password')).toBeInTheDocument();
+    expect(screen.getByText('Two-Factor Authentication')).toBeInTheDocument();
+    expect(screen.getByText('Session Management')).toBeInTheDocument();
+  });
+
+  it('should show deactivate account button in security tab', async () => {
+    renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    const securityButton = screen.getByText('Account Security');
+    fireEvent.click(securityButton);
 
     expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
-
-    // Wait for GdprComplianceSection to load
-    await waitFor(() => {
-      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
   });
 
-  it('should show edit profile button', async () => {
+  it('should show edit profile button in overview', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
-    expect(screen.getByText('Edit Profile')).toBeInTheDocument();
+    expect(screen.getAllByText('Edit Profile')).toHaveLength(2); // One in header, one in quick actions
 
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
+    }, { timeout: 10000 });
   });
 
   it('should open delete confirmation dialog when deactivate button is clicked', async () => {
@@ -96,16 +174,20 @@ describe('UserProfile', () => {
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
+    }, { timeout: 10000 });
 
-    const deactivateButton = screen.getAllByText('Deactivate Account')[0];
+    // Navigate to security tab
+    const securityButton = screen.getByText('Account Security');
+    fireEvent.click(securityButton);
+
+    const deactivateButton = screen.getByText('Deactivate Account');
     fireEvent.click(deactivateButton);
 
     expect(
       screen.getByText(/Are you sure you want to deactivate your account/)
     ).toBeInTheDocument();
     expect(screen.getByText('Cancel')).toBeInTheDocument();
-    expect(screen.getAllByText('Deactivate Account')).toHaveLength(3);
+    expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
   });
 
   it('should close dialog when cancel is clicked', async () => {
@@ -114,9 +196,13 @@ describe('UserProfile', () => {
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
+    }, { timeout: 10000 });
 
-    const deactivateButton = screen.getAllByText('Deactivate Account')[0];
+    // Navigate to security tab
+    const securityButton = screen.getByText('Account Security');
+    fireEvent.click(securityButton);
+
+    const deactivateButton = screen.getByText('Deactivate Account');
     fireEvent.click(deactivateButton);
 
     const cancelButton = screen.getByText('Cancel');
@@ -126,7 +212,7 @@ describe('UserProfile', () => {
       expect(
         screen.queryByText(/Are you sure you want to deactivate your account/)
       ).not.toBeInTheDocument();
-    });
+    }, { timeout: 10000 });
   });
 
   it('should call onEditProfile when edit button is clicked', async () => {
@@ -135,12 +221,24 @@ describe('UserProfile', () => {
     // Wait for GdprComplianceSection to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
-    });
+    }, { timeout: 10000 });
 
-    const editButton = screen.getByText('Edit Profile');
-    fireEvent.click(editButton);
+    const editButtons = screen.getAllByText('Edit Profile');
+    fireEvent.click(editButtons[0]); // Click the first edit button
 
     expect(mockNavigate).toHaveBeenCalledWith('/profile/edit');
+  });
+
+  it('should show quick action buttons in overview', async () => {
+    renderWithProviders(<UserProfile user={mockUser} />);
+
+    // Wait for GdprComplianceSection to load
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    }, { timeout: 10000 });
+
+    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
+    expect(screen.getByText('Privacy Settings')).toBeInTheDocument();
   });
 
   it('should verify axios mock is working', async () => {

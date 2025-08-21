@@ -12,6 +12,8 @@ Reuse or update existing code where needed as opposed to creating duplicate code
 
 KEEP THE IMPLEMENTATION, AND TESTS, DRY!!!
 
+Do not duplicate any functionality, such as exercise preferences or workout preferences, which are already on the user profile.  check the user profile before adding functionality to the new dashboard page, so we don't introduce duplication
+
 🔍 Step 1: Backend Audit
 
 Begin by reviewing the backend codebase (or available documentation) to identify existing endpoints related to:
