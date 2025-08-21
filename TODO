@@ -50,8 +50,6 @@ update privacy policy contact email
 
 add reloader config for keycloak so it restarts on configmap change
 
-simplify keycloak theme for only necessary changes
-
 
 
 

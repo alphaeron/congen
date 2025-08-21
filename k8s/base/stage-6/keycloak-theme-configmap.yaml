@@ -81,7 +81,8 @@ data:
     }
     
     /* Remove background images and set proper background */
-    body {
+    body,
+    .login-pf body {
       background-color: var(--background-color) !important;
       background-image: none !important;
       color: var(--text-color) !important;
@@ -89,10 +90,8 @@ data:
       padding: 0;
     }
     
-    /* Remove background images from login page */
+    /* Center login page content */
     .login-pf body {
-      background-color: var(--background-color) !important;
-      background-image: none !important;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -162,43 +161,20 @@ data:
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
     }
     
-    /* Remove all custom password input styling to let Keycloak use defaults */
-    input[type="password"] {
-      /* Let Keycloak use its default styling for password fields */
-    }
-    
-    /* Force remove background from input group with maximum specificity */
+    /* Remove PatternFly white background from password input groups */
     .pf-c-input-group,
     div.pf-c-input-group,
     .form-group .pf-c-input-group,
     .card-pf .pf-c-input-group,
-    .card-pf-body .pf-c-input-group,
-    .card-pf-body div.pf-c-input-group,
-    .form-group div.pf-c-input-group {
+    .card-pf-body .pf-c-input-group {
       background: transparent !important;
       background-color: transparent !important;
       --pf-c-input-group--BackgroundColor: transparent !important;
     }
     
-    /* Also target the global variable at the root level */
+    /* Override the global PatternFly variable */
     :root {
       --pf-global--BackgroundColor--100: transparent !important;
-    }
-    
-    /* Force password fields to match regular text fields exactly */
-    input[type="password"] {
-      background-color: var(--form-background) !important;
-      border: 2px solid var(--form-border) !important;
-      border-radius: 12px !important;
-      color: var(--text-color) !important;
-      padding: 16px 20px !important;
-      font-size: 16px !important;
-      font-weight: 500 !important;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-      font-family: 'Inter', sans-serif !important;
-      outline: none !important;
-      box-sizing: border-box !important;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
     }
     
     /* Remove all custom input group styling to let Keycloak use defaults */
@@ -209,28 +185,6 @@ data:
       box-shadow: none !important;
       padding: 0 !important;
       margin: 0 !important;
-    }
-    
-    /* Remove all custom eye icon styling to let Keycloak use defaults */
-    .input-group-addon button,
-    .input-group-addon i,
-    .input-group-addon span {
-      background: transparent !important;
-      border: none !important;
-      color: var(--text-secondary) !important;
-      font-size: 16px !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      cursor: pointer !important;
-    }
-    
-    /* Remove all custom pseudo-elements */
-    .input-group-addon::before,
-    .input-group-addon::after,
-    .input-group-addon button::before,
-    .input-group-addon button::after {
-      content: none !important;
-      background-image: none !important;
     }
     
     /* Fix eye icon button styling */
@@ -383,21 +337,6 @@ data:
       margin-bottom: 1.5rem !important;
     }
     
-    /* Override Keycloak's default focus styles */
-    .form-control:focus,
-    input:focus,
-    textarea:focus,
-    select:focus {
-      outline: none !important;
-      border-color: var(--form-border-focus) !important;
-      border-width: 2px !important;
-      box-shadow: 0 0 0 4px rgba(34, 54, 204, 0.15) !important;
-      background-color: var(--form-background) !important;
-      color: var(--text-color) !important;
-      transform: translateY(-1px) !important;
-      border-radius: 10px !important;
-    }
-    
     /* Remove any default browser focus styles */
     .form-control:focus-visible,
     input:focus-visible,
@@ -411,14 +350,12 @@ data:
       .btn-primary,
       button[type="submit"],
       input[type="submit"] {
-        background: linear-gradient(135deg, var(--button-color), var(--button-hover-color)) !important;
         box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3) !important;
       }
       
       .btn-primary:hover,
       button[type="submit"]:hover,
       input[type="submit"]:hover {
-        background: linear-gradient(135deg, var(--button-hover-color), var(--button-color)) !important;
         box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4) !important;
       }
       
