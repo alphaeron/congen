@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -199,9 +199,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     }
   };
 
-  const handleWorkoutDetailsUpdate = (workoutDetails: { name: string; day_number: number; stages: number }) => {
+  const handleWorkoutDetailsUpdate = useCallback((workoutDetails: { name: string; day_number: number; stages: number }) => {
     setCurrentWorkoutDetails(workoutDetails);
-  };
+  }, []);
 
   return (
     <React.Fragment>

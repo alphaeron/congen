@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 
@@ -20,6 +20,12 @@ export const AuthCallback: React.FC = () => {
   const { isAuthenticated, user, error: authError } = useAuth();
   const navigate = useNavigate();
   const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
+  const navigateRef = useRef(navigate);
+
+  // Update the ref when navigate changes
+  useEffect(() => {
+    navigateRef.current = navigate;
+  }, [navigate]);
 
   useEffect(() => {
     // Only run this effect once when OIDC finishes loading and AuthContext has processed the user
@@ -36,7 +42,7 @@ export const AuthCallback: React.FC = () => {
 
       // If OIDC authentication failed, redirect to login
       if (oidcAuth.error) {
-        navigate('/login');
+        navigateRef.current('/login');
         setHasCheckedProfile(true);
         return;
       }
@@ -49,13 +55,13 @@ export const AuthCallback: React.FC = () => {
 
         if (isAuthenticated && user) {
           // User has a profile, redirect to home
-          navigate('/');
+          navigateRef.current('/');
         } else if (authError && authError.includes('Profile not found')) {
           // User doesn't have a profile, redirect to profile page (which will show creation form)
-          navigate('/profile');
+          navigateRef.current('/profile');
         } else if (authError && authError.includes('Authentication failed')) {
           // Authentication error, redirect to login
-          navigate('/login');
+          navigateRef.current('/login');
         } else {
           // Still processing, wait a bit more
           setTimeout(() => {
@@ -80,7 +86,6 @@ export const AuthCallback: React.FC = () => {
     isAuthenticated,
     user,
     authError,
-    navigate,
     hasCheckedProfile,
   ]);
 
