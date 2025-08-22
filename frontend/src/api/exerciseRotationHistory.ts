@@ -25,6 +25,7 @@ export const createExerciseRotationHistory = (
 
 /**
  * Get all exercise rotation history records for the current user.
+ * The backend automatically filters to only return records for the authenticated user.
  *
  * @return List of exercise rotation history records for the current user
  */
@@ -37,6 +38,7 @@ export const getExerciseRotationHistory = (): Promise<ExerciseRotationHistory[]>
 
 /**
  * Get exercise rotation history records filtered by accessory type.
+ * The backend automatically filters to only return records for the authenticated user.
  *
  * @param isAccessory Whether to filter by accessory exercises
  * @return List of exercise rotation history records for the accessory type

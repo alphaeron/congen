@@ -11,22 +11,24 @@ import {
   CircularProgress,
   Chip,
   Tooltip,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Tabs,
   Tab,
+  Autocomplete,
+  TextField,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getExerciseRotationHistory } from '../api/exerciseRotationHistory';
-import type { User, UserOneRepMax, ExerciseRotationHistory } from '../api/types';
+import { getExercises } from '../api/exercise';
+import type { User, UserOneRepMax, ExerciseRotationHistory, Exercise } from '../api/types';
 
 interface ExerciseHistoryProps {
   user: User;
 }
+
+type TabName = 'onerepmax' | 'exercise_rotation' | 'usage';
 
 /**
  * Exercise History page component for exercise history and trends.
@@ -38,29 +40,42 @@ interface ExerciseHistoryProps {
  * @return Exercise History page component
  */
 export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [exerciseHistory, setExerciseHistory] = useState<ExerciseRotationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(0);
   const [selectedExercise, setSelectedExercise] = useState<string>('all');
+  const [allExercises, setAllExercises] = useState<Exercise[]>([]);
+
+  // Get active tab from URL parameters, default to 'onerepmax'
+  const activeTab = (searchParams.get('tab') as TabName) || 'onerepmax';
 
   useEffect(() => {
     loadExerciseHistoryData();
   }, [user.keycloak_id]);
+
+  // Update URL when tab changes
+  const handleTabChange = (event: React.SyntheticEvent, newValue: TabName) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('tab', newValue);
+    setSearchParams(newSearchParams);
+  };
 
   const loadExerciseHistoryData = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const [oneRepMaxesData, exerciseHistoryData] = await Promise.all([
+      const [oneRepMaxesData, exerciseHistoryData, allExercisesData] = await Promise.all([
         getUserOneRepMaxes(user.keycloak_id),
         getExerciseRotationHistory(),
+        getExercises(),
       ]);
 
       setOneRepMaxes(oneRepMaxesData);
       setExerciseHistory(exerciseHistoryData);
+      setAllExercises(allExercisesData);
     } catch (err) {
       console.error('Error loading exercise history data:', err);
       setError('Failed to load exercise history data. Please try again.');
@@ -69,15 +84,12 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
     }
   };
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
-  // Get unique exercise names for filter
+  // Get unique exercise names for filter (from both 1RM and history data)
   const uniqueExercises = Array.from(
     new Set([
       ...oneRepMaxes.map(orm => orm.exercise_name),
-      ...exerciseHistory.map(history => history.exercise_name)
+      ...exerciseHistory.map(history => history.exercise_name),
+      ...allExercises.map(exercise => exercise.name)
     ])
   ).sort();
 
@@ -90,14 +102,14 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
     ? exerciseHistory
     : exerciseHistory.filter(history => history.exercise_name === selectedExercise);
 
-  // Calculate exercise statistics
-  const exerciseStats = uniqueExercises.map(exerciseName => {
-    const exerciseOneRepMax = oneRepMaxes.find(orm => orm.exercise_name === exerciseName);
-    const exerciseHistoryCount = exerciseHistory.filter(history => history.exercise_name === exerciseName).length;
-    const primaryCount = exerciseHistory.filter(history => 
+  // Calculate exercise statistics based on filtered data
+  const exerciseStats = (selectedExercise === 'all' ? uniqueExercises : [selectedExercise]).map(exerciseName => {
+    const exerciseOneRepMax = filteredOneRepMaxes.find(orm => orm.exercise_name === exerciseName);
+    const exerciseHistoryCount = filteredExerciseHistory.filter(history => history.exercise_name === exerciseName).length;
+    const primaryCount = filteredExerciseHistory.filter(history => 
       history.exercise_name === exerciseName && !history.is_accessory
     ).length;
-    const accessoryCount = exerciseHistory.filter(history => 
+    const accessoryCount = filteredExerciseHistory.filter(history => 
       history.exercise_name === exerciseName && history.is_accessory
     ).length;
 
@@ -107,7 +119,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       totalUses: exerciseHistoryCount,
       primaryUses: primaryCount,
       accessoryUses: accessoryCount,
-      lastUsed: exerciseHistory
+      lastUsed: filteredExerciseHistory
         .filter(history => history.exercise_name === exerciseName)
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at
     };
@@ -136,21 +148,24 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       {/* Exercise Filter */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
-          <FormControl fullWidth>
-            <InputLabel>Filter by Exercise</InputLabel>
-            <Select
-              value={selectedExercise}
-              label="Filter by Exercise"
-              onChange={(e) => setSelectedExercise(e.target.value)}
-            >
-              <MenuItem value="all">All Exercises</MenuItem>
-              {uniqueExercises.map((exercise) => (
-                <MenuItem key={exercise} value={exercise}>
-                  {exercise}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            options={['all', ...uniqueExercises]}
+            value={selectedExercise}
+            onChange={(event, newValue) => setSelectedExercise(newValue || 'all')}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Filter by Exercise"
+                placeholder="Select an exercise or 'All Exercises'"
+              />
+            )}
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
+                {option === 'all' ? 'All Exercises' : option}
+              </Box>
+            )}
+            getOptionLabel={(option) => option === 'all' ? 'All Exercises' : option}
+          />
         </CardContent>
       </Card>
 
@@ -163,14 +178,14 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           scrollButtons="auto"
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label="1RM Progress" icon={<ShowChartIcon />} iconPosition="start" />
-          <Tab label="Exercise Rotation" icon={<TrendingUpIcon />} iconPosition="start" />
-          <Tab label="Usage Statistics" icon={<InfoIcon />} iconPosition="start" />
+          <Tab label="1RM Progress" value="onerepmax" icon={<ShowChartIcon />} iconPosition="start" />
+          <Tab label="Exercise Rotation" value="exercise_rotation" icon={<TrendingUpIcon />} iconPosition="start" />
+          <Tab label="Usage Statistics" value="usage" icon={<InfoIcon />} iconPosition="start" />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
           {/* 1RM Progress Tab */}
-          {activeTab === 0 && (
+          {activeTab === 'onerepmax' && (
             <Box>
               <Typography variant="h6" gutterBottom>
                 1RM Progress Tracking
@@ -217,7 +232,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           )}
 
           {/* Exercise Rotation Tab */}
-          {activeTab === 1 && (
+          {activeTab === 'exercise_rotation' && (
             <Box>
               <Typography variant="h6" gutterBottom>
                 Exercise Rotation History
@@ -263,7 +278,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           )}
 
           {/* Usage Statistics Tab */}
-          {activeTab === 2 && (
+          {activeTab === 'usage' && (
             <Box>
               <Typography variant="h6" gutterBottom>
                 Exercise Usage Statistics
