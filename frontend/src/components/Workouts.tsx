@@ -1,7 +1,8 @@
 import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
 import { default as CheckCircleIcon } from '@mui/icons-material/CheckCircle';
-import { default as TimerIcon } from '@mui/icons-material/Timer';
+import { default as AddIcon } from '@mui/icons-material/Add';
+import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 import {
   Box,
   Card,
@@ -19,28 +20,34 @@ import {
   LinearProgress,
   IconButton,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 
 import { getPrograms } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
 
-interface WorkoutFlowProps {
+interface WorkoutsProps {
   user: User;
 }
 
 /**
- * Workout flow component for guided workout experience.
+ * Workouts component for managing and viewing workout programs.
  *
- * Displays today's and this week's workouts with sets, reps,
- * rest periods, and cues. Allows marking completion and
- * saving performance data.
+ * Displays current workouts, allows generation of new workouts,
+ * and provides workout flow functionality with sets, reps,
+ * rest periods, and cues.
  *
  * @param user The user data
- * @return Workout flow component
+ * @return Workouts component
  */
-export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
+export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +55,9 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
   const [currentWorkout, setCurrentWorkout] = useState<ProgrammedWorkout | null>(null);
   const [workoutProgress, setWorkoutProgress] = useState(0);
   const [isWorkoutActive, setIsWorkoutActive] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
   useEffect(() => {
     loadWorkoutData();
@@ -82,6 +92,51 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
     }
   };
 
+  const handleGenerateWorkouts = async () => {
+    if (!selectedProgram) return;
+
+    try {
+      setIsGenerating(true);
+      setError(null);
+
+      const updatedProgram = await generateNextWeek(selectedProgram.id);
+      
+      // Update the programs list with the updated program
+      setPrograms(prev => prev.map(p => p.id === updatedProgram.id ? updatedProgram : p));
+      
+      // Reload workouts to get the newly generated ones
+      const newWorkouts = await getProgrammedWorkouts();
+      setWorkouts(newWorkouts);
+
+      // Find the new workout for today
+      const todayWorkout = newWorkouts.find(workout => 
+        workout.program_id === updatedProgram.id
+      );
+      setCurrentWorkout(todayWorkout || null);
+
+      setGenerateDialogOpen(false);
+      setSelectedProgram(null);
+    } catch (err) {
+      console.error('Error generating workouts:', err);
+      
+      // Provide more specific error messages based on the error
+      if (err && typeof err === 'object' && 'error' in err) {
+        const errorMessage = (err as any).error;
+        if (errorMessage === 'Resource not found') {
+          setError('Program not found or you don\'t have the required data set up. Please ensure you have created a program.');
+        } else if (errorMessage.includes('Access denied')) {
+          setError('Access denied. Please ensure you own this program.');
+        } else {
+          setError(`Failed to generate workouts: ${errorMessage}`);
+        }
+      } else {
+        setError('Failed to generate workouts. Please try again.');
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const startWorkout = () => {
     setIsWorkoutActive(true);
     setWorkoutProgress(0);
@@ -107,6 +162,11 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
     return workouts.filter(workout => workout.program_id === activeProgram.id);
   };
 
+  const openGenerateDialog = (program: Program) => {
+    setSelectedProgram(program);
+    setGenerateDialogOpen(true);
+  };
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
@@ -121,7 +181,7 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
   return (
     <React.Fragment>
       <Typography variant="h5" gutterBottom>
-        Workout Flow
+        Workouts
       </Typography>
 
       {error && (
@@ -137,12 +197,48 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
               No Active Program
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Create or activate a program to start your workout flow.
+              Create or activate a program to start your workouts.
             </Typography>
           </CardContent>
         </Card>
       ) : (
         <Grid container spacing={3}>
+          {/* Program Overview and Generation */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box>
+                    <Typography variant="h6" gutterBottom>
+                      {activeProgram.name}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Week {activeProgram.current_week_number} • {programWorkouts.length} workouts
+                    </Typography>
+                  </Box>
+                  <Box display="flex" gap={1}>
+                    <Button
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                      onClick={() => openGenerateDialog(activeProgram)}
+                      disabled={isGenerating}
+                    >
+                      Generate Workouts
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      startIcon={<RefreshIcon />}
+                      onClick={loadWorkoutData}
+                      disabled={isLoading}
+                    >
+                      Refresh
+                    </Button>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
           {/* Current Workout Section */}
           <Grid item xs={12} lg={8}>
             <Card>
@@ -242,7 +338,7 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
                       No Workout Scheduled
                     </Typography>
                     <Typography variant="body1" color="text.secondary">
-                      No workout is scheduled for today. Check your program schedule.
+                      Generate workouts for your program to get started.
                     </Typography>
                   </Box>
                 )}
@@ -316,6 +412,37 @@ export const WorkoutFlow: React.FC<WorkoutFlowProps> = ({ user }) => {
           </Grid>
         </Grid>
       )}
+
+      {/* Generate Workouts Dialog */}
+      <Dialog
+        open={generateDialogOpen}
+        onClose={() => setGenerateDialogOpen(false)}
+        aria-labelledby="generate-dialog-title"
+        aria-describedby="generate-dialog-description"
+      >
+        <DialogTitle id="generate-dialog-title">
+          Generate Workouts
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="generate-dialog-description">
+            This will generate the next week of workouts for "{selectedProgram?.name}". 
+            The workouts will be based on your preferences and available equipment.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setGenerateDialogOpen(false)} disabled={isGenerating}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleGenerateWorkouts}
+            variant="contained"
+            disabled={isGenerating}
+            startIcon={isGenerating ? <CircularProgress size={16} /> : <AddIcon />}
+          >
+            {isGenerating ? 'Generating...' : 'Generate'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </React.Fragment>
   );
 };

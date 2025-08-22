@@ -24,20 +24,20 @@ import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getExerciseRotationHistory } from '../api/exerciseRotationHistory';
 import type { User, UserOneRepMax, ExerciseRotationHistory } from '../api/types';
 
-interface VisualizationPageProps {
+interface ExerciseHistoryProps {
   user: User;
 }
 
 /**
- * Visualization page component for exercise history and trends.
+ * Exercise History page component for exercise history and trends.
  *
  * Tracks exercise history per lift and visualizes set/rep schemes,
  * rotation frequency, and estimated 1RM with explanatory tooltips.
  *
  * @param user The user data
- * @return Visualization page component
+ * @return Exercise History page component
  */
-export const VisualizationPage: React.FC<VisualizationPageProps> = ({ user }) => {
+export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [exerciseHistory, setExerciseHistory] = useState<ExerciseRotationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,10 +46,10 @@ export const VisualizationPage: React.FC<VisualizationPageProps> = ({ user }) =>
   const [selectedExercise, setSelectedExercise] = useState<string>('all');
 
   useEffect(() => {
-    loadVisualizationData();
+    loadExerciseHistoryData();
   }, [user.keycloak_id]);
 
-  const loadVisualizationData = async () => {
+  const loadExerciseHistoryData = async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -62,8 +62,8 @@ export const VisualizationPage: React.FC<VisualizationPageProps> = ({ user }) =>
       setOneRepMaxes(oneRepMaxesData);
       setExerciseHistory(exerciseHistoryData);
     } catch (err) {
-      console.error('Error loading visualization data:', err);
-      setError('Failed to load visualization data. Please try again.');
+      console.error('Error loading exercise history data:', err);
+      setError('Failed to load exercise history data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +124,7 @@ export const VisualizationPage: React.FC<VisualizationPageProps> = ({ user }) =>
   return (
     <React.Fragment>
       <Typography variant="h5" gutterBottom>
-        Exercise Visualization
+        Exercise History
       </Typography>
 
       {error && (

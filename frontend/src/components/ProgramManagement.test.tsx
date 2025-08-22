@@ -164,7 +164,7 @@ describe('ProgramManagement', () => {
     await waitFor(() => {
       expect(mock.history.post).toHaveLength(1);
       expect(mock.history.post[0].params).toEqual({
-        user_id: 'current',
+        user_id: 'test-user-id',
         name: 'New Program',
         is_active: true,
       });

@@ -8,12 +8,12 @@ import type { Program } from './types';
  * @param isActive Whether the program should be active (defaults to true)
  * @return The created program
  */
-export const createProgram = (name: string, isActive: boolean = true): Promise<Program> => {
+export const createProgram = (name: string, isActive: boolean = true, userId: string): Promise<Program> => {
   return REQUEST({
     method: 'POST',
     url: '/program/',
     params: {
-      user_id: 'current', // Backend will resolve this to current user
+      user_id: userId,
       name,
       is_active: isActive,
     },

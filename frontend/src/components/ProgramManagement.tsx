@@ -83,7 +83,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
   const handleCreateProgram = async () => {
     try {
-      const newProgram = await createProgram(formData.name, formData.isActive);
+      const newProgram = await createProgram(formData.name, formData.isActive, user.keycloak_id);
       setPrograms(prev => [...prev, newProgram]);
       setCreateDialogOpen(false);
       setFormData({ name: '', isActive: true });

@@ -22,8 +22,8 @@ import React, { useState, useEffect } from 'react';
 
 import { DashboardOverview } from './DashboardOverview';
 import { ProgramManagement } from './ProgramManagement';
-import { WorkoutFlow } from './WorkoutFlow';
-import { VisualizationPage } from './VisualizationPage';
+import { Workouts } from './Workouts';
+import { ExerciseHistory } from './ExerciseHistory';
 import { WorkoutCalendar } from './WorkoutCalendar';
 import { useDrawer } from '../App';
 import type { User } from '../api/types';
@@ -70,14 +70,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
       content: <ProgramManagement user={user} />,
     },
     {
-      label: 'Workout Flow',
+      label: 'Workouts',
       icon: <TimelineIcon />,
-      content: <WorkoutFlow user={user} />,
+      content: <Workouts user={user} />,
     },
     {
-      label: 'Visualization',
+      label: 'Exercise History',
       icon: <ShowChartIcon />,
-      content: <VisualizationPage user={user} />,
+      content: <ExerciseHistory user={user} />,
     },
     {
       label: 'Calendar',

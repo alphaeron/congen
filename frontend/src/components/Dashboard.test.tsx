@@ -34,8 +34,8 @@ jest.mock('./WorkoutFlow', () => ({
   ),
 }));
 
-jest.mock('./VisualizationPage', () => ({
-  VisualizationPage: ({ user }: { user: User }) => (
+jest.mock('./ExerciseHistory', () => ({
+  ExerciseHistory: ({ user }: { user: User }) => (
     <div data-testid="visualization-page">Visualization Page for {user.name}</div>
   ),
 }));

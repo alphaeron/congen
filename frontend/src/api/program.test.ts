@@ -24,18 +24,23 @@ describe('Program API', () => {
     it('should create a program successfully', async () => {
       mock.onPost('/program/').reply(200, mockProgram);
 
-      const result = await createProgram('Test Program', true);
+      const result = await createProgram('Test Program', true, 'test-user-id');
 
       expect(result).toEqual(mockProgram);
       expect(mock.history.post).toHaveLength(1);
       expect(mock.history.post[0].url).toBe('/program/');
+      expect(mock.history.post[0].params).toEqual({
+        user_id: 'test-user-id',
+        name: 'Test Program',
+        is_active: true,
+      });
     });
 
     it('should handle creation errors', async () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPost('/program/').reply(400, errorResponse);
 
-      await expect(createProgram('Test Program')).rejects.toEqual(errorResponse);
+      await expect(createProgram('Test Program', true, 'test-user-id')).rejects.toEqual(errorResponse);
     });
   });
 

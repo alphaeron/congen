@@ -313,38 +313,38 @@ function AppContent(): React.ReactElement {
                   transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                   anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
-                  {isAuthenticated ? (
-                    <>
-                      <MenuItem
-                        component={ProfileLink}
-                        onClick={handleUserMenuClose}
-                        sx={{
-                          fontWeight: 500,
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                          },
-                        }}
-                      >
-                        Profile
-                      </MenuItem>
-                      <Divider sx={{ my: 1 }} />
-                      <MenuItem
-                        onClick={() => {
-                          handleUserMenuClose();
-                          logout();
-                        }}
-                        sx={{
-                          fontWeight: 500,
-                          color: 'error.main',
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.error.main, 0.08),
-                          },
-                        }}
-                      >
-                        Sign Out
-                      </MenuItem>
-                    </>
-                  ) : (
+                  {isAuthenticated ? [
+                    <MenuItem
+                      key="profile"
+                      component={ProfileLink}
+                      onClick={handleUserMenuClose}
+                      sx={{
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Profile
+                    </MenuItem>,
+                    <Divider key="divider" sx={{ my: 1 }} />,
+                    <MenuItem
+                      key="signout"
+                      onClick={() => {
+                        handleUserMenuClose();
+                        logout();
+                      }}
+                      sx={{
+                        fontWeight: 500,
+                        color: 'error.main',
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                        },
+                      }}
+                    >
+                      Sign Out
+                    </MenuItem>
+                  ] : (
                     <MenuItem
                       component={Link}
                       to="/login"
