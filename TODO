@@ -1,6 +1,9 @@
 after generating a workout the dialog does not automatically go away and show the loader until the generation is done, causing confusion
 
 
+user keycloak state not cleared on frontend correctly when invalid, lingering state can cause issues when you try to log in and it uses your current credentials instead of redirecting you to login
+
+
 
 
 We want to change the workflow for the workout generation.
