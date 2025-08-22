@@ -1,3 +1,8 @@
+after generating a workout the dialog does not automatically go away and show the loader until the generation is done, causing confusion
+
+
+
+
 We want to change the workflow for the workout generation.
 
 Currently, we generate a week of workouts, however what we would like the flow to be is this.
@@ -26,8 +31,12 @@ Is exercise rotation history not needed or duplicated state?
 
 
 
+tooltip to hover over exercise to get exercise information, relation information, ...
+use this everwhere an exercise name is rendered for consistency
 
 
+
+the top corners of the drawers should not be rounded
 
 test tests, no error logs in test.
 

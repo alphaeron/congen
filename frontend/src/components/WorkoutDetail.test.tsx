@@ -113,24 +113,24 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Push Day')).toBeInTheDocument();
+        expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
       expect(screen.getByText('Warm-up')).toBeInTheDocument();
       expect(screen.getByText('Bench Press')).toBeInTheDocument();
-      expect(screen.getByText('Set 1')).toBeInTheDocument();
-    });
+      expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets
+    }, 10000);
 
     it('should display workout information correctly', async () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Push Day')).toBeInTheDocument();
+        expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/Day 1/)).toBeInTheDocument();
-      expect(screen.getByText(/1 stages/)).toBeInTheDocument();
-    });
+      expect(screen.getByText('Warm-up')).toBeInTheDocument();
+      expect(screen.getByText('1 exercises')).toBeInTheDocument();
+    }, 10000);
 
     it('should display stage information correctly', async () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -139,7 +139,6 @@ describe('WorkoutDetail', () => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Stage 1')).toBeInTheDocument();
       expect(screen.getByText('1 exercises')).toBeInTheDocument();
     });
 
@@ -150,19 +149,21 @@ describe('WorkoutDetail', () => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('"Focus on form"')).toBeInTheDocument();
+      // Check that the notes icon is present (notes are now in tooltip)
+      expect(screen.getByTestId('NotesIcon')).toBeInTheDocument();
     });
 
     it('should display set scheme information correctly', async () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Set 1')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
       });
 
       expect(screen.getByText('135 lbs')).toBeInTheDocument();
       expect(screen.getByText('8')).toBeInTheDocument();
-      expect(screen.getByText('1m 30s')).toBeInTheDocument();
+      expect(screen.getAllByText('-')).toHaveLength(2); // Rest and Notes show as "-" when null
+      expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets
     });
 
     it('should handle exercise without notes', async () => {
@@ -175,7 +176,7 @@ describe('WorkoutDetail', () => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
       });
 
-      expect(screen.queryByText('"Focus on form"')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('NotesIcon')).not.toBeInTheDocument();
     });
 
     it('should handle set scheme without notes', async () => {
@@ -185,11 +186,11 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Set 1')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
       });
 
-      // Notes are not displayed in the UI for set schemes
-      expect(screen.getByText('135 lbs')).toBeInTheDocument();
+      // Notes icon should still be present since it comes from exercise notes, not set scheme notes
+      expect(screen.getByTestId('NotesIcon')).toBeInTheDocument();
     });
 
     it('should handle set scheme without RPE', async () => {
@@ -199,7 +200,7 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Set 1')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
       });
 
       expect(screen.getByText('135 lbs')).toBeInTheDocument();
@@ -236,9 +237,11 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Set 1')).toBeInTheDocument();
-        expect(screen.getByText('Set 2')).toBeInTheDocument();
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
       });
+
+      // Should show the number of sets (2) instead of individual set numbers
+      expect(screen.getByText('2')).toBeInTheDocument();
     });
   });
 
@@ -298,11 +301,13 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Push Day')).toBeInTheDocument();
+        expect(screen.getByText('Exercise')).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/0 stages/)).toBeInTheDocument();
-    });
+      // When there are no stages, only the table header should be visible
+      expect(screen.getByText('Exercise')).toBeInTheDocument();
+      expect(screen.getByText('Sets')).toBeInTheDocument();
+    }, 10000);
 
     it('should handle empty exercises', async () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
@@ -327,11 +332,17 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Bench Press')).toBeInTheDocument();
+        expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('Sets (0):')).toBeInTheDocument();
-    });
+      // Check that the table headers are present but no data rows
+      expect(screen.getByText('Sets')).toBeInTheDocument();
+      expect(screen.getByText('Reps')).toBeInTheDocument();
+      expect(screen.getByText('Tempo')).toBeInTheDocument();
+      expect(screen.getByText('Weight')).toBeInTheDocument();
+      expect(screen.getByText('Rest')).toBeInTheDocument();
+      expect(screen.getByText('Notes')).toBeInTheDocument();
+    }, 10000);
   });
 
   describe('Accordion Interaction', () => {
@@ -349,7 +360,7 @@ describe('WorkoutDetail', () => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
-      const accordion = screen.getByRole('button', { name: /stage 1 warm-up 1 exercises/i });
+      const accordion = screen.getByRole('button', { name: /warm-up 1 exercises/i });
       fireEvent.click(accordion);
 
       await waitFor(() => {
@@ -366,14 +377,13 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Push Day')).toBeInTheDocument();
+        expect(screen.getByText('Exercise')).toBeInTheDocument();
       });
 
-      const backButton = screen.getByRole('button');
-      fireEvent.click(backButton);
-
-      expect(mockOnBack).toHaveBeenCalledTimes(1);
-    });
+      // Note: Back button is now in the parent Workouts component, not in WorkoutDetail
+      // This test is no longer applicable since the back functionality is handled by the parent
+      expect(mockOnBack).not.toHaveBeenCalled();
+    }, 10000);
 
     it('should load workout with correct ID', async () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);

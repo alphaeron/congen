@@ -70,10 +70,18 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{ name: string; day_number: number; stages: number } | null>(null);
 
   // URL query parameters
   const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
   const selectedSection = searchParams.get('section') || 'overview';
+
+  // Reset workout details when workout selection changes
+  useEffect(() => {
+    if (!selectedWorkoutId) {
+      setCurrentWorkoutDetails(null);
+    }
+  }, [selectedWorkoutId]);
 
   // Load workout data
   useEffect(() => {
@@ -121,14 +129,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     navigate(`?${newSearchParams.toString()}`);
   };
 
-  const handleBreadcrumbClick = (path: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    if (path === 'workouts') {
-      newSearchParams.delete('workout');
-    }
-    navigate(`?${newSearchParams.toString()}`);
-  };
-
   const handleGenerateWorkouts = async () => {
     if (!selectedProgram) return;
 
@@ -157,22 +157,51 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
   // Render breadcrumbs
   const renderBreadcrumbs = () => (
-    <Breadcrumbs sx={{ mb: 2 }}>
-      <Link
-        component="button"
-        variant="body1"
-        onClick={() => handleBreadcrumbClick('workouts')}
-        sx={{ color: 'text.secondary' }}
-      >
-        Workouts
-      </Link>
-      {selectedWorkoutId && (
-        <Typography variant="body1" color="text.primary">
-          Workout Details
-        </Typography>
-      )}
-    </Breadcrumbs>
+    <Box 
+      position="sticky" 
+      top={0} 
+      zIndex={1001} 
+      sx={{ 
+        bgcolor: 'background.paper', 
+        boxShadow: 1,
+        borderBottom: 1,
+        borderColor: 'divider',
+        pb: 1
+      }}
+    >
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Link
+          component="button"
+          variant="body1"
+          onClick={() => handleBreadcrumbClick('workouts')}
+          sx={{ color: 'text.secondary' }}
+        >
+          Workouts
+        </Link>
+        {selectedWorkoutId && currentWorkoutDetails && (
+          <Typography variant="body1" color="text.primary">
+            {currentWorkoutDetails.name} (Day {currentWorkoutDetails.day_number}) • {currentWorkoutDetails.stages} stages
+          </Typography>
+        )}
+        {selectedWorkoutId && !currentWorkoutDetails && (
+          <Typography variant="body1" color="text.primary">
+            Workout Details
+          </Typography>
+        )}
+      </Breadcrumbs>
+    </Box>
   );
+
+  const handleBreadcrumbClick = (path: string) => {
+    if (path === 'workouts') {
+      // Use the same pattern as handleBackToWorkouts
+      handleBackToWorkouts();
+    }
+  };
+
+  const handleWorkoutDetailsUpdate = (workoutDetails: { name: string; day_number: number; stages: number }) => {
+    setCurrentWorkoutDetails(workoutDetails);
+  };
 
   return (
     <React.Fragment>
@@ -184,15 +213,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
               No Active Program
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              You need to create a program first before you can generate and view workouts.
+              You need to create a program first before you can generate and view workouts. Please go to the Programs section to create a program.
             </Typography>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => navigate('/programs')}
-            >
-              Create Program
-            </Button>
           </CardContent>
         </Card>
       ) : (
@@ -278,6 +300,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                 <WorkoutDetail 
                   workoutId={parseInt(selectedWorkoutId)} 
                   onBack={handleBackToWorkouts}
+                  onWorkoutDetailsUpdate={handleWorkoutDetailsUpdate}
                 />
               </Box>
             </Slide>

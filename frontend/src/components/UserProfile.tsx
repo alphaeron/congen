@@ -15,11 +15,13 @@ import {
   Security as SecurityIcon,
   Settings as SettingsIcon,
   History as HistoryIcon,
+  FitnessCenter as FitnessCenterIcon,
 } from '@mui/icons-material';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { ProfileOverview } from './ProfileOverview';
 import { AccountSecurity } from './AccountSecurity';
+import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import type { User } from '../api/types';
 
 interface UserProfileProps {
@@ -51,6 +53,12 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
       label: 'Profile Overview',
       icon: <PersonIcon />,
       component: <ProfileOverview user={user} />,
+    },
+    {
+      id: 'workout-preferences',
+      label: 'Workout Preferences',
+      icon: <FitnessCenterIcon />,
+      component: <WorkoutPreferencesSection />,
     },
     {
       id: 'security',

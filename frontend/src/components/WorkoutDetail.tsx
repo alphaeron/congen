@@ -6,9 +6,6 @@ import {
   Typography,
   Grid,
   Chip,
-  List,
-  ListItem,
-  ListItemText,
   Divider,
   CircularProgress,
   Alert,
@@ -17,12 +14,17 @@ import {
   AccordionDetails,
   IconButton,
   Tooltip,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
-  FitnessCenter as FitnessCenterIcon,
   Timer as TimerIcon,
-  TrendingUp as TrendingUpIcon,
   Notes as NotesIcon,
 } from '@mui/icons-material';
 
@@ -35,6 +37,7 @@ import type { ProgrammedWorkout, WorkoutStage, ProgrammedExercise, SetScheme } f
 interface WorkoutDetailProps {
   workoutId: number;
   onBack: () => void;
+  onWorkoutDetailsUpdate?: (workoutDetails: { name: string; day_number: number; stages: number }) => void;
 }
 
 interface WorkoutStageWithExercises {
@@ -57,7 +60,7 @@ interface ProgrammedExerciseWithSetSchemes {
  * @param onBack Callback to go back to the workout list
  * @returns WorkoutDetail component
  */
-export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack }) => {
+export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack, onWorkoutDetailsUpdate }) => {
   const [workout, setWorkout] = useState<ProgrammedWorkout | null>(null);
   const [stages, setStages] = useState<WorkoutStageWithExercises[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -110,6 +113,17 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack 
     loadWorkoutDetails();
   }, [workoutId]);
 
+  // Update parent component with workout details for breadcrumb
+  useEffect(() => {
+    if (workout && stages.length > 0 && onWorkoutDetailsUpdate) {
+      onWorkoutDetailsUpdate({
+        name: workout.name,
+        day_number: workout.day_number,
+        stages: stages.length
+      });
+    }
+  }, [workout, stages, onWorkoutDetailsUpdate]);
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
@@ -147,135 +161,130 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack 
 
   return (
     <Box>
-      {/* Workout Header */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box>
-              <Typography variant="h4" gutterBottom>
-                {workout.name}
-              </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Day {workout.day_number} • {stages.length} stages
-              </Typography>
-            </Box>
-            <IconButton onClick={onBack} size="large">
-              <ExpandMoreIcon sx={{ transform: 'rotate(90deg)' }} />
-            </IconButton>
-          </Box>
-        </CardContent>
-      </Card>
+      {/* Sticky Table Header */}
+      <Box 
+        position="sticky" 
+        top={48} 
+        zIndex={999} 
+        sx={{ 
+          bgcolor: 'background.paper', 
+          boxShadow: 1,
+          borderBottom: 1,
+          borderColor: 'divider'
+        }}
+      >
+        <TableContainer component={Paper} sx={{ width: '100%' }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ width: '25%', fontWeight: 'bold' }}>Exercise</TableCell>
+                <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>Sets</TableCell>
+                <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>Reps</TableCell>
+                <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Tempo</TableCell>
+                <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Weight</TableCell>
+                <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Rest</TableCell>
+                <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>Notes</TableCell>
+              </TableRow>
+            </TableHead>
+          </Table>
+        </TableContainer>
+      </Box>
 
       {/* Workout Stages */}
-      <Grid container spacing={3}>
+      <Box sx={{ mt: 2 }}>
         {stages.map((stageData: WorkoutStageWithExercises, stageIndex: number) => (
-          <Grid item xs={12} key={stageData.stage.id}>
-            <Accordion defaultExpanded={stageIndex === 0}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box display="flex" alignItems="center" gap={2}>
-                  <Chip 
-                    label={`Stage ${stageData.stage.position}`}
-                    color="primary"
-                    size="small"
-                  />
-                  <Typography variant="h6">
-                    {stageData.stage.name}
-                  </Typography>
-                  <Chip 
-                    label={`${stageData.exercises.length} exercises`}
-                    variant="outlined"
-                    size="small"
-                  />
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <List>
-                  {stageData.exercises.map((exerciseData: ProgrammedExerciseWithSetSchemes, exerciseIndex: number) => (
-                    <React.Fragment key={exerciseData.exercise.id}>
-                      <ListItem sx={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-                        <Box display="flex" alignItems="center" gap={2} width="100%" mb={2}>
-                          <FitnessCenterIcon color="primary" />
-                          <Typography variant="h6">
-                            {exerciseData.exercise.exercise_name}
-                          </Typography>
-                          {exerciseData.exercise.notes && (
-                            <Tooltip title={exerciseData.exercise.notes}>
-                              <NotesIcon color="action" fontSize="small" />
-                            </Tooltip>
-                          )}
-                        </Box>
-                        
-                        {exerciseData.exercise.notes && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: 'italic' }}>
-                            "{exerciseData.exercise.notes}"
-                          </Typography>
-                        )}
+          <Accordion key={stageData.stage.id} defaultExpanded={stageIndex === 0} sx={{ mb: 2 }}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <Typography variant="h6">
+                  {stageData.stage.name}
+                </Typography>
+                <Chip 
+                  label={`${stageData.exercises.length} exercises`}
+                  size="small"
+                  color="secondary"
+                />
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+              <TableContainer component={Paper} sx={{ width: '100%' }}>
+                <Table size="small">
+                  <TableBody>
+                    {stageData.exercises.map((exercise: ProgrammedExerciseWithSetSchemes) => {
+                      const setSchemes = exercise.setSchemes || [];
+                      if (setSchemes.length === 0) return null;
 
-                        {/* Set Schemes */}
-                        <Box width="100%">
-                          <Typography variant="subtitle2" gutterBottom>
-                            Sets ({exerciseData.setSchemes.length}):
-                          </Typography>
-                          <Grid container spacing={1}>
-                            {exerciseData.setSchemes.map((setScheme, setIndex) => (
-                              <Grid item xs={12} sm={6} md={4} key={setScheme.id}>
-                                <Card variant="outlined" sx={{ p: 1 }}>
-                                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                                    <Typography variant="body2" fontWeight="bold">
-                                      Set {setScheme.set_number}
-                                    </Typography>
-                                    <Box display="flex" gap={0.5}>
-                                      {setScheme.is_amrap && (
-                                        <Chip label="AMRAP" size="small" color="warning" />
-                                      )}
-                                      {setScheme.is_emom && (
-                                        <Chip label="EMOM" size="small" color="info" />
-                                      )}
-                                      {setScheme.use_tempo && (
-                                        <Chip 
-                                          label={formatTempo(
-                                            setScheme.eccentric_tempo || '0',
-                                            setScheme.isometric_tempo || '0',
-                                            setScheme.concentric_tempo || '0'
-                                          )}
-                                          size="small"
-                                          color="secondary"
-                                        />
-                                      )}
-                                    </Box>
-                                  </Box>
-                                  
-                                  <Box mt={1}>
-                                    <Typography variant="body2">
-                                      <strong>Weight:</strong> {setScheme.target_weight} lbs
-                                    </Typography>
-                                    <Typography variant="body2">
-                                      <strong>Reps:</strong> {setScheme.target_rep_count}
-                                    </Typography>
-                                    {setScheme.rest_seconds && setScheme.rest_seconds > 0 && (
-                                      <Box display="flex" alignItems="center" gap={0.5}>
-                                        <TimerIcon fontSize="small" color="action" />
-                                        <Typography variant="body2">
-                                          {formatRestTime(setScheme.rest_seconds)}
-                                        </Typography>
-                                      </Box>
-                                    )}
-                                  </Box>
-                                </Card>
-                              </Grid>
-                            ))}
-                          </Grid>
-                        </Box>
-                      </ListItem>
-                      {exerciseIndex < stageData.exercises.length - 1 && <Divider />}
-                    </React.Fragment>
-                  ))}
-                </List>
-              </AccordionDetails>
-            </Accordion>
-          </Grid>
+                      // Aggregate set scheme data
+                      const firstSetScheme = setSchemes[0];
+                      const totalSets = setSchemes.length;
+                      const reps = firstSetScheme.target_rep_count;
+                      const weight = firstSetScheme.target_weight;
+                      const rest = firstSetScheme.rest_seconds;
+                      
+                      // Format tempo if available
+                      const tempo = firstSetScheme.use_tempo && firstSetScheme.eccentric_tempo && firstSetScheme.isometric_tempo && firstSetScheme.concentric_tempo
+                        ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
+                        : '-';
+
+                      return (
+                        <TableRow key={exercise.exercise.id}>
+                          <TableCell sx={{ width: '25%' }}>
+                            <Box display="flex" alignItems="center" gap={1}>
+                              <Typography variant="body2">
+                                {exercise.exercise.exercise_name}
+                              </Typography>
+                              {exercise.exercise.notes && (
+                                <Tooltip title={exercise.exercise.notes} arrow>
+                                  <IconButton size="small">
+                                    <NotesIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ width: '10%' }}>
+                            <Typography variant="body2">
+                              {totalSets}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ width: '10%' }}>
+                            <Typography variant="body2">
+                              {reps || '-'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ width: '15%' }}>
+                            <Box display="flex" alignItems="center" gap={0.5}>
+                              <TimerIcon fontSize="small" />
+                              <Typography variant="body2">
+                                {tempo}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell sx={{ width: '15%' }}>
+                            <Typography variant="body2">
+                              {weight ? `${weight} lbs` : '-'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ width: '15%' }}>
+                            <Typography variant="body2">
+                              {rest ? `${rest}s` : '-'}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ width: '10%' }}>
+                            <Typography variant="body2">
+                              -
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </AccordionDetails>
+          </Accordion>
         ))}
-      </Grid>
+      </Box>
     </Box>
   );
 };
