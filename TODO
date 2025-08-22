@@ -2,6 +2,12 @@ test tests, no error logs in test.
 
 frontend query params for drawer selected page navigation
 
+chart.js for chart visualizations
+
+print / export to pdf for workouts
+
+remove timeout duration from workout generation exceeded error message.  the user facing error messages should not contain implementation details
+
 check the frontend for common patterns we can abstract into our own custom components to promote reusse
 
 workout calendar / putting workouts generated in timeline?

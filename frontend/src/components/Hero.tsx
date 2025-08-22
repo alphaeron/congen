@@ -4,7 +4,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 
-import { useTypewriter } from './useTypewriter';
+import { useTypewriter } from '../hooks/useTypewriter';
 
 export function Hero() {
   const headline = useTypewriter('Conjugate Method Programming, Without the Hassle', 40);

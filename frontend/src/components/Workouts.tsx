@@ -2,7 +2,6 @@ import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
 import { default as CheckCircleIcon } from '@mui/icons-material/CheckCircle';
 import { default as AddIcon } from '@mui/icons-material/Add';
-import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 import {
   Box,
   Card,
@@ -31,6 +30,7 @@ import React, { useEffect, useState } from 'react';
 import { getPrograms } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
 
 interface WorkoutsProps {
@@ -58,6 +58,28 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+
+  // Auto-refresh hook for workout data
+  const { executeAndRefresh: refreshWorkoutData } = useAutoRefresh(async () => {
+    const [programsData, workoutsData] = await Promise.all([
+      getPrograms(),
+      getProgrammedWorkouts(),
+    ]);
+
+    setPrograms(programsData);
+    setWorkouts(workoutsData);
+
+    // Find active program and today's workout
+    const activeProgram = programsData.find(program => program.is_active);
+    if (activeProgram) {
+      const todayWorkout = workoutsData.find(workout => 
+        workout.program_id === activeProgram.id
+      );
+      setCurrentWorkout(todayWorkout || null);
+    }
+
+    return { programs: programsData, workouts: workoutsData };
+  });
 
   useEffect(() => {
     loadWorkoutData();
@@ -99,20 +121,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
       setIsGenerating(true);
       setError(null);
 
-      const updatedProgram = await generateNextWeek(selectedProgram.id);
-      
-      // Update the programs list with the updated program
-      setPrograms(prev => prev.map(p => p.id === updatedProgram.id ? updatedProgram : p));
-      
-      // Reload workouts to get the newly generated ones
-      const newWorkouts = await getProgrammedWorkouts();
-      setWorkouts(newWorkouts);
-
-      // Find the new workout for today
-      const todayWorkout = newWorkouts.find(workout => 
-        workout.program_id === updatedProgram.id
-      );
-      setCurrentWorkout(todayWorkout || null);
+      // Use the auto-refresh hook to execute the generation and refresh data
+      await refreshWorkoutData(async () => {
+        const updatedProgram = await generateNextWeek(selectedProgram.id);
+        return updatedProgram;
+      });
 
       setGenerateDialogOpen(false);
       setSelectedProgram(null);
@@ -126,6 +139,10 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
           setError('Program not found or you don\'t have the required data set up. Please ensure you have created a program.');
         } else if (errorMessage.includes('Access denied')) {
           setError('Access denied. Please ensure you own this program.');
+        } else if (errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
+          setError('Authentication error. Please refresh the page and try again.');
+        } else if (errorMessage.includes('timeout')) {
+          setError('Workout generation is taking longer than expected. Please wait and try again.');
         } else {
           setError(`Failed to generate workouts: ${errorMessage}`);
         }
@@ -217,22 +234,14 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user }) => {
                     </Typography>
                   </Box>
                   <Box display="flex" gap={1}>
-                    <Button
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => openGenerateDialog(activeProgram)}
-                      disabled={isGenerating}
-                    >
-                      Generate Workouts
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<RefreshIcon />}
-                      onClick={loadWorkoutData}
-                      disabled={isLoading}
-                    >
-                      Refresh
-                    </Button>
+                                          <Button
+                        variant="contained"
+                        startIcon={isGenerating ? <CircularProgress size={16} /> : <AddIcon />}
+                        onClick={() => openGenerateDialog(activeProgram)}
+                        disabled={isGenerating}
+                      >
+                        {isGenerating ? 'Generating...' : 'Generate Workouts'}
+                      </Button>
                   </Box>
                 </Box>
               </CardContent>
