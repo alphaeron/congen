@@ -27,6 +27,7 @@ jest.mock('react-router', () => ({
   ),
   Routes: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Route: ({ element }: { element: React.ReactNode }) => <div>{element}</div>,
+  Navigate: ({ to }: { to: string }) => <div data-testid={`navigate-to-${to}`}>Navigate to {to}</div>,
 }));
 
 // Mock the AuthContext
@@ -165,11 +166,12 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText('Sign in')).toBeInTheDocument();
+      // Should show the root page content when not authenticated
+      expect(screen.getByTestId('root-page')).toBeInTheDocument();
     });
   });
 
-  it('shows sign in button when user is not authenticated', async () => {
+  it('shows root page when user is not authenticated', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -183,11 +185,12 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText('Sign in')).toBeInTheDocument();
+      // Should show the root page content when not authenticated
+      expect(screen.getByTestId('root-page')).toBeInTheDocument();
     });
   });
 
-  it('shows profile and sign out buttons when user is authenticated', async () => {
+  it('redirects authenticated users from root to dashboard', async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
@@ -201,8 +204,9 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText('Profile')).toBeInTheDocument();
-      expect(screen.getByText('Sign Out')).toBeInTheDocument();
+      // Should redirect to dashboard when authenticated
+      expect(screen.getByTestId('navigate-to-/dashboard')).toBeInTheDocument();
+      expect(screen.getByText('Navigate to /dashboard')).toBeInTheDocument();
     });
   });
 });

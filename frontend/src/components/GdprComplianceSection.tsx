@@ -182,7 +182,7 @@ export function GdprComplianceSection(): React.ReactElement {
           </Box>
 
           <Typography variant="body2" color="text.secondary" paragraph>
-            Manage your data and privacy settings in compliance with GDPR. You have the right to
+            Manage your data and privacy settings. You have the right to
             control how your personal data is processed.
           </Typography>
 

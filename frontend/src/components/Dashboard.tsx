@@ -1,7 +1,9 @@
-import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
+import { default as DashboardIcon } from '@mui/icons-material/Dashboard';
 import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as PrivacyTipIcon } from '@mui/icons-material/PrivacyTip';
-import { default as SecurityIcon } from '@mui/icons-material/Security';
+import { default as TimelineIcon } from '@mui/icons-material/Timeline';
+import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
+import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday';
+import { default as SettingsIcon } from '@mui/icons-material/Settings';
 import {
   Box,
   Container,
@@ -18,27 +20,28 @@ import {
 } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
-import { ProfileOverview } from './ProfileOverview';
-import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
-import { GdprComplianceSection } from './GdprComplianceSection';
-import { AccountSecurity } from './AccountSecurity';
+import { DashboardOverview } from './DashboardOverview';
+import { ProgramManagement } from './ProgramManagement';
+import { WorkoutFlow } from './WorkoutFlow';
+import { VisualizationPage } from './VisualizationPage';
+import { WorkoutCalendar } from './WorkoutCalendar';
 import { useDrawer } from '../App';
 import type { User } from '../api/types';
 
-interface UserProfileProps {
+interface DashboardProps {
   user: User;
 }
 
 /**
- * User profile component with modern drawer-based interface.
+ * Dashboard component with modern drawer-based interface.
  *
- * Displays user profile information, workout preferences, privacy settings,
- * and account security using MUI Drawer for navigation.
+ * Displays user dashboard with progress tracking, program management,
+ * workout flow, and visualization tools using MUI Drawer for navigation.
  *
  * @param user The user data to display
- * @return User profile component with drawer interface
+ * @return Dashboard component with drawer interface
  */
-export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [activeTab, setActiveTab] = useState(0);
@@ -55,36 +58,31 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
     setDrawerOpen(!drawerOpen);
   };
 
-  const handleEditProfile = () => {
-    // TODO: Implement edit profile functionality
-    console.log('Edit profile clicked');
-  };
-
-  const handleAccountDeleted = () => {
-    // TODO: Handle successful account deletion (e.g., redirect to logout)
-    console.log('Account deleted successfully');
-  };
-
   const menuItems = [
     {
       label: 'Overview',
-      icon: <AccountCircleIcon />,
-      content: <ProfileOverview user={user} onEditProfile={handleEditProfile} />,
+      icon: <DashboardIcon />,
+      content: <DashboardOverview user={user} />,
     },
     {
-      label: 'Workout Preferences',
+      label: 'Program Management',
       icon: <FitnessCenterIcon />,
-      content: <WorkoutPreferencesSection />,
+      content: <ProgramManagement user={user} />,
     },
     {
-      label: 'Privacy & Data',
-      icon: <PrivacyTipIcon />,
-      content: <GdprComplianceSection />,
+      label: 'Workout Flow',
+      icon: <TimelineIcon />,
+      content: <WorkoutFlow user={user} />,
     },
     {
-      label: 'Account Security',
-      icon: <SecurityIcon />,
-      content: <AccountSecurity user={user} onAccountDeleted={handleAccountDeleted} />,
+      label: 'Visualization',
+      icon: <ShowChartIcon />,
+      content: <VisualizationPage user={user} />,
+    },
+    {
+      label: 'Calendar',
+      icon: <CalendarTodayIcon />,
+      content: <WorkoutCalendar user={user} />,
     },
   ];
 
@@ -123,7 +121,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
       >
         <Toolbar>
           <Typography variant="h6" noWrap component="div">
-            User Profile
+            Dashboard
           </Typography>
         </Toolbar>
         <List sx={{ overflow: 'auto', flex: 1 }}>
@@ -133,6 +131,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
                 selected={activeTab === index}
                 onClick={() => {
                   setActiveTab(index);
+                  if (isMobile) {
+                    setDrawerOpen(false);
+                  }
                 }}
                 sx={{
                   '&.Mui-selected': {
@@ -163,15 +164,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
         component="main"
         sx={{
           flexGrow: 1,
+          p: 3,
+          width: { sm: `calc(100% - ${drawerWidth}px)` },
           minHeight: '100%',
-          overflow: 'auto',
-          maxWidth: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)`,
+          overflow: 'auto', // Allow content to scroll if needed
+          maxWidth: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)`, // Prevent overflow
         }}
       >
         <Container maxWidth="xl" sx={{ height: '100%' }}>
-          <Box sx={{ p: 3 }}>
-            {menuItems[activeTab].content}
-          </Box>
+          {menuItems[activeTab]?.content}
         </Container>
       </Box>
     </Box>

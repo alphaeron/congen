@@ -1,8 +1,18 @@
+test tests, no error logs in test.
+
+check the frontend for common patterns we can abstract into our own custom components to promote reusse
+
+workout calendar / putting workouts generated in timeline?
+
+support edit profile with keycloak, or other backend integration?
+
 Implement change password functionality
 
 Fix dates: Member since January 21, 1970
 
 integration test all user profile sidebar functionality to make sure it works
+
+remove article, gdpr from user facing wording
 
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 

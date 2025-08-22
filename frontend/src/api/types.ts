@@ -198,3 +198,63 @@ export interface PrivacyPolicy {
   last_updated: string;
   version: string;
 } // end interface PrivacyPolicy
+
+/**
+ * A workout program created for a user.
+ */
+export interface Program {
+  id: number;
+  user_id: string;
+  name: string;
+  current_week_number: number;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+} // end interface Program
+
+/**
+ * A programmed workout within a program.
+ */
+export interface ProgrammedWorkout {
+  id: number;
+  program_id: number;
+  day_number: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+} // end interface ProgrammedWorkout
+
+/**
+ * User's one rep max for a specific exercise.
+ */
+export interface UserOneRepMax {
+  user_id: string;
+  exercise_name: string;
+  one_rep_max: number;
+  unit: string;
+  created_at: string;
+  updated_at: string;
+} // end interface UserOneRepMax
+
+/**
+ * Exercise rotation history tracking when exercises were used.
+ */
+export interface ExerciseRotationHistory {
+  id: number;
+  user_id: string;
+  exercise_name: string;
+  is_accessory: boolean;
+  created_at: string;
+  updated_at: string;
+} // end interface ExerciseRotationHistory
+
+/**
+ * Dashboard statistics and progress data.
+ */
+export interface DashboardStats {
+  total_workouts: number;
+  current_week: number;
+  active_program?: Program;
+  recent_one_rep_maxes: UserOneRepMax[];
+  exercise_rotation_history: ExerciseRotationHistory[];
+} // end interface DashboardStats
