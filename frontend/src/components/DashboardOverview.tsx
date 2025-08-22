@@ -12,8 +12,10 @@ import {
   CircularProgress,
   Tooltip,
   Chip,
+  Button,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 import { getPrograms } from '../api/program';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
@@ -34,11 +36,18 @@ interface DashboardOverviewProps {
  * @return Dashboard overview component
  */
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) => {
+  const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [exerciseHistory, setExerciseHistory] = useState<ExerciseRotationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleActiveProgramClick = () => {
+    if (activeProgram) {
+      navigate('/dashboard?section=workouts');
+    }
+  };
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -172,7 +181,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
       {/* Active Program Section */}
       {activeProgram && (
-        <Card sx={{ mb: 4 }}>
+        <Card sx={{ mb: 4, cursor: 'pointer' }} onClick={handleActiveProgramClick}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Active Program
@@ -192,6 +201,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 size="small" 
               />
             </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Click to view workouts
+            </Typography>
           </CardContent>
         </Card>
       )}

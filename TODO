@@ -1,16 +1,8 @@
-When you click on the active program in the program overview page, it should link to the appropriate route on the dashboard page for the program with the right query parameters
-
-Also, on the workouts section of the dashboard, clicking on the workout does the wrong thing.
-
-First, we need breadcrumbs on the workout section instead of the header.  these will be links and take you to the appropriate workouts seciton of the dashboard with the right query parameters
-
-There is no detail section it should still be the workout section, what should happen is the query parameters are updated it should scroll the overview left and show the workout details.  the breadcrumbs will be updated as well.
-
-
-
 test tests, no error logs in test.
 
 Remove the workout calendar component since it is unused
+
+remove console statements from frontend
 
 chart.js for chart visualizations
 
