@@ -15,7 +15,7 @@ import type { User } from '../api/types';
 
 interface ProfileOverviewProps {
   user: User;
-  onEditProfile: () => void;
+  onEditProfile?: () => void;
 }
 
 /**
@@ -24,7 +24,7 @@ interface ProfileOverviewProps {
  * Shows user avatar, name, member since date, roles, and edit button.
  *
  * @param user The user data to display
- * @param onEditProfile Callback function when edit profile is clicked
+ * @param onEditProfile Optional callback function when edit profile is clicked
  * @return Profile overview component
  */
 export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditProfile }) => {
@@ -34,6 +34,14 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditPr
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const handleEditProfile = () => {
+    if (onEditProfile) {
+      onEditProfile();
+    } else {
+      // Default implementation - could be expanded later
+    }
   };
 
   return (
@@ -66,7 +74,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditPr
                     </Box>
                   )}
                 </Box>
-                <Button variant="outlined" startIcon={<EditIcon />} onClick={onEditProfile}>
+                <Button variant="outlined" startIcon={<EditIcon />} onClick={handleEditProfile}>
                   Edit Profile
                 </Button>
               </Box>

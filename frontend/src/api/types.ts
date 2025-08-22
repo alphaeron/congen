@@ -225,6 +225,32 @@ export interface ProgrammedWorkout {
 } // end interface ProgrammedWorkout
 
 /**
+ * A workout stage within a programmed workout.
+ */
+export interface WorkoutStage {
+  id: number;
+  programmed_workout_id: number;
+  stage_type_id: number;
+  position: number;
+  name: string;
+  created_at: string;
+  updated_at: string;
+} // end interface WorkoutStage
+
+/**
+ * A programmed exercise within a workout stage.
+ */
+export interface ProgrammedExercise {
+  id: number;
+  workout_stage_id: number;
+  exercise_name: string;
+  position: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+} // end interface ProgrammedExercise
+
+/**
  * User's one rep max for a specific exercise.
  */
 export interface UserOneRepMax {

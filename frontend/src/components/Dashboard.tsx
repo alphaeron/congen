@@ -1,178 +1,171 @@
-import { default as DashboardIcon } from '@mui/icons-material/Dashboard';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as TimelineIcon } from '@mui/icons-material/Timeline';
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday';
-import { default as SettingsIcon } from '@mui/icons-material/Settings';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
-  Typography,
+  Drawer,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useTheme,
-  useMediaQuery,
-  Drawer,
-  Toolbar,
+  Typography,
+  Container,
 } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import {
+  Dashboard as DashboardIcon,
+  FitnessCenter as FitnessCenterIcon,
+  ShowChart as ShowChartIcon,
+  Settings as SettingsIcon,
+  History as HistoryIcon,
+} from '@mui/icons-material';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import { DashboardOverview } from './DashboardOverview';
 import { ProgramManagement } from './ProgramManagement';
 import { Workouts } from './Workouts';
 import { ExerciseHistory } from './ExerciseHistory';
-import { WorkoutCalendar } from './WorkoutCalendar';
-import { useDrawer } from '../App';
 import type { User } from '../api/types';
 
 interface DashboardProps {
   user: User;
+  initialSection?: string;
+  selectedWorkout?: string | null;
 }
 
 /**
- * Dashboard component with modern drawer-based interface.
- *
- * Displays user dashboard with progress tracking, program management,
- * workout flow, and visualization tools using MUI Drawer for navigation.
- *
- * @param user The user data to display
- * @return Dashboard component with drawer interface
+ * Dashboard component with sidebar navigation and URL query parameter support.
+ * 
+ * Features:
+ * - Left sidebar navigation with URL state persistence
+ * - Multiple sections: Overview, Programs, Workouts, Exercise History
+ * - URL query parameters for bookmarkable navigation
+ * - Proper drawer positioning and layout
+ * 
+ * @param user The current user object
+ * @param initialSection The initial section to display (from URL)
+ * @param selectedWorkout The selected workout ID (from URL)
+ * @returns Dashboard component
  */
-export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [activeTab, setActiveTab] = useState(0);
-  const { drawerOpen, setDrawerOpen, drawerWidth } = useDrawer();
-
-  // Initialize drawer as open on desktop
-  useEffect(() => {
-    if (!isMobile) {
-      setDrawerOpen(true);
-    }
-  }, [isMobile, setDrawerOpen]);
-
-  const handleDrawerToggle = () => {
-    setDrawerOpen(!drawerOpen);
-  };
+export const Dashboard: React.FC<DashboardProps> = ({ user, initialSection = 'overview', selectedWorkout }) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const activeSection = searchParams.get('section') || initialSection;
 
   const menuItems = [
     {
+      id: 'overview',
       label: 'Overview',
       icon: <DashboardIcon />,
-      content: <DashboardOverview user={user} />,
+      component: <DashboardOverview user={user} />,
     },
     {
-      label: 'Program Management',
-      icon: <FitnessCenterIcon />,
-      content: <ProgramManagement user={user} />,
+      id: 'programs',
+      label: 'Programs',
+      icon: <SettingsIcon />,
+      component: <ProgramManagement user={user} />,
     },
     {
+      id: 'workouts',
       label: 'Workouts',
-      icon: <TimelineIcon />,
-      content: <Workouts user={user} />,
+      icon: <FitnessCenterIcon />,
+      component: <Workouts user={user} selectedWorkout={selectedWorkout} />,
     },
     {
+      id: 'exercise-history',
       label: 'Exercise History',
-      icon: <ShowChartIcon />,
-      content: <ExerciseHistory user={user} />,
-    },
-    {
-      label: 'Calendar',
-      icon: <CalendarTodayIcon />,
-      content: <WorkoutCalendar user={user} />,
+      icon: <HistoryIcon />,
+      component: <ExerciseHistory user={user} />,
     },
   ];
+
+  const handleSectionChange = (sectionId: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', sectionId);
+    navigate(`?${newSearchParams.toString()}`);
+  };
+
+  const currentSection = menuItems.find(item => item.id === activeSection) || menuItems[0];
 
   return (
     <Box sx={{ 
       display: 'flex', 
-      height: 'calc(100vh - 64px)', // Account for AppBar height
+      height: '100vh', // Use full viewport height
       position: 'relative',
       overflow: 'hidden', // Prevent overflow
       maxWidth: '100%', // Ensure it doesn't exceed container width
-      mt: 0, // Remove any top margin since App.tsx handles it
     }}>
-      {/* Drawer */}
+      {/* Left Sidebar */}
       <Drawer
-        variant={isMobile ? 'temporary' : 'permanent'}
-        open={drawerOpen}
-        onClose={handleDrawerToggle}
+        variant="permanent"
         sx={{
-          width: drawerWidth,
+          width: 240,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: drawerWidth,
+            width: 240,
             boxSizing: 'border-box',
             position: 'relative',
             height: '100%',
             zIndex: 1,
             backgroundColor: 'background.paper',
-            borderRight: `1px solid ${theme.palette.divider}`,
+            borderRight: 1,
+            borderColor: 'divider',
             overflow: 'hidden', // Prevent drawer content overflow
-            mt: 0, // Ensure no top margin
           },
         }}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-        }}
       >
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div">
-            Dashboard
-          </Typography>
-        </Toolbar>
-        <List sx={{ overflow: 'auto', flex: 1 }}>
-          {menuItems.map((item, index) => (
-            <ListItem key={index} disablePadding>
-              <ListItemButton
-                selected={activeTab === index}
-                onClick={() => {
-                  setActiveTab(index);
-                  if (isMobile) {
-                    setDrawerOpen(false);
-                  }
-                }}
-                sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark',
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          height: '100%' 
+        }}>
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
+            <Typography variant="h6" color="primary">
+              Dashboard
+            </Typography>
+          </Box>
+          <List sx={{ flex: 1, overflow: 'auto' }}>
+            {menuItems.map((item) => (
+              <ListItem key={item.id} disablePadding>
+                <ListItemButton
+                  selected={activeSection === item.id}
+                  onClick={() => handleSectionChange(item.id)}
                   sx={{
-                    color: activeTab === index ? 'primary.contrastText' : 'inherit',
+                    '&.Mui-selected': {
+                      backgroundColor: 'primary.main',
+                      color: 'primary.contrastText',
+                      '&:hover': {
+                        backgroundColor: 'primary.dark',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'primary.contrastText',
+                      },
+                    },
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       </Drawer>
 
-      {/* Main content */}
+      {/* Main Content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          minHeight: '100%',
+          height: '100%',
           overflow: 'auto', // Allow content to scroll if needed
-          maxWidth: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)`, // Prevent overflow
+          maxWidth: 'calc(100% - 240px)', // Prevent overflow
         }}
       >
         <Container maxWidth="xl" sx={{ height: '100%' }}>
-          {menuItems[activeTab]?.content}
+          <Box sx={{ p: 3 }}>
+            {currentSection.component}
+          </Box>
         </Container>
       </Box>
     </Box>

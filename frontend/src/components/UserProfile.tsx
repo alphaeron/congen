@@ -1,176 +1,153 @@
-import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as PrivacyTipIcon } from '@mui/icons-material/PrivacyTip';
-import { default as SecurityIcon } from '@mui/icons-material/Security';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Container,
-  Typography,
+  Drawer,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  useTheme,
-  useMediaQuery,
-  Drawer,
-  Toolbar,
+  Typography,
+  Container,
 } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import {
+  Person as PersonIcon,
+  Security as SecurityIcon,
+  Settings as SettingsIcon,
+  History as HistoryIcon,
+} from '@mui/icons-material';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import { ProfileOverview } from './ProfileOverview';
-import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
-import { GdprComplianceSection } from './GdprComplianceSection';
 import { AccountSecurity } from './AccountSecurity';
-import { useDrawer } from '../App';
 import type { User } from '../api/types';
 
 interface UserProfileProps {
   user: User;
+  initialSection?: string;
 }
 
 /**
- * User profile component with modern drawer-based interface.
- *
- * Displays user profile information, workout preferences, privacy settings,
- * and account security using MUI Drawer for navigation.
- *
- * @param user The user data to display
- * @return User profile component with drawer interface
+ * UserProfile component with sidebar navigation and URL query parameter support.
+ * 
+ * Features:
+ * - Left sidebar navigation with URL state persistence
+ * - Multiple sections: Overview, Account Security
+ * - URL query parameters for bookmarkable navigation
+ * - Consistent layout with Dashboard component
+ * 
+ * @param user The current user object
+ * @param initialSection The initial section to display (from URL)
+ * @returns UserProfile component
  */
-export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const [activeTab, setActiveTab] = useState(0);
-  const { drawerOpen, setDrawerOpen, drawerWidth } = useDrawer();
-
-  // Initialize drawer as open on desktop
-  useEffect(() => {
-    if (!isMobile) {
-      setDrawerOpen(true);
-    }
-  }, [isMobile, setDrawerOpen]);
-
-  const handleDrawerToggle = () => {
-    setDrawerOpen(!drawerOpen);
-  };
-
-  const handleEditProfile = () => {
-    // TODO: Implement edit profile functionality
-    console.log('Edit profile clicked');
-  };
-
-  const handleAccountDeleted = () => {
-    // TODO: Handle successful account deletion (e.g., redirect to logout)
-    console.log('Account deleted successfully');
-  };
+export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection = 'overview' }) => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const activeSection = searchParams.get('section') || initialSection;
 
   const menuItems = [
     {
-      label: 'Overview',
-      icon: <AccountCircleIcon />,
-      content: <ProfileOverview user={user} onEditProfile={handleEditProfile} />,
+      id: 'overview',
+      label: 'Profile Overview',
+      icon: <PersonIcon />,
+      component: <ProfileOverview user={user} />,
     },
     {
-      label: 'Workout Preferences',
-      icon: <FitnessCenterIcon />,
-      content: <WorkoutPreferencesSection />,
-    },
-    {
-      label: 'Privacy & Data',
-      icon: <PrivacyTipIcon />,
-      content: <GdprComplianceSection />,
-    },
-    {
+      id: 'security',
       label: 'Account Security',
       icon: <SecurityIcon />,
-      content: <AccountSecurity user={user} onAccountDeleted={handleAccountDeleted} />,
+      component: <AccountSecurity user={user} />,
     },
   ];
+
+  const handleSectionChange = (sectionId: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', sectionId);
+    navigate(`?${newSearchParams.toString()}`);
+  };
+
+  const currentSection = menuItems.find(item => item.id === activeSection) || menuItems[0];
 
   return (
     <Box sx={{ 
       display: 'flex', 
-      height: 'calc(100vh - 64px)', // Account for AppBar height
+      height: '100vh', // Use full viewport height
       position: 'relative',
       overflow: 'hidden', // Prevent overflow
       maxWidth: '100%', // Ensure it doesn't exceed container width
-      mt: 0, // Remove any top margin since App.tsx handles it
     }}>
-      {/* Drawer */}
+      {/* Left Sidebar */}
       <Drawer
-        variant={isMobile ? 'temporary' : 'permanent'}
-        open={drawerOpen}
-        onClose={handleDrawerToggle}
+        variant="permanent"
         sx={{
-          width: drawerWidth,
+          width: 240,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: drawerWidth,
+            width: 240,
             boxSizing: 'border-box',
             position: 'relative',
             height: '100%',
             zIndex: 1,
             backgroundColor: 'background.paper',
-            borderRight: `1px solid ${theme.palette.divider}`,
+            borderRight: 1,
+            borderColor: 'divider',
             overflow: 'hidden', // Prevent drawer content overflow
-            mt: 0, // Ensure no top margin
           },
         }}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-        }}
       >
-        <Toolbar>
-          <Typography variant="h6" noWrap component="div">
-            User Profile
-          </Typography>
-        </Toolbar>
-        <List sx={{ overflow: 'auto', flex: 1 }}>
-          {menuItems.map((item, index) => (
-            <ListItem key={index} disablePadding>
-              <ListItemButton
-                selected={activeTab === index}
-                onClick={() => {
-                  setActiveTab(index);
-                }}
-                sx={{
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    color: 'primary.contrastText',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark',
-                    },
-                  },
-                }}
-              >
-                <ListItemIcon
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          height: '100%' 
+        }}>
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
+            <Typography variant="h6" color="primary">
+              User Profile
+            </Typography>
+          </Box>
+          <List sx={{ flex: 1, overflow: 'auto' }}>
+            {menuItems.map((item) => (
+              <ListItem key={item.id} disablePadding>
+                <ListItemButton
+                  selected={activeSection === item.id}
+                  onClick={() => handleSectionChange(item.id)}
                   sx={{
-                    color: activeTab === index ? 'primary.contrastText' : 'inherit',
+                    '&.Mui-selected': {
+                      backgroundColor: 'primary.main',
+                      color: 'primary.contrastText',
+                      '&:hover': {
+                        backgroundColor: 'primary.dark',
+                      },
+                      '& .MuiListItemIcon-root': {
+                        color: 'primary.contrastText',
+                      },
+                    },
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.label} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Box>
       </Drawer>
 
-      {/* Main content */}
+      {/* Main Content */}
       <Box
         component="main"
         sx={{
           flexGrow: 1,
-          minHeight: '100%',
-          overflow: 'auto',
-          maxWidth: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)`,
+          height: '100%',
+          overflow: 'auto', // Allow content to scroll if needed
+          maxWidth: 'calc(100% - 240px)', // Prevent overflow
         }}
       >
         <Container maxWidth="xl" sx={{ height: '100%' }}>
           <Box sx={{ p: 3 }}>
-            {menuItems[activeTab].content}
+            {currentSection.component}
           </Box>
         </Container>
       </Box>

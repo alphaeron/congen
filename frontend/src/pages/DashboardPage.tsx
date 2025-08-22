@@ -1,5 +1,6 @@
 import { Container, Alert, CircularProgress, Typography } from '@mui/material';
 import React, { useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Dashboard } from '../components/Dashboard';
@@ -10,11 +11,13 @@ import { useAuth } from '../contexts/AuthContext';
  *
  * Handles routing and data gathering for the dashboard page.
  * Shows the Dashboard component for the interface once user is authenticated.
+ * Manages URL query parameters for section navigation.
  *
  * @return Dashboard page component
  */
 export const DashboardPage: React.FC = () => {
   const { user, isLoading, error, clearError } = useAuth();
+  const [searchParams] = useSearchParams();
 
   // Clear any errors when component mounts
   useEffect(() => {
@@ -52,6 +55,10 @@ export const DashboardPage: React.FC = () => {
     );
   }
 
-  // If user has a profile, show the dashboard view
-  return <Dashboard user={user} />;
+  // Extract query parameters
+  const section = searchParams.get('section') || 'overview';
+  const workout = searchParams.get('workout');
+
+  // If user has a profile, show the dashboard view with query parameters
+  return <Dashboard user={user} initialSection={section} selectedWorkout={workout} />;
 };
