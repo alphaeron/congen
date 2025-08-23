@@ -154,10 +154,9 @@ function AppContent(): React.ReactElement {
       <CssBaseline />
       <DrawerContext.Provider value={{ drawerOpen, setDrawerOpen, drawerWidth }}>
         <AppBar
-          position="relative"
+          position="sticky"
           sx={{
             width: '100%',
-            zIndex: theme => theme.zIndex.drawer + 1,
             boxShadow: 'none',
             bgcolor: 'transparent',
             backgroundImage: 'none',
@@ -297,6 +296,7 @@ function AppContent(): React.ReactElement {
                   anchorEl={userMenuAnchor}
                   open={Boolean(userMenuAnchor)}
                   onClose={handleUserMenuClose}
+                  sx={{ zIndex: theme.zIndex.drawer + 10 }}
                   PaperProps={{
                     sx: {
                       mt: 1,

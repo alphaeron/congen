@@ -162,11 +162,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       top={0} 
       zIndex={1001} 
       sx={{ 
-        bgcolor: 'background.paper', 
-        boxShadow: 1,
-        borderBottom: 1,
-        borderColor: 'divider',
-        pb: 1
+        pb: 3
       }}
     >
       <Breadcrumbs sx={{ mb: 2 }}>

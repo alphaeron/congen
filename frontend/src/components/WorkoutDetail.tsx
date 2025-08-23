@@ -1,32 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Box,
-  Card,
-  CardContent,
   Typography,
-  Grid,
-  Chip,
-  Divider,
   CircularProgress,
   Alert,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   IconButton,
   Tooltip,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Paper,
+  useTheme,
 } from '@mui/material';
 import {
-  ExpandMore as ExpandMoreIcon,
   Timer as TimerIcon,
   Notes as NotesIcon,
 } from '@mui/icons-material';
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  createColumnHelper,
+  getGroupedRowModel,
+} from '@tanstack/react-table';
 
 import { getProgrammedWorkout } from '../api/programmedWorkout';
 import { getWorkoutStagesByWorkout } from '../api/workoutStage';
@@ -50,17 +43,36 @@ interface ProgrammedExerciseWithSetSchemes {
   setSchemes: SetScheme[];
 }
 
+// Table row data type
+interface TableRow {
+  id: string;
+  type: 'stage' | 'exercise';
+  stageName?: string;
+  exerciseName?: string;
+  sets?: number;
+  reps?: number;
+  tempo?: string;
+  weight?: string;
+  rest?: string;
+  notes?: string;
+  exerciseNotes?: string;
+  stageId?: number;
+}
+
+const columnHelper = createColumnHelper<TableRow>();
+
 /**
  * Detailed workout display component.
  * 
  * Shows all stages, exercises, and set schemes for a specific workout
- * with a hierarchical accordion layout for easy navigation.
+ * with sticky section headers that pin under the table header when scrolling.
  * 
  * @param workoutId The ID of the workout to display
  * @param onBack Callback to go back to the workout list
  * @returns WorkoutDetail component
  */
 export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack, onWorkoutDetailsUpdate }) => {
+  const theme = useTheme();
   const [workout, setWorkout] = useState<ProgrammedWorkout | null>(null);
   const [stages, setStages] = useState<WorkoutStageWithExercises[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -124,6 +136,183 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
     }
   }, [workout, stages, onWorkoutDetailsUpdate]);
 
+  // Transform data for table
+  const tableData = useMemo(() => {
+    const rows: TableRow[] = [];
+    
+    stages.forEach((stageData) => {
+      // Add stage header row
+      rows.push({
+        id: `stage-${stageData.stage.id}`,
+        type: 'stage',
+        stageName: stageData.stage.name,
+        stageId: stageData.stage.id,
+      });
+      
+      // Add exercise rows
+      stageData.exercises.forEach((exerciseData) => {
+        const setSchemes = exerciseData.setSchemes || [];
+        if (setSchemes.length === 0) return;
+
+        // Aggregate set scheme data
+        const firstSetScheme = setSchemes[0];
+        const totalSets = setSchemes.length;
+        const reps = firstSetScheme.target_rep_count;
+        const weight = firstSetScheme.target_weight;
+        const rest = firstSetScheme.rest_seconds;
+        
+        // Format tempo if available
+        const tempo = firstSetScheme.use_tempo && firstSetScheme.eccentric_tempo && firstSetScheme.isometric_tempo && firstSetScheme.concentric_tempo
+          ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
+          : '-';
+
+        rows.push({
+          id: `exercise-${exerciseData.exercise.id}`,
+          type: 'exercise',
+          exerciseName: exerciseData.exercise.exercise_name,
+          sets: totalSets,
+          reps: reps || undefined,
+          tempo: tempo !== '-' ? tempo : undefined,
+          weight: weight ? `${weight} lbs` : undefined,
+          rest: rest ? `${rest}s` : undefined,
+          notes: '-',
+          exerciseNotes: exerciseData.exercise.notes,
+          stageId: stageData.stage.id,
+        });
+      });
+    });
+    
+    return rows;
+  }, [stages]);
+
+  // Define columns
+  const columns = useMemo(() => [
+    columnHelper.accessor('exerciseName', {
+      id: 'exercise',
+      header: 'Exercise',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="body2">
+                {row.original.exerciseName}
+              </Typography>
+              {row.original.exerciseNotes && (
+                <Tooltip title={row.original.exerciseNotes} arrow>
+                  <IconButton size="small">
+                    <NotesIcon fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          );
+        }
+        return null;
+      },
+      size: 200,
+    }),
+    columnHelper.accessor('sets', {
+      id: 'sets',
+      header: 'Sets',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Typography variant="body2">
+              {row.original.sets}
+            </Typography>
+          );
+        }
+        return null;
+      },
+      size: 80,
+    }),
+    columnHelper.accessor('reps', {
+      id: 'reps',
+      header: 'Reps',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Typography variant="body2">
+              {row.original.reps || '-'}
+            </Typography>
+          );
+        }
+        return null;
+      },
+      size: 80,
+    }),
+    columnHelper.accessor('tempo', {
+      id: 'tempo',
+      header: 'Tempo',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Box display="flex" alignItems="center" gap={0.5}>
+              <TimerIcon fontSize="small" />
+              <Typography variant="body2">
+                {row.original.tempo || '-'}
+              </Typography>
+            </Box>
+          );
+        }
+        return null;
+      },
+      size: 120,
+    }),
+    columnHelper.accessor('weight', {
+      id: 'weight',
+      header: 'Weight',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Typography variant="body2">
+              {row.original.weight || '-'}
+            </Typography>
+          );
+        }
+        return null;
+      },
+      size: 120,
+    }),
+    columnHelper.accessor('rest', {
+      id: 'rest',
+      header: 'Rest',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Typography variant="body2">
+              {row.original.rest || '-'}
+            </Typography>
+          );
+        }
+        return null;
+      },
+      size: 120,
+    }),
+    columnHelper.accessor('notes', {
+      id: 'notes',
+      header: 'Notes',
+      cell: ({ row }) => {
+        if (row.original.type === 'exercise') {
+          return (
+            <Typography variant="body2">
+              {row.original.notes}
+            </Typography>
+          );
+        }
+        return null;
+      },
+      size: 80,
+    }),
+  ], []);
+
+  // Create table instance
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   if (isLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
@@ -148,143 +337,108 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
     );
   }
 
-  const formatRestTime = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
-  };
-
-  const formatTempo = (eccentric: string, isometric: string, concentric: string): string => {
-    return `${eccentric}-${isometric}-${concentric}`;
-  };
-
   return (
-    <Box>
-      {/* Sticky Table Header */}
-      <Box 
-        position="sticky" 
-        top={48} 
-        zIndex={999} 
-        sx={{ 
-          bgcolor: 'background.paper', 
-          boxShadow: 1,
-          borderBottom: 1,
-          borderColor: 'divider'
-        }}
-      >
-        <TableContainer component={Paper} sx={{ width: '100%' }}>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ width: '25%', fontWeight: 'bold' }}>Exercise</TableCell>
-                <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>Sets</TableCell>
-                <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>Reps</TableCell>
-                <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Tempo</TableCell>
-                <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Weight</TableCell>
-                <TableCell sx={{ width: '15%', fontWeight: 'bold' }}>Rest</TableCell>
-                <TableCell sx={{ width: '10%', fontWeight: 'bold' }}>Notes</TableCell>
-              </TableRow>
-            </TableHead>
-          </Table>
-        </TableContainer>
-      </Box>
+    <Box 
+      sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}
+    >
 
-      {/* Workout Stages */}
-      <Box sx={{ mt: 2 }}>
-        {stages.map((stageData: WorkoutStageWithExercises, stageIndex: number) => (
-          <Accordion key={stageData.stage.id} defaultExpanded={stageIndex === 0} sx={{ mb: 2 }}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-              <Box display="flex" alignItems="center" gap={2}>
-                <Typography variant="h6">
-                  {stageData.stage.name}
-                </Typography>
-                <Chip 
-                  label={`${stageData.exercises.length} exercises`}
-                  size="small"
-                  color="secondary"
-                />
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <TableContainer component={Paper} sx={{ width: '100%' }}>
-                <Table size="small">
-                  <TableBody>
-                    {stageData.exercises.map((exercise: ProgrammedExerciseWithSetSchemes) => {
-                      const setSchemes = exercise.setSchemes || [];
-                      if (setSchemes.length === 0) return null;
 
-                      // Aggregate set scheme data
-                      const firstSetScheme = setSchemes[0];
-                      const totalSets = setSchemes.length;
-                      const reps = firstSetScheme.target_rep_count;
-                      const weight = firstSetScheme.target_weight;
-                      const rest = firstSetScheme.rest_seconds;
-                      
-                      // Format tempo if available
-                      const tempo = firstSetScheme.use_tempo && firstSetScheme.eccentric_tempo && firstSetScheme.isometric_tempo && firstSetScheme.concentric_tempo
-                        ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
-                        : '-';
-
-                      return (
-                        <TableRow key={exercise.exercise.id}>
-                          <TableCell sx={{ width: '25%' }}>
-                            <Box display="flex" alignItems="center" gap={1}>
-                              <Typography variant="body2">
-                                {exercise.exercise.exercise_name}
-                              </Typography>
-                              {exercise.exercise.notes && (
-                                <Tooltip title={exercise.exercise.notes} arrow>
-                                  <IconButton size="small">
-                                    <NotesIcon fontSize="small" />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ width: '10%' }}>
-                            <Typography variant="body2">
-                              {totalSets}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ width: '10%' }}>
-                            <Typography variant="body2">
-                              {reps || '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ width: '15%' }}>
-                            <Box display="flex" alignItems="center" gap={0.5}>
-                              <TimerIcon fontSize="small" />
-                              <Typography variant="body2">
-                                {tempo}
-                              </Typography>
-                            </Box>
-                          </TableCell>
-                          <TableCell sx={{ width: '15%' }}>
-                            <Typography variant="body2">
-                              {weight ? `${weight} lbs` : '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ width: '15%' }}>
-                            <Typography variant="body2">
-                              {rest ? `${rest}s` : '-'}
-                            </Typography>
-                          </TableCell>
-                          <TableCell sx={{ width: '10%' }}>
-                            <Typography variant="body2">
-                              -
-                            </Typography>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </AccordionDetails>
-          </Accordion>
-        ))}
-      </Box>
+      {/* Table Container */}
+      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+        <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            {/* Table Column Headers */}
+            <thead style={{ 
+              position: 'sticky', 
+              top: 0,
+              zIndex: 999, 
+              backgroundColor: theme.palette.background.paper,
+              borderBottom: 'none'
+            }}>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th
+                      key={header.id}
+                      style={{
+                        padding: '12px 8px',
+                        textAlign: 'left',
+                        fontWeight: 'bold',
+                        borderBottom: `1px solid ${theme.palette.divider}`,
+                        backgroundColor: theme.palette.background.paper,
+                        color: theme.palette.text.primary,
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                      }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map(row => (
+                <tr
+                  key={row.id}
+                  style={{
+                    backgroundColor: row.original.type === 'stage' 
+                      ? theme.palette.mode === 'dark' 
+                        ? theme.palette.grey[800] 
+                        : theme.palette.grey[100]
+                      : theme.palette.background.paper,
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  {row.original.type === 'stage' ? (
+                    // Stage header row - spans all columns (no longer sticky)
+                    <td
+                      colSpan={columns.length}
+                      style={{
+                        padding: '12px 16px',
+                        textAlign: 'left',
+                        fontWeight: 'bold',
+                        color: theme.palette.primary.main,
+                        backgroundColor: row.original.type === 'stage' 
+                          ? theme.palette.mode === 'dark' 
+                            ? theme.palette.grey[800] 
+                            : theme.palette.grey[100]
+                          : theme.palette.background.paper,
+                        borderBottom: `1px solid ${theme.palette.divider}`,
+                      }}
+                    >
+                      <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                        {row.original.stageName}
+                      </Typography>
+                    </td>
+                  ) : (
+                    // Exercise row - normal columns
+                    row.getVisibleCells().map(cell => (
+                      <td
+                        key={cell.id}
+                        style={{
+                          padding: '8px',
+                          borderBottom: `1px solid ${theme.palette.divider}`,
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                          color: theme.palette.text.primary,
+                        }}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Box>
+      </Paper>
     </Box>
   );
 };
