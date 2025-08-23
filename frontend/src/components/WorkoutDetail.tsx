@@ -247,12 +247,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
       cell: ({ row }) => {
         if (row.original.type === 'exercise') {
           return (
-            <Box display="flex" alignItems="center" gap={0.5}>
-              <TimerIcon fontSize="small" />
-              <Typography variant="body2">
-                {row.original.tempo || '-'}
-              </Typography>
-            </Box>
+            <Typography variant="body2">
+              {row.original.tempo || '-'}
+            </Typography>
           );
         }
         return null;
