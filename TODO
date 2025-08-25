@@ -1,48 +1,8 @@
-user exercise pool should filter user exercises before returning the list so there is centralized filtering?
-
-
-
-
-
 update program button not working
 
 
 
 remove "_ ->" / anon params
-
-
-see the below code in WorkoutStageGenerationService.kt, we shouldn't have workoutType and dayType, workoutType is even unused.
-    protected fun selectPrimaryExercise(
-        userExercisePool: UserExercisePool,
-        workoutType: String,
-        weakMuscles: List<String>,
-        dayType: String,
-        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Exercise> {
-        return exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
-            isAccessory = false,
-            dayType = dayType,
-            movementBalanceState = movementBalanceState
-        )
-    }
-
-
-
-
-
-
-
-
-Mono.empty??? handling???
-
-
-
-
-Rename ExercisePool to ExercisePoolFactory
-
-
 
 
 remove unused params

@@ -6,17 +6,12 @@ import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
-import com.congen.model.Exercise
-import com.congen.model.MovementType
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
-import reactor.core.publisher.Flux
 
 /**
- * Manages a pool of available exercises for a user, handling all filtering logic
+ * Factory for creating user exercise pools, handling all filtering logic
  * including equipment availability, user preferences, and exercise characteristics.
  *
  * This class consolidates all exercise filtering logic that was previously scattered
@@ -32,7 +27,7 @@ import reactor.core.publisher.Flux
  * @since 1.0.0
  */
 @Component
-class ExercisePool(
+class ExercisePoolFactory(
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
     private val exerciseMuscleDAL: ExerciseMuscleDAL,
     private val exerciseWorkoutTypeDAL: ExerciseWorkoutTypeDAL,
@@ -42,7 +37,7 @@ class ExercisePool(
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(ExercisePool::class.java)
+        private val logger = LoggerFactory.getLogger(ExercisePoolFactory::class.java)
     }
 
     /**

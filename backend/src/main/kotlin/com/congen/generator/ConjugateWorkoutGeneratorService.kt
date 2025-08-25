@@ -49,7 +49,7 @@ import reactor.core.publisher.Mono
  * @property programmedWorkoutDAL Data access layer for programmed workout operations
  * @property conjugateTemplates Service for managing workout templates
  * @property workoutStageGenerationServiceFactory Factory for selecting appropriate workout stage generation services
- * @property exercisePool Service for managing exercise pools and filtering
+ * @property exercisePoolFactor Service for managing exercise pools and filtering
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -63,7 +63,7 @@ class ConjugateWorkoutGeneratorService(
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
-    private val exercisePool: ExercisePool,
+    private val exercisePoolFactory: ExercisePoolFactory,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -103,7 +103,7 @@ class ConjugateWorkoutGeneratorService(
                         }
                     val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
 
-                    exercisePool.createPoolForUser(program.userId)
+                    exercisePoolFactory.createPoolForUser(program.userId)
                         .flatMap { userExercisePool ->
                             generateWorkoutsForWeek(
                                 program = program,
