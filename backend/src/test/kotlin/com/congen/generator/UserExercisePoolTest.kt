@@ -286,7 +286,7 @@ class UserExercisePoolTest {
         )
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
-            .thenReturn(Flux.fromIterable(exerciseEquipment))
+            .thenReturn(Mono.just(exerciseEquipment))
 
         // When
         val result = userExercisePool.filterExercisesByEquipment(listOf(exercises[0]))
@@ -418,7 +418,7 @@ class UserExercisePoolTest {
         )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
-            .thenReturn(Flux.fromIterable(exerciseMuscles))
+            .thenReturn(Mono.just(exerciseMuscles))
 
         // When
         val result = userExercisePool.filterExercisesByMuscles(listOf(exercises[0]), listOf("Chest"), exerciseMuscleDAL)
@@ -460,8 +460,8 @@ class UserExercisePoolTest {
         // Given
         val exercises = createSampleExercises()
         val userEquipment = listOf(
-            UserEquipment(userId = USER_ID, equipmentName = "BARBELL"),
-            UserEquipment(userId = USER_ID, equipmentName = "bench")
+            UserEquipment(userId = USER_ID, equipmentName = "BARBELL", createdAt = Instant.now()),
+            UserEquipment(userId = USER_ID, equipmentName = "bench", createdAt = Instant.now())
         )
         val preferences = emptyList<UserExercisePreference>()
 
@@ -478,7 +478,7 @@ class UserExercisePoolTest {
         )
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
-            .thenReturn(Flux.fromIterable(exerciseEquipment))
+            .thenReturn(Mono.just(exerciseEquipment))
 
         // When
         val result = userExercisePool.filterExercisesByEquipment(listOf(exercises[0]))
@@ -508,7 +508,7 @@ class UserExercisePoolTest {
         )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
-            .thenReturn(Flux.fromIterable(exerciseMuscles))
+            .thenReturn(Mono.just(exerciseMuscles))
 
         // When
         val result = userExercisePool.filterExercisesByMuscles(listOf(exercises[0]), listOf("CHEST"), exerciseMuscleDAL)
