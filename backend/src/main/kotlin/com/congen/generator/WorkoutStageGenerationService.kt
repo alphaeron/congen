@@ -325,6 +325,7 @@ abstract class WorkoutStageGenerationService(
                         selectAccessoryExercise(
                             userExercisePool = userExercisePool,
                             weakMuscles = weakMuscles,
+                            dayType = dayType,
                             movementBalanceState = movementBalanceState
                         ).flatMap { accessoryExercise ->
                             createProgrammedExercise(
@@ -392,6 +393,7 @@ abstract class WorkoutStageGenerationService(
                 selectConditioningExercise(
                     userExercisePool = userExercisePool,
                     weakMuscles = weakMuscles,
+                    dayType = dayType,
                     movementBalanceState = movementBalanceState
                 ).flatMap { conditioningExercise ->
                     createProgrammedExercise(
@@ -444,10 +446,11 @@ abstract class WorkoutStageGenerationService(
         currentWeekNumber: Int,
         userId: String,
     ): Mono<Void> {
-        return exerciseSelectionService.selectWarmupExercises(
+        return         exerciseSelectionService.selectWarmupExercises(
             userExercisePool = userExercisePool,
             primaryExercise = primaryExercise,
-            isFourDayTemplate = isFourDayTemplate
+            isFourDayTemplate = isFourDayTemplate,
+            dayType = dayType
         )
             .flatMap { warmupExercises ->
                 if (warmupExercises.isEmpty()) {
@@ -592,12 +595,14 @@ abstract class WorkoutStageGenerationService(
         userExercisePool: UserExercisePool,
         workoutType: String,
         weakMuscles: List<String>,
+        dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = false,
+            dayType = dayType,
             movementBalanceState = movementBalanceState
         )
     }
@@ -617,11 +622,13 @@ abstract class WorkoutStageGenerationService(
     protected fun selectSecondaryExercise(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise,
+        dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectSimilarSecondaryExercise(
             primaryExercise = primaryExercise,
             userExercisePool = userExercisePool,
+            dayType = dayType,
             movementBalanceState = movementBalanceState
         ).filter { selectedExercise ->
             // Filter out exercises that are the same as the primary
@@ -646,12 +653,14 @@ abstract class WorkoutStageGenerationService(
     protected fun selectAccessoryExercise(
         userExercisePool: UserExercisePool,
         weakMuscles: List<String>,
+        dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = true,
+            dayType = dayType,
             movementBalanceState = movementBalanceState
         )
     }
@@ -669,12 +678,14 @@ abstract class WorkoutStageGenerationService(
     protected fun selectConditioningExercise(
         userExercisePool: UserExercisePool,
         weakMuscles: List<String>,
+        dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = true,
+            dayType = dayType,
             movementBalanceState = movementBalanceState
         )
     }

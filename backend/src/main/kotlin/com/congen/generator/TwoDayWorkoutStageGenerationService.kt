@@ -103,6 +103,7 @@ class TwoDayWorkoutStageGenerationService(
                 userExercisePool = userExercisePool,
                 workoutType = "maximal_effort",
                 weakMuscles = weakMuscles,
+                dayType = dayType,
                 movementBalanceState = movementBalanceState
             )
 
@@ -111,6 +112,7 @@ class TwoDayWorkoutStageGenerationService(
             selectConditioningExercise(
                 userExercisePool = userExercisePool,
                 weakMuscles = weakMuscles,
+                dayType = dayType,
                 movementBalanceState = movementBalanceState
             )
 

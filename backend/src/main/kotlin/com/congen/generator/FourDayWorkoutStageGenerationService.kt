@@ -99,6 +99,7 @@ class FourDayWorkoutStageGenerationService(
             userExercisePool = userExercisePool,
             workoutType = workoutType,
             weakMuscles = weakMuscles,
+            dayType = dayType,
             movementBalanceState = movementBalanceState
         )
 
@@ -124,11 +125,12 @@ class FourDayWorkoutStageGenerationService(
         // Select secondary exercise if applicable
         val secondaryExerciseMono = if (conjugateTemplates.hasSecondaryMovement(dayType)) {
             primaryExerciseMono.flatMap { primaryExercise ->
-                selectSecondaryExercise(
-                    userExercisePool = userExercisePool,
-                    primaryExercise = primaryExercise,
-                    movementBalanceState = movementBalanceState
-                ).doOnNext { secondaryExercise ->
+                        selectSecondaryExercise(
+                            userExercisePool = userExercisePool,
+                            primaryExercise = primaryExercise,
+                            dayType = dayType,
+                            movementBalanceState = movementBalanceState
+                        ).doOnNext { secondaryExercise ->
                     // Update movement balance state with secondary exercise
                     movementBalanceState = updateMovementBalanceState(movementBalanceState, secondaryExercise, false)
                     logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")

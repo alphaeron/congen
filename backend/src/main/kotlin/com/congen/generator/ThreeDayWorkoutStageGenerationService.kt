@@ -146,6 +146,7 @@ class ThreeDayWorkoutStageGenerationService(
                 userExercisePool = userExercisePool,
                 workoutType = "maximal_effort",
                 weakMuscles = weakMuscles,
+                dayType = dayType,
                 movementBalanceState = movementBalanceState
             )
 
@@ -154,6 +155,7 @@ class ThreeDayWorkoutStageGenerationService(
             selectConditioningExercise(
                 userExercisePool = userExercisePool,
                 weakMuscles = weakMuscles,
+                dayType = dayType,
                 movementBalanceState = movementBalanceState
             )
 
@@ -295,6 +297,7 @@ class ThreeDayWorkoutStageGenerationService(
                 userExercisePool = userExercisePool,
                 workoutType = "dynamic_effort",
                 weakMuscles = weakMuscles,
+                dayType = "DE_Upper",
                 movementBalanceState = movementBalanceState
             )
 
@@ -304,6 +307,7 @@ class ThreeDayWorkoutStageGenerationService(
                 userExercisePool = userExercisePool,
                 workoutType = "dynamic_effort",
                 weakMuscles = weakMuscles,
+                dayType = "DE_Lower",
                 movementBalanceState = movementBalanceState
             )
 
