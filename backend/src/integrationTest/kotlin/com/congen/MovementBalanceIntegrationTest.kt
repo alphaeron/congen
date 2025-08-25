@@ -1,6 +1,7 @@
 package com.congen
 
 import com.congen.model.WeightUnit
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.math.BigDecimal
@@ -10,7 +11,31 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         private val logger = LoggerFactory.getLogger(MovementBalanceIntegrationTest::class.java)
     }
 
-    // Each test will create its own user to avoid duplicate key constraint issues
+    private var userId: String = ""
+    private lateinit var userToken: String
+
+    @BeforeEach
+    override fun setUp() {
+        super.setUp()
+        // Create test user once for all tests
+        userToken = getValidToken("user")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
+
+        // Clean up any existing user program preferences to avoid duplicates
+        try {
+            webTestClient.delete()
+                .uri("/api/v1/user_program_preferences/$userId")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+        } catch (e: Exception) {
+            // Ignore errors if no preferences exist
+        }
+    }
+
+    // User creation is centralized in setUp() to avoid duplicate key constraint issues
 
     private fun setupUserEquipment(
         userId: String,
@@ -83,17 +108,11 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with balanced movement types for multiple users`() {
-        val token = getValidToken("user")
-
-        // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
         // Setup user equipment, program preferences, and one rep maxes
-        setupUserEquipment(testUser.keycloakId, token)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, token)
+        setupUserEquipment(testUser.keycloakId, userToken)
+        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -105,13 +124,13 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                 "Deadlift" to BigDecimal("200")
             )
 
-        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, token)
+        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, userToken)
 
         // Create a program for the user
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/program/?user_id=${testUser.keycloakId}&name=Movement Balance Test Program")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -120,7 +139,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                     val workoutResponse =
                         webTestClient.post()
                             .uri("/api/v1/conjugate_workout_generator/$programId")
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $userToken")
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
@@ -129,7 +148,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                                 val workouts =
                                     webTestClient.get()
                                         .uri("/api/v1/programmed_workout/program/$programId")
-                                        .header("Authorization", "Bearer $token")
+                                        .header("Authorization", "Bearer $userToken")
                                         .exchange()
                                         .expectStatus().isOk
                                         .expectBody()
@@ -141,7 +160,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
                                             // Verify that each workout has balanced movement types
                                             for (i in 0 until workoutCount) {
-                                                checkMovementBalance(programId, i, token)
+                                                checkMovementBalance(programId, i, userToken)
                                             }
                                         }
                             }
@@ -150,17 +169,11 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with balanced movement types for different session lengths`() {
-        val token = getValidToken("user")
-
-        // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
         // Setup user equipment, program preferences, and one rep maxes
-        setupUserEquipment(testUser.keycloakId, token)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, token)
+        setupUserEquipment(testUser.keycloakId, userToken)
+        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -171,13 +184,13 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                 "Back Squat" to BigDecimal("150"),
                 "Deadlift" to BigDecimal("200")
             )
-        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, token)
+        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, userToken)
 
         // Create a program for the user
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/program/?user_id=${testUser.keycloakId}&name=Movement Balance Test Program")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -186,7 +199,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                     val workoutResponse =
                         webTestClient.post()
                             .uri("/api/v1/conjugate_workout_generator/$programId")
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $userToken")
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
@@ -195,7 +208,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                                 val workouts =
                                     webTestClient.get()
                                         .uri("/api/v1/programmed_workout/program/$programId")
-                                        .header("Authorization", "Bearer $token")
+                                        .header("Authorization", "Bearer $userToken")
                                         .exchange()
                                         .expectStatus().isOk
                                         .expectBody()
@@ -205,7 +218,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
                                             // Verify that each workout has balanced movement types
                                             for (i in 0 until workoutCount) {
-                                                checkMovementBalance(programId, i, token)
+                                                checkMovementBalance(programId, i, userToken)
                                             }
                                         }
                             }
@@ -214,17 +227,11 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with balanced movement types for different one rep max profiles`() {
-        val token = getValidToken("user")
-
-        // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
         // Setup user equipment and program preferences
-        setupUserEquipment(testUser.keycloakId, token)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, token)
+        setupUserEquipment(testUser.keycloakId, userToken)
+        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         // Test with balanced one rep maxes
         val balancedOneRepMaxes =
@@ -236,13 +243,13 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                 "Back Squat" to BigDecimal("150"),
                 "Deadlift" to BigDecimal("200")
             )
-        setupUserOneRepMaxes(testUser.keycloakId, balancedOneRepMaxes, token)
+        setupUserOneRepMaxes(testUser.keycloakId, balancedOneRepMaxes, userToken)
 
         // Create a program for the user
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/program/?user_id=${testUser.keycloakId}&name=Movement Balance Test Program")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -251,7 +258,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                     val workoutResponse =
                         webTestClient.post()
                             .uri("/api/v1/conjugate_workout_generator/$programId")
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $userToken")
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
@@ -260,7 +267,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                                 val workouts =
                                     webTestClient.get()
                                         .uri("/api/v1/programmed_workout/program/$programId")
-                                        .header("Authorization", "Bearer $token")
+                                        .header("Authorization", "Bearer $userToken")
                                         .exchange()
                                         .expectStatus().isOk
                                         .expectBody()
@@ -270,7 +277,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
                                             // Verify that each workout has balanced movement types
                                             for (i in 0 until workoutCount) {
-                                                checkMovementBalance(programId, i, token)
+                                                checkMovementBalance(programId, i, userToken)
                                             }
                                         }
                             }
@@ -279,17 +286,11 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with balanced movement types for different equipment availability`() {
-        val token = getValidToken("user")
-
-        // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
         // Setup user equipment, program preferences, and one rep maxes
-        setupUserEquipment(testUser.keycloakId, token)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, token)
+        setupUserEquipment(testUser.keycloakId, userToken)
+        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -300,13 +301,13 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                 "Back Squat" to BigDecimal("150"),
                 "Deadlift" to BigDecimal("200")
             )
-        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, token)
+        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, userToken)
 
         // Create a program for the user
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/program/?user_id=${testUser.keycloakId}&name=Movement Balance Test Program")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -315,7 +316,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                     val workoutResponse =
                         webTestClient.post()
                             .uri("/api/v1/conjugate_workout_generator/$programId")
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $userToken")
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
@@ -324,7 +325,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                                 val workouts =
                                     webTestClient.get()
                                         .uri("/api/v1/programmed_workout/program/$programId")
-                                        .header("Authorization", "Bearer $token")
+                                        .header("Authorization", "Bearer $userToken")
                                         .exchange()
                                         .expectStatus().isOk
                                         .expectBody()
@@ -334,7 +335,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
                                             // Verify that each workout has balanced movement types
                                             for (i in 0 until workoutCount) {
-                                                checkMovementBalance(programId, i, token)
+                                                checkMovementBalance(programId, i, userToken)
                                             }
                                         }
                             }
@@ -343,17 +344,11 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with balanced movement types for different movement patterns`() {
-        val token = getValidToken("user")
-
-        // Create a single test user for this test
-        val testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
-        // Create user consent for GDPR compliance
-        IntegrationTestHelpers.createUserConsent(webTestClient, token)
-        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = token)
+        val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
         // Setup user equipment, program preferences, and one rep maxes
-        setupUserEquipment(testUser.keycloakId, token)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, token)
+        setupUserEquipment(testUser.keycloakId, userToken)
+        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -364,13 +359,13 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                 "Back Squat" to BigDecimal("150"),
                 "Deadlift" to BigDecimal("200")
             )
-        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, token)
+        setupUserOneRepMaxes(testUser.keycloakId, oneRepMaxes, userToken)
 
         // Create a program for the user
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/program/?user_id=${testUser.keycloakId}&name=Movement Balance Test Program")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk
                 .expectBody()
@@ -379,7 +374,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                     val workoutResponse =
                         webTestClient.post()
                             .uri("/api/v1/conjugate_workout_generator/$programId")
-                            .header("Authorization", "Bearer $token")
+                            .header("Authorization", "Bearer $userToken")
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
@@ -388,7 +383,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                                 val workouts =
                                     webTestClient.get()
                                         .uri("/api/v1/programmed_workout/program/$programId")
-                                        .header("Authorization", "Bearer $token")
+                                        .header("Authorization", "Bearer $userToken")
                                         .exchange()
                                         .expectStatus().isOk
                                         .expectBody()
@@ -398,7 +393,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
                                             // Verify that each workout has balanced movement types
                                             for (i in 0 until workoutCount) {
-                                                checkMovementBalance(programId, i, token)
+                                                checkMovementBalance(programId, i, userToken)
                                             }
                                         }
                             }
