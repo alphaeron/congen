@@ -72,6 +72,49 @@ class PrilepinGuidelinesService {
     }
 
     /**
+     * Gets a rest time based on intensity and total reps, rounded to standard intervals.
+     *
+     * Rest time calculation:
+     * - 0.9-1.0 intensity: Always 300 seconds (5 minutes)
+     * - Other intensities: Based on how close to the upper end of totalRepsRange
+     * - Higher intensity and more reps = longer rest
+     *
+     * @param restRange The range of rest times
+     * @param intensity The exercise intensity (0.0-1.0)
+     * @param totalReps The actual total reps being performed
+     * @param totalRepsRange The acceptable range of total reps
+     * @return A calculated rest time rounded to standard intervals
+     */
+    fun getRestTimeBasedOnIntensity(
+        restRange: IntRange,
+        intensity: Double,
+        totalReps: Int,
+        totalRepsRange: IntRange
+    ): Int {
+        // For 90%+ intensity, always use maximum rest (300 seconds)
+        if (intensity >= 0.9) {
+            return 300
+        }
+        
+        // Calculate how close we are to the upper end of the total reps range
+        val rangeSize = totalRepsRange.endInclusive - totalRepsRange.start
+        val repsFromStart = totalReps - totalRepsRange.start
+        val repsRatio = if (rangeSize > 0) repsFromStart.toDouble() / rangeSize else 0.5
+        
+        // Calculate intensity factor (0.0-1.0)
+        val intensityFactor = (intensity - 0.5) / 0.4 // Normalize 0.5-0.9 to 0.0-1.0
+        
+        // Combine intensity and reps factors
+        val combinedFactor = (intensityFactor + repsRatio) / 2.0
+        
+        // Calculate rest time within the range
+        val restRangeSize = restRange.endInclusive - restRange.start
+        val calculatedRest = restRange.start + (combinedFactor * restRangeSize).toInt()
+        
+        return roundRestTimeToStandardInterval(calculatedRest)
+    }
+
+    /**
      * Gets a random rest time from the given range, rounded to standard intervals.
      *
      * @param restRange The range of rest times
@@ -105,6 +148,9 @@ class PrilepinGuidelinesService {
         return when {
             // Accessory movements always use accessory guidelines
             movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
+            
+            // Secondary movements use lower intensity guidelines than primary
+            movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle, dayType)
             
             // Handle combined ME+DE days based on movement role
             dayType == "ME_Upper_DE_Lower" -> {
@@ -337,6 +383,42 @@ class PrilepinGuidelinesService {
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.5)
+            }
+            else -> {
+                val guidelines = PRILEPIN_GUIDELINES["0.7-0.8"]!!
+                val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
+                Pair(guidelines, intensity)
+            }
+        }
+    }
+
+    /**
+     * Gets Secondary Exercise guidelines based on week in cycle.
+     *
+     * Secondary exercises use lower intensity than primary exercises:
+     * - Week 1-2: 70-80% intensity (vs 80-90% for primary)
+     * - Week 3: 80-90% intensity (vs 90-100% for primary)
+     * - Week 4: 55-65% intensity (deload, same as primary)
+     */
+    private fun getSecondaryExerciseGuidelines(weekInCycle: Int, dayType: String): Pair<PrilepinGuidelines, Double> {
+        return when (weekInCycle) {
+            1, 2 -> {
+                // Use 70-80% intensity for secondary (lower than primary's 80-90%)
+                val guidelines = PRILEPIN_GUIDELINES["0.7-0.8"]!!
+                val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
+                Pair(guidelines, intensity)
+            }
+            3 -> {
+                // Use 80-90% intensity for secondary (lower than primary's 90-100%)
+                val guidelines = PRILEPIN_GUIDELINES["0.8-0.9"]!!
+                val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
+                Pair(guidelines, intensity)
+            }
+            4 -> {
+                // Use 55-65% intensity for deload (same as primary)
+                val guidelines = PRILEPIN_GUIDELINES["0.55-0.65"]!!
+                val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
+                Pair(guidelines, intensity)
             }
             else -> {
                 val guidelines = PRILEPIN_GUIDELINES["0.7-0.8"]!!

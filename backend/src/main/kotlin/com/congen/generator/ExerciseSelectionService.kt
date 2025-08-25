@@ -408,8 +408,6 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String
     ): Mono<List<Exercise>> {
-        val warmupExercises = mutableListOf<Exercise>()
-
         return if (primaryExercise != null) {
             // Get muscles for the primary exercise
             exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
@@ -441,14 +439,11 @@ class ExerciseSelectionService(
                     muscleFocusedMono.flatMap { muscleExercises ->
                         movementPatternMono
                             .map { movementExercise ->
-                                warmupExercises.addAll(muscleExercises)
-                                warmupExercises.add(movementExercise)
-                                warmupExercises
+                                muscleExercises + movementExercise
                             }
                             .switchIfEmpty(
                                 // If no movement pattern exercise found, just return the muscle-focused exercises
-                                // Don't add more exercises to avoid exceeding the expected count
-                                Mono.just(warmupExercises.apply { addAll(muscleExercises) })
+                                Mono.just(muscleExercises)
                             )
                     }
                 }

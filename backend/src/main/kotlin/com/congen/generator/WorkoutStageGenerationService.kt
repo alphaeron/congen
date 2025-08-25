@@ -775,7 +775,13 @@ abstract class WorkoutStageGenerationService(
 
         val repsPerSet = guidelines.repsPerSetRange.random()
         val numSets = (guidelines.totalReps / repsPerSet).toInt()
-        val restSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
+        val actualTotalReps = numSets * repsPerSet
+        val restSeconds = prilepinGuidelinesService.getRestTimeBasedOnIntensity(
+            restRange = guidelines.restSeconds,
+            intensity = intensity,
+            totalReps = actualTotalReps,
+            totalRepsRange = guidelines.totalRepsRange
+        )
 
         val isDynamicEffort = dayType.startsWith("DE_")
         // For non-DE exercises, use standard weight calculation
