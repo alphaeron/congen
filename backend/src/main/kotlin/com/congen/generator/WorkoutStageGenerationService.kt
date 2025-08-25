@@ -321,6 +321,14 @@ abstract class WorkoutStageGenerationService(
             WorkoutStageTypeEnum.ACCESSORY.position
         )
             .flatMap { accessoryStage ->
+                // Generate a consistent rest time for all accessory exercises
+                val guidelines = prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                    dayType = dayType,
+                    currentWeekNumber = currentWeekNumber,
+                    movementRole = "accessory"
+                ).first
+                val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
+                
                 Flux.range(1, numAccessoryExercises)
                     .concatMap {
                         selectAccessoryExercise(
@@ -335,13 +343,13 @@ abstract class WorkoutStageGenerationService(
                                 accessoryExercise.name
                             )
                                 .flatMap { accessoryProgrammedExercise ->
-                                    generatePrilepinBasedScheme(
+                                    generateAccessorySchemeWithConsistentRest(
                                         exercise = accessoryExercise,
-                                        movementRole = "accessory",
                                         dayType = dayType,
                                         oneRepMaxes = oneRepMaxes,
                                         currentWeekNumber = currentWeekNumber,
-                                        userId = userId
+                                        userId = userId,
+                                        consistentRestSeconds = consistentRestSeconds
                                     ).flatMap { accessoryScheme ->
                                         createSetSchemes(
                                             accessoryProgrammedExercise.id,
@@ -761,7 +769,8 @@ abstract class WorkoutStageGenerationService(
         val (guidelines, intensity) =
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
                 dayType = dayType,
-                currentWeekNumber = currentWeekNumber
+                currentWeekNumber = currentWeekNumber,
+                movementRole = movementRole
             )
 
         val repsPerSet = guidelines.repsPerSetRange.random()
@@ -889,6 +898,79 @@ abstract class WorkoutStageGenerationService(
                         restSeconds = restSeconds,
                         // No bands for conditioning
                         band = null,
+                    )
+                }
+            }
+    }
+
+    /**
+     * Generates accessory set schemes with a consistent rest time.
+     *
+     * @param exercise The accessory exercise to generate schemes for
+     * @param dayType The type of workout day
+     * @param oneRepMaxes User's one rep max values
+     * @param currentWeekNumber Current week number
+     * @param userId User ID
+     * @param consistentRestSeconds The consistent rest time in seconds
+     * @return Mono containing the generated set schemes
+     */
+    protected fun generateAccessorySchemeWithConsistentRest(
+        exercise: Exercise,
+        dayType: String,
+        oneRepMaxes: List<UserOneRepMax>,
+        currentWeekNumber: Int,
+        userId: String,
+        consistentRestSeconds: Int
+    ): Mono<List<SetSchemeParams>> {
+        val (guidelines, intensity) =
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber,
+                movementRole = "accessory"
+            )
+
+        val repsPerSet = guidelines.repsPerSetRange.random()
+        val numSets = (guidelines.totalReps / repsPerSet).toInt()
+
+        val isDynamicEffort = dayType.startsWith("DE_")
+        // For non-DE exercises, use standard weight calculation
+        return weightSelectionService.getTargetWeight(
+            exercise.name,
+            intensity,
+            oneRepMaxes,
+            userId,
+            isDynamicEffort = isDynamicEffort,
+            currentWeekNumber = currentWeekNumber
+        )
+            .map { result ->
+                val useTempo = Random.nextBoolean() // Random tempo for accessory exercises
+                val eccentric = if (useTempo) Random.nextInt(1, 4).toString() else "0"
+                val isometric = if (useTempo) Random.nextInt(0, 3).toString() else "0"
+                val concentric =
+                    if (useTempo) {
+                        if (Random.nextBoolean()) {
+                            "1"
+                        } else {
+                            "X"
+                        }
+                    } else {
+                        "0"
+                    }
+                (1..numSets).map { setNumber ->
+                    SetSchemeParams(
+                        setNumber = setNumber,
+                        isAmrap = false,
+                        isEmom = false,
+                        useTempo = useTempo,
+                        eccentricTempo = eccentric,
+                        isometricTempo = isometric,
+                        concentricTempo = concentric,
+                        targetWeight = result.targetWeight,
+                        performedWeight = null,
+                        targetRepCount = repsPerSet,
+                        performedRepCount = null,
+                        restSeconds = consistentRestSeconds,
+                        band = result.band,
                     )
                 }
             }

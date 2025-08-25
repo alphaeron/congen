@@ -87,27 +87,51 @@ class PrilepinGuidelinesService {
      * - Week 4: Deload
      *
      * @param dayType The type of workout day (ME_Upper, DE_Lower, etc.)
-     * @param movementRole The role of the movement (primary, secondary, accessory)
      * @param currentWeekNumber The current week number in the program
-     * @param exercise The exercise being programmed
+     * @param movementRole The role of the movement (primary, secondary, accessory)
      * @return Pair of PrilepinGuidelines and target intensity
      */
     fun getUndulatingPeriodizationGuidelines(
         dayType: String,
-        currentWeekNumber: Int
+        currentWeekNumber: Int,
+        movementRole: String = "primary"
     ): Pair<PrilepinGuidelines, Double> {
         val weekInCycle = ((currentWeekNumber - 1) % 4) + 1
-        val isUpperBody = dayType.contains("Upper")
-        val isLowerBody = dayType.contains("Lower")
 
         return when {
-            // Max Effort movements
-            dayType.contains("ME") -> getMaxEffortGuidelines(weekInCycle, isUpperBody)
+            // Accessory movements always use accessory guidelines
+            movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
+            
+            // Handle combined ME+DE days based on movement role
+            dayType == "ME_Upper_DE_Lower" -> {
+                when (movementRole) {
+                    "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
+                    "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = false, isLowerBody = true)
+                    else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
+                }
+            }
+            
+            dayType == "ME_Lower_DE_Upper" -> {
+                when (movementRole) {
+                    "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
+                    "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = true, isLowerBody = false)
+                    else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
+                }
+            }
+            
+            // Handle regular day types
+            dayType.contains("ME") -> {
+                val isUpperBody = dayType.contains("Upper")
+                getMaxEffortGuidelines(weekInCycle, isUpperBody)
+            }
+            
+            dayType.contains("DE") -> {
+                val isUpperBody = dayType.contains("Upper")
+                val isLowerBody = dayType.contains("Lower")
+                getDynamicEffortGuidelines(weekInCycle, isUpperBody, isLowerBody)
+            }
 
-            // Dynamic Effort movements
-            dayType.contains("DE") -> getDynamicEffortGuidelines(weekInCycle, isUpperBody, isLowerBody)
-
-            // Accessory movements
+            // Default to accessory guidelines
             else -> getAccessoryGuidelines(weekInCycle)
         }
     }
