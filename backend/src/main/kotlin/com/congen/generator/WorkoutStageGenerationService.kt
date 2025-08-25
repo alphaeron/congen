@@ -929,8 +929,11 @@ abstract class WorkoutStageGenerationService(
                 movementRole = "accessory"
             )
 
-        val repsPerSet = guidelines.repsPerSetRange.random()
-        val numSets = (guidelines.totalReps / repsPerSet).toInt()
+        // For accessories, use "good" rep numbers (6, 8, 10, 12, 15) instead of random ranges
+        val goodRepNumbers = listOf(6, 8, 10, 12, 15)
+        val repsPerSet = goodRepNumbers.random()
+        // For accessories, use a fixed 3-4 set range instead of calculating from total reps
+        val numSets = (3..4).random()
 
         val isDynamicEffort = dayType.startsWith("DE_")
         // For non-DE exercises, use standard weight calculation

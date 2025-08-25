@@ -18,8 +18,10 @@ data class PrilepinGuidelines(
     val intensityRange: ClosedFloatingPointRange<Double>,
     /** The range of reps per set. */
     val repsPerSetRange: IntRange,
-    /** The total number of reps to perform. */
+    /** The optimal total number of reps to perform. */
     val totalReps: Int,
+    /** The acceptable range of total reps to perform. */
+    val totalRepsRange: IntRange,
     /** The range of rest seconds between sets. */
     val restSeconds: IntRange
 )

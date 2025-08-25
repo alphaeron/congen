@@ -21,6 +21,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.55..0.65,
                         repsPerSetRange = 3..6,
                         totalReps = 24,
+                        totalRepsRange = 18..30,
                         restSeconds = 60..90
                     ),
                 "0.7-0.8" to
@@ -28,6 +29,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.7..0.8,
                         repsPerSetRange = 3..6,
                         totalReps = 18,
+                        totalRepsRange = 12..24,
                         restSeconds = 90..120
                     ),
                 "0.8-0.9" to
@@ -35,6 +37,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.8..0.9,
                         repsPerSetRange = 2..4,
                         totalReps = 15,
+                        totalRepsRange = 10..20,
                         restSeconds = 180..300
                     ),
                 "0.9-1.0" to
@@ -42,6 +45,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.9..1.0,
                         repsPerSetRange = 1..2,
                         totalReps = 4,
+                        totalRepsRange = 4..4,
                         restSeconds = 180..300
                     )
             )
@@ -219,6 +223,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.75..0.75,
                         repsPerSetRange = repsPerSet..repsPerSet,
                         totalReps = totalReps,
+                        totalRepsRange = totalReps..totalReps,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.75)
@@ -233,6 +238,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.8..0.8,
                         repsPerSetRange = repsPerSet..repsPerSet,
                         totalReps = totalReps,
+                        totalRepsRange = totalReps..totalReps,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.8)
@@ -247,6 +253,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.85..0.85,
                         repsPerSetRange = repsPerSet..repsPerSet,
                         totalReps = totalReps,
+                        totalRepsRange = totalReps..totalReps,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.85)
@@ -261,6 +268,7 @@ class PrilepinGuidelinesService {
                         intensityRange = 0.5..0.5,
                         repsPerSetRange = repsPerSet..repsPerSet,
                         totalReps = totalReps,
+                        totalRepsRange = totalReps..totalReps,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.5)
@@ -286,6 +294,7 @@ class PrilepinGuidelinesService {
                         repsPerSetRange = 3..3,
                         // 9*3
                         totalReps = 27,
+                        totalRepsRange = 27..27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.5)
@@ -298,6 +307,7 @@ class PrilepinGuidelinesService {
                         repsPerSetRange = 3..3,
                         // 9*3
                         totalReps = 27,
+                        totalRepsRange = 27..27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.55)
@@ -310,6 +320,7 @@ class PrilepinGuidelinesService {
                         repsPerSetRange = 3..3,
                         // 9*3
                         totalReps = 27,
+                        totalRepsRange = 27..27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.6)
@@ -322,6 +333,7 @@ class PrilepinGuidelinesService {
                         repsPerSetRange = 3..3,
                         // 9*3
                         totalReps = 27,
+                        totalRepsRange = 27..27,
                         restSeconds = 60..90
                     )
                 Pair(guidelines, 0.5)
@@ -337,25 +349,45 @@ class PrilepinGuidelinesService {
     /**
      * Gets Accessory guidelines based on week in cycle.
      *
-     * Accessory undulating periodization:
-     * - Week 1: 55-65% intensity
-     * - Week 2-3: 70-80% intensity
-     * - Week 4: 55-65% intensity (deload)
+     * Accessory undulating periodization with 3-4 sets:
+     * - Week 1: 55-65% intensity, 3-4 sets of "good" rep numbers (6, 8, 10, 12, 15)
+     * - Week 2-3: 70-80% intensity, 3-4 sets of "good" rep numbers (6, 8, 10, 12, 15)
+     * - Week 4: 55-65% intensity (deload), 3-4 sets of "good" rep numbers (6, 8, 10, 12, 15)
      */
     private fun getAccessoryGuidelines(weekInCycle: Int): Pair<PrilepinGuidelines, Double> {
         return when (weekInCycle) {
             1, 4 -> {
-                val guidelines = PRILEPIN_GUIDELINES["0.55-0.65"]!!
+                // Use 55-65% intensity with 3-4 sets of "good" rep numbers for accessories
+                val guidelines = PrilepinGuidelines(
+                    intensityRange = 0.55..0.65,
+                    repsPerSetRange = 6..15, // This will be overridden to use specific "good" numbers
+                    totalReps = 30, // 3-4 sets × 6-15 reps = 18-60 total, target ~30
+                    totalRepsRange = 18..60,
+                    restSeconds = 60..90
+                )
                 val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
                 Pair(guidelines, intensity)
             }
             2, 3 -> {
-                val guidelines = PRILEPIN_GUIDELINES["0.7-0.8"]!!
+                // Use 70-80% intensity with 3-4 sets of "good" rep numbers for accessories
+                val guidelines = PrilepinGuidelines(
+                    intensityRange = 0.7..0.8,
+                    repsPerSetRange = 6..15, // This will be overridden to use specific "good" numbers
+                    totalReps = 24, // 3-4 sets × 6-15 reps = 18-60 total, target ~24
+                    totalRepsRange = 18..60,
+                    restSeconds = 90..120
+                )
                 val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
                 Pair(guidelines, intensity)
             }
             else -> {
-                val guidelines = PRILEPIN_GUIDELINES["0.7-0.8"]!!
+                val guidelines = PrilepinGuidelines(
+                    intensityRange = 0.7..0.8,
+                    repsPerSetRange = 6..15, // This will be overridden to use specific "good" numbers
+                    totalReps = 24,
+                    totalRepsRange = 18..60,
+                    restSeconds = 90..120
+                )
                 val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
                 Pair(guidelines, intensity)
             }
