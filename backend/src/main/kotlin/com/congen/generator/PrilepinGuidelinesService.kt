@@ -126,17 +126,60 @@ class PrilepinGuidelinesService {
     }
 
     /**
-     * Gets undulating periodization guidelines based on week number and movement type.
+     * Gets reps per set and number of sets based on intensity within the given guidelines.
      *
-     * Undulating periodization works on a 4-week cycle:
-     * - Week 1-2: Build intensity
-     * - Week 3: Peak intensity
-     * - Week 4: Deload
+     * Reps calculation:
+     * - Higher intensity = lower reps within the range
+     * - Lower intensity = higher reps within the range
+     * - Linear interpolation between these points
      *
-     * @param dayType The type of workout day (ME_Upper, DE_Lower, etc.)
-     * @param currentWeekNumber The current week number in the program
-     * @param movementRole The role of the movement (primary, secondary, accessory)
-     * @return Pair of PrilepinGuidelines and target intensity
+     * Sets calculation:
+     * - Based on total reps divided by reps per set
+     * - Higher intensity = fewer total reps within the range
+     *
+     * @param guidelines The Prilepin guidelines containing ranges and total reps
+     * @param intensity The actual intensity being used
+     * @return Pair of (reps per set, number of sets)
+     */
+    fun getRepsAndSetsBasedOnIntensity(
+        guidelines: PrilepinGuidelines,
+        intensity: Double
+    ): Pair<Int, Int> {
+        // Calculate reps based on intensity: higher intensity = lower reps
+        val rangeSize = guidelines.intensityRange.endInclusive - guidelines.intensityRange.start
+        val intensityPosition = (intensity - guidelines.intensityRange.start) / rangeSize
+        
+        val maxReps = guidelines.repsPerSetRange.last
+        val minReps = guidelines.repsPerSetRange.first
+        val repsPerSet = (maxReps - (intensityPosition * (maxReps - minReps))).toInt().coerceIn(minReps, maxReps)
+        
+        // Calculate total reps based on intensity: higher intensity = fewer total reps
+        val totalRepsRangeSize = guidelines.totalRepsRange.endInclusive - guidelines.totalRepsRange.start
+        val adjustedTotalReps = guidelines.totalRepsRange.endInclusive - (intensityPosition * totalRepsRangeSize).toInt()
+        
+        // Calculate sets based on adjusted total reps
+        val numSets = (adjustedTotalReps / repsPerSet).toInt()
+        
+        return Pair(repsPerSet, numSets)
+    }
+
+    /**
+     * Gets undulating periodization guidelines based on day type, week number, and movement role.
+     *
+     * This function determines the appropriate Prilepin guidelines and intensity based on:
+     * - Day type (ME_Upper, ME_Lower, DE_Upper, DE_Lower, etc.)
+     * - Current week number (used to calculate week in cycle)
+     * - Movement role (primary, secondary, accessory)
+     *
+     * The function handles the 4-week undulating periodization cycle:
+     * - Week 1-2: Build-up phase
+     * - Week 3: Peak intensity phase
+     * - Week 4: Deload phase
+     *
+     * @param dayType The type of training day (e.g., "ME_Upper", "DE_Lower")
+     * @param currentWeekNumber The current week number (used to calculate week in cycle)
+     * @param movementRole The role of the movement ("primary", "secondary", "accessory")
+     * @return Pair of (PrilepinGuidelines, intensity)
      */
     fun getUndulatingPeriodizationGuidelines(
         dayType: String,
@@ -145,7 +188,7 @@ class PrilepinGuidelinesService {
     ): Pair<PrilepinGuidelines, Double> {
         val weekInCycle = ((currentWeekNumber - 1) % 4) + 1
 
-        return when {
+        val result = when {
             // Accessory movements always use accessory guidelines
             movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
             
@@ -184,6 +227,8 @@ class PrilepinGuidelinesService {
             // Default to accessory guidelines
             else -> getAccessoryGuidelines(weekInCycle)
         }
+        
+        return result
     }
 
     /**

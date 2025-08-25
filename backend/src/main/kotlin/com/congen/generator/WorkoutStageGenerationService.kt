@@ -773,8 +773,10 @@ abstract class WorkoutStageGenerationService(
                 movementRole = movementRole
             )
 
-        val repsPerSet = guidelines.repsPerSetRange.random()
-        val numSets = (guidelines.totalReps / repsPerSet).toInt()
+        val (repsPerSet, numSets) = prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
+            guidelines = guidelines,
+            intensity = intensity
+        )
         val actualTotalReps = numSets * repsPerSet
         val restSeconds = prilepinGuidelinesService.getRestTimeBasedOnIntensity(
             restRange = guidelines.restSeconds,
