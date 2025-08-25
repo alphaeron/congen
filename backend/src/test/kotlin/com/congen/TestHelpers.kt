@@ -420,12 +420,14 @@ fun mockPrilepinGuidelines(
     intensityRange: ClosedFloatingPointRange<Double> = 0.8..0.9,
     repsPerSetRange: IntRange = 2..4,
     totalReps: Int = 15,
+    totalRepsRange: IntRange = 12..18,
     restSeconds: IntRange = 180..300
 ): PrilepinGuidelines =
     PrilepinGuidelines(
         intensityRange = intensityRange,
         repsPerSetRange = repsPerSetRange,
         totalReps = totalReps,
+        totalRepsRange = totalRepsRange,
         restSeconds = restSeconds
     )
 

@@ -2,6 +2,7 @@ package com.congen.service
 
 import com.congen.client.KeycloakClient
 import com.congen.dal.UserDAL
+import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.util.KeycloakUtil
@@ -22,6 +23,7 @@ import java.time.Instant
 @ExtendWith(MockitoExtension::class)
 class UserServiceTest {
     private lateinit var userDAL: UserDAL
+    private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
     private lateinit var unitConverter: UnitConverter
     private lateinit var keycloakClient: KeycloakClient
     private lateinit var keycloakUtil: KeycloakUtil
@@ -40,11 +42,12 @@ class UserServiceTest {
     @BeforeEach
     fun setUp() {
         userDAL = mock()
+        userProgramPreferencesDAL = mock()
         unitConverter = mock()
         keycloakClient = mock()
         keycloakUtil = mock()
         gdprComplianceService = mock()
-        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService)
+        userService = UserService(userDAL, userProgramPreferencesDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService)
     }
 
     @Test
