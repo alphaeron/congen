@@ -15,6 +15,17 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
+
+        // Clean up any existing user program preferences to avoid duplicates
+        try {
+            webTestClient.delete()
+                .uri("/api/v1/user_program_preferences/$userId")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+        } catch (e: Exception) {
+            // Ignore errors if no preferences exist
+        }
     }
 
     @Test

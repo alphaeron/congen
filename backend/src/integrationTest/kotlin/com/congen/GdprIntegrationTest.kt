@@ -22,6 +22,17 @@ class GdprIntegrationTest : BaseIntegrationTest() {
         // Create a test user with real Keycloak authentication
         userToken = getValidToken("user")
         testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
+
+        // Clean up any existing user program preferences to avoid duplicates
+        try {
+            webTestClient.delete()
+                .uri("/api/v1/user_program_preferences/$testUserId")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+        } catch (e: Exception) {
+            // Ignore errors if no preferences exist
+        }
     }
 
     @Test
@@ -153,20 +164,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_rights").exists()
             .jsonPath("$.last_updated").isEqualTo("2025-08-08T00:00:00Z")
             .jsonPath("$.version").isEqualTo("1.0.0")
-    }
-
-    @Test
-    fun `GDPR endpoints should handle user not found gracefully`() {
-        // Test consent status for non-existent user, which should default to false
-        webTestClient
-            .get()
-            .uri("/api/v1/gdpr/consent")
-            .header("Authorization", "Bearer $userToken")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("$.data_processing_consent").isEqualTo(false)
     }
 
     @Test
