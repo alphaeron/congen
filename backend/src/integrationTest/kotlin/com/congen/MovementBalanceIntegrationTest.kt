@@ -143,7 +143,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
-                            .jsonPath("$.id").value<Int> { _ ->
+                            .jsonPath("$.id").value<Int> {
                                 // Get workouts for this program
                                 val workouts =
                                     webTestClient.get()
@@ -203,7 +203,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
-                            .jsonPath("$.id").value<Int> { _ ->
+                            .jsonPath("$.id").value<Int> {
                                 // Get workouts for this program
                                 val workouts =
                                     webTestClient.get()
@@ -262,7 +262,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
-                            .jsonPath("$.id").value<Int> { _ ->
+                            .jsonPath("$.id").value<Int> {
                                 // Get workouts for this program
                                 val workouts =
                                     webTestClient.get()
@@ -320,7 +320,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
-                            .jsonPath("$.id").value<Int> { _ ->
+                            .jsonPath("$.id").value<Int> {
                                 // Get workouts for this program
                                 val workouts =
                                     webTestClient.get()
@@ -378,7 +378,7 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                             .exchange()
                             .expectStatus().isOk
                             .expectBody()
-                            .jsonPath("$.id").value<Int> { _ ->
+                            .jsonPath("$.id").value<Int> {
                                 // Get workouts for this program
                                 val workouts =
                                     webTestClient.get()

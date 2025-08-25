@@ -109,7 +109,7 @@ class ExerciseSelectionService(
             } else {
                 userExercisePool.getAvailablePrimaryExercises()
             }
-            
+
             if (availableExercises.isEmpty()) {
                 logger.error("No available exercises found for isAccessory: {}", isAccessory)
                 return@defer Mono.error(IllegalStateException("No available exercises found for isAccessory: $isAccessory"))
@@ -139,7 +139,7 @@ class ExerciseSelectionService(
                     .flatMap { workoutTypeFilteredExercises ->
                         if (workoutTypeFilteredExercises.isEmpty()) {
                             logger.error(
-                                "No exercises available after workout-type filtering for workoutType: {} and isAccessory: {}", 
+                                "No exercises available after workout-type filtering for workoutType: {} and isAccessory: {}",
                                 workoutType, isAccessory
                             )
                             return@flatMap Mono.error(
@@ -157,8 +157,8 @@ class ExerciseSelectionService(
                             )
                             .flatMap { equipmentFilteredExercises ->
                                 userExercisePool.filterExercisesByMuscles(
-                                    equipmentFilteredExercises, 
-                                    targetMuscles, 
+                                    equipmentFilteredExercises,
+                                    targetMuscles,
                                     exerciseMuscleDAL
                                 )
                             }
@@ -193,14 +193,14 @@ class ExerciseSelectionService(
 
                             if (finalExercises.isEmpty()) {
                                 logger.error(
-                                    "No exercises available after movement balance constraints for isAccessory: {}", 
+                                    "No exercises available after movement balance constraints for isAccessory: {}",
                                     isAccessory
                                 )
                                 // Fallback to any available exercise
                                 val fallbackExercise = availableExercises.firstOrNull()
                                 if (fallbackExercise != null) {
                                     logger.warn(
-                                        "Using fallback exercise after movement balance constraints: {} for isAccessory: {}", 
+                                        "Using fallback exercise after movement balance constraints: {} for isAccessory: {}",
                                         fallbackExercise.name, isAccessory
                                     )
                                     Mono.just(fallbackExercise)
@@ -258,7 +258,7 @@ class ExerciseSelectionService(
             }
             .onErrorResume { error ->
                 logger.error(
-                    "Failed to select similar secondary exercise for primary exercise: {}. Error: {}", 
+                    "Failed to select similar secondary exercise for primary exercise: {}. Error: {}",
                     primaryExercise.name, error.message
                 )
                 Mono.error(error)
@@ -291,7 +291,7 @@ class ExerciseSelectionService(
      */
     fun filterExercisesByDayType(exercises: List<Exercise>, dayType: String): List<Exercise> {
         logger.debug("Filtering exercises by day type: {} for {} exercises", dayType, exercises.size)
-        
+
         val filteredExercises = when {
             dayType.contains("Upper") -> {
                 // For upper body days, only include exercises that primarily target upper body muscles
@@ -315,7 +315,7 @@ class ExerciseSelectionService(
                 exercises
             }
         }
-        
+
         logger.debug("Day type filtering result: {} exercises for dayType: {}", filteredExercises.size, dayType)
         return filteredExercises
     }
@@ -512,7 +512,7 @@ class ExerciseSelectionService(
     ): Mono<List<Exercise>> {
         // For 2 and 3 day templates, focus on common muscles used in ME and DE exercises
         val commonMuscles = listOf(
-            "chest", "shoulders", "triceps", "upper_back", "biceps", 
+            "chest", "shoulders", "triceps", "upper_back", "biceps",
             "quadriceps", "hamstrings", "glutes", "calves", "core"
         )
 
@@ -546,7 +546,7 @@ class ExerciseSelectionService(
 
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
-            .concatMap { _ ->
+            .concatMap {
                 selectExercise(
                     userExercisePool = userExercisePool,
                     targetMuscles = targetMuscles,
@@ -561,7 +561,7 @@ class ExerciseSelectionService(
             .collectList()
             .onErrorResume { error ->
                 logger.error(
-                    "Failed to select muscle-focused warmup exercises. Parameters: targetMuscles={}, count={}. Error: {}", 
+                    "Failed to select muscle-focused warmup exercises. Parameters: targetMuscles={}, count={}. Error: {}",
                     targetMuscles, count, error.message
                 )
                 Mono.just(emptyList())
@@ -581,7 +581,7 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String
     ): Mono<Exercise> {
-        
+
         // Use the main entry point to select an accessory exercise with similar movement pattern
         return selectExercise(
             userExercisePool = userExercisePool,
@@ -595,7 +595,7 @@ class ExerciseSelectionService(
             selectedExercise.movementType == primaryExercise.movementType
         }.onErrorResume { error ->
             logger.error(
-                "Failed to select movement pattern warmup exercise for primary exercise: {}. Error: {}", 
+                "Failed to select movement pattern warmup exercise for primary exercise: {}. Error: {}",
                 primaryExercise.name, error.message
             )
             Mono.error(error)
@@ -621,7 +621,7 @@ class ExerciseSelectionService(
 
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
-            .concatMap { _ ->
+            .concatMap {
                 selectExercise(
                     userExercisePool = userExercisePool,
                     targetMuscles = emptyList(),
