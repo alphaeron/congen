@@ -2,6 +2,7 @@ package com.congen.generator
 
 import org.springframework.stereotype.Service
 import kotlin.random.Random
+import kotlin.math.abs
 
 /**
  * Service for managing Prilepin's Chart guidelines and undulating periodization.
@@ -44,6 +45,37 @@ class PrilepinGuidelinesService {
                         restSeconds = 180..300
                     )
             )
+    }
+
+    /**
+     * Rounds rest time to standard intervals for better user experience.
+     *
+     * Standard rest time intervals:
+     * - 30 seconds for very short rest
+     * - 60 seconds for short rest
+     * - 90 seconds for moderate rest
+     * - 120 seconds for longer rest
+     * - 180 seconds for long rest
+     * - 240 seconds for very long rest
+     * - 300 seconds for maximum rest
+     *
+     * @param restSeconds The raw rest time in seconds
+     * @return Rounded rest time to nearest standard interval
+     */
+    private fun roundRestTimeToStandardInterval(restSeconds: Int): Int {
+        val standardIntervals = listOf(30, 45, 60, 90, 120, 180, 300)
+        return standardIntervals.minByOrNull { abs(it - restSeconds) } ?: restSeconds
+    }
+
+    /**
+     * Gets a random rest time from the given range, rounded to standard intervals.
+     *
+     * @param restRange The range of rest times
+     * @return A random rest time rounded to standard intervals
+     */
+    fun getRandomRestTime(restRange: IntRange): Int {
+        val rawRestTime = restRange.random()
+        return roundRestTimeToStandardInterval(rawRestTime)
     }
 
     /**

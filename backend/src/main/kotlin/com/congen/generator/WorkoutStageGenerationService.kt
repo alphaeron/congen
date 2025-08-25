@@ -766,7 +766,7 @@ abstract class WorkoutStageGenerationService(
 
         val repsPerSet = guidelines.repsPerSetRange.random()
         val numSets = (guidelines.totalReps / repsPerSet).toInt()
-        val restSeconds = guidelines.restSeconds.random()
+        val restSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
 
         val isDynamicEffort = dayType.startsWith("DE_")
         // For non-DE exercises, use standard weight calculation
@@ -855,7 +855,7 @@ abstract class WorkoutStageGenerationService(
         // Conditioning exercises: 3-5 sets, 10-15 reps, 60-90 seconds rest
         val numSets = (3..5).random()
         val repsPerSet = (10..15).random()
-        val restSeconds = (60..90).random()
+        val restSeconds = prilepinGuidelinesService.getRandomRestTime(60..90)
 
         // Use 50-60% intensity for conditioning
         val intensity = Random.nextDouble(0.5, 0.6)

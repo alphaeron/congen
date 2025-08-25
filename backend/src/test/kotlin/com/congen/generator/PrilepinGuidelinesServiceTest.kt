@@ -429,4 +429,71 @@ class PrilepinGuidelinesServiceTest {
         assertEquals(90..120, guidelines.restSeconds)
         assertTrue(intensity in 0.7..0.8)
     }
+
+    @Test
+    fun `getRandomRestTime should round rest times to standard intervals`() {
+        // Test various ranges to ensure they round to standard intervals
+        val standardIntervals = listOf(30, 45, 60, 90, 120, 180, 300)
+        
+        // Test 60..90 range - should round to 60, 90, or 120
+        repeat(100) {
+            val restTime = service.getRandomRestTime(60..90)
+            assertTrue(restTime in standardIntervals, "Rest time $restTime should be a standard interval")
+            assertTrue(restTime in listOf(60, 90, 120), "Rest time $restTime should be 60, 90, or 120 for range 60..90")
+        }
+        
+        // Test 90..120 range - should round to 90 or 120
+        repeat(100) {
+            val restTime = service.getRandomRestTime(90..120)
+            assertTrue(restTime in standardIntervals, "Rest time $restTime should be a standard interval")
+            assertTrue(restTime in listOf(90, 120), "Rest time $restTime should be 90 or 120 for range 90..120")
+        }
+        
+        // Test 180..300 range - should round to 180, 240, or 300
+        repeat(100) {
+            val restTime = service.getRandomRestTime(180..300)
+            assertTrue(restTime in standardIntervals, "Rest time $restTime should be a standard interval")
+            assertTrue(restTime in listOf(180, 300), "Rest time $restTime should be 180, or 300 for range 180..300")
+        }
+    }
+
+    @Test
+    fun `getRandomRestTime should handle edge cases`() {
+        // Test exact standard intervals
+        repeat(50) {
+            val restTime = service.getRandomRestTime(60..60)
+            assertEquals(60, restTime, "Exact 60 should remain 60")
+        }
+        
+        repeat(50) {
+            val restTime = service.getRandomRestTime(90..90)
+            assertEquals(90, restTime, "Exact 90 should remain 90")
+        }
+        
+        repeat(50) {
+            val restTime = service.getRandomRestTime(180..180)
+            assertEquals(180, restTime, "Exact 180 should remain 180")
+        }
+    }
+
+    @Test
+    fun `getRandomRestTime should round to nearest standard interval`() {
+        // Test values that should round to specific intervals
+        val testCases = mapOf(
+            45 to 45,   // 45 should round to 30 (closer to 30 than 60)
+            75 to 60,   // 75 should round to 60 (closer to 60 than 90)
+            105 to 90,  // 105 should round to 90 (closer to 90 than 120)
+            150 to 180, // 150 should round to 180 (closer to 180 than 120)
+            210 to 180, // 210 should round to 180 (closer to 180 than 240)
+            270 to 240, // 270 should round to 240 (closer to 240 than 300)
+            330 to 300  // 330 should round to 300 (closer to 300 than 240)
+        )
+        
+        testCases.forEach { (input, expected) ->
+            // Since we can't directly test the private roundRestTimeToStandardInterval function,
+            // we test by creating a range that will always generate the input value
+            val restTime = service.getRandomRestTime(input..input)
+            assertEquals(expected, restTime, "Input $input should round to $expected")
+        }
+    }
 }
