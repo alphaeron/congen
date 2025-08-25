@@ -439,6 +439,7 @@ class PrilepinGuidelinesServiceTest {
         repeat(100) {
             val restTime = service.getRandomRestTime(60..90)
             assertTrue(restTime in standardIntervals, "Rest time $restTime should be a standard interval")
+            // Rest time should be 60, 90, or 120 for range 60..90
             assertTrue(restTime in listOf(60, 90, 120), "Rest time $restTime should be 60, 90, or 120 for range 60..90")
         }
         

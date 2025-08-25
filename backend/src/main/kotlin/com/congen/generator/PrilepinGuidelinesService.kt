@@ -487,8 +487,10 @@ class PrilepinGuidelinesService {
                 // Use 55-65% intensity with 3-4 sets of "good" rep numbers for accessories
                 val guidelines = PrilepinGuidelines(
                     intensityRange = 0.55..0.65,
-                    repsPerSetRange = 6..15, // This will be overridden to use specific "good" numbers
-                    totalReps = 30, // 3-4 sets × 6-15 reps = 18-60 total, target ~30
+                    // This will be overridden to use specific "good" numbers
+                    repsPerSetRange = 6..15,
+                    // 3-4 sets × 6-15 reps = 18-60 total, target ~30
+                    totalReps = 30,
                     totalRepsRange = 18..60,
                     restSeconds = 60..90
                 )
@@ -499,8 +501,10 @@ class PrilepinGuidelinesService {
                 // Use 70-80% intensity with 3-4 sets of "good" rep numbers for accessories
                 val guidelines = PrilepinGuidelines(
                     intensityRange = 0.7..0.8,
-                    repsPerSetRange = 6..15, // This will be overridden to use specific "good" numbers
-                    totalReps = 24, // 3-4 sets × 6-15 reps = 18-60 total, target ~24
+                    // This will be overridden to use specific "good" numbers
+                    repsPerSetRange = 6..15,
+                    // 3-4 sets × 6-15 reps = 18-60 total, target ~24
+                    totalReps = 24,
                     totalRepsRange = 18..60,
                     restSeconds = 90..120
                 )
@@ -510,7 +514,8 @@ class PrilepinGuidelinesService {
             else -> {
                 val guidelines = PrilepinGuidelines(
                     intensityRange = 0.7..0.8,
-                    repsPerSetRange = 6..15, // This will be overridden to use specific "good" numbers
+                    // This will be overridden to use specific "good" numbers
+                    repsPerSetRange = 6..15,
                     totalReps = 24,
                     totalRepsRange = 18..60,
                     restSeconds = 90..120

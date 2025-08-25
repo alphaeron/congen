@@ -9,33 +9,41 @@ import org.springframework.http.HttpStatus
 class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     private var userId: String = ""
     private var programId: Long = 0
+    private lateinit var userToken: String
 
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        // User and program creation will be done in individual test methods
-        // to ensure Spring context is fully initialized first
-    }
-
-    private fun createTestUserAndProgramWithToken(): Triple<String, Long, String> {
+        // Create test user and program once for all tests
         val unique = System.nanoTime()
-        val userToken = getValidToken("user")
-        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
+        userToken = getValidToken("user")
+        userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-        // Use user token for program creation
-        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = userToken)
-        return Triple(userId, programId, userToken)
+        // Create program
+        programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = userToken)
+        
+        // Clean up any existing user program preferences to avoid duplicates
+        try {
+            webTestClient.delete()
+                .uri("/api/v1/user_program_preferences/$userId")
+                .header("Authorization", "Bearer $userToken")
+                .exchange()
+                .expectStatus().isOk()
+        } catch (e: Exception) {
+            // Ignore errors if no preferences exist
+        }
     }
 
     @Test
     fun `should generate 3-day conjugate workout program successfully`() {
-        val (userId, programId, token) = createTestUserAndProgramWithToken()
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = token)
+        // Create reference data for 3-day program
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
+        
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -46,7 +54,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -56,9 +64,9 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate 2-day conjugate workout program successfully`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
-        // Use user token for operations that have authorization issues
+        // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
+        
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
@@ -83,12 +91,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate 4-day conjugate workout program successfully`() {
-        val (userId, programId, token) = createTestUserAndProgramWithToken()
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = token)
+        // Create reference data for 4-day program
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
+        
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Program::class.java)
@@ -99,7 +108,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
             .expectBody()
@@ -109,7 +118,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle invalid programDaysPerWeek in database`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Create user program preferences with invalid days per week should fail
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
@@ -124,20 +132,20 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle non-existent program`() {
-        val token = getValidToken("user")
         // When & Then - Try to generate for non-existent program
         webTestClient.post()
             .uri("/api/v1/conjugate_workout_generator/999999/generate")
-            .header("Authorization", "Bearer $token")
+            .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isNotFound()
     }
 
     @Test
     fun `should generate workout with user exercise preferences`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
-        // Create user program preferences (required for workout generation)
+        // Create minimal reference data (program preferences and equipment) but not exercise preferences
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
 
         // Exercises already exist in migrations
 
@@ -172,9 +180,10 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user equipment`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
-        // Create user program preferences (required for workout generation)
+        // Create minimal reference data (program preferences and equipment)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
 
         // Equipment already exists in migrations
 
@@ -199,9 +208,10 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user one rep max data`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
-        // Create user program preferences (required for workout generation)
+        // Create minimal reference data (program preferences and equipment)
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bench", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
 
         // Exercises already exist in migrations
 
@@ -227,7 +237,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user program preferences`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Add program preferences
         webTestClient.post()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=3&session_time_length_in_minutes=60")
@@ -253,7 +262,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate DE set scheme with correct band and bar weights`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Set up user with 1RM for banded exercises specifically
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -396,7 +404,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 2-day template invariants`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Given - Set up user with 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
 
@@ -448,7 +455,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 3-day template invariants`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Given - Set up user with 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
 
@@ -500,7 +506,6 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 4-day template invariants`() {
-        val (userId, programId, userToken) = createTestUserAndProgramWithToken()
         // Given - Set up user with 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
 
