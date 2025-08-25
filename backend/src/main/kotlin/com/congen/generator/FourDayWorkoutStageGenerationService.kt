@@ -101,7 +101,7 @@ class FourDayWorkoutStageGenerationService(
             weakMuscles = weakMuscles,
             dayType = dayType,
             movementBalanceState = movementBalanceState
-        )
+        ).cache()
 
         val primarySetSchemesMono =
             primaryExerciseMono.flatMap { primaryExercise ->
@@ -128,9 +128,10 @@ class FourDayWorkoutStageGenerationService(
                         selectSecondaryExercise(
                             userExercisePool = userExercisePool,
                             primaryExercise = primaryExercise,
+                            workoutType = workoutType,
                             dayType = dayType,
                             movementBalanceState = movementBalanceState
-                        ).doOnNext { secondaryExercise ->
+                    ).doOnNext { secondaryExercise ->
                     // Update movement balance state with secondary exercise
                     movementBalanceState = updateMovementBalanceState(movementBalanceState, secondaryExercise, false)
                     logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
@@ -157,147 +158,101 @@ class FourDayWorkoutStageGenerationService(
 
         // Combine all operations and create stages
         return Mono.zip(primaryExerciseMono, primarySetSchemesMono)
+            .doOnNext { tuple ->
+                logger.info("Mono.zip executed for dayType: {}", dayType)
+            }
             .flatMap { tuple ->
                 val primaryExercise = tuple.t1
                 val primarySetSchemes = tuple.t2
                 
-                // Handle secondary exercise separately since it might not exist
-                secondaryExerciseMono.flatMap { secondaryExercise ->
-                    secondarySetSchemesMono.flatMap { secondarySetSchemes ->
-                        val numAccessoryExercises =
-                            calculateNumAccessoryExercises(
-                                sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
-                                primarySetSchemes = primarySetSchemes,
-                                secondarySetSchemes = secondarySetSchemes,
-                                dayType = dayType
-                            )
+                // Get secondary exercise and set schemes if available
+                val secondaryExerciseAndSchemesMono = secondaryExerciseMono
+                    .flatMap { secondaryExercise ->
+                        logger.info("Secondary exercise found: {} for dayType: {}", secondaryExercise.name, dayType)
+                        secondarySetSchemesMono.map { secondarySetSchemes ->
+                            Triple(secondaryExercise, secondarySetSchemes, true)
+                        }
+                    }
+                    .switchIfEmpty(
+                        Mono.just(Triple<Exercise?, List<SetSchemeParams>, Boolean>(null, emptyList(), false))
+                    )
+                
+                secondaryExerciseAndSchemesMono.flatMap { (secondaryExercise, secondarySetSchemes, hasSecondary) ->
+                    val numAccessoryExercises =
+                        calculateNumAccessoryExercises(
+                            sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
+                            primarySetSchemes = primarySetSchemes,
+                            secondarySetSchemes = secondarySetSchemes,
+                            dayType = dayType
+                        )
 
-                        // Create stages sequentially
-                        createStagesSequentially(
-                            stageCreators = listOf(
-                                // Warmup stage
-                                {
-                                    createWarmupStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        primaryExercise = primaryExercise,
-                                        isFourDayTemplate = true,
-                                        currentWeekNumber = currentWeekNumber,
-                                        userId = userId
-                                    )
-                                },
-                                // Primary stage
-                                {
-                                    createPrimaryStage(
-                                        workout = workout,
-                                        exercise = primaryExercise,
-                                        setSchemes = primarySetSchemes
-                                    )
-                                },
-                                // Secondary stage
-                                {
-                                    createSecondaryStage(
-                                        workout = workout,
-                                        exercise = secondaryExercise,
-                                        setSchemes = secondarySetSchemes
-                                    )
-                                },
-                                // Accessory stage
-                                {
-                                    createAccessoryStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        weakMuscles = weakMuscles,
-                                        numAccessoryExercises = numAccessoryExercises,
-                                        userId = userId,
-                                        currentWeekNumber = currentWeekNumber,
-                                        movementBalanceState = movementBalanceState
-                                    )
-                                },
-                                // Conditioning stage (for DE days)
-                                {
-                                    createConditioningStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        weakMuscles = weakMuscles,
-                                        userId = userId,
-                                        movementBalanceState = movementBalanceState
-                                    )
-                                }
-                            )
+                    // Create stages sequentially with conditional secondary stage
+                    val stageCreators = mutableListOf<() -> Mono<Void>>()
+                    
+                    // Always add warmup stage
+                    stageCreators.add {
+                        createWarmupStage(
+                            workout = workout,
+                            userExercisePool = userExercisePool,
+                            oneRepMaxes = oneRepMaxes,
+                            dayType = dayType,
+                            primaryExercise = primaryExercise,
+                            isFourDayTemplate = true,
+                            currentWeekNumber = currentWeekNumber,
+                            userId = userId
                         )
                     }
-                }.switchIfEmpty(
-                    // No secondary exercise - handle case without secondary
-                    Mono.defer {
-                        val numAccessoryExercises =
-                            calculateNumAccessoryExercises(
-                                sessionTimeMinutes = programPreferences.sessionTimeLengthInMinutes,
-                                primarySetSchemes = primarySetSchemes,
-                                secondarySetSchemes = emptyList(),
-                                dayType = dayType
-                            )
-
-                        // Create stages sequentially
-                        createStagesSequentially(
-                            stageCreators = listOf(
-                                // Warmup stage
-                                {
-                                    createWarmupStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        primaryExercise = primaryExercise,
-                                        isFourDayTemplate = true,
-                                        currentWeekNumber = currentWeekNumber,
-                                        userId = userId
-                                    )
-                                },
-                                // Primary stage
-                                {
-                                    createPrimaryStage(
-                                        workout = workout,
-                                        exercise = primaryExercise,
-                                        setSchemes = primarySetSchemes
-                                    )
-                                },
-                                // Accessory stage
-                                {
-                                    createAccessoryStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        weakMuscles = weakMuscles,
-                                        numAccessoryExercises = numAccessoryExercises,
-                                        userId = userId,
-                                        currentWeekNumber = currentWeekNumber,
-                                        movementBalanceState = movementBalanceState
-                                    )
-                                },
-                                // Conditioning stage (for DE days)
-                                {
-                                    createConditioningStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        weakMuscles = weakMuscles,
-                                        userId = userId,
-                                        movementBalanceState = movementBalanceState
-                                    )
-                                }
-                            )
+                    
+                    // Always add primary stage
+                    stageCreators.add {
+                        createPrimaryStage(
+                            workout = workout,
+                            exercise = primaryExercise,
+                            setSchemes = primarySetSchemes
                         )
                     }
-                )
+                    
+                    // Add secondary stage only if we have a secondary exercise
+                    if (hasSecondary && secondaryExercise != null) {
+                        stageCreators.add {
+                            createSecondaryStage(
+                                workout = workout,
+                                exercise = secondaryExercise,
+                                setSchemes = secondarySetSchemes
+                            )
+                        }
+                    }
+                    
+                    // Always add accessory stage
+                    stageCreators.add {
+                        createAccessoryStage(
+                            workout = workout,
+                            userExercisePool = userExercisePool,
+                            oneRepMaxes = oneRepMaxes,
+                            dayType = dayType,
+                            weakMuscles = weakMuscles,
+                            numAccessoryExercises = numAccessoryExercises,
+                            userId = userId,
+                            currentWeekNumber = currentWeekNumber,
+                            movementBalanceState = movementBalanceState
+                        )
+                    }
+                    
+                    // Always add conditioning stage (for DE days)
+                    stageCreators.add {
+                        createConditioningStage(
+                            workout = workout,
+                            userExercisePool = userExercisePool,
+                            oneRepMaxes = oneRepMaxes,
+                            dayType = dayType,
+                            weakMuscles = weakMuscles,
+                            userId = userId,
+                            movementBalanceState = movementBalanceState
+                        )
+                    }
+                    
+                    createStagesSequentially(stageCreators)
+                }
             }
             .onErrorResume { error ->
                 logger.error("Failed to generate stages for day type: {}. Error: {}", dayType, error.message)

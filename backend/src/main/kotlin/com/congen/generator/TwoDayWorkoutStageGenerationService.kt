@@ -108,10 +108,12 @@ class TwoDayWorkoutStageGenerationService(
             )
 
         // Select secondary DE exercise
+        val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         val secondaryExerciseMono =
             selectConditioningExercise(
                 userExercisePool = userExercisePool,
                 weakMuscles = weakMuscles,
+                workoutType = workoutType,
                 dayType = dayType,
                 movementBalanceState = movementBalanceState
             )

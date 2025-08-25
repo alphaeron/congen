@@ -310,6 +310,7 @@ abstract class WorkoutStageGenerationService(
         currentWeekNumber: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
+        val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         if (numAccessoryExercises <= 0) {
             return Mono.empty()
         }
@@ -321,10 +322,11 @@ abstract class WorkoutStageGenerationService(
         )
             .flatMap { accessoryStage ->
                 Flux.range(1, numAccessoryExercises)
-                    .flatMap {
+                    .concatMap {
                         selectAccessoryExercise(
                             userExercisePool = userExercisePool,
                             weakMuscles = weakMuscles,
+                            workoutType = workoutType,
                             dayType = dayType,
                             movementBalanceState = movementBalanceState
                         ).flatMap { accessoryExercise ->
@@ -380,6 +382,7 @@ abstract class WorkoutStageGenerationService(
         userId: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
+        val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         if (!hasConditioning(dayType)) {
             return Mono.empty()
         }
@@ -393,6 +396,7 @@ abstract class WorkoutStageGenerationService(
                 selectConditioningExercise(
                     userExercisePool = userExercisePool,
                     weakMuscles = weakMuscles,
+                    workoutType = workoutType,
                     dayType = dayType,
                     movementBalanceState = movementBalanceState
                 ).flatMap { conditioningExercise ->
@@ -446,11 +450,20 @@ abstract class WorkoutStageGenerationService(
         currentWeekNumber: Int,
         userId: String,
     ): Mono<Void> {
-        return         exerciseSelectionService.selectWarmupExercises(
+        // Determine workout type based on day template
+        val workoutType = when {
+            dayType.contains("_DE_") -> "dynamic_effort"
+            dayType.startsWith("ME_") -> "maximal_effort"
+            dayType.startsWith("DE_") -> "dynamic_effort"
+            else -> "maximal_effort"
+        }
+        
+        return exerciseSelectionService.selectWarmupExercises(
             userExercisePool = userExercisePool,
             primaryExercise = primaryExercise,
             isFourDayTemplate = isFourDayTemplate,
-            dayType = dayType
+            dayType = dayType,
+            workoutType = workoutType
         )
             .flatMap { warmupExercises ->
                 if (warmupExercises.isEmpty()) {
@@ -464,7 +477,7 @@ abstract class WorkoutStageGenerationService(
                 )
                     .flatMap { warmupStage ->
                         Flux.fromIterable(warmupExercises)
-                            .flatMap { warmupExercise ->
+                            .concatMap { warmupExercise ->
                                 createProgrammedExercise(
                                     warmupStage.id,
                                     warmupExercise.name
@@ -602,6 +615,7 @@ abstract class WorkoutStageGenerationService(
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = false,
+            workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState
         )
@@ -622,12 +636,14 @@ abstract class WorkoutStageGenerationService(
     protected fun selectSecondaryExercise(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise,
+        workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         return exerciseSelectionService.selectSimilarSecondaryExercise(
             primaryExercise = primaryExercise,
             userExercisePool = userExercisePool,
+            workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState
         ).filter { selectedExercise ->
@@ -635,7 +651,7 @@ abstract class WorkoutStageGenerationService(
             selectedExercise.name != primaryExercise.name
         }.onErrorResume { error ->
             logger.error("Failed to select secondary exercise for primary exercise: {}. Error: {}", primaryExercise.name, error.message)
-            Mono.error(error)
+            Mono.empty()
         }
     }
 
@@ -653,6 +669,7 @@ abstract class WorkoutStageGenerationService(
     protected fun selectAccessoryExercise(
         userExercisePool: UserExercisePool,
         weakMuscles: List<String>,
+        workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
@@ -660,6 +677,7 @@ abstract class WorkoutStageGenerationService(
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = true,
+            workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState
         )
@@ -678,6 +696,7 @@ abstract class WorkoutStageGenerationService(
     protected fun selectConditioningExercise(
         userExercisePool: UserExercisePool,
         weakMuscles: List<String>,
+        workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
@@ -685,6 +704,7 @@ abstract class WorkoutStageGenerationService(
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = true,
+            workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState
         )
@@ -931,7 +951,7 @@ abstract class WorkoutStageGenerationService(
         weightUnit: WeightUnit
     ): Mono<Void> {
         return Flux.fromIterable(setSchemes)
-            .flatMap { scheme ->
+            .concatMap { scheme ->
                 setSchemeService.insertSetScheme(
                     programmedExerciseId = programmedExerciseId,
                     setNumber = scheme.setNumber,

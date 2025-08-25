@@ -56,6 +56,7 @@ class ExerciseSelectionService(
         userExercisePool: UserExercisePool,
         targetMuscles: List<String>,
         isAccessory: Boolean,
+        workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
@@ -63,6 +64,7 @@ class ExerciseSelectionService(
             userExercisePool = userExercisePool,
             targetMuscles = targetMuscles,
             isAccessory = isAccessory,
+            workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = movementBalanceState
         ).flatMap { selectedExercise ->
@@ -92,36 +94,52 @@ class ExerciseSelectionService(
         userExercisePool: UserExercisePool,
         targetMuscles: List<String>,
         isAccessory: Boolean,
+        workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise?> {
-        // Get available exercises from the pool
-        val availableExercisesMono = if (isAccessory) {
-            Mono.just(userExercisePool.getAvailableAccessoryExercises())
-        } else {
-            Mono.just(userExercisePool.getAvailablePrimaryExercises())
-        }
-        
-        return availableExercisesMono
-            .flatMap { availableExercises ->
-                if (availableExercises.isEmpty()) {
-                    logger.error("No available exercises found for isAccessory: {}", isAccessory)
-                    return@flatMap Mono.error(IllegalStateException("No available exercises found for isAccessory: $isAccessory"))
+        return Mono.defer {
+            // Get fresh available exercises from the pool each time this method is called
+            val availableExercises = if (isAccessory) {
+                userExercisePool.getAvailableAccessoryExercises()
+            } else {
+                userExercisePool.getAvailablePrimaryExercises()
+            }
+            
+            if (availableExercises.isEmpty()) {
+                logger.error("No available exercises found for isAccessory: {}", isAccessory)
+                return@defer Mono.error(IllegalStateException("No available exercises found for isAccessory: $isAccessory"))
+            }
+
+            // Apply day-type filtering first
+            val dayTypeFilteredExercises = filterExercisesByDayType(availableExercises, dayType)
+            if (dayTypeFilteredExercises.isEmpty()) {
+                logger.error("No exercises available after day-type filtering for dayType: {} and isAccessory: {}", dayType, isAccessory)
+                return@defer Mono.error(IllegalStateException("No exercises available after day-type filtering for dayType: $dayType and isAccessory: $isAccessory"))
+            }
+
+                // Apply workout-type filtering only for non-accessory exercises
+                val exercisesAfterWorkoutTypeFiltering = if (isAccessory) {
+                    // For accessory exercises, skip workout-type filtering
+                    Mono.just(dayTypeFilteredExercises)
+                } else {
+                    // For primary/secondary exercises, apply workout-type filtering
+                    filterExercisesByWorkoutType(dayTypeFilteredExercises, workoutType)
                 }
 
-                // Apply day-type filtering first
-                val dayTypeFilteredExercises = filterExercisesByDayType(availableExercises, dayType)
-                if (dayTypeFilteredExercises.isEmpty()) {
-                    logger.error("No exercises available after day-type filtering for dayType: {} and isAccessory: {}", dayType, isAccessory)
-                    return@flatMap Mono.error(IllegalStateException("No exercises available after day-type filtering for dayType: $dayType and isAccessory: $isAccessory"))
-                }
+                exercisesAfterWorkoutTypeFiltering
+                    .flatMap { workoutTypeFilteredExercises ->
+                        if (workoutTypeFilteredExercises.isEmpty()) {
+                            logger.error("No exercises available after workout-type filtering for workoutType: {} and isAccessory: {}", workoutType, isAccessory)
+                            return@flatMap Mono.error(IllegalStateException("No exercises available after workout-type filtering for workoutType: $workoutType and isAccessory: $isAccessory"))
+                        }
 
-                // Filter exercises by equipment and muscles reactively
-                userExercisePool.filterExercisesByEquipment(dayTypeFilteredExercises)
-                    .flatMap { equipmentFilteredExercises ->
-                        userExercisePool.filterExercisesByMuscles(equipmentFilteredExercises, targetMuscles, exerciseMuscleDAL)
-                    }
-                    .flatMap { filteredExercises ->
+                        // Filter exercises by equipment and muscles reactively
+                        userExercisePool.filterExercisesByEquipment(workoutTypeFilteredExercises)
+                            .flatMap { equipmentFilteredExercises ->
+                                userExercisePool.filterExercisesByMuscles(equipmentFilteredExercises, targetMuscles, exerciseMuscleDAL)
+                            }
+                            .flatMap { filteredExercises ->
                         if (filteredExercises.isEmpty()) {
                             logger.error("No exercises found for target muscles: {} for isAccessory: {}", targetMuscles, isAccessory)
                             // Fallback to any available exercise
@@ -164,6 +182,7 @@ class ExerciseSelectionService(
                             }
                         }
                     }
+                }
             }
     }
 
@@ -180,6 +199,7 @@ class ExerciseSelectionService(
     fun selectSimilarSecondaryExercise(
         primaryExercise: Exercise,
         userExercisePool: UserExercisePool,
+        workoutType: String,
         dayType: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
@@ -193,7 +213,8 @@ class ExerciseSelectionService(
                 selectExercise(
                     userExercisePool = userExercisePool,
                     targetMuscles = primaryMuscles,
-                    isAccessory = false, // Secondary exercises are primary movements
+                    isAccessory = false,
+                    workoutType = workoutType,
                     dayType = dayType,
                     movementBalanceState = movementBalanceState
                 )
@@ -352,20 +373,23 @@ class ExerciseSelectionService(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise?,
         isFourDayTemplate: Boolean,
-        dayType: String
+        dayType: String,
+        workoutType: String
     ): Mono<List<Exercise>> {
         return if (isFourDayTemplate) {
             // 4-day template: 2 muscle-focused + 1 movement pattern exercise
             selectFourDayWarmupExercises(
                 userExercisePool = userExercisePool,
                 primaryExercise = primaryExercise,
-                dayType = dayType
+                dayType = dayType,
+                workoutType = workoutType
             )
         } else {
             // 2 and 3 day templates: 3 exercises for common muscles
             selectTwoThreeDayWarmupExercises(
                 userExercisePool = userExercisePool,
-                dayType = dayType
+                dayType = dayType,
+                workoutType = workoutType
             )
         }
     }
@@ -381,7 +405,8 @@ class ExerciseSelectionService(
     private fun selectFourDayWarmupExercises(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise?,
-        dayType: String
+        dayType: String,
+        workoutType: String
     ): Mono<List<Exercise>> {
         val warmupExercises = mutableListOf<Exercise>()
 
@@ -400,7 +425,8 @@ class ExerciseSelectionService(
                             userExercisePool = userExercisePool,
                             targetMuscles = adjustedTargetMuscles,
                             count = 2,
-                            dayType = dayType
+                            dayType = dayType,
+                            workoutType = workoutType
                         )
 
                     // Select 1 movement pattern exercise
@@ -408,7 +434,8 @@ class ExerciseSelectionService(
                         selectMovementPatternWarmupExercise(
                             userExercisePool = userExercisePool,
                             primaryExercise = primaryExercise,
-                            dayType = dayType
+                            dayType = dayType,
+                            workoutType = workoutType
                         )
 
                     muscleFocusedMono.flatMap { muscleExercises ->
@@ -419,6 +446,8 @@ class ExerciseSelectionService(
                                 warmupExercises
                             }
                             .switchIfEmpty(
+                                // If no movement pattern exercise found, just return the muscle-focused exercises
+                                // Don't add more exercises to avoid exceeding the expected count
                                 Mono.just(warmupExercises.apply { addAll(muscleExercises) })
                             )
                     }
@@ -428,7 +457,8 @@ class ExerciseSelectionService(
             selectGeneralWarmupExercises(
                 userExercisePool = userExercisePool,
                 count = 3,
-                dayType = dayType
+                dayType = dayType,
+                workoutType = workoutType
             )
         }
     }
@@ -442,7 +472,8 @@ class ExerciseSelectionService(
      */
     private fun selectTwoThreeDayWarmupExercises(
         userExercisePool: UserExercisePool,
-        dayType: String
+        dayType: String,
+        workoutType: String
     ): Mono<List<Exercise>> {
         // For 2 and 3 day templates, focus on common muscles used in ME and DE exercises
         val commonMuscles = listOf("chest", "shoulders", "triceps", "upper_back", "biceps", "quadriceps", "hamstrings", "glutes", "calves", "core")
@@ -451,7 +482,8 @@ class ExerciseSelectionService(
             userExercisePool = userExercisePool,
             targetMuscles = commonMuscles,
             count = 3,
-            dayType = dayType
+            dayType = dayType,
+            workoutType = workoutType
         )
     }
 
@@ -467,7 +499,8 @@ class ExerciseSelectionService(
         userExercisePool: UserExercisePool,
         targetMuscles: List<String>,
         count: Int,
-        dayType: String
+        dayType: String,
+        workoutType: String
     ): Mono<List<Exercise>> {
         if (count <= 0) {
             return Mono.just(emptyList())
@@ -480,6 +513,7 @@ class ExerciseSelectionService(
                     userExercisePool = userExercisePool,
                     targetMuscles = targetMuscles,
                     isAccessory = true, // Warmup exercises are accessory
+                    workoutType = workoutType, // Use correct workoutType derived from dayType
                     dayType = dayType,
                     movementBalanceState = null
                 )
@@ -501,13 +535,16 @@ class ExerciseSelectionService(
     private fun selectMovementPatternWarmupExercise(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise,
-        dayType: String
+        dayType: String,
+        workoutType: String
     ): Mono<Exercise> {
+        
         // Use the main entry point to select an accessory exercise with similar movement pattern
         return selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = emptyList(), // No specific muscle targeting for movement pattern
-            isAccessory = true, // Warmup exercises are accessory
+            targetMuscles = emptyList(),
+            isAccessory = true,
+            workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = null
         ).filter { selectedExercise ->
@@ -529,7 +566,8 @@ class ExerciseSelectionService(
     private fun selectGeneralWarmupExercises(
         userExercisePool: UserExercisePool,
         count: Int,
-        dayType: String
+        dayType: String,
+        workoutType: String
     ): Mono<List<Exercise>> {
         if (count <= 0) {
             return Mono.just(emptyList())
@@ -540,8 +578,9 @@ class ExerciseSelectionService(
             .concatMap { _ ->
                 selectExercise(
                     userExercisePool = userExercisePool,
-                    targetMuscles = emptyList(), // No specific muscle targeting for general warmup
-                    isAccessory = true, // Warmup exercises are accessory
+                    targetMuscles = emptyList(),
+                    isAccessory = true,
+                    workoutType = workoutType,
                     dayType = dayType,
                     movementBalanceState = null
                 )
