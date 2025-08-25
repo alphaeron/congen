@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -67,6 +68,16 @@ class UserServiceTest {
                 updatedAt = now
             )
         ))
+        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(any(), any(), any()))
+            .thenReturn(Mono.just(
+                com.congen.model.UserProgramPreferences(
+                    userId = keycloakId,
+                    programDaysPerWeek = 4,
+                    sessionTimeLengthInMinutes = 60,
+                    createdAt = now,
+                    updatedAt = now
+                )
+            ))
 
         // When
         val result = userService.insertUser()
@@ -79,6 +90,7 @@ class UserServiceTest {
         verify(keycloakUtil).getCurrentUserName()
         verify(userDAL).insertUser(keycloakId, name)
         verify(gdprComplianceService).updateUserConsent(keycloakId, true)
+        verify(userProgramPreferencesDAL).insertUserProgramPreferences(any(), any(), any())
     }
 
     @Test

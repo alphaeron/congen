@@ -249,11 +249,11 @@ class GdprControllerTest {
                 // Verify data controller information
                 assert(body.dataController.name == "Congen Fitness Application")
                 assert(body.dataController.contact == "privacy@congen.com")
-                assert(body.dataController.dpo == "dpo@congen.com")
+                assert(body.dataController.dpo == "privacy@congen.com")
 
                 // Verify data processing information
                 assert(body.dataProcessing.purposes.contains("Personalized workout generation"))
-                assert(body.dataProcessing.legalBasis.contains("Consent (GDPR Article 6.1.a)"))
+                assert(body.dataProcessing.legalBasis.contains("Consent - Additional data processing for personalized features"))
                 assert(body.dataProcessing.dataTypes.contains("Personal identifiers (name)"))
 
                 // Verify user rights information
@@ -261,7 +261,7 @@ class GdprControllerTest {
                 assert(body.userRights.erasure == "You can request deletion of your personal data (right to be forgotten)")
 
                 // Verify metadata
-                assert(body.lastUpdated == "2025-08-08T00:00:00Z")
+                assert(body.lastUpdated == "2025-08-25T00:00:00Z")
                 assert(body.version == "1.0.0")
             }
             .verifyComplete()

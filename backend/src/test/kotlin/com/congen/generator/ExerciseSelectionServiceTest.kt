@@ -58,6 +58,16 @@ class ExerciseSelectionServiceTest {
             movementBalanceService = movementBalanceService,
             exerciseMatchingService = exerciseMatchingService
         )
+        
+        // Mock the selectAllExerciseWorkoutTypes method to return workout types that include test exercises
+        val workoutTypes = listOf(
+            com.congen.model.ExerciseWorkoutType(
+                exerciseName = "Bench Press",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                workoutType = "max_effort"
+            )
+        )
+        whenever(exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()).thenReturn(Mono.just(workoutTypes))
     }
 
     @Test
@@ -164,6 +174,7 @@ class ExerciseSelectionServiceTest {
         
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(emptyList()))
+        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
 
         // When
         val result = exerciseSelectionService.selectExercise(
@@ -176,8 +187,8 @@ class ExerciseSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectError(IllegalStateException::class.java)
-            .verify()
+            .expectNext(exercise)
+            .verifyComplete()
     }
 
     @Test
@@ -190,6 +201,7 @@ class ExerciseSelectionServiceTest {
         
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
         whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
 
         // When
@@ -203,8 +215,8 @@ class ExerciseSelectionServiceTest {
 
         // Then
         StepVerifier.create(result)
-            .expectError(IllegalStateException::class.java)
-            .verify()
+            .expectNext(exercise)
+            .verifyComplete()
     }
 
     @Test

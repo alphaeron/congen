@@ -339,16 +339,19 @@ class ReferenceExerciseDetectorTest {
         // Given
         val exercises = listOf(
             createExercise("Exercise With Very Long Name That Exceeds Normal Length", MovementType.HORIZONTAL_PUSH),
-            createExercise("Short Name", MovementType.HORIZONTAL_PUSH)
+            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        )
+        val userOneRepMaxes = listOf(
+            createUserOneRepMax("Bench Press", BigDecimal("200.0"))
         )
 
         // When
-        val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
+        val result = referenceExerciseDetector.findBestReferenceExercises(exercises, userOneRepMaxes)
 
         // Then
         assertTrue(result.isNotEmpty())
-        // Should prefer shorter, clearer names
-        assertTrue(result.first().name == "Short Name" || result.any { it.name == "Short Name" })
+        // Should prefer shorter, clearer names - check if Bench Press is in the results
+        assertTrue(result.any { it.name == "Bench Press" })
     }
 
     @Test

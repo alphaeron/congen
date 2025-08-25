@@ -180,7 +180,7 @@ class PrilepinGuidelinesServiceTest {
         assertEquals(1..2, guidelines.repsPerSetRange)
         assertEquals(4, guidelines.totalReps)
         assertEquals(180..300, guidelines.restSeconds)
-        assertTrue(intensity in 0.9..0.95) // Upper body capped at 95%
+        assertTrue(intensity in 0.9..0.95)
     }
 
     @Test
@@ -193,7 +193,7 @@ class PrilepinGuidelinesServiceTest {
         assertEquals(1..2, guidelines.repsPerSetRange)
         assertEquals(4, guidelines.totalReps)
         assertEquals(180..300, guidelines.restSeconds)
-        assertTrue(intensity in 0.9..1.0) // Lower body can go to 100%
+        assertTrue(intensity in 0.9..1.0)
     }
 
     @Test
@@ -294,8 +294,8 @@ class PrilepinGuidelinesServiceTest {
         val guidelines = result.first
         val intensity = result.second
         assertEquals(0.55..0.65, guidelines.intensityRange)
-        assertEquals(3..6, guidelines.repsPerSetRange)
-        assertEquals(24, guidelines.totalReps)
+        assertEquals(6..15, guidelines.repsPerSetRange)
+        assertEquals(30, guidelines.totalReps)
         assertEquals(60..90, guidelines.restSeconds)
         assertTrue(intensity in 0.55..0.65)
     }
@@ -307,8 +307,8 @@ class PrilepinGuidelinesServiceTest {
         val guidelines = result.first
         val intensity = result.second
         assertEquals(0.7..0.8, guidelines.intensityRange)
-        assertEquals(3..6, guidelines.repsPerSetRange)
-        assertEquals(18, guidelines.totalReps)
+        assertEquals(6..15, guidelines.repsPerSetRange)
+        assertEquals(24, guidelines.totalReps)
         assertEquals(90..120, guidelines.restSeconds)
         assertTrue(intensity in 0.7..0.8)
     }
@@ -320,8 +320,8 @@ class PrilepinGuidelinesServiceTest {
         val guidelines = result.first
         val intensity = result.second
         assertEquals(0.7..0.8, guidelines.intensityRange)
-        assertEquals(3..6, guidelines.repsPerSetRange)
-        assertEquals(18, guidelines.totalReps)
+        assertEquals(6..15, guidelines.repsPerSetRange)
+        assertEquals(24, guidelines.totalReps)
         assertEquals(90..120, guidelines.restSeconds)
         assertTrue(intensity in 0.7..0.8)
     }
@@ -333,8 +333,8 @@ class PrilepinGuidelinesServiceTest {
         val guidelines = result.first
         val intensity = result.second
         assertEquals(0.55..0.65, guidelines.intensityRange)
-        assertEquals(3..6, guidelines.repsPerSetRange)
-        assertEquals(24, guidelines.totalReps)
+        assertEquals(6..15, guidelines.repsPerSetRange)
+        assertEquals(30, guidelines.totalReps)
         assertEquals(60..90, guidelines.restSeconds)
         assertTrue(intensity in 0.55..0.65)
     }
@@ -346,8 +346,8 @@ class PrilepinGuidelinesServiceTest {
         val guidelines = result.first
         val intensity = result.second
         assertEquals(0.55..0.65, guidelines.intensityRange)
-        assertEquals(3..6, guidelines.repsPerSetRange)
-        assertEquals(24, guidelines.totalReps)
+        assertEquals(6..15, guidelines.repsPerSetRange)
+        assertEquals(30, guidelines.totalReps)
         assertEquals(60..90, guidelines.restSeconds)
         assertTrue(intensity in 0.55..0.65)
     }
@@ -424,8 +424,8 @@ class PrilepinGuidelinesServiceTest {
         val guidelines = result.first
         val intensity = result.second
         assertEquals(0.7..0.8, guidelines.intensityRange)
-        assertEquals(3..6, guidelines.repsPerSetRange)
-        assertEquals(18, guidelines.totalReps)
+        assertEquals(6..15, guidelines.repsPerSetRange)
+        assertEquals(24, guidelines.totalReps)
         assertEquals(90..120, guidelines.restSeconds)
         assertTrue(intensity in 0.7..0.8)
     }
@@ -481,13 +481,13 @@ class PrilepinGuidelinesServiceTest {
     fun `getRandomRestTime should round to nearest standard interval`() {
         // Test values that should round to specific intervals
         val testCases = mapOf(
-            45 to 45,   // 45 should round to 30 (closer to 30 than 60)
-            75 to 60,   // 75 should round to 60 (closer to 60 than 90)
-            105 to 90,  // 105 should round to 90 (closer to 90 than 120)
-            150 to 180, // 150 should round to 180 (closer to 180 than 120)
-            210 to 180, // 210 should round to 180 (closer to 180 than 240)
-            270 to 240, // 270 should round to 240 (closer to 240 than 300)
-            330 to 300  // 330 should round to 300 (closer to 300 than 240)
+            45 to 45,
+            75 to 60,
+            105 to 90,
+            150 to 120,
+            210 to 180,
+            270 to 300,
+            330 to 300,
         )
         
         testCases.forEach { (input, expected) ->

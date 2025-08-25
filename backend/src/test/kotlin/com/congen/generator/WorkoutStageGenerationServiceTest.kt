@@ -14,6 +14,8 @@ import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -86,10 +88,14 @@ class WorkoutStageGenerationServiceTest {
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
 
-        whenever(exerciseSelectionService.selectExercise(any(), any(), any(), any(), any(), any()))
-            .thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(any(), any(), any(), any(), any()))
-            .thenReturn(Mono.just(secondaryExercise))
+        whenever(exerciseSelectionService.selectExercise(
+            userExercisePool = eq(userExercisePool),
+            targetMuscles = eq(weakMuscles),
+            isAccessory = eq(false),
+            workoutType = eq("maximal_effort"),
+            dayType = eq(dayType),
+            movementBalanceState = isNull()
+        )).thenReturn(Mono.just(primaryExercise))
         whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.empty())
         whenever(setSchemeService.insertSetScheme(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
@@ -134,8 +140,14 @@ class WorkoutStageGenerationServiceTest {
         val currentWeekNumber = 1
         val userId = "user123"
 
-        whenever(exerciseSelectionService.selectExercise(any(), any(), any(), any(), any(), any()))
-            .thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
+        whenever(exerciseSelectionService.selectExercise(
+            userExercisePool = eq(userExercisePool),
+            targetMuscles = eq(weakMuscles),
+            isAccessory = eq(false),
+            workoutType = eq("maximal_effort"),
+            dayType = eq(dayType),
+            movementBalanceState = isNull()
+        )).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
 
         // When
         val result = baseService.generateWorkoutStages(
@@ -170,10 +182,14 @@ class WorkoutStageGenerationServiceTest {
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
 
-        whenever(exerciseSelectionService.selectExercise(any(), any(), any(), any(), any(), any()))
-            .thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(any(), any(), any(), any(), any()))
-            .thenReturn(Mono.just(secondaryExercise))
+        whenever(exerciseSelectionService.selectExercise(
+            userExercisePool = eq(userExercisePool),
+            targetMuscles = eq(weakMuscles),
+            isAccessory = eq(false),
+            workoutType = eq("dynamic_effort"),
+            dayType = eq(dayType),
+            movementBalanceState = isNull()
+        )).thenReturn(Mono.just(primaryExercise))
         whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
             .thenReturn(Mono.empty())
         whenever(setSchemeService.insertSetScheme(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))

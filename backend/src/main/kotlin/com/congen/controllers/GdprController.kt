@@ -287,7 +287,7 @@ class GdprController(
                     DataController(
                         name = "Congen Fitness Application",
                         contact = "privacy@congen.com",
-                        dpo = "dpo@congen.com"
+                        dpo = "privacy@congen.com"
                     ),
                 dataProcessing =
                     DataProcessing(
@@ -300,14 +300,13 @@ class GdprController(
                             ),
                         legalBasis =
                             listOf(
-                                "Contract performance (GDPR Article 6.1.b) - Account creation and basic service provision",
-                                "Consent (GDPR Article 6.1.a) - Additional data processing for personalized features",
-                                "Legitimate interest (GDPR Article 6.1.f) - Service improvement and security"
+                                "Contract performance - Account creation and basic service provision",
+                                "Consent - Additional data processing for personalized features",
+                                "Legitimate interest - Service improvement and security"
                             ),
                         dataTypes =
                             listOf(
                                 "Personal identifiers (name)",
-                                "Authentication data (Keycloak ID)",
                                 "Fitness preferences and exercise data",
                                 "Equipment preferences",
                                 "Consent records and audit logs"
@@ -329,7 +328,7 @@ class GdprController(
                         objection = "You can object to the processing of your personal data",
                         complaint = "You can file a complaint with your local data protection authority"
                     ),
-                lastUpdated = "2025-08-08T00:00:00Z",
+                lastUpdated = "2025-08-25T00:00:00Z",
                 version = "1.0.0"
             )
 

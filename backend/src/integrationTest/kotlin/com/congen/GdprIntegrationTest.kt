@@ -162,7 +162,7 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.data_processing.data_types").isArray
             .jsonPath("$.data_processing.retention_periods").exists()
             .jsonPath("$.user_rights").exists()
-            .jsonPath("$.last_updated").isEqualTo("2025-08-08T00:00:00Z")
+            .jsonPath("$.last_updated").isEqualTo("2025-08-25T00:00:00Z")
             .jsonPath("$.version").isEqualTo("1.0.0")
     }
 
@@ -370,7 +370,7 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.data_controller").exists()
             .jsonPath("$.data_controller.name").isEqualTo("Congen Fitness Application")
             .jsonPath("$.data_controller.contact").isEqualTo("privacy@congen.com")
-            .jsonPath("$.data_controller.dpo").isEqualTo("dpo@congen.com")
+            .jsonPath("$.data_controller.dpo").isEqualTo("privacy@congen.com")
             .jsonPath("$.data_processing").exists()
             .jsonPath("$.data_processing.purposes").isArray
             .jsonPath("$.data_processing.purposes.length()").value(org.hamcrest.Matchers.greaterThan(0))
@@ -390,7 +390,7 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_rights.portability").exists()
             .jsonPath("$.user_rights.objection").exists()
             .jsonPath("$.user_rights.complaint").exists()
-            .jsonPath("$.last_updated").isEqualTo("2025-08-08T00:00:00Z")
+            .jsonPath("$.last_updated").isEqualTo("2025-08-25T00:00:00Z")
             .jsonPath("$.version").isEqualTo("1.0.0")
     }
 
