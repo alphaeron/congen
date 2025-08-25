@@ -6,6 +6,7 @@ import com.congen.util.UnitConverter
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import kotlin.math.abs
 
 /**
  * Service for computing band weights for Dynamic Effort exercises.
@@ -115,7 +116,7 @@ class BandWeightService(
 
         val selectedBandWeight =
             allowedWeights.minByOrNull { weight ->
-                kotlin.math.abs(weight.toDouble() - normalizedTargetWeight.toDouble())
+                abs(weight.toDouble() - normalizedTargetWeight.toDouble())
             }
 
         val result = selectedBandWeight?.let { Band.fromWeight(it) }

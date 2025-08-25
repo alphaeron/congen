@@ -1,6 +1,7 @@
 package com.congen.generator
 
 import com.congen.model.Band
+import java.math.BigDecimal
 
 /**
  * Data class for day templates.
@@ -45,9 +46,9 @@ data class SetSchemeParams(
     /** The concentric tempo (lifting phase) in seconds. */
     val concentricTempo: String?,
     /** The target weight for this set in kilograms. */
-    val targetWeight: java.math.BigDecimal?,
+    val targetWeight: BigDecimal?,
     /** The actual weight performed for this set in kilograms. */
-    val performedWeight: java.math.BigDecimal?,
+    val performedWeight: BigDecimal?,
     /** The target number of repetitions for this set. */
     val targetRepCount: Int?,
     /** The actual number of repetitions performed for this set. */

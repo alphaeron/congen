@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import reactor.test.StepVerifier
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Integration tests for SupportedEquipmentWeightRoundingService.
@@ -139,7 +140,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
 
         // Then
         StepVerifier.create(result)
-            .expectNext(targetWeight.setScale(2, java.math.RoundingMode.HALF_UP)) // Should return original weight with proper scale
+            .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight with proper scale
             .verifyComplete()
     }
 
@@ -251,7 +252,7 @@ class SupportedEquipmentWeightRoundingServiceIntegrationTest : BaseIntegrationTe
 
         // Then
         StepVerifier.create(result)
-            .expectNext(targetWeight.setScale(2, java.math.RoundingMode.HALF_UP)) // Should return original weight when no equipment found
+            .expectNext(targetWeight.setScale(2, RoundingMode.HALF_UP)) // Should return original weight when no equipment found
             .verifyComplete()
     }
 }

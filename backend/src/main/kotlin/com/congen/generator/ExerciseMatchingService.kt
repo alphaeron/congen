@@ -1,5 +1,6 @@
 package com.congen.generator
 
+import com.congen.dal.ExerciseMuscleDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
@@ -509,7 +510,7 @@ class ExerciseMatchingService(
     fun calculateComprehensiveExerciseSimilarityScore(
         exercise: Exercise,
         primaryExercise: Exercise,
-        exerciseMuscleDAL: com.congen.dal.ExerciseMuscleDAL
+        exerciseMuscleDAL: ExerciseMuscleDAL
     ): Mono<Double> {
         return exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
             .flatMap { primaryExerciseMuscles ->

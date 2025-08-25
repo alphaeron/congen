@@ -1,8 +1,10 @@
 package com.congen.generator
 
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.dal.ExerciseMuscleDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
+import com.congen.model.ExerciseMuscle
 import com.congen.model.MovementType
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
@@ -28,7 +30,7 @@ import java.time.Instant
 class UserExercisePoolTest {
     private lateinit var userExercisePool: UserExercisePool
     private lateinit var exerciseEquipmentDAL: ExerciseEquipmentDAL
-    private lateinit var exerciseMuscleDAL: com.congen.dal.ExerciseMuscleDAL
+    private lateinit var exerciseMuscleDAL: ExerciseMuscleDAL
 
     companion object {
         private const val USER_ID = "test-user-123"
@@ -414,7 +416,7 @@ class UserExercisePoolTest {
         )
 
         val exerciseMuscles = listOf(
-            com.congen.model.ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
+            ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
         )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
@@ -504,7 +506,7 @@ class UserExercisePoolTest {
         )
 
         val exerciseMuscles = listOf(
-            com.congen.model.ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
+            ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
         )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))

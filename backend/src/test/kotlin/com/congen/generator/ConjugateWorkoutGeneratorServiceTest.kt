@@ -5,6 +5,7 @@ import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.Program
+import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.model.UserWeakMuscle
@@ -416,8 +417,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
     }
 
-    private fun createSampleProgrammedWorkout(): com.congen.model.ProgrammedWorkout {
-        return com.congen.model.ProgrammedWorkout(
+    private fun createSampleProgrammedWorkout(): ProgrammedWorkout {
+        return ProgrammedWorkout(
             id = 1L,
             programId = PROGRAM_ID,
             dayNumber = 1,

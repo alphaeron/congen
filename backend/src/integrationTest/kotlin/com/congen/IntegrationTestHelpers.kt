@@ -12,6 +12,8 @@ import com.congen.model.WorkoutStageTypeEnum
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.math.BigDecimal
+import java.net.URLEncoder
 
 /**
  * Helper class for integration tests providing reusable constants and helper methods.
@@ -626,7 +628,7 @@ object IntegrationTestHelpers {
         preferredUnit: String,
         token: String? = null
     ) {
-        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
+        val encodedExerciseName = URLEncoder.encode(exerciseName, "UTF-8")
         val request =
             webTestClient.put()
                 .uri(
@@ -654,7 +656,7 @@ object IntegrationTestHelpers {
         webTestClient: WebTestClient,
         keycloakId: String,
         exerciseName: String,
-        oneRepMax: java.math.BigDecimal,
+        oneRepMax: BigDecimal,
         unit: String? = null,
         token: String? = null
     ): UserOneRepMax {

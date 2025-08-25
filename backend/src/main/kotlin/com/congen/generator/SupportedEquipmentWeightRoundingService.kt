@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -172,7 +173,7 @@ class SupportedEquipmentWeightRoundingService(
         val targetWeightDouble = targetWeight.toDouble()
         val closestWeight =
             kettlebellWeights.minByOrNull {
-                kotlin.math.abs(it - targetWeightDouble)
+                abs(it - targetWeightDouble)
             } ?: kettlebellWeights.first()
 
         return BigDecimal(closestWeight).setScale(2, RoundingMode.HALF_UP)
@@ -230,7 +231,7 @@ class SupportedEquipmentWeightRoundingService(
 
         // Try single plates
         for (plate in sortedPlates) {
-            val difference = kotlin.math.abs(targetDouble - plate)
+            val difference = abs(targetDouble - plate)
             if (difference < bestDifference) {
                 bestWeight = plate
                 bestDifference = difference
@@ -241,7 +242,7 @@ class SupportedEquipmentWeightRoundingService(
         for (i in sortedPlates.indices) {
             for (j in i until sortedPlates.size) {
                 val combinedWeight = sortedPlates[i] + sortedPlates[j]
-                val difference = kotlin.math.abs(targetDouble - combinedWeight)
+                val difference = abs(targetDouble - combinedWeight)
 
                 if (difference < bestDifference) {
                     bestWeight = combinedWeight
@@ -255,7 +256,7 @@ class SupportedEquipmentWeightRoundingService(
             for (j in i until sortedPlates.size) {
                 for (k in j until sortedPlates.size) {
                     val combinedWeight = sortedPlates[i] + sortedPlates[j] + sortedPlates[k]
-                    val difference = kotlin.math.abs(targetDouble - combinedWeight)
+                    val difference = abs(targetDouble - combinedWeight)
 
                     if (difference < bestDifference) {
                         bestWeight = combinedWeight
@@ -271,7 +272,7 @@ class SupportedEquipmentWeightRoundingService(
                 for (k in j until sortedPlates.size) {
                     for (l in k until sortedPlates.size) {
                         val combinedWeight = sortedPlates[i] + sortedPlates[j] + sortedPlates[k] + sortedPlates[l]
-                        val difference = kotlin.math.abs(targetDouble - combinedWeight)
+                        val difference = abs(targetDouble - combinedWeight)
 
                         if (difference < bestDifference) {
                             bestWeight = combinedWeight

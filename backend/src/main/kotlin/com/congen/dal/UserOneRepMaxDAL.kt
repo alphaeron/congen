@@ -11,6 +11,7 @@ import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
 
 /**
  * Data Access Layer for UserOneRepMax entity operations.
@@ -122,7 +123,7 @@ class UserOneRepMaxDAL(
     fun insertUserOneRepMax(
         userId: String,
         exerciseName: String,
-        oneRepMax: java.math.BigDecimal,
+        oneRepMax: BigDecimal,
     ): Mono<UserOneRepMax> {
         logger.debug("Inserting user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         // Validate all CHECK constraints
@@ -159,7 +160,7 @@ class UserOneRepMaxDAL(
     fun updateUserOneRepMax(
         userId: String,
         exerciseName: String,
-        oneRepMax: java.math.BigDecimal,
+        oneRepMax: BigDecimal,
     ): Mono<UserOneRepMax> {
         logger.debug("Updating user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         // Validate all CHECK constraints
@@ -195,7 +196,7 @@ class UserOneRepMaxDAL(
     fun upsertUserOneRepMax(
         userId: String,
         exerciseName: String,
-        oneRepMax: java.math.BigDecimal,
+        oneRepMax: BigDecimal,
     ): Mono<UserOneRepMax> {
         logger.debug("Upserting user one rep max: {} - {} - {}", userId, exerciseName, oneRepMax)
         // Validate all CHECK constraints

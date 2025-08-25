@@ -2,6 +2,7 @@ package com.congen
 
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.net.URLEncoder
 
 class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     private var userId1: String = ""
@@ -18,7 +19,6 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
     @BeforeEach
     override fun setUp() {
         super.setUp()
-        val unique = System.nanoTime()
         // Create unique tokens for each user to avoid keycloak ID conflicts
         token1 = getValidToken("user")
         token2 = getValidToken("user")
@@ -78,7 +78,7 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId4, "Overhead Press", false, token = token4)
 
         // Then delete it using query parameters with proper URL encoding
-        val encodedExerciseName = java.net.URLEncoder.encode("Overhead Press", "UTF-8")
+        val encodedExerciseName = URLEncoder.encode("Overhead Press", "UTF-8")
         webTestClient.delete()
             .uri("/api/v1/user_exercise_preference/?user_id=$userId4&exercise_name=$encodedExerciseName")
             .header("Authorization", "Bearer $token4")

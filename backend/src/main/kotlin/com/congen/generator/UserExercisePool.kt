@@ -1,7 +1,9 @@
 package com.congen.generator
 
 import com.congen.dal.ExerciseEquipmentDAL
+import com.congen.dal.ExerciseMuscleDAL
 import com.congen.model.Exercise
+import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
@@ -26,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap
 class UserExercisePool(
     private val allExercises: List<Exercise>,
     private val preferences: List<UserExercisePreference>,
-    private val userEquipment: List<com.congen.model.UserEquipment>,
+    private val userEquipment: List<UserEquipment>,
     private val exerciseEquipmentDAL: ExerciseEquipmentDAL
 ) {
     companion object {
@@ -162,7 +164,7 @@ class UserExercisePool(
     fun filterExercisesByMuscles(
         exercises: List<Exercise>,
         targetMuscles: List<String>,
-        exerciseMuscleDAL: com.congen.dal.ExerciseMuscleDAL
+        exerciseMuscleDAL: ExerciseMuscleDAL
     ): Mono<List<Exercise>> {
         if (exercises.isEmpty() || targetMuscles.isEmpty()) {
             return Mono.just(exercises)

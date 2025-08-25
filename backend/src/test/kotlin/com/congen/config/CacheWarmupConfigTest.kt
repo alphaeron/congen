@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.core.env.MapPropertySource
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -72,7 +73,7 @@ class CacheWarmupConfigDisabledTest {
         // Set disabled properties
         context.environment.setActiveProfiles("test")
         context.environment.propertySources.addFirst(
-            org.springframework.core.env.MapPropertySource(
+            MapPropertySource(
                 "test-properties",
                 mapOf(
                     "congen.cache.warmup.enabled" to "false",

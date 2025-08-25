@@ -168,12 +168,12 @@ class CacheKeyGenerator {
      */
     fun generateInvalidationKeys(
         entityName: String,
-        invalidationStrategy: com.congen.cache.CacheInvalidationStrategy,
+        invalidationStrategy: CacheInvalidationStrategy,
         args: Array<Any?>
     ): List<String> {
         return when (invalidationStrategy) {
-            com.congen.cache.CacheInvalidationStrategy.STANDARD -> listOf("$entityName:*")
-            com.congen.cache.CacheInvalidationStrategy.ENTITY_BY_NAME -> {
+            CacheInvalidationStrategy.STANDARD -> listOf("$entityName:*")
+            CacheInvalidationStrategy.ENTITY_BY_NAME -> {
                 val entityNameParam = args.firstOrNull()?.toString()
                 if (entityNameParam != null) {
                     listOf("$entityName:byName:$entityNameParam", "$entityName:*")
@@ -181,7 +181,7 @@ class CacheKeyGenerator {
                     listOf("$entityName:*")
                 }
             }
-            com.congen.cache.CacheInvalidationStrategy.USER_DATA -> {
+            CacheInvalidationStrategy.USER_DATA -> {
                 val userId = args.firstOrNull()?.toString()
                 if (userId != null) {
                     listOf("$entityName:user:$userId:*", "$entityName:*")
@@ -189,11 +189,11 @@ class CacheKeyGenerator {
                     listOf("$entityName:*")
                 }
             }
-            com.congen.cache.CacheInvalidationStrategy.RELATIONSHIP -> {
+            CacheInvalidationStrategy.RELATIONSHIP -> {
                 val params = args.joinToString(":") { it?.toString() ?: "null" }
                 listOf("$entityName:*", "$entityName:*:$params")
             }
-            com.congen.cache.CacheInvalidationStrategy.LIST_QUERIES -> {
+            CacheInvalidationStrategy.LIST_QUERIES -> {
                 listOf("$entityName:list:*", "$entityName:*")
             }
         }

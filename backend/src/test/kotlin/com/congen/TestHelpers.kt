@@ -1,5 +1,18 @@
 package com.congen
 
+import com.congen.dal.ExerciseRotationHistoryDAL
+import com.congen.dal.GdprComplianceDAL
+import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgrammedExerciseDAL
+import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
+import com.congen.dal.UserDAL
+import com.congen.dal.UserEquipmentDAL
+import com.congen.dal.UserExercisePreferenceDAL
+import com.congen.dal.UserOneRepMaxDAL
+import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.dal.WorkoutStageDAL
 import com.congen.generator.DayTemplate
 import com.congen.generator.PrilepinGuidelines
 import com.congen.generator.SetSchemeParams
@@ -30,6 +43,10 @@ import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
+import com.congen.service.AuditService
+import com.congen.service.GdprComplianceService
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.spy
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -505,24 +522,24 @@ fun <T : Any> assertFluxEmpty(flux: Flux<T>) {
  *
  * @return A spy of GdprComplianceService with all dependencies mocked
  */
-fun createGdprComplianceServiceSpy(): com.congen.service.GdprComplianceService {
-    val gdprComplianceDAL = org.mockito.kotlin.mock<com.congen.dal.GdprComplianceDAL>()
-    val userDAL = org.mockito.kotlin.mock<com.congen.dal.UserDAL>()
-    val userEquipmentDAL = org.mockito.kotlin.mock<com.congen.dal.UserEquipmentDAL>()
-    val userExercisePreferenceDAL = org.mockito.kotlin.mock<com.congen.dal.UserExercisePreferenceDAL>()
-    val userProgramPreferencesDAL = org.mockito.kotlin.mock<com.congen.dal.UserProgramPreferencesDAL>()
-    val userOneRepMaxDAL = org.mockito.kotlin.mock<com.congen.dal.UserOneRepMaxDAL>()
-    val userWeightUnitPreferenceDAL = org.mockito.kotlin.mock<com.congen.dal.UserWeightUnitPreferenceDAL>()
-    val exerciseRotationHistoryDAL = org.mockito.kotlin.mock<com.congen.dal.ExerciseRotationHistoryDAL>()
-    val programDAL = org.mockito.kotlin.mock<com.congen.dal.ProgramDAL>()
-    val programmedWorkoutDAL = org.mockito.kotlin.mock<com.congen.dal.ProgrammedWorkoutDAL>()
-    val workoutStageDAL = org.mockito.kotlin.mock<com.congen.dal.WorkoutStageDAL>()
-    val programmedExerciseDAL = org.mockito.kotlin.mock<com.congen.dal.ProgrammedExerciseDAL>()
-    val setSchemeDAL = org.mockito.kotlin.mock<com.congen.dal.SetSchemeDAL>()
-    val auditService = org.mockito.kotlin.mock<com.congen.service.AuditService>()
+fun createGdprComplianceServiceSpy(): GdprComplianceService {
+    val gdprComplianceDAL = mock<GdprComplianceDAL>()
+    val userDAL = mock<UserDAL>()
+    val userEquipmentDAL = mock<UserEquipmentDAL>()
+    val userExercisePreferenceDAL = mock<UserExercisePreferenceDAL>()
+    val userProgramPreferencesDAL = mock<UserProgramPreferencesDAL>()
+    val userOneRepMaxDAL = mock<UserOneRepMaxDAL>()
+    val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
+    val exerciseRotationHistoryDAL = mock<ExerciseRotationHistoryDAL>()
+    val programDAL = mock<ProgramDAL>()
+    val programmedWorkoutDAL = mock<ProgrammedWorkoutDAL>()
+    val workoutStageDAL = mock<WorkoutStageDAL>()
+    val programmedExerciseDAL = mock<ProgrammedExerciseDAL>()
+    val setSchemeDAL = mock<SetSchemeDAL>()
+    val auditService = mock<AuditService>()
 
     val gdprComplianceService =
-        com.congen.service.GdprComplianceService(
+        GdprComplianceService(
             gdprComplianceDAL = gdprComplianceDAL,
             userDAL = userDAL,
             userEquipmentDAL = userEquipmentDAL,
@@ -539,5 +556,5 @@ fun createGdprComplianceServiceSpy(): com.congen.service.GdprComplianceService {
             auditService = auditService
         )
 
-    return org.mockito.kotlin.spy(gdprComplianceService)
+    return spy(gdprComplianceService)
 }

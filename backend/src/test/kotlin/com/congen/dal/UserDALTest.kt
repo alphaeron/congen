@@ -40,8 +40,8 @@ class UserDALTest {
             mapOf(
                 "keycloak_id" to user.keycloakId,
                 "name" to user.name,
-                "created_at" to java.time.Instant.parse("2024-01-01T00:00:00Z"),
-                "updated_at" to java.time.Instant.parse("2024-01-01T00:00:00Z")
+                "created_at" to Instant.parse("2024-01-01T00:00:00Z"),
+                "updated_at" to Instant.parse("2024-01-01T00:00:00Z")
             )
         whenever(postgresClient.selectIndividual<Map<String, Any>>("SELECT * FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
             .thenReturn(Mono.just(mockRow))

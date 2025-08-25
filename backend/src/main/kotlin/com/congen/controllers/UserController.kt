@@ -8,6 +8,7 @@ import com.congen.service.UserService
 import com.congen.util.KeycloakUtil
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.responses.ApiResponses
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -66,7 +67,7 @@ class UserController(
             ApiResponse(
                 responseCode = "200",
                 description = "User profile created successfully",
-                content = [Content(schema = io.swagger.v3.oas.annotations.media.Schema(implementation = User::class))]
+                content = [Content(schema = Schema(implementation = User::class))]
             ),
             ApiResponse(
                 responseCode = "400",
@@ -114,7 +115,7 @@ class UserController(
             ApiResponse(
                 responseCode = "200",
                 description = "Current user profile retrieved successfully",
-                content = [Content(schema = io.swagger.v3.oas.annotations.media.Schema(implementation = User::class))]
+                content = [Content(schema = Schema(implementation = User::class))]
             ),
             ApiResponse(
                 responseCode = "401",

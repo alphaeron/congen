@@ -8,6 +8,7 @@ import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.result.method.RequestMappingInfo
 import org.springframework.web.reactive.result.method.annotation.RequestMappingHandlerMapping
+import java.lang.reflect.Method
 
 /**
  * Web configuration for the Congen API.
@@ -50,7 +51,7 @@ class WebConfig : WebFluxConfigurer {
     fun requestMappingHandlerMapping(): RequestMappingHandlerMapping {
         return object : RequestMappingHandlerMapping() {
             override fun getMappingForMethod(
-                method: java.lang.reflect.Method,
+                method: Method,
                 handlerType: Class<*>
             ): RequestMappingInfo? {
                 val mapping = super.getMappingForMethod(method, handlerType)

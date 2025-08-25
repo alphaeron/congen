@@ -6,6 +6,7 @@ import com.congen.dal.ExerciseDAL
 import com.congen.model.Exercise
 import com.congen.model.MovementType
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.reflect.MethodSignature
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -570,8 +571,8 @@ class DALCachingAspectTest {
         exerciseName: String,
         exercise: Exercise,
         method: Method
-    ): org.aspectj.lang.ProceedingJoinPoint {
-        val joinPoint = Mockito.mock(org.aspectj.lang.ProceedingJoinPoint::class.java)
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
         val methodSignature = Mockito.mock(MethodSignature::class.java)
 
         Mockito.lenient().`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))
@@ -587,8 +588,8 @@ class DALCachingAspectTest {
     private fun createJoinPointWithNull(
         exerciseName: String,
         method: Method
-    ): org.aspectj.lang.ProceedingJoinPoint {
-        val joinPoint = Mockito.mock(org.aspectj.lang.ProceedingJoinPoint::class.java)
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
         val methodSignature = Mockito.mock(MethodSignature::class.java)
 
         Mockito.lenient().`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))
@@ -605,8 +606,8 @@ class DALCachingAspectTest {
         exerciseName: String,
         exercise: Exercise,
         method: Method
-    ): org.aspectj.lang.ProceedingJoinPoint {
-        val joinPoint = Mockito.mock(org.aspectj.lang.ProceedingJoinPoint::class.java)
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
         val methodSignature = Mockito.mock(MethodSignature::class.java)
 
         Mockito.lenient().`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))
@@ -623,8 +624,8 @@ class DALCachingAspectTest {
         exerciseName: String,
         error: Exception,
         method: Method
-    ): org.aspectj.lang.ProceedingJoinPoint {
-        val joinPoint = Mockito.mock(org.aspectj.lang.ProceedingJoinPoint::class.java)
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
         val methodSignature = Mockito.mock(MethodSignature::class.java)
 
         Mockito.lenient().`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))
@@ -657,8 +658,8 @@ class DALCachingAspectTest {
         exerciseName: String,
         exercise: Exercise,
         method: Method
-    ): org.aspectj.lang.ProceedingJoinPoint {
-        val joinPoint = Mockito.mock(org.aspectj.lang.ProceedingJoinPoint::class.java)
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
         val methodSignature = Mockito.mock(MethodSignature::class.java)
 
         Mockito.`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))
@@ -673,8 +674,8 @@ class DALCachingAspectTest {
         exerciseName: String,
         error: Exception,
         method: Method
-    ): org.aspectj.lang.ProceedingJoinPoint {
-        val joinPoint = Mockito.mock(org.aspectj.lang.ProceedingJoinPoint::class.java)
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
         val methodSignature = Mockito.mock(MethodSignature::class.java)
 
         Mockito.`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))

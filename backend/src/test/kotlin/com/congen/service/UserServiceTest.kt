@@ -5,6 +5,8 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
+import com.congen.model.UserConsent
+import com.congen.model.UserProgramPreferences
 import com.congen.util.KeycloakUtil
 import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
@@ -60,7 +62,7 @@ class UserServiceTest {
         whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(name))
         whenever(userDAL.insertUser(eq(keycloakId), eq(name))).thenReturn(Mono.just(testUser))
         whenever(gdprComplianceService.updateUserConsent(eq(keycloakId), eq(true))).thenReturn(Mono.just(
-            com.congen.model.UserConsent(
+            UserConsent(
                 keycloakId = keycloakId,
                 dataProcessingConsent = true,
                 consentTimestamp = now,
@@ -70,7 +72,7 @@ class UserServiceTest {
         ))
         whenever(userProgramPreferencesDAL.insertUserProgramPreferences(any(), any(), any()))
             .thenReturn(Mono.just(
-                com.congen.model.UserProgramPreferences(
+                UserProgramPreferences(
                     userId = keycloakId,
                     programDaysPerWeek = 4,
                     sessionTimeLengthInMinutes = 60,

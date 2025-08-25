@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 /**
  * Data Access Layer for User entities with GDPR-compliant encryption.
@@ -258,7 +260,7 @@ class UserDAL(
                 } catch (e: Exception) {
                     try {
                         // Try to parse as LocalDateTime and convert to Instant
-                        java.time.LocalDateTime.parse(value).atZone(java.time.ZoneOffset.UTC).toInstant()
+                        LocalDateTime.parse(value).atZone(ZoneOffset.UTC).toInstant()
                     } catch (e: Exception) {
                         // Fallback to current time if parsing fails
                         Instant.now()

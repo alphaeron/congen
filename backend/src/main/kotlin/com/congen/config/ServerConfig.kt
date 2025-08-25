@@ -1,5 +1,6 @@
 package com.congen.config
 
+import io.netty.channel.ChannelOption
 import org.springframework.boot.web.embedded.netty.NettyServerCustomizer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -29,10 +30,10 @@ class ServerConfig {
     fun nettyServerCustomizer(): NettyServerCustomizer {
         return NettyServerCustomizer { httpServer: HttpServer ->
             httpServer
-                .option(io.netty.channel.ChannelOption.SO_BACKLOG, 1000)
-                .option(io.netty.channel.ChannelOption.SO_REUSEADDR, true)
-                .childOption(io.netty.channel.ChannelOption.SO_KEEPALIVE, true)
-                .childOption(io.netty.channel.ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_BACKLOG, 1000)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.TCP_NODELAY, true)
                 .httpRequestDecoder { decoder ->
                     decoder.maxInitialLineLength(4096)
                         .maxHeaderSize(8192)

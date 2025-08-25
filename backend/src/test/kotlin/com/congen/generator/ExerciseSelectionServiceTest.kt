@@ -5,6 +5,7 @@ import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.model.Exercise
+import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
@@ -17,6 +18,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import java.math.BigDecimal
 import java.time.Instant
 
 /**
@@ -61,7 +63,7 @@ class ExerciseSelectionServiceTest {
         
         // Mock the selectAllExerciseWorkoutTypes method to return workout types that include test exercises
         val workoutTypes = listOf(
-            com.congen.model.ExerciseWorkoutType(
+            ExerciseWorkoutType(
                 exerciseName = "Bench Press",
                 movementType = MovementType.HORIZONTAL_PUSH,
                 workoutType = "max_effort"
@@ -260,8 +262,8 @@ class ExerciseSelectionServiceTest {
                 MovementType.HORIZONTAL_PUSH to 2,
                 MovementType.HORIZONTAL_PULL to 1
             ),
-            pushVolume = java.math.BigDecimal.ZERO,
-            pullVolume = java.math.BigDecimal.ZERO
+            pushVolume = BigDecimal.ZERO,
+            pullVolume = BigDecimal.ZERO
         )
         
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
@@ -302,8 +304,8 @@ class ExerciseSelectionServiceTest {
                 MovementType.HORIZONTAL_PUSH to 2,
                 MovementType.HORIZONTAL_PULL to 1
             ),
-            pushVolume = java.math.BigDecimal.ZERO,
-            pullVolume = java.math.BigDecimal.ZERO
+            pushVolume = BigDecimal.ZERO,
+            pullVolume = BigDecimal.ZERO
         )
         
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
@@ -339,8 +341,8 @@ class ExerciseSelectionServiceTest {
         )
     }
 
-    private fun createSampleExerciseWorkoutType(): com.congen.model.ExerciseWorkoutType {
-        return com.congen.model.ExerciseWorkoutType(
+    private fun createSampleExerciseWorkoutType(): ExerciseWorkoutType {
+        return ExerciseWorkoutType(
             exerciseName = "Bench Press",
             movementType = MovementType.HORIZONTAL_PUSH,
             workoutType = "max_effort"

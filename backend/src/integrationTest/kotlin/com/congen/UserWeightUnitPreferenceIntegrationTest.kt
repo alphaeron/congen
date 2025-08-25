@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import java.net.URLEncoder
 
 /**
  * Integration tests for UserWeightUnitPreference endpoints.
@@ -34,7 +35,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     fun `should create weight unit preference`() {
         val exerciseName = "Bench Press"
         val preferredUnit = "LBS"
-        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
+        val encodedExerciseName = URLEncoder.encode(exerciseName, "UTF-8")
 
         webTestClient.put()
             .uri(
@@ -56,7 +57,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     fun `should create weight unit preference with KG`() {
         val exerciseName = "Deadlift"
         val preferredUnit = "KG"
-        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
+        val encodedExerciseName = URLEncoder.encode(exerciseName, "UTF-8")
 
         webTestClient.put()
             .uri(
@@ -78,7 +79,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 for invalid weight unit`() {
         val exerciseName = "Bench Press"
         val invalidUnit = "INVALID"
-        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
+        val encodedExerciseName = URLEncoder.encode(exerciseName, "UTF-8")
 
         webTestClient.put()
             .uri(
@@ -135,8 +136,8 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
         val unit2 = "KG"
 
         // Create preferences
-        val encodedExercise1 = java.net.URLEncoder.encode(exercise1, "UTF-8")
-        val encodedExercise2 = java.net.URLEncoder.encode(exercise2, "UTF-8")
+        val encodedExercise1 = URLEncoder.encode(exercise1, "UTF-8")
+        val encodedExercise2 = URLEncoder.encode(exercise2, "UTF-8")
 
         webTestClient.put()
             .uri(
@@ -203,7 +204,7 @@ class UserWeightUnitPreferenceIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 for non-existent weight unit preference`() {
         val exerciseName = "NonExistentExercise"
-        val encodedExerciseName = java.net.URLEncoder.encode(exerciseName, "UTF-8")
+        val encodedExerciseName = URLEncoder.encode(exerciseName, "UTF-8")
 
         webTestClient.get()
             .uri("/api/v1/user_weight_unit_preference/$userId/$encodedExerciseName")
