@@ -1,3 +1,38 @@
+user exercise pool should filter user exercises before returning the list so there is centralized filtering?
+
+
+
+
+Mono.empty??? handling???
+
+
+
+
+Rename ExercisePool to ExercisePoolFactory
+
+
+
+
+remove unused params
+
+
+
+
+Now completely remove exercise rotation history since it is unused
+
+
+
+WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage
+
+
+
+
+Display for workout detail title (should not be "DE_Upper Day (Day 4) • 5 stages")
+
+
+
+
+
 after generating a workout the dialog does not automatically go away and show the loader until the generation is done, causing confusion
 
 
@@ -25,12 +60,6 @@ Workout generation algorithm should put a description of the stage (for example,
 never have banded exercises for the secondary movement, they should always only be in the primary, and banded exercises should also only be used on DE day types.
 
 
-
-
-
-How does exercise rotation history work, I don't see any rotation history even though workouts have been created and I see the exercises in usage statistics.
-
-Is exercise rotation history not needed or duplicated state?
 
 
 
@@ -76,6 +105,8 @@ assets, and object storage for assets
 
 congen database for congen?  Or maybe aws terraform will handle that.
 
+export (pdf or xlsx), print icons on workout and program
+
 
 
 generate database
@@ -107,6 +138,10 @@ Health metric visualization impact on performance page.
 hashicorp vault for staging/production
 
 Write a gradle task to check for all component updates and apply them
+
+remove keycloak username, just use email?
+
+workout type enum
 
 
 https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/

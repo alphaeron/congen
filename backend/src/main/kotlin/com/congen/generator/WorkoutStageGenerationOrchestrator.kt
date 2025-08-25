@@ -6,7 +6,6 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
-import com.congen.model.ExerciseRotationHistory
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
@@ -50,15 +49,16 @@ class WorkoutStageGenerationOrchestrator(
     private val prilepinGuidelinesService: PrilepinGuidelinesService,
     private val weightSelectionService: WeightSelectionService,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
-    private val workoutStageGenerationServiceFactory: WorkoutStageGenerationServiceFactory
+    private val workoutStageGenerationServiceFactory: WorkoutStageGenerationServiceFactory,
 ) {
     /**
      * Generates complete workout stages for a given workout and day type.
      *
      * This method orchestrates the entire workout stage generation process:
-     * 1. Selects the appropriate business logic service based on program days
-     * 2. Delegates to the service for exercise selection and stage planning
-     * 3. Uses the infrastructure layer for actual creation of stages, exercises, and set schemes
+     * 1. Creates a UserExercisePool for thread-safe exercise management
+     * 2. Selects the appropriate business logic service based on program days
+     * 3. Delegates to the service for exercise selection and stage planning
+     * 4. Uses the infrastructure layer for actual creation of stages, exercises, and set schemes
      *
      * @param workout The workout to generate stages for
      * @param dayType The type of workout day (e.g., "ME_Upper", "DE_Lower")
@@ -67,38 +67,33 @@ class WorkoutStageGenerationOrchestrator(
      * @param userEquipment User's available equipment
      * @param oneRepMaxes User's one rep max values
      * @param programPreferences User's program preferences
-     * @param rotationHistory Exercise rotation history
      * @param weakMuscles User's weak muscle groups
      * @param currentWeekNumber Current week in the program
      * @param userId User ID
-     * @return Flux of created workout stages
+     * @return Mono indicating completion
      */
     fun generateWorkoutStages(
         workout: ProgrammedWorkout,
         dayType: String,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
     ): Mono<Void> {
         // Get the appropriate business logic service based on program days
-        val service = workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(programPreferences.programDaysPerWeek)
+        val service = workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(
+            programDaysPerWeek = programPreferences.programDaysPerWeek
+        )
 
         // Delegate to the service for business logic (exercise selection, stage planning)
         return service.generateWorkoutStages(
             workout = workout,
             dayType = dayType,
-            exercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
+            userExercisePool = userExercisePool,
             oneRepMaxes = oneRepMaxes,
             programPreferences = programPreferences,
-            rotationHistory = rotationHistory,
             weakMuscles = weakMuscles,
             currentWeekNumber = currentWeekNumber,
             userId = userId,

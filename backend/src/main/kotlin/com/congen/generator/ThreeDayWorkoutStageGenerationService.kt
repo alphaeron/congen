@@ -6,7 +6,6 @@ import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
-import com.congen.model.ExerciseRotationHistory
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
@@ -64,7 +63,6 @@ class ThreeDayWorkoutStageGenerationService(
     movementBalanceService: MovementBalanceService,
     private val conjugateTemplates: ConjugateTemplates,
 ) : WorkoutStageGenerationService(
-        exerciseSelectionService,
         workoutStageDAL,
         workoutStageTypeDAL,
         programmedExerciseDAL,
@@ -73,8 +71,9 @@ class ThreeDayWorkoutStageGenerationService(
         prilepinGuidelinesService,
         weightSelectionService,
         userWeightUnitPreferenceDAL,
-        sessionTimeCalculator,
-        movementBalanceService
+        exerciseSelectionService,
+        movementBalanceService,
+        sessionTimeCalculator
     ) {
     companion object {
         /** Logger instance for this class. */
@@ -84,12 +83,9 @@ class ThreeDayWorkoutStageGenerationService(
     override fun generateStagesForDayType(
         workout: ProgrammedWorkout,
         dayType: String,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
@@ -99,12 +95,9 @@ class ThreeDayWorkoutStageGenerationService(
                 generateCombinedMEDay(
                     workout = workout,
                     dayType = dayType,
-                    exercises = exercises,
-                    preferences = preferences,
-                    userEquipment = userEquipment,
+                    userExercisePool = userExercisePool,
                     oneRepMaxes = oneRepMaxes,
                     programPreferences = programPreferences,
-                    rotationHistory = rotationHistory,
                     weakMuscles = weakMuscles,
                     currentWeekNumber = currentWeekNumber,
                     userId = userId
@@ -113,12 +106,9 @@ class ThreeDayWorkoutStageGenerationService(
             conjugateTemplates.isFullBodyDE(dayType) -> {
                 generateFullBodyDEDay(
                     workout = workout,
-                    exercises = exercises,
-                    preferences = preferences,
-                    userEquipment = userEquipment,
+                    userExercisePool = userExercisePool,
                     oneRepMaxes = oneRepMaxes,
                     programPreferences = programPreferences,
-                    rotationHistory = rotationHistory,
                     weakMuscles = weakMuscles,
                     currentWeekNumber = currentWeekNumber,
                     userId = userId
@@ -137,12 +127,9 @@ class ThreeDayWorkoutStageGenerationService(
     private fun generateCombinedMEDay(
         workout: ProgrammedWorkout,
         dayType: String,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
@@ -156,57 +143,49 @@ class ThreeDayWorkoutStageGenerationService(
         // Select primary ME exercise
         val primaryExerciseMono =
             selectPrimaryExercise(
-                exercises = exercises,
-                preferences = preferences,
-                userEquipment = userEquipment,
-                weakMuscles = weakMuscles,
-                rotationHistory = rotationHistory,
+                userExercisePool = userExercisePool,
                 workoutType = "maximal_effort",
+                weakMuscles = weakMuscles,
                 movementBalanceState = movementBalanceState
             )
 
         // Select secondary DE exercise
         val secondaryExerciseMono =
-            selectDEExercise(
-                exercises = exercises,
-                preferences = preferences,
-                userEquipment = userEquipment,
+            selectConditioningExercise(
+                userExercisePool = userExercisePool,
                 weakMuscles = weakMuscles,
-                rotationHistory = rotationHistory,
                 movementBalanceState = movementBalanceState
             )
 
         // Generate set schemes for both exercises
         val primarySetSchemesMono =
             primaryExerciseMono.flatMap { primaryExercise ->
-                if (primaryExercise != null) {
-                    generateSetSchemes(
-                        exercise = primaryExercise,
-                        movementRole = "primary",
-                        dayType = primaryMovementType,
-                        oneRepMaxes = oneRepMaxes,
-                        currentWeekNumber = currentWeekNumber,
-                        userId = userId
-                    )
-                } else {
-                    Mono.just(emptyList())
-                }
+                generateSetSchemes(
+                    exercise = primaryExercise,
+                    movementRole = "primary",
+                    dayType = primaryMovementType,
+                    oneRepMaxes = oneRepMaxes,
+                    currentWeekNumber = currentWeekNumber,
+                    userId = userId
+                )
+            }.onErrorResume { error ->
+                logger.error("Failed to generate set schemes for primary exercise. Error: {}", error.message)
+                Mono.just(emptyList())
             }
 
         val secondarySetSchemesMono =
             secondaryExerciseMono.flatMap { secondaryExercise ->
-                if (secondaryExercise != null) {
-                    generateSetSchemes(
-                        exercise = secondaryExercise,
-                        movementRole = "secondary",
-                        dayType = secondaryMovementType!!,
-                        oneRepMaxes = oneRepMaxes,
-                        currentWeekNumber = currentWeekNumber,
-                        userId = userId
-                    )
-                } else {
-                    Mono.just(emptyList())
-                }
+                generateSetSchemes(
+                    exercise = secondaryExercise,
+                    movementRole = "secondary",
+                    dayType = secondaryMovementType!!,
+                    oneRepMaxes = oneRepMaxes,
+                    currentWeekNumber = currentWeekNumber,
+                    userId = userId
+                )
+            }.onErrorResume { error ->
+                logger.error("Failed to generate set schemes for secondary exercise. Error: {}", error.message)
+                Mono.just(emptyList())
             }
 
         // Create workout stages with both exercises in the same primary stage
@@ -234,9 +213,7 @@ class ThreeDayWorkoutStageGenerationService(
                             {
                                 createWarmupStage(
                                     workout = workout,
-                                    exercises = exercises,
-                                    preferences = preferences,
-                                    userEquipment = userEquipment,
+                                    userExercisePool = userExercisePool,
                                     oneRepMaxes = oneRepMaxes,
                                     dayType = dayType,
                                     primaryExercise = primaryExercise,
@@ -260,14 +237,11 @@ class ThreeDayWorkoutStageGenerationService(
                                 if (numAccessoryExercises > 0) {
                                     createAccessoryStage(
                                         workout = workout,
-                                        exercises = exercises,
-                                        preferences = preferences,
-                                        userEquipment = userEquipment,
+                                        userExercisePool = userExercisePool,
                                         oneRepMaxes = oneRepMaxes,
                                         dayType = dayType,
                                         weakMuscles = weakMuscles,
                                         numAccessoryExercises = numAccessoryExercises,
-                                        rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
                                         userId = userId,
                                         movementBalanceState = movementBalanceState
@@ -281,13 +255,10 @@ class ThreeDayWorkoutStageGenerationService(
                                 if (hasConditioning(dayType)) {
                                     createConditioningStage(
                                         workout = workout,
-                                        exercises = exercises,
-                                        preferences = preferences,
-                                        userEquipment = userEquipment,
+                                        userExercisePool = userExercisePool,
                                         oneRepMaxes = oneRepMaxes,
                                         dayType = dayType,
                                         weakMuscles = weakMuscles,
-                                        rotationHistory = rotationHistory,
                                         userId = userId,
                                         movementBalanceState = movementBalanceState
                                     )
@@ -308,12 +279,9 @@ class ThreeDayWorkoutStageGenerationService(
      */
     private fun generateFullBodyDEDay(
         workout: ProgrammedWorkout,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
@@ -324,58 +292,50 @@ class ThreeDayWorkoutStageGenerationService(
         // Select upper body DE exercise
         val upperDEExerciseMono =
             selectPrimaryExercise(
-                exercises = exercises,
-                preferences = preferences,
-                userEquipment = userEquipment,
-                weakMuscles = weakMuscles,
-                rotationHistory = rotationHistory,
+                userExercisePool = userExercisePool,
                 workoutType = "dynamic_effort",
+                weakMuscles = weakMuscles,
                 movementBalanceState = movementBalanceState
             )
 
         // Select lower body DE exercise
         val lowerDEExerciseMono =
             selectPrimaryExercise(
-                exercises = exercises,
-                preferences = preferences,
-                userEquipment = userEquipment,
-                weakMuscles = weakMuscles,
-                rotationHistory = rotationHistory,
+                userExercisePool = userExercisePool,
                 workoutType = "dynamic_effort",
+                weakMuscles = weakMuscles,
                 movementBalanceState = movementBalanceState
             )
 
         // Generate set schemes for both exercises
         val upperDESetSchemesMono =
             upperDEExerciseMono.flatMap { upperDEExercise ->
-                if (upperDEExercise != null) {
-                    generateSetSchemes(
-                        exercise = upperDEExercise,
-                        movementRole = "primary",
-                        dayType = "DE_Upper",
-                        oneRepMaxes = oneRepMaxes,
-                        currentWeekNumber = currentWeekNumber,
-                        userId = userId
-                    )
-                } else {
-                    Mono.just(emptyList())
-                }
+                generateSetSchemes(
+                    exercise = upperDEExercise,
+                    movementRole = "primary",
+                    dayType = "DE_Upper",
+                    oneRepMaxes = oneRepMaxes,
+                    currentWeekNumber = currentWeekNumber,
+                    userId = userId
+                )
+            }.onErrorResume { error ->
+                logger.error("Failed to generate set schemes for upper DE exercise. Error: {}", error.message)
+                Mono.just(emptyList())
             }
 
         val lowerDESetSchemesMono =
             lowerDEExerciseMono.flatMap { lowerDEExercise ->
-                if (lowerDEExercise != null) {
-                    generateSetSchemes(
-                        exercise = lowerDEExercise,
-                        movementRole = "secondary",
-                        dayType = "DE_Lower",
-                        oneRepMaxes = oneRepMaxes,
-                        currentWeekNumber = currentWeekNumber,
-                        userId = userId
-                    )
-                } else {
-                    Mono.just(emptyList())
-                }
+                generateSetSchemes(
+                    exercise = lowerDEExercise,
+                    movementRole = "secondary",
+                    dayType = "DE_Lower",
+                    oneRepMaxes = oneRepMaxes,
+                    currentWeekNumber = currentWeekNumber,
+                    userId = userId
+                )
+            }.onErrorResume { error ->
+                logger.error("Failed to generate set schemes for lower DE exercise. Error: {}", error.message)
+                Mono.just(emptyList())
             }
 
         // Create workout stages with both DE exercises in the same primary stage
@@ -403,9 +363,7 @@ class ThreeDayWorkoutStageGenerationService(
                             {
                                 createWarmupStage(
                                     workout = workout,
-                                    exercises = exercises,
-                                    preferences = preferences,
-                                    userEquipment = userEquipment,
+                                    userExercisePool = userExercisePool,
                                     oneRepMaxes = oneRepMaxes,
                                     dayType = "DE_Full_Body",
                                     primaryExercise = upperDEExercise,
@@ -429,14 +387,11 @@ class ThreeDayWorkoutStageGenerationService(
                                 if (numAccessoryExercises > 0) {
                                     createAccessoryStage(
                                         workout = workout,
-                                        exercises = exercises,
-                                        preferences = preferences,
-                                        userEquipment = userEquipment,
+                                        userExercisePool = userExercisePool,
                                         oneRepMaxes = oneRepMaxes,
                                         dayType = "DE_Full_Body",
                                         weakMuscles = weakMuscles,
                                         numAccessoryExercises = numAccessoryExercises,
-                                        rotationHistory = rotationHistory,
                                         currentWeekNumber = currentWeekNumber,
                                         userId = userId,
                                         movementBalanceState = movementBalanceState
@@ -449,13 +404,10 @@ class ThreeDayWorkoutStageGenerationService(
                             {
                                 createConditioningStage(
                                     workout = workout,
-                                    dayType = "DE_Full_Body",
-                                    exercises = exercises,
-                                    preferences = preferences,
-                                    userEquipment = userEquipment,
+                                    userExercisePool = userExercisePool,
                                     oneRepMaxes = oneRepMaxes,
+                                    dayType = "DE_Full_Body",
                                     weakMuscles = weakMuscles,
-                                    rotationHistory = rotationHistory,
                                     userId = userId,
                                     movementBalanceState = movementBalanceState
                                 )

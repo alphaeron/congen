@@ -32,12 +32,14 @@ class WorkoutStageGenerationServiceFactory(
     /**
      * Gets the appropriate workout stage generation service based on the number of days per week.
      *
-     * @param numDaysPerWeek The number of training days per week (2, 3, or 4)
+     * @param programDaysPerWeek The number of training days per week (2, 3, or 4)
      * @return The appropriate WorkoutStageGenerationService for the program type
-     * @throws IllegalArgumentException if numDaysPerWeek is not 2, 3, or 4
+     * @throws IllegalArgumentException if programDaysPerWeek is not 2, 3, or 4
      */
-    fun getWorkoutStageGenerationService(numDaysPerWeek: Int): WorkoutStageGenerationService {
-        return when (numDaysPerWeek) {
+    fun getWorkoutStageGenerationService(
+        programDaysPerWeek: Int
+    ): WorkoutStageGenerationService {
+        return when (programDaysPerWeek) {
             2 -> twoDayWorkoutStageGenerationService
             3 -> threeDayWorkoutStageGenerationService
             4 -> fourDayWorkoutStageGenerationService

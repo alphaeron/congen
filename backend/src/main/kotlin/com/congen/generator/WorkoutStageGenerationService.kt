@@ -7,7 +7,6 @@ import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
-import com.congen.model.ExerciseRotationHistory
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserEquipment
@@ -61,9 +60,7 @@ import kotlin.random.Random
  * @author Congen Development Team
  * @since 1.0.0
  */
-@Service
 abstract class WorkoutStageGenerationService(
-    protected val exerciseSelectionService: ExerciseSelectionService,
     protected val workoutStageDAL: WorkoutStageDAL,
     protected val workoutStageTypeDAL: WorkoutStageTypeDAL,
     protected val programmedExerciseDAL: ProgrammedExerciseDAL,
@@ -72,8 +69,9 @@ abstract class WorkoutStageGenerationService(
     protected val prilepinGuidelinesService: PrilepinGuidelinesService,
     protected val weightSelectionService: WeightSelectionService,
     protected val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
-    protected val sessionTimeCalculator: SessionTimeCalculator,
+    protected val exerciseSelectionService: ExerciseSelectionService,
     protected val movementBalanceService: MovementBalanceService,
+    protected val sessionTimeCalculator: SessionTimeCalculator,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -102,12 +100,9 @@ abstract class WorkoutStageGenerationService(
     fun generateWorkoutStages(
         workout: ProgrammedWorkout,
         dayType: String,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
@@ -115,12 +110,9 @@ abstract class WorkoutStageGenerationService(
         return generateStagesForDayType(
             workout = workout,
             dayType = dayType,
-            exercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
+            userExercisePool = userExercisePool,
             oneRepMaxes = oneRepMaxes,
             programPreferences = programPreferences,
-            rotationHistory = rotationHistory,
             weakMuscles = weakMuscles,
             currentWeekNumber = currentWeekNumber,
             userId = userId
@@ -151,12 +143,9 @@ abstract class WorkoutStageGenerationService(
     protected abstract fun generateStagesForDayType(
         workout: ProgrammedWorkout,
         dayType: String,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
@@ -312,14 +301,11 @@ abstract class WorkoutStageGenerationService(
      */
     protected fun createAccessoryStage(
         workout: ProgrammedWorkout,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         dayType: String,
         weakMuscles: List<String>,
         numAccessoryExercises: Int,
-        rotationHistory: List<ExerciseRotationHistory>,
         userId: String,
         currentWeekNumber: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
@@ -337,37 +323,33 @@ abstract class WorkoutStageGenerationService(
                 Flux.range(1, numAccessoryExercises)
                     .flatMap {
                         selectAccessoryExercise(
-                            exercises = exercises,
-                            preferences = preferences,
-                            userEquipment = userEquipment,
+                            userExercisePool = userExercisePool,
                             weakMuscles = weakMuscles,
-                            rotationHistory = rotationHistory,
                             movementBalanceState = movementBalanceState
                         ).flatMap { accessoryExercise ->
-                            if (accessoryExercise != null) {
-                                createProgrammedExercise(
-                                    accessoryStage.id,
-                                    accessoryExercise.name
-                                )
-                                    .flatMap { accessoryProgrammedExercise ->
-                                        generatePrilepinBasedScheme(
-                                            exercise = accessoryExercise,
-                                            movementRole = "accessory",
-                                            dayType = dayType,
-                                            oneRepMaxes = oneRepMaxes,
-                                            currentWeekNumber = currentWeekNumber,
-                                            userId = userId
-                                        ).flatMap { accessoryScheme ->
-                                            createSetSchemes(
-                                                accessoryProgrammedExercise.id,
-                                                accessoryScheme,
-                                                WeightUnit.KG
-                                            )
-                                        }
+                            createProgrammedExercise(
+                                accessoryStage.id,
+                                accessoryExercise.name
+                            )
+                                .flatMap { accessoryProgrammedExercise ->
+                                    generatePrilepinBasedScheme(
+                                        exercise = accessoryExercise,
+                                        movementRole = "accessory",
+                                        dayType = dayType,
+                                        oneRepMaxes = oneRepMaxes,
+                                        currentWeekNumber = currentWeekNumber,
+                                        userId = userId
+                                    ).flatMap { accessoryScheme ->
+                                        createSetSchemes(
+                                            accessoryProgrammedExercise.id,
+                                            accessoryScheme,
+                                            WeightUnit.KG
+                                        )
                                     }
-                            } else {
-                                Mono.empty()
-                            }
+                                }
+                        }.onErrorResume { error ->
+                            logger.error("Failed to create accessory exercise for stage. Error: {}", error.message)
+                            Mono.empty()
                         }
                     }
                     .then()
@@ -390,13 +372,10 @@ abstract class WorkoutStageGenerationService(
      */
     protected fun createConditioningStage(
         workout: ProgrammedWorkout,
-        dayType: String,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
+        dayType: String,
         weakMuscles: List<String>,
-        rotationHistory: List<ExerciseRotationHistory>,
         userId: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Void> {
@@ -411,34 +390,30 @@ abstract class WorkoutStageGenerationService(
         )
             .flatMap { conditioningStage ->
                 selectConditioningExercise(
-                    exercises = exercises,
-                    preferences = preferences,
-                    userEquipment = userEquipment,
+                    userExercisePool = userExercisePool,
                     weakMuscles = weakMuscles,
-                    rotationHistory = rotationHistory,
                     movementBalanceState = movementBalanceState
                 ).flatMap { conditioningExercise ->
-                    if (conditioningExercise != null) {
-                        createProgrammedExercise(
-                            conditioningStage.id,
-                            conditioningExercise.name
-                        )
-                            .flatMap { conditioningProgrammedExercise ->
-                                generateAmrapOrEmomScheme(
-                                    exercise = conditioningExercise,
-                                    oneRepMaxes = oneRepMaxes,
-                                    userId = userId
-                                ).flatMap { conditioningScheme ->
-                                    createSetSchemes(
-                                        conditioningProgrammedExercise.id,
-                                        conditioningScheme,
-                                        WeightUnit.KG
-                                    )
-                                }
+                    createProgrammedExercise(
+                        conditioningStage.id,
+                        conditioningExercise.name
+                    )
+                        .flatMap { conditioningProgrammedExercise ->
+                            generateAmrapOrEmomScheme(
+                                exercise = conditioningExercise,
+                                oneRepMaxes = oneRepMaxes,
+                                userId = userId
+                            ).flatMap { conditioningScheme ->
+                                createSetSchemes(
+                                    conditioningProgrammedExercise.id,
+                                    conditioningScheme,
+                                    WeightUnit.KG
+                                )
                             }
-                    } else {
-                        Mono.empty()
-                    }
+                        }
+                }.onErrorResume { error ->
+                    logger.error("Failed to create conditioning exercise for stage. Error: {}", error.message)
+                    Mono.empty()
                 }
             }
             .then()
@@ -461,9 +436,7 @@ abstract class WorkoutStageGenerationService(
      */
     protected fun createWarmupStage(
         workout: ProgrammedWorkout,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         dayType: String,
         primaryExercise: Exercise?,
@@ -472,10 +445,7 @@ abstract class WorkoutStageGenerationService(
         userId: String,
     ): Mono<Void> {
         return exerciseSelectionService.selectWarmupExercises(
-            exercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            dayType = dayType,
+            userExercisePool = userExercisePool,
             primaryExercise = primaryExercise,
             isFourDayTemplate = isFourDayTemplate
         )
@@ -607,124 +577,106 @@ abstract class WorkoutStageGenerationService(
     }
 
     /**
-     * Selects a primary exercise based on workout type and movement type.
+     * Selects a primary exercise using the UserExercisePool.
+     * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
      *
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
-     * @param oneRepMaxes User's one rep max values
+     * @param userExercisePool The user's exercise pool
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param weakMuscles Target weak muscles
      * @param rotationHistory Exercise rotation history
-     * @param workoutType The type of workout (maximal_effort, dynamic_effort)
-     * @param movementType The specific movement type (e.g., "ME_Upper", "DE_Lower")
-     * @param currentWeekNumber Current week number
-     * @param userId User ID
-     * @return Mono containing the selected exercise or empty
+     * @param movementBalanceState Current movement balance state (optional)
+     * @return Mono containing the selected exercise or null if none available
      */
     protected fun selectPrimaryExercise(
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
-        weakMuscles: List<String>,
-        rotationHistory: List<ExerciseRotationHistory>,
+        userExercisePool: UserExercisePool,
         workoutType: String,
-        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Exercise?> {
-        return if (workoutType == "dynamic_effort") {
-            // For DE workouts, use the special DE filter that includes plyometric exercises
-            exerciseSelectionService.filterExercisesForDEWorkout(exercises)
-                .flatMap { filteredExercises ->
-                    exerciseSelectionService.selectRotatingExercise(
-                        targetMuscles = weakMuscles,
-                        userEquipment = userEquipment,
-                        preferences = preferences,
-                        exercises = filteredExercises,
-                        isAccessory = false,
-                        rotationHistory = rotationHistory,
-                        movementBalanceState = movementBalanceState
-                    )
-                }
-        } else {
-            // For ME workouts, use the standard filter
-            exerciseSelectionService.filterExercisesByWorkoutType(
-                exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
-                workoutType
-            ).flatMap { filteredExercises ->
-                exerciseSelectionService.selectRotatingExercise(
-                    targetMuscles = weakMuscles,
-                    userEquipment = userEquipment,
-                    preferences = preferences,
-                    exercises = filteredExercises,
-                    isAccessory = false,
-                    rotationHistory = rotationHistory,
-                    movementBalanceState = movementBalanceState
-                )
-            }
-        }
-    }
-
-    /**
-     * Selects a secondary exercise based on the primary exercise.
-     *
-     * @param primaryExercise The primary exercise to base selection on
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
-     * @param rotationHistory Exercise rotation history
-     * @return Mono containing the selected exercise or empty
-     */
-    protected fun selectSecondaryExercise(
-        primaryExercise: Exercise,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
-        rotationHistory: List<ExerciseRotationHistory>,
+        weakMuscles: List<String>,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
-        return exerciseSelectionService.selectSimilarSecondaryExercise(
-            primaryExercise = primaryExercise,
-            userEquipment = userEquipment,
-            preferences = preferences,
-            exercises =
-                exerciseSelectionService.filterExercisesExcluding(
-                    exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, false),
-                    primaryExercise.name
-                ),
-            rotationHistory = rotationHistory,
+        return exerciseSelectionService.selectExercise(
+            userExercisePool = userExercisePool,
+            targetMuscles = weakMuscles,
+            isAccessory = false,
             movementBalanceState = movementBalanceState
         )
     }
 
     /**
-     * Selects a DE exercise for combined workouts.
+     * Selects a secondary exercise using the UserExercisePool.
+     * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
      *
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool The user's exercise pool
+     * @param primaryExercise The primary exercise to base selection on
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param weakMuscles Target weak muscles
      * @param rotationHistory Exercise rotation history
-     * @return Mono containing the selected exercise or empty
+     * @param movementBalanceState Current movement balance state (optional)
+     * @return Mono containing the selected exercise or null if none available
      */
-    protected fun selectDEExercise(
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
-        weakMuscles: List<String>,
-        rotationHistory: List<ExerciseRotationHistory>,
+    protected fun selectSecondaryExercise(
+        userExercisePool: UserExercisePool,
+        primaryExercise: Exercise,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Exercise?> {
-        return exerciseSelectionService.filterExercisesForDEWorkout(exercises)
-            .flatMap { filteredExercises ->
-                exerciseSelectionService.selectRotatingExercise(
-                    targetMuscles = weakMuscles,
-                    userEquipment = userEquipment,
-                    preferences = preferences,
-                    exercises = filteredExercises,
-                    isAccessory = false,
-                    rotationHistory = rotationHistory,
-                    movementBalanceState = movementBalanceState
-                )
-            }
+    ): Mono<Exercise> {
+        return exerciseSelectionService.selectSimilarSecondaryExercise(
+            primaryExercise = primaryExercise,
+            userExercisePool = userExercisePool,
+            movementBalanceState = movementBalanceState
+        ).filter { selectedExercise ->
+            // Filter out exercises that are the same as the primary
+            selectedExercise.name != primaryExercise.name
+        }.onErrorResume { error ->
+            logger.error("Failed to select secondary exercise for primary exercise: {}. Error: {}", primaryExercise.name, error.message)
+            Mono.error(error)
+        }
+    }
+
+    /**
+     * Selects an accessory exercise using the UserExercisePool.
+     * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
+     *
+     * @param userExercisePool The user's exercise pool
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param weakMuscles Target weak muscles
+     * @param rotationHistory Exercise rotation history
+     * @param movementBalanceState Current movement balance state (optional)
+     * @return Mono containing the selected exercise or null if none available
+     */
+    protected fun selectAccessoryExercise(
+        userExercisePool: UserExercisePool,
+        weakMuscles: List<String>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
+    ): Mono<Exercise> {
+        return exerciseSelectionService.selectExercise(
+            userExercisePool = userExercisePool,
+            targetMuscles = weakMuscles,
+            isAccessory = true,
+            movementBalanceState = movementBalanceState
+        )
+    }
+
+    /**
+     * Selects a conditioning exercise using the UserExercisePool.
+     * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
+     *
+     * @param userExercisePool The user's exercise pool
+     * @param weakMuscles Target weak muscles
+     * @param rotationHistory Exercise rotation history
+     * @param movementBalanceState Current movement balance state (optional)
+     * @return Mono containing the selected exercise or null if none available
+     */
+    protected fun selectConditioningExercise(
+        userExercisePool: UserExercisePool,
+        weakMuscles: List<String>,
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
+    ): Mono<Exercise> {
+        return exerciseSelectionService.selectExercise(
+            userExercisePool = userExercisePool,
+            targetMuscles = weakMuscles,
+            isAccessory = true,
+            movementBalanceState = movementBalanceState
+        )
     }
 
     /**
@@ -1005,68 +957,6 @@ abstract class WorkoutStageGenerationService(
         }
 
         return currentMono
-    }
-
-    /**
-     * Selects an accessory exercise for the workout.
-     *
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
-     * @param weakMuscles Target weak muscles
-     * @param rotationHistory Exercise rotation history
-     * @param currentWeekNumber Current week number
-     * @param userId User ID
-     * @return Mono containing the selected accessory exercise
-     */
-    protected fun selectAccessoryExercise(
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
-        weakMuscles: List<String>,
-        rotationHistory: List<ExerciseRotationHistory>,
-        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Exercise?> {
-        return exerciseSelectionService.selectRotatingExercise(
-            targetMuscles = weakMuscles,
-            userEquipment = userEquipment,
-            preferences = preferences,
-            exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-            isAccessory = true,
-            rotationHistory = rotationHistory,
-            movementBalanceState = movementBalanceState
-        )
-    }
-
-    /**
-     * Selects a conditioning exercise for the workout.
-     *
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
-     * @param weakMuscles Target weak muscles
-     * @param rotationHistory Exercise rotation history
-     * @param currentWeekNumber Current week number
-     * @param userId User ID
-     * @return Mono containing the selected conditioning exercise
-     */
-    protected fun selectConditioningExercise(
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
-        weakMuscles: List<String>,
-        rotationHistory: List<ExerciseRotationHistory>,
-        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Exercise?> {
-        return exerciseSelectionService.selectRotatingExercise(
-            targetMuscles = weakMuscles,
-            userEquipment = userEquipment,
-            preferences = preferences,
-            exercises = exerciseSelectionService.filterExercisesByAccessoryStatus(exercises, true),
-            isAccessory = true,
-            rotationHistory = rotationHistory,
-            movementBalanceState = movementBalanceState
-        )
     }
 
     /**

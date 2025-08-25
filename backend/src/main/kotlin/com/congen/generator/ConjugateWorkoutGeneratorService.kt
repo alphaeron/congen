@@ -1,18 +1,10 @@
 package com.congen.generator
 
-import com.congen.dal.ExerciseDAL
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.UserEquipmentDAL
-import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
-import com.congen.model.Exercise
-import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.service.ProgramService
@@ -53,28 +45,25 @@ import reactor.core.publisher.Mono
  * @property userEquipmentDAL Data access layer for user equipment
  * @property userOneRepMaxDAL Data access layer for user one rep max values
  * @property userProgramPreferencesDAL Data access layer for user program preferences
- * @property exerciseRotationHistoryDAL Data access layer for exercise rotation history
  * @property programService Service for program operations
  * @property programmedWorkoutDAL Data access layer for programmed workout operations
  * @property conjugateTemplates Service for managing workout templates
  * @property workoutStageGenerationServiceFactory Factory for selecting appropriate workout stage generation services
+ * @property exercisePool Service for managing exercise pools and filtering
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 @Service
 class ConjugateWorkoutGeneratorService(
-    private val exerciseDAL: ExerciseDAL,
-    private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
-    private val userEquipmentDAL: UserEquipmentDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
-    private val exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL,
     private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
+    private val exercisePool: ExercisePool,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -98,21 +87,13 @@ class ConjugateWorkoutGeneratorService(
         return programService.selectProgramById(programId)
             .flatMap { program ->
                 Mono.zip(
-                    exerciseDAL.selectExercises(),
-                    userExercisePreferenceDAL.selectUserExercisePreferencesByUser(program.userId),
-                    userEquipmentDAL.selectUserEquipmentByUser(program.userId),
                     userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId),
                     userProgramPreferencesDAL.selectUserProgramPreferences(program.userId),
-                    exerciseRotationHistoryDAL.selectAll(),
                     userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId)
                 ).flatMap { tuple ->
-                    val exercises = tuple.t1
-                    val preferences = tuple.t2
-                    val userEquipment = tuple.t3
-                    val oneRepMaxes = tuple.t4
-                    val programPreferences = tuple.t5
-                    val rotationHistory = tuple.t6
-                    val userWeakMuscles = tuple.t7
+                    val oneRepMaxes = tuple.t1
+                    val programPreferences = tuple.t2
+                    val userWeakMuscles = tuple.t3
 
                     val weakMuscles =
                         if (userWeakMuscles.isNotEmpty()) {
@@ -122,44 +103,54 @@ class ConjugateWorkoutGeneratorService(
                         }
                     val template = conjugateTemplates.selectTemplate(programPreferences.programDaysPerWeek)
 
-                    generateWorkoutsForWeek(
-                        program = program,
-                        exercises = exercises,
-                        preferences = preferences,
-                        userEquipment = userEquipment,
-                        oneRepMaxes = oneRepMaxes,
-                        programPreferences = programPreferences,
-                        rotationHistory = rotationHistory,
-                        template = template,
-                        weakMuscles = weakMuscles,
-                        currentWeekNumber = program.currentWeekNumber
-                    ).then(
-                        programService.updateProgram(
-                            program.id,
-                            "Conjugate Powerlifting - Week ${program.currentWeekNumber + 1}",
-                            program.currentWeekNumber + 1,
-                            program.isActive
-                        )
-                    )
+                    exercisePool.createPoolForUser(program.userId)
+                        .flatMap { userExercisePool ->
+                            generateWorkoutsForWeek(
+                                program = program,
+                                userExercisePool = userExercisePool,
+                                oneRepMaxes = oneRepMaxes,
+                                programPreferences = programPreferences,
+                                template = template,
+                                weakMuscles = weakMuscles,
+                                currentWeekNumber = program.currentWeekNumber
+                            ).then(
+                                programService.updateProgram(
+                                    program.id,
+                                    "Conjugate Powerlifting - Week ${program.currentWeekNumber + 1}",
+                                    program.currentWeekNumber + 1,
+                                    program.isActive
+                                )
+                            )
+                        }
                 }
             }
     }
 
     /**
      * Generates workouts for the specified week.
+     *
+     * This method processes each workout day sequentially, ensuring that exercise selection
+     * is properly tracked and no duplicates occur within the week.
+     *
+     * @param program The program to generate workouts for
+     * @param userExercisePool The user's exercise pool for the week
+     * @param oneRepMaxes User's one rep max values
+     * @param programPreferences User's program preferences
+     * @param template The workout template for the week
+     * @param weakMuscles Target weak muscles
+     * @param currentWeekNumber Current week number
+     * @return Mono<Void> indicating completion
      */
     private fun generateWorkoutsForWeek(
         program: Program,
-        exercises: List<Exercise>,
-        preferences: List<UserExercisePreference>,
-        userEquipment: List<UserEquipment>,
+        userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         programPreferences: UserProgramPreferences,
-        rotationHistory: List<ExerciseRotationHistory>,
         template: List<DayTemplate>,
         weakMuscles: List<String>,
         currentWeekNumber: Int
     ): Mono<Void> {
+
         return Flux.fromIterable(template)
             .index()
             .concatMap { tuple ->
@@ -175,12 +166,9 @@ class ConjugateWorkoutGeneratorService(
                         workoutStageGenerationOrchestrator.generateWorkoutStages(
                             workout = createdWorkout,
                             dayType = dayTemplate.type,
-                            exercises = exercises,
-                            preferences = preferences,
-                            userEquipment = userEquipment,
+                            userExercisePool = userExercisePool,
                             oneRepMaxes = oneRepMaxes,
                             programPreferences = programPreferences,
-                            rotationHistory = rotationHistory,
                             weakMuscles = weakMuscles,
                             currentWeekNumber = currentWeekNumber,
                             userId = program.userId

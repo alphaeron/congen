@@ -6,6 +6,7 @@ import com.congen.model.ExerciseMuscle
 import com.congen.model.MovementType
 import com.congen.model.UserOneRepMax
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Mono
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -465,5 +466,156 @@ class ExerciseMatchingService(
         }
 
         return matrix[s1.length][s2.length]
+    }
+
+    /**
+     * Calculates a similarity score for an exercise compared to a primary exercise.
+     * Higher scores indicate more similarity.
+     *
+     * @param exercise The exercise to score
+     * @param primaryExercise The primary exercise to compare against
+     * @param rotationHistory List of exercise rotation history
+     * @return Similarity score (higher is more similar)
+     */
+    fun calculateExerciseSimilarityScore(
+        exercise: Exercise,
+        primaryExercise: Exercise
+    ): Double {
+        var score = 0.0
+
+        // Movement type similarity (highest weight)
+        if (exercise.movementType == primaryExercise.movementType) {
+            score += 100.0
+        } else {
+            // Partial credit for related movement types
+            score += calculateMovementTypeSimilarity(exercise.movementType, primaryExercise.movementType)
+        }
+
+
+
+        return score
+    }
+
+    /**
+     * Calculates a comprehensive similarity score for an exercise compared to a primary exercise.
+     * This method includes muscle overlap scoring.
+     *
+     * @param exercise The exercise to score
+     * @param primaryExercise The primary exercise to compare against
+     * @param rotationHistory List of exercise rotation history
+     * @param exerciseMuscleDAL Data access layer for exercise muscle relationships
+     * @return Similarity score (higher is more similar)
+     */
+    fun calculateComprehensiveExerciseSimilarityScore(
+        exercise: Exercise,
+        primaryExercise: Exercise,
+        exerciseMuscleDAL: com.congen.dal.ExerciseMuscleDAL
+    ): Mono<Double> {
+        return exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
+            .flatMap { primaryExerciseMuscles ->
+                exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                    .map { exerciseMuscles ->
+                        val primaryMuscleNames = primaryExerciseMuscles.map { it.muscleName }.toSet()
+                        val exerciseMuscleNames = exerciseMuscles.map { it.muscleName }.toSet()
+                        
+                        var score = 0.0
+
+                        // Movement type similarity (highest weight)
+                        if (exercise.movementType == primaryExercise.movementType) {
+                            score += 100.0
+                        } else {
+                            // Partial credit for related movement types
+                            score += calculateMovementTypeSimilarity(exercise.movementType, primaryExercise.movementType)
+                        }
+
+                        // Muscle overlap similarity
+                        val muscleOverlapScore = calculateMuscleOverlapScore(primaryMuscleNames, exerciseMuscleNames)
+                        score += muscleOverlapScore
+
+
+
+                        score
+                    }
+                    .onErrorReturn(0.0)
+            }
+            .onErrorReturn(0.0)
+    }
+
+    /**
+     * Calculates muscle overlap score between primary and secondary exercise muscles.
+     *
+     * @param primaryMuscles The muscles worked by the primary exercise
+     * @param exerciseMuscles The muscles worked by the exercise being evaluated
+     * @return Muscle overlap score
+     */
+    private fun calculateMuscleOverlapScore(
+        primaryMuscles: Set<String>,
+        exerciseMuscles: Set<String>
+    ): Double {
+        if (primaryMuscles.isEmpty() || exerciseMuscles.isEmpty()) {
+            return 0.0
+        }
+
+        // Calculate intersection (overlapping muscles)
+        val overlappingMuscles = primaryMuscles.intersect(exerciseMuscles)
+
+        // Calculate overlap percentage
+        val overlapPercentage = overlappingMuscles.size.toDouble() / primaryMuscles.size.toDouble()
+
+        // Score based on overlap percentage (max 50 points for complete overlap)
+        return overlapPercentage * 50.0
+    }
+
+    /**
+     * Calculates similarity between movement types.
+     *
+     * @param movementType1 First movement type
+     * @param movementType2 Second movement type
+     * @return Similarity score
+     */
+    private fun calculateMovementTypeSimilarity(
+        movementType1: MovementType,
+        movementType2: MovementType
+    ): Double {
+        return when {
+            // Same category (push/pull)
+            (movementType1 == MovementType.HORIZONTAL_PUSH && movementType2 == MovementType.HORIZONTAL_PUSH) ||
+                (movementType1 == MovementType.VERTICAL_PUSH && movementType2 == MovementType.VERTICAL_PUSH) ||
+                (movementType1 == MovementType.HORIZONTAL_PULL && movementType2 == MovementType.HORIZONTAL_PULL) ||
+                (movementType1 == MovementType.VERTICAL_PULL && movementType2 == MovementType.VERTICAL_PULL) -> 50.0
+
+            // Same plane (horizontal/vertical)
+            (movementType1 == MovementType.HORIZONTAL_PUSH && movementType2 == MovementType.HORIZONTAL_PULL) ||
+                (movementType1 == MovementType.HORIZONTAL_PULL && movementType2 == MovementType.HORIZONTAL_PUSH) ||
+                (movementType1 == MovementType.VERTICAL_PUSH && movementType2 == MovementType.VERTICAL_PULL) ||
+                (movementType1 == MovementType.VERTICAL_PULL && movementType2 == MovementType.VERTICAL_PUSH) -> 25.0
+
+            // Same body part focus (upper/lower)
+            (movementType1 == MovementType.SQUAT && movementType2 == MovementType.HINGE) ||
+                (movementType1 == MovementType.HINGE && movementType2 == MovementType.SQUAT) ||
+                (
+                    movementType1 == MovementType.LUNGE &&
+                        (movementType2 == MovementType.SQUAT || movementType2 == MovementType.HINGE)
+                ) -> 15.0
+
+            else -> 0.0
+        }
+    }
+
+    /**
+     * Sorts exercises by similarity score to a primary exercise.
+     *
+     * @param exercises List of exercises to sort
+     * @param primaryExercise The primary exercise to compare against
+     * @param rotationHistory List of exercise rotation history
+     * @return Sorted list of exercises (most similar first)
+     */
+    fun sortExercisesBySimilarity(
+        exercises: List<Exercise>,
+        primaryExercise: Exercise
+    ): List<Exercise> {
+        return exercises.sortedByDescending { exercise ->
+            calculateExerciseSimilarityScore(exercise, primaryExercise)
+        }
     }
 }
