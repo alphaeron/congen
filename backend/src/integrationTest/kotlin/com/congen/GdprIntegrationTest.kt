@@ -373,11 +373,17 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.data_controller.dpo").isEqualTo("privacy@congen.com")
             .jsonPath("$.data_processing").exists()
             .jsonPath("$.data_processing.purposes").isArray
-            .jsonPath("$.data_processing.purposes.length()").value(org.hamcrest.Matchers.greaterThan(0))
+            .jsonPath("$.data_processing.purposes.length()").value { value: Any ->
+                assert(value is Number && value.toInt() > 0)
+            }
             .jsonPath("$.data_processing.legal_basis").isArray
-            .jsonPath("$.data_processing.legal_basis.length()").value(org.hamcrest.Matchers.greaterThan(0))
+            .jsonPath("$.data_processing.legal_basis.length()").value { value: Any ->
+                assert(value is Number && value.toInt() > 0)
+            }
             .jsonPath("$.data_processing.data_types").isArray
-            .jsonPath("$.data_processing.data_types.length()").value(org.hamcrest.Matchers.greaterThan(0))
+            .jsonPath("$.data_processing.data_types.length()").value { value: Any ->
+                assert(value is Number && value.toInt() > 0)
+            }
             .jsonPath("$.data_processing.retention_periods").exists()
             .jsonPath("$.data_processing.retention_periods.user_profile").exists()
             .jsonPath("$.data_processing.retention_periods.exercise_data").exists()
