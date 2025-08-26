@@ -93,7 +93,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         setSessionTimeLength(prefsResponse.data.session_time_length_in_minutes);
       } catch {
         // Program preferences don't exist yet, use defaults
-        console.log('No program preferences found, using defaults');
       }
 
       // Load weight unit preferences
@@ -102,7 +101,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         setWeightUnitPreferences(unitResponse.data);
       } catch {
         // No weight unit preferences yet
-        console.log('No weight unit preferences found');
       }
 
       // Load exercises

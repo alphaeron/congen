@@ -1,5 +1,6 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
 import React from 'react';
 
 import { Dashboard } from './Dashboard';
@@ -29,21 +30,15 @@ jest.mock('./ProgramManagement', () => ({
   ),
 }));
 
-jest.mock('./WorkoutFlow', () => ({
-  WorkoutFlow: ({ user }: { user: User }) => (
-    <div data-testid="workout-flow">Workout Flow for {user.name}</div>
+jest.mock('./Workouts', () => ({
+  Workouts: ({ user }: { user: User }) => (
+    <div data-testid="workouts">Workouts for {user.name}</div>
   ),
 }));
 
 jest.mock('./ExerciseHistory', () => ({
   ExerciseHistory: ({ user }: { user: User }) => (
-    <div data-testid="visualization-page">Visualization Page for {user.name}</div>
-  ),
-}));
-
-jest.mock('./WorkoutCalendar', () => ({
-  WorkoutCalendar: ({ user }: { user: User }) => (
-    <div data-testid="workout-calendar">Workout Calendar for {user.name}</div>
+    <div data-testid="exercise-history">Exercise History for {user.name}</div>
   ),
 }));
 
@@ -51,7 +46,11 @@ jest.mock('./WorkoutCalendar', () => ({
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
+  return render(
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>{component}</ThemeProvider>
+    </MemoryRouter>
+  );
 };
 
 describe('Dashboard', () => {
@@ -80,76 +79,57 @@ describe('Dashboard', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Program Management')).toBeInTheDocument();
-    expect(screen.getByText('Workout Flow')).toBeInTheDocument();
-    expect(screen.getByText('Visualization')).toBeInTheDocument();
-    expect(screen.getByText('Calendar')).toBeInTheDocument();
+    expect(screen.getByText('Programs')).toBeInTheDocument();
+    expect(screen.getByText('Workouts')).toBeInTheDocument();
+    expect(screen.getByText('Exercise History')).toBeInTheDocument();
   });
 
   it('shows overview as the default active tab', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    const overviewButton = screen.getByText('Overview').closest('button');
+    const overviewButton = screen.getByRole('button', { name: 'Overview' });
     expect(overviewButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
   });
 
-  it('switches to program management when clicked', () => {
+  it('switches to programs when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    const programManagementButton = screen.getByText('Program Management').closest('button');
-    fireEvent.click(programManagementButton!);
+    const programsButton = screen.getByRole('button', { name: 'Programs' });
+    fireEvent.click(programsButton);
 
-    expect(programManagementButton).toHaveClass('Mui-selected');
+    expect(programsButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('program-management')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
   });
 
-  it('switches to workout flow when clicked', () => {
+  it('switches to workouts when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    const workoutFlowButton = screen.getByText('Workout Flow').closest('button');
-    fireEvent.click(workoutFlowButton!);
+    const workoutsButton = screen.getByRole('button', { name: 'Workouts' });
+    fireEvent.click(workoutsButton);
 
-    expect(workoutFlowButton).toHaveClass('Mui-selected');
-    expect(screen.getByTestId('workout-flow')).toBeInTheDocument();
+    expect(workoutsButton).toHaveClass('Mui-selected');
+    expect(screen.getByTestId('workouts')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
   });
 
-  it('switches to visualization when clicked', () => {
+  it('switches to exercise history when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    const visualizationButton = screen.getByText('Visualization').closest('button');
-    fireEvent.click(visualizationButton!);
+    const exerciseHistoryButton = screen.getByRole('button', { name: 'Exercise History' });
+    fireEvent.click(exerciseHistoryButton);
 
-    expect(visualizationButton).toHaveClass('Mui-selected');
-    expect(screen.getByTestId('visualization-page')).toBeInTheDocument();
+    expect(exerciseHistoryButton).toHaveClass('Mui-selected');
+    expect(screen.getByTestId('exercise-history')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
   });
 
-  it('switches to calendar when clicked', () => {
+  it('renders with correct drawer structure', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    const calendarButton = screen.getByText('Calendar').closest('button');
-    fireEvent.click(calendarButton!);
-
-    expect(calendarButton).toHaveClass('Mui-selected');
-    expect(screen.getByTestId('workout-calendar')).toBeInTheDocument();
-    expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
-  });
-
-  it('calls setDrawerOpen when drawer toggle is triggered', () => {
-    renderWithTheme(<Dashboard user={mockUser} />);
-
-    // Simulate drawer toggle (this would typically be triggered by a button or resize)
-    // Since the drawer is controlled by the useDrawer hook, we test the effect
-    expect(mockUseDrawer.setDrawerOpen).toHaveBeenCalledWith(true);
-  });
-
-  it('renders with correct drawer width', () => {
-    renderWithTheme(<Dashboard user={mockUser} />);
-
-    const drawer = screen.getByRole('navigation');
+    // Check that the drawer is rendered (it's a div with MuiDrawer classes)
+    const drawer = document.querySelector('.MuiDrawer-root');
     expect(drawer).toBeInTheDocument();
   });
 
@@ -186,13 +166,13 @@ describe('Dashboard', () => {
   it('maintains drawer state across tab switches', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
-    // Switch to program management
-    const programManagementButton = screen.getByText('Program Management').closest('button');
-    fireEvent.click(programManagementButton!);
+    // Switch to programs
+    const programsButton = screen.getByRole('button', { name: 'Programs' });
+    fireEvent.click(programsButton);
 
     // Switch back to overview
-    const overviewButton = screen.getByText('Overview').closest('button');
-    fireEvent.click(overviewButton!);
+    const overviewButton = screen.getByRole('button', { name: 'Overview' });
+    fireEvent.click(overviewButton);
 
     // Should show overview content
     expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
@@ -205,10 +185,9 @@ describe('Dashboard', () => {
     // Check that all menu items are present
     const menuItems = [
       'Overview',
-      'Program Management',
-      'Workout Flow',
-      'Visualization',
-      'Calendar',
+      'Programs',
+      'Workouts',
+      'Exercise History',
     ];
     menuItems.forEach(item => {
       expect(screen.getByText(item)).toBeInTheDocument();

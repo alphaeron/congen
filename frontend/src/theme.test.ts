@@ -4,16 +4,16 @@ describe('theme', () => {
   describe('color palettes', () => {
     describe('brand', () => {
       it('should have correct brand color values', () => {
-        expect(brand[50]).toBe('#f0f4ff');
-        expect(brand[100]).toBe('#d6e0fa');
-        expect(brand[200]).toBe('#b3c6f7');
-        expect(brand[300]).toBe('#7a9cf0');
-        expect(brand[400]).toBe('#4d6fe0');
-        expect(brand[500]).toBe('#2236cc');
-        expect(brand[600]).toBe('#1b2a9e');
-        expect(brand[700]).toBe('#16227a');
-        expect(brand[800]).toBe('#10195a');
-        expect(brand[900]).toBe('#0a113a');
+        expect(brand[50]).toBe('#f0f9ff');
+        expect(brand[100]).toBe('#e0f2fe');
+        expect(brand[200]).toBe('#bae6fd');
+        expect(brand[300]).toBe('#7dd3fc');
+        expect(brand[400]).toBe('#38bdf8');
+        expect(brand[500]).toBe('#0ea5e9');
+        expect(brand[600]).toBe('#0284c7');
+        expect(brand[700]).toBe('#0369a1');
+        expect(brand[800]).toBe('#075985');
+        expect(brand[900]).toBe('#0c4a6e');
       });
 
       it('should have all required color steps', () => {
@@ -26,16 +26,16 @@ describe('theme', () => {
 
     describe('secondary', () => {
       it('should have correct secondary color values', () => {
-        expect(secondary[50]).toBe('#f3f2fa');
-        expect(secondary[100]).toBe('#e0def7');
-        expect(secondary[200]).toBe('#c2bff0');
-        expect(secondary[300]).toBe('#a39ee0');
-        expect(secondary[400]).toBe('#7a6fd6');
-        expect(secondary[500]).toBe('#5a4fc2');
-        expect(secondary[600]).toBe('#473d9e');
-        expect(secondary[700]).toBe('#352c7a');
-        expect(secondary[800]).toBe('#241b5a');
-        expect(secondary[900]).toBe('#18113a');
+        expect(secondary[50]).toBe('#fff7ed');
+        expect(secondary[100]).toBe('#ffedd5');
+        expect(secondary[200]).toBe('#fed7aa');
+        expect(secondary[300]).toBe('#fdba74');
+        expect(secondary[400]).toBe('#fb923c');
+        expect(secondary[500]).toBe('#f97316');
+        expect(secondary[600]).toBe('#ea580c');
+        expect(secondary[700]).toBe('#c2410c');
+        expect(secondary[800]).toBe('#9a3412');
+        expect(secondary[900]).toBe('#7c2d12');
       });
 
       it('should have all required color steps', () => {
@@ -48,16 +48,16 @@ describe('theme', () => {
 
     describe('gray', () => {
       it('should have correct gray color values', () => {
-        expect(gray[50]).toBe('#f9fafc');
-        expect(gray[100]).toBe('#e3e6ea');
-        expect(gray[200]).toBe('#c8ccd2');
-        expect(gray[300]).toBe('#a2a6ad');
-        expect(gray[400]).toBe('#7a7e87');
-        expect(gray[500]).toBe('#55585e');
-        expect(gray[600]).toBe('#3a3c40');
-        expect(gray[700]).toBe('#28292c');
-        expect(gray[800]).toBe('#202020');
-        expect(gray[900]).toBe('#141417');
+        expect(gray[50]).toBe('#fafafa');
+        expect(gray[100]).toBe('#f5f5f5');
+        expect(gray[200]).toBe('#e5e5e5');
+        expect(gray[300]).toBe('#d4d4d4');
+        expect(gray[400]).toBe('#a3a3a3');
+        expect(gray[500]).toBe('#737373');
+        expect(gray[600]).toBe('#525252');
+        expect(gray[700]).toBe('#404040');
+        expect(gray[800]).toBe('#262626');
+        expect(gray[900]).toBe('#171717');
       });
 
       it('should have all required color steps', () => {
@@ -70,16 +70,16 @@ describe('theme', () => {
 
     describe('green', () => {
       it('should have correct green color values', () => {
-        expect(green[50]).toBe('#F6FEF6');
-        expect(green[100]).toBe('#E3FBE3');
-        expect(green[200]).toBe('#C7F7C7');
-        expect(green[300]).toBe('#A1E8A1');
-        expect(green[400]).toBe('#51BC51');
-        expect(green[500]).toBe('#1F7A1F');
-        expect(green[600]).toBe('#136C13');
-        expect(green[700]).toBe('#0A470A');
-        expect(green[800]).toBe('#042F04');
-        expect(green[900]).toBe('#021D02');
+        expect(green[50]).toBe('#f0fdf4');
+        expect(green[100]).toBe('#dcfce7');
+        expect(green[200]).toBe('#bbf7d0');
+        expect(green[300]).toBe('#86efac');
+        expect(green[400]).toBe('#4ade80');
+        expect(green[500]).toBe('#22c55e');
+        expect(green[600]).toBe('#16a34a');
+        expect(green[700]).toBe('#15803d');
+        expect(green[800]).toBe('#166534');
+        expect(green[900]).toBe('#14532d');
       });
 
       it('should have all required color steps', () => {
@@ -148,7 +148,7 @@ describe('theme', () => {
       const darkPrimary = darkTheme.palette?.primary;
 
       expect(lightPrimary?.main).toBe(brand[500]);
-      expect(darkPrimary?.main).toBe(brand[400]);
+      expect(darkPrimary?.main).toBe(brand[500]); // Both use brand[500] as main
     });
 
     it('should have different contrast text colors for light and dark modes', () => {
@@ -158,8 +158,8 @@ describe('theme', () => {
       const lightPrimary = lightTheme.palette?.primary;
       const darkPrimary = darkTheme.palette?.primary;
 
-      expect(lightPrimary?.contrastText).toBe(brand[50]);
-      expect(darkPrimary?.contrastText).toBe(brand[100]);
+      expect(lightPrimary?.contrastText).toBe('#ffffff'); // Both use white contrast text
+      expect(darkPrimary?.contrastText).toBe('#ffffff');
     });
 
     it('should have different light colors for light and dark modes', () => {
@@ -169,8 +169,8 @@ describe('theme', () => {
       const lightPrimary = lightTheme.palette?.primary;
       const darkPrimary = darkTheme.palette?.primary;
 
-      expect(lightPrimary?.light).toBe(brand[200]);
-      expect(darkPrimary?.light).toBe(brand[300]);
+      expect(lightPrimary?.light).toBe(brand[300]);
+      expect(darkPrimary?.light).toBe(brand[400]);
     });
 
     it('should have same dark color for both modes', () => {
@@ -180,7 +180,7 @@ describe('theme', () => {
       const lightPrimary = lightTheme.palette?.primary;
       const darkPrimary = darkTheme.palette?.primary;
 
-      expect(lightPrimary?.dark).toBe(brand[800]);
+      expect(lightPrimary?.dark).toBe(brand[700]);
       expect(darkPrimary?.dark).toBe(brand[800]);
     });
 

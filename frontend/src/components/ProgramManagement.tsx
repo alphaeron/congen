@@ -74,7 +74,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setPrograms(programsData);
       setWorkouts(workoutsData);
     } catch (err) {
-      console.error('Error loading programs:', err);
       setError('Failed to load programs. Please try again.');
     } finally {
       setIsLoading(false);
@@ -88,7 +87,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setCreateDialogOpen(false);
       setFormData({ name: '', isActive: true });
     } catch (err) {
-      console.error('Error creating program:', err);
       setError('Failed to create program. Please try again.');
     }
   };
@@ -108,7 +106,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setSelectedProgram(null);
       setFormData({ name: '', isActive: true });
     } catch (err) {
-      console.error('Error updating program:', err);
       setError('Failed to update program. Please try again.');
     }
   };
@@ -122,7 +119,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setDeleteDialogOpen(false);
       setSelectedProgram(null);
     } catch (err) {
-      console.error('Error deleting program:', err);
       setError('Failed to delete program. Please try again.');
     }
   };

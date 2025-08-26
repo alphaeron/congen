@@ -59,13 +59,13 @@ describe('user API', () => {
     it('should handle network error', async () => {
       mockAdapter.onPost('/user/').networkError();
 
-      await expect(createUserProfile()).rejects.toBeUndefined();
+      await expect(createUserProfile()).rejects.toEqual({ error: 'Network Error' });
     });
 
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user/').timeout();
 
-      await expect(createUserProfile()).rejects.toBeUndefined();
+      await expect(createUserProfile()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
     });
   });
 
@@ -103,13 +103,13 @@ describe('user API', () => {
     it('should handle network error', async () => {
       mockAdapter.onGet('/user/me').networkError();
 
-      await expect(getCurrentUser()).rejects.toBeUndefined();
+      await expect(getCurrentUser()).rejects.toEqual({ error: 'Network Error' });
     });
 
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user/me').timeout();
 
-      await expect(getCurrentUser()).rejects.toBeUndefined();
+      await expect(getCurrentUser()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
     });
   });
 });

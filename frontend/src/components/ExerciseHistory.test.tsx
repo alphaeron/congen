@@ -56,13 +56,18 @@ describe('ExerciseHistory', () => {
     mock.restore();
   });
 
-  it('renders loading state initially', () => {
+  it('renders loading state initially', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    
+    // Wait for loading to complete to avoid act warnings
+    await waitFor(() => {
+      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+    });
   });
 
   it('renders visualization page title and tabs', async () => {
@@ -104,7 +109,7 @@ describe('ExerciseHistory', () => {
       expect(
         screen.getByText('Failed to load exercise history data. Please try again.')
       ).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('switches between tabs when clicked', async () => {

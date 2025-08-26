@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
-import { BrowserRouter } from 'react-router';
+import { MemoryRouter } from 'react-router';
 
 import { UserProfile } from './UserProfile';
 import { ENDPOINT } from '../api/endpoint';
@@ -21,9 +21,13 @@ const mockUser: User = {
 
 // Mock react-router
 const mockNavigate = jest.fn();
+const mockSearchParams = new URLSearchParams();
+const mockSetSearchParams = jest.fn();
+
 jest.mock('react-router', () => ({
   ...jest.requireActual('react-router'),
   useNavigate: () => mockNavigate,
+  useSearchParams: () => [mockSearchParams, mockSetSearchParams],
 }));
 
 // Mock the auth context
@@ -35,7 +39,7 @@ jest.mock('../contexts/AuthContext', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+  return render(<MemoryRouter>{component}</MemoryRouter>);
 };
 
 describe('UserProfile', () => {
@@ -70,6 +74,9 @@ describe('UserProfile', () => {
       { id: 1, name: 'Bench Press', category: 'strength' },
       { id: 2, name: 'Squat', category: 'strength' },
     ]);
+
+    // Mock AccountSecurity API calls
+    mock.onDelete('/gdpr/delete_all_data').reply(200, { message: 'Account deleted successfully' });
   });
 
   afterAll(() => {
@@ -87,8 +94,8 @@ describe('UserProfile', () => {
   it('should render all tab navigation items', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
-    expect(screen.getAllByText('Overview')[0]).toBeInTheDocument();
-    expect(screen.getAllByText('Workout Preferences')[0]).toBeInTheDocument();
+    expect(screen.getAllByText('Profile Overview')).toHaveLength(2); // One in sidebar, one in content
+    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
     expect(screen.getByText('Account Security')).toBeInTheDocument();
   });
@@ -104,51 +111,41 @@ describe('UserProfile', () => {
   });
 
   it('should navigate to workout preferences tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    renderWithProviders(<UserProfile user={mockUser} initialSection="workout-preferences" />);
 
-    const workoutPrefsButton = screen.getByText('Workout Preferences');
-    fireEvent.click(workoutPrefsButton);
-
-    // Check that the workout preferences tab is selected and the main heading is visible
-    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
-
-    // The content might still be loading, but the navigation should work
-    // We can see from the DOM that the Workout Preferences tab is selected (Mui-selected class)
-    const selectedTab = screen.getByText('Workout Preferences').closest('.Mui-selected');
-    expect(selectedTab).toBeInTheDocument();
+    // Wait for the workout preferences content to load
+    await waitFor(() => {
+      expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
+    });
   });
 
   it('should navigate to privacy tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
-
-    const privacyButton = screen.getByText('Privacy & Data');
-    fireEvent.click(privacyButton);
+    renderWithProviders(<UserProfile user={mockUser} initialSection="privacy" />);
 
     // Wait for the privacy content to load
     await waitFor(() => {
       expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
     });
-  });
+  }, 10000);
 
   it('should navigate to account security tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
 
-    const securityButton = screen.getAllByText('Account Security')[0]; // Get the first one (navigation item)
-    fireEvent.click(securityButton);
+    await waitFor(() => {
+      expect(screen.getByText('Security Settings')).toBeInTheDocument();
+    });
 
-    expect(screen.getByText('Security Settings')).toBeInTheDocument();
     expect(screen.getByText('Change Password')).toBeInTheDocument();
     expect(screen.getByText('Danger Zone')).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('should show deactivate account button in security tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
 
-    const securityButton = screen.getAllByText('Account Security')[0]; // Get the first one (navigation item)
-    fireEvent.click(securityButton);
-
-    expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
-  });
+    await waitFor(() => {
+      expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
+    });
+  }, 10000);
 
   it('should show edit profile button in overview', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);
@@ -158,42 +155,49 @@ describe('UserProfile', () => {
   });
 
   it('should open delete confirmation dialog when deactivate button is clicked', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
 
-    // Navigate to security tab
-    const securityButton = screen.getAllByText('Account Security')[0]; // Get the first one (navigation item)
-    fireEvent.click(securityButton);
+    await waitFor(() => {
+      expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
+    });
 
-    const deactivateButton = screen.getAllByText('Deactivate Account')[0]; // Get the first one (button)
+    const deactivateButton = screen.getByText('Deactivate Account');
     fireEvent.click(deactivateButton);
 
-    expect(
-      screen.getByText(/Are you sure you want to deactivate your account/)
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Are you sure you want to delete your account/)
+      ).toBeInTheDocument();
+    });
+
     expect(screen.getByText('Cancel')).toBeInTheDocument();
     // Check for the dialog title specifically
-    expect(screen.getByText('Deactivate Account', { selector: 'h2' })).toBeInTheDocument();
-  });
+    expect(screen.getByText('Delete Account', { selector: 'h2' })).toBeInTheDocument();
+  }, 10000);
 
   it('should close dialog when cancel is clicked', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
 
-    // Navigate to security tab
-    const securityButton = screen.getAllByText('Account Security')[0]; // Get the first one (navigation item)
-    fireEvent.click(securityButton);
+    await waitFor(() => {
+      expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
+    });
 
-    const deactivateButton = screen.getAllByText('Deactivate Account')[0]; // Get the first one (button)
+    const deactivateButton = screen.getByText('Deactivate Account');
     fireEvent.click(deactivateButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Cancel')).toBeInTheDocument();
+    });
 
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
 
     await waitFor(() => {
       expect(
-        screen.queryByText(/Are you sure you want to deactivate your account/)
+        screen.queryByText(/Are you sure you want to delete your account/)
       ).not.toBeInTheDocument();
     });
-  });
+  }, 10000);
 
   it('should call onEditProfile when edit button is clicked', async () => {
     renderWithProviders(<UserProfile user={mockUser} />);

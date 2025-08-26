@@ -1,14 +1,14 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
-import { BrowserRouter } from 'react-router';
+import { MemoryRouter } from 'react-router';
 
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
 // Create axios mock adapter for the ENDPOINT instance
-const mock = new MockAdapter(ENDPOINT);
+const mock = new MockAdapter(ENDPOINT, { delayResponse: 0 });
 
 const mockUser: User = {
   keycloak_id: 'test-user-id',
@@ -26,7 +26,7 @@ jest.mock('../contexts/AuthContext', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>);
+  return render(<MemoryRouter>{component}</MemoryRouter>);
 };
 
 describe('WorkoutPreferencesSection', () => {
@@ -34,7 +34,7 @@ describe('WorkoutPreferencesSection', () => {
     jest.clearAllMocks();
     mock.reset();
 
-    // Mock exercises API
+    // Mock exercises API - respond immediately
     mock.onGet('/exercise/').reply(200, [
       {
         name: 'Bench Press',
@@ -67,6 +67,42 @@ describe('WorkoutPreferencesSection', () => {
 
     // Mock weight unit preferences API - no existing preferences
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
+
+    // Mock POST for creating program preferences
+    mock.onPost('/user_program_preferences/').reply(200, {
+      user_id: 'test-user-id',
+      program_days_per_week: 3,
+      session_time_length_in_minutes: 60,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    });
+
+    // Mock PATCH for updating program preferences
+    mock.onPatch('/user_program_preferences/').reply(200, {
+      user_id: 'test-user-id',
+      program_days_per_week: 4,
+      session_time_length_in_minutes: 75,
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    });
+
+    // Mock PUT for upserting weight unit preferences
+    mock.onPut('/user_weight_unit_preference/').reply(200, {
+      user_id: 'test-user-id',
+      exercise_name: 'Bench Press',
+      preferred_unit: 'LBS',
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    });
+
+    // Mock DELETE for deleting weight unit preferences
+    mock.onDelete('/user_weight_unit_preference/test-user-id/Bench%20Press').reply(200, {
+      user_id: 'test-user-id',
+      exercise_name: 'Bench Press',
+      preferred_unit: 'LBS',
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    });
   });
 
   afterAll(() => {
@@ -102,35 +138,26 @@ describe('WorkoutPreferencesSection', () => {
   it('should show save button for program preferences', async () => {
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Save Program Preferences')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Save Program Preferences')).toBeInTheDocument();
+    });
   });
 
   it('should show add preference button for weight units', async () => {
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Add Preference')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Add Preference')).toBeInTheDocument();
+    });
   });
 
   it('should open dialog when add preference button is clicked', async () => {
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        const addButton = screen.getByText('Add Preference');
-        fireEvent.click(addButton);
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      const addButton = screen.getByText('Add Preference');
+      fireEvent.click(addButton);
+    });
 
     expect(screen.getByText('Add Weight Unit Preference')).toBeInTheDocument();
     expect(screen.getAllByText('Exercise')[0]).toBeInTheDocument();
@@ -140,22 +167,16 @@ describe('WorkoutPreferencesSection', () => {
   it('should show exercises in the dialog', async () => {
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        const addButton = screen.getByText('Add Preference');
-        fireEvent.click(addButton);
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      const addButton = screen.getByText('Add Preference');
+      fireEvent.click(addButton);
+    });
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Bench Press')).toBeInTheDocument();
-        expect(screen.getByText('Deadlift')).toBeInTheDocument();
-        expect(screen.getByText('Squat')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+      expect(screen.getByText('Deadlift')).toBeInTheDocument();
+      expect(screen.getByText('Squat')).toBeInTheDocument();
+    });
   });
 
   it('should show current settings summary', async () => {
@@ -184,33 +205,27 @@ describe('WorkoutPreferencesSection', () => {
 
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        // Change days per week
-        const daysSelect = screen.getByDisplayValue('3');
-        fireEvent.mouseDown(daysSelect);
-        const fourDaysOption = screen.getByText('4 days');
-        fireEvent.click(fourDaysOption);
+    await waitFor(() => {
+      // Change days per week
+      const daysSelect = screen.getByDisplayValue('3');
+      fireEvent.mouseDown(daysSelect);
+      const fourDaysOption = screen.getByText('4 days');
+      fireEvent.click(fourDaysOption);
 
-        // Change session length
-        const sessionSelect = screen.getByDisplayValue('60');
-        fireEvent.mouseDown(sessionSelect);
-        const seventyFiveOption = screen.getByText('75 minutes');
-        fireEvent.click(seventyFiveOption);
+      // Change session length
+      const sessionSelect = screen.getByDisplayValue('60');
+      fireEvent.mouseDown(sessionSelect);
+      const seventyFiveOption = screen.getByText('75 minutes');
+      fireEvent.click(seventyFiveOption);
 
-        // Save preferences
-        const saveButton = screen.getByText('Save Program Preferences');
-        fireEvent.click(saveButton);
-      },
-      { timeout: 10000 }
-    );
+      // Save preferences
+      const saveButton = screen.getByText('Save Program Preferences');
+      fireEvent.click(saveButton);
+    });
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Program preferences saved successfully')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Program preferences saved successfully')).toBeInTheDocument();
+    });
   });
 
   it('should add weight unit preference successfully', async () => {
@@ -236,42 +251,33 @@ describe('WorkoutPreferencesSection', () => {
 
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        // Open dialog
-        const addButton = screen.getByText('Add Preference');
-        fireEvent.click(addButton);
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      // Open dialog
+      const addButton = screen.getByText('Add Preference');
+      fireEvent.click(addButton);
+    });
 
-    await waitFor(
-      () => {
-        // Select exercise
-        const exerciseSelect = screen.getByDisplayValue('');
-        fireEvent.mouseDown(exerciseSelect);
-        const benchPressOption = screen.getByText('Bench Press');
-        fireEvent.click(benchPressOption);
+    await waitFor(() => {
+      // Select exercise
+      const exerciseSelect = screen.getByDisplayValue('');
+      fireEvent.mouseDown(exerciseSelect);
+      const benchPressOption = screen.getByText('Bench Press');
+      fireEvent.click(benchPressOption);
 
-        // Select unit
-        const unitSelect = screen.getByDisplayValue('Pounds (LBS)');
-        fireEvent.mouseDown(unitSelect);
-        const lbsOption = screen.getByText('Pounds (LBS)');
-        fireEvent.click(lbsOption);
+      // Select unit
+      const unitSelect = screen.getByDisplayValue('Pounds (LBS)');
+      fireEvent.mouseDown(unitSelect);
+      const lbsOption = screen.getByText('Pounds (LBS)');
+      fireEvent.click(lbsOption);
 
-        // Add preference
-        const addPreferenceButton = screen.getByText('Add Preference');
-        fireEvent.click(addPreferenceButton);
-      },
-      { timeout: 10000 }
-    );
+      // Add preference
+      const addPreferenceButton = screen.getByText('Add Preference');
+      fireEvent.click(addPreferenceButton);
+    });
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Weight unit preference added successfully')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Weight unit preference added successfully')).toBeInTheDocument();
+    });
   });
 
   it('should handle loading state', async () => {
@@ -289,12 +295,9 @@ describe('WorkoutPreferencesSection', () => {
 
     renderWithProviders(<WorkoutPreferencesSection />);
 
-    await waitFor(
-      () => {
-        expect(screen.getByText('Failed to load preferences')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
+    await waitFor(() => {
+      expect(screen.getByText('Failed to load preferences')).toBeInTheDocument();
+    });
   });
 
   it('should verify axios mock is working', async () => {

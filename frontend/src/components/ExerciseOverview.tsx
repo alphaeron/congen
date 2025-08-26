@@ -219,6 +219,7 @@ export function ExerciseOverview(): React.ReactElement {
         <Box sx={{ textAlign: 'center', mb: 2 }}>
           <Typography
             variant="h3"
+            data-testid="exerciseHeader"
             sx={{
               fontWeight: 700,
               mb: 2,

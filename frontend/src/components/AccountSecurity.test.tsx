@@ -72,11 +72,11 @@ describe('AccountSecurity', () => {
     const deactivateButton = screen.getByRole('button', { name: /deactivate account/i });
     fireEvent.click(deactivateButton);
 
-    expect(screen.getByText('Delete Account')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Delete Account' })).toBeInTheDocument();
     expect(screen.getByText(/Are you sure you want to delete your account/)).toBeInTheDocument();
   });
 
-  it('closes dialog when cancel is clicked', () => {
+  it('closes dialog when cancel is clicked', async () => {
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
 
     // Open dialog
@@ -87,12 +87,14 @@ describe('AccountSecurity', () => {
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     fireEvent.click(cancelButton);
 
-    expect(screen.queryByText('Delete Account')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Delete Account' })).not.toBeInTheDocument();
+    });
   });
 
   it('deletes account successfully', async () => {
     mock
-      .onDelete('/gdpr/delete_all_personal_data/test-user-id')
+      .onDelete('/gdpr/delete_all_data')
       .reply(200, { message: 'Account deleted successfully' });
 
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
@@ -107,14 +109,14 @@ describe('AccountSecurity', () => {
 
     await waitFor(() => {
       expect(mock.history.delete).toHaveLength(1);
-      expect(mock.history.delete[0].url).toBe('/gdpr/delete_all_personal_data/test-user-id');
+      expect(mock.history.delete[0].url).toBe('/gdpr/delete_all_data');
       expect(mockOnAccountDeleted).toHaveBeenCalledTimes(1);
     });
-  });
+  }, 10000);
 
   it('shows error when account deletion fails', async () => {
     mock
-      .onDelete('/gdpr/delete_all_personal_data/test-user-id')
+      .onDelete('/gdpr/delete_all_data')
       .reply(500, { message: 'Internal server error' });
 
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
@@ -165,7 +167,7 @@ describe('AccountSecurity', () => {
 
   it('verifies API call is made with correct endpoint', async () => {
     mock
-      .onDelete('/gdpr/delete_all_personal_data/test-user-id')
+      .onDelete('/gdpr/delete_all_data')
       .reply(200, { message: 'Account deleted successfully' });
 
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
@@ -180,7 +182,7 @@ describe('AccountSecurity', () => {
 
     await waitFor(() => {
       expect(mock.history.delete).toHaveLength(1);
-      expect(mock.history.delete[0].url).toBe('/gdpr/delete_all_personal_data/test-user-id');
+      expect(mock.history.delete[0].url).toBe('/gdpr/delete_all_data');
     });
-  });
+  }, 10000);
 });

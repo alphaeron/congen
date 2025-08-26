@@ -72,7 +72,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       setOneRepMaxes(oneRepMaxesData);
       setAllExercises(allExercisesData);
     } catch (err) {
-      console.error('Error loading exercise history data:', err);
       setError('Failed to load exercise history data. Please try again.');
     } finally {
       setIsLoading(false);

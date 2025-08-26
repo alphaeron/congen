@@ -160,10 +160,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 <TrendingUpIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
                   <Typography variant="h4" component="div" textAlign="center">
-                    {oneRepMaxes.length}
+                    {new Set(oneRepMaxes.map(orm => orm.exercise_name)).size}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" textAlign="center">
-                    1RM Records
+                    Unique Exercises
                   </Typography>
                 </Box>
               </Box>

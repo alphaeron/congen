@@ -43,14 +43,14 @@ describe('equipment API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/equipment/').networkError();
 
-      await expect(getEquipment()).rejects.toBeUndefined();
+      await expect(getEquipment()).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/equipment/').timeout();
 
-      await expect(getEquipment()).rejects.toBeUndefined();
+      await expect(getEquipment()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
   });
@@ -89,14 +89,14 @@ describe('equipment API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/equipment/Barbell').networkError();
 
-      await expect(getIndividualEquipment('Barbell')).rejects.toBeUndefined();
+      await expect(getIndividualEquipment('Barbell')).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/equipment/Barbell').timeout();
 
-      await expect(getIndividualEquipment('Barbell')).rejects.toBeUndefined();
+      await expect(getIndividualEquipment('Barbell')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

@@ -155,7 +155,7 @@ describe('endpoint', () => {
           url: '/test',
           method: 'GET',
         })
-      ).rejects.toEqual(undefined);
+      ).rejects.toEqual({ error: 'Network Error' });
     });
 
     it('should handle timeout errors', async () => {
@@ -166,7 +166,7 @@ describe('endpoint', () => {
           url: '/test',
           method: 'GET',
         })
-      ).rejects.toEqual(undefined);
+      ).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
     });
 
     it('should work with POST requests', async () => {

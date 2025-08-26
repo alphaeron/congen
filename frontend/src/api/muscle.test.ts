@@ -47,14 +47,14 @@ describe('muscle API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/muscle/').networkError();
 
-      await expect(getMuscles()).rejects.toBeUndefined();
+      await expect(getMuscles()).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/muscle/').timeout();
 
-      await expect(getMuscles()).rejects.toBeUndefined();
+      await expect(getMuscles()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
@@ -102,14 +102,14 @@ describe('muscle API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/muscle/Pectoralis Major').networkError();
 
-      await expect(getIndividualMuscle('Pectoralis Major')).rejects.toBeUndefined();
+      await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/muscle/Pectoralis Major').timeout();
 
-      await expect(getIndividualMuscle('Pectoralis Major')).rejects.toBeUndefined();
+      await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

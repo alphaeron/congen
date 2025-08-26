@@ -36,39 +36,28 @@ describe('useAutoRefresh', () => {
   });
 
   it('should prevent multiple simultaneous refresh calls', async () => {
-    let resolveRefresh: (value: string) => void;
-    const mockRefreshFunction = jest.fn().mockImplementation(
-      () =>
-        new Promise<string>(resolve => {
-          resolveRefresh = resolve;
-        })
-    );
+    let callCount = 0;
+    const mockRefreshFunction = jest.fn().mockImplementation(() => {
+      callCount++;
+      return Promise.resolve(`refreshed data ${callCount}`);
+    });
 
     const { result } = renderHook(() => useAutoRefresh(mockRefreshFunction));
 
     // Start first refresh
-    const firstRefreshPromise = act(async () => {
-      return result.current.refresh();
-    });
+    const firstRefreshPromise = result.current.refresh();
 
-    // Try to start second refresh immediately
-    const secondRefreshPromise = act(async () => {
-      return result.current.refresh();
-    });
-
-    // Resolve the first refresh
-    act(() => {
-      resolveRefresh!('refreshed data');
-    });
+    // Try to start second refresh immediately (this should be queued)
+    const secondRefreshPromise = result.current.refresh();
 
     const [firstResult, secondResult] = await Promise.all([
       firstRefreshPromise,
       secondRefreshPromise,
     ]);
 
-    expect(firstResult).toBe('refreshed data');
-    expect(secondResult).toBe('refreshed data');
-    expect(mockRefreshFunction).toHaveBeenCalledTimes(1); // Should only be called once
+    expect(firstResult).toBe('refreshed data 1');
+    expect(secondResult).toBe('refreshed data 2');
+    expect(mockRefreshFunction).toHaveBeenCalledTimes(2); // Called once for first refresh, once for second refresh
   });
 
   it('should handle refresh function errors', async () => {

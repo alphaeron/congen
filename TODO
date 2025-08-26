@@ -1,3 +1,11 @@
+remove console statements from frontend, if there is an error the user needs to be aware of use notistack to show it in a user-friendly fashion without implementation details
+
+test tests, no error logs in test.
+
+
+
+
+
 remove all hardcoded exercises, use muscles from primary exercise.
 
 
@@ -54,11 +62,7 @@ use this everwhere an exercise name is rendered for consistency
 
 the top corners of the drawers should not be rounded
 
-test tests, no error logs in test.
-
 Remove the workout calendar component since it is unused
-
-remove console statements from frontend
 
 chart.js for chart visualizations
 

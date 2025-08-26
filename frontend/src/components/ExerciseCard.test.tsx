@@ -51,7 +51,7 @@ describe('ExerciseCard component', () => {
   });
 
   it('Renders the exercise isAccessory', () => {
-    const text = EXERCISE.is_accessory ? 'Accessory' : 'Primary Movement';
+    const text = EXERCISE.is_accessory ? 'Accessory' : 'Primary';
     const regex = new RegExp(`${text}`, 'i');
     expect(screen.getByText(regex)).toBeInTheDocument();
   });

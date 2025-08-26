@@ -64,14 +64,14 @@ describe('exerciseMuscle API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise_muscle/').networkError();
 
-      await expect(getExerciseMuscle()).rejects.toBeUndefined();
+      await expect(getExerciseMuscle()).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise_muscle/').timeout();
 
-      await expect(getExerciseMuscle()).rejects.toBeUndefined();
+      await expect(getExerciseMuscle()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

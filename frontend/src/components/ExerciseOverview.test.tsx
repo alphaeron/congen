@@ -46,12 +46,16 @@ describe('ExerciseOverview component', () => {
   });
 
   it('Renders the exercise header', async () => {
+    // Wait for all API calls to be made
     await waitFor(() => {
-      // All 5 mocks should have been called.
       expect(mockAdapter.history.get.length).toBe(5);
+    });
 
+    // Wait for the header to be rendered
+    await waitFor(() => {
       const exerciseElement = screen.getByTestId('exerciseHeader');
       expect(exerciseElement).toBeInTheDocument();
+      expect(exerciseElement).toHaveTextContent('Exercise Library');
     });
   });
 });

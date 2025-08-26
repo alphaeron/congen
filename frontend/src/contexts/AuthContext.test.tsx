@@ -52,6 +52,7 @@ describe('AuthContext', () => {
       user: null,
       error: null,
       signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
   });
@@ -82,6 +83,7 @@ describe('AuthContext', () => {
       user: null,
       error: null,
       signinRedirect: mockSigninRedirect,
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 
@@ -105,6 +107,7 @@ describe('AuthContext', () => {
       user: null,
       error: null,
       signinRedirect: mockSigninRedirect,
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 
@@ -124,14 +127,15 @@ describe('AuthContext', () => {
   });
 
   it('should handle logout', async () => {
-    const mockRemoveUser = jest.fn();
+    const mockSignoutRedirect = jest.fn();
     mockUseOidcAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: {} as Record<string, unknown>,
       error: null,
       signinRedirect: jest.fn(),
-      removeUser: mockRemoveUser,
+      signoutRedirect: mockSignoutRedirect,
+      removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 
     render(
@@ -143,18 +147,19 @@ describe('AuthContext', () => {
     await act(async () => {
       screen.getByText('Logout').click();
     });
-    expect(mockRemoveUser).toHaveBeenCalled();
+    expect(mockSignoutRedirect).toHaveBeenCalled();
   });
 
   it('should handle logout error', async () => {
-    const mockRemoveUser = jest.fn().mockRejectedValue(new Error('Logout failed'));
+    const mockSignoutRedirect = jest.fn().mockRejectedValue(new Error('Logout failed'));
     mockUseOidcAuth.mockReturnValue({
       isAuthenticated: true,
       isLoading: false,
       user: {} as Record<string, unknown>,
       error: null,
       signinRedirect: jest.fn(),
-      removeUser: mockRemoveUser,
+      signoutRedirect: mockSignoutRedirect,
+      removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 
     render(
@@ -179,6 +184,7 @@ describe('AuthContext', () => {
       user: null,
       error: new Error('Test error'),
       signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 
@@ -204,6 +210,7 @@ describe('AuthContext', () => {
       user: {} as Record<string, unknown>,
       error: null,
       signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
     mockGetCurrentUser.mockResolvedValue(mockUser);
@@ -228,6 +235,7 @@ describe('AuthContext', () => {
       user: {} as Record<string, unknown>,
       error: null,
       signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 
@@ -259,6 +267,7 @@ describe('AuthContext', () => {
       user: null,
       error: oidcError,
       signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
 

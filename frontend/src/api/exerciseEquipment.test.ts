@@ -60,14 +60,14 @@ describe('exerciseEquipment API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise_equipment/').networkError();
 
-      await expect(getExerciseEquipment()).rejects.toBeUndefined();
+      await expect(getExerciseEquipment()).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise_equipment/').timeout();
 
-      await expect(getExerciseEquipment()).rejects.toBeUndefined();
+      await expect(getExerciseEquipment()).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 

@@ -52,7 +52,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
       id: 'overview',
       label: 'Profile Overview',
       icon: <PersonIcon />,
-      component: <ProfileOverview user={user} />,
+      component: <ProfileOverview user={user} onEditProfile={() => navigate('/profile/edit')} />,
     },
     {
       id: 'workout-preferences',
