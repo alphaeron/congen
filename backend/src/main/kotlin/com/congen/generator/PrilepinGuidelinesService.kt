@@ -194,7 +194,7 @@ class PrilepinGuidelinesService {
                 movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
 
                 // Secondary movements use lower intensity guidelines than primary
-                movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle, dayType)
+                movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle)
 
                 // Handle combined ME+DE days based on movement role
                 dayType == "ME_Upper_DE_Lower" -> {
@@ -446,10 +446,7 @@ class PrilepinGuidelinesService {
      * - Week 3: 80-90% intensity (vs 90-100% for primary)
      * - Week 4: 55-65% intensity (deload, same as primary)
      */
-    private fun getSecondaryExerciseGuidelines(
-        weekInCycle: Int,
-        dayType: String
-    ): Pair<PrilepinGuidelines, Double> {
+    private fun getSecondaryExerciseGuidelines(weekInCycle: Int): Pair<PrilepinGuidelines, Double> {
         return when (weekInCycle) {
             1, 2 -> {
                 // Use 70-80% intensity for secondary (lower than primary's 80-90%)

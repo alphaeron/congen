@@ -5,8 +5,6 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.model.Exercise
-import com.congen.model.MovementType
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
@@ -218,20 +216,6 @@ class WorkoutStageGenerationOrchestratorTest {
             name = "Test Workout",
             createdAt = Instant.now(),
             updatedAt = Instant.now()
-        )
-    }
-
-    private fun createSampleExercise(
-        name: String,
-        movementType: MovementType
-    ): Exercise {
-        return Exercise(
-            name = name,
-            description = "A sample exercise for testing",
-            movementType = movementType,
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
         )
     }
 
