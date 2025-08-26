@@ -19,30 +19,24 @@ class VertxConfigTest {
 
     @Test
     fun `should create Vertx bean`() {
-        // When
         val vertx = vertxConfig.vertx()
 
-        // Then
         assertNotNull(vertx)
     }
 
     @Test
     fun `should create multiple Vertx instances`() {
-        // When
         val vertx1 = vertxConfig.vertx()
         val vertx2 = vertxConfig.vertx()
 
-        // Then
         assertNotNull(vertx1)
         assertNotNull(vertx2)
     }
 
     @Test
     fun `should create Vertx instance with configured Jackson mappers`() {
-        // When
         val vertx = vertxConfig.vertx()
 
-        // Then
         assertNotNull(vertx)
         // The Vertx instance is created and Jackson mappers are configured
         // We can't easily test the internal mapper configuration without reflection

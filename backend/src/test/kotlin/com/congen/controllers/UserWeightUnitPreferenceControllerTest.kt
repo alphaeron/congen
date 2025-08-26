@@ -65,7 +65,6 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `upsert should create preference successfully`() {
-        // Given
         val preference = mockUserWeightUnitPreference().copy(userId = currentUserId)
 
         whenever(
@@ -76,7 +75,6 @@ class UserWeightUnitPreferenceControllerTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceController.upsert(
                 preference.userId,
@@ -84,7 +82,6 @@ class UserWeightUnitPreferenceControllerTest {
                 preference.preferredUnit.name
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(preference))
             .verifyComplete()
@@ -98,7 +95,6 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `upsert should handle database errors`() {
-        // Given
         val preference = mockUserWeightUnitPreference().copy(userId = currentUserId)
 
         whenever(
@@ -109,7 +105,6 @@ class UserWeightUnitPreferenceControllerTest {
             )
         ).thenReturn(createMockMonoError(DatabaseException("Database error")))
 
-        // When
         val result =
             userWeightUnitPreferenceController.upsert(
                 preference.userId,
@@ -117,7 +112,6 @@ class UserWeightUnitPreferenceControllerTest {
                 preference.preferredUnit.name
             )
 
-        // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
@@ -125,11 +119,9 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `upsert should deny access for different user`() {
-        // Given
         val differentUserId = "different-user-id"
         val preference = mockUserWeightUnitPreference().copy(userId = differentUserId)
 
-        // When
         val result =
             userWeightUnitPreferenceController.upsert(
                 preference.userId,
@@ -137,7 +129,6 @@ class UserWeightUnitPreferenceControllerTest {
                 preference.preferredUnit.name
             )
 
-        // Then
         StepVerifier.create(result)
             .expectError(AccessDeniedException::class.java)
             .verify()
@@ -145,16 +136,13 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `getByUser should return preferences successfully`() {
-        // Given
         val preferences = listOf(mockUserWeightUnitPreference().copy(userId = currentUserId))
 
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(eq(currentUserId)))
             .thenReturn(createMockMono(preferences))
 
-        // When
         val result = userWeightUnitPreferenceController.getAllByUser(currentUserId)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(preferences))
             .verifyComplete()
@@ -164,14 +152,11 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `getByUser should handle database errors`() {
-        // Given
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(eq(currentUserId)))
             .thenReturn(createMockMonoError(DatabaseException("Database error")))
 
-        // When
         val result = userWeightUnitPreferenceController.getAllByUser(currentUserId)
 
-        // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
@@ -179,13 +164,10 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `getByUser should deny access for different user`() {
-        // Given
         val differentUserId = "different-user-id"
 
-        // When
         val result = userWeightUnitPreferenceController.getAllByUser(differentUserId)
 
-        // Then
         StepVerifier.create(result)
             .expectError(AccessDeniedException::class.java)
             .verify()
@@ -193,7 +175,6 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `getByUserAndExercise should return preference successfully`() {
-        // Given
         val exerciseName = "Bench Press"
         val preference = mockUserWeightUnitPreference().copy(userId = currentUserId)
 
@@ -204,10 +185,8 @@ class UserWeightUnitPreferenceControllerTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result = userWeightUnitPreferenceController.getByUserAndExercise(currentUserId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(preference))
             .verifyComplete()
@@ -217,7 +196,6 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `getByUserAndExercise should return not found when preference not found`() {
-        // Given
         val exerciseName = "Bench Press"
 
         whenever(
@@ -227,10 +205,8 @@ class UserWeightUnitPreferenceControllerTest {
             )
         ).thenReturn(createMockMonoError(NoResultsFoundException("Preference not found")))
 
-        // When
         val result = userWeightUnitPreferenceController.getByUserAndExercise(currentUserId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
@@ -238,14 +214,11 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `getByUserAndExercise should deny access for different user`() {
-        // Given
         val differentUserId = "different-user-id"
         val exerciseName = "Bench Press"
 
-        // When
         val result = userWeightUnitPreferenceController.getByUserAndExercise(differentUserId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectError(AccessDeniedException::class.java)
             .verify()
@@ -253,7 +226,6 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `delete should return preference successfully`() {
-        // Given
         val exerciseName = "Bench Press"
         val preference = mockUserWeightUnitPreference().copy(userId = currentUserId)
 
@@ -264,10 +236,8 @@ class UserWeightUnitPreferenceControllerTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result = userWeightUnitPreferenceController.delete(currentUserId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(preference))
             .verifyComplete()
@@ -277,14 +247,11 @@ class UserWeightUnitPreferenceControllerTest {
 
     @Test
     fun `delete should deny access for different user`() {
-        // Given
         val differentUserId = "different-user-id"
         val exerciseName = "Bench Press"
 
-        // When
         val result = userWeightUnitPreferenceController.delete(differentUserId, exerciseName)
 
-        // Then
         StepVerifier.create(result)
             .expectError(AccessDeniedException::class.java)
             .verify()

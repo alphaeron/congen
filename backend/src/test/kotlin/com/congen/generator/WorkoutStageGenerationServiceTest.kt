@@ -76,7 +76,6 @@ class WorkoutStageGenerationServiceTest {
 
     @Test
     fun `should generate workout stages successfully`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "maximal_effort"
         val userExercisePool = mock<UserExercisePool>()
@@ -120,7 +119,6 @@ class WorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.empty())
 
-        // When
         val result =
             baseService.generateWorkoutStages(
                 workout = workout,
@@ -133,7 +131,6 @@ class WorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -150,7 +147,6 @@ class WorkoutStageGenerationServiceTest {
 
     @Test
     fun `should handle exercise selection failure`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "maximal_effort"
         val userExercisePool = mock<UserExercisePool>()
@@ -171,7 +167,6 @@ class WorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
 
-        // When
         val result =
             baseService.generateWorkoutStages(
                 workout = workout,
@@ -184,7 +179,6 @@ class WorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -192,7 +186,6 @@ class WorkoutStageGenerationServiceTest {
 
     @Test
     fun `should handle dynamic effort day type`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "dynamic_effort"
         val userExercisePool = mock<UserExercisePool>()
@@ -236,7 +229,6 @@ class WorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.empty())
 
-        // When
         val result =
             baseService.generateWorkoutStages(
                 workout = workout,
@@ -249,7 +241,6 @@ class WorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()

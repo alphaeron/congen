@@ -73,16 +73,13 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `determineWeakMuscles should return default weak muscles`() {
-        // When
         val result = exerciseSelectionService.determineWeakMuscles()
 
-        // Then
         assert(result == ConjugateConstants.DEFAULT_WEAK_MUSCLES)
     }
 
     @Test
     fun `selectExercise should select primary exercise successfully`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -96,7 +93,6 @@ class ExerciseSelectionServiceTest {
         ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -106,7 +102,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
@@ -116,7 +111,6 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should select accessory exercise successfully`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -127,7 +121,6 @@ class ExerciseSelectionServiceTest {
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -137,7 +130,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
@@ -147,14 +139,12 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should handle no available exercises`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(emptyList())
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -164,7 +154,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
-        // Then
         StepVerifier.create(result)
             .expectError(IllegalStateException::class.java)
             .verify()
@@ -172,7 +161,6 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should handle no exercises after day type filtering`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -182,7 +170,6 @@ class ExerciseSelectionServiceTest {
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(emptyList()))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -192,7 +179,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
@@ -200,7 +186,6 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should handle no exercises after workout type filtering`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -213,7 +198,6 @@ class ExerciseSelectionServiceTest {
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
         ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -223,7 +207,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
@@ -231,7 +214,6 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should handle no exercises after muscle filtering`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -244,7 +226,6 @@ class ExerciseSelectionServiceTest {
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
         ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -254,7 +235,6 @@ class ExerciseSelectionServiceTest {
                 dayType = dayType
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise) // Should use fallback exercise
             .verifyComplete()
@@ -262,7 +242,6 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should apply movement balance constraints`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -288,7 +267,6 @@ class ExerciseSelectionServiceTest {
         whenever(movementBalanceService.prioritizeExercisesForBalance(any(), any())).thenReturn(listOf(exercise))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -299,7 +277,6 @@ class ExerciseSelectionServiceTest {
                 movementBalanceState = movementBalanceState
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
@@ -309,7 +286,6 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `selectExercise should handle movement balance constraints with no exercises`() {
-        // Given
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
@@ -334,7 +310,6 @@ class ExerciseSelectionServiceTest {
         ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
         whenever(movementBalanceService.prioritizeExercisesForBalance(any(), any())).thenReturn(emptyList())
 
-        // When
         val result =
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -345,7 +320,6 @@ class ExerciseSelectionServiceTest {
                 movementBalanceState = movementBalanceState
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercise) // Should use fallback exercise
             .verifyComplete()

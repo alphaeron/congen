@@ -55,7 +55,6 @@ class UserServiceTest {
 
     @Test
     fun `createUser should create user from Keycloak information successfully`() {
-        // Given
         val keycloakId = "test-keycloak-id"
         val name = "Test User"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
@@ -85,10 +84,8 @@ class UserServiceTest {
                 )
             )
 
-        // When
         val result = userService.insertUser()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(testUser)
             .verifyComplete()
@@ -101,12 +98,10 @@ class UserServiceTest {
 
     @Test
     fun `createUser should throw ValidationException when name is not available`() {
-        // Given
         val keycloakId = "test-keycloak-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.empty())
 
-        // When & Then
         assertThrows<ValidationException> {
             userService.insertUser().block()
         }
@@ -116,12 +111,10 @@ class UserServiceTest {
 
     @Test
     fun `createUser should throw ValidationException when name is blank`() {
-        // Given
         val keycloakId = "test-keycloak-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(""))
 
-        // When & Then
         assertThrows<ValidationException> {
             userService.insertUser().block()
         }
@@ -131,14 +124,11 @@ class UserServiceTest {
 
     @Test
     fun `getUserByKeycloakId should return user successfully`() {
-        // Given
         val keycloakId = "test-keycloak-id"
         whenever(userDAL.selectUserByKeycloakId(keycloakId)).thenReturn(Mono.just(testUser))
 
-        // When
         val result = userService.selectUserByKeycloakId(keycloakId)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(testUser)
             .verifyComplete()

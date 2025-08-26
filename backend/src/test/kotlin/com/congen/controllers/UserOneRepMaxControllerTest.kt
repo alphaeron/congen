@@ -80,17 +80,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxesByUserId should return list of one rep maxes`() {
-        // Given
         val oneRepMaxes = listOf(TEST_ONE_REP_MAX)
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.selectUserOneRepMaxByUser(TEST_USER_ID, null))
             .thenReturn(Mono.just(oneRepMaxes))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxesByUserId(TEST_USER_ID, null)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(oneRepMaxes))
             .verifyComplete()
@@ -100,17 +97,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxesByUserId should pass unit parameter to service`() {
-        // Given
         val oneRepMaxes = listOf(TEST_ONE_REP_MAX)
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.selectUserOneRepMaxByUser(TEST_USER_ID, "lbs"))
             .thenReturn(Mono.just(oneRepMaxes))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxesByUserId(TEST_USER_ID, "lbs")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(oneRepMaxes))
             .verifyComplete()
@@ -120,16 +114,13 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxByUserAndExercise should return one rep max when found`() {
-        // Given
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.selectUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, null))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -139,16 +130,13 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxByUserAndExercise should return not found when not found`() {
-        // Given
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.selectUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, null))
             .thenReturn(Mono.error(DatabaseException("Not found")))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
 
-        // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
@@ -158,16 +146,13 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxByUserAndExercise should pass unit parameter to service`() {
-        // Given
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.selectUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, "kg"))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, "kg")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -177,17 +162,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `upsertOneRepMax should return created one rep max`() {
-        // Given
         val oneRepMax = BigDecimal("100.0")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.upsertUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg"))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -197,17 +179,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `upsertOneRepMax should pass unit parameter to service`() {
-        // Given
         val oneRepMax = BigDecimal("100.0")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.upsertUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "lbs"))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "lbs")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -217,16 +196,13 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `deleteOneRepMax should return deleted one rep max when deleted`() {
-        // Given
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.deleteUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -236,16 +212,13 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `deleteOneRepMax should return not found when not found`() {
-        // Given
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(TEST_USER_ID))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
         whenever(userOneRepMaxService.deleteUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME))
             .thenReturn(Mono.error(DatabaseException("Not found")))
 
-        // When
         val result = userOneRepMaxController.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
@@ -255,7 +228,6 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxesByUserId should allow admin to access any user data`() {
-        // Given
         val oneRepMaxes = listOf(TEST_ONE_REP_MAX)
         val adminUserId = "admin-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(adminUserId))
@@ -263,10 +235,8 @@ class UserOneRepMaxControllerTest {
         whenever(userOneRepMaxService.selectUserOneRepMaxByUser(TEST_USER_ID, null))
             .thenReturn(Mono.just(oneRepMaxes))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxesByUserId(TEST_USER_ID, null)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(oneRepMaxes))
             .verifyComplete()
@@ -276,17 +246,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxByUserAndExercise should allow admin to access any user data`() {
-        // Given
         val adminUserId = "admin-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(adminUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("admin")))
         whenever(userOneRepMaxService.selectUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, null))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -296,7 +263,6 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `upsertOneRepMax should allow admin to update any user data`() {
-        // Given
         val oneRepMax = BigDecimal("100.0")
         val adminUserId = "admin-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(adminUserId))
@@ -304,10 +270,8 @@ class UserOneRepMaxControllerTest {
         whenever(userOneRepMaxService.upsertUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg"))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -317,17 +281,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `deleteOneRepMax should allow admin to delete any user data`() {
-        // Given
         val adminUserId = "admin-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(adminUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("admin")))
         whenever(userOneRepMaxService.deleteUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -337,7 +298,6 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxesByUserId should allow service user to access any user data`() {
-        // Given
         val oneRepMaxes = listOf(TEST_ONE_REP_MAX)
         val serviceUserId = "service-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(serviceUserId))
@@ -345,10 +305,8 @@ class UserOneRepMaxControllerTest {
         whenever(userOneRepMaxService.selectUserOneRepMaxByUser(TEST_USER_ID, null))
             .thenReturn(Mono.just(oneRepMaxes))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxesByUserId(TEST_USER_ID, null)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(oneRepMaxes))
             .verifyComplete()
@@ -358,17 +316,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `getOneRepMaxByUserAndExercise should allow service user to access any user data`() {
-        // Given
         val serviceUserId = "service-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(serviceUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("service")))
         whenever(userOneRepMaxService.selectUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, null))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.getOneRepMaxByUserAndExercise(TEST_USER_ID, TEST_EXERCISE_NAME, null)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -378,7 +333,6 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `upsertOneRepMax should allow service user to update any user data`() {
-        // Given
         val oneRepMax = BigDecimal("100.0")
         val serviceUserId = "service-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(serviceUserId))
@@ -386,10 +340,8 @@ class UserOneRepMaxControllerTest {
         whenever(userOneRepMaxService.upsertUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg"))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.upsertOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME, oneRepMax, "kg")
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()
@@ -399,17 +351,14 @@ class UserOneRepMaxControllerTest {
 
     @Test
     fun `deleteOneRepMax should allow service user to delete any user data`() {
-        // Given
         val serviceUserId = "service-user-id"
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(serviceUserId))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("service")))
         whenever(userOneRepMaxService.deleteUserOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME))
             .thenReturn(Mono.just(TEST_ONE_REP_MAX))
 
-        // When
         val result = userOneRepMaxController.deleteOneRepMax(TEST_USER_ID, TEST_EXERCISE_NAME)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(TEST_ONE_REP_MAX))
             .verifyComplete()

@@ -57,7 +57,6 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         // First create a one rep max record
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 100.0, "KG", token = userToken)
 
-        // Then update it using PUT (upsert)
         webTestClient.put()
             .uri("/api/v1/user_one_rep_max/?user_id=$userId&exercise_name=Bench Press&one_rep_max=150.0&unit=KG")
             .header("Authorization", "Bearer $userToken")
@@ -81,7 +80,6 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         // First create a one rep max record
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 200.0, "KG", token = userToken)
 
-        // Then retrieve it
         webTestClient.get()
             .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
             .header("Authorization", "Bearer $userToken")
@@ -98,7 +96,6 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         // First save a one rep max
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 200.0, "KG", token = userToken)
 
-        // Then delete it
         webTestClient.delete()
             .uri("/api/v1/user_one_rep_max/user/$userId/exercise/Bench Press")
             .header("Authorization", "Bearer $userToken")
@@ -123,7 +120,6 @@ class UserOneRepMaxIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Bench Press", 100.0, "KG", token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Deadlift", 200.0, "KG", token = userToken)
 
-        // Then get all for the user
         webTestClient.get()
             .uri("/api/v1/user_one_rep_max/user/$userId")
             .header("Authorization", "Bearer $userToken")

@@ -29,7 +29,6 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then get it by id
         webTestClient.get()
             .uri("/api/v1/workout_stage_type/${stageTypeResponse.id}")
             .header("Authorization", "Bearer $token")
@@ -56,7 +55,6 @@ class WorkoutStageTypeIntegrationTest : BaseIntegrationTest() {
         // First create a workout stage type
         val stageTypeName = IntegrationTestHelpers.createTestWorkoutStageType(WorkoutStageTypeEnum.WARMUP)
 
-        // Then get it by name
         webTestClient.get()
             .uri("/api/v1/workout_stage_type/name/$stageTypeName")
             .header("Authorization", "Bearer $token")

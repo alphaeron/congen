@@ -63,7 +63,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should return pool with filtered exercises`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = createSamplePreferences()
@@ -72,10 +71,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 pool.getAvailableExerciseCount() > 0
@@ -89,7 +86,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle empty exercises list`() {
-        // Given
         val emptyExercises = emptyList<Exercise>()
         val userEquipment = createSampleUserEquipment()
         val preferences = createSamplePreferences()
@@ -98,10 +94,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 pool.getAvailableExerciseCount() == 0
@@ -111,7 +105,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle empty user equipment`() {
-        // Given
         val exercises = createSampleExercises()
         val emptyUserEquipment = emptyList<UserEquipment>()
         val preferences = createSamplePreferences()
@@ -120,10 +113,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(emptyUserEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 pool.getAvailableExerciseCount() > 0
@@ -133,7 +124,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle empty preferences`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val emptyPreferences = emptyList<UserExercisePreference>()
@@ -142,10 +132,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(emptyPreferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 pool.getAvailableExerciseCount() > 0
@@ -155,7 +143,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should filter out exercises user wants to avoid`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences =
@@ -172,10 +159,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 !pool.getAvailableExercises().any { it.name == "Bench Press" }
@@ -185,13 +170,10 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle DAL errors gracefully`() {
-        // Given
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -199,16 +181,13 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle user equipment DAL errors`() {
-        // Given
         val exercises = createSampleExercises()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -216,7 +195,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle preferences DAL errors`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
 
@@ -226,10 +204,8 @@ class ExercisePoolFactoryTest {
             userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)
         ).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -237,7 +213,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle mixed preferences`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences =
@@ -260,10 +235,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 !pool.getAvailableExercises().any { it.name == "Bench Press" } &&
@@ -274,7 +247,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle exercises with no equipment requirements`() {
-        // Given
         val exercises =
             listOf(
                 createExercise("Bodyweight Squat", MovementType.SQUAT),
@@ -287,10 +259,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 pool.getAvailableExerciseCount() > 0
@@ -300,7 +270,6 @@ class ExercisePoolFactoryTest {
 
     @Test
     fun `createPoolForUser should handle exercises with multiple equipment requirements`() {
-        // Given
         val exercises =
             listOf(
                 createExercise("Barbell Bench Press", MovementType.HORIZONTAL_PUSH),
@@ -325,10 +294,8 @@ class ExercisePoolFactoryTest {
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
 
-        // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 pool.getAvailableExerciseCount() > 0

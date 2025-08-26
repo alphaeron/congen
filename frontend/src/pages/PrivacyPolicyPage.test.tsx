@@ -149,7 +149,6 @@ describe('PrivacyPolicyPage', () => {
       data_controller: {
         name: 'Congen Fitness Application',
         contact: 'privacy@congen.app',
-        // No DPO field
       },
     };
 

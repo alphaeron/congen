@@ -56,101 +56,80 @@ class JacksonConfigTest {
 
     @Test
     fun `should create ObjectMapper bean`() {
-        // When
         val objectMapper = jacksonConfig.objectMapper()
 
-        // Then
         assertNotNull(objectMapper)
     }
 
     @Test
     fun `should configure ObjectMapper with custom settings`() {
-        // Given
         val mapper = ObjectMapper()
 
-        // When
         JacksonConfig.configureObjectMapper(mapper)
 
-        // Then
         assertNotNull(mapper)
     }
 
     @Test
     fun `should serialize Instant to ISO string`() {
-        // Given
         val instant = Instant.parse("2024-01-01T12:00:00Z")
         val serializer = JacksonConfig.CustomInstantSerializer()
 
-        // When
         serializer.serialize(instant, jsonGenerator, serializerProvider)
 
-        // Then - Verify that writeString was called with the ISO string
         // Note: We can't easily verify the exact call due to Mockito limitations with JsonGenerator
         // The test ensures the method doesn't throw exceptions
     }
 
     @Test
     fun `should serialize null Instant`() {
-        // Given
         val serializer = JacksonConfig.CustomInstantSerializer()
 
-        // When & Then
         // Should not throw exception
         serializer.serialize(null, jsonGenerator, serializerProvider)
     }
 
     @Test
     fun `should deserialize ISO instant string`() {
-        // Given
         val instantString = "2024-01-01T12:00:00Z"
         val expectedInstant = Instant.parse(instantString)
         val deserializer = JacksonConfig.CustomInstantDeserializer()
         `when`(jsonParser.text).thenReturn(instantString)
 
-        // When
         val result = deserializer.deserialize(jsonParser, deserializationContext)
 
-        // Then
         assertEquals(expectedInstant, result)
     }
 
     @Test
     fun `should deserialize Unix timestamp`() {
-        // Given
         val unixTimestamp = "1704110400.0"
         val deserializer = JacksonConfig.CustomInstantDeserializer()
         `when`(jsonParser.text).thenReturn(unixTimestamp)
 
-        // When
         val result = deserializer.deserialize(jsonParser, deserializationContext)
 
-        // Then
         assertEquals(Instant.ofEpochSecond(1704110400L), result)
     }
 
     @Test
     fun `should deserialize LocalDateTime string as UTC`() {
-        // Given
         val localDateTimeString = "2024-01-01T12:00:00"
         val expectedInstant = Instant.parse("2024-01-01T12:00:00Z")
         val deserializer = JacksonConfig.CustomInstantDeserializer()
         `when`(jsonParser.text).thenReturn(localDateTimeString)
 
-        // When
         val result = deserializer.deserialize(jsonParser, deserializationContext)
 
-        // Then
         assertEquals(expectedInstant, result)
     }
 
     @Test
     fun `should throw exception for invalid timestamp format`() {
-        // Given
         val invalidTimestamp = "invalid-timestamp"
         val deserializer = JacksonConfig.CustomInstantDeserializer()
         `when`(jsonParser.text).thenReturn(invalidTimestamp)
 
-        // When & Then
         assertThrows<IllegalArgumentException> {
             deserializer.deserialize(jsonParser, deserializationContext)
         }
@@ -158,43 +137,34 @@ class JacksonConfigTest {
 
     @Test
     fun `should deserialize integer value to Int`() {
-        // Given
         val deserializer = JacksonConfig.NumericIntDeserializer()
         `when`(jsonParser.currentToken).thenReturn(JsonToken.VALUE_NUMBER_INT)
         `when`(jsonParser.intValue).thenReturn(42)
 
-        // When
         val result = deserializer.deserialize(jsonParser, deserializationContext)
 
-        // Then
         assertEquals(42, result)
     }
 
     @Test
     fun `should deserialize float value to Int`() {
-        // Given
         val deserializer = JacksonConfig.NumericIntDeserializer()
         `when`(jsonParser.currentToken).thenReturn(JsonToken.VALUE_NUMBER_FLOAT)
         `when`(jsonParser.doubleValue).thenReturn(42.5)
 
-        // When
         val result = deserializer.deserialize(jsonParser, deserializationContext)
 
-        // Then
         assertEquals(42, result)
     }
 
     @Test
     fun `should deserialize string value to Int`() {
-        // Given
         val deserializer = JacksonConfig.NumericIntDeserializer()
         `when`(jsonParser.currentToken).thenReturn(JsonToken.VALUE_STRING)
         `when`(jsonParser.text).thenReturn("42")
 
-        // When
         val result = deserializer.deserialize(jsonParser, deserializationContext)
 
-        // Then
         assertEquals(42, result)
     }
 
@@ -261,11 +231,9 @@ class JacksonConfigTest {
 
     @Test
     fun `should throw exception for unsupported token type`() {
-        // Given
         val deserializer = JacksonConfig.NumericIntDeserializer()
         `when`(jsonParser.currentToken).thenReturn(JsonToken.START_ARRAY)
 
-        // When & Then
         assertThrows<JsonMappingException> {
             deserializer.deserialize(jsonParser, deserializationContext)
         }

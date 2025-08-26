@@ -69,7 +69,6 @@ class WorkoutStageGenerationOrchestratorTest {
 
     @Test
     fun `should orchestrate workout stage generation successfully`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "maximal_effort"
         val userExercisePool = mock<UserExercisePool>()
@@ -94,7 +93,6 @@ class WorkoutStageGenerationOrchestratorTest {
             )
         ).thenReturn(Mono.empty())
 
-        // When
         val result =
             orchestrator.generateWorkoutStages(
                 workout = workout,
@@ -107,7 +105,6 @@ class WorkoutStageGenerationOrchestratorTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -127,7 +124,6 @@ class WorkoutStageGenerationOrchestratorTest {
 
     @Test
     fun `should handle service errors`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "maximal_effort"
         val userExercisePool = mock<UserExercisePool>()
@@ -152,7 +148,6 @@ class WorkoutStageGenerationOrchestratorTest {
             )
         ).thenReturn(Mono.error(RuntimeException("Service error")))
 
-        // When
         val result =
             orchestrator.generateWorkoutStages(
                 workout = workout,
@@ -165,7 +160,6 @@ class WorkoutStageGenerationOrchestratorTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -173,7 +167,6 @@ class WorkoutStageGenerationOrchestratorTest {
 
     @Test
     fun `should handle different program days per week`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "dynamic_effort"
         val userExercisePool = mock<UserExercisePool>()
@@ -198,7 +191,6 @@ class WorkoutStageGenerationOrchestratorTest {
             )
         ).thenReturn(Mono.empty())
 
-        // When
         val result =
             orchestrator.generateWorkoutStages(
                 workout = workout,
@@ -211,7 +203,6 @@ class WorkoutStageGenerationOrchestratorTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()

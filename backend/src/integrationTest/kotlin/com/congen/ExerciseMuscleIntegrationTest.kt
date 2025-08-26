@@ -26,14 +26,12 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the muscle
         webTestClient.post()
             .uri("/api/v1/muscle/?name=$uniqueMuscle&description=Test muscle for exercise relationship")
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the exercise-muscle relationship
         webTestClient.post()
             .uri("/api/v1/exercise_muscle/?exercise_name=$uniqueExercise&muscle_name=$uniqueMuscle")
             .header("Authorization", "Bearer $token")
@@ -62,7 +60,6 @@ class ExerciseMuscleIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the muscles
         webTestClient.post()
             .uri("/api/v1/muscle/?name=$uniqueMuscle1&description=Test muscle 1 for exercise relationship")
             .header("Authorization", "Bearer $token")

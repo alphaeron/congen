@@ -26,14 +26,12 @@ class ExerciseEquipmentIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the equipment
         webTestClient.post()
             .uri("/api/v1/equipment/?name=$uniqueEquipment&description=Test equipment for exercise relationship")
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the exercise-equipment relationship
         webTestClient.post()
             .uri("/api/v1/exercise_equipment/?exercise_name=$uniqueExercise&equipment_name=$uniqueEquipment")
             .header("Authorization", "Bearer $token")
@@ -61,7 +59,6 @@ class ExerciseEquipmentIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the equipment
         webTestClient.post()
             .uri("/api/v1/equipment/?name=$uniqueEquipment&description=Test equipment for exercise relationship")
             .header("Authorization", "Bearer $token")

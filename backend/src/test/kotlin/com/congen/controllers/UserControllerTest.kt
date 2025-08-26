@@ -46,7 +46,6 @@ class UserControllerTest {
 
     @Test
     fun `createUser should create user profile from Keycloak information successfully`() {
-        // Given
         val now = Instant.now()
         val expectedUser =
             User(
@@ -57,10 +56,8 @@ class UserControllerTest {
             )
         whenever(userService.insertUser()).thenReturn(Mono.just(expectedUser))
 
-        // When
         val result = userController.createUser()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
@@ -69,14 +66,11 @@ class UserControllerTest {
 
     @Test
     fun `createUser should propagate validation error`() {
-        // Given
         val validationException = ValidationException("User name not available from Keycloak token")
         whenever(userService.insertUser()).thenReturn(Mono.error(validationException))
 
-        // When
         val result = userController.createUser()
 
-        // Then
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
             .verify()
@@ -85,14 +79,11 @@ class UserControllerTest {
 
     @Test
     fun `createUser should propagate database error`() {
-        // Given
         val databaseException = DatabaseException("Database connection failed")
         whenever(userService.insertUser()).thenReturn(Mono.error(databaseException))
 
-        // When
         val result = userController.createUser()
 
-        // Then
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)
             .verify()
@@ -101,7 +92,6 @@ class UserControllerTest {
 
     @Test
     fun `getCurrentUser should return current user profile`() {
-        // Given
         val now = Instant.now()
         val expectedUser =
             User(
@@ -113,10 +103,8 @@ class UserControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(KEYCLOAK_USER_ID))
         whenever(userService.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.just(expectedUser))
 
-        // When
         val result = userController.getCurrentUser()
 
-        // Then
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(expectedUser))
             .verifyComplete()
@@ -126,15 +114,12 @@ class UserControllerTest {
 
     @Test
     fun `getCurrentUser should return 404 when user not found in database`() {
-        // Given
         val error = NoResultsFoundException("User not found")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(KEYCLOAK_USER_ID))
         whenever(userService.selectUserByKeycloakId(KEYCLOAK_USER_ID)).thenReturn(Mono.error(error))
 
-        // When
         val result = userController.getCurrentUser()
 
-        // Then
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
@@ -144,14 +129,11 @@ class UserControllerTest {
 
     @Test
     fun `getCurrentUser should propagate keycloak error`() {
-        // Given
         val error = RuntimeException("Keycloak error")
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.error(error))
 
-        // When
         val result = userController.getCurrentUser()
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()

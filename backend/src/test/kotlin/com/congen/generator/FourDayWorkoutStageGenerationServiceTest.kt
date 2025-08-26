@@ -80,7 +80,6 @@ class FourDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should generate stages for ME Upper day type`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "ME_Upper"
         val userExercisePool = mock<UserExercisePool>()
@@ -122,7 +121,6 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
 
-        // When
         val result =
             fourDayService.generateWorkoutStages(
                 workout = workout,
@@ -135,7 +133,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -151,7 +148,6 @@ class FourDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should generate stages for DE Lower day type`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "DE_Lower"
         val userExercisePool = mock<UserExercisePool>()
@@ -192,7 +188,6 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
 
-        // When
         val result =
             fourDayService.generateWorkoutStages(
                 workout = workout,
@@ -205,7 +200,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -221,7 +215,6 @@ class FourDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should handle exercise selection failure gracefully`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "ME_Upper"
         val userExercisePool = mock<UserExercisePool>()
@@ -242,7 +235,6 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
 
-        // When
         val result =
             fourDayService.generateWorkoutStages(
                 workout = workout,
@@ -255,14 +247,12 @@ class FourDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
     }
 
     @Test
     fun `should handle unknown day type with default workout type`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "Unknown_Day"
         val userExercisePool = mock<UserExercisePool>()
@@ -303,7 +293,6 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
 
-        // When
         val result =
             fourDayService.generateWorkoutStages(
                 workout = workout,
@@ -316,7 +305,6 @@ class FourDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 

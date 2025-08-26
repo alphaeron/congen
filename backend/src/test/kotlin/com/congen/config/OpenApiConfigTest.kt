@@ -33,20 +33,16 @@ class OpenApiConfigTest {
 
     @Test
     fun `should create OpenAPI bean`() {
-        // When
         val openAPI = openApiConfig.openAPI()
 
-        // Then
         assertNotNull(openAPI)
     }
 
     @Test
     fun `should configure API info correctly`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val info = openAPI.info
 
-        // Then
         assertNotNull(info)
         assertEquals("Congen API", info.title)
         assertEquals("1.0.0", info.version)
@@ -65,11 +61,9 @@ class OpenApiConfigTest {
 
     @Test
     fun `should configure contact information correctly`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val contact = openAPI.info.contact
 
-        // Then
         assertNotNull(contact)
         assertEquals("Congen Development Team", contact.name)
         assertEquals("support@congen.com", contact.email)
@@ -78,11 +72,9 @@ class OpenApiConfigTest {
 
     @Test
     fun `should configure license information correctly`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val license = openAPI.info.license
 
-        // Then
         assertNotNull(license)
         assertEquals("MIT License", license.name)
         assertEquals("https://opensource.org/licenses/MIT", license.url)
@@ -90,11 +82,9 @@ class OpenApiConfigTest {
 
     @Test
     fun `should configure servers correctly`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val servers = openAPI.servers
 
-        // Then
         assertNotNull(servers)
         assertEquals(2, servers.size)
 
@@ -109,7 +99,6 @@ class OpenApiConfigTest {
 
     @Test
     fun `should handle different server ports`() {
-        // Given
         val openApiProps =
             OpenApiProperties(
                 serverPort = "9090",
@@ -117,21 +106,17 @@ class OpenApiConfigTest {
             )
         val configWithDifferentPort = OpenApiConfig(openApiProps)
 
-        // When
         val openAPI = configWithDifferentPort.openAPI()
         val servers = openAPI.servers
 
-        // Then
         assertEquals("http://localhost:9090/api/v1", servers[0].url)
     }
 
     @Test
     fun `should include all required API documentation sections`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val description = openAPI.info.description
 
-        // Then
         assertNotNull(description)
         assert(description!!.contains("## Key Features"))
         assert(description.contains("## Authentication"))
@@ -142,22 +127,18 @@ class OpenApiConfigTest {
 
     @Test
     fun `should include validation rules in description`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val description = openAPI.info.description
 
-        // Then
         assertNotNull(description)
         assert(description!!.contains("Program days per week: 2, 3, or 4 days"))
     }
 
     @Test
     fun `should include feature descriptions in API info`() {
-        // When
         val openAPI = openApiConfig.openAPI()
         val description = openAPI.info.description
 
-        // Then
         assertNotNull(description)
         assert(description!!.contains("User Management"))
         assert(description.contains("Exercise Library"))

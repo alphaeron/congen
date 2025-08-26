@@ -188,7 +188,6 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then get the set scheme by id
         webTestClient.get()
             .uri("/api/v1/set_scheme/${setSchemeResponse.id}")
             .header("Authorization", "Bearer $userToken")
@@ -238,7 +237,6 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
 
-        // Then get all set schemes for the exercise
         webTestClient.get()
             .uri("/api/v1/set_scheme/exercise/$programmedExerciseId")
             .header("Authorization", "Bearer $userToken")
@@ -292,7 +290,6 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then update the set scheme
         val updateUri =
             "/api/v1/set_scheme/${setSchemeResponse.id}?programmed_exercise_id=$programmedExerciseId&" +
                 "set_number=1&was_set_performed=true&is_amrap=false&is_emom=false&use_tempo=false&" +
@@ -325,7 +322,6 @@ class SetSchemeIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then delete the set scheme
         webTestClient.delete()
             .uri("/api/v1/set_scheme/${setSchemeResponse.id}")
             .header("Authorization", "Bearer $userToken")

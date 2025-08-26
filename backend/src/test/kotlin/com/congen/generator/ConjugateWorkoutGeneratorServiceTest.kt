@@ -69,7 +69,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should generate workouts successfully`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -103,10 +102,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(PROGRAM_ID, "Conjugate Powerlifting - Week 2", 2, true)).thenReturn(Mono.just(program))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
@@ -121,7 +118,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle empty weak muscles`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -150,10 +146,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
@@ -161,13 +155,10 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle program not found`() {
-        // Given
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.error(RuntimeException("Program not found")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -175,16 +166,13 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle one rep max DAL error`() {
-        // Given
         val program = createSampleProgram()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -192,7 +180,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle program preferences DAL error`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
 
@@ -200,10 +187,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -211,7 +196,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle weak muscles DAL error`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -221,10 +205,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -232,7 +214,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle exercise pool factory error`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -246,10 +227,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Pool creation error")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -257,7 +236,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle workout stage generation error`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -285,10 +263,8 @@ class ConjugateWorkoutGeneratorServiceTest {
             )
         ).thenReturn(Mono.error(RuntimeException("Stage generation error")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -296,7 +272,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle program update error`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -325,10 +300,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.error(RuntimeException("Update error")))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -336,7 +309,6 @@ class ConjugateWorkoutGeneratorServiceTest {
 
     @Test
     fun `generateNextWeek should handle different program days per week`() {
-        // Given
         val program = createSampleProgram()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences().copy(programDaysPerWeek = 3)
@@ -365,10 +337,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
 
-        // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()

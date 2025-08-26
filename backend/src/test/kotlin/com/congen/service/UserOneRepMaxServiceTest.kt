@@ -86,38 +86,31 @@ class UserOneRepMaxServiceTest {
 
     @Test
     fun `upsertOneRepMax stores value in kg when unit is kg`() {
-        // Given
         val weight = BigDecimal("100.0")
         whenever(unitConverter.toKg(weight, WeightUnit.KG)).thenReturn(weight)
         whenever(userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weight)).thenReturn(createMockMono(oneRepMax))
 
-        // When
         val result = service.upsertUserOneRepMax(userId, exerciseName, weight, "kg")
 
-        // Then
         assertMonoSuccess(result, oneRepMax)
         verify(userOneRepMaxDAL).upsertUserOneRepMax(userId, exerciseName, weight)
     }
 
     @Test
     fun `upsertOneRepMax converts lbs to kg for storage`() {
-        // Given
         val weightInLbs = BigDecimal("220.46")
         val weightInKg = BigDecimal("100.0")
         whenever(unitConverter.toKg(weightInLbs, WeightUnit.LBS)).thenReturn(weightInKg)
         whenever(userOneRepMaxDAL.upsertUserOneRepMax(userId, exerciseName, weightInKg)).thenReturn(createMockMono(oneRepMax))
 
-        // When
         val result = service.upsertUserOneRepMax(userId, exerciseName, weightInLbs, "lbs")
 
-        // Then
         assertMonoSuccess(result, oneRepMax)
         verify(userOneRepMaxDAL).upsertUserOneRepMax(userId, exerciseName, weightInKg)
     }
 
     @Test
     fun `getAllByUser returns converted values using preferences`() {
-        // Given
         val oneRepMaxes = createUserOneRepMaxTestData()
         val preferences = createWeightUnitPreferenceTestData()
         val convertedWeight1 = BigDecimal("220.46")
@@ -130,10 +123,8 @@ class UserOneRepMaxServiceTest {
         whenever(unitConverter.fromKg(eq(oneRepMaxes[1].oneRepMax), eq(WeightUnit.KG))).thenReturn(convertedWeight2)
         whenever(unitConverter.fromKg(eq(oneRepMaxes[2].oneRepMax), eq(WeightUnit.LBS))).thenReturn(convertedWeight3)
 
-        // When
         val result = service.selectUserOneRepMaxByUser(userId, null)
 
-        // Then
         StepVerifier.create(result)
             .assertNext { list ->
                 assert(list.size == 3)
@@ -146,7 +137,6 @@ class UserOneRepMaxServiceTest {
 
     @Test
     fun `getByUserAndExercise returns converted value using preference`() {
-        // Given
         val preference = mockUserWeightUnitPreference(userId = userId, exerciseName = exerciseName)
         val convertedWeight = BigDecimal("220.46")
 
@@ -154,10 +144,8 @@ class UserOneRepMaxServiceTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)).thenReturn(createMockMono(preference))
         whenever(unitConverter.fromKg(oneRepMax.oneRepMax, WeightUnit.LBS)).thenReturn(convertedWeight)
 
-        // When
         val result = service.selectUserOneRepMax(userId, exerciseName, null)
 
-        // Then
         StepVerifier.create(result)
             .assertNext { userOneRepMax ->
                 assert(userOneRepMax.oneRepMax == convertedWeight)
@@ -167,24 +155,19 @@ class UserOneRepMaxServiceTest {
 
     @Test
     fun `deleteOneRepMax returns deleted value`() {
-        // Given
         whenever(userOneRepMaxDAL.deleteUserOneRepMax(userId, exerciseName)).thenReturn(createMockMono(oneRepMax))
 
-        // When
         val result = service.deleteUserOneRepMax(userId, exerciseName)
 
-        // Then
         assertMonoSuccess(result, oneRepMax)
     }
 
     @Test
     fun `getByUserAndExercise returns error if not found`() {
-        // Given
         whenever(userOneRepMaxDAL.selectUserOneRepMax(userId, exerciseName)).thenReturn(
             createMockMonoError(NoResultsFoundException("not found"))
         )
 
-        // When & Then
         assertMonoError(
             service.selectUserOneRepMax(userId, exerciseName, null),
             NoResultsFoundException::class.java

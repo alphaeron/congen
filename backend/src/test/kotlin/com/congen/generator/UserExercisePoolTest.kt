@@ -43,12 +43,10 @@ class UserExercisePoolTest {
 
     @Test
     fun `should initialize with all exercises when no preferences exist`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        // When
         userExercisePool =
             UserExercisePool(
                 allExercises = exercises,
@@ -57,7 +55,6 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // Then
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
         assertEquals(3, userExercisePool.getAvailableExercises().size)
         assertEquals(3, userExercisePool.getAvailablePrimaryExercises().size)
@@ -66,7 +63,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `should filter out exercises that user wants to avoid`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences =
@@ -79,7 +75,6 @@ class UserExercisePoolTest {
                 )
             )
 
-        // When
         userExercisePool =
             UserExercisePool(
                 allExercises = exercises,
@@ -88,7 +83,6 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // Then
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
         assertFalse(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
         assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Squat" })
@@ -97,7 +91,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `should include exercises that user prefers`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences =
@@ -110,7 +103,6 @@ class UserExercisePoolTest {
                 )
             )
 
-        // When
         userExercisePool =
             UserExercisePool(
                 allExercises = exercises,
@@ -119,14 +111,12 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // Then
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
         assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
     }
 
     @Test
     fun `should handle mixed preferences correctly`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences =
@@ -145,7 +135,6 @@ class UserExercisePoolTest {
                 )
             )
 
-        // When
         userExercisePool =
             UserExercisePool(
                 allExercises = exercises,
@@ -154,7 +143,6 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // Then
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
         assertFalse(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
         assertTrue(userExercisePool.getAvailableExercises().any { it.name == "Squat" })
@@ -163,12 +151,10 @@ class UserExercisePoolTest {
 
     @Test
     fun `should correctly separate primary and accessory exercises`() {
-        // Given
         val exercises = createSampleExercisesWithAccessories()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        // When
         userExercisePool =
             UserExercisePool(
                 allExercises = exercises,
@@ -177,7 +163,6 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // Then
         assertEquals(5, userExercisePool.getAvailableExerciseCount())
         assertEquals(3, userExercisePool.getAvailablePrimaryExercises().size)
         assertEquals(2, userExercisePool.getAvailableAccessoryExercises().size)
@@ -185,7 +170,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `markExerciseAsUsed should remove exercise from available pool`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -198,10 +182,8 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // When
         val result = userExercisePool.markExerciseAsUsed("Bench Press")
 
-        // Then
         assertTrue(result)
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
         assertFalse(userExercisePool.getAvailableExercises().any { it.name == "Bench Press" })
@@ -209,7 +191,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `markExerciseAsUsed should return false for already used exercise`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -222,11 +203,9 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // When
         val firstResult = userExercisePool.markExerciseAsUsed("Bench Press")
         val secondResult = userExercisePool.markExerciseAsUsed("Bench Press")
 
-        // Then
         assertTrue(firstResult)
         assertFalse(secondResult)
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
@@ -234,7 +213,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `markExerciseAsUsed should return false for non-existent exercise`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -247,17 +225,14 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // When
         val result = userExercisePool.markExerciseAsUsed("Non-existent Exercise")
 
-        // Then
         assertFalse(result)
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
     }
 
     @Test
     fun `filterExercisesByEquipment should return empty list for empty exercises`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -270,10 +245,8 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // When
         val result = userExercisePool.filterExercisesByEquipment(emptyList())
 
-        // Then
         StepVerifier.create(result)
             .expectNext(emptyList<Exercise>())
             .verifyComplete()
@@ -281,7 +254,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByEquipment should filter exercises based on user equipment`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -303,10 +275,8 @@ class UserExercisePoolTest {
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseEquipment))
 
-        // When
         val result = userExercisePool.filterExercisesByEquipment(listOf(exercises[0]))
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()
@@ -314,7 +284,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByEquipment should return all exercises when no equipment matches`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -335,10 +304,8 @@ class UserExercisePoolTest {
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseEquipment))
 
-        // When
         val result = userExercisePool.filterExercisesByEquipment(listOf(exercises[0]))
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()
@@ -346,7 +313,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByEquipment should handle DAL errors gracefully`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -362,10 +328,8 @@ class UserExercisePoolTest {
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = userExercisePool.filterExercisesByEquipment(listOf(exercises[0]))
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()
@@ -373,7 +337,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByMuscles should return all exercises when no target muscles specified`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -386,10 +349,8 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // When
         val result = userExercisePool.filterExercisesByMuscles(exercises, emptyList(), exerciseMuscleDAL)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(exercises)
             .verifyComplete()
@@ -397,7 +358,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByMuscles should return all exercises when exercises list is empty`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -410,10 +370,8 @@ class UserExercisePoolTest {
                 exerciseEquipmentDAL = exerciseEquipmentDAL
             )
 
-        // When
         val result = userExercisePool.filterExercisesByMuscles(emptyList(), listOf("Chest"), exerciseMuscleDAL)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(emptyList<Exercise>())
             .verifyComplete()
@@ -421,7 +379,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByMuscles should filter exercises based on target muscles`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -442,10 +399,8 @@ class UserExercisePoolTest {
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseMuscles))
 
-        // When
         val result = userExercisePool.filterExercisesByMuscles(listOf(exercises[0]), listOf("Chest"), exerciseMuscleDAL)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()
@@ -453,7 +408,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `filterExercisesByMuscles should handle DAL errors gracefully`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -469,10 +423,8 @@ class UserExercisePoolTest {
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
             .thenReturn(Mono.error(RuntimeException("Database error")))
 
-        // When
         val result = userExercisePool.filterExercisesByMuscles(listOf(exercises[0]), listOf("Chest"), exerciseMuscleDAL)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()
@@ -480,7 +432,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `should handle case insensitive equipment matching`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment =
             listOf(
@@ -506,10 +457,8 @@ class UserExercisePoolTest {
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseEquipment))
 
-        // When
         val result = userExercisePool.filterExercisesByEquipment(listOf(exercises[0]))
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()
@@ -517,7 +466,6 @@ class UserExercisePoolTest {
 
     @Test
     fun `should handle case insensitive muscle matching`() {
-        // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
@@ -538,10 +486,8 @@ class UserExercisePoolTest {
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseMuscles))
 
-        // When
         val result = userExercisePool.filterExercisesByMuscles(listOf(exercises[0]), listOf("CHEST"), exerciseMuscleDAL)
 
-        // Then
         StepVerifier.create(result)
             .expectNext(listOf(exercises[0]))
             .verifyComplete()

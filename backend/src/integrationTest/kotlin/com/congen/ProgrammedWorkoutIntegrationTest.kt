@@ -73,7 +73,6 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then get the workout by id
         webTestClient.get()
             .uri("/api/v1/programmed_workout/${workoutResponse.id}")
             .header("Authorization", "Bearer $token")
@@ -116,7 +115,6 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
             token = token
         )
 
-        // Then get all workouts for the program
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/$programId")
             .header("Authorization", "Bearer $token")
@@ -187,7 +185,6 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then update the workout
         webTestClient.patch()
             .uri("/api/v1/programmed_workout/${workoutResponse.id}?program_id=$programId&day_number=15&name=Updated Workout")
             .header("Authorization", "Bearer $token")
@@ -219,7 +216,6 @@ class ProgrammedWorkoutIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then delete the workout
         webTestClient.delete()
             .uri("/api/v1/programmed_workout/${workoutResponse.id}")
             .header("Authorization", "Bearer $token")

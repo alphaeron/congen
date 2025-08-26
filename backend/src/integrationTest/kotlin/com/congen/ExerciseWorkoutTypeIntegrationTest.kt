@@ -25,7 +25,6 @@ class ExerciseWorkoutTypeIntegrationTest : BaseIntegrationTest() {
             .exchange()
             .expectStatus().isOk()
 
-        // Then create the exercise-workout-type relationship
         webTestClient.post()
             .uri("/api/v1/exercise_workout_type/?exercise_name=$uniqueExercise&movement_type=horizontal_push&workout_type=dynamic_effort")
             .header("Authorization", "Bearer $token")

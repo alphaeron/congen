@@ -52,14 +52,7 @@ class DALCachingAspectTest {
     }
 
     @Test
-    fun `should create aspect successfully`() {
-        // Given & When & Then
-        assert(dalCachingAspect != null)
-    }
-
-    @Test
     fun `should handle cache miss gracefully with reactive result`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -82,14 +75,12 @@ class DALCachingAspectTest {
         Mockito.`when`(reactiveCache.set(cacheKey, exercise, Duration.ofHours(24)))
             .thenReturn(Mono.just(true))
 
-        // When
         val result =
             dalCachingAspect.cacheMethod(
                 createJoinPoint(exerciseName, exercise, method),
                 createCacheableAnnotation()
             )
 
-        // Then
         assert(result != null)
         StepVerifier.create(result as Mono<*>)
             .expectNext(exercise)
@@ -101,7 +92,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache miss gracefully with non-reactive result`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -124,14 +114,12 @@ class DALCachingAspectTest {
         Mockito.`when`(reactiveCache.set(cacheKey, exercise, Duration.ofHours(24)))
             .thenReturn(Mono.just(true))
 
-        // When
         val result =
             dalCachingAspect.cacheMethod(
                 createJoinPointNonReactive(exerciseName, exercise, method),
                 createCacheableAnnotation()
             )
 
-        // Then
         assert(result != null)
         assert(result == exercise)
 
@@ -141,7 +129,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle null result gracefully`() {
-        // Given
         val exerciseName = "non-existent"
         val cacheKey = "exercise:byName:non-existent"
         val method = createMockMethod()
@@ -150,14 +137,12 @@ class DALCachingAspectTest {
         Mockito.`when`(cacheKeyGenerator.generateKey(method, arrayOf(exerciseName), createCacheableAnnotation()))
             .thenReturn(cacheKey)
 
-        // When
         val result =
             dalCachingAspect.cacheMethod(
                 createJoinPointWithNull(exerciseName, method),
                 createCacheableAnnotation()
             )
 
-        // Then
         assert(result != null)
         StepVerifier.create(result as Mono<*>)
             .expectComplete()
@@ -168,7 +153,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache set failure gracefully`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -191,14 +175,12 @@ class DALCachingAspectTest {
         Mockito.`when`(reactiveCache.set(cacheKey, exercise, Duration.ofHours(24)))
             .thenReturn(Mono.just(false))
 
-        // When
         val result =
             dalCachingAspect.cacheMethod(
                 createJoinPoint(exerciseName, exercise, method),
                 createCacheableAnnotation()
             )
 
-        // Then
         assert(result != null)
         StepVerifier.create(result as Mono<*>)
             .expectNext(exercise)
@@ -210,7 +192,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache set error gracefully`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -233,14 +214,12 @@ class DALCachingAspectTest {
         Mockito.`when`(reactiveCache.set(cacheKey, exercise, Duration.ofHours(24)))
             .thenReturn(Mono.error(RuntimeException("Cache error")))
 
-        // When
         val result =
             dalCachingAspect.cacheMethod(
                 createJoinPoint(exerciseName, exercise, method),
                 createCacheableAnnotation()
             )
 
-        // Then
         assert(result != null)
         StepVerifier.create(result as Mono<*>)
             .expectNext(exercise)
@@ -252,7 +231,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle method execution error`() {
-        // Given
         val exerciseName = "bench-press"
         val cacheKey = "exercise:byName:bench-press"
         val method = createMockMethod()
@@ -261,7 +239,6 @@ class DALCachingAspectTest {
         Mockito.`when`(cacheKeyGenerator.generateKey(method, arrayOf(exerciseName), createCacheableAnnotation()))
             .thenReturn(cacheKey)
 
-        // When & Then
         val exception =
             assertThrows<RuntimeException> {
                 dalCachingAspect.cacheMethod(
@@ -277,7 +254,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle different TTL values`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -301,14 +277,12 @@ class DALCachingAspectTest {
         Mockito.`when`(reactiveCache.set(cacheKey, exercise, Duration.ofMinutes(30)))
             .thenReturn(Mono.just(true))
 
-        // When
         val result =
             dalCachingAspect.cacheMethod(
                 createJoinPoint(exerciseName, exercise, method),
                 shortTtlAnnotation
             )
 
-        // Then
         assert(result != null)
         StepVerifier.create(result as Mono<*>)
             .expectNext(exercise)
@@ -320,7 +294,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache eviction successfully`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -345,14 +318,12 @@ class DALCachingAspectTest {
         )
             .thenReturn(invalidationKeys)
 
-        // When
         val result =
             dalCachingAspect.evictCache(
                 createJoinPointForEviction(exerciseName, exercise, method),
                 createCacheEvictAnnotation()
             )
 
-        // Then
         assert(result != null)
         assert(result == exercise)
 
@@ -362,7 +333,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache eviction with multiple keys`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -391,14 +361,12 @@ class DALCachingAspectTest {
         )
             .thenReturn(invalidationKeys)
 
-        // When
         val result =
             dalCachingAspect.evictCache(
                 createJoinPointForEviction(exerciseName, exercise, method),
                 createCacheEvictAnnotation()
             )
 
-        // Then
         assert(result != null)
         assert(result == exercise)
 
@@ -410,7 +378,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache eviction with pattern keys`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -431,14 +398,12 @@ class DALCachingAspectTest {
         )
             .thenReturn(invalidationKeys)
 
-        // When
         val result =
             dalCachingAspect.evictCache(
                 createJoinPointForEviction(exerciseName, exercise, method),
                 createCacheEvictAnnotation()
             )
 
-        // Then
         assert(result != null)
         assert(result == exercise)
 
@@ -449,7 +414,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache eviction error gracefully`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -474,14 +438,12 @@ class DALCachingAspectTest {
         )
             .thenReturn(invalidationKeys)
 
-        // When
         val result =
             dalCachingAspect.evictCache(
                 createJoinPointForEviction(exerciseName, exercise, method),
                 createCacheEvictAnnotation()
             )
 
-        // Then
         assert(result != null)
         assert(result == exercise)
 
@@ -491,7 +453,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should handle cache eviction with method execution error`() {
-        // Given
         val exerciseName = "bench-press"
         val invalidationKeys = listOf("exercise:byName:bench-press")
         val method = createMockMethod()
@@ -502,7 +463,6 @@ class DALCachingAspectTest {
         )
             .thenReturn(invalidationKeys)
 
-        // When & Then
         val exception =
             assertThrows<RuntimeException> {
                 dalCachingAspect.evictCache(
@@ -518,7 +478,6 @@ class DALCachingAspectTest {
 
     @Test
     fun `should extract entity name from annotation`() {
-        // Given
         val exerciseName = "bench-press"
         val exercise =
             Exercise(
@@ -548,14 +507,12 @@ class DALCachingAspectTest {
         Mockito.`when`(reactiveCache.delete("custom:byName:bench-press"))
             .thenReturn(Mono.just(true))
 
-        // When
         val result =
             dalCachingAspect.evictCache(
                 createJoinPointForEviction(exerciseName, exercise, method),
                 customCacheEvict
             )
 
-        // Then
         assert(result != null)
         assert(result == exercise)
 

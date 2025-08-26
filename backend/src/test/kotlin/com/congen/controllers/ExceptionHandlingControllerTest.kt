@@ -16,7 +16,6 @@ class ExceptionHandlingControllerTest {
 
     @Test
     fun `conflict method should handle InvalidResultException`() {
-        // When & Then
         // The method should not throw any exception
         exceptionHandlingController.conflict()
 
@@ -27,41 +26,33 @@ class ExceptionHandlingControllerTest {
 
     @Test
     fun `conflict method should be accessible`() {
-        // When & Then
         // This test verifies that the method is public and accessible
         exceptionHandlingController.conflict()
     }
 
     @Test
     fun `handleNoResultsFound should return 404 status`() {
-        // Given
         val exception = NoResultsFoundException("Resource not found")
 
-        // When
         val response = exceptionHandlingController.handleNoResultsFound(exception)
 
-        // Then
         assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
         assertEquals("Resource not found", response.body!!["error"])
     }
 
     @Test
     fun `handleValidationException should return 422 status with error message`() {
-        // Given
         val errorMessage = "Name must be between 1 and 255 characters, got: 0"
         val exception = ValidationException(errorMessage)
 
-        // When
         val response = exceptionHandlingController.handleValidationException(exception)
 
-        // Then
         assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.statusCode)
         assertEquals(errorMessage, response.body!!["error"])
     }
 
     @Test
     fun `handleValidationException should be accessible`() {
-        // When & Then
         // This test verifies that the method is public and accessible
         val exception = ValidationException("Test validation error")
         exceptionHandlingController.handleValidationException(exception)

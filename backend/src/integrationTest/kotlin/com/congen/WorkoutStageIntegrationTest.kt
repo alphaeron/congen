@@ -25,7 +25,6 @@ class WorkoutStageIntegrationTest : BaseIntegrationTest() {
         val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-        // Then create a program for that user with user token
         val unique = System.nanoTime()
         val response =
             webTestClient.post()

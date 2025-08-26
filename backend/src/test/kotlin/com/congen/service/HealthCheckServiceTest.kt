@@ -43,17 +43,13 @@ class HealthCheckServiceTest {
 
     @Test
     fun `performHealthCheck should include all required health check components`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
-
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 response.version == "1.0.0" &&
@@ -70,17 +66,13 @@ class HealthCheckServiceTest {
 
     @Test
     fun `database health check should include response time when successful`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
-
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 val dbCheck = response.checks["database"]?.first()
@@ -96,17 +88,14 @@ class HealthCheckServiceTest {
 
     @Test
     fun `database health check should include error message when failed`() {
-        // Given
         val errorMessage = "Connection timeout"
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.error(DatabaseException(errorMessage)))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 val dbCheck = response.checks["database"]?.first()
@@ -119,17 +108,14 @@ class HealthCheckServiceTest {
 
     @Test
     fun `keycloak health check should include response time when successful`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 val keycloakCheck = response.checks["keycloak"]?.first()
@@ -145,7 +131,6 @@ class HealthCheckServiceTest {
 
     @Test
     fun `keycloak health check should include error message when failed`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
@@ -153,10 +138,8 @@ class HealthCheckServiceTest {
         val errorMessage = "Connection refused"
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.error(RuntimeException(errorMessage)))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 val keycloakCheck = response.checks["keycloak"]?.first()
@@ -169,7 +152,6 @@ class HealthCheckServiceTest {
 
     @Test
     fun `keycloak health check should handle WebClientResponseException`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
@@ -184,10 +166,8 @@ class HealthCheckServiceTest {
             )
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.error(webClientException))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 val keycloakCheck = response.checks["keycloak"]?.first()
@@ -200,16 +180,13 @@ class HealthCheckServiceTest {
 
     @Test
     fun `overall status should be FAIL when any component fails`() {
-        // Given
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.error(DatabaseException("Database error")))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 response.status == HealthStatus.FAIL
@@ -219,17 +196,14 @@ class HealthCheckServiceTest {
 
     @Test
     fun `overall status should be PASS when all components pass`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 response.status == HealthStatus.PASS
@@ -239,17 +213,14 @@ class HealthCheckServiceTest {
 
     @Test
     fun `application health check should always pass`() {
-        // Given
         val dbResult = listOf(mapOf("health_check" to 1))
         whenever(postgresClient.select<Map<String, Any>>("SELECT 1 as health_check"))
             .thenReturn(Mono.just(dbResult))
 
         whenever(keycloakClient.checkHealthLive()).thenReturn(Mono.just(ResponseEntity.ok().build<Void>()))
 
-        // When
         val result = healthCheckService.performHealthCheck()
 
-        // Then
         StepVerifier.create(result)
             .expectNextMatches { response ->
                 val appCheck = response.checks["application"]?.first()

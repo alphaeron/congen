@@ -60,7 +60,6 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then get the record by id
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/${response.id}")
             .header("Authorization", "Bearer $testToken")
@@ -93,7 +92,6 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
             token = testToken
         )
 
-        // Then get records for accessory exercises
         webTestClient.get()
             .uri("/api/v1/exercise_rotation_history/is_accessory/true")
             .header("Authorization", "Bearer $testToken")
@@ -145,7 +143,6 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then update the record
         webTestClient.patch()
             .uri("/api/v1/exercise_rotation_history/${response.id}?user_id=$testUserId&exercise_name=Bench Press&is_accessory=true")
             .header("Authorization", "Bearer $testToken")
@@ -169,7 +166,6 @@ class ExerciseRotationHistoryIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
 
-        // Then delete the record
         webTestClient.delete()
             .uri("/api/v1/exercise_rotation_history/${response.id}")
             .header("Authorization", "Bearer $testToken")

@@ -20,13 +20,10 @@ import org.junit.jupiter.api.Test
 class VersionConfigTest {
     @Test
     fun `should create VersionConfig with default values`() {
-        // Given
         val versionProperties = VersionProperties()
 
-        // When
         val versionConfig = VersionConfig(versionProperties)
 
-        // Then
         assertNotNull(versionConfig)
         // The actual version will be generated based on git info and timestamp
         // We can't predict the exact value, so we just verify it's not null/empty
@@ -42,14 +39,11 @@ class VersionConfigTest {
 
     @Test
     fun `should create multiple VersionConfig instances`() {
-        // Given
         val versionProperties = VersionProperties()
 
-        // When
         val versionConfig1 = VersionConfig(versionProperties)
         val versionConfig2 = VersionConfig(versionProperties)
 
-        // Then
         assertNotNull(versionConfig1)
         assertNotNull(versionConfig2)
         assertEquals(versionConfig1.version, versionConfig2.version)
@@ -62,13 +56,10 @@ class VersionConfigTest {
 
     @Test
     fun `should handle missing version properties file gracefully`() {
-        // Given
         val versionProperties = VersionProperties()
 
-        // When
         val versionConfig = VersionConfig(versionProperties)
 
-        // Then
         assertNotNull(versionConfig)
         // Even with missing properties file, it should still generate a version
         assertNotNull(versionConfig.version)
@@ -83,13 +74,10 @@ class VersionConfigTest {
 
     @Test
     fun `should have consistent default values`() {
-        // Given
         val versionProperties = VersionProperties()
 
-        // When
         val versionConfig = VersionConfig(versionProperties)
 
-        // Then
         // Verify all properties have expected default values
         assert(versionConfig.version.isNotEmpty())
         assert(versionConfig.releaseId.isNotEmpty())
@@ -101,13 +89,10 @@ class VersionConfigTest {
 
     @Test
     fun `should handle gitDirty property parsing`() {
-        // Given
         val versionProperties = VersionProperties()
 
-        // When
         val versionConfig = VersionConfig(versionProperties)
 
-        // Then
         // gitDirty should be a valid boolean value
         assert(versionConfig.gitDirty == true || versionConfig.gitDirty == false)
     }

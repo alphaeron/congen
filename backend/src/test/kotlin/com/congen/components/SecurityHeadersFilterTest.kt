@@ -38,7 +38,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should add basic security headers in all environments`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
         val request =
@@ -48,10 +47,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -64,7 +61,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should add production security headers when in production profile`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
         val request =
@@ -74,10 +70,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -97,7 +91,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should add development security headers when not in production`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "local")
 
         val request =
@@ -107,10 +100,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -130,7 +121,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should add development security headers when in staging profile`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "staging")
 
         val request =
@@ -140,10 +130,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -159,7 +147,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should add development security headers when in test profile`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
         val request =
@@ -169,10 +156,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -188,7 +173,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should use default profile when none specified`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "local")
 
         val request =
@@ -198,10 +182,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -217,7 +199,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should handle POST request with security headers`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
         val request =
@@ -227,10 +208,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -243,7 +222,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should handle PUT request with security headers`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
         val request =
@@ -253,10 +231,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -267,7 +243,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should handle DELETE request with security headers`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "production")
 
         val request =
@@ -277,10 +252,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 
@@ -295,7 +268,6 @@ class SecurityHeadersFilterTest {
 
     @Test
     fun `should handle OPTIONS request with security headers`() {
-        // Given
         securityHeadersFilter = SecurityHeadersFilter(activeProfile = "test")
 
         val request =
@@ -305,10 +277,8 @@ class SecurityHeadersFilterTest {
 
         val exchange = MockServerWebExchange.from(request)
 
-        // When
         val result = securityHeadersFilter.filter(exchange, webFilterChain)
 
-        // Then
         StepVerifier.create(result)
             .verifyComplete()
 

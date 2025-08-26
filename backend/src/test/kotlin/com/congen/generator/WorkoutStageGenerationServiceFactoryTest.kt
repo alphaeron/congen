@@ -34,34 +34,27 @@ class WorkoutStageGenerationServiceFactoryTest {
 
     @Test
     fun `getWorkoutStageGenerationService should return two day service for 2 days per week`() {
-        // When
         val result = factory.getWorkoutStageGenerationService(2)
 
-        // Then
         assertEquals(twoDayService, result)
     }
 
     @Test
     fun `getWorkoutStageGenerationService should return three day service for 3 days per week`() {
-        // When
         val result = factory.getWorkoutStageGenerationService(3)
 
-        // Then
         assertEquals(threeDayService, result)
     }
 
     @Test
     fun `getWorkoutStageGenerationService should return four day service for 4 days per week`() {
-        // When
         val result = factory.getWorkoutStageGenerationService(4)
 
-        // Then
         assertEquals(fourDayService, result)
     }
 
     @Test
     fun `getWorkoutStageGenerationService should throw exception for invalid number of days`() {
-        // When & Then
         assertThrows(IllegalArgumentException::class.java) {
             factory.getWorkoutStageGenerationService(1)
         }

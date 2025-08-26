@@ -105,7 +105,6 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
                 token = token
             )
 
-        // Then update it
         webTestClient.patch()
             .uri("/api/v1/program/$programId?name=Updated Program&current_week_number=3&is_active=false")
             .header("Authorization", "Bearer $token")

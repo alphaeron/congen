@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test
 class CachingComponentsTest {
     @Test
     fun `should create cacheable annotation with all parameters`() {
-        // Given & When
         val cacheable =
             Cacheable(
                 ttl = CacheTTL.LONG_TERM,
@@ -27,7 +26,6 @@ class CachingComponentsTest {
                 entityName = "exercise"
             )
 
-        // Then
         assertEquals(CacheTTL.LONG_TERM, cacheable.ttl)
         assertEquals(CacheKeyStrategy.ENTITY_BY_NAME, cacheable.keyStrategy)
         assertEquals(CacheInvalidationStrategy.STANDARD, cacheable.invalidationStrategy)
@@ -36,21 +34,18 @@ class CachingComponentsTest {
 
     @Test
     fun `should create cache evict annotation with parameters`() {
-        // Given & When
         val cacheEvict =
             CacheEvict(
                 invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
                 entityName = "user"
             )
 
-        // Then
         assertEquals(CacheInvalidationStrategy.USER_DATA, cacheEvict.invalidationStrategy)
         assertEquals("user", cacheEvict.entityName)
     }
 
     @Test
     fun `should have correct TTL durations`() {
-        // Then
         assertEquals(24 * 60 * 60, CacheTTL.LONG_TERM.duration.seconds)
         assertEquals(60 * 60, CacheTTL.MEDIUM_TERM.duration.seconds)
         assertEquals(30 * 60, CacheTTL.SHORT_TERM.duration.seconds)
@@ -60,7 +55,6 @@ class CachingComponentsTest {
 
     @Test
     fun `should have all key strategies defined`() {
-        // Then
         assertNotNull(CacheKeyStrategy.STANDARD)
         assertNotNull(CacheKeyStrategy.ENTITY_BY_NAME)
         assertNotNull(CacheKeyStrategy.USER_SPECIFIC)
@@ -70,7 +64,6 @@ class CachingComponentsTest {
 
     @Test
     fun `should have all invalidation strategies defined`() {
-        // Then
         assertNotNull(CacheInvalidationStrategy.STANDARD)
         assertNotNull(CacheInvalidationStrategy.ENTITY_BY_NAME)
         assertNotNull(CacheInvalidationStrategy.USER_DATA)

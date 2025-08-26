@@ -93,7 +93,6 @@ class UserKeycloakIntegrationTest : BaseIntegrationTest() {
                 token = token
             )
 
-        // Then get user profile using /me endpoint
         webTestClient.get()
             .uri("/api/v1/user/me")
             .header("Authorization", "Bearer $token")

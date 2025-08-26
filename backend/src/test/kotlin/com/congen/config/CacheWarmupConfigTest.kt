@@ -22,14 +22,12 @@ import kotlin.test.assertTrue
 class CacheWarmupConfigTest {
     @Test
     fun `should load default configuration properties correctly`() {
-        // Given
         val context = AnnotationConfigApplicationContext()
         context.register(CacheWarmupConfigTest::class.java)
         context.refresh()
 
         val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
 
-        // Then
         assertTrue(cacheWarmupConfig.enabled)
         assertTrue(cacheWarmupConfig.warmupReferenceData)
         assertTrue(cacheWarmupConfig.warmupLists)
@@ -66,7 +64,6 @@ class CacheWarmupConfigTest {
 class CacheWarmupConfigDisabledTest {
     @Test
     fun `should load disabled configuration properties correctly`() {
-        // Given
         val context = AnnotationConfigApplicationContext()
         context.register(CacheWarmupConfigDisabledTest::class.java)
 
@@ -88,7 +85,6 @@ class CacheWarmupConfigDisabledTest {
 
         val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
 
-        // Then
         assertFalse(cacheWarmupConfig.enabled)
         assertFalse(cacheWarmupConfig.warmupReferenceData)
         assertFalse(cacheWarmupConfig.warmupLists)
@@ -112,14 +108,12 @@ class CacheWarmupConfigDisabledTest {
 class CacheWarmupConfigDefaultTest {
     @Test
     fun `should use default values when no properties specified`() {
-        // Given
         val context = AnnotationConfigApplicationContext()
         context.register(CacheWarmupConfigDefaultTest::class.java)
         context.refresh()
 
         val cacheWarmupConfig = context.getBean(CacheWarmupConfig::class.java)
 
-        // Then
         assertTrue(cacheWarmupConfig.enabled)
         assertTrue(cacheWarmupConfig.warmupReferenceData)
         assertTrue(cacheWarmupConfig.warmupLists)

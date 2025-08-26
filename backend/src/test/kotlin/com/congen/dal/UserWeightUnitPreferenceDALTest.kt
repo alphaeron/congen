@@ -30,7 +30,6 @@ class UserWeightUnitPreferenceDALTest {
 
     @Test
     fun `upsertUserWeightUnitPreference should insert new preference when it does not exist`() {
-        // Given
         val preference = mockUserWeightUnitPreference()
 
         whenever(
@@ -43,7 +42,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(
                 preference.userId,
@@ -51,7 +49,6 @@ class UserWeightUnitPreferenceDALTest {
                 preference.preferredUnit
             )
 
-        // Then
         assertMonoSuccess(result, preference)
         verify(postgresClient).update<UserWeightUnitPreference>(
             any<String>(),
@@ -64,7 +61,6 @@ class UserWeightUnitPreferenceDALTest {
 
     @Test
     fun `upsertUserWeightUnitPreference should update existing preference when it exists`() {
-        // Given
         val preference = mockUserWeightUnitPreference(preferredUnit = WeightUnit.KG)
 
         whenever(
@@ -77,7 +73,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(
                 preference.userId,
@@ -85,13 +80,11 @@ class UserWeightUnitPreferenceDALTest {
                 preference.preferredUnit
             )
 
-        // Then
         assertMonoSuccess(result, preference)
     }
 
     @Test
     fun `upsertUserWeightUnitPreference should handle database errors`() {
-        // Given
         val preference = mockUserWeightUnitPreference()
 
         whenever(
@@ -104,7 +97,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMonoError(DatabaseException("Database error")))
 
-        // When & Then
         assertMonoError(
             userWeightUnitPreferenceDAL.upsertUserWeightUnitPreference(
                 preference.userId,
@@ -117,7 +109,6 @@ class UserWeightUnitPreferenceDALTest {
 
     @Test
     fun `selectUserWeightUnitPreference should return preference when found`() {
-        // Given
         val preference = mockUserWeightUnitPreference()
 
         whenever(
@@ -129,20 +120,17 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(
                 preference.userId,
                 preference.exerciseName
             )
 
-        // Then
         assertMonoSuccess(result, preference)
     }
 
     @Test
     fun `selectUserWeightUnitPreference should throw NoResultsFoundException when not found`() {
-        // Given
         val userId = "test-keycloak-user-id"
         val exerciseName = "NonExistentExercise"
 
@@ -155,7 +143,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMonoError(NoResultsFoundException("No results returned from query")))
 
-        // When & Then
         assertMonoError(
             userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName),
             NoResultsFoundException::class.java
@@ -164,7 +151,6 @@ class UserWeightUnitPreferenceDALTest {
 
     @Test
     fun `selectUserWeightUnitPreferencesByUser should return all preferences for user`() {
-        // Given
         val userId = "test-keycloak-user-id"
         val preferences =
             listOf(
@@ -180,16 +166,13 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preferences))
 
-        // When
         val result = userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
 
-        // Then
         assertMonoSuccess(result, preferences)
     }
 
     @Test
     fun `selectUserWeightUnitPreferencesByUser should return empty list when no preferences exist`() {
-        // Given
         val userId = "test-keycloak-user-id"
 
         whenever(
@@ -200,16 +183,13 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(emptyList()))
 
-        // When
         val result = userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
 
-        // Then
         assertMonoSuccess(result, emptyList())
     }
 
     @Test
     fun `deleteUserWeightUnitPreference should delete preference successfully`() {
-        // Given
         val preference = mockUserWeightUnitPreference()
 
         whenever(
@@ -221,14 +201,12 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceDAL.deleteUserWeightUnitPreference(
                 preference.userId,
                 preference.exerciseName
             )
 
-        // Then
         assertMonoSuccess(result, preference)
         verify(postgresClient).update<UserWeightUnitPreference>(
             any<String>(),
@@ -240,7 +218,6 @@ class UserWeightUnitPreferenceDALTest {
 
     @Test
     fun `deleteUserWeightUnitPreference should handle database errors`() {
-        // Given
         val preference = mockUserWeightUnitPreference()
 
         whenever(
@@ -252,7 +229,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMonoError(DatabaseException("Database error")))
 
-        // When & Then
         assertMonoError(
             userWeightUnitPreferenceDAL.deleteUserWeightUnitPreference(
                 preference.userId,
@@ -264,7 +240,6 @@ class UserWeightUnitPreferenceDALTest {
 
     @Test
     fun `insertUserWeightUnitPreference should insert new preference successfully`() {
-        // Given
         val preference = mockUserWeightUnitPreference()
 
         whenever(
@@ -277,7 +252,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceDAL.insertUserWeightUnitPreference(
                 preference.userId,
@@ -285,13 +259,11 @@ class UserWeightUnitPreferenceDALTest {
                 preference.preferredUnit
             )
 
-        // Then
         assertMonoSuccess(result, preference)
     }
 
     @Test
     fun `updateUserWeightUnitPreference should update existing preference successfully`() {
-        // Given
         val preference = mockUserWeightUnitPreference(preferredUnit = WeightUnit.KG)
 
         whenever(
@@ -304,7 +276,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMono(preference))
 
-        // When
         val result =
             userWeightUnitPreferenceDAL.updateUserWeightUnitPreference(
                 preference.userId,
@@ -312,13 +283,11 @@ class UserWeightUnitPreferenceDALTest {
                 preference.preferredUnit
             )
 
-        // Then
         assertMonoSuccess(result, preference)
     }
 
     @Test
     fun `updateUserWeightUnitPreference should throw NoResultsFoundException when preference does not exist`() {
-        // Given
         val preference = mockUserWeightUnitPreference(exerciseName = "NonExistentExercise", preferredUnit = WeightUnit.KG)
 
         whenever(
@@ -331,7 +300,6 @@ class UserWeightUnitPreferenceDALTest {
             )
         ).thenReturn(createMockMonoError(NoResultsFoundException("No results returned from query")))
 
-        // When & Then
         assertMonoError(
             userWeightUnitPreferenceDAL.updateUserWeightUnitPreference(
                 preference.userId,

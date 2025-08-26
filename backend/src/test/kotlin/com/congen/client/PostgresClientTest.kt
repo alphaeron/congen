@@ -65,7 +65,6 @@ class PostgresClientTest {
 
     @Test
     fun `should execute select query successfully`() {
-        // Given
         val query = "SELECT * FROM users WHERE id = \$1"
         val expectedResult = listOf(mockUser(keycloakId = "1"), mockUser(keycloakId = "2"))
         val row1 = mock<Row>()
@@ -90,10 +89,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<User>(query, 1)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -101,7 +97,6 @@ class PostgresClientTest {
 
     @Test
     fun `should execute update query successfully`() {
-        // Given
         val query = "UPDATE users SET name = \$1 WHERE id = \$2"
         val expectedResult = mockUser(keycloakId = "1", name = "New Name")
         val row = mock<Row>()
@@ -127,10 +122,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBWriter.preparedQuery(eq("$query RETURNING *"))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.update<User>(query, "New Name", 1)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -138,7 +130,6 @@ class PostgresClientTest {
 
     @Test
     fun `should execute updateLiteral query successfully`() {
-        // Given
         val query = "UPDATE users SET name = 'New Name' WHERE id = 1 RETURNING *"
         val expectedResult = mockUser(keycloakId = "1", name = "New Name")
         val row = mock<Row>()
@@ -164,10 +155,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBWriter.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.updateLiteral(query, User::class)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -175,7 +163,6 @@ class PostgresClientTest {
 
     @Test
     fun `should handle query with multiple parameters`() {
-        // Given
         val query = "SELECT * FROM users WHERE name = \$1 AND city = \$2"
         val expectedResult = listOf(mockUser(keycloakId = "1"))
         val row = mock<Row>()
@@ -197,10 +184,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<User>(query, 25, "New York")
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -208,7 +192,6 @@ class PostgresClientTest {
 
     @Test
     fun `should handle empty result set from select query`() {
-        // Given
         val query = "SELECT * FROM users WHERE id = \$1"
         val expectedResult = listOf<User>()
         val rowSet = mock<RowSet<Row>>()
@@ -222,10 +205,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<User>(query, 999)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -233,7 +213,6 @@ class PostgresClientTest {
 
     @Test
     fun `should return individual result from selectIndividual`() {
-        // Given
         val query = "SELECT * FROM users WHERE id = \$1"
         val expectedResult = mockUser(keycloakId = "1", name = "John")
         val row = mock<Row>()
@@ -259,10 +238,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.selectIndividual(query, User::class, 1)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -270,7 +246,6 @@ class PostgresClientTest {
 
     @Test
     fun `should throw NoResultsFoundException when selectIndividual returns no results`() {
-        // Given
         val query = "SELECT * FROM users WHERE id = \$1"
         val rowSet = mock<RowSet<Row>>()
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
@@ -283,10 +258,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.selectIndividual(query, User::class, 999)
-
-        // Then
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is NoResultsFoundException)
@@ -297,7 +269,6 @@ class PostgresClientTest {
 
     @Test
     fun `should throw InvalidResultException when selectIndividual returns multiple results`() {
-        // Given
         val query = "SELECT * FROM users WHERE name = \$1"
         val row1 = mock<Row>()
         val row2 = mock<Row>()
@@ -326,10 +297,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.selectIndividual(query, User::class, 25)
-
-        // Then
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is InvalidResultException)
@@ -340,17 +308,13 @@ class PostgresClientTest {
 
     @Test
     fun `should throw DatabaseQueryException when query execution fails`() {
-        // Given
         val query = "SELECT * FROM invalid_table"
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         whenever(preparedQuery.execute(any<Tuple>()))
             .thenReturn(Future.failedFuture(RuntimeException("Table does not exist")))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<User>(query)
-
-        // Then
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is DatabaseQueryException) { "Expected DatabaseQueryException but got ${ex::class.qualifiedName}" }
@@ -365,17 +329,13 @@ class PostgresClientTest {
 
     @Test
     fun `should throw DatabaseConnectionException when connection fails`() {
-        // Given
         val query = "SELECT * FROM users"
         val preparedQuery = mock<PreparedQuery<RowSet<Row>>>()
         whenever(preparedQuery.execute(any<Tuple>()))
             .thenReturn(Future.failedFuture(ConnectException("Connection failed")))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<User>(query)
-
-        // Then
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is DatabaseConnectionException) { "Expected DatabaseConnectionException but got ${ex::class.qualifiedName}" }
@@ -389,7 +349,6 @@ class PostgresClientTest {
 
     @Test
     fun `should handle null parameters gracefully`() {
-        // Given
         val query = "SELECT * FROM users WHERE name = \$1"
         val expectedResult = listOf<User>()
         val rowSet = mock<RowSet<Row>>()
@@ -403,10 +362,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<User>(query, null)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()
@@ -414,7 +370,6 @@ class PostgresClientTest {
 
     @Test
     fun `should handle complex data types in results`() {
-        // Given
         val query = "SELECT * FROM complex_data WHERE id = \$1"
         val expectedResult = listOf(mockProgrammedExercise(id = 1, exerciseName = "Test"))
         val row = mock<Row>()
@@ -435,10 +390,7 @@ class PostgresClientTest {
         whenever(preparedQuery.execute(any<Tuple>())).thenReturn(Future.succeededFuture(rowSet))
         whenever(postgresDBReader.preparedQuery(eq(query))).thenReturn(preparedQuery)
 
-        // When
         val result = postgresClient.select<ProgrammedExercise>(query, 1)
-
-        // Then
         StepVerifier.create(result)
             .expectNext(expectedResult)
             .verifyComplete()

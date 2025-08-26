@@ -80,7 +80,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should generate workout stages for maximal effort day`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "ME_Upper_DE_Lower"
         val userExercisePool = mock<UserExercisePool>()
@@ -127,7 +126,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
-        // When
         val result =
             twoDayService.generateWorkoutStages(
                 workout = workout,
@@ -140,7 +138,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -157,7 +154,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should generate workout stages for dynamic effort day`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "ME_Lower_DE_Upper"
         val userExercisePool = mock<UserExercisePool>()
@@ -204,7 +200,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
-        // When
         val result =
             twoDayService.generateWorkoutStages(
                 workout = workout,
@@ -217,7 +212,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()
@@ -234,7 +228,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should handle exercise selection failure`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "ME_Upper_DE_Lower"
         val userExercisePool = mock<UserExercisePool>()
@@ -269,7 +262,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
-        // When
         val result =
             twoDayService.generateWorkoutStages(
                 workout = workout,
@@ -282,7 +274,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectError(RuntimeException::class.java)
             .verify()
@@ -290,7 +281,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
     @Test
     fun `should generate workout stages for repetition effort day`() {
-        // Given
         val workout = createSampleWorkout()
         val dayType = "ME_Upper_DE_Lower"
         val userExercisePool = mock<UserExercisePool>()
@@ -337,7 +327,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
-        // When
         val result =
             twoDayService.generateWorkoutStages(
                 workout = workout,
@@ -350,7 +339,6 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 userId = userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectComplete()
             .verify()

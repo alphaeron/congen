@@ -30,11 +30,9 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should apply rate limiting to API requests`() {
-        // Given
         val client = createWebTestClient()
         val testIp = "192.168.1.101" // Use unique IP for this test
 
-        // When - Make 10 requests (at the limit)
         repeat(10) { requestNumber ->
             client.get()
                 .uri("/api/v1/health/")
@@ -53,12 +51,10 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle different IPs separately for rate limiting`() {
-        // Given
         val client = createWebTestClient()
         val ip1 = "192.168.1.102" // Use unique IPs for this test
         val ip2 = "192.168.1.103"
 
-        // When - Make 10 requests from IP1 (should hit limit)
         repeat(10) {
             client.get()
                 .uri("/api/v1/health/")
@@ -84,11 +80,9 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should reject oversized payloads`() {
-        // Given
         val client = createWebTestClient()
         val largePayload = "x".repeat(2048) // 2KB payload
 
-        // When - Test payload size validation by setting Content-Length header
         // The RateLimitFilter checks Content-Length before the request reaches the controller
         client.post()
             .uri("/api/v1/health/")
@@ -102,11 +96,9 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should allow requests with acceptable payload size`() {
-        // Given
         val client = createWebTestClient()
         val acceptablePayload = "x".repeat(512) // 512B payload
 
-        // When - Test acceptable payload size by setting Content-Length header
         client.post()
             .uri("/api/v1/health/")
             .contentType(MediaType.APPLICATION_JSON)
@@ -119,10 +111,8 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should apply security headers to all responses`() {
-        // Given
         val client = createWebTestClient()
 
-        // When
         val response =
             client.get()
                 .uri("/api/v1/health/")
@@ -131,7 +121,6 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
                 .expectStatus().isOk
                 .returnResult(String::class.java)
 
-        // Then
         val responseHeaders = response.responseHeaders
         assert(responseHeaders.getFirst("X-Content-Type-Options") == "nosniff")
         assert(responseHeaders.getFirst("X-Frame-Options") == "DENY")
@@ -141,10 +130,8 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle X-Forwarded-For header correctly`() {
-        // Given
         val client = createWebTestClient()
 
-        // When - Make 10 requests with X-Forwarded-For header
         repeat(10) {
             client.get()
                 .uri("/api/v1/health/")
@@ -163,10 +150,8 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle requests without IP headers`() {
-        // Given
         val client = createWebTestClient()
 
-        // When - Make 10 requests without IP headers (will use 127.0.0.1)
         repeat(10) {
             client.get()
                 .uri("/api/v1/health/")
@@ -183,10 +168,8 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should handle concurrent requests`() {
-        // Given
         val client = createWebTestClient()
 
-        // When - Make concurrent requests
         val requests =
             (1..5).map {
                 client.get()
@@ -195,7 +178,6 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
                     .exchange()
             }
 
-        // Then - All should complete (some may be rate limited)
         requests.forEach { request ->
             val status = request.returnResult(String::class.java).status
             assert(status.is2xxSuccessful || status == HttpStatus.TOO_MANY_REQUESTS) {
@@ -206,29 +188,24 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should apply request timeout settings`() {
-        // Given
         val client =
             createWebTestClient()
                 .mutate()
                 .responseTimeout(Duration.ofSeconds(5))
                 .build()
 
-        // When
         val response =
             client.get()
                 .uri("/api/v1/health/")
                 .exchange()
 
-        // Then - Should complete within timeout
         response.expectStatus().isOk
     }
 
     @Test
     fun `should handle malformed requests gracefully`() {
-        // Given
         val client = createWebTestClient()
 
-        // When - Send request with malformed headers
         client.get()
             .uri("/api/v1/health/")
             .header("X-Real-IP", "invalid-ip-address")
@@ -238,10 +215,8 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should clean up rate limit data over time`() {
-        // Given
         val client = createWebTestClient()
 
-        // When - Make 5 requests (under limit)
         repeat(5) {
             client.get()
                 .uri("/api/v1/health/")
@@ -250,7 +225,6 @@ class DdosProtectionIntegrationTest : BaseIntegrationTest() {
                 .expectStatus().isOk
         }
 
-        // Then - Should still be under limit
         client.get()
             .uri("/api/v1/health/")
             .header("X-Real-IP", "192.168.1.109")

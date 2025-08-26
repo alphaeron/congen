@@ -49,7 +49,6 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
         // First create user program preferences using helper
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = userToken)
 
-        // Then get them by user id
         webTestClient.get()
             .uri("/api/v1/user_program_preferences/$userId")
             .header("Authorization", "Bearer $userToken")
@@ -66,7 +65,6 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
         // First create user program preferences using helper
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = userToken)
 
-        // Then update them
         webTestClient.patch()
             .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=4&session_time_length_in_minutes=90")
             .header("Authorization", "Bearer $userToken")
@@ -83,7 +81,6 @@ class UserProgramPreferencesIntegrationTest : BaseIntegrationTest() {
         // First create user program preferences using helper
         IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, 60, token = userToken)
 
-        // Then delete them
         webTestClient.delete()
             .uri("/api/v1/user_program_preferences/$userId")
             .header("Authorization", "Bearer $userToken")

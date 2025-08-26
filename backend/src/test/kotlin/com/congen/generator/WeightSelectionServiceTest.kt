@@ -75,7 +75,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should return target weight when user has 1RM`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -83,7 +82,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(roundedWeight))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 exerciseName,
@@ -92,7 +90,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
             .verifyComplete()
@@ -100,7 +97,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should return target weight with band for dynamic effort`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -119,7 +115,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(roundedWeight))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 exerciseName,
@@ -130,7 +125,6 @@ class WeightSelectionServiceTest {
                 currentWeekNumber = 1
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, band))
             .verifyComplete()
@@ -138,7 +132,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should estimate weight from similar exercises when no 1RM`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf(UserOneRepMax(userId, "Squat", BigDecimal("315"), now))
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -180,7 +173,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(roundedWeight))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 exerciseName,
@@ -189,7 +181,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
             .verifyComplete()
@@ -197,7 +188,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should use bodyweight estimate for isolation exercises`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf<UserOneRepMax>()
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -233,7 +223,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("12")))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 "Bicep Curl",
@@ -242,7 +231,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("12"), null))
             .verifyComplete()
@@ -250,7 +238,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should use conservative estimate for curl exercises`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf<UserOneRepMax>()
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -265,7 +252,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Bicep Curl"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("35")))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 "Bicep Curl",
@@ -274,7 +260,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
             .verifyComplete()
@@ -282,7 +267,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should use conservative estimate for raise exercises`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf<UserOneRepMax>()
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -297,7 +281,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Lateral Raise"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("15")))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 "Lateral Raise",
@@ -306,7 +289,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("15"), null))
             .verifyComplete()
@@ -314,7 +296,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should use conservative estimate when exercise not found`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf<UserOneRepMax>()
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -329,7 +310,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq("Unknown Exercise"), any(), eq(WeightUnit.LBS)))
             .thenReturn(Mono.just(BigDecimal("35")))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 "Unknown Exercise",
@@ -338,7 +318,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(BigDecimal("35"), null))
             .verifyComplete()
@@ -346,7 +325,6 @@ class WeightSelectionServiceTest {
 
     @Test
     fun `getTargetWeight should default to KG when no weight unit preference found`() {
-        // Given
         val now = Instant.now()
         val oneRepMaxes = listOf(UserOneRepMax(userId, exerciseName, oneRepMax, now))
         `when`(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(eq(userId), any()))
@@ -354,7 +332,6 @@ class WeightSelectionServiceTest {
         `when`(supportedEquipmentWeightRoundingService.roundWeightForExercise(eq(exerciseName), any(), eq(WeightUnit.KG)))
             .thenReturn(Mono.just(roundedWeight))
 
-        // When
         val result =
             weightSelectionService.getTargetWeight(
                 exerciseName,
@@ -363,7 +340,6 @@ class WeightSelectionServiceTest {
                 userId
             )
 
-        // Then
         StepVerifier.create(result)
             .expectNext(WeightSelectionService.TargetWeightResult(roundedWeight, null))
             .verifyComplete()

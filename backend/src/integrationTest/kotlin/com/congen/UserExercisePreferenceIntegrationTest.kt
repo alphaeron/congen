@@ -59,7 +59,6 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
         // First create user exercise preference
         IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId2, "Safety Bar Squat", true, token = token2)
 
-        // Then retrieve it - the controller only has GET /{userId} endpoint
         webTestClient.get()
             .uri("/api/v1/user_exercise_preference/$userId2")
             .header("Authorization", "Bearer $token2")
@@ -77,7 +76,6 @@ class UserExercisePreferenceIntegrationTest : BaseIntegrationTest() {
         // First create user exercise preference
         IntegrationTestHelpers.createTestUserExercisePreference(webTestClient, userId4, "Overhead Press", false, token = token4)
 
-        // Then delete it using query parameters with proper URL encoding
         val encodedExerciseName = URLEncoder.encode("Overhead Press", "UTF-8")
         webTestClient.delete()
             .uri("/api/v1/user_exercise_preference/?user_id=$userId4&exercise_name=$encodedExerciseName")
