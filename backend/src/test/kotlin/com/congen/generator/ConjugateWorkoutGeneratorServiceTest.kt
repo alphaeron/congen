@@ -54,16 +54,17 @@ class ConjugateWorkoutGeneratorServiceTest {
         userWeakMuscleDAL = mock()
         exercisePoolFactory = mock()
 
-        conjugateWorkoutGeneratorService = ConjugateWorkoutGeneratorService(
-            userOneRepMaxDAL = userOneRepMaxDAL,
-            userProgramPreferencesDAL = userProgramPreferencesDAL,
-            programService = programService,
-            programmedWorkoutDAL = programmedWorkoutDAL,
-            conjugateTemplates = conjugateTemplates,
-            workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator,
-            userWeakMuscleDAL = userWeakMuscleDAL,
-            exercisePoolFactory = exercisePoolFactory
-        )
+        conjugateWorkoutGeneratorService =
+            ConjugateWorkoutGeneratorService(
+                userOneRepMaxDAL = userOneRepMaxDAL,
+                userProgramPreferencesDAL = userProgramPreferencesDAL,
+                programService = programService,
+                programmedWorkoutDAL = programmedWorkoutDAL,
+                conjugateTemplates = conjugateTemplates,
+                workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator,
+                userWeakMuscleDAL = userWeakMuscleDAL,
+                exercisePoolFactory = exercisePoolFactory
+            )
     }
 
     @Test
@@ -82,18 +83,24 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, 1, "Max Effort Day")).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, 2, "Dynamic Effort Day")).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(
-            workout = any(),
-            dayType = any(),
-            userExercisePool = any(),
-            oneRepMaxes = any(),
-            programPreferences = any(),
-            weakMuscles = any(),
-            currentWeekNumber = any(),
-            userId = any()
-        )).thenReturn(Mono.empty())
+        whenever(
+            programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, 1, "Max Effort Day")
+        ).thenReturn(Mono.just(createSampleProgrammedWorkout()))
+        whenever(
+            programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, 2, "Dynamic Effort Day")
+        ).thenReturn(Mono.just(createSampleProgrammedWorkout()))
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                workout = any(),
+                dayType = any(),
+                userExercisePool = any(),
+                oneRepMaxes = any(),
+                programPreferences = any(),
+                weakMuscles = any(),
+                currentWeekNumber = any(),
+                userId = any()
+            )
+        ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(PROGRAM_ID, "Conjugate Powerlifting - Week 2", 2, true)).thenReturn(Mono.just(program))
 
         // When
@@ -129,16 +136,18 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(
-            workout = any(),
-            dayType = any(),
-            userExercisePool = any(),
-            oneRepMaxes = any(),
-            programPreferences = any(),
-            weakMuscles = any(),
-            currentWeekNumber = any(),
-            userId = any()
-        )).thenReturn(Mono.empty())
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                workout = any(),
+                dayType = any(),
+                userExercisePool = any(),
+                oneRepMaxes = any(),
+                programPreferences = any(),
+                weakMuscles = any(),
+                currentWeekNumber = any(),
+                userId = any()
+            )
+        ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
 
         // When
@@ -263,16 +272,18 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(
-            workout = any(),
-            dayType = any(),
-            userExercisePool = any(),
-            oneRepMaxes = any(),
-            programPreferences = any(),
-            weakMuscles = any(),
-            currentWeekNumber = any(),
-            userId = any()
-        )).thenReturn(Mono.error(RuntimeException("Stage generation error")))
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                workout = any(),
+                dayType = any(),
+                userExercisePool = any(),
+                oneRepMaxes = any(),
+                programPreferences = any(),
+                weakMuscles = any(),
+                currentWeekNumber = any(),
+                userId = any()
+            )
+        ).thenReturn(Mono.error(RuntimeException("Stage generation error")))
 
         // When
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -300,16 +311,18 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(
-            workout = any(),
-            dayType = any(),
-            userExercisePool = any(),
-            oneRepMaxes = any(),
-            programPreferences = any(),
-            weakMuscles = any(),
-            currentWeekNumber = any(),
-            userId = any()
-        )).thenReturn(Mono.empty())
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                workout = any(),
+                dayType = any(),
+                userExercisePool = any(),
+                oneRepMaxes = any(),
+                programPreferences = any(),
+                weakMuscles = any(),
+                currentWeekNumber = any(),
+                userId = any()
+            )
+        ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.error(RuntimeException("Update error")))
 
         // When
@@ -338,16 +351,18 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(3)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(
-            workout = any(),
-            dayType = any(),
-            userExercisePool = any(),
-            oneRepMaxes = any(),
-            programPreferences = any(),
-            weakMuscles = any(),
-            currentWeekNumber = any(),
-            userId = any()
-        )).thenReturn(Mono.empty())
+        whenever(
+            workoutStageGenerationOrchestrator.generateWorkoutStages(
+                workout = any(),
+                dayType = any(),
+                userExercisePool = any(),
+                oneRepMaxes = any(),
+                programPreferences = any(),
+                weakMuscles = any(),
+                currentWeekNumber = any(),
+                userId = any()
+            )
+        ).thenReturn(Mono.empty())
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
 
         // When

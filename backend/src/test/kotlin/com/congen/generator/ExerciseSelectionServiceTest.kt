@@ -7,8 +7,6 @@ import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -19,7 +17,6 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.math.BigDecimal
-import java.time.Instant
 
 /**
  * Unit tests for the ExerciseSelectionService.
@@ -51,24 +48,26 @@ class ExerciseSelectionServiceTest {
         movementBalanceService = mock()
         exerciseMatchingService = mock()
         userExercisePool = mock()
-        
-        exerciseSelectionService = ExerciseSelectionService(
-            exerciseDAL = exerciseDAL,
-            exerciseMuscleDAL = exerciseMuscleDAL,
-            exerciseWorkoutTypeDAL = exerciseWorkoutTypeDAL,
-            exerciseEquipmentDAL = exerciseEquipmentDAL,
-            movementBalanceService = movementBalanceService,
-            exerciseMatchingService = exerciseMatchingService
-        )
-        
-        // Mock the selectAllExerciseWorkoutTypes method to return workout types that include test exercises
-        val workoutTypes = listOf(
-            ExerciseWorkoutType(
-                exerciseName = "Bench Press",
-                movementType = MovementType.HORIZONTAL_PUSH,
-                workoutType = "max_effort"
+
+        exerciseSelectionService =
+            ExerciseSelectionService(
+                exerciseDAL = exerciseDAL,
+                exerciseMuscleDAL = exerciseMuscleDAL,
+                exerciseWorkoutTypeDAL = exerciseWorkoutTypeDAL,
+                exerciseEquipmentDAL = exerciseEquipmentDAL,
+                movementBalanceService = movementBalanceService,
+                exerciseMatchingService = exerciseMatchingService
             )
-        )
+
+        // Mock the selectAllExerciseWorkoutTypes method to return workout types that include test exercises
+        val workoutTypes =
+            listOf(
+                ExerciseWorkoutType(
+                    exerciseName = "Bench Press",
+                    movementType = MovementType.HORIZONTAL_PUSH,
+                    workoutType = "max_effort"
+                )
+            )
         whenever(exerciseWorkoutTypeDAL.selectAllExerciseWorkoutTypes()).thenReturn(Mono.just(workoutTypes))
     }
 
@@ -88,27 +87,30 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
-        whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
+        ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
-        
+
         verify(userExercisePool).markExerciseAsUsed(exercise.name)
     }
 
@@ -119,26 +121,27 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Dumbbell Flyes", MovementType.HORIZONTAL_PUSH)
-        
+
         whenever(userExercisePool.getAvailableAccessoryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = true,
-            workoutType = workoutType,
-            dayType = dayType
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = true,
+                workoutType = workoutType,
+                dayType = dayType
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
-        
+
         verify(userExercisePool).markExerciseAsUsed(exercise.name)
     }
 
@@ -148,17 +151,18 @@ class ExerciseSelectionServiceTest {
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
-        
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(emptyList())
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType
+            )
 
         // Then
         StepVerifier.create(result)
@@ -173,19 +177,20 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(emptyList()))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType
+            )
 
         // Then
         StepVerifier.create(result)
@@ -200,20 +205,23 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
-        whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
+        ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType
+            )
 
         // Then
         StepVerifier.create(result)
@@ -228,20 +236,23 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
-        whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
+        ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType
+            )
 
         // Then
         StepVerifier.create(result)
@@ -256,38 +267,43 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        val movementBalanceState = MovementBalanceService.MovementBalanceState(
-            selectedExercises = emptyList(),
-            movementTypeCounts = mapOf(
-                MovementType.HORIZONTAL_PUSH to 2,
-                MovementType.HORIZONTAL_PULL to 1
-            ),
-            pushVolume = BigDecimal.ZERO,
-            pullVolume = BigDecimal.ZERO
-        )
-        
+        val movementBalanceState =
+            MovementBalanceService.MovementBalanceState(
+                selectedExercises = emptyList(),
+                movementTypeCounts =
+                    mapOf(
+                        MovementType.HORIZONTAL_PUSH to 2,
+                        MovementType.HORIZONTAL_PULL to 1
+                    ),
+                pushVolume = BigDecimal.ZERO,
+                pullVolume = BigDecimal.ZERO
+            )
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
-        whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
+        ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
         whenever(movementBalanceService.prioritizeExercisesForBalance(any(), any())).thenReturn(listOf(exercise))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType,
-            movementBalanceState = movementBalanceState
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType,
+                movementBalanceState = movementBalanceState
+            )
 
         // Then
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
-        
+
         verify(movementBalanceService).prioritizeExercisesForBalance(any(), eq(movementBalanceState))
     }
 
@@ -298,31 +314,36 @@ class ExerciseSelectionServiceTest {
         val workoutType = "max_effort"
         val dayType = "upper_body"
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        val movementBalanceState = MovementBalanceService.MovementBalanceState(
-            selectedExercises = emptyList(),
-            movementTypeCounts = mapOf(
-                MovementType.HORIZONTAL_PUSH to 2,
-                MovementType.HORIZONTAL_PULL to 1
-            ),
-            pushVolume = BigDecimal.ZERO,
-            pullVolume = BigDecimal.ZERO
-        )
-        
+        val movementBalanceState =
+            MovementBalanceService.MovementBalanceState(
+                selectedExercises = emptyList(),
+                movementTypeCounts =
+                    mapOf(
+                        MovementType.HORIZONTAL_PUSH to 2,
+                        MovementType.HORIZONTAL_PULL to 1
+                    ),
+                pushVolume = BigDecimal.ZERO,
+                pullVolume = BigDecimal.ZERO
+            )
+
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
-        whenever(exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
+        ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
         whenever(movementBalanceService.prioritizeExercisesForBalance(any(), any())).thenReturn(emptyList())
 
         // When
-        val result = exerciseSelectionService.selectExercise(
-            userExercisePool = userExercisePool,
-            targetMuscles = targetMuscles,
-            isAccessory = false,
-            workoutType = workoutType,
-            dayType = dayType,
-            movementBalanceState = movementBalanceState
-        )
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = false,
+                workoutType = workoutType,
+                dayType = dayType,
+                movementBalanceState = movementBalanceState
+            )
 
         // Then
         StepVerifier.create(result)
@@ -330,7 +351,10 @@ class ExerciseSelectionServiceTest {
             .verifyComplete()
     }
 
-    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
+    private fun createSampleExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "A sample exercise for testing",

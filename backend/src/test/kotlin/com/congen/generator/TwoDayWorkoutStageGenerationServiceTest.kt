@@ -61,20 +61,21 @@ class TwoDayWorkoutStageGenerationServiceTest {
         movementBalanceService = mock()
         conjugateTemplates = mock()
 
-        twoDayService = TwoDayWorkoutStageGenerationService(
-            exerciseSelectionService = exerciseSelectionService,
-            workoutStageDAL = workoutStageDAL,
-            workoutStageTypeDAL = workoutStageTypeDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL,
-            setSchemeService = setSchemeService,
-            prilepinGuidelinesService = prilepinGuidelinesService,
-            weightSelectionService = weightSelectionService,
-            userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-            sessionTimeCalculator = sessionTimeCalculator,
-            movementBalanceService = movementBalanceService,
-            conjugateTemplates = conjugateTemplates
-        )
+        twoDayService =
+            TwoDayWorkoutStageGenerationService(
+                exerciseSelectionService = exerciseSelectionService,
+                workoutStageDAL = workoutStageDAL,
+                workoutStageTypeDAL = workoutStageTypeDAL,
+                programmedExerciseDAL = programmedExerciseDAL,
+                setSchemeDAL = setSchemeDAL,
+                setSchemeService = setSchemeService,
+                prilepinGuidelinesService = prilepinGuidelinesService,
+                weightSelectionService = weightSelectionService,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+                sessionTimeCalculator = sessionTimeCalculator,
+                movementBalanceService = movementBalanceService,
+                conjugateTemplates = conjugateTemplates
+            )
     }
 
     @Test
@@ -95,42 +96,49 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(true),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(secondaryExercise))
-        whenever(exerciseSelectionService.selectWarmupExercises(
-            userExercisePool = any(),
-            primaryExercise = any(),
-            isFourDayTemplate = any(),
-            dayType = any(),
-            workoutType = any()
-        )).thenReturn(Mono.just(emptyList()))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(true),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
         // When
-        val result = twoDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            twoDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -165,42 +173,49 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Lower")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Upper")
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(true),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(secondaryExercise))
-        whenever(exerciseSelectionService.selectWarmupExercises(
-            userExercisePool = any(),
-            primaryExercise = any(),
-            isFourDayTemplate = any(),
-            dayType = any(),
-            workoutType = any()
-        )).thenReturn(Mono.just(emptyList()))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(true),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
         // When
-        val result = twoDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            twoDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -232,35 +247,40 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(true),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(true),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
         // When
-        val result = twoDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            twoDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -286,42 +306,49 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(true),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(secondaryExercise))
-        whenever(exerciseSelectionService.selectWarmupExercises(
-            userExercisePool = any(),
-            primaryExercise = any(),
-            isFourDayTemplate = any(),
-            dayType = any(),
-            workoutType = any()
-        )).thenReturn(Mono.just(emptyList()))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(true),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
 
         // When
-        val result = twoDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            twoDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -349,7 +376,10 @@ class TwoDayWorkoutStageGenerationServiceTest {
         )
     }
 
-    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
+    private fun createSampleExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "A sample exercise for testing",

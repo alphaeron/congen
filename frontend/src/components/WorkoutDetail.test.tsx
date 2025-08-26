@@ -1,15 +1,15 @@
-import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
-import { ENDPOINT } from '../api/endpoint';
+import React from 'react';
 
 import { WorkoutDetail } from './WorkoutDetail';
-import { getProgrammedWorkout } from '../api/programmedWorkout';
-import { getWorkoutStagesByWorkout } from '../api/workoutStage';
+import { ENDPOINT } from '../api/endpoint';
 import { getProgrammedExercisesByStage } from '../api/programmedExercise';
+import { getProgrammedWorkout } from '../api/programmedWorkout';
 import { getSetSchemesByExercise } from '../api/setScheme';
 import type { ProgrammedWorkout, WorkoutStage, ProgrammedExercise, SetScheme } from '../api/types';
+import { getWorkoutStagesByWorkout } from '../api/workoutStage';
 
 const mock = new MockAdapter(ENDPOINT);
 
@@ -19,10 +19,18 @@ jest.mock('../api/workoutStage');
 jest.mock('../api/programmedExercise');
 jest.mock('../api/setScheme');
 
-const mockGetProgrammedWorkout = getProgrammedWorkout as jest.MockedFunction<typeof getProgrammedWorkout>;
-const mockGetWorkoutStagesByWorkout = getWorkoutStagesByWorkout as jest.MockedFunction<typeof getWorkoutStagesByWorkout>;
-const mockGetProgrammedExercisesByStage = getProgrammedExercisesByStage as jest.MockedFunction<typeof getProgrammedExercisesByStage>;
-const mockGetSetSchemesByExercise = getSetSchemesByExercise as jest.MockedFunction<typeof getSetSchemesByExercise>;
+const mockGetProgrammedWorkout = getProgrammedWorkout as jest.MockedFunction<
+  typeof getProgrammedWorkout
+>;
+const mockGetWorkoutStagesByWorkout = getWorkoutStagesByWorkout as jest.MockedFunction<
+  typeof getWorkoutStagesByWorkout
+>;
+const mockGetProgrammedExercisesByStage = getProgrammedExercisesByStage as jest.MockedFunction<
+  typeof getProgrammedExercisesByStage
+>;
+const mockGetSetSchemesByExercise = getSetSchemesByExercise as jest.MockedFunction<
+  typeof getSetSchemesByExercise
+>;
 
 const theme = createTheme();
 
@@ -73,11 +81,7 @@ const mockSetScheme: SetScheme = {
 };
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('WorkoutDetail', () => {
@@ -231,7 +235,13 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle multiple set schemes', async () => {
-      const setScheme2 = { ...mockSetScheme, id: 2, set_number: 2, target_rep_count: 6, target_weight: 145 };
+      const setScheme2 = {
+        ...mockSetScheme,
+        id: 2,
+        set_number: 2,
+        target_rep_count: 6,
+        target_weight: 145,
+      };
       mockGetSetSchemesByExercise.mockResolvedValue([mockSetScheme, setScheme2]);
 
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -252,7 +262,9 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to load workout details. Please try again.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Failed to load workout details. Please try again.')
+        ).toBeInTheDocument();
       });
     });
 
@@ -263,7 +275,9 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to load workout details. Please try again.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Failed to load workout details. Please try again.')
+        ).toBeInTheDocument();
       });
     });
 
@@ -275,7 +289,9 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to load workout details. Please try again.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Failed to load workout details. Please try again.')
+        ).toBeInTheDocument();
       });
     });
 
@@ -288,7 +304,9 @@ describe('WorkoutDetail', () => {
       renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
 
       await waitFor(() => {
-        expect(screen.getByText('Failed to load workout details. Please try again.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Failed to load workout details. Please try again.')
+        ).toBeInTheDocument();
       });
     });
   });

@@ -1,7 +1,8 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { ENDPOINT } from './endpoint';
-import { getWorkoutStagesByWorkout, getWorkoutStage } from './workoutStage';
 import type { WorkoutStage } from './types';
+import { getWorkoutStagesByWorkout, getWorkoutStage } from './workoutStage';
 
 const mock = new MockAdapter(ENDPOINT);
 

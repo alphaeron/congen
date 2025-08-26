@@ -1,6 +1,6 @@
+import { default as InfoIcon } from '@mui/icons-material/Info';
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import { default as InfoIcon } from '@mui/icons-material/Info';
 import {
   Box,
   Card,
@@ -19,10 +19,10 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
-import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { getExerciseRotationHistory } from '../api/exerciseRotationHistory';
 import { getExercises } from '../api/exercise';
+import { getExerciseRotationHistory } from '../api/exerciseRotationHistory';
 import type { User, UserOneRepMax, ExerciseRotationHistory, Exercise } from '../api/types';
+import { getUserOneRepMaxes } from '../api/userOneRepMax';
 
 interface ExerciseHistoryProps {
   user: User;
@@ -89,41 +89,48 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
     new Set([
       ...oneRepMaxes.map(orm => orm.exercise_name),
       ...exerciseHistory.map(history => history.exercise_name),
-      ...allExercises.map(exercise => exercise.name)
+      ...allExercises.map(exercise => exercise.name),
     ])
   ).sort();
 
   // Filter data based on selected exercise
-  const filteredOneRepMaxes = selectedExercise === 'all' 
-    ? oneRepMaxes 
-    : oneRepMaxes.filter(orm => orm.exercise_name === selectedExercise);
+  const filteredOneRepMaxes =
+    selectedExercise === 'all'
+      ? oneRepMaxes
+      : oneRepMaxes.filter(orm => orm.exercise_name === selectedExercise);
 
-  const filteredExerciseHistory = selectedExercise === 'all'
-    ? exerciseHistory
-    : exerciseHistory.filter(history => history.exercise_name === selectedExercise);
+  const filteredExerciseHistory =
+    selectedExercise === 'all'
+      ? exerciseHistory
+      : exerciseHistory.filter(history => history.exercise_name === selectedExercise);
 
   // Calculate exercise statistics based on filtered data
-  const exerciseStats = (selectedExercise === 'all' ? uniqueExercises : [selectedExercise]).map(exerciseName => {
-    const exerciseOneRepMax = filteredOneRepMaxes.find(orm => orm.exercise_name === exerciseName);
-    const exerciseHistoryCount = filteredExerciseHistory.filter(history => history.exercise_name === exerciseName).length;
-    const primaryCount = filteredExerciseHistory.filter(history => 
-      history.exercise_name === exerciseName && !history.is_accessory
-    ).length;
-    const accessoryCount = filteredExerciseHistory.filter(history => 
-      history.exercise_name === exerciseName && history.is_accessory
-    ).length;
+  const exerciseStats = (selectedExercise === 'all' ? uniqueExercises : [selectedExercise]).map(
+    exerciseName => {
+      const exerciseOneRepMax = filteredOneRepMaxes.find(orm => orm.exercise_name === exerciseName);
+      const exerciseHistoryCount = filteredExerciseHistory.filter(
+        history => history.exercise_name === exerciseName
+      ).length;
+      const primaryCount = filteredExerciseHistory.filter(
+        history => history.exercise_name === exerciseName && !history.is_accessory
+      ).length;
+      const accessoryCount = filteredExerciseHistory.filter(
+        history => history.exercise_name === exerciseName && history.is_accessory
+      ).length;
 
-    return {
-      name: exerciseName,
-      oneRepMax: exerciseOneRepMax,
-      totalUses: exerciseHistoryCount,
-      primaryUses: primaryCount,
-      accessoryUses: accessoryCount,
-      lastUsed: filteredExerciseHistory
-        .filter(history => history.exercise_name === exerciseName)
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]?.created_at
-    };
-  });
+      return {
+        name: exerciseName,
+        oneRepMax: exerciseOneRepMax,
+        totalUses: exerciseHistoryCount,
+        primaryUses: primaryCount,
+        accessoryUses: accessoryCount,
+        lastUsed: filteredExerciseHistory
+          .filter(history => history.exercise_name === exerciseName)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+          ?.created_at,
+      };
+    }
+  );
 
   if (isLoading) {
     return (
@@ -152,7 +159,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             options={['all', ...uniqueExercises]}
             value={selectedExercise}
             onChange={(event, newValue) => setSelectedExercise(newValue || 'all')}
-            renderInput={(params) => (
+            renderInput={params => (
               <TextField
                 {...params}
                 label="Filter by Exercise"
@@ -164,7 +171,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
                 {option === 'all' ? 'All Exercises' : option}
               </Box>
             )}
-            getOptionLabel={(option) => option === 'all' ? 'All Exercises' : option}
+            getOptionLabel={option => (option === 'all' ? 'All Exercises' : option)}
           />
         </CardContent>
       </Card>
@@ -178,8 +185,18 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           scrollButtons="auto"
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label="1RM Progress" value="onerepmax" icon={<ShowChartIcon />} iconPosition="start" />
-          <Tab label="Exercise Rotation" value="exercise_rotation" icon={<TrendingUpIcon />} iconPosition="start" />
+          <Tab
+            label="1RM Progress"
+            value="onerepmax"
+            icon={<ShowChartIcon />}
+            iconPosition="start"
+          />
+          <Tab
+            label="Exercise Rotation"
+            value="exercise_rotation"
+            icon={<TrendingUpIcon />}
+            iconPosition="start"
+          />
           <Tab label="Usage Statistics" value="usage" icon={<InfoIcon />} iconPosition="start" />
         </Tabs>
 
@@ -190,7 +207,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
               <Typography variant="h6" gutterBottom>
                 1RM Progress Tracking
               </Typography>
-              
+
               {filteredOneRepMaxes.length > 0 ? (
                 <Grid container spacing={3}>
                   {filteredOneRepMaxes.map((oneRepMax, index) => (
@@ -206,7 +223,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
                           <Typography variant="body2" color="text.secondary">
                             Last Updated: {new Date(oneRepMax.updated_at).toLocaleDateString()}
                           </Typography>
-                          
+
                           <Tooltip title="This 1RM value is used for workout generation and progression calculations">
                             <Chip
                               icon={<InfoIcon />}
@@ -237,7 +254,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
               <Typography variant="h6" gutterBottom>
                 Exercise Rotation History
               </Typography>
-              
+
               {filteredExerciseHistory.length > 0 ? (
                 <Grid container spacing={3}>
                   {filteredExerciseHistory.slice(-10).map((history, index) => (
@@ -260,7 +277,10 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
                             />
                           </Box>
                           <Typography variant="body2" color="text.secondary">
-                            Used as {history.is_accessory ? 'accessory movement' : 'primary/secondary movement'}
+                            Used as{' '}
+                            {history.is_accessory
+                              ? 'accessory movement'
+                              : 'primary/secondary movement'}
                           </Typography>
                         </CardContent>
                       </Card>
@@ -283,7 +303,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
               <Typography variant="h6" gutterBottom>
                 Exercise Usage Statistics
               </Typography>
-              
+
               {exerciseStats.length > 0 ? (
                 <Grid container spacing={3}>
                   {exerciseStats.map((stat, index) => (
@@ -293,7 +313,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
                           <Typography variant="h6" gutterBottom>
                             {stat.name}
                           </Typography>
-                          
+
                           <Box sx={{ mb: 2 }}>
                             <Typography variant="body2" color="text.secondary">
                               Total Uses: {stat.totalUses}

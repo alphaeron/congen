@@ -1,7 +1,7 @@
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
 import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday';
+import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
+import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import {
   Box,
   Card,
@@ -12,15 +12,14 @@ import {
   CircularProgress,
   Tooltip,
   Chip,
-  Button,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { getPrograms } from '../api/program';
-import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getExerciseRotationHistory } from '../api/exerciseRotationHistory';
+import { getPrograms } from '../api/program';
 import type { User, Program, UserOneRepMax, ExerciseRotationHistory } from '../api/types';
+import { getUserOneRepMaxes } from '../api/userOneRepMax';
 
 interface DashboardOverviewProps {
   user: User;
@@ -108,7 +107,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CardContent
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
                 <FitnessCenterIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
@@ -126,7 +132,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CardContent
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
                 <ShowChartIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
@@ -144,7 +157,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CardContent
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
                 <TrendingUpIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
@@ -162,7 +182,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
         <Grid item xs={12} sm={6} md={3}>
           <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CardContent
+              sx={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
               <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
                 <CalendarTodayIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
@@ -190,16 +217,12 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               <Typography variant="body1" fontWeight="medium">
                 {activeProgram.name}
               </Typography>
-              <Chip 
-                label={`Week ${activeProgram.current_week_number}`} 
-                color="primary" 
-                size="small" 
+              <Chip
+                label={`Week ${activeProgram.current_week_number}`}
+                color="primary"
+                size="small"
               />
-              <Chip 
-                label="Active" 
-                color="success" 
-                size="small" 
-              />
+              <Chip label="Active" color="success" size="small" />
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Click to view workouts
@@ -264,11 +287,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                         key={index}
                         title={`Used on ${new Date(history.created_at).toLocaleDateString()}`}
                       >
-                        <Chip
-                          label={history.exercise_name}
-                          size="small"
-                          variant="outlined"
-                        />
+                        <Chip label={history.exercise_name} size="small" variant="outlined" />
                       </Tooltip>
                     ))}
                 </Box>
@@ -309,7 +328,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               Welcome to Your Dashboard!
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Start by creating your first program and tracking your 1RM values to see your progress here.
+              Start by creating your first program and tracking your 1RM values to see your progress
+              here.
             </Typography>
           </CardContent>
         </Card>

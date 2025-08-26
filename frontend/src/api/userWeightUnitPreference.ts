@@ -66,7 +66,9 @@ export const getUserWeightUnitPreference = async (
   userId: string,
   exerciseName: string
 ): Promise<{ data: UserWeightUnitPreference }> => {
-  const response = await ENDPOINT.get(`/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`);
+  const response = await ENDPOINT.get(
+    `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`
+  );
   return response;
 };
 
@@ -81,6 +83,8 @@ export const deleteUserWeightUnitPreference = async (
   userId: string,
   exerciseName: string
 ): Promise<{ data: UserWeightUnitPreference }> => {
-  const response = await ENDPOINT.delete(`/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`);
+  const response = await ENDPOINT.delete(
+    `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`
+  );
   return response;
 };

@@ -1,7 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import React from 'react';
+
 import { ExerciseHistory } from './ExerciseHistory';
 import { ENDPOINT } from '../api/endpoint';
 import type { User, UserOneRepMax, ExerciseRotationHistory } from '../api/types';
@@ -22,11 +23,7 @@ jest.mock('react-router', () => ({
 }));
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('ExerciseHistory', () => {
@@ -117,7 +114,7 @@ describe('ExerciseHistory', () => {
     });
 
     // Mock the URL parameter update
-    mockSetSearchParams.mockImplementation((newParams) => {
+    mockSetSearchParams.mockImplementation(newParams => {
       mockSearchParams = newParams;
     });
 
@@ -128,14 +125,18 @@ describe('ExerciseHistory', () => {
   });
 
   it('shows error message when API calls fail', async () => {
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(500, { message: 'Internal server error' });
+    mock
+      .onGet('/user_one_rep_max/user/test-user-id')
+      .reply(500, { message: 'Internal server error' });
     mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load exercise history data. Please try again.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to load exercise history data. Please try again.')
+      ).toBeInTheDocument();
     });
   });
 
@@ -147,7 +148,7 @@ describe('ExerciseHistory', () => {
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     // Mock the URL parameter update
-    mockSetSearchParams.mockImplementation((newParams) => {
+    mockSetSearchParams.mockImplementation(newParams => {
       mockSearchParams = newParams;
     });
 
@@ -164,9 +165,11 @@ describe('ExerciseHistory', () => {
   it('filters data by exercise selection', async () => {
     const mockOneRepMax2 = { ...mockOneRepMax, exercise_name: 'Squat' };
     const mockExerciseHistory2 = { ...mockExerciseHistory, id: 2, exercise_name: 'Squat' };
-    
+
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax, mockOneRepMax2]);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory, mockExerciseHistory2]);
+    mock
+      .onGet('/exercise_rotation_history/')
+      .reply(200, [mockExerciseHistory, mockExerciseHistory2]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -180,13 +183,15 @@ describe('ExerciseHistory', () => {
   it('displays exercise statistics correctly', async () => {
     const mockExerciseHistory2 = { ...mockExerciseHistory, id: 2, is_accessory: true };
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory, mockExerciseHistory2]);
+    mock
+      .onGet('/exercise_rotation_history/')
+      .reply(200, [mockExerciseHistory, mockExerciseHistory2]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     // Mock the URL parameter update
-    mockSetSearchParams.mockImplementation((newParams) => {
+    mockSetSearchParams.mockImplementation(newParams => {
       mockSearchParams = newParams;
     });
 
@@ -210,7 +215,9 @@ describe('ExerciseHistory', () => {
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     await waitFor(() => {
-      expect(screen.getByText('No 1RM data available for the selected exercise.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No 1RM data available for the selected exercise.')
+      ).toBeInTheDocument();
     });
   });
 
@@ -262,7 +269,7 @@ describe('ExerciseHistory', () => {
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     // Mock the URL parameter update
-    mockSetSearchParams.mockImplementation((newParams) => {
+    mockSetSearchParams.mockImplementation(newParams => {
       mockSearchParams = newParams;
     });
 
@@ -286,4 +293,3 @@ describe('ExerciseHistory', () => {
     });
   });
 });
-

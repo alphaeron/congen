@@ -1,4 +1,5 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { ENDPOINT } from './endpoint';
 import { getSetSchemesByExercise, getSetScheme } from './setScheme';
 import type { SetScheme } from './types';
@@ -109,11 +110,11 @@ describe('SetScheme API', () => {
     });
 
     it('should handle set scheme with zero values', async () => {
-      const setSchemeWithZeros = { 
-        ...mockSetScheme, 
-        weight: 0, 
-        rest_seconds: 0, 
-        rpe: 0 
+      const setSchemeWithZeros = {
+        ...mockSetScheme,
+        weight: 0,
+        rest_seconds: 0,
+        rpe: 0,
       };
       mock.onGet('/set_scheme/1').reply(200, setSchemeWithZeros);
 

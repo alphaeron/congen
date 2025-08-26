@@ -5,10 +5,7 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.model.Exercise
 import com.congen.model.ProgrammedWorkout
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.service.SetSchemeService
@@ -83,9 +80,10 @@ class WorkoutStageGenerationOrchestrator(
         userId: String,
     ): Mono<Void> {
         // Get the appropriate business logic service based on program days
-        val service = workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(
-            programDaysPerWeek = programPreferences.programDaysPerWeek
-        )
+        val service =
+            workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(
+                programDaysPerWeek = programPreferences.programDaysPerWeek
+            )
 
         // Delegate to the service for business logic (exercise selection, stage planning)
         return service.generateWorkoutStages(

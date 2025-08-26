@@ -1,9 +1,9 @@
 package com.congen.generator
 
+import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
-import com.congen.dal.ExerciseDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import org.slf4j.LoggerFactory
@@ -55,7 +55,7 @@ class ExercisePoolFactory(
             val allExercises = tuple.t1
             val userEquipment = tuple.t2
             val preferences = tuple.t3
-            
+
             UserExercisePool(
                 allExercises = allExercises,
                 preferences = preferences,

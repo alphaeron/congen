@@ -1,14 +1,6 @@
 import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
 import { default as EditIcon } from '@mui/icons-material/Edit';
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  Typography,
-  Avatar,
-  Button,
-} from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography, Avatar, Button } from '@mui/material';
 import React from 'react';
 
 import type { User } from '../api/types';

@@ -50,7 +50,7 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
       await deleteAllPersonalData(user.keycloak_id);
       setDeleteDialogOpen(false);
       onAccountDeleted?.();
-    } catch (error) {
+    } catch {
       setDeleteError('Failed to delete account. Please try again.');
     } finally {
       setIsDeleting(false);
@@ -62,11 +62,11 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
       <Typography variant="h5" gutterBottom>
         Account Security
       </Typography>
-      
+
       <Typography variant="body1" color="text.secondary" paragraph>
         Manage your account security settings and access controls.
       </Typography>
-      
+
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <Card>
@@ -120,13 +120,11 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
       >
-        <DialogTitle id="delete-dialog-title">
-          Delete Account
-        </DialogTitle>
+        <DialogTitle id="delete-dialog-title">Delete Account</DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete your account? This action cannot be undone.
-            All your data will be permanently removed.
+            Are you sure you want to delete your account? This action cannot be undone. All your
+            data will be permanently removed.
           </DialogContentText>
           {deleteError && (
             <Alert severity="error" sx={{ mt: 2 }}>
@@ -138,9 +136,9 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
           <Button onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleConfirmDelete} 
-            color="error" 
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
             variant="contained"
             disabled={isDeleting}
           >

@@ -24,7 +24,11 @@ export const getUserOneRepMaxes = (userId: string, unit?: string): Promise<UserO
  * @param unit Optional unit to convert weight to (kg or lbs)
  * @return The one rep max record for the exercise
  */
-export const getUserOneRepMax = (userId: string, exerciseName: string, unit?: string): Promise<UserOneRepMax> => {
+export const getUserOneRepMax = (
+  userId: string,
+  exerciseName: string,
+  unit?: string
+): Promise<UserOneRepMax> => {
   return REQUEST({
     method: 'GET',
     url: `/user_one_rep_max/user/${encodeURIComponent(userId)}/exercise/${encodeURIComponent(exerciseName)}`,
@@ -66,7 +70,10 @@ export const upsertUserOneRepMax = (
  * @param exerciseName The exercise name
  * @return The deleted one rep max record
  */
-export const deleteUserOneRepMax = (userId: string, exerciseName: string): Promise<UserOneRepMax> => {
+export const deleteUserOneRepMax = (
+  userId: string,
+  exerciseName: string
+): Promise<UserOneRepMax> => {
   return REQUEST({
     method: 'DELETE',
     url: `/user_one_rep_max/user/${encodeURIComponent(userId)}/exercise/${encodeURIComponent(exerciseName)}`,

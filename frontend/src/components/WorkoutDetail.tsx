@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { Notes as NotesIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -10,27 +10,27 @@ import {
   useTheme,
 } from '@mui/material';
 import {
-  Timer as TimerIcon,
-  Notes as NotesIcon,
-} from '@mui/icons-material';
-import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
-  getGroupedRowModel,
 } from '@tanstack/react-table';
+import React, { useEffect, useState, useMemo } from 'react';
 
-import { getProgrammedWorkout } from '../api/programmedWorkout';
-import { getWorkoutStagesByWorkout } from '../api/workoutStage';
 import { getProgrammedExercisesByStage } from '../api/programmedExercise';
+import { getProgrammedWorkout } from '../api/programmedWorkout';
 import { getSetSchemesByExercise } from '../api/setScheme';
 import type { ProgrammedWorkout, WorkoutStage, ProgrammedExercise, SetScheme } from '../api/types';
+import { getWorkoutStagesByWorkout } from '../api/workoutStage';
 
 interface WorkoutDetailProps {
   workoutId: number;
   onBack: () => void;
-  onWorkoutDetailsUpdate?: (workoutDetails: { name: string; day_number: number; stages: number }) => void;
+  onWorkoutDetailsUpdate?: (workoutDetails: {
+    name: string;
+    day_number: number;
+    stages: number;
+  }) => void;
 }
 
 interface WorkoutStageWithExercises {
@@ -63,15 +63,18 @@ const columnHelper = createColumnHelper<TableRow>();
 
 /**
  * Detailed workout display component.
- * 
+ *
  * Shows all stages, exercises, and set schemes for a specific workout
  * with sticky section headers that pin under the table header when scrolling.
- * 
+ *
  * @param workoutId The ID of the workout to display
  * @param onBack Callback to go back to the workout list
  * @returns WorkoutDetail component
  */
-export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack, onWorkoutDetailsUpdate }) => {
+export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
+  workoutId,
+  onWorkoutDetailsUpdate,
+}) => {
   const theme = useTheme();
   const [workout, setWorkout] = useState<ProgrammedWorkout | null>(null);
   const [stages, setStages] = useState<WorkoutStageWithExercises[]>([]);
@@ -83,21 +86,21 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Load workout details
         const workoutData = await getProgrammedWorkout(workoutId);
         setWorkout(workoutData);
-        
+
         // Load stages for this workout
         const stagesData = await getWorkoutStagesByWorkout(workoutId);
-        
+
         // Load exercises and set schemes for each stage
         const stagesWithExercises = await Promise.all(
-          stagesData.map(async (stage) => {
+          stagesData.map(async stage => {
             const exercises = await getProgrammedExercisesByStage(stage.id);
-            
+
             const exercisesWithSetSchemes = await Promise.all(
-              exercises.map(async (exercise) => {
+              exercises.map(async exercise => {
                 const setSchemes = await getSetSchemesByExercise(exercise.id);
                 return {
                   exercise,
@@ -105,14 +108,14 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
                 };
               })
             );
-            
+
             return {
               stage,
               exercises: exercisesWithSetSchemes,
             };
           })
         );
-        
+
         setStages(stagesWithExercises);
       } catch (err) {
         console.error('Error loading workout details:', err);
@@ -131,7 +134,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
       onWorkoutDetailsUpdate({
         name: workout.name,
         day_number: workout.day_number,
-        stages: stages.length
+        stages: stages.length,
       });
     }
   }, [workout, stages, onWorkoutDetailsUpdate]);
@@ -139,8 +142,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
   // Transform data for table
   const tableData = useMemo(() => {
     const rows: TableRow[] = [];
-    
-    stages.forEach((stageData) => {
+
+    stages.forEach(stageData => {
       // Add stage header row
       rows.push({
         id: `stage-${stageData.stage.id}`,
@@ -148,9 +151,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
         stageName: stageData.stage.name,
         stageId: stageData.stage.id,
       });
-      
+
       // Add exercise rows
-      stageData.exercises.forEach((exerciseData) => {
+      stageData.exercises.forEach(exerciseData => {
         const setSchemes = exerciseData.setSchemes || [];
         if (setSchemes.length === 0) return;
 
@@ -160,11 +163,15 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
         const reps = firstSetScheme.target_rep_count;
         const weight = firstSetScheme.target_weight;
         const rest = firstSetScheme.rest_seconds;
-        
+
         // Format tempo if available
-        const tempo = firstSetScheme.use_tempo && firstSetScheme.eccentric_tempo && firstSetScheme.isometric_tempo && firstSetScheme.concentric_tempo
-          ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
-          : '-';
+        const tempo =
+          firstSetScheme.use_tempo &&
+          firstSetScheme.eccentric_tempo &&
+          firstSetScheme.isometric_tempo &&
+          firstSetScheme.concentric_tempo
+            ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
+            : '-';
 
         rows.push({
           id: `exercise-${exerciseData.exercise.id}`,
@@ -181,127 +188,104 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
         });
       });
     });
-    
+
     return rows;
   }, [stages]);
 
   // Define columns
-  const columns = useMemo(() => [
-    columnHelper.accessor('exerciseName', {
-      id: 'exercise',
-      header: 'Exercise',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Box display="flex" alignItems="center" gap={1}>
-              <Typography variant="body2">
-                {row.original.exerciseName}
-              </Typography>
-              {row.original.exerciseNotes && (
-                <Tooltip title={row.original.exerciseNotes} arrow>
-                  <IconButton size="small">
-                    <NotesIcon fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
-          );
-        }
-        return null;
-      },
-      size: 200,
-    }),
-    columnHelper.accessor('sets', {
-      id: 'sets',
-      header: 'Sets',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Typography variant="body2">
-              {row.original.sets}
-            </Typography>
-          );
-        }
-        return null;
-      },
-      size: 80,
-    }),
-    columnHelper.accessor('reps', {
-      id: 'reps',
-      header: 'Reps',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Typography variant="body2">
-              {row.original.reps || '-'}
-            </Typography>
-          );
-        }
-        return null;
-      },
-      size: 80,
-    }),
-    columnHelper.accessor('tempo', {
-      id: 'tempo',
-      header: 'Tempo',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Typography variant="body2">
-              {row.original.tempo || '-'}
-            </Typography>
-          );
-        }
-        return null;
-      },
-      size: 120,
-    }),
-    columnHelper.accessor('weight', {
-      id: 'weight',
-      header: 'Weight',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Typography variant="body2">
-              {row.original.weight || '-'}
-            </Typography>
-          );
-        }
-        return null;
-      },
-      size: 120,
-    }),
-    columnHelper.accessor('rest', {
-      id: 'rest',
-      header: 'Rest',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Typography variant="body2">
-              {row.original.rest || '-'}
-            </Typography>
-          );
-        }
-        return null;
-      },
-      size: 120,
-    }),
-    columnHelper.accessor('notes', {
-      id: 'notes',
-      header: 'Notes',
-      cell: ({ row }) => {
-        if (row.original.type === 'exercise') {
-          return (
-            <Typography variant="body2">
-              {row.original.notes}
-            </Typography>
-          );
-        }
-        return null;
-      },
-      size: 80,
-    }),
-  ], []);
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('exerciseName', {
+        id: 'exercise',
+        header: 'Exercise',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return (
+              <Box display="flex" alignItems="center" gap={1}>
+                <Typography variant="body2">{row.original.exerciseName}</Typography>
+                {row.original.exerciseNotes && (
+                  <Tooltip title={row.original.exerciseNotes} arrow>
+                    <IconButton size="small">
+                      <NotesIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </Box>
+            );
+          }
+          return null;
+        },
+        size: 200,
+      }),
+      columnHelper.accessor('sets', {
+        id: 'sets',
+        header: 'Sets',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return <Typography variant="body2">{row.original.sets}</Typography>;
+          }
+          return null;
+        },
+        size: 80,
+      }),
+      columnHelper.accessor('reps', {
+        id: 'reps',
+        header: 'Reps',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return <Typography variant="body2">{row.original.reps || '-'}</Typography>;
+          }
+          return null;
+        },
+        size: 80,
+      }),
+      columnHelper.accessor('tempo', {
+        id: 'tempo',
+        header: 'Tempo',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return <Typography variant="body2">{row.original.tempo || '-'}</Typography>;
+          }
+          return null;
+        },
+        size: 120,
+      }),
+      columnHelper.accessor('weight', {
+        id: 'weight',
+        header: 'Weight',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return <Typography variant="body2">{row.original.weight || '-'}</Typography>;
+          }
+          return null;
+        },
+        size: 120,
+      }),
+      columnHelper.accessor('rest', {
+        id: 'rest',
+        header: 'Rest',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return <Typography variant="body2">{row.original.rest || '-'}</Typography>;
+          }
+          return null;
+        },
+        size: 120,
+      }),
+      columnHelper.accessor('notes', {
+        id: 'notes',
+        header: 'Notes',
+        cell: ({ row }) => {
+          if (row.original.type === 'exercise') {
+            return <Typography variant="body2">{row.original.notes}</Typography>;
+          }
+          return null;
+        },
+        size: 80,
+      }),
+    ],
+    []
+  );
 
   // Create table instance
   const table = useReactTable({
@@ -327,31 +311,25 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
   }
 
   if (!workout) {
-    return (
-      <Alert severity="warning">
-        Workout not found.
-      </Alert>
-    );
+    return <Alert severity="warning">Workout not found.</Alert>;
   }
 
   return (
-    <Box 
-      sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}
-    >
-
-
+    <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
       {/* Table Container */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             {/* Table Column Headers */}
-            <thead style={{ 
-              position: 'sticky', 
-              top: 0,
-              zIndex: 999, 
-              backgroundColor: theme.palette.background.paper,
-              borderBottom: 'none'
-            }}>
+            <thead
+              style={{
+                position: 'sticky',
+                top: 0,
+                zIndex: 999,
+                backgroundColor: theme.palette.background.paper,
+                borderBottom: 'none',
+              }}
+            >
               {table.getHeaderGroups().map(headerGroup => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
@@ -370,10 +348,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
                     >
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </th>
                   ))}
                 </tr>
@@ -384,11 +359,12 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
                 <tr
                   key={row.id}
                   style={{
-                    backgroundColor: row.original.type === 'stage' 
-                      ? theme.palette.mode === 'dark' 
-                        ? theme.palette.grey[800] 
-                        : theme.palette.grey[100]
-                      : theme.palette.background.paper,
+                    backgroundColor:
+                      row.original.type === 'stage'
+                        ? theme.palette.mode === 'dark'
+                          ? theme.palette.grey[800]
+                          : theme.palette.grey[100]
+                        : theme.palette.background.paper,
                     borderBottom: `1px solid ${theme.palette.divider}`,
                   }}
                 >
@@ -401,11 +377,12 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({ workoutId, onBack,
                         textAlign: 'left',
                         fontWeight: 'bold',
                         color: theme.palette.primary.main,
-                        backgroundColor: row.original.type === 'stage' 
-                          ? theme.palette.mode === 'dark' 
-                            ? theme.palette.grey[800] 
-                            : theme.palette.grey[100]
-                          : theme.palette.background.paper,
+                        backgroundColor:
+                          row.original.type === 'stage'
+                            ? theme.palette.mode === 'dark'
+                              ? theme.palette.grey[800]
+                              : theme.palette.grey[100]
+                            : theme.palette.background.paper,
                         borderBottom: `1px solid ${theme.palette.divider}`,
                       }}
                     >

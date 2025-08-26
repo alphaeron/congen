@@ -1,10 +1,11 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { ENDPOINT } from './endpoint';
-import { 
-  getProgrammedWorkouts, 
-  getProgrammedWorkout, 
+import {
+  getProgrammedWorkouts,
+  getProgrammedWorkout,
   getProgrammedWorkoutsByProgram,
-  updateProgrammedWorkout 
+  updateProgrammedWorkout,
 } from './programmedWorkout';
 import type { ProgrammedWorkout } from './types';
 
@@ -124,14 +125,18 @@ describe('ProgrammedWorkout API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPatch('/programmed_workout/1').reply(400, errorResponse);
 
-      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(errorResponse);
+      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(
+        errorResponse
+      );
     });
 
     it('should handle workout not found errors', async () => {
       const errorResponse = { message: 'Workout not found' };
       mock.onPatch('/programmed_workout/999').reply(404, errorResponse);
 
-      await expect(updateProgrammedWorkout(999, 1, 2, 'Updated Push Day')).rejects.toEqual(errorResponse);
+      await expect(updateProgrammedWorkout(999, 1, 2, 'Updated Push Day')).rejects.toEqual(
+        errorResponse
+      );
     });
   });
 });

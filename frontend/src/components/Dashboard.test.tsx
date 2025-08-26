@@ -1,6 +1,7 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+
 import { Dashboard } from './Dashboard';
 import type { User } from '../api/types';
 
@@ -50,11 +51,7 @@ jest.mock('./WorkoutCalendar', () => ({
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('Dashboard', () => {
@@ -74,14 +71,14 @@ describe('Dashboard', () => {
 
   it('renders the dashboard with drawer and content', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
   });
 
   it('displays all menu items in the drawer', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Program Management')).toBeInTheDocument();
     expect(screen.getByText('Workout Flow')).toBeInTheDocument();
@@ -91,7 +88,7 @@ describe('Dashboard', () => {
 
   it('shows overview as the default active tab', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     const overviewButton = screen.getByText('Overview').closest('button');
     expect(overviewButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
@@ -99,10 +96,10 @@ describe('Dashboard', () => {
 
   it('switches to program management when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     const programManagementButton = screen.getByText('Program Management').closest('button');
     fireEvent.click(programManagementButton!);
-    
+
     expect(programManagementButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('program-management')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
@@ -110,10 +107,10 @@ describe('Dashboard', () => {
 
   it('switches to workout flow when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     const workoutFlowButton = screen.getByText('Workout Flow').closest('button');
     fireEvent.click(workoutFlowButton!);
-    
+
     expect(workoutFlowButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('workout-flow')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
@@ -121,10 +118,10 @@ describe('Dashboard', () => {
 
   it('switches to visualization when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     const visualizationButton = screen.getByText('Visualization').closest('button');
     fireEvent.click(visualizationButton!);
-    
+
     expect(visualizationButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('visualization-page')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
@@ -132,10 +129,10 @@ describe('Dashboard', () => {
 
   it('switches to calendar when clicked', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     const calendarButton = screen.getByText('Calendar').closest('button');
     fireEvent.click(calendarButton!);
-    
+
     expect(calendarButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('workout-calendar')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
@@ -143,7 +140,7 @@ describe('Dashboard', () => {
 
   it('calls setDrawerOpen when drawer toggle is triggered', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     // Simulate drawer toggle (this would typically be triggered by a button or resize)
     // Since the drawer is controlled by the useDrawer hook, we test the effect
     expect(mockUseDrawer.setDrawerOpen).toHaveBeenCalledWith(true);
@@ -151,14 +148,14 @@ describe('Dashboard', () => {
 
   it('renders with correct drawer width', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     const drawer = screen.getByRole('navigation');
     expect(drawer).toBeInTheDocument();
   });
 
   it('passes user data to child components', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     expect(screen.getByText('Dashboard Overview for Test User')).toBeInTheDocument();
   });
 
@@ -177,26 +174,26 @@ describe('Dashboard', () => {
     }));
 
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     // Should still render correctly on mobile
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
-    
+
     // Restore original matchMedia
     window.matchMedia = originalMatchMedia;
   });
 
   it('maintains drawer state across tab switches', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     // Switch to program management
     const programManagementButton = screen.getByText('Program Management').closest('button');
     fireEvent.click(programManagementButton!);
-    
+
     // Switch back to overview
     const overviewButton = screen.getByText('Overview').closest('button');
     fireEvent.click(overviewButton!);
-    
+
     // Should show overview content
     expect(screen.getByTestId('dashboard-overview')).toBeInTheDocument();
     expect(overviewButton).toHaveClass('Mui-selected');
@@ -204,9 +201,15 @@ describe('Dashboard', () => {
 
   it('renders all menu items with correct icons', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
-    
+
     // Check that all menu items are present
-    const menuItems = ['Overview', 'Program Management', 'Workout Flow', 'Visualization', 'Calendar'];
+    const menuItems = [
+      'Overview',
+      'Program Management',
+      'Workout Flow',
+      'Visualization',
+      'Calendar',
+    ];
     menuItems.forEach(item => {
       expect(screen.getByText(item)).toBeInTheDocument();
     });

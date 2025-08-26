@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
@@ -50,12 +49,13 @@ class UserExercisePoolTest {
         val preferences = emptyList<UserExercisePreference>()
 
         // When
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // Then
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
@@ -69,22 +69,24 @@ class UserExercisePoolTest {
         // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = true,
-                createdAt = Instant.now()
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = true,
+                    createdAt = Instant.now()
+                )
             )
-        )
 
         // When
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // Then
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
@@ -98,22 +100,24 @@ class UserExercisePoolTest {
         // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = false,
-                createdAt = Instant.now()
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = false,
+                    createdAt = Instant.now()
+                )
             )
-        )
 
         // When
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // Then
         assertEquals(3, userExercisePool.getAvailableExerciseCount())
@@ -125,28 +129,30 @@ class UserExercisePoolTest {
         // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = true,
-                createdAt = Instant.now()
-            ),
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Squat",
-                shouldAvoid = false,
-                createdAt = Instant.now()
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = true,
+                    createdAt = Instant.now()
+                ),
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Squat",
+                    shouldAvoid = false,
+                    createdAt = Instant.now()
+                )
             )
-        )
 
         // When
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // Then
         assertEquals(2, userExercisePool.getAvailableExerciseCount())
@@ -163,12 +169,13 @@ class UserExercisePoolTest {
         val preferences = emptyList<UserExercisePreference>()
 
         // When
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // Then
         assertEquals(5, userExercisePool.getAvailableExerciseCount())
@@ -183,12 +190,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // When
         val result = userExercisePool.markExerciseAsUsed("Bench Press")
@@ -206,12 +214,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // When
         val firstResult = userExercisePool.markExerciseAsUsed("Bench Press")
@@ -230,12 +239,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // When
         val result = userExercisePool.markExerciseAsUsed("Non-existent Exercise")
@@ -252,12 +262,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // When
         val result = userExercisePool.filterExercisesByEquipment(emptyList())
@@ -275,17 +286,19 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
-        val exerciseEquipment = listOf(
-            ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Barbell"),
-            ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Bench")
-        )
+        val exerciseEquipment =
+            listOf(
+                ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Barbell"),
+                ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Bench")
+            )
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseEquipment))
@@ -306,16 +319,18 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
-        val exerciseEquipment = listOf(
-            ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Dumbbell")
-        )
+        val exerciseEquipment =
+            listOf(
+                ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Dumbbell")
+            )
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseEquipment))
@@ -336,12 +351,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.error(RuntimeException("Database error")))
@@ -362,12 +378,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // When
         val result = userExercisePool.filterExercisesByMuscles(exercises, emptyList(), exerciseMuscleDAL)
@@ -385,12 +402,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         // When
         val result = userExercisePool.filterExercisesByMuscles(emptyList(), listOf("Chest"), exerciseMuscleDAL)
@@ -408,16 +426,18 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
-        val exerciseMuscles = listOf(
-            ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
-        )
+        val exerciseMuscles =
+            listOf(
+                ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
+            )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseMuscles))
@@ -438,12 +458,13 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
             .thenReturn(Mono.error(RuntimeException("Database error")))
@@ -461,23 +482,26 @@ class UserExercisePoolTest {
     fun `should handle case insensitive equipment matching`() {
         // Given
         val exercises = createSampleExercises()
-        val userEquipment = listOf(
-            UserEquipment(userId = USER_ID, equipmentName = "BARBELL", createdAt = Instant.now()),
-            UserEquipment(userId = USER_ID, equipmentName = "bench", createdAt = Instant.now())
-        )
+        val userEquipment =
+            listOf(
+                UserEquipment(userId = USER_ID, equipmentName = "BARBELL", createdAt = Instant.now()),
+                UserEquipment(userId = USER_ID, equipmentName = "bench", createdAt = Instant.now())
+            )
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
-        val exerciseEquipment = listOf(
-            ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Barbell"),
-            ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Bench")
-        )
+        val exerciseEquipment =
+            listOf(
+                ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Barbell"),
+                ExerciseEquipment(exerciseName = "Bench Press", equipmentName = "Bench")
+            )
 
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseEquipment))
@@ -498,16 +522,18 @@ class UserExercisePoolTest {
         val userEquipment = createSampleUserEquipment()
         val preferences = emptyList<UserExercisePreference>()
 
-        userExercisePool = UserExercisePool(
-            allExercises = exercises,
-            preferences = preferences,
-            userEquipment = userEquipment,
-            exerciseEquipmentDAL = exerciseEquipmentDAL
-        )
+        userExercisePool =
+            UserExercisePool(
+                allExercises = exercises,
+                preferences = preferences,
+                userEquipment = userEquipment,
+                exerciseEquipmentDAL = exerciseEquipmentDAL
+            )
 
-        val exerciseMuscles = listOf(
-            ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
-        )
+        val exerciseMuscles =
+            listOf(
+                ExerciseMuscle(exerciseName = "Bench Press", muscleName = "Chest")
+            )
 
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Bench Press"))
             .thenReturn(Mono.just(exerciseMuscles))
@@ -554,13 +580,24 @@ class UserExercisePoolTest {
         )
     }
 
-    private fun createExercise(name: String, movementType: MovementType, isAccessory: Boolean = false): Exercise {
+    private fun createExercise(
+        name: String,
+        movementType: MovementType,
+        isAccessory: Boolean = false
+    ): Exercise {
         return Exercise(
             name = name,
             description = "Test exercise description",
             movementType = movementType,
             isUnilateral = false,
-            isUpper = movementType in listOf(MovementType.HORIZONTAL_PUSH, MovementType.VERTICAL_PUSH, MovementType.HORIZONTAL_PULL, MovementType.VERTICAL_PULL),
+            isUpper =
+                movementType in
+                    listOf(
+                        MovementType.HORIZONTAL_PUSH,
+                        MovementType.VERTICAL_PUSH,
+                        MovementType.HORIZONTAL_PULL,
+                        MovementType.VERTICAL_PULL
+                    ),
             isAccessory = isAccessory
         )
     }

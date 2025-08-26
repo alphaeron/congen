@@ -1,4 +1,5 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { generateNextWeek } from './conjugateWorkoutGenerator';
 import { ENDPOINT } from './endpoint';
 import type { Program } from './types';

@@ -13,7 +13,6 @@ import com.congen.model.UserProgramPreferences
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -54,17 +53,18 @@ class WorkoutStageGenerationOrchestratorTest {
         workoutStageGenerationServiceFactory = mock()
         mockWorkoutStageGenerationService = mock()
 
-        orchestrator = WorkoutStageGenerationOrchestrator(
-            workoutStageDAL = workoutStageDAL,
-            workoutStageTypeDAL = workoutStageTypeDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL,
-            setSchemeService = setSchemeService,
-            prilepinGuidelinesService = prilepinGuidelinesService,
-            weightSelectionService = weightSelectionService,
-            userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-            workoutStageGenerationServiceFactory = workoutStageGenerationServiceFactory
-        )
+        orchestrator =
+            WorkoutStageGenerationOrchestrator(
+                workoutStageDAL = workoutStageDAL,
+                workoutStageTypeDAL = workoutStageTypeDAL,
+                programmedExerciseDAL = programmedExerciseDAL,
+                setSchemeDAL = setSchemeDAL,
+                setSchemeService = setSchemeService,
+                prilepinGuidelinesService = prilepinGuidelinesService,
+                weightSelectionService = weightSelectionService,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+                workoutStageGenerationServiceFactory = workoutStageGenerationServiceFactory
+            )
     }
 
     @Test
@@ -81,28 +81,31 @@ class WorkoutStageGenerationOrchestratorTest {
 
         whenever(workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(4))
             .thenReturn(mockWorkoutStageGenerationService)
-        whenever(mockWorkoutStageGenerationService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )).thenReturn(Mono.empty())
+        whenever(
+            mockWorkoutStageGenerationService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
+        ).thenReturn(Mono.empty())
 
         // When
-        val result = orchestrator.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            orchestrator.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -136,28 +139,31 @@ class WorkoutStageGenerationOrchestratorTest {
 
         whenever(workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(4))
             .thenReturn(mockWorkoutStageGenerationService)
-        whenever(mockWorkoutStageGenerationService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )).thenReturn(Mono.error(RuntimeException("Service error")))
+        whenever(
+            mockWorkoutStageGenerationService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
+        ).thenReturn(Mono.error(RuntimeException("Service error")))
 
         // When
-        val result = orchestrator.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            orchestrator.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -179,28 +185,31 @@ class WorkoutStageGenerationOrchestratorTest {
 
         whenever(workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(3))
             .thenReturn(mockWorkoutStageGenerationService)
-        whenever(mockWorkoutStageGenerationService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )).thenReturn(Mono.empty())
+        whenever(
+            mockWorkoutStageGenerationService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
+        ).thenReturn(Mono.empty())
 
         // When
-        val result = orchestrator.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            orchestrator.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -221,7 +230,10 @@ class WorkoutStageGenerationOrchestratorTest {
         )
     }
 
-    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
+    private fun createSampleExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "A sample exercise for testing",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { Add as AddIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -13,31 +13,20 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  Chip,
   List,
   ListItem,
   ListItemText,
-  Divider,
-  IconButton,
-  Tooltip,
   Breadcrumbs,
   Link,
   Slide,
 } from '@mui/material';
-import {
-  FitnessCenter as FitnessCenterIcon,
-  Add as AddIcon,
-  Refresh as RefreshIcon,
-  ArrowBack as ArrowBackIcon,
-  CalendarToday as CalendarIcon,
-  TrendingUp as TrendingUpIcon,
-} from '@mui/icons-material';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { WorkoutDetail } from './WorkoutDetail';
+import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getPrograms } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
-import { WorkoutDetail } from './WorkoutDetail';
 import type { Program, ProgrammedWorkout, User } from '../api/types';
 
 interface WorkoutsProps {
@@ -47,22 +36,22 @@ interface WorkoutsProps {
 
 /**
  * Workouts component for managing and viewing workout programs.
- * 
+ *
  * Features:
  * - Display active program and its workouts
  * - Generate new workouts for programs
  * - View workout details with slide-left animation
  * - Auto-refresh functionality after workout generation
  * - URL query parameters for workout selection
- * 
+ *
  * @param user The current user object
  * @param selectedWorkout The selected workout ID (from URL)
  * @returns Workouts component
  */
-export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => {
+export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  
+
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -70,11 +59,14 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
-  const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{ name: string; day_number: number; stages: number } | null>(null);
+  const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
+    name: string;
+    day_number: number;
+    stages: number;
+  } | null>(null);
 
   // URL query parameters
   const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
-  const selectedSection = searchParams.get('section') || 'overview';
 
   // Reset workout details when workout selection changes
   useEffect(() => {
@@ -108,8 +100,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   }, []); // Only load once on mount
 
   const activeProgram = programs.find(program => program.is_active);
-  const programWorkouts = workouts.filter(workout => 
-    activeProgram && workout.program_id === activeProgram.id
+  const programWorkouts = workouts.filter(
+    workout => activeProgram && workout.program_id === activeProgram.id
   );
 
   const openGenerateDialog = (program: Program) => {
@@ -136,7 +128,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     setError(null);
     try {
       await generateNextWeek(selectedProgram.id);
-      
+
       // Refresh data after generation
       const [programsData, workoutsData] = await Promise.all([
         getPrograms(),
@@ -144,7 +136,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       ]);
       setPrograms(programsData);
       setWorkouts(workoutsData);
-      
+
       setGenerateDialogOpen(false);
       setSelectedProgram(null);
     } catch (err) {
@@ -157,12 +149,12 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
   // Render breadcrumbs
   const renderBreadcrumbs = () => (
-    <Box 
-      position="sticky" 
-      top={0} 
-      zIndex={1001} 
-      sx={{ 
-        pb: 3
+    <Box
+      position="sticky"
+      top={0}
+      zIndex={1001}
+      sx={{
+        pb: 3,
       }}
     >
       <Breadcrumbs sx={{ mb: 2 }}>
@@ -176,7 +168,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         </Link>
         {selectedWorkoutId && currentWorkoutDetails && (
           <Typography variant="body1" color="text.primary">
-            {currentWorkoutDetails.name} (Day {currentWorkoutDetails.day_number}) • {currentWorkoutDetails.stages} stages
+            {currentWorkoutDetails.name} (Day {currentWorkoutDetails.day_number}) •{' '}
+            {currentWorkoutDetails.stages} stages
           </Typography>
         )}
         {selectedWorkoutId && !currentWorkoutDetails && (
@@ -195,9 +188,12 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     }
   };
 
-  const handleWorkoutDetailsUpdate = useCallback((workoutDetails: { name: string; day_number: number; stages: number }) => {
-    setCurrentWorkoutDetails(workoutDetails);
-  }, []);
+  const handleWorkoutDetailsUpdate = useCallback(
+    (workoutDetails: { name: string; day_number: number; stages: number }) => {
+      setCurrentWorkoutDetails(workoutDetails);
+    },
+    []
+  );
 
   return (
     <React.Fragment>
@@ -209,7 +205,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
               No Active Program
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>
-              You need to create a program first before you can generate and view workouts. Please go to the Programs section to create a program.
+              You need to create a program first before you can generate and view workouts. Please
+              go to the Programs section to create a program.
             </Typography>
           </CardContent>
         </Card>
@@ -229,7 +226,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                             {activeProgram.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Week {activeProgram.current_week_number} • {programWorkouts.length} workouts
+                            Week {activeProgram.current_week_number} • {programWorkouts.length}{' '}
+                            workouts
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>
@@ -260,17 +258,18 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                         </Box>
                       ) : programWorkouts.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">
-                          No workouts generated yet. Click "Generate Workouts" to create your first workout.
+                          No workouts generated yet. Click &quot;Generate Workouts&quot; to create
+                          your first workout.
                         </Typography>
                       ) : (
                         <List>
                           {programWorkouts.map((workout, index) => (
-                            <ListItem 
-                              key={workout.id} 
+                            <ListItem
+                              key={workout.id}
                               disablePadding
-                              sx={{ 
+                              sx={{
                                 cursor: 'pointer',
-                                '&:hover': { backgroundColor: 'action.hover' }
+                                '&:hover': { backgroundColor: 'action.hover' },
                               }}
                               onClick={() => handleWorkoutClick(workout.id)}
                             >
@@ -293,8 +292,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
           {selectedWorkoutId && (
             <Slide direction="left" in={!!selectedWorkoutId} mountOnEnter unmountOnExit>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <WorkoutDetail 
-                  workoutId={parseInt(selectedWorkoutId)} 
+                <WorkoutDetail
+                  workoutId={parseInt(selectedWorkoutId)}
                   onBack={handleBackToWorkouts}
                   onWorkoutDetailsUpdate={handleWorkoutDetailsUpdate}
                 />
@@ -309,7 +308,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         <DialogTitle>Generate Workouts</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Generate next week's workouts for {selectedProgram?.name}?
+            Generate next week&apos;s workouts for {selectedProgram?.name}?
           </DialogContentText>
         </DialogContent>
         <DialogActions>

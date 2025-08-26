@@ -59,11 +59,11 @@ describe('UserProfile', () => {
         session_time_length_in_minutes: 60,
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
-      }
+      },
     });
 
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, {
-      data: []
+      data: [],
     });
 
     mock.onGet('/exercises').reply(200, [
@@ -111,7 +111,7 @@ describe('UserProfile', () => {
 
     // Check that the workout preferences tab is selected and the main heading is visible
     expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
-    
+
     // The content might still be loading, but the navigation should work
     // We can see from the DOM that the Workout Preferences tab is selected (Mui-selected class)
     const selectedTab = screen.getByText('Workout Preferences').closest('.Mui-selected');

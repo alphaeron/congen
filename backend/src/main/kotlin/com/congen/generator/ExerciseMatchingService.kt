@@ -492,8 +492,6 @@ class ExerciseMatchingService(
             score += calculateMovementTypeSimilarity(exercise.movementType, primaryExercise.movementType)
         }
 
-
-
         return score
     }
 
@@ -518,7 +516,7 @@ class ExerciseMatchingService(
                     .map { exerciseMuscles ->
                         val primaryMuscleNames = primaryExerciseMuscles.map { it.muscleName }.toSet()
                         val exerciseMuscleNames = exerciseMuscles.map { it.muscleName }.toSet()
-                        
+
                         var score = 0.0
 
                         // Movement type similarity (highest weight)
@@ -532,8 +530,6 @@ class ExerciseMatchingService(
                         // Muscle overlap similarity
                         val muscleOverlapScore = calculateMuscleOverlapScore(primaryMuscleNames, exerciseMuscleNames)
                         score += muscleOverlapScore
-
-
 
                         score
                     }

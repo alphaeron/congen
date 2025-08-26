@@ -1,7 +1,13 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { ENDPOINT } from './endpoint';
-import { getUserOneRepMaxes, getUserOneRepMax, upsertUserOneRepMax, deleteUserOneRepMax } from './userOneRepMax';
 import type { UserOneRepMax } from './types';
+import {
+  getUserOneRepMaxes,
+  getUserOneRepMax,
+  upsertUserOneRepMax,
+  deleteUserOneRepMax,
+} from './userOneRepMax';
 
 const mock = new MockAdapter(ENDPOINT);
 
@@ -35,7 +41,9 @@ describe('UserOneRepMax API', () => {
 
     it('should get one rep maxes with unit parameter', async () => {
       const oneRepMaxes = [mockOneRepMax];
-      mock.onGet(`/user_one_rep_max/user/${mockUserId}`, { params: { unit: 'KG' } }).reply(200, oneRepMaxes);
+      mock
+        .onGet(`/user_one_rep_max/user/${mockUserId}`, { params: { unit: 'KG' } })
+        .reply(200, oneRepMaxes);
 
       const result = await getUserOneRepMaxes(mockUserId, 'KG');
 
@@ -55,32 +63,45 @@ describe('UserOneRepMax API', () => {
   describe('getUserOneRepMax', () => {
     it('should get a specific one rep max successfully', async () => {
       const exerciseName = 'Bench Press';
-      mock.onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`).reply(200, mockOneRepMax);
+      mock
+        .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`)
+        .reply(200, mockOneRepMax);
 
       const result = await getUserOneRepMax(mockUserId, exerciseName);
 
       expect(result).toEqual(mockOneRepMax);
       expect(mock.history.get).toHaveLength(1);
-      expect(mock.history.get[0].url).toBe(`/user_one_rep_max/user/${mockUserId}/exercise/Bench%20Press`);
+      expect(mock.history.get[0].url).toBe(
+        `/user_one_rep_max/user/${mockUserId}/exercise/Bench%20Press`
+      );
     });
 
     it('should get one rep max with unit parameter', async () => {
       const exerciseName = 'Bench Press';
-      mock.onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`, { 
-        params: { unit: 'KG' } 
-      }).reply(200, mockOneRepMax);
+      mock
+        .onGet(
+          `/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`,
+          {
+            params: { unit: 'KG' },
+          }
+        )
+        .reply(200, mockOneRepMax);
 
       const result = await getUserOneRepMax(mockUserId, exerciseName, 'KG');
 
       expect(result).toEqual(mockOneRepMax);
       expect(mock.history.get).toHaveLength(1);
-      expect(mock.history.get[0].url).toBe(`/user_one_rep_max/user/${mockUserId}/exercise/Bench%20Press`);
+      expect(mock.history.get[0].url).toBe(
+        `/user_one_rep_max/user/${mockUserId}/exercise/Bench%20Press`
+      );
     });
 
     it('should handle get one rep max errors', async () => {
       const exerciseName = 'Bench Press';
       const errorResponse = { message: 'Not found' };
-      mock.onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`).reply(404, errorResponse);
+      mock
+        .onGet(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`)
+        .reply(404, errorResponse);
 
       await expect(getUserOneRepMax(mockUserId, exerciseName)).rejects.toEqual(errorResponse);
     });
@@ -101,26 +122,38 @@ describe('UserOneRepMax API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPut('/user_one_rep_max/').reply(400, errorResponse);
 
-      await expect(upsertUserOneRepMax(mockUserId, 'Bench Press', 225, 'KG')).rejects.toEqual(errorResponse);
+      await expect(upsertUserOneRepMax(mockUserId, 'Bench Press', 225, 'KG')).rejects.toEqual(
+        errorResponse
+      );
     });
   });
 
   describe('deleteUserOneRepMax', () => {
     it('should delete a one rep max successfully', async () => {
       const exerciseName = 'Bench Press';
-      mock.onDelete(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`).reply(200, mockOneRepMax);
+      mock
+        .onDelete(
+          `/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`
+        )
+        .reply(200, mockOneRepMax);
 
       const result = await deleteUserOneRepMax(mockUserId, exerciseName);
 
       expect(result).toEqual(mockOneRepMax);
       expect(mock.history.delete).toHaveLength(1);
-      expect(mock.history.delete[0].url).toBe(`/user_one_rep_max/user/${mockUserId}/exercise/Bench%20Press`);
+      expect(mock.history.delete[0].url).toBe(
+        `/user_one_rep_max/user/${mockUserId}/exercise/Bench%20Press`
+      );
     });
 
     it('should handle delete errors', async () => {
       const exerciseName = 'Bench Press';
       const errorResponse = { message: 'Not found' };
-      mock.onDelete(`/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`).reply(404, errorResponse);
+      mock
+        .onDelete(
+          `/user_one_rep_max/user/${mockUserId}/exercise/${encodeURIComponent(exerciseName)}`
+        )
+        .reply(404, errorResponse);
 
       await expect(deleteUserOneRepMax(mockUserId, exerciseName)).rejects.toEqual(errorResponse);
     });

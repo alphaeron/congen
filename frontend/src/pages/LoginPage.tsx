@@ -58,9 +58,9 @@ export const LoginPage: React.FC = () => {
           textAlign="center"
           sx={{ maxWidth: 400 }}
         >
-          By creating an account, you confirm that you are at least 16 years old and consent to the 
-          processing of your personal data for account creation and service provision in 
-          accordance with our{' '}
+          By creating an account, you confirm that you are at least 16 years old and consent to the
+          processing of your personal data for account creation and service provision in accordance
+          with our{' '}
           <a href="/privacy_policy" style={{ color: 'inherit', textDecoration: 'underline' }}>
             Privacy Policy
           </a>

@@ -36,9 +36,7 @@ class WorkoutStageGenerationServiceFactory(
      * @return The appropriate WorkoutStageGenerationService for the program type
      * @throws IllegalArgumentException if programDaysPerWeek is not 2, 3, or 4
      */
-    fun getWorkoutStageGenerationService(
-        programDaysPerWeek: Int
-    ): WorkoutStageGenerationService {
+    fun getWorkoutStageGenerationService(programDaysPerWeek: Int): WorkoutStageGenerationService {
         return when (programDaysPerWeek) {
             2 -> twoDayWorkoutStageGenerationService
             3 -> threeDayWorkoutStageGenerationService

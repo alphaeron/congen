@@ -1,4 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
+
+import { ENDPOINT } from './endpoint';
 import {
   createUserProgramPreferences,
   getUserProgramPreferences,
@@ -6,7 +8,6 @@ import {
   deleteUserProgramPreferences,
   type UserProgramPreferences,
 } from './userProgramPreferences';
-import { ENDPOINT } from './endpoint';
 
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
@@ -90,7 +91,9 @@ describe('userProgramPreferences API', () => {
 
   describe('deleteUserProgramPreferences', () => {
     it('should delete user program preferences successfully', async () => {
-      mock.onDelete('/user_program_preferences/test-user-id').reply(200, mockUserProgramPreferences);
+      mock
+        .onDelete('/user_program_preferences/test-user-id')
+        .reply(200, mockUserProgramPreferences);
 
       const result = await deleteUserProgramPreferences('test-user-id');
 

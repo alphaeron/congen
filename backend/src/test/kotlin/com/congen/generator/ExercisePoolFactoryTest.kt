@@ -49,15 +49,16 @@ class ExercisePoolFactoryTest {
         userEquipmentDAL = mock()
         userExercisePreferenceDAL = mock()
 
-        exercisePoolFactory = ExercisePoolFactory(
-            exerciseEquipmentDAL = exerciseEquipmentDAL,
-            exerciseMuscleDAL = exerciseMuscleDAL,
-            exerciseWorkoutTypeDAL = exerciseWorkoutTypeDAL,
-            exerciseMatchingService = exerciseMatchingService,
-            exerciseDAL = exerciseDAL,
-            userEquipmentDAL = userEquipmentDAL,
-            userExercisePreferenceDAL = userExercisePreferenceDAL
-        )
+        exercisePoolFactory =
+            ExercisePoolFactory(
+                exerciseEquipmentDAL = exerciseEquipmentDAL,
+                exerciseMuscleDAL = exerciseMuscleDAL,
+                exerciseWorkoutTypeDAL = exerciseWorkoutTypeDAL,
+                exerciseMatchingService = exerciseMatchingService,
+                exerciseDAL = exerciseDAL,
+                userEquipmentDAL = userEquipmentDAL,
+                userExercisePreferenceDAL = userExercisePreferenceDAL
+            )
     }
 
     @Test
@@ -157,14 +158,15 @@ class ExercisePoolFactoryTest {
         // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = true,
-                createdAt = Instant.now()
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = true,
+                    createdAt = Instant.now()
+                )
             )
-        )
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
@@ -220,7 +222,9 @@ class ExercisePoolFactoryTest {
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
-        whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(
+            userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)
+        ).thenReturn(Mono.error(RuntimeException("Database error")))
 
         // When
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
@@ -236,20 +240,21 @@ class ExercisePoolFactoryTest {
         // Given
         val exercises = createSampleExercises()
         val userEquipment = createSampleUserEquipment()
-        val preferences = listOf(
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Bench Press",
-                shouldAvoid = true,
-                createdAt = Instant.now()
-            ),
-            UserExercisePreference(
-                userId = USER_ID,
-                exerciseName = "Squat",
-                shouldAvoid = false,
-                createdAt = Instant.now()
+        val preferences =
+            listOf(
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Bench Press",
+                    shouldAvoid = true,
+                    createdAt = Instant.now()
+                ),
+                UserExercisePreference(
+                    userId = USER_ID,
+                    exerciseName = "Squat",
+                    shouldAvoid = false,
+                    createdAt = Instant.now()
+                )
             )
-        )
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
@@ -262,7 +267,7 @@ class ExercisePoolFactoryTest {
         StepVerifier.create(result)
             .expectNextMatches { pool ->
                 !pool.getAvailableExercises().any { it.name == "Bench Press" } &&
-                pool.getAvailableExercises().any { it.name == "Squat" }
+                    pool.getAvailableExercises().any { it.name == "Squat" }
             }
             .verifyComplete()
     }
@@ -270,10 +275,11 @@ class ExercisePoolFactoryTest {
     @Test
     fun `createPoolForUser should handle exercises with no equipment requirements`() {
         // Given
-        val exercises = listOf(
-            createExercise("Bodyweight Squat", MovementType.SQUAT),
-            createExercise("Push-up", MovementType.HORIZONTAL_PUSH)
-        )
+        val exercises =
+            listOf(
+                createExercise("Bodyweight Squat", MovementType.SQUAT),
+                createExercise("Push-up", MovementType.HORIZONTAL_PUSH)
+            )
         val userEquipment = createSampleUserEquipment()
         val preferences = createSamplePreferences()
 
@@ -295,22 +301,24 @@ class ExercisePoolFactoryTest {
     @Test
     fun `createPoolForUser should handle exercises with multiple equipment requirements`() {
         // Given
-        val exercises = listOf(
-            createExercise("Barbell Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Dumbbell Bench Press", MovementType.HORIZONTAL_PUSH)
-        )
-        val userEquipment = listOf(
-            UserEquipment(
-                userId = USER_ID,
-                equipmentName = "Barbell",
-                createdAt = Instant.now()
-            ),
-            UserEquipment(
-                userId = USER_ID,
-                equipmentName = "Bench",
-                createdAt = Instant.now()
+        val exercises =
+            listOf(
+                createExercise("Barbell Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Dumbbell Bench Press", MovementType.HORIZONTAL_PUSH)
             )
-        )
+        val userEquipment =
+            listOf(
+                UserEquipment(
+                    userId = USER_ID,
+                    equipmentName = "Barbell",
+                    createdAt = Instant.now()
+                ),
+                UserEquipment(
+                    userId = USER_ID,
+                    equipmentName = "Bench",
+                    createdAt = Instant.now()
+                )
+            )
         val preferences = createSamplePreferences()
 
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
@@ -362,13 +370,23 @@ class ExercisePoolFactoryTest {
         )
     }
 
-    private fun createExercise(name: String, movementType: MovementType): Exercise {
+    private fun createExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "Test exercise description",
             movementType = movementType,
             isUnilateral = false,
-            isUpper = movementType in listOf(MovementType.HORIZONTAL_PUSH, MovementType.VERTICAL_PUSH, MovementType.HORIZONTAL_PULL, MovementType.VERTICAL_PULL),
+            isUpper =
+                movementType in
+                    listOf(
+                        MovementType.HORIZONTAL_PUSH,
+                        MovementType.VERTICAL_PUSH,
+                        MovementType.HORIZONTAL_PULL,
+                        MovementType.VERTICAL_PULL
+                    ),
             isAccessory = false
         )
     }

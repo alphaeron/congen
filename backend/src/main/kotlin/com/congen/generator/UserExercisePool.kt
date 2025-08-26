@@ -37,29 +37,30 @@ class UserExercisePool(
 
     /** Thread-safe map of available exercises by name. Exercises are removed immediately when used. */
     private val availableExercises = ConcurrentHashMap<String, Exercise>()
-    
+
     /** Thread-safe set of used exercise names for tracking. */
     private val usedExerciseNames = ConcurrentHashMap.newKeySet<String>()
 
     init {
         // Initialize available exercises with all exercises that match user preferences
         // Equipment filtering will be done reactively during exercise selection
-        val preferenceFilteredExercises = allExercises.filter { exercise ->
-            val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
-            when {
-                // If user has a preference to avoid this exercise, exclude it
-                preference?.shouldAvoid == true -> false
-                // If user has a preference for this exercise (shouldAvoid = false), include it
-                preference?.shouldAvoid == false -> true
-                // If no preference exists, include the exercise (default behavior)
-                else -> true
+        val preferenceFilteredExercises =
+            allExercises.filter { exercise ->
+                val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
+                when {
+                    // If user has a preference to avoid this exercise, exclude it
+                    preference?.shouldAvoid == true -> false
+                    // If user has a preference for this exercise (shouldAvoid = false), include it
+                    preference?.shouldAvoid == false -> true
+                    // If no preference exists, include the exercise (default behavior)
+                    else -> true
+                }
             }
-        }
-        
+
         preferenceFilteredExercises.forEach { exercise ->
             availableExercises[exercise.name] = exercise
         }
-        
+
         logger.debug("Initialized UserExercisePool with {} exercises (filtered by preferences only)", availableExercises.size)
     }
 
@@ -81,18 +82,17 @@ class UserExercisePool(
         val exercise = availableExercises.remove(exerciseName)
         return if (exercise != null) {
             usedExerciseNames.add(exerciseName)
-            logger.debug("Marked exercise as used and removed from pool: {}. Available exercises remaining: {}", 
-                exerciseName, availableExercises.size)
+            logger.debug(
+                "Marked exercise as used and removed from pool: {}. Available exercises remaining: {}",
+                exerciseName,
+                availableExercises.size
+            )
             true
         } else {
             logger.debug("Exercise was already used or not available: {}", exerciseName)
             false
         }
     }
-
-
-
-
 
     /**
      * Gets all currently available exercises (thread-safe).

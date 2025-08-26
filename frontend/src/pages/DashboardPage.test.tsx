@@ -1,5 +1,5 @@
+import { render, screen } from '@testing-library/react';
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 
 import { DashboardPage } from './DashboardPage';
@@ -34,7 +34,9 @@ jest.mock('react-oidc-context', () => ({
 
 // Mock the Dashboard component
 jest.mock('../components/Dashboard', () => ({
-  Dashboard: ({ user }: { user: any }) => <div data-testid="dashboard">Dashboard for {user.name}</div>,
+  Dashboard: ({ user }: { user: User }) => (
+    <div data-testid="dashboard">Dashboard for {user.name}</div>
+  ),
 }));
 
 // Mock the LoadingSpinner component
@@ -94,7 +96,9 @@ describe('DashboardPage', () => {
     renderWithProviders(<DashboardPage />);
 
     expect(screen.getByText('Loading Dashboard')).toBeInTheDocument();
-    expect(screen.getByText(/Please ensure you have a profile to access the dashboard/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Please ensure you have a profile to access the dashboard/)
+    ).toBeInTheDocument();
   });
 
   it('should render dashboard when user has a profile', () => {

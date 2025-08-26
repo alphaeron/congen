@@ -95,20 +95,21 @@ class FourDayWorkoutStageGenerationService(
             }
 
         // Select primary exercise and generate set schemes
-        val primaryExerciseMono = selectPrimaryExercise(
-            userExercisePool = userExercisePool,
-            workoutType = workoutType,
-            weakMuscles = weakMuscles,
-            dayType = dayType,
-            movementBalanceState = movementBalanceState
-        ).cache()
+        val primaryExerciseMono =
+            selectPrimaryExercise(
+                userExercisePool = userExercisePool,
+                workoutType = workoutType,
+                weakMuscles = weakMuscles,
+                dayType = dayType,
+                movementBalanceState = movementBalanceState
+            ).cache()
 
         val primarySetSchemesMono =
             primaryExerciseMono.flatMap { primaryExercise ->
                 // Update movement balance state with primary exercise
                 movementBalanceState = updateMovementBalanceState(movementBalanceState, primaryExercise, false)
                 logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
-                
+
                 generateSetSchemes(
                     exercise = primaryExercise,
                     movementRole = "primary",
@@ -123,23 +124,24 @@ class FourDayWorkoutStageGenerationService(
             }
 
         // Select secondary exercise if applicable
-        val secondaryExerciseMono = if (conjugateTemplates.hasSecondaryMovement(dayType)) {
-            primaryExerciseMono.flatMap { primaryExercise ->
-                        selectSecondaryExercise(
-                            userExercisePool = userExercisePool,
-                            primaryExercise = primaryExercise,
-                            workoutType = workoutType,
-                            dayType = dayType,
-                            movementBalanceState = movementBalanceState
+        val secondaryExerciseMono =
+            if (conjugateTemplates.hasSecondaryMovement(dayType)) {
+                primaryExerciseMono.flatMap { primaryExercise ->
+                    selectSecondaryExercise(
+                        userExercisePool = userExercisePool,
+                        primaryExercise = primaryExercise,
+                        workoutType = workoutType,
+                        dayType = dayType,
+                        movementBalanceState = movementBalanceState
                     ).doOnNext { secondaryExercise ->
-                    // Update movement balance state with secondary exercise
-                    movementBalanceState = updateMovementBalanceState(movementBalanceState, secondaryExercise, false)
-                    logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
+                        // Update movement balance state with secondary exercise
+                        movementBalanceState = updateMovementBalanceState(movementBalanceState, secondaryExercise, false)
+                        logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
+                    }
                 }
+            } else {
+                Mono.empty()
             }
-        } else {
-            Mono.empty()
-        }
 
         val secondarySetSchemesMono =
             secondaryExerciseMono.flatMap { secondaryExercise ->
@@ -164,19 +166,20 @@ class FourDayWorkoutStageGenerationService(
             .flatMap { tuple ->
                 val primaryExercise = tuple.t1
                 val primarySetSchemes = tuple.t2
-                
+
                 // Get secondary exercise and set schemes if available
-                val secondaryExerciseAndSchemesMono = secondaryExerciseMono
-                    .flatMap { secondaryExercise ->
-                        logger.info("Secondary exercise found: {} for dayType: {}", secondaryExercise.name, dayType)
-                        secondarySetSchemesMono.map { secondarySetSchemes ->
-                            Triple(secondaryExercise, secondarySetSchemes, true)
+                val secondaryExerciseAndSchemesMono =
+                    secondaryExerciseMono
+                        .flatMap { secondaryExercise ->
+                            logger.info("Secondary exercise found: {} for dayType: {}", secondaryExercise.name, dayType)
+                            secondarySetSchemesMono.map { secondarySetSchemes ->
+                                Triple(secondaryExercise, secondarySetSchemes, true)
+                            }
                         }
-                    }
-                    .switchIfEmpty(
-                        Mono.just(Triple<Exercise?, List<SetSchemeParams>, Boolean>(null, emptyList(), false))
-                    )
-                
+                        .switchIfEmpty(
+                            Mono.just(Triple<Exercise?, List<SetSchemeParams>, Boolean>(null, emptyList(), false))
+                        )
+
                 secondaryExerciseAndSchemesMono.flatMap { (secondaryExercise, secondarySetSchemes, hasSecondary) ->
                     val numAccessoryExercises =
                         calculateNumAccessoryExercises(
@@ -188,7 +191,7 @@ class FourDayWorkoutStageGenerationService(
 
                     // Create stages sequentially with conditional secondary stage
                     val stageCreators = mutableListOf<() -> Mono<Void>>()
-                    
+
                     // Always add warmup stage
                     stageCreators.add {
                         createWarmupStage(
@@ -202,7 +205,7 @@ class FourDayWorkoutStageGenerationService(
                             userId = userId
                         )
                     }
-                    
+
                     // Always add primary stage
                     stageCreators.add {
                         createPrimaryStage(
@@ -211,7 +214,7 @@ class FourDayWorkoutStageGenerationService(
                             setSchemes = primarySetSchemes
                         )
                     }
-                    
+
                     // Add secondary stage only if we have a secondary exercise
                     if (hasSecondary && secondaryExercise != null) {
                         stageCreators.add {
@@ -222,7 +225,7 @@ class FourDayWorkoutStageGenerationService(
                             )
                         }
                     }
-                    
+
                     // Always add accessory stage
                     stageCreators.add {
                         createAccessoryStage(
@@ -237,7 +240,7 @@ class FourDayWorkoutStageGenerationService(
                             movementBalanceState = movementBalanceState
                         )
                     }
-                    
+
                     // Always add conditioning stage (for DE days)
                     stageCreators.add {
                         createConditioningStage(
@@ -250,7 +253,7 @@ class FourDayWorkoutStageGenerationService(
                             movementBalanceState = movementBalanceState
                         )
                     }
-                    
+
                     createStagesSequentially(stageCreators)
                 }
             }

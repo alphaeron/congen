@@ -27,7 +27,9 @@ jest.mock('react-router', () => ({
   ),
   Routes: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Route: ({ element }: { element: React.ReactNode }) => <div>{element}</div>,
-  Navigate: ({ to }: { to: string }) => <div data-testid={`navigate-to-${to}`}>Navigate to {to}</div>,
+  Navigate: ({ to }: { to: string }) => (
+    <div data-testid={`navigate-to-${to}`}>Navigate to {to}</div>
+  ),
 }));
 
 // Mock the AuthContext

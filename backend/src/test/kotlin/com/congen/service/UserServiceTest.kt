@@ -61,25 +61,29 @@ class UserServiceTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just(keycloakId))
         whenever(keycloakUtil.getCurrentUserName()).thenReturn(Mono.just(name))
         whenever(userDAL.insertUser(eq(keycloakId), eq(name))).thenReturn(Mono.just(testUser))
-        whenever(gdprComplianceService.updateUserConsent(eq(keycloakId), eq(true))).thenReturn(Mono.just(
-            UserConsent(
-                keycloakId = keycloakId,
-                dataProcessingConsent = true,
-                consentTimestamp = now,
-                createdAt = now,
-                updatedAt = now
-            )
-        ))
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(any(), any(), any()))
-            .thenReturn(Mono.just(
-                UserProgramPreferences(
-                    userId = keycloakId,
-                    programDaysPerWeek = 4,
-                    sessionTimeLengthInMinutes = 60,
+        whenever(gdprComplianceService.updateUserConsent(eq(keycloakId), eq(true))).thenReturn(
+            Mono.just(
+                UserConsent(
+                    keycloakId = keycloakId,
+                    dataProcessingConsent = true,
+                    consentTimestamp = now,
                     createdAt = now,
                     updatedAt = now
                 )
-            ))
+            )
+        )
+        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(any(), any(), any()))
+            .thenReturn(
+                Mono.just(
+                    UserProgramPreferences(
+                        userId = keycloakId,
+                        programDaysPerWeek = 4,
+                        sessionTimeLengthInMinutes = 60,
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                )
+            )
 
         // When
         val result = userService.insertUser()

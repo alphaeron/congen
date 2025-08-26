@@ -1,8 +1,8 @@
 import { default as AddIcon } from '@mui/icons-material/Add';
-import { default as EditIcon } from '@mui/icons-material/Edit';
 import { default as DeleteIcon } from '@mui/icons-material/Delete';
-import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
+import { default as EditIcon } from '@mui/icons-material/Edit';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
+import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
 import {
   Box,
   Button,
@@ -103,7 +103,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         selectedProgram.current_week_number,
         formData.isActive
       );
-      setPrograms(prev => prev.map(p => p.id === selectedProgram.id ? updatedProgram : p));
+      setPrograms(prev => prev.map(p => (p.id === selectedProgram.id ? updatedProgram : p)));
       setEditDialogOpen(false);
       setSelectedProgram(null);
       setFormData({ name: '', isActive: true });
@@ -156,9 +156,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   return (
     <React.Fragment>
       <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
-        <Typography variant="h5">
-          Program Management
-        </Typography>
+        <Typography variant="h5">Program Management</Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
@@ -176,22 +174,24 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
       {/* Programs Grid */}
       <Grid container spacing={3}>
-        {programs.map((program) => {
+        {programs.map(program => {
           const programWorkouts = getWorkoutsForProgram(program.id);
           return (
             <Grid item xs={12} md={6} lg={4} key={program.id}>
               <Card>
                 <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    sx={{ mb: 2 }}
+                  >
                     <Typography variant="h6" component="h3">
                       {program.name}
                     </Typography>
                     <Box>
                       <Tooltip title="Edit Program">
-                        <IconButton
-                          size="small"
-                          onClick={() => openEditDialog(program)}
-                        >
+                        <IconButton size="small" onClick={() => openEditDialog(program)}>
                           <EditIcon />
                         </IconButton>
                       </Tooltip>
@@ -235,7 +235,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                         Recent Workouts:
                       </Typography>
                       <Box display="flex" flexWrap="wrap" gap={0.5}>
-                        {programWorkouts.slice(-3).map((workout) => (
+                        {programWorkouts.slice(-3).map(workout => (
                           <Chip
                             key={workout.id}
                             label={`Day ${workout.day_number}: ${workout.name}`}
@@ -277,7 +277,12 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       )}
 
       {/* Create Program Dialog */}
-      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Create New Program</DialogTitle>
         <DialogContent>
           <TextField
@@ -287,14 +292,14 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
             fullWidth
             variant="outlined"
             value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
             sx={{ mb: 2 }}
           />
           <FormControlLabel
             control={
               <Switch
                 checked={formData.isActive}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
               />
             }
             label="Set as active program"
@@ -313,7 +318,12 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       </Dialog>
 
       {/* Edit Program Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => setEditDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Edit Program</DialogTitle>
         <DialogContent>
           <TextField
@@ -323,14 +333,14 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
             fullWidth
             variant="outlined"
             value={formData.name}
-            onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
             sx={{ mb: 2 }}
           />
           <FormControlLabel
             control={
               <Switch
                 checked={formData.isActive}
-                onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
+                onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
               />
             }
             label="Set as active program"
@@ -353,7 +363,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         <DialogTitle>Delete Program</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete "{selectedProgram?.name}"? This action cannot be undone.
+            Are you sure you want to delete this program? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>

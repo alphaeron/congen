@@ -434,7 +434,7 @@ class PrilepinGuidelinesServiceTest {
     fun `getRandomRestTime should round rest times to standard intervals`() {
         // Test various ranges to ensure they round to standard intervals
         val standardIntervals = listOf(30, 45, 60, 90, 120, 180, 300)
-        
+
         // Test 60..90 range - should round to 60, 90, or 120
         repeat(100) {
             val restTime = service.getRandomRestTime(60..90)
@@ -442,14 +442,14 @@ class PrilepinGuidelinesServiceTest {
             // Rest time should be 60, 90, or 120 for range 60..90
             assertTrue(restTime in listOf(60, 90, 120), "Rest time $restTime should be 60, 90, or 120 for range 60..90")
         }
-        
+
         // Test 90..120 range - should round to 90 or 120
         repeat(100) {
             val restTime = service.getRandomRestTime(90..120)
             assertTrue(restTime in standardIntervals, "Rest time $restTime should be a standard interval")
             assertTrue(restTime in listOf(90, 120), "Rest time $restTime should be 90 or 120 for range 90..120")
         }
-        
+
         // Test 180..300 range - should round to 180, 240, or 300
         repeat(100) {
             val restTime = service.getRandomRestTime(180..300)
@@ -465,12 +465,12 @@ class PrilepinGuidelinesServiceTest {
             val restTime = service.getRandomRestTime(60..60)
             assertEquals(60, restTime, "Exact 60 should remain 60")
         }
-        
+
         repeat(50) {
             val restTime = service.getRandomRestTime(90..90)
             assertEquals(90, restTime, "Exact 90 should remain 90")
         }
-        
+
         repeat(50) {
             val restTime = service.getRandomRestTime(180..180)
             assertEquals(180, restTime, "Exact 180 should remain 180")
@@ -480,16 +480,17 @@ class PrilepinGuidelinesServiceTest {
     @Test
     fun `getRandomRestTime should round to nearest standard interval`() {
         // Test values that should round to specific intervals
-        val testCases = mapOf(
-            45 to 45,
-            75 to 60,
-            105 to 90,
-            150 to 120,
-            210 to 180,
-            270 to 300,
-            330 to 300,
-        )
-        
+        val testCases =
+            mapOf(
+                45 to 45,
+                75 to 60,
+                105 to 90,
+                150 to 120,
+                210 to 180,
+                270 to 300,
+                330 to 300,
+            )
+
         testCases.forEach { (input, expected) ->
             // Since we can't directly test the private roundRestTimeToStandardInterval function,
             // we test by creating a range that will always generate the input value

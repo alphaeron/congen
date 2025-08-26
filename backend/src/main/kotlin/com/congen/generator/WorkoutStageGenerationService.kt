@@ -9,8 +9,6 @@ import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
-import com.congen.model.UserEquipment
-import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserProgramPreferences
 import com.congen.model.WeightUnit
@@ -18,7 +16,6 @@ import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import kotlin.random.Random
@@ -322,13 +319,14 @@ abstract class WorkoutStageGenerationService(
         )
             .flatMap { accessoryStage ->
                 // Generate a consistent rest time for all accessory exercises
-                val guidelines = prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                    dayType = dayType,
-                    currentWeekNumber = currentWeekNumber,
-                    movementRole = "accessory"
-                ).first
+                val guidelines =
+                    prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                        dayType = dayType,
+                        currentWeekNumber = currentWeekNumber,
+                        movementRole = "accessory"
+                    ).first
                 val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
-                
+
                 Flux.range(1, numAccessoryExercises)
                     .concatMap {
                         selectAccessoryExercise(
@@ -459,13 +457,14 @@ abstract class WorkoutStageGenerationService(
         userId: String,
     ): Mono<Void> {
         // Determine workout type based on day template
-        val workoutType = when {
-            dayType.contains("_DE_") -> "dynamic_effort"
-            dayType.startsWith("ME_") -> "maximal_effort"
-            dayType.startsWith("DE_") -> "dynamic_effort"
-            else -> "maximal_effort"
-        }
-        
+        val workoutType =
+            when {
+                dayType.contains("_DE_") -> "dynamic_effort"
+                dayType.startsWith("ME_") -> "maximal_effort"
+                dayType.startsWith("DE_") -> "dynamic_effort"
+                else -> "maximal_effort"
+            }
+
         return exerciseSelectionService.selectWarmupExercises(
             userExercisePool = userExercisePool,
             primaryExercise = primaryExercise,
@@ -773,17 +772,19 @@ abstract class WorkoutStageGenerationService(
                 movementRole = movementRole
             )
 
-        val (repsPerSet, numSets) = prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
-            guidelines = guidelines,
-            intensity = intensity
-        )
+        val (repsPerSet, numSets) =
+            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
+                guidelines = guidelines,
+                intensity = intensity
+            )
         val actualTotalReps = numSets * repsPerSet
-        val restSeconds = prilepinGuidelinesService.getRestTimeBasedOnIntensity(
-            restRange = guidelines.restSeconds,
-            intensity = intensity,
-            totalReps = actualTotalReps,
-            totalRepsRange = guidelines.totalRepsRange
-        )
+        val restSeconds =
+            prilepinGuidelinesService.getRestTimeBasedOnIntensity(
+                restRange = guidelines.restSeconds,
+                intensity = intensity,
+                totalReps = actualTotalReps,
+                totalRepsRange = guidelines.totalRepsRange
+            )
 
         val isDynamicEffort = dayType.startsWith("DE_")
         // For non-DE exercises, use standard weight calculation

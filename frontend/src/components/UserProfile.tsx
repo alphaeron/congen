@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import {
+  Person as PersonIcon,
+  Security as SecurityIcon,
+  FitnessCenter as FitnessCenterIcon,
+  PrivacyTip as PrivacyIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Drawer,
@@ -10,20 +15,13 @@ import {
   Typography,
   Container,
 } from '@mui/material';
-import {
-  Person as PersonIcon,
-  Security as SecurityIcon,
-  Settings as SettingsIcon,
-  History as HistoryIcon,
-  FitnessCenter as FitnessCenterIcon,
-  PrivacyTip as PrivacyIcon,
-} from '@mui/icons-material';
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { ProfileOverview } from './ProfileOverview';
 import { AccountSecurity } from './AccountSecurity';
-import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { GdprComplianceSection } from './GdprComplianceSection';
+import { ProfileOverview } from './ProfileOverview';
+import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import type { User } from '../api/types';
 
 interface UserProfileProps {
@@ -33,13 +31,13 @@ interface UserProfileProps {
 
 /**
  * UserProfile component with sidebar navigation and URL query parameter support.
- * 
+ *
  * Features:
  * - Left sidebar navigation with URL state persistence
  * - Multiple sections: Overview, Account Security
  * - URL query parameters for bookmarkable navigation
  * - Consistent layout with Dashboard component
- * 
+ *
  * @param user The current user object
  * @param initialSection The initial section to display (from URL)
  * @returns UserProfile component
@@ -85,13 +83,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
   const currentSection = menuItems.find(item => item.id === activeSection) || menuItems[0];
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      height: '100vh', // Use full viewport height
-      position: 'relative',
-      overflow: 'hidden', // Prevent overflow
-      maxWidth: '100%', // Ensure it doesn't exceed container width
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        height: '100vh', // Use full viewport height
+        position: 'relative',
+        overflow: 'hidden', // Prevent overflow
+        maxWidth: '100%', // Ensure it doesn't exceed container width
+      }}
+    >
       {/* Left Sidebar */}
       <Drawer
         variant="permanent"
@@ -111,18 +111,20 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
           },
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          height: '100%' 
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+          }}
+        >
           <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
             <Typography variant="h6" color="primary">
               User Profile
             </Typography>
           </Box>
           <List sx={{ flex: 1, overflow: 'auto' }}>
-            {menuItems.map((item) => (
+            {menuItems.map(item => (
               <ListItem key={item.id} disablePadding>
                 <ListItemButton
                   selected={activeSection === item.id}
@@ -140,9 +142,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
                     },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    {item.icon}
-                  </ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.label} />
                 </ListItemButton>
               </ListItem>
@@ -162,9 +162,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
         }}
       >
         <Container maxWidth="xl" sx={{ height: '100%' }}>
-          <Box sx={{ p: 3 }}>
-            {currentSection.component}
-          </Box>
+          <Box sx={{ p: 3 }}>{currentSection.component}</Box>
         </Container>
       </Box>
     </Box>

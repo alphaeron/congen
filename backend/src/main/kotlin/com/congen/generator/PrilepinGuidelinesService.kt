@@ -1,8 +1,8 @@
 package com.congen.generator
 
 import org.springframework.stereotype.Service
-import kotlin.random.Random
 import kotlin.math.abs
+import kotlin.random.Random
 
 /**
  * Service for managing Prilepin's Chart guidelines and undulating periodization.
@@ -95,22 +95,22 @@ class PrilepinGuidelinesService {
         if (intensity >= 0.9) {
             return 300
         }
-        
+
         // Calculate how close we are to the upper end of the total reps range
         val rangeSize = totalRepsRange.endInclusive - totalRepsRange.start
         val repsFromStart = totalReps - totalRepsRange.start
         val repsRatio = if (rangeSize > 0) repsFromStart.toDouble() / rangeSize else 0.5
-        
+
         // Calculate intensity factor (0.0-1.0)
         val intensityFactor = (intensity - 0.5) / 0.4 // Normalize 0.5-0.9 to 0.0-1.0
-        
+
         // Combine intensity and reps factors
         val combinedFactor = (intensityFactor + repsRatio) / 2.0
-        
+
         // Calculate rest time within the range
         val restRangeSize = restRange.endInclusive - restRange.start
         val calculatedRest = restRange.start + (combinedFactor * restRangeSize).toInt()
-        
+
         return roundRestTimeToStandardInterval(calculatedRest)
     }
 
@@ -148,18 +148,18 @@ class PrilepinGuidelinesService {
         // Calculate reps based on intensity: higher intensity = lower reps
         val rangeSize = guidelines.intensityRange.endInclusive - guidelines.intensityRange.start
         val intensityPosition = (intensity - guidelines.intensityRange.start) / rangeSize
-        
+
         val maxReps = guidelines.repsPerSetRange.last
         val minReps = guidelines.repsPerSetRange.first
         val repsPerSet = (maxReps - (intensityPosition * (maxReps - minReps))).toInt().coerceIn(minReps, maxReps)
-        
+
         // Calculate total reps based on intensity: higher intensity = fewer total reps
         val totalRepsRangeSize = guidelines.totalRepsRange.endInclusive - guidelines.totalRepsRange.start
         val adjustedTotalReps = guidelines.totalRepsRange.endInclusive - (intensityPosition * totalRepsRangeSize).toInt()
-        
+
         // Calculate sets based on adjusted total reps
         val numSets = (adjustedTotalReps / repsPerSet).toInt()
-        
+
         return Pair(repsPerSet, numSets)
     }
 
@@ -188,46 +188,47 @@ class PrilepinGuidelinesService {
     ): Pair<PrilepinGuidelines, Double> {
         val weekInCycle = ((currentWeekNumber - 1) % 4) + 1
 
-        val result = when {
-            // Accessory movements always use accessory guidelines
-            movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
-            
-            // Secondary movements use lower intensity guidelines than primary
-            movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle, dayType)
-            
-            // Handle combined ME+DE days based on movement role
-            dayType == "ME_Upper_DE_Lower" -> {
-                when (movementRole) {
-                    "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
-                    "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = false, isLowerBody = true)
-                    else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
+        val result =
+            when {
+                // Accessory movements always use accessory guidelines
+                movementRole == "accessory" -> getAccessoryGuidelines(weekInCycle)
+
+                // Secondary movements use lower intensity guidelines than primary
+                movementRole == "secondary" -> getSecondaryExerciseGuidelines(weekInCycle, dayType)
+
+                // Handle combined ME+DE days based on movement role
+                dayType == "ME_Upper_DE_Lower" -> {
+                    when (movementRole) {
+                        "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
+                        "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = false, isLowerBody = true)
+                        else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = true)
+                    }
                 }
-            }
-            
-            dayType == "ME_Lower_DE_Upper" -> {
-                when (movementRole) {
-                    "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
-                    "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = true, isLowerBody = false)
-                    else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
+
+                dayType == "ME_Lower_DE_Upper" -> {
+                    when (movementRole) {
+                        "primary" -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
+                        "secondary" -> getDynamicEffortGuidelines(weekInCycle, isUpperBody = true, isLowerBody = false)
+                        else -> getMaxEffortGuidelines(weekInCycle, isUpperBody = false)
+                    }
                 }
-            }
-            
-            // Handle regular day types
-            dayType.contains("ME") -> {
-                val isUpperBody = dayType.contains("Upper")
-                getMaxEffortGuidelines(weekInCycle, isUpperBody)
-            }
-            
-            dayType.contains("DE") -> {
-                val isUpperBody = dayType.contains("Upper")
-                val isLowerBody = dayType.contains("Lower")
-                getDynamicEffortGuidelines(weekInCycle, isUpperBody, isLowerBody)
+
+                // Handle regular day types
+                dayType.contains("ME") -> {
+                    val isUpperBody = dayType.contains("Upper")
+                    getMaxEffortGuidelines(weekInCycle, isUpperBody)
+                }
+
+                dayType.contains("DE") -> {
+                    val isUpperBody = dayType.contains("Upper")
+                    val isLowerBody = dayType.contains("Lower")
+                    getDynamicEffortGuidelines(weekInCycle, isUpperBody, isLowerBody)
+                }
+
+                // Default to accessory guidelines
+                else -> getAccessoryGuidelines(weekInCycle)
             }
 
-            // Default to accessory guidelines
-            else -> getAccessoryGuidelines(weekInCycle)
-        }
-        
         return result
     }
 
@@ -445,7 +446,10 @@ class PrilepinGuidelinesService {
      * - Week 3: 80-90% intensity (vs 90-100% for primary)
      * - Week 4: 55-65% intensity (deload, same as primary)
      */
-    private fun getSecondaryExerciseGuidelines(weekInCycle: Int, dayType: String): Pair<PrilepinGuidelines, Double> {
+    private fun getSecondaryExerciseGuidelines(
+        weekInCycle: Int,
+        dayType: String
+    ): Pair<PrilepinGuidelines, Double> {
         return when (weekInCycle) {
             1, 2 -> {
                 // Use 70-80% intensity for secondary (lower than primary's 80-90%)
@@ -485,41 +489,44 @@ class PrilepinGuidelinesService {
         return when (weekInCycle) {
             1, 4 -> {
                 // Use 55-65% intensity with 3-4 sets of "good" rep numbers for accessories
-                val guidelines = PrilepinGuidelines(
-                    intensityRange = 0.55..0.65,
-                    // This will be overridden to use specific "good" numbers
-                    repsPerSetRange = 6..15,
-                    // 3-4 sets × 6-15 reps = 18-60 total, target ~30
-                    totalReps = 30,
-                    totalRepsRange = 18..60,
-                    restSeconds = 60..90
-                )
+                val guidelines =
+                    PrilepinGuidelines(
+                        intensityRange = 0.55..0.65,
+                        // This will be overridden to use specific "good" numbers
+                        repsPerSetRange = 6..15,
+                        // 3-4 sets × 6-15 reps = 18-60 total, target ~30
+                        totalReps = 30,
+                        totalRepsRange = 18..60,
+                        restSeconds = 60..90
+                    )
                 val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
                 Pair(guidelines, intensity)
             }
             2, 3 -> {
                 // Use 70-80% intensity with 3-4 sets of "good" rep numbers for accessories
-                val guidelines = PrilepinGuidelines(
-                    intensityRange = 0.7..0.8,
-                    // This will be overridden to use specific "good" numbers
-                    repsPerSetRange = 6..15,
-                    // 3-4 sets × 6-15 reps = 18-60 total, target ~24
-                    totalReps = 24,
-                    totalRepsRange = 18..60,
-                    restSeconds = 90..120
-                )
+                val guidelines =
+                    PrilepinGuidelines(
+                        intensityRange = 0.7..0.8,
+                        // This will be overridden to use specific "good" numbers
+                        repsPerSetRange = 6..15,
+                        // 3-4 sets × 6-15 reps = 18-60 total, target ~24
+                        totalReps = 24,
+                        totalRepsRange = 18..60,
+                        restSeconds = 90..120
+                    )
                 val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
                 Pair(guidelines, intensity)
             }
             else -> {
-                val guidelines = PrilepinGuidelines(
-                    intensityRange = 0.7..0.8,
-                    // This will be overridden to use specific "good" numbers
-                    repsPerSetRange = 6..15,
-                    totalReps = 24,
-                    totalRepsRange = 18..60,
-                    restSeconds = 90..120
-                )
+                val guidelines =
+                    PrilepinGuidelines(
+                        intensityRange = 0.7..0.8,
+                        // This will be overridden to use specific "good" numbers
+                        repsPerSetRange = 6..15,
+                        totalReps = 24,
+                        totalRepsRange = 18..60,
+                        restSeconds = 90..120
+                    )
                 val intensity = Random.nextDouble(guidelines.intensityRange.start, guidelines.intensityRange.endInclusive)
                 Pair(guidelines, intensity)
             }

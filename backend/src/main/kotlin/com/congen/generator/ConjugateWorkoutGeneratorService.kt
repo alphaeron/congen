@@ -150,7 +150,6 @@ class ConjugateWorkoutGeneratorService(
         weakMuscles: List<String>,
         currentWeekNumber: Int
     ): Mono<Void> {
-
         return Flux.fromIterable(template)
             .index()
             .concatMap { tuple ->

@@ -1,6 +1,6 @@
 import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday';
-import { default as EventIcon } from '@mui/icons-material/Event';
 import { default as CheckCircleIcon } from '@mui/icons-material/CheckCircle';
+import { default as EventIcon } from '@mui/icons-material/Event';
 import { default as ScheduleIcon } from '@mui/icons-material/Schedule';
 import {
   Box,
@@ -37,7 +37,7 @@ interface WorkoutCalendarProps {
  * @param user The user data
  * @return Workout calendar component
  */
-export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
+export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,12 +81,12 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
   const getUpcomingWorkouts = () => {
     const programWorkouts = getWorkoutsForActiveProgram();
     const today = new Date();
-    
+
     // Mock upcoming workouts for the next 7 days
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       const workout = programWorkouts[i % programWorkouts.length];
       return {
         date,
@@ -100,12 +100,12 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
   const getPastWorkouts = () => {
     const programWorkouts = getWorkoutsForActiveProgram();
     const today = new Date();
-    
+
     // Mock past workouts for the last 7 days
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(today);
       date.setDate(today.getDate() - (i + 1));
-      
+
       const workout = programWorkouts[i % programWorkouts.length];
       return {
         date,
@@ -158,9 +158,7 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} sx={{ mb: 3 }}>
                   <ScheduleIcon color="primary" />
-                  <Typography variant="h6">
-                    Upcoming Workouts
-                  </Typography>
+                  <Typography variant="h6">Upcoming Workouts</Typography>
                 </Box>
 
                 {upcomingWorkouts.length > 0 ? (
@@ -181,11 +179,11 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                                   <Chip label="Today" color="primary" size="small" />
                                 )}
                                 {item.isCompleted && (
-                                  <Chip 
-                                    icon={<CheckCircleIcon />} 
-                                    label="Completed" 
-                                    color="success" 
-                                    size="small" 
+                                  <Chip
+                                    icon={<CheckCircleIcon />}
+                                    label="Completed"
+                                    color="success"
+                                    size="small"
                                   />
                                 )}
                               </Box>
@@ -193,10 +191,10 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                             secondary={
                               <Box>
                                 <Typography variant="body2" color="text.secondary">
-                                  {item.date.toLocaleDateString('en-US', { 
-                                    weekday: 'long', 
-                                    month: 'short', 
-                                    day: 'numeric' 
+                                  {item.date.toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    month: 'short',
+                                    day: 'numeric',
                                   })}
                                 </Typography>
                                 {item.workout && (
@@ -213,7 +211,11 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                     ))}
                   </List>
                 ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center', py: 2 }}
+                  >
                     No upcoming workouts scheduled.
                   </Typography>
                 )}
@@ -227,9 +229,7 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
               <CardContent>
                 <Box display="flex" alignItems="center" gap={1} sx={{ mb: 3 }}>
                   <CalendarTodayIcon color="primary" />
-                  <Typography variant="h6">
-                    Past Workouts
-                  </Typography>
+                  <Typography variant="h6">Past Workouts</Typography>
                 </Box>
 
                 {pastWorkouts.length > 0 ? (
@@ -247,11 +247,11 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                                   {item.workout ? item.workout.name : 'Rest Day'}
                                 </Typography>
                                 {item.isCompleted && (
-                                  <Chip 
-                                    icon={<CheckCircleIcon />} 
-                                    label="Completed" 
-                                    color="success" 
-                                    size="small" 
+                                  <Chip
+                                    icon={<CheckCircleIcon />}
+                                    label="Completed"
+                                    color="success"
+                                    size="small"
                                   />
                                 )}
                               </Box>
@@ -259,10 +259,10 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                             secondary={
                               <Box>
                                 <Typography variant="body2" color="text.secondary">
-                                  {item.date.toLocaleDateString('en-US', { 
-                                    weekday: 'long', 
-                                    month: 'short', 
-                                    day: 'numeric' 
+                                  {item.date.toLocaleDateString('en-US', {
+                                    weekday: 'long',
+                                    month: 'short',
+                                    day: 'numeric',
                                   })}
                                 </Typography>
                                 {item.workout && (
@@ -279,7 +279,11 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                     ))}
                   </List>
                 ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center', py: 2 }}
+                  >
                     No past workouts recorded.
                   </Typography>
                 )}
@@ -294,7 +298,7 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                 <Typography variant="h6" gutterBottom>
                   Monthly Calendar View
                 </Typography>
-                
+
                 <Paper sx={{ p: 3, textAlign: 'center' }}>
                   <Typography variant="body1" color="text.secondary">
                     Calendar view will be implemented with a proper calendar component.
@@ -314,7 +318,7 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = ({ user }) => {
                 <Typography variant="h6" gutterBottom>
                   Program Summary
                 </Typography>
-                
+
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box textAlign="center">

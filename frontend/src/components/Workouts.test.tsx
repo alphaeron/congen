@@ -1,7 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import React from 'react';
+
 import { Workouts } from './Workouts';
 import { ENDPOINT } from '../api/endpoint';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
@@ -10,11 +11,7 @@ const mock = new MockAdapter(ENDPOINT);
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('Workouts', () => {
@@ -210,11 +207,13 @@ describe('Workouts', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load workout data. Please try again.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to load workout data. Please try again.')
+      ).toBeInTheDocument();
     });
   });
 
-  it('displays this week\'s workouts', async () => {
+  it("displays this week's workouts", async () => {
     const workout2 = { ...mockWorkout, id: 2, name: 'Pull Day', day_number: 2 };
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout, workout2]);

@@ -1,5 +1,5 @@
-import { default as MenuIcon } from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import { default as MenuIcon } from '@mui/icons-material/Menu';
 import AppBar from '@mui/material/AppBar';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
@@ -18,7 +18,7 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import * as React from 'react';
 import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
-import { BrowserRouter, Link, Routes, Route, Navigate, useLocation } from 'react-router';
+import { BrowserRouter, Link, Routes, Route, Navigate } from 'react-router';
 
 import { getAuthProviderConfig } from './auth/OidcConfig';
 import { AuthCallback } from './components/AuthCallback';
@@ -80,10 +80,10 @@ export const useDrawer = () => {
 
 /**
  * Root redirect component that redirects based on authentication status.
- * 
+ *
  * When authenticated: redirects to /dashboard
  * When not authenticated: shows the root page
- * 
+ *
  * @return Redirect component or null
  */
 function RootRedirect(): React.ReactElement | null {
@@ -114,15 +114,10 @@ function AppContent(): React.ReactElement {
   const [open, setOpen] = React.useState(false);
   const [userMenuAnchor, setUserMenuAnchor] = React.useState<null | HTMLElement>(null);
   const { isLoading, logout, isAuthenticated, user } = useAuth();
-  const location = useLocation();
-  
+
   // Drawer state for dashboard/profile pages
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const drawerWidth = 280;
-  
-  // Check if current route should show drawer
-  const shouldShowDrawer = location.pathname === '/dashboard' || location.pathname === '/profile';
-
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
   };
@@ -313,38 +308,40 @@ function AppContent(): React.ReactElement {
                   transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                   anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
-                  {isAuthenticated ? [
-                    <MenuItem
-                      key="profile"
-                      component={ProfileLink}
-                      onClick={handleUserMenuClose}
-                      sx={{
-                        fontWeight: 500,
-                        '&:hover': {
-                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                        },
-                      }}
-                    >
-                      Profile
-                    </MenuItem>,
-                    <Divider key="divider" sx={{ my: 1 }} />,
-                    <MenuItem
-                      key="signout"
-                      onClick={() => {
-                        handleUserMenuClose();
-                        logout();
-                      }}
-                      sx={{
-                        fontWeight: 500,
-                        color: 'error.main',
-                        '&:hover': {
-                          bgcolor: theme => alpha(theme.palette.error.main, 0.08),
-                        },
-                      }}
-                    >
-                      Sign Out
-                    </MenuItem>
-                  ] : (
+                  {isAuthenticated ? (
+                    [
+                      <MenuItem
+                        key="profile"
+                        component={ProfileLink}
+                        onClick={handleUserMenuClose}
+                        sx={{
+                          fontWeight: 500,
+                          '&:hover': {
+                            bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                          },
+                        }}
+                      >
+                        Profile
+                      </MenuItem>,
+                      <Divider key="divider" sx={{ my: 1 }} />,
+                      <MenuItem
+                        key="signout"
+                        onClick={() => {
+                          handleUserMenuClose();
+                          logout();
+                        }}
+                        sx={{
+                          fontWeight: 500,
+                          color: 'error.main',
+                          '&:hover': {
+                            bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                          },
+                        }}
+                      >
+                        Sign Out
+                      </MenuItem>,
+                    ]
+                  ) : (
                     <MenuItem
                       component={Link}
                       to="/login"
@@ -504,10 +501,7 @@ function AppContent(): React.ReactElement {
         >
           <Container maxWidth="xl" sx={{ height: '100%' }}>
             <Routes>
-              <Route
-                path="/"
-                element={<RootRedirect />}
-              />
+              <Route path="/" element={<RootRedirect />} />
               <Route
                 path="/dashboard"
                 element={
@@ -542,10 +536,7 @@ function AppContent(): React.ReactElement {
               />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route
-                path="/privacy_policy"
-                element={<PrivacyPolicyPage />}
-              />
+              <Route path="/privacy_policy" element={<PrivacyPolicyPage />} />
             </Routes>
           </Container>
         </Box>

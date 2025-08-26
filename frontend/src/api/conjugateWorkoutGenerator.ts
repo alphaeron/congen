@@ -12,5 +12,5 @@ export const generateNextWeek = (programId: number): Promise<Program> => {
     method: 'POST',
     url: `/conjugate_workout_generator/${programId}`,
     timeout: 30000, // 30 seconds timeout for workout generation
-  })
+  });
 };

@@ -1,7 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import React from 'react';
+
 import { ProgramManagement } from './ProgramManagement';
 import { ENDPOINT } from '../api/endpoint';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
@@ -13,11 +14,7 @@ const mock = new MockAdapter(ENDPOINT);
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('ProgramManagement', () => {

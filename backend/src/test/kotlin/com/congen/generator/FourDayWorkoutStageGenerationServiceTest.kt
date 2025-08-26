@@ -61,20 +61,21 @@ class FourDayWorkoutStageGenerationServiceTest {
         sessionTimeCalculator = mock()
         conjugateTemplates = mock()
 
-        fourDayService = FourDayWorkoutStageGenerationService(
-            workoutStageDAL = workoutStageDAL,
-            workoutStageTypeDAL = workoutStageTypeDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL,
-            setSchemeService = setSchemeService,
-            prilepinGuidelinesService = prilepinGuidelinesService,
-            weightSelectionService = weightSelectionService,
-            userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-            exerciseSelectionService = exerciseSelectionService,
-            movementBalanceService = movementBalanceService,
-            sessionTimeCalculator = sessionTimeCalculator,
-            conjugateTemplates = conjugateTemplates
-        )
+        fourDayService =
+            FourDayWorkoutStageGenerationService(
+                workoutStageDAL = workoutStageDAL,
+                workoutStageTypeDAL = workoutStageTypeDAL,
+                programmedExerciseDAL = programmedExerciseDAL,
+                setSchemeDAL = setSchemeDAL,
+                setSchemeService = setSchemeService,
+                prilepinGuidelinesService = prilepinGuidelinesService,
+                weightSelectionService = weightSelectionService,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
+                exerciseSelectionService = exerciseSelectionService,
+                movementBalanceService = movementBalanceService,
+                sessionTimeCalculator = sessionTimeCalculator,
+                conjugateTemplates = conjugateTemplates
+            )
     }
 
     @Test
@@ -91,45 +92,48 @@ class FourDayWorkoutStageGenerationServiceTest {
 
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
-        val accessoryExercises = listOf(
-            createSampleExercise("Dumbbell Flyes", MovementType.HORIZONTAL_PUSH),
-            createSampleExercise("Tricep Dips", MovementType.HORIZONTAL_PUSH)
-        )
 
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(
-            primaryExercise = eq(primaryExercise),
-            userExercisePool = eq(userExercisePool),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(secondaryExercise))
-        whenever(exerciseSelectionService.selectWarmupExercises(
-            userExercisePool = any(),
-            primaryExercise = any(),
-            isFourDayTemplate = any(),
-            dayType = any(),
-            workoutType = any()
-        )).thenReturn(Mono.just(emptyList()))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectSimilarSecondaryExercise(
+                primaryExercise = eq(primaryExercise),
+                userExercisePool = eq(userExercisePool),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
 
         // When
-        val result = fourDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            fourDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -158,49 +162,48 @@ class FourDayWorkoutStageGenerationServiceTest {
         val userId = "user123"
 
         val primaryExercise = createSampleExercise("Box Squat", MovementType.SQUAT)
-        val accessoryExercises = listOf(
-            createSampleExercise("Leg Press", MovementType.SQUAT),
-            createSampleExercise("Romanian Deadlift", MovementType.HINGE)
-        )
-        val conditioningExercises = listOf(
-            createSampleExercise("Burpees", MovementType.SQUAT),
-            createSampleExercise("Mountain Climbers", MovementType.SQUAT)
-        )
 
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("dynamic_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(
-            primaryExercise = any(),
-            userExercisePool = any(),
-            workoutType = any(),
-            dayType = any(),
-            movementBalanceState = any()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectWarmupExercises(
-            userExercisePool = any(),
-            primaryExercise = any(),
-            isFourDayTemplate = any(),
-            dayType = any(),
-            workoutType = any()
-        )).thenReturn(Mono.just(emptyList()))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("dynamic_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectSimilarSecondaryExercise(
+                primaryExercise = any(),
+                userExercisePool = any(),
+                workoutType = any(),
+                dayType = any(),
+                movementBalanceState = any()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
 
         // When
-        val result = fourDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            fourDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -228,26 +231,29 @@ class FourDayWorkoutStageGenerationServiceTest {
         val currentWeekNumber = 1
         val userId = "user123"
 
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
 
         // When
-        val result = fourDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            fourDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -268,40 +274,47 @@ class FourDayWorkoutStageGenerationServiceTest {
 
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
 
-        whenever(exerciseSelectionService.selectExercise(
-            userExercisePool = eq(userExercisePool),
-            targetMuscles = eq(weakMuscles),
-            isAccessory = eq(false),
-            workoutType = eq("maximal_effort"),
-            dayType = eq(dayType),
-            movementBalanceState = isNull()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectSimilarSecondaryExercise(
-            primaryExercise = any(),
-            userExercisePool = any(),
-            workoutType = any(),
-            dayType = any(),
-            movementBalanceState = any()
-        )).thenReturn(Mono.just(primaryExercise))
-        whenever(exerciseSelectionService.selectWarmupExercises(
-            userExercisePool = any(),
-            primaryExercise = any(),
-            isFourDayTemplate = any(),
-            dayType = any(),
-            workoutType = any()
-        )).thenReturn(Mono.just(emptyList()))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(false),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectSimilarSecondaryExercise(
+                primaryExercise = any(),
+                userExercisePool = any(),
+                workoutType = any(),
+                dayType = any(),
+                movementBalanceState = any()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectWarmupExercises(
+                userExercisePool = any(),
+                primaryExercise = any(),
+                isFourDayTemplate = any(),
+                dayType = any(),
+                workoutType = any()
+            )
+        ).thenReturn(Mono.just(emptyList()))
 
         // When
-        val result = fourDayService.generateWorkoutStages(
-            workout = workout,
-            dayType = dayType,
-            userExercisePool = userExercisePool,
-            oneRepMaxes = oneRepMaxes,
-            programPreferences = programPreferences,
-            weakMuscles = weakMuscles,
-            currentWeekNumber = currentWeekNumber,
-            userId = userId
-        )
+        val result =
+            fourDayService.generateWorkoutStages(
+                workout = workout,
+                dayType = dayType,
+                userExercisePool = userExercisePool,
+                oneRepMaxes = oneRepMaxes,
+                programPreferences = programPreferences,
+                weakMuscles = weakMuscles,
+                currentWeekNumber = currentWeekNumber,
+                userId = userId
+            )
 
         // Then
         StepVerifier.create(result)
@@ -311,7 +324,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             userExercisePool = userExercisePool,
             targetMuscles = weakMuscles,
             isAccessory = false,
-            workoutType = "maximal_effort", // Default fallback
+            workoutType = "maximal_effort",
             dayType = dayType,
             movementBalanceState = null
         )
@@ -355,7 +368,10 @@ class FourDayWorkoutStageGenerationServiceTest {
         )
     }
 
-    private fun createSampleExercise(name: String, movementType: MovementType): Exercise {
+    private fun createSampleExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "A sample exercise for testing",

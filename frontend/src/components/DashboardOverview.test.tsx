@@ -1,6 +1,7 @@
-import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import React from 'react';
+
 import { DashboardOverview } from './DashboardOverview';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
@@ -92,7 +93,9 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load dashboard data. Please try again.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to load dashboard data. Please try again.')
+      ).toBeInTheDocument();
     });
   });
 
@@ -183,20 +186,23 @@ describe('DashboardOverview', () => {
       render(<DashboardOverview user={mockUser} />);
     });
 
-    await waitFor(() => {
-      // Total workouts should be sum of current_week_number (3 + 2 = 5)
-      expect(screen.getByText('5')).toBeInTheDocument();
-      // 1RM records count - look for "2" in the context of "1RM Records"
-      const oneRepMaxCard = screen.getByText('1RM Records').closest('.MuiCard-root');
-      expect(oneRepMaxCard).toBeInTheDocument();
-      expect(oneRepMaxCard).toHaveTextContent('2');
-      // Unique exercises count - look for "2" in the context of "Unique Exercises"
-      const uniqueExercisesCard = screen.getByText('Unique Exercises').closest('.MuiCard-root');
-      expect(uniqueExercisesCard).toBeInTheDocument();
-      expect(uniqueExercisesCard).toHaveTextContent('2');
-      // Current week from active program
-      expect(screen.getByText('3')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        // Total workouts should be sum of current_week_number (3 + 2 = 5)
+        expect(screen.getByText('5')).toBeInTheDocument();
+        // 1RM records count - look for "2" in the context of "1RM Records"
+        const oneRepMaxCard = screen.getByText('1RM Records').closest('.MuiCard-root');
+        expect(oneRepMaxCard).toBeInTheDocument();
+        expect(oneRepMaxCard).toHaveTextContent('2');
+        // Unique exercises count - look for "2" in the context of "Unique Exercises"
+        const uniqueExercisesCard = screen.getByText('Unique Exercises').closest('.MuiCard-root');
+        expect(uniqueExercisesCard).toBeInTheDocument();
+        expect(uniqueExercisesCard).toHaveTextContent('2');
+        // Current week from active program
+        expect(screen.getByText('3')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should verify API calls are made with correct endpoints', async () => {

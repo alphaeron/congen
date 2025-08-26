@@ -1,7 +1,8 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { render, screen, waitFor } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import React from 'react';
+
 import { WorkoutCalendar } from './WorkoutCalendar';
 import { ENDPOINT } from '../api/endpoint';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
@@ -13,11 +14,7 @@ const mock = new MockAdapter(ENDPOINT);
 const theme = createTheme();
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(
-    <ThemeProvider theme={theme}>
-      {component}
-    </ThemeProvider>
-  );
+  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
 };
 
 describe('WorkoutCalendar', () => {
@@ -102,7 +99,9 @@ describe('WorkoutCalendar', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
 
     await waitFor(() => {
-      expect(screen.getByText('Failed to load calendar data. Please try again.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to load calendar data. Please try again.')
+      ).toBeInTheDocument();
     });
   });
 

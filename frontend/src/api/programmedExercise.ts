@@ -7,7 +7,9 @@ import type { ProgrammedExercise } from './types';
  * @param workoutStageId The ID of the workout stage
  * @returns Promise containing a list of programmed exercises
  */
-export const getProgrammedExercisesByStage = (workoutStageId: number): Promise<ProgrammedExercise[]> => {
+export const getProgrammedExercisesByStage = (
+  workoutStageId: number
+): Promise<ProgrammedExercise[]> => {
   return REQUEST({
     method: 'GET',
     url: `/programmed_exercise/stage/${workoutStageId}`,

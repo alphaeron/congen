@@ -1,4 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import {
+  Dashboard as DashboardIcon,
+  FitnessCenter as FitnessCenterIcon,
+  Settings as SettingsIcon,
+  History as HistoryIcon,
+} from '@mui/icons-material';
 import {
   Box,
   Drawer,
@@ -10,19 +15,13 @@ import {
   Typography,
   Container,
 } from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  FitnessCenter as FitnessCenterIcon,
-  ShowChart as ShowChartIcon,
-  Settings as SettingsIcon,
-  History as HistoryIcon,
-} from '@mui/icons-material';
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { DashboardOverview } from './DashboardOverview';
+import { ExerciseHistory } from './ExerciseHistory';
 import { ProgramManagement } from './ProgramManagement';
 import { Workouts } from './Workouts';
-import { ExerciseHistory } from './ExerciseHistory';
 import type { User } from '../api/types';
 
 interface DashboardProps {
@@ -33,19 +32,23 @@ interface DashboardProps {
 
 /**
  * Dashboard component with sidebar navigation and URL query parameter support.
- * 
+ *
  * Features:
  * - Left sidebar navigation with URL state persistence
  * - Multiple sections: Overview, Programs, Workouts, Exercise History
  * - URL query parameters for bookmarkable navigation
  * - Proper drawer positioning and layout
- * 
+ *
  * @param user The current user object
  * @param initialSection The initial section to display (from URL)
  * @param selectedWorkout The selected workout ID (from URL)
  * @returns Dashboard component
  */
-export const Dashboard: React.FC<DashboardProps> = ({ user, initialSection = 'overview', selectedWorkout }) => {
+export const Dashboard: React.FC<DashboardProps> = ({
+  user,
+  initialSection = 'overview',
+  selectedWorkout,
+}) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeSection = searchParams.get('section') || initialSection;
@@ -86,13 +89,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, initialSection = 'ov
   const currentSection = menuItems.find(item => item.id === activeSection) || menuItems[0];
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      height: '100vh', // Use full viewport height
-      position: 'relative',
-      overflow: 'hidden', // Prevent overflow
-      maxWidth: '100%', // Ensure it doesn't exceed container width
-    }}>
+    <Box
+      sx={{
+        display: 'flex',
+        height: '100vh', // Use full viewport height
+        position: 'relative',
+        overflow: 'hidden', // Prevent overflow
+        maxWidth: '100%', // Ensure it doesn't exceed container width
+      }}
+    >
       {/* Left Sidebar */}
       <Drawer
         variant="permanent"
@@ -112,18 +117,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, initialSection = 'ov
           },
         }}
       >
-        <Box sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          height: '100%' 
-        }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+          }}
+        >
           <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
             <Typography variant="h6" color="primary">
               Dashboard
             </Typography>
           </Box>
           <List sx={{ flex: 1, overflow: 'auto' }}>
-            {menuItems.map((item) => (
+            {menuItems.map(item => (
               <ListItem key={item.id} disablePadding>
                 <ListItemButton
                   selected={activeSection === item.id}
@@ -141,9 +148,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, initialSection = 'ov
                     },
                   }}
                 >
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    {item.icon}
-                  </ListItemIcon>
+                  <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
                   <ListItemText primary={item.label} />
                 </ListItemButton>
               </ListItem>
@@ -163,9 +168,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, initialSection = 'ov
         }}
       >
         <Container maxWidth="xl" sx={{ height: '100%' }}>
-          <Box sx={{ p: 3 }}>
-            {currentSection.component}
-          </Box>
+          <Box sx={{ p: 3 }}>{currentSection.component}</Box>
         </Container>
       </Box>
     </Box>

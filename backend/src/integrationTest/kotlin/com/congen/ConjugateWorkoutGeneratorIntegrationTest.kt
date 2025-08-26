@@ -22,7 +22,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
         // Create program
         programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = userToken)
-        
+
         // Clean up any existing user program preferences to avoid duplicates
         try {
             webTestClient.delete()
@@ -39,7 +39,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should generate 3-day conjugate workout program successfully`() {
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
-        
+
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
@@ -66,7 +66,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should generate 2-day conjugate workout program successfully`() {
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
-        
+
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")
@@ -93,7 +93,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     fun `should generate 4-day conjugate workout program successfully`() {
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
-        
+
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId")

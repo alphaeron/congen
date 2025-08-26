@@ -2,8 +2,8 @@ import { Container, Alert, CircularProgress, Typography } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { Dashboard } from '../components/Dashboard';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 
 /**

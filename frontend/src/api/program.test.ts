@@ -1,4 +1,5 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { ENDPOINT } from './endpoint';
 import { createProgram, getPrograms, getProgram, updateProgram, deleteProgram } from './program';
 import type { Program } from './types';
@@ -40,7 +41,9 @@ describe('Program API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPost('/program/').reply(400, errorResponse);
 
-      await expect(createProgram('Test Program', true, 'test-user-id')).rejects.toEqual(errorResponse);
+      await expect(createProgram('Test Program', true, 'test-user-id')).rejects.toEqual(
+        errorResponse
+      );
     });
   });
 

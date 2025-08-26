@@ -3,8 +3,6 @@ package com.congen.generator
 import com.congen.model.Exercise
 import com.congen.model.MovementType
 import com.congen.model.UserOneRepMax
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -45,11 +43,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should return exercises with score above threshold`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Conventional Deadlift", MovementType.HINGE)
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Conventional Deadlift", MovementType.HINGE)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -62,14 +61,16 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should prioritize exercises with user 1RM data`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Conventional Deadlift", MovementType.HINGE)
-        )
-        val userOneRepMaxes = listOf(
-            createUserOneRepMax("Bench Press", BigDecimal("200.0"))
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Conventional Deadlift", MovementType.HINGE)
+            )
+        val userOneRepMaxes =
+            listOf(
+                createUserOneRepMax("Bench Press", BigDecimal("200.0"))
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises, userOneRepMaxes)
@@ -83,16 +84,18 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should consider exercise usage patterns`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Conventional Deadlift", MovementType.HINGE)
-        )
-        val exerciseUsageCounts = mapOf(
-            "Back Squat" to 150,
-            "Bench Press" to 50,
-            "Conventional Deadlift" to 25
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Conventional Deadlift", MovementType.HINGE)
+            )
+        val exerciseUsageCounts =
+            mapOf(
+                "Back Squat" to 150,
+                "Bench Press" to 50,
+                "Conventional Deadlift" to 25
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises, emptyList(), exerciseUsageCounts)
@@ -106,11 +109,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should prioritize barbell exercises`() {
         // Given
-        val exercises = listOf(
-            createExercise("Barbell Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Dumbbell Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Machine Bench Press", MovementType.HORIZONTAL_PUSH)
-        )
+        val exercises =
+            listOf(
+                createExercise("Barbell Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Dumbbell Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Machine Bench Press", MovementType.HORIZONTAL_PUSH)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -124,11 +128,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should prioritize pure movement patterns`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Front Squat", MovementType.SQUAT),
-            createExercise("Split Squat", MovementType.LUNGE)
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Front Squat", MovementType.SQUAT),
+                createExercise("Split Squat", MovementType.LUNGE)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -142,11 +147,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle exercises with clear names`() {
         // Given
-        val exercises = listOf(
-            createExercise("Conventional Deadlift", MovementType.HINGE),
-            createExercise("Deadlift", MovementType.HINGE),
-            createExercise("Very Long Exercise Name That Is Not Clear", MovementType.HINGE)
-        )
+        val exercises =
+            listOf(
+                createExercise("Conventional Deadlift", MovementType.HINGE),
+                createExercise("Deadlift", MovementType.HINGE),
+                createExercise("Very Long Exercise Name That Is Not Clear", MovementType.HINGE)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -160,10 +166,11 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should filter out low-scoring exercises`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Very Obscure Exercise With Low Score", MovementType.ISOLATION)
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Very Obscure Exercise With Low Score", MovementType.ISOLATION)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -177,19 +184,22 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle mixed factors correctly`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Conventional Deadlift", MovementType.HINGE)
-        )
-        val userOneRepMaxes = listOf(
-            createUserOneRepMax("Bench Press", BigDecimal("200.0"))
-        )
-        val exerciseUsageCounts = mapOf(
-            "Back Squat" to 200,
-            "Bench Press" to 100,
-            "Conventional Deadlift" to 50
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Conventional Deadlift", MovementType.HINGE)
+            )
+        val userOneRepMaxes =
+            listOf(
+                createUserOneRepMax("Bench Press", BigDecimal("200.0"))
+            )
+        val exerciseUsageCounts =
+            mapOf(
+                "Back Squat" to 200,
+                "Bench Press" to 100,
+                "Conventional Deadlift" to 50
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises, userOneRepMaxes, exerciseUsageCounts)
@@ -203,10 +213,11 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle exercises with no usage data`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+            )
         val emptyUsageCounts = emptyMap<String, Int>()
 
         // When
@@ -221,10 +232,11 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle exercises with no user 1RM data`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+            )
         val emptyOneRepMaxes = emptyList<UserOneRepMax>()
 
         // When
@@ -239,11 +251,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should prioritize strict press over military press`() {
         // Given
-        val exercises = listOf(
-            createExercise("Strict Press", MovementType.VERTICAL_PUSH),
-            createExercise("Military Press", MovementType.VERTICAL_PUSH),
-            createExercise("Overhead Press", MovementType.VERTICAL_PUSH)
-        )
+        val exercises =
+            listOf(
+                createExercise("Strict Press", MovementType.VERTICAL_PUSH),
+                createExercise("Military Press", MovementType.VERTICAL_PUSH),
+                createExercise("Overhead Press", MovementType.VERTICAL_PUSH)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -257,10 +270,11 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle bodyweight exercises`() {
         // Given
-        val exercises = listOf(
-            createExercise("Bodyweight Squat", MovementType.SQUAT),
-            createExercise("Barbell Squat", MovementType.SQUAT)
-        )
+        val exercises =
+            listOf(
+                createExercise("Bodyweight Squat", MovementType.SQUAT),
+                createExercise("Barbell Squat", MovementType.SQUAT)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -274,11 +288,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle cable and machine exercises`() {
         // Given
-        val exercises = listOf(
-            createExercise("Cable Row", MovementType.HORIZONTAL_PULL),
-            createExercise("Machine Row", MovementType.HORIZONTAL_PULL),
-            createExercise("Barbell Row", MovementType.HORIZONTAL_PULL)
-        )
+        val exercises =
+            listOf(
+                createExercise("Cable Row", MovementType.HORIZONTAL_PULL),
+                createExercise("Machine Row", MovementType.HORIZONTAL_PULL),
+                createExercise("Barbell Row", MovementType.HORIZONTAL_PULL)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -292,11 +307,12 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle compound movements`() {
         // Given
-        val exercises = listOf(
-            createExercise("Dip", MovementType.VERTICAL_PUSH),
-            createExercise("Pull Up", MovementType.VERTICAL_PULL),
-            createExercise("Row", MovementType.HORIZONTAL_PULL)
-        )
+        val exercises =
+            listOf(
+                createExercise("Dip", MovementType.VERTICAL_PUSH),
+                createExercise("Pull Up", MovementType.VERTICAL_PULL),
+                createExercise("Row", MovementType.HORIZONTAL_PULL)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -310,20 +326,23 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle exercises with multiple factors`() {
         // Given
-        val exercises = listOf(
-            createExercise("Back Squat", MovementType.SQUAT),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Conventional Deadlift", MovementType.HINGE)
-        )
-        val userOneRepMaxes = listOf(
-            createUserOneRepMax("Back Squat", BigDecimal("300.0")),
-            createUserOneRepMax("Bench Press", BigDecimal("200.0"))
-        )
-        val exerciseUsageCounts = mapOf(
-            "Back Squat" to 300,
-            "Bench Press" to 250,
-            "Conventional Deadlift" to 200
-        )
+        val exercises =
+            listOf(
+                createExercise("Back Squat", MovementType.SQUAT),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Conventional Deadlift", MovementType.HINGE)
+            )
+        val userOneRepMaxes =
+            listOf(
+                createUserOneRepMax("Back Squat", BigDecimal("300.0")),
+                createUserOneRepMax("Bench Press", BigDecimal("200.0"))
+            )
+        val exerciseUsageCounts =
+            mapOf(
+                "Back Squat" to 300,
+                "Bench Press" to 250,
+                "Conventional Deadlift" to 200
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises, userOneRepMaxes, exerciseUsageCounts)
@@ -337,13 +356,15 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle exercises with edge case names`() {
         // Given
-        val exercises = listOf(
-            createExercise("Exercise With Very Long Name That Exceeds Normal Length", MovementType.HORIZONTAL_PUSH),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        )
-        val userOneRepMaxes = listOf(
-            createUserOneRepMax("Bench Press", BigDecimal("200.0"))
-        )
+        val exercises =
+            listOf(
+                createExercise("Exercise With Very Long Name That Exceeds Normal Length", MovementType.HORIZONTAL_PUSH),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+            )
+        val userOneRepMaxes =
+            listOf(
+                createUserOneRepMax("Bench Press", BigDecimal("200.0"))
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises, userOneRepMaxes)
@@ -357,10 +378,11 @@ class ReferenceExerciseDetectorTest {
     @Test
     fun `findBestReferenceExercises should handle exercises with special characters`() {
         // Given
-        val exercises = listOf(
-            createExercise("Bench-Press", MovementType.HORIZONTAL_PUSH),
-            createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
-        )
+        val exercises =
+            listOf(
+                createExercise("Bench-Press", MovementType.HORIZONTAL_PUSH),
+                createExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+            )
 
         // When
         val result = referenceExerciseDetector.findBestReferenceExercises(exercises)
@@ -371,18 +393,31 @@ class ReferenceExerciseDetectorTest {
         assertTrue(result.size >= 1)
     }
 
-    private fun createExercise(name: String, movementType: MovementType): Exercise {
+    private fun createExercise(
+        name: String,
+        movementType: MovementType
+    ): Exercise {
         return Exercise(
             name = name,
             description = "Test exercise description",
             movementType = movementType,
             isUnilateral = false,
-            isUpper = movementType in listOf(MovementType.HORIZONTAL_PUSH, MovementType.VERTICAL_PUSH, MovementType.HORIZONTAL_PULL, MovementType.VERTICAL_PULL),
+            isUpper =
+                movementType in
+                    listOf(
+                        MovementType.HORIZONTAL_PUSH,
+                        MovementType.VERTICAL_PUSH,
+                        MovementType.HORIZONTAL_PULL,
+                        MovementType.VERTICAL_PULL
+                    ),
             isAccessory = false
         )
     }
 
-    private fun createUserOneRepMax(exerciseName: String, oneRepMax: BigDecimal): UserOneRepMax {
+    private fun createUserOneRepMax(
+        exerciseName: String,
+        oneRepMax: BigDecimal
+    ): UserOneRepMax {
         return UserOneRepMax(
             userId = USER_ID,
             exerciseName = exerciseName,

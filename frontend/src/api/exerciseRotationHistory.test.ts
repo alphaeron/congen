@@ -1,4 +1,5 @@
 import MockAdapter from 'axios-mock-adapter';
+
 import { ENDPOINT } from './endpoint';
 import {
   createExerciseRotationHistory,

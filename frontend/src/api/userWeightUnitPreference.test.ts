@@ -1,4 +1,6 @@
 import MockAdapter from 'axios-mock-adapter';
+
+import { ENDPOINT } from './endpoint';
 import {
   upsertUserWeightUnitPreference,
   getUserWeightUnitPreferences,
@@ -7,7 +9,6 @@ import {
   type UserWeightUnitPreference,
   WeightUnit,
 } from './userWeightUnitPreference';
-import { ENDPOINT } from './endpoint';
 
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
@@ -83,7 +84,9 @@ describe('userWeightUnitPreference API', () => {
       const result = await getUserWeightUnitPreference('test-user-id', 'Bench Press');
 
       expect(result.data).toEqual(mockUserWeightUnitPreference);
-      expect(mock.history.get[0].url).toBe('/user_weight_unit_preference/test-user-id/Bench%20Press');
+      expect(mock.history.get[0].url).toBe(
+        '/user_weight_unit_preference/test-user-id/Bench%20Press'
+      );
     });
 
     it('should handle API errors', async () => {
@@ -104,7 +107,9 @@ describe('userWeightUnitPreference API', () => {
       const result = await deleteUserWeightUnitPreference('test-user-id', 'Bench Press');
 
       expect(result.data).toEqual(mockUserWeightUnitPreference);
-      expect(mock.history.delete[0].url).toBe('/user_weight_unit_preference/test-user-id/Bench%20Press');
+      expect(mock.history.delete[0].url).toBe(
+        '/user_weight_unit_preference/test-user-id/Bench%20Press'
+      );
     });
 
     it('should handle API errors', async () => {
