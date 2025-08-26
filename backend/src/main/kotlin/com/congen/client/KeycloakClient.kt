@@ -17,12 +17,13 @@ import reactor.core.publisher.Mono
  * using a dedicated service account instead of admin credentials. This provides
  * better security by following the principle of least privilege.
  *
- * @property keycloakUrl Base URL for Keycloak server
- * @property realm Keycloak realm name
- * @property clientId Client ID for authentication
- * @property serviceAccountUsername Service account username
- * @property clientSecret Client secret for authentication
- * @property keycloakWebClient WebClient for HTTP requests
+ * @param keycloakUrl Base URL for Keycloak server
+ * @param realm Keycloak realm name
+ * @param clientId Client ID for authentication
+ * @param serviceAccountUsername Service account username
+ * @param clientSecret Client secret for authentication
+ * @param managementUrl Management URL for health checks
+ * @param keycloakWebClient WebClient for HTTP requests
  *
  * @author Congen Development Team
  * @since 1.0.0

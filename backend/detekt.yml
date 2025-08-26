@@ -21,11 +21,17 @@ style:
     active: true
   UnusedParameter:
     active: true
+  VarCouldBeVal:
+    active: true
   WildcardImport:
     active: true
 
 comments:
   active: true
+  KDocReferencesNonPublicProperty:
+    active: true
+  OutdatedDocumentation:
+    active: true
   UndocumentedPublicClass:
     active: true
     severity: error

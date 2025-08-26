@@ -51,6 +51,8 @@ data class OpenApiProperties(
  * - Interactive API testing interface
  * - Server information and contact details
  *
+ * @param openApiProps The OpenAPI properties loaded from configuration
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

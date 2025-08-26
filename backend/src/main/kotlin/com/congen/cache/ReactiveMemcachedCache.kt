@@ -41,9 +41,9 @@ import java.util.Base64
  *     .subscribe()
  * ```
  *
- * @property memcachedClient The underlying Memcached client
- * @property objectMapper Jackson ObjectMapper for JSON serialization
- * @property memcachedScheduler Dedicated scheduler for Memcached operations
+ * @param memcachedClient The underlying Memcached client
+ * @param objectMapper Jackson ObjectMapper for JSON serialization
+ * @param memcachedScheduler Dedicated scheduler for Memcached operations
  *
  * @author Congen Development Team
  * @since 1.0.0

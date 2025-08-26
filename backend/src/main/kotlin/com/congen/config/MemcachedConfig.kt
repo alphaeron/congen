@@ -69,7 +69,7 @@ data class MemcachedProperties(
  * - `memcached.op-timeout`: Operation timeout in milliseconds.
  * - `memcached.max-queued-noreply`: Maximum queued no-reply operations.
  *
- * @property props The properties for configuring Memcached connections.
+ * @param props The properties for configuring Memcached connections.
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -31,8 +31,8 @@ import kotlin.reflect.KClass
  * All operations return [Mono] for reactive programming and include
  * comprehensive error handling and logging.
  *
- * @property postgresDBReader SQL client for read operations
- * @property postgresDBWriter SQL client for write operations
+ * @param postgresDBReader SQL client for read operations
+ * @param postgresDBWriter SQL client for write operations
  *
  * @author Congen Development Team
  * @since 1.0.0

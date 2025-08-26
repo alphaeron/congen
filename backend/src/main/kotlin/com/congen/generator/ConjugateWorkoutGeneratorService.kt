@@ -40,16 +40,14 @@ import reactor.core.publisher.Mono
  * - **Accessory**: Isolation and weak point training
  * - **Conditioning**: Cardio and recovery work
  *
- * @property exerciseDAL Data access layer for exercise operations
- * @property userExercisePreferenceDAL Data access layer for user exercise preferences
- * @property userEquipmentDAL Data access layer for user equipment
- * @property userOneRepMaxDAL Data access layer for user one rep max values
- * @property userProgramPreferencesDAL Data access layer for user program preferences
- * @property programService Service for program operations
- * @property programmedWorkoutDAL Data access layer for programmed workout operations
- * @property conjugateTemplates Service for managing workout templates
- * @property workoutStageGenerationServiceFactory Factory for selecting appropriate workout stage generation services
- * @property exercisePoolFactor Service for managing exercise pools and filtering
+ * @param userOneRepMaxDAL Data access layer for user one rep max values
+ * @param userProgramPreferencesDAL Data access layer for user program preferences
+ * @param programService Service for program operations
+ * @param programmedWorkoutDAL Data access layer for programmed workout operations
+ * @param conjugateTemplates Service for managing workout templates
+ * @param workoutStageGenerationOrchestrator Service for orchestrating workout stage generation
+ * @param userWeakMuscleDAL Data access layer for user weak muscle data
+ * @param exercisePoolFactory Service for managing exercise pools and filtering
  *
  * @author Congen Development Team
  * @since 1.0.0

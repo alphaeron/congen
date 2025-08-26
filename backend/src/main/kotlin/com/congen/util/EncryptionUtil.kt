@@ -45,7 +45,7 @@ import javax.crypto.spec.SecretKeySpec
  * - Failed decryption attempts should be logged and monitored
  * - Access to encryption keys should be strictly controlled
  *
- * @property encryptionKey Base64-encoded AES-256 encryption key
+ * @param encryptionKey Base64-encoded AES-256 encryption key
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -177,8 +177,8 @@ class EncryptionUtil(
 /**
  * Exception thrown when encryption or decryption operations fail.
  *
- * @property message Error message describing the failure
- * @property cause Underlying cause of the failure
+ * @param message Error message describing the failure
+ * @param cause Underlying cause of the failure
  */
 class EncryptionException(
     message: String,

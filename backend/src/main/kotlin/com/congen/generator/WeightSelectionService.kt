@@ -25,14 +25,14 @@ import java.math.RoundingMode
  * - Bodyweight exercise estimations
  * - Unit conversion and weight rounding
  *
- * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preference operations
- * @property supportedEquipmentWeightRoundingService Service to match desired weights to equipment-supported weights
- * @property bandWeightService Service for band weight calculations
- * @property exerciseMatchingService Service for exercise matching
- * @property exerciseDAL Data access layer for exercise operations
- * @property exerciseEquipmentDAL Data access layer for exercise equipment operations
- * @property exerciseMuscleDAL Data access layer for exercise muscle operations
- * @property userOneRepMaxDAL Data access layer for user one rep max operations
+ * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preference operations
+ * @param supportedEquipmentWeightRoundingService Service to match desired weights to equipment-supported weights
+ * @param bandWeightService Service for band weight calculations
+ * @param exerciseMatchingService Service for exercise matching
+ * @param exerciseDAL Data access layer for exercise operations
+ * @param exerciseEquipmentDAL Data access layer for exercise equipment operations
+ * @param exerciseMuscleDAL Data access layer for exercise muscle operations
+ * @param userOneRepMaxDAL Data access layer for user one rep max operations
  *
  * @author Congen Development Team
  * @since 1.0.0

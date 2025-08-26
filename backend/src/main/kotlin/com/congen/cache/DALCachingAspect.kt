@@ -39,8 +39,8 @@ import java.lang.reflect.Method
  * fun insertExercise(name: String, ...): Mono<Exercise>
  * ```
  *
- * @property reactiveCache The reactive Memcached cache utility
- * @property cacheKeyGenerator The cache key generator utility
+ * @param reactiveCache The reactive Memcached cache utility
+ * @param cacheKeyGenerator The cache key generator utility
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -65,6 +65,7 @@ class DALCachingAspect(
      * 4. Handling cache misses gracefully
      *
      * @param joinPoint The method execution join point
+     * @param cacheable The cacheable annotation configuration
      * @return The method result (cached or fresh)
      */
     @Around("@annotation(cacheable)")

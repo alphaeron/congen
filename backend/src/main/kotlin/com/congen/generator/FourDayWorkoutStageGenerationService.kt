@@ -36,7 +36,18 @@ import reactor.core.publisher.Mono
  * - **Accessory Stage**: Multiple accessory exercises based on available time
  * - **Conditioning Stage**: AMRAP/EMOM exercises (for DE days)
  *
- * @property conjugateTemplates Service for managing workout templates
+ * @param workoutStageDAL Data access layer for workout stage operations
+ * @param workoutStageTypeDAL Data access layer for workout stage type operations
+ * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param setSchemeDAL Data access layer for set scheme operations
+ * @param setSchemeService Service for set scheme operations
+ * @param prilepinGuidelinesService Service for Prilepin guidelines
+ * @param weightSelectionService Service for weight selection
+ * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
+ * @param exerciseSelectionService Service for exercise selection
+ * @param movementBalanceService Service for movement balance
+ * @param sessionTimeCalculator Service for session time calculation
+ * @param conjugateTemplates Service for managing workout templates
  *
  * @author Congen Development Team
  * @since 1.0.0

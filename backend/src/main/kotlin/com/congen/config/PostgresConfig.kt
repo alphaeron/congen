@@ -13,21 +13,17 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Configuration class for PostgreSQL database connections.
+ * Configuration properties for PostgreSQL database connections.
  *
- * This class manages the configuration and creation of PostgreSQL database connections
- * for both read and write operations. It uses Vert.x PostgreSQL client for reactive
- * database operations and supports connection pooling with separate configurations
- * for reader and writer connections.
+ * This data class holds all the configuration properties needed to establish
+ * PostgreSQL database connections, including separate configurations for
+ * reader and writer connections, authentication details, and SSL settings.
  *
- * The configuration supports SSL connections and includes connection pooling,
- * prepared statement caching, and automatic reconnection capabilities.
- *
- * @property writerHost Hostname for the writer database connection
- * @property readerHost Hostname for the reader database connection
+ * @property writer Writer database host configuration
+ * @property reader Reader database host configuration
  * @property port Database port number
- * @property usernameV Database username
- * @property passwordV Database password
+ * @property username Database username
+ * @property password Database password
  * @property dbName Database name
  * @property sslMode Whether SSL is enabled for database connections
  *
@@ -68,7 +64,7 @@ data class PostgresProperties(
  * The configuration supports SSL connections and includes connection pooling,
  * prepared statement caching, and automatic reconnection capabilities.
  *
- * @property props The properties for configuring PostgreSQL connections.
+ * @param props The properties for configuring PostgreSQL connections.
  *
  * @author Congen Development Team
  * @since 1.0.0
