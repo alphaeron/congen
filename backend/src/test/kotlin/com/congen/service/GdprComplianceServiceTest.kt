@@ -1,6 +1,5 @@
 package com.congen.service
 
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedExerciseDAL
@@ -45,7 +44,6 @@ class GdprComplianceServiceTest {
     private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
-    private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
     private lateinit var programDAL: ProgramDAL
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var workoutStageDAL: WorkoutStageDAL
@@ -63,7 +61,6 @@ class GdprComplianceServiceTest {
         userProgramPreferencesDAL = mock()
         userOneRepMaxDAL = mock()
         userWeightUnitPreferenceDAL = mock()
-        exerciseRotationHistoryDAL = mock()
         programDAL = mock()
         programmedWorkoutDAL = mock()
         workoutStageDAL = mock()
@@ -79,7 +76,6 @@ class GdprComplianceServiceTest {
                 userProgramPreferencesDAL = userProgramPreferencesDAL,
                 userOneRepMaxDAL = userOneRepMaxDAL,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-                exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
                 programDAL = programDAL,
                 programmedWorkoutDAL = programmedWorkoutDAL,
                 workoutStageDAL = workoutStageDAL,
@@ -204,7 +200,6 @@ class GdprComplianceServiceTest {
         whenever(userProgramPreferencesDAL.selectUserProgramPreferences(keycloakId)).thenReturn(Mono.empty())
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
-        whenever(exerciseRotationHistoryDAL.selectByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getUserAuditLogs(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getDataRetentionPolicies()).thenReturn(Mono.just(emptyList()))

@@ -72,7 +72,7 @@ class ConjugateWorkoutGeneratorService(
      * Generates the next week of workouts for an existing conjugate powerlifting program.
      *
      * This method generates a complete week of workouts for an existing program based on the conjugate method,
-     * incorporating user preferences, available equipment, and exercise rotation history.
+     * incorporating user preferences and available equipment.
      *
      * @param programId The ID of the existing program
      * @return Mono containing the updated program with new workouts

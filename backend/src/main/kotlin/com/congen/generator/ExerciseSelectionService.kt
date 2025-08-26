@@ -12,7 +12,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
- * Service for selecting exercises based on various criteria including rotation history,
+ * Service for selecting exercises based on various criteria including
  * user preferences, equipment availability, and target muscles.
  */
 @Service
@@ -234,7 +234,6 @@ class ExerciseSelectionService(
      *
      * @param primaryExercise The primary exercise to find a similar secondary exercise for
      * @param userExercisePool The user's exercise pool
-     * @param rotationHistory List of exercise rotation history
      * @param movementBalanceState Current movement balance state (optional)
      * @return Selected secondary exercise or empty if none available
      */

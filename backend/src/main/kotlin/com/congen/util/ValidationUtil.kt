@@ -267,33 +267,6 @@ object ValidationUtil {
     }
 
     /**
-     * Validates exercise category for exercise rotation history.
-     *
-     * Exercise categories must be one of the predefined valid categories
-     * used in the workout generation system. This ensures consistency
-     * in exercise classification across the application.
-     *
-     * @param category The exercise category to validate
-     * @throws ValidationException if category is not a valid exercise category
-     *
-     * @example
-     * ```kotlin
-     * ValidationUtil.validateExerciseCategory("primary")   // Valid
-     * ValidationUtil.validateExerciseCategory("secondary") // Valid
-     * ValidationUtil.validateExerciseCategory("accessory") // Valid
-     * ValidationUtil.validateExerciseCategory("invalid")   // Throws ValidationException
-     * ```
-     */
-    fun validateExerciseCategory(category: String) {
-        val validCategories = listOf("primary", "secondary", "accessory")
-        if (category !in validCategories) {
-            val message = "Exercise category must be one of: ${validCategories.joinToString(", ")}, got: $category"
-            logger.error(message)
-            throw ValidationException(message)
-        }
-    }
-
-    /**
      * Validates one rep max value with unit conversion for user_one_rep_max (DB: > 0 and <= 1000 kg equivalent).
      *
      * @param oneRepMax One rep max value in the specified unit

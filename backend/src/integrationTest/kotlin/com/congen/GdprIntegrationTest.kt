@@ -108,7 +108,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_exercise_preferences").exists()
             .jsonPath("$.user_one_rep_max").exists()
             .jsonPath("$.user_weight_unit_preferences").exists()
-            .jsonPath("$.exercise_rotation_history").exists()
             .jsonPath("$.training_programs").exists()
             .jsonPath("$.user_program_preferences").exists()
     }

@@ -87,8 +87,6 @@ data class UserDataExport(
     @param:JsonProperty("user_one_rep_max") val userOneRepMax: List<Any>,
     /** User's weight unit preferences. */
     @param:JsonProperty("user_weight_unit_preferences") val userWeightUnitPreferences: List<Any>,
-    /** User's exercise rotation history. */
-    @param:JsonProperty("exercise_rotation_history") val exerciseRotationHistory: List<Any>,
     /** User's training programs. */
     @param:JsonProperty("training_programs") val trainingPrograms: List<ProgramWithWorkouts>,
     /** Audit logs for data access. */

@@ -5,7 +5,6 @@ import com.congen.dal.EquipmentDAL
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.MuscleDAL
@@ -62,7 +61,6 @@ class CacheWarmupService(
     private val workoutStageDAL: WorkoutStageDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
     private val setSchemeDAL: SetSchemeDAL,
-    private val exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL,
     private val cacheWarmupConfig: CacheWarmupConfig
 ) : ApplicationRunner {
     private val logger = LoggerFactory.getLogger(CacheWarmupService::class.java)
@@ -313,12 +311,7 @@ class CacheWarmupService(
             gdprComplianceDAL.hasUserConsent(userId)
                 .doOnSuccess { logger.debug("Warmed up user GDPR consent for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user GDPR consent for: {}", userId, it) }
-                .onErrorResume { Mono.just(false) },
-            // Exercise rotation history
-            exerciseRotationHistoryDAL.selectByUserId(userId)
-                .doOnSuccess { logger.debug("Warmed up exercise rotation history for: {}", userId) }
-                .doOnError { logger.warn("Failed to warm up exercise rotation history for: {}", userId, it) }
-                .onErrorComplete()
+                .onErrorResume { Mono.just(false) }
         ).then(Mono.just(Unit))
     }
 

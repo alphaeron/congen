@@ -5,7 +5,6 @@ import com.congen.dal.EquipmentDAL
 import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.MuscleDAL
@@ -90,8 +89,6 @@ class CacheWarmupServiceTest {
 
     @Mock private lateinit var setSchemeDAL: SetSchemeDAL
 
-    @Mock private lateinit var exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL
-
     @Mock private lateinit var cacheWarmupConfig: CacheWarmupConfig
 
     @Mock private lateinit var applicationArguments: ApplicationArguments
@@ -122,7 +119,6 @@ class CacheWarmupServiceTest {
                 workoutStageDAL,
                 programmedExerciseDAL,
                 setSchemeDAL,
-                exerciseRotationHistoryDAL,
                 cacheWarmupConfig
             )
     }
@@ -451,7 +447,6 @@ class CacheWarmupServiceTest {
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(gdprComplianceDAL.hasUserConsent("user1")).thenReturn(Mono.just(true))
         whenever(programDAL.selectProgramsByUserId("user1")).thenReturn(Mono.just(listOf()))
-        whenever(exerciseRotationHistoryDAL.selectByUserId("user1")).thenReturn(Mono.just(listOf()))
 
         cacheWarmupService.run(applicationArguments)
 

@@ -22,7 +22,7 @@ import java.math.BigDecimal
  * Unit tests for the ExerciseSelectionService.
  *
  * These tests verify that the service correctly selects exercises based on
- * various criteria including rotation history, user preferences, equipment
+ * various criteria including user preferences, equipment
  * availability, and target muscles.
  */
 class ExerciseSelectionServiceTest {

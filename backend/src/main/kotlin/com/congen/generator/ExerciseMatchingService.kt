@@ -475,7 +475,6 @@ class ExerciseMatchingService(
      *
      * @param exercise The exercise to score
      * @param primaryExercise The primary exercise to compare against
-     * @param rotationHistory List of exercise rotation history
      * @return Similarity score (higher is more similar)
      */
     fun calculateExerciseSimilarityScore(
@@ -501,7 +500,6 @@ class ExerciseMatchingService(
      *
      * @param exercise The exercise to score
      * @param primaryExercise The primary exercise to compare against
-     * @param rotationHistory List of exercise rotation history
      * @param exerciseMuscleDAL Data access layer for exercise muscle relationships
      * @return Similarity score (higher is more similar)
      */
@@ -604,7 +602,6 @@ class ExerciseMatchingService(
      *
      * @param exercises List of exercises to sort
      * @param primaryExercise The primary exercise to compare against
-     * @param rotationHistory List of exercise rotation history
      * @return Sorted list of exercises (most similar first)
      */
     fun sortExercisesBySimilarity(

@@ -409,7 +409,6 @@ abstract class BaseIntegrationTest {
                     user_program_preferences,
                     user_equipment,
                     "user",
-                    exercise_rotation_history,
                     user_one_rep_max
                 CASCADE;
                 """.trimIndent()

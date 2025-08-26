@@ -1,6 +1,5 @@
 package com.congen.service
 
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedExerciseDAL
@@ -54,7 +53,6 @@ import java.time.Instant
  * - Program preferences
  * - One-rep-max records
  * - Weight unit preferences
- * - Exercise rotation history
  * - Complete training programs with workouts
  * - Performance data and set schemes
  * - Audit logs for data access
@@ -67,7 +65,6 @@ import java.time.Instant
  * @property userProgramPreferencesDAL Data access layer for program preferences
  * @property userOneRepMaxDAL Data access layer for one-rep-max records
  * @property userWeightUnitPreferenceDAL Data access layer for weight unit preferences
- * @property exerciseRotationHistoryDAL Data access layer for exercise rotation history
  * @property programDAL Data access layer for training programs
  * @property programmedWorkoutDAL Data access layer for programmed workouts
  * @property workoutStageDAL Data access layer for workout stages
@@ -87,7 +84,6 @@ class GdprComplianceService(
     private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
-    private val exerciseRotationHistoryDAL: ExerciseRotationHistoryDAL,
     private val programDAL: ProgramDAL,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val workoutStageDAL: WorkoutStageDAL,
@@ -215,8 +211,7 @@ class GdprComplianceService(
      * - Program preferences (days per week, session length)
      * - One-rep-max records
      * - Weight unit preferences
-     * - Exercise rotation history
-     * - Complete training programs with workouts
+      * - Complete training programs with workouts
      * - Performance data and set schemes
      * - Audit logs for data access history
      * - Data retention policies
@@ -241,7 +236,6 @@ class GdprComplianceService(
             val userProgramPreferencesMono = userProgramPreferencesDAL.selectUserProgramPreferences(keycloakId)
             val userOneRepMaxMono = userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)
             val userWeightUnitPreferencesMono = userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)
-            val exerciseRotationHistoryMono = exerciseRotationHistoryDAL.selectByUserId(keycloakId)
             val programsMono = programDAL.selectProgramsByUserId(keycloakId)
             val auditLogsMono = gdprComplianceDAL.getUserAuditLogs(keycloakId)
             val dataRetentionPoliciesMono = gdprComplianceDAL.getDataRetentionPolicies()
@@ -266,12 +260,11 @@ class GdprComplianceService(
                             val oneRepMax = tuple2.t2 ?: emptyList()
                             val weightUnitPreferences = tuple2.t3 ?: emptyList()
 
-                            Mono.zip(exerciseRotationHistoryMono, programsMono, auditLogsMono, dataRetentionPoliciesMono)
+                            Mono.zip(programsMono, auditLogsMono, dataRetentionPoliciesMono)
                                 .flatMap { tuple3 ->
-                                    val rotationHistory = tuple3.t1 ?: emptyList()
-                                    val programs = tuple3.t2 ?: emptyList()
-                                    val auditLogs = tuple3.t3 ?: emptyList()
-                                    val retentionPolicies = tuple3.t4 ?: emptyList()
+                                    val programs = tuple3.t1 ?: emptyList()
+                                    val auditLogs = tuple3.t2 ?: emptyList()
+                                    val retentionPolicies = tuple3.t3 ?: emptyList()
 
                                     // Fetch complete training programs with workouts, stages, exercises, and set schemes
                                     Flux.fromIterable(programs)
@@ -298,7 +291,6 @@ class GdprComplianceService(
                                                 userProgramPreferences = programPreferences,
                                                 userOneRepMax = oneRepMax,
                                                 userWeightUnitPreferences = weightUnitPreferences,
-                                                exerciseRotationHistory = rotationHistory,
                                                 trainingPrograms = programsWithWorkouts,
                                                 auditLogs = auditLogs,
                                                 dataRetentionPolicies = retentionPolicies,
@@ -325,7 +317,6 @@ class GdprComplianceService(
      * - One-rep-max records
      * - Program preferences
      * - Weight unit preferences
-     * - Exercise rotation history
      * - Training programs and workouts
      * - Performance data and set schemes
      * - Consent records

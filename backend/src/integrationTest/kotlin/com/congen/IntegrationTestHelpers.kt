@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.model.ExerciseRotationHistory
 import com.congen.model.Program
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
@@ -549,43 +548,6 @@ object IntegrationTestHelpers {
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(ProgrammedExercise::class.java)
-                .returnResult()
-                .responseBody!!
-        return response.id
-    }
-
-    /**
-     * Creates test exercise rotation history via the API and returns the record ID.
-     */
-    fun createTestExerciseRotationHistory(
-        webTestClient: WebTestClient,
-        keycloakId: String,
-        exerciseName: String,
-        rotationDate: String,
-        isAccessory: Boolean = false,
-        token: String? = null
-    ): Long {
-        val request =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/exercise_rotation_history/?user_id=$keycloakId" +
-                        "&exercise_name=$exerciseName" +
-                        "&rotation_date=$rotationDate" +
-                        "&is_accessory=$isAccessory"
-                )
-
-        // Add authorization header if token is provided
-        if (token != null) {
-            request.header("Authorization", "Bearer $token")
-        } else {
-            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
-        }
-
-        val response =
-            request
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(ExerciseRotationHistory::class.java)
                 .returnResult()
                 .responseBody!!
         return response.id

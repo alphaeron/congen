@@ -38,7 +38,7 @@ import kotlin.random.Random
  * ## Common Patterns
  *
  * This service implements common patterns for:
- * - Exercise selection with rotation history
+ * - Exercise selection
  * - Set scheme generation using Prilepin guidelines
  * - Time-based accessory exercise allocation
  * - Stage creation and exercise programming
@@ -89,7 +89,6 @@ abstract class WorkoutStageGenerationService(
      * @param userEquipment User's available equipment
      * @param oneRepMaxes User's one rep max values
      * @param programPreferences User's program preferences
-     * @param rotationHistory Exercise rotation history
      * @param weakMuscles Target weak muscles
      * @param currentWeekNumber Current week number
      * @param userId User ID
@@ -132,7 +131,6 @@ abstract class WorkoutStageGenerationService(
      * @param userEquipment User's available equipment
      * @param oneRepMaxes User's one rep max values
      * @param programPreferences User's program preferences
-     * @param rotationHistory Exercise rotation history
      * @param weakMuscles Target weak muscles
      * @param currentWeekNumber Current week number
      * @param userId User ID
@@ -292,7 +290,6 @@ abstract class WorkoutStageGenerationService(
      * @param oneRepMaxes User's one rep max values
      * @param weakMuscles Target weak muscles
      * @param numAccessoryExercises Number of accessory exercises to create
-     * @param rotationHistory Exercise rotation history
      * @param currentWeekNumber Current week number
      * @param userId User ID
      * @return Mono<Void> indicating completion
@@ -608,7 +605,6 @@ abstract class WorkoutStageGenerationService(
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param weakMuscles Target weak muscles
-     * @param rotationHistory Exercise rotation history
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -637,7 +633,6 @@ abstract class WorkoutStageGenerationService(
      * @param primaryExercise The primary exercise to base selection on
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param weakMuscles Target weak muscles
-     * @param rotationHistory Exercise rotation history
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -670,7 +665,6 @@ abstract class WorkoutStageGenerationService(
      * @param userExercisePool The user's exercise pool
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param weakMuscles Target weak muscles
-     * @param rotationHistory Exercise rotation history
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -697,7 +691,6 @@ abstract class WorkoutStageGenerationService(
      *
      * @param userExercisePool The user's exercise pool
      * @param weakMuscles Target weak muscles
-     * @param rotationHistory Exercise rotation history
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -932,12 +925,12 @@ abstract class WorkoutStageGenerationService(
         userId: String,
         consistentRestSeconds: Int
     ): Mono<List<SetSchemeParams>> {
-        val (guidelines, intensity) =
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                dayType = dayType,
-                currentWeekNumber = currentWeekNumber,
-                movementRole = "accessory"
-            )
+        val undulatingPeriodizationGuidelines = prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+            dayType = dayType,
+            currentWeekNumber = currentWeekNumber,
+            movementRole = "accessory"
+        )
+        val intensity = undulatingPeriodizationGuidelines.second
 
         // For accessories, use "good" rep numbers (6, 8, 10, 12, 15) instead of random ranges
         val goodRepNumbers = listOf(6, 8, 10, 12, 15)

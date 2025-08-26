@@ -1,6 +1,5 @@
 package com.congen
 
-import com.congen.dal.ExerciseRotationHistoryDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgrammedExerciseDAL
@@ -22,7 +21,6 @@ import com.congen.model.Equipment
 import com.congen.model.Exercise
 import com.congen.model.ExerciseEquipment
 import com.congen.model.ExerciseMuscle
-import com.congen.model.ExerciseRotationHistory
 import com.congen.model.ExerciseWorkoutType
 import com.congen.model.HealthCheck
 import com.congen.model.HealthCheckResponse
@@ -351,22 +349,6 @@ fun mockExerciseWorkoutType(
         workoutType = workoutType
     )
 
-// ExerciseRotationHistory helpers
-fun mockExerciseRotationHistory(
-    id: Long = 1L,
-    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
-    exerciseName: String = "Bench Press",
-    isAccessory: Boolean = false,
-    createdAt: Instant = sampleInstant()
-): ExerciseRotationHistory =
-    ExerciseRotationHistory(
-        id = id,
-        userId = userId,
-        exerciseName = exerciseName,
-        isAccessory = isAccessory,
-        createdAt = createdAt
-    )
-
 // WorkoutStage helpers
 fun mockWorkoutStage(
     id: Long = 1L,
@@ -530,7 +512,6 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
     val userProgramPreferencesDAL = mock<UserProgramPreferencesDAL>()
     val userOneRepMaxDAL = mock<UserOneRepMaxDAL>()
     val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
-    val exerciseRotationHistoryDAL = mock<ExerciseRotationHistoryDAL>()
     val programDAL = mock<ProgramDAL>()
     val programmedWorkoutDAL = mock<ProgrammedWorkoutDAL>()
     val workoutStageDAL = mock<WorkoutStageDAL>()
@@ -547,7 +528,6 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             userProgramPreferencesDAL = userProgramPreferencesDAL,
             userOneRepMaxDAL = userOneRepMaxDAL,
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
-            exerciseRotationHistoryDAL = exerciseRotationHistoryDAL,
             programDAL = programDAL,
             programmedWorkoutDAL = programmedWorkoutDAL,
             workoutStageDAL = workoutStageDAL,
