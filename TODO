@@ -6,10 +6,6 @@ update program button not working
 
 
 
-Now completely remove exercise rotation history since it is unused
-
-
-
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage
 
 
@@ -66,7 +62,7 @@ remove console statements from frontend
 
 chart.js for chart visualizations
 
-print / export to pdf for workouts
+support print / export (pdf or xlsx) and add corresponding icon buttons on workout and program to expose this functionality
 
 remove timeout duration from workout generation exceeded error message.  the user facing error messages should not contain implementation details
 
@@ -82,8 +78,6 @@ Fix dates: Member since January 21, 1970
 
 integration test all user profile sidebar functionality to make sure it works
 
-remove article, gdpr from user facing wording
-
 com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 
 
@@ -92,8 +86,6 @@ assets, and object storage for assets
 "how it works" on root spa with workout generation algorithm flowchart
 
 congen database for congen?  Or maybe aws terraform will handle that.
-
-export (pdf or xlsx), print icons on workout and program
 
 
 

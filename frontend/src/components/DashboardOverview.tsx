@@ -16,10 +16,10 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { getExerciseRotationHistory } from '../api/exerciseRotationHistory';
 import { getPrograms } from '../api/program';
-import type { User, Program, UserOneRepMax, ExerciseRotationHistory } from '../api/types';
+import type { User, Program, UserOneRepMax } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { ExerciseHistory } from './ExerciseHistory';
 
 interface DashboardOverviewProps {
   user: User;
@@ -38,7 +38,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [exerciseHistory, setExerciseHistory] = useState<ExerciseRotationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,15 +54,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         setError(null);
 
         // Load all dashboard data in parallel
-        const [programsData, oneRepMaxesData, exerciseHistoryData] = await Promise.all([
+        const [programsData, oneRepMaxesData] = await Promise.all([
           getPrograms(),
           getUserOneRepMaxes(user.keycloak_id),
-          getExerciseRotationHistory(),
         ]);
 
         setPrograms(programsData);
         setOneRepMaxes(oneRepMaxesData);
-        setExerciseHistory(exerciseHistoryData);
       } catch (err) {
         console.error('Error loading dashboard data:', err);
         setError('Failed to load dashboard data. Please try again.');
@@ -90,12 +87,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const activeProgram = programs.find(program => program.is_active);
   const totalWorkouts = programs.reduce((total, program) => total + program.current_week_number, 0);
   const recentOneRepMaxes = oneRepMaxes.slice(-5); // Last 5 1RMs
-  const recentExerciseHistory = exerciseHistory.slice(-10); // Last 10 exercises
-
-  // Calculate statistics
-  const uniqueExercises = new Set(exerciseHistory.map(history => history.exercise_name)).size;
-  const accessoryExercises = exerciseHistory.filter(history => history.is_accessory).length;
-  const primaryExercises = exerciseHistory.filter(history => !history.is_accessory).length;
 
   return (
     <React.Fragment>
@@ -169,10 +160,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 <TrendingUpIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
                   <Typography variant="h4" component="div" textAlign="center">
-                    {uniqueExercises}
+                    {oneRepMaxes.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Unique Exercises
+                    1RM Records
                   </Typography>
                 </Box>
               </Box>
@@ -267,61 +258,10 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       )}
 
       {/* Exercise History Section */}
-      {recentExerciseHistory.length > 0 && (
-        <Card sx={{ mb: 4 }}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Recent Exercise History
-            </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Primary Exercises ({primaryExercises})
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {exerciseHistory
-                    .filter(history => !history.is_accessory)
-                    .slice(-5)
-                    .map((history, index) => (
-                      <Tooltip
-                        key={index}
-                        title={`Used on ${new Date(history.created_at).toLocaleDateString()}`}
-                      >
-                        <Chip label={history.exercise_name} size="small" variant="outlined" />
-                      </Tooltip>
-                    ))}
-                </Box>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle1" gutterBottom>
-                  Accessory Exercises ({accessoryExercises})
-                </Typography>
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {exerciseHistory
-                    .filter(history => history.is_accessory)
-                    .slice(-5)
-                    .map((history, index) => (
-                      <Tooltip
-                        key={index}
-                        title={`Used on ${new Date(history.created_at).toLocaleDateString()}`}
-                      >
-                        <Chip
-                          label={history.exercise_name}
-                          size="small"
-                          variant="outlined"
-                          color="secondary"
-                        />
-                      </Tooltip>
-                    ))}
-                </Box>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      )}
+      <ExerciseHistory user={user} />
 
       {/* No Data State */}
-      {!activeProgram && recentOneRepMaxes.length === 0 && recentExerciseHistory.length === 0 && (
+      {!activeProgram && recentOneRepMaxes.length === 0 && (
         <Card>
           <CardContent>
             <Typography variant="h6" gutterBottom>

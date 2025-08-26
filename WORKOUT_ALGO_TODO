@@ -1,9 +1,0 @@
-The workout generation algorithm in the backend isn't working as expected, and I think this might have something to do with the exercise rotation history issues as well.
-
-Look at the images to see for the same week 2 workouts generated where the same exercises are used, the exercises for the warmup are not simple enough (chin-up is not a warmup), there are 5 instead of 3 exercises in a warmup, and a dynamic effort exercise is used as a secondary exercise, in addtiion to the primary exercise not matching the day type of upper body.  upper body exercises are also given as warmups on lower body days, and the same exercise is used more than once.
-
-First, explain How does exercise rotation history work, I don't see any rotation history even though workouts have been created and I see the exercises in usage statistics.
-
-Is exercise rotation history not needed or duplicated state?
-
-From there, propose fixes for the backend workout generation issues

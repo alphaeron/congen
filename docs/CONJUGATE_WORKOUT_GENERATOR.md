@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Conjugate Workout Generator is a service that implements the Westside Barbell conjugate method for powerlifting, incorporating undulating periodization, exercise rotation, and personalized programming based on user preferences and available equipment.
+The Conjugate Workout Generator is a service that implements the Westside Barbell conjugate method for powerlifting, incorporating undulating periodization, and personalized programming based on user preferences and available equipment.
 
 ## System Architecture
 
@@ -54,7 +54,6 @@ src/main/kotlin/com/congen/generator/
 #### 4. ExerciseSelectionService.kt
 - **Purpose**: Manages exercise selection based on various criteria
 - **Responsibilities**:
-  - Exercise rotation history management
   - User preference filtering
   - Equipment availability checking
   - Weak muscle determination
@@ -154,7 +153,7 @@ The conjugate method, developed by Louie Simmons at Westside Barbell, combines:
 - **Max Effort (ME)**: Heavy singles, doubles, or triples at 85-92% 1RM
 - **Dynamic Effort (DE)**: Speed work at 60-70% 1RM with explosive intent
 - **Accessory Work**: Targeted muscle development and weak point training
-- **Exercise Rotation**: Prevent accommodation by rotating exercises every 1-3 weeks
+
 
 ## Program Structure
 
@@ -216,8 +215,7 @@ The system implements soft constraints to ensure balanced movement patterns acro
 3. **Filter by User Preferences**: Exclude exercises the user wants to avoid
 4. **Filter by Equipment**: Only include exercises the user can perform with available equipment
 5. **Movement Balance Scoring**: Score exercises based on current movement balance state
-6. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
-7. **Sort by Priority**: Sort by movement balance score, equipment options, targeted muscles, and exercise name
+6. **Sort by Priority**: Sort by movement balance score, equipment options, targeted muscles, and exercise name
 
 ### Secondary Exercise Selection
 Secondary exercises are selected to be similar to the primary exercise in terms of movement type and muscles worked, while considering movement balance:
@@ -230,8 +228,7 @@ Secondary exercises are selected to be similar to the primary exercise in terms 
    - Same plane (horizontal/vertical): 25 points
    - Same body part focus (upper/lower): 15 points
 5. **Movement Balance Scoring**: Scores exercises based on current movement balance state and balance constraints
-6. **Rotation History Bonus**: Gives preference to less recently used exercises
-7. **User Preferences & Equipment**: Applies the same filtering as primary exercises
+6. **User Preferences & Equipment**: Applies the same filtering as primary exercises
 
 #### Similarity Scoring Algorithm
 The system calculates a similarity score for each potential secondary exercise:
@@ -239,7 +236,6 @@ The system calculates a similarity score for each potential secondary exercise:
 - **Movement Type Match**: 100 points for exact match
 - **Muscle Overlap**: Up to 50 points based on percentage of primary muscles targeted
 - **Movement Balance Score**: Up to 30 points based on how well the exercise balances current movement patterns
-- **Rotation Bonus**: 0-20 points based on usage frequency (less used = higher bonus)
 
 The exercise with the highest total score is selected as the secondary movement.
 
@@ -248,8 +244,7 @@ The exercise with the highest total score is selected as the secondary movement.
 2. **Filter by User Preferences**: Exclude exercises the user wants to avoid
 3. **Filter by Equipment**: Only include exercises the user can perform with available equipment
 4. **Movement Balance Scoring**: Score exercises based on current movement balance state
-5. **Exercise Rotation**: Prioritize unused exercises, then least recently used exercises
-6. **Sort by Priority**: Sort by movement balance score, equipment options, targeted muscles, and exercise name
+5. **Sort by Priority**: Sort by movement balance score, equipment options, targeted muscles, and exercise name
 
 ## Weight Calculation and Estimation
 
@@ -272,7 +267,7 @@ The system provides intelligent weight calculation and estimation through multip
 - **Equipment Preference**: Prioritizes barbell > dumbbell > machine exercises
 - **Pattern Purity**: Scores exercises based on movement pattern clarity
 - **User Data Integration**: Prioritizes exercises the user has 1RM data for
-- **Usage Tracking**: Considers exercise popularity and usage patterns
+
 - **Name Clarity**: Prefers clear, standard exercise names
 
 ### Supported Equipment Weight Rounding
@@ -307,13 +302,7 @@ The service uses dynamic time calculation to determine the number of accessory e
 
 This approach ensures more accurate time allocation based on the actual workout structure rather than fixed estimates.
 
-### Exercise Rotation Logic
 
-The service ensures exercise variety by:
-- Tracking exercise usage history by accessory type (primary/secondary vs accessory)
-- Prioritizing exercises that haven't been used in the accessory type
-- When all exercises have been used, selecting the least frequently used exercise
-- This prevents accommodation and ensures balanced exercise selection
 
 ## Prilepin's Chart Integration
 
@@ -403,7 +392,7 @@ Secondary exercises (additional primary movements) are intelligently selected to
 ### Selection Criteria
 - **Movement Similarity**: Prioritizes exercises with the same movement type as the primary exercise
 - **Muscle Overlap**: Selects exercises that target similar muscle groups to the primary movement
-- **Exercise Variety**: Ensures rotation and prevents accommodation through usage tracking
+
 - **User Preferences**: Respects user's exercise preferences and equipment availability
 
 ### Training Parameters
@@ -459,9 +448,7 @@ The service personalizes workouts based on:
 - Focuses accessory work on user's weak points
 - Defaults to common weak areas for new users
 
-### Exercise History
-- Tracks exercise rotation to ensure variety
-- Prevents overuse of the same exercises
+
 
 ## Error Handling
 
@@ -501,7 +488,7 @@ The system now works with existing programs instead of creating new ones:
 The secondary exercise selection is implemented in the `ExerciseSelectionService` with the following key components:
 
 #### `selectSimilarSecondaryExercise()` Method
-- **Input**: Primary exercise, user equipment, preferences, available exercises, rotation history
+- **Input**: Primary exercise, user equipment, preferences, available exercises
 - **Process**:
   1. Filters exercises by user preferences and equipment
   2. Fetches muscle data for primary exercise from database
@@ -510,10 +497,9 @@ The secondary exercise selection is implemented in the `ExerciseSelectionService
 - **Output**: `Mono<Exercise?>` - Reactive stream containing the selected exercise or null
 
 #### Similarity Scoring Functions
-- **`calculateExerciseSimilarityScore()`**: Main scoring function that combines movement type, muscle overlap, and rotation history
+- **`calculateExerciseSimilarityScore()`**: Main scoring function that combines movement type and muscle overlap
 - **`calculateMovementTypeSimilarity()`**: Provides partial credit for related movement types
 - **`calculateMuscleOverlapScore()`**: Calculates percentage overlap between primary and secondary exercise muscles
-- **`calculateRotationBonus()`**: Awards points based on exercise usage frequency
 
 #### Database Integration
 - Uses `ExerciseMuscleDAL` to fetch muscle relationships for exercises

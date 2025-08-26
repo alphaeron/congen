@@ -5,7 +5,7 @@ import React from 'react';
 
 import { ExerciseHistory } from './ExerciseHistory';
 import { ENDPOINT } from '../api/endpoint';
-import type { User, UserOneRepMax, ExerciseRotationHistory } from '../api/types';
+import type { User, UserOneRepMax } from '../api/types';
 
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
@@ -44,14 +44,7 @@ describe('ExerciseHistory', () => {
     updated_at: '2024-01-01T00:00:00Z',
   };
 
-  const mockExerciseHistory: ExerciseRotationHistory = {
-    id: 1,
-    user_id: 'test-user-id',
-    exercise_name: 'Bench Press',
-    is_accessory: false,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-  };
+
 
   beforeEach(() => {
     mock.reset();
@@ -65,7 +58,6 @@ describe('ExerciseHistory', () => {
 
   it('renders loading state initially', () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -75,7 +67,6 @@ describe('ExerciseHistory', () => {
 
   it('renders visualization page title and tabs', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -83,13 +74,12 @@ describe('ExerciseHistory', () => {
     await waitFor(() => {
       expect(screen.getByText('Exercise History')).toBeInTheDocument();
       expect(screen.getByText('1RM Progress')).toBeInTheDocument();
-      expect(screen.getByText('Exercise Rotation')).toBeInTheDocument();
+      expect(screen.getByText('Exercise Information')).toBeInTheDocument();
     });
   });
 
   it('displays 1RM data when loaded successfully', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -100,35 +90,12 @@ describe('ExerciseHistory', () => {
     });
   });
 
-  it('displays exercise history when loaded successfully', async () => {
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory]);
-    mock.onGet('/exercise/').reply(200, []);
 
-    renderWithTheme(<ExerciseHistory user={mockUser} />);
-
-    // Switch to Exercise Rotation tab
-    await waitFor(() => {
-      const exerciseRotationTab = screen.getByText('Exercise Rotation');
-      fireEvent.click(exerciseRotationTab);
-    });
-
-    // Mock the URL parameter update
-    mockSetSearchParams.mockImplementation(newParams => {
-      mockSearchParams = newParams;
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Bench Press')).toBeInTheDocument();
-      expect(screen.getByText('Primary')).toBeInTheDocument();
-    });
-  });
 
   it('shows error message when API calls fail', async () => {
     mock
       .onGet('/user_one_rep_max/user/test-user-id')
       .reply(500, { message: 'Internal server error' });
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -142,7 +109,6 @@ describe('ExerciseHistory', () => {
 
   it('switches between tabs when clicked', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -153,23 +119,19 @@ describe('ExerciseHistory', () => {
     });
 
     await waitFor(() => {
-      const exerciseRotationTab = screen.getByText('Exercise Rotation');
-      fireEvent.click(exerciseRotationTab);
+      const exerciseInfoTab = screen.getByText('Exercise Information');
+      fireEvent.click(exerciseInfoTab);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Exercise Rotation History')).toBeInTheDocument();
+      expect(screen.getByText('Exercise Information')).toBeInTheDocument();
     });
   });
 
   it('filters data by exercise selection', async () => {
     const mockOneRepMax2 = { ...mockOneRepMax, exercise_name: 'Squat' };
-    const mockExerciseHistory2 = { ...mockExerciseHistory, id: 2, exercise_name: 'Squat' };
 
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax, mockOneRepMax2]);
-    mock
-      .onGet('/exercise_rotation_history/')
-      .reply(200, [mockExerciseHistory, mockExerciseHistory2]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -180,12 +142,8 @@ describe('ExerciseHistory', () => {
     });
   });
 
-  it('displays exercise statistics correctly', async () => {
-    const mockExerciseHistory2 = { ...mockExerciseHistory, id: 2, is_accessory: true };
+  it('displays exercise information correctly', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock
-      .onGet('/exercise_rotation_history/')
-      .reply(200, [mockExerciseHistory, mockExerciseHistory2]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -195,21 +153,20 @@ describe('ExerciseHistory', () => {
       mockSearchParams = newParams;
     });
 
-    // Switch to Usage Statistics tab
+    // Switch to Exercise Information tab
     await waitFor(() => {
-      const usageStatsTab = screen.getByText('Usage Statistics');
-      fireEvent.click(usageStatsTab);
+      const exerciseInfoTab = screen.getByText('Exercise Information');
+      fireEvent.click(exerciseInfoTab);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Exercise Usage Statistics')).toBeInTheDocument();
+      expect(screen.getByText('Exercise Information')).toBeInTheDocument();
       expect(screen.getByText('Bench Press')).toBeInTheDocument();
     });
   });
 
   it('shows no data message when no data is available', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -223,7 +180,6 @@ describe('ExerciseHistory', () => {
 
   it('displays tooltips for estimated data', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -235,7 +191,6 @@ describe('ExerciseHistory', () => {
 
   it('handles exercise filter change', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -248,22 +203,19 @@ describe('ExerciseHistory', () => {
 
   it('verifies API calls are made with correct endpoints', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
 
     await waitFor(() => {
-      expect(mock.history.get).toHaveLength(3);
+      expect(mock.history.get).toHaveLength(2);
       expect(mock.history.get[0].url).toBe('/user_one_rep_max/user/test-user-id');
-      expect(mock.history.get[1].url).toBe('/exercise_rotation_history/');
-      expect(mock.history.get[2].url).toBe('/exercise/');
+      expect(mock.history.get[1].url).toBe('/exercise/');
     });
   });
 
   it('maintains tab state when switching between tabs', async () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory]);
     mock.onGet('/exercise/').reply(200, []);
 
     renderWithTheme(<ExerciseHistory user={mockUser} />);
@@ -274,12 +226,12 @@ describe('ExerciseHistory', () => {
     });
 
     await waitFor(() => {
-      const exerciseRotationTab = screen.getByText('Exercise Rotation');
-      fireEvent.click(exerciseRotationTab);
+      const exerciseInfoTab = screen.getByText('Exercise Information');
+      fireEvent.click(exerciseInfoTab);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Exercise Rotation History')).toBeInTheDocument();
+      expect(screen.getByText('Exercise Information')).toBeInTheDocument();
     });
 
     // Switch back to 1RM Progress tab

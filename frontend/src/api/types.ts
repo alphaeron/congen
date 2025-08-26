@@ -80,7 +80,6 @@ export interface UserDataExport {
   user_program_preferences?: Record<string, unknown>;
   user_one_rep_max: Record<string, unknown>[];
   user_weight_unit_preferences: Record<string, unknown>[];
-  exercise_rotation_history: Record<string, unknown>[];
   training_programs: ProgramWithWorkouts[];
   audit_logs: Record<string, unknown>[];
   data_retention_policies: Record<string, unknown>[];
@@ -263,18 +262,6 @@ export interface UserOneRepMax {
 } // end interface UserOneRepMax
 
 /**
- * Exercise rotation history tracking when exercises were used.
- */
-export interface ExerciseRotationHistory {
-  id: number;
-  user_id: string;
-  exercise_name: string;
-  is_accessory: boolean;
-  created_at: string;
-  updated_at: string;
-} // end interface ExerciseRotationHistory
-
-/**
  * Dashboard statistics and progress data.
  */
 export interface DashboardStats {
@@ -282,5 +269,4 @@ export interface DashboardStats {
   current_week: number;
   active_program?: Program;
   recent_one_rep_maxes: UserOneRepMax[];
-  exercise_rotation_history: ExerciseRotationHistory[];
 } // end interface DashboardStats

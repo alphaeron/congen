@@ -36,15 +36,6 @@ const mockOneRepMax = {
   updated_at: '2024-01-01T00:00:00Z',
 };
 
-const mockExerciseHistory = {
-  id: 1,
-  user_id: 'test-user-id',
-  exercise_name: 'Bench Press',
-  is_accessory: false,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
 describe('DashboardOverview', () => {
   beforeEach(() => {
     mock.reset();
@@ -57,7 +48,6 @@ describe('DashboardOverview', () => {
   it('should render loading state initially', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
 
     render(<DashboardOverview user={mockUser} />);
 
@@ -67,7 +57,6 @@ describe('DashboardOverview', () => {
   it('should render dashboard overview when data loads successfully', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory]);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
@@ -86,7 +75,6 @@ describe('DashboardOverview', () => {
   it('should render error message when API calls fail', async () => {
     mock.onGet('/program/').reply(500, { message: 'Internal server error' });
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
@@ -102,7 +90,6 @@ describe('DashboardOverview', () => {
   it('should display active program when available', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
@@ -119,7 +106,6 @@ describe('DashboardOverview', () => {
   it('should display recent 1RM records when available', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
@@ -132,26 +118,9 @@ describe('DashboardOverview', () => {
     });
   });
 
-  it('should display exercise history when available', async () => {
-    mock.onGet('/program/').reply(200, []);
-    mock.onGet('/user_one_rep_max/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, [mockExerciseHistory]);
-
-    await act(async () => {
-      render(<DashboardOverview user={mockUser} />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Recent Exercise History')).toBeInTheDocument();
-      expect(screen.getByText('Primary Exercises (1)')).toBeInTheDocument();
-      expect(screen.getByText('Accessory Exercises (0)')).toBeInTheDocument();
-    });
-  });
-
   it('should display welcome message when no data is available', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
@@ -172,15 +141,9 @@ describe('DashboardOverview', () => {
       mockOneRepMax,
       { ...mockOneRepMax, exercise_name: 'Squat', one_rep_max: 315 },
     ];
-    const multipleExerciseHistory = [
-      mockExerciseHistory,
-      { ...mockExerciseHistory, id: 2, exercise_name: 'Squat' },
-      { ...mockExerciseHistory, id: 3, exercise_name: 'Bench Press', is_accessory: true },
-    ];
 
     mock.onGet('/program/').reply(200, multiplePrograms);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, multipleOneRepMaxes);
-    mock.onGet('/exercise_rotation_history/').reply(200, multipleExerciseHistory);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
@@ -194,10 +157,6 @@ describe('DashboardOverview', () => {
         const oneRepMaxCard = screen.getByText('1RM Records').closest('.MuiCard-root');
         expect(oneRepMaxCard).toBeInTheDocument();
         expect(oneRepMaxCard).toHaveTextContent('2');
-        // Unique exercises count - look for "2" in the context of "Unique Exercises"
-        const uniqueExercisesCard = screen.getByText('Unique Exercises').closest('.MuiCard-root');
-        expect(uniqueExercisesCard).toBeInTheDocument();
-        expect(uniqueExercisesCard).toHaveTextContent('2');
         // Current week from active program
         expect(screen.getByText('3')).toBeInTheDocument();
       },
@@ -208,17 +167,15 @@ describe('DashboardOverview', () => {
   it('should verify API calls are made with correct endpoints', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/user_one_rep_max/test-user-id').reply(200, []);
-    mock.onGet('/exercise_rotation_history/').reply(200, []);
 
     await act(async () => {
       render(<DashboardOverview user={mockUser} />);
     });
 
     await waitFor(() => {
-      expect(mock.history.get).toHaveLength(3);
+      expect(mock.history.get).toHaveLength(2);
       expect(mock.history.get[0].url).toBe('/program/');
       expect(mock.history.get[1].url).toBe('/user_one_rep_max/test-user-id');
-      expect(mock.history.get[2].url).toBe('/exercise_rotation_history/');
     });
   });
 });
