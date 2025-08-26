@@ -13,11 +13,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  * information as required by GDPR Articles 13 and 14. It provides
  * transparency about data collection, processing, and user rights.
  *
- * @property dataController Information about the data controller
- * @property dataProcessing Details about data processing activities
- * @property userRights Information about user rights under GDPR
- * @property lastUpdated When the privacy policy was last updated
- * @property version The version of the privacy policy
+ * @param dataController Information about the data controller
+ * @param dataProcessing Details about data processing activities
+ * @param userRights Information about user rights under GDPR
+ * @param lastUpdated When the privacy policy was last updated
+ * @param version The version of the privacy policy
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -54,9 +54,9 @@ data class PrivacyPolicy(
 /**
  * Data controller information for GDPR compliance.
  *
- * @property name Name of the data controller organization
- * @property contact Contact information for privacy inquiries
- * @property dpo Data Protection Officer contact (optional)
+ * @param name Name of the data controller organization
+ * @param contact Contact information for privacy inquiries
+ * @param dpo Data Protection Officer contact (optional)
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -73,10 +73,10 @@ data class DataController(
 /**
  * Data processing information for GDPR transparency.
  *
- * @property purposes List of purposes for data processing
- * @property legalBasis Legal basis for data processing
- * @property dataTypes Types of data collected
- * @property retentionPeriods Data retention periods by type
+ * @param purposes List of purposes for data processing
+ * @param legalBasis Legal basis for data processing
+ * @param dataTypes Types of data collected
+ * @param retentionPeriods Data retention periods by type
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -95,12 +95,12 @@ data class DataProcessing(
 /**
  * User rights information under GDPR.
  *
- * @property access Right of access information
- * @property rectification Right to rectification information
- * @property erasure Right to erasure information
- * @property portability Right to data portability information
- * @property objection Right to object information
- * @property complaint Right to file a complaint information
+ * @param access Right of access information
+ * @param rectification Right to rectification information
+ * @param erasure Right to erasure information
+ * @param portability Right to data portability information
+ * @param objection Right to object information
+ * @param complaint Right to file a complaint information
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

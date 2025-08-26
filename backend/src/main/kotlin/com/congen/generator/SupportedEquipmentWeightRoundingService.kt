@@ -33,7 +33,7 @@ import kotlin.math.roundToInt
  *
  * **Dumbbell Increments**: 5 lb / 2.5 kg
  *
- * @property exerciseEquipmentDAL Data access layer for exercise equipment relationships
+ * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -48,8 +48,8 @@ import reactor.core.publisher.Mono
  * - **422 Unprocessable Entity**: When validation fails
  * - **500 Internal Server Error**: When database operations fail
  *
- * @property userExercisePreferenceDAL Data access layer for user exercise preference operations
- * @property keycloakUtil Utility for Keycloak operations
+ * @param userExercisePreferenceDAL Data access layer for user exercise preference operations
+ * @param keycloakUtil Utility for Keycloak operations
  *
  * @author Congen Development Team
  * @since 1.0.0

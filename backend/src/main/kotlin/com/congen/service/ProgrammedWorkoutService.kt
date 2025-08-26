@@ -12,7 +12,8 @@ import reactor.core.publisher.Mono
  * This service is a thin wrapper around [ProgrammedWorkoutDAL], exposing the same methods
  * for use by controllers and other services.
  *
- * @property programmedWorkoutDAL Data access layer for programmed workout operations
+ * @param programmedWorkoutDAL Data access layer for programmed workout operations
+ * @param programDAL Data access layer for program operations
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -12,10 +12,10 @@ import java.time.Instant
  *
  * This model allows users to indicate exercises they want to avoid or prefer.
  *
- * @property userId The ID of the user
- * @property exerciseName The name of the exercise
- * @property shouldAvoid Whether the user should avoid this exercise
- * @property createdAt Timestamp when the preference was created
+ * @param userId The ID of the user
+ * @param exerciseName The name of the exercise
+ * @param shouldAvoid Whether the user should avoid this exercise
+ * @param createdAt Timestamp when the preference was created
  *
  * @author Congen Development Team
  * @since 1.0.0

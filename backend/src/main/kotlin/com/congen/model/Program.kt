@@ -37,10 +37,13 @@ import java.time.Instant
  * - **3-day programs**: Three workouts per week (most common)
  * - **4-day programs**: Four workouts per week
  *
- * @property id Unique identifier for the program
- * @property userId ID of the user who owns this program
- * @property name Human-readable name of the program
- * @property description Optional description of the program
+ * @param id Unique identifier for the program
+ * @param userId ID of the user who owns this program
+ * @param name Human-readable name of the program
+ * @param currentWeekNumber The current week number of the program
+ * @param createdAt The timestamp when the program was created
+ * @param updatedAt The timestamp when the program was last updated
+ * @param isActive Whether this program is currently active for the user
  *
  * @author Congen Development Team
  * @since 1.0.0

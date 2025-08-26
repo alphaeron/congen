@@ -42,7 +42,7 @@ import java.time.Instant
  * These endpoints support GDPR Article 5(1)(e) compliance by ensuring
  * personal data is not kept longer than necessary for processing purposes.
  *
- * @property dataRetentionService Service for data retention operations
+ * @param dataRetentionService Service for data retention operations
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -13,9 +13,9 @@ import java.time.Instant
  * This model links a user to a muscle group they wish to focus on as a weak point.
  * Used to personalize accessory exercise selection in workout generation.
  *
- * @property userId The ID of the user
- * @property muscleName The name of the weak muscle group
- * @property createdAt Timestamp when the weak muscle was set
+ * @param userId The ID of the user
+ * @param muscleName The name of the weak muscle group
+ * @param createdAt Timestamp when the weak muscle was set
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

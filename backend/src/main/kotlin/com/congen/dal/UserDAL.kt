@@ -44,9 +44,9 @@ import java.time.ZoneOffset
  * All user data is validated before database operations using [ValidationUtil]:
  * - Name validation (1-255 characters)
  *
- * @property postgresClient Client for database operations
- * @property encryptionUtil Utility for encrypting/decrypting sensitive data
- * @property auditService Service for logging data access operations
+ * @param postgresClient Client for database operations
+ * @param encryptionUtil Utility for encrypting/decrypting sensitive data
+ * @param auditService Service for logging data access operations
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -45,7 +45,7 @@ import reactor.core.publisher.Mono
  * - `created_at`: Creation timestamp (auto-generated)
  * - `updated_at`: Last update timestamp (auto-generated)
  *
- * @property postgresClient Client for database operations
+ * @param postgresClient Client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0

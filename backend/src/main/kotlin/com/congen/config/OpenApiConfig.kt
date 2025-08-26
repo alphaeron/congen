@@ -22,7 +22,18 @@ import org.springframework.context.annotation.Configuration
  * - Interactive API testing interface
  * - Server information and contact details
  *
- * @property openApiProps The OpenAPI properties loaded from configuration.
+ * @param openApiProps The OpenAPI properties loaded from configuration.
+ *
+ * @author Congen Development Team
+ * @since 1.0.0
+ */
+/**
+ * Configuration properties for OpenAPI documentation.
+ *
+ * This class contains configuration properties for OpenAPI documentation generation.
+ *
+ * @param serverPort The port on which the server is running
+ * @param activeProfile The active Spring profile (e.g., local, staging, production)
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -21,11 +21,11 @@ import java.time.Instant
  * If no preference is set for an exercise, the system will use a default
  * or prompt the user to specify their preference.
  *
- * @property userId The ID of the user
- * @property exerciseName The name of the exercise
- * @property preferredUnit The user's preferred weight unit for this exercise
- * @property createdAt Timestamp when the preference was created
- * @property updatedAt Timestamp when the preference was last updated
+ * @param userId The ID of the user
+ * @param exerciseName The name of the exercise
+ * @param preferredUnit The user's preferred weight unit for this exercise
+ * @param createdAt Timestamp when the preference was created
+ * @param updatedAt Timestamp when the preference was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0

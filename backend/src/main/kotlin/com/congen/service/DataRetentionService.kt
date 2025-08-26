@@ -38,9 +38,9 @@ import java.time.Instant
  * personal data is "kept in a form which permits identification of data subjects
  * for no longer than is necessary for the purposes for which the personal data are processed."
  *
- * @property dataRetentionDAL Data access layer for retention operations
- * @property auditService Service for logging cleanup operations
- * @property dataRetentionEnabled Whether data retention cleanup is enabled
+ * @param dataRetentionDAL Data access layer for retention operations
+ * @param auditService Service for logging cleanup operations
+ * @param dataRetentionEnabled Whether data retention cleanup is enabled
  *
  * @author Congen Development Team
  * @since 1.0.0

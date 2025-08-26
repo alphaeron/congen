@@ -33,10 +33,10 @@ import java.time.Instant
  * - This ensures seamless integration with the authentication system
  * - Authorization checks use the Keycloak ID for security validation
  *
- * @property keycloakId Unique Keycloak identifier for the user (primary key)
- * @property name User's full name
- * @property createdAt Timestamp when the user was created
- * @property updatedAt Timestamp when the user was last updated
+ * @param keycloakId Unique Keycloak identifier for the user (primary key)
+ * @param name User's full name
+ * @param createdAt Timestamp when the user was created
+ * @param updatedAt Timestamp when the user was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0

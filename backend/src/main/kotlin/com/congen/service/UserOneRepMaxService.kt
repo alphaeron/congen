@@ -39,9 +39,9 @@ import java.math.BigDecimal
  * val oneRepMax = userOneRepMaxService.selectUserOneRepMax(userId, exerciseName, unit)
  * ```
  *
- * @property userOneRepMaxDAL Data access layer for user one rep max operations
- * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
- * @property unitConverter Utility for unit conversions
+ * @param userOneRepMaxDAL Data access layer for user one rep max operations
+ * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
+ * @param unitConverter Utility for unit conversions
  *
  * @author Congen Development Team
  * @since 1.0.0

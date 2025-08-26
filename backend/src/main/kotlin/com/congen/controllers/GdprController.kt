@@ -46,8 +46,8 @@ import reactor.core.publisher.Mono
  * - All operations are logged for audit purposes
  * - Sensitive operations require additional verification
  *
- * @property gdprComplianceService Service for GDPR operations
- * @property keycloakUtil Utility for extracting user information from JWT
+ * @param gdprComplianceService Service for GDPR operations
+ * @param keycloakUtil Utility for extracting user information from JWT
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -39,10 +39,11 @@ import reactor.core.publisher.Mono
  * - **Delete**: Remove set scheme (no 1RM impact)
  * - **Read**: Standard read operations (no 1RM impact)
  *
- * @property setSchemeDAL Data access layer for set scheme operations
- * @property programmedExerciseDAL Data access layer for programmed exercise operations
- * @property userOneRepMaxDAL Data access layer for user one rep max operations
- * @property unitConverter Service for unit conversions
+ * @param setSchemeDAL Data access layer for set scheme operations
+ * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param userOneRepMaxDAL Data access layer for user one rep max operations
+ * @param unitConverter Service for unit conversions
+ * @param oneRepMaxCalculator Service for one rep max calculations
  *
  * @author Congen Development Team
  * @since 1.0.0

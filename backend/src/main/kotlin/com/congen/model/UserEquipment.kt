@@ -12,9 +12,9 @@ import java.time.Instant
  *
  * This model links users to the equipment available to them for workouts.
  *
- * @property userId The ID of the user
- * @property equipmentName The name of the equipment
- * @property createdAt Timestamp when the association was created
+ * @param userId The ID of the user
+ * @param equipmentName The name of the equipment
+ * @param createdAt Timestamp when the association was created
  *
  * @author Congen Development Team
  * @since 1.0.0

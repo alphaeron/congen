@@ -16,9 +16,9 @@ import org.springframework.stereotype.Service
  * - **3-day programs**: Combined ME+DE days + Full Body DE day
  * - **4-day programs**: Traditional separate ME and DE days
  *
- * @property twoDayWorkoutStageGenerationService Service for 2-day program stage generation
- * @property threeDayWorkoutStageGenerationService Service for 3-day program stage generation
- * @property fourDayWorkoutStageGenerationService Service for 4-day program stage generation
+ * @param twoDayWorkoutStageGenerationService Service for 2-day program stage generation
+ * @param threeDayWorkoutStageGenerationService Service for 3-day program stage generation
+ * @param fourDayWorkoutStageGenerationService Service for 4-day program stage generation
  *
  * @author Congen Development Team
  * @since 1.0.0

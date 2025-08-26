@@ -37,7 +37,7 @@ import reactor.core.publisher.Mono
  * - **Production**: Strict security headers with comprehensive protection
  * - **Development**: Relaxed headers to facilitate development and debugging
  *
- * @property activeProfile Active Spring profile for environment detection
+ * @param activeProfile Active Spring profile for environment detection
  *
  * @author Congen Development Team
  * @since 1.0.0

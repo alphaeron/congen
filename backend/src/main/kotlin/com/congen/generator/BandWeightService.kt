@@ -154,8 +154,8 @@ class BandWeightService(
         /**
          * Result of band weight computation for Dynamic Effort exercises.
          *
-         * @property band The selected band, or null if no bands
-         * @property barWeight The calculated bar weight in the original unit
+         * @param band The selected band, or null if no bands
+         * @param barWeight The calculated bar weight in the original unit
          */
         data class BandWeightResult(
             val band: Band?,

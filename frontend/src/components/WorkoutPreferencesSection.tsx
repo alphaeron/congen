@@ -25,7 +25,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 
 import { getExercises } from '../api/exercise';
 import type { Exercise } from '../api/types';
@@ -81,43 +81,39 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   }, [user?.keycloak_id]);
 
   const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      // Load program preferences
-      try {
-        const prefsResponse = await getUserProgramPreferences(user!.keycloak_id);
-        setProgramPreferences(prefsResponse.data);
-        setProgramDaysPerWeek(prefsResponse.data.program_days_per_week);
-        setSessionTimeLength(prefsResponse.data.session_time_length_in_minutes);
-      } catch {
-        // Program preferences don't exist yet, use defaults
-      }
+    // Load all data in parallel for better performance
+    const [prefsResponse, unitResponse, exercisesResponse] = await Promise.allSettled([
+      getUserProgramPreferences(user!.keycloak_id),
+      getUserWeightUnitPreferences(user!.keycloak_id),
+      getExercises(),
+    ]);
 
-      // Load weight unit preferences
-      try {
-        const unitResponse = await getUserWeightUnitPreferences(user!.keycloak_id);
-        setWeightUnitPreferences(unitResponse.data);
-      } catch {
-        // No weight unit preferences yet
-      }
-
-      // Load exercises
-      try {
-        const exercisesResponse = await getExercises();
-        setExercises(exercisesResponse);
-      } catch (err) {
-        console.error('Failed to load exercises:', err);
-        // Set empty array to prevent undefined errors
-        setExercises([]);
-      }
-    } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to load preferences');
-    } finally {
-      setLoading(false);
+    // Handle program preferences
+    if (prefsResponse.status === 'fulfilled') {
+      setProgramPreferences(prefsResponse.value.data);
+      setProgramDaysPerWeek(prefsResponse.value.data.program_days_per_week);
+      setSessionTimeLength(prefsResponse.value.data.session_time_length_in_minutes);
     }
+    // If rejected, program preferences don't exist yet, use defaults
+
+    // Handle weight unit preferences
+    if (unitResponse.status === 'fulfilled') {
+      setWeightUnitPreferences(unitResponse.value.data);
+    }
+    // If rejected, no weight unit preferences yet
+
+    // Handle exercises
+    if (exercisesResponse.status === 'fulfilled') {
+      setExercises(exercisesResponse.value);
+    } else {
+      console.error('Failed to load exercises:', exercisesResponse.reason);
+      setExercises([]);
+    }
+
+    setLoading(false);
   };
 
   const handleSaveProgramPreferences = async () => {
@@ -196,12 +192,16 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     }
   };
 
+  const exerciseNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    exercises.forEach(exercise => {
+      map.set(exercise.name, exercise.name);
+    });
+    return map;
+  }, [exercises]);
+
   const getExerciseName = (exerciseName: string) => {
-    if (!exercises || exercises.length === 0) {
-      return exerciseName;
-    }
-    const exercise = exercises.find(e => e.name === exerciseName);
-    return exercise?.name || exerciseName;
+    return exerciseNameMap.get(exerciseName) || exerciseName;
   };
 
   if (loading) {

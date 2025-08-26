@@ -10,15 +10,15 @@ import java.time.Instant
  * Top-level health check response object following RFC specification.
  * https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check-06
  *
- * @property status Overall health status.
- * @property version API version.
- * @property releaseId Release identifier.
- * @property notes Additional notes.
- * @property output Output message.
- * @property checks Map of checks by component.
- * @property links Related links.
- * @property serviceId Service identifier.
- * @property description Description of the health check response.
+ * @param status Overall health status.
+ * @param version API version.
+ * @param releaseId Release identifier.
+ * @param notes Additional notes.
+ * @param output Output message.
+ * @param checks Map of checks by component.
+ * @param links Related links.
+ * @param serviceId Service identifier.
+ * @param description Description of the health check response.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Top-level health check response object.")
@@ -82,15 +82,15 @@ enum class HealthStatus(
 /**
  * Represents the health check for a specific component.
  *
- * @property componentId Component identifier.
- * @property componentType Type of component.
- * @property observedValue Observed value.
- * @property observedUnit Observed unit.
- * @property status Status of the component.
- * @property affectedEndpoints Endpoints affected by this component.
- * @property time Timestamp of the check.
- * @property output Output message.
- * @property links Related links.
+ * @param componentId Component identifier.
+ * @param componentType Type of component.
+ * @param observedValue Observed value.
+ * @param observedUnit Observed unit.
+ * @param status Status of the component.
+ * @param affectedEndpoints Endpoints affected by this component.
+ * @param time Timestamp of the check.
+ * @param output Output message.
+ * @param links Related links.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Represents the health check for a specific component.")
@@ -127,10 +127,10 @@ data class HealthCheck(
 /**
  * Represents the health check for the database.
  *
- * @property status Status of the database.
- * @property responseTime Response time in milliseconds.
- * @property error Error message, if any.
- * @property details Additional details.
+ * @param status Status of the database.
+ * @param responseTime Response time in milliseconds.
+ * @param error Error message, if any.
+ * @param details Additional details.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Represents the health check for the database.")

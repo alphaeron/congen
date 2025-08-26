@@ -58,19 +58,19 @@ import java.time.Instant
  * - Audit logs for data access
  * - Data retention policies
  *
- * @property gdprComplianceDAL Data access layer for GDPR operations
- * @property userDAL Data access layer for user operations
- * @property userEquipmentDAL Data access layer for user equipment
- * @property userExercisePreferenceDAL Data access layer for exercise preferences
- * @property userProgramPreferencesDAL Data access layer for program preferences
- * @property userOneRepMaxDAL Data access layer for one-rep-max records
- * @property userWeightUnitPreferenceDAL Data access layer for weight unit preferences
- * @property programDAL Data access layer for training programs
- * @property programmedWorkoutDAL Data access layer for programmed workouts
- * @property workoutStageDAL Data access layer for workout stages
- * @property programmedExerciseDAL Data access layer for programmed exercises
- * @property setSchemeDAL Data access layer for set schemes
- * @property auditService Service for audit logging
+ * @param gdprComplianceDAL Data access layer for GDPR operations
+ * @param userDAL Data access layer for user operations
+ * @param userEquipmentDAL Data access layer for user equipment
+ * @param userExercisePreferenceDAL Data access layer for exercise preferences
+ * @param userProgramPreferencesDAL Data access layer for program preferences
+ * @param userOneRepMaxDAL Data access layer for one-rep-max records
+ * @param userWeightUnitPreferenceDAL Data access layer for weight unit preferences
+ * @param programDAL Data access layer for training programs
+ * @param programmedWorkoutDAL Data access layer for programmed workouts
+ * @param workoutStageDAL Data access layer for workout stages
+ * @param programmedExerciseDAL Data access layer for programmed exercises
+ * @param setSchemeDAL Data access layer for set schemes
+ * @param auditService Service for audit logging
  *
  * @author Congen Development Team
  * @since 1.0.0

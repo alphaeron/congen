@@ -9,9 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * Data class representing the result of a cleanup operation or estimation.
  *
- * @property dataType The type of data that was processed
- * @property count Number of records (deleted for cleanup, estimated for estimation)
- * @property operationType Type of operation (CLEANUP or ESTIMATION)
+ * @param dataType The type of data that was processed
+ * @param count Number of records (deleted for cleanup, estimated for estimation)
+ * @param operationType Type of operation (CLEANUP or ESTIMATION)
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

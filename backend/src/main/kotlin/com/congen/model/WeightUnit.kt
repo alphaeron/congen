@@ -5,8 +5,8 @@ import com.congen.exceptions.InvalidWeightUnitException
 /**
  * Enum representing weight units supported by the system.
  *
- * @property KG Kilograms
- * @property LBS Pounds
+ * @param KG Kilograms
+ * @param LBS Pounds
  */
 enum class WeightUnit {
     /** Kilograms */

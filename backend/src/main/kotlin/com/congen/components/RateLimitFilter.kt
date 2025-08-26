@@ -29,12 +29,12 @@ import java.util.concurrent.atomic.AtomicInteger
  * - **Automatic cleanup**: Memory leak prevention
  * - **Thread safety**: Concurrent request handling
  *
- * @property activeProfile Active Spring profile for environment detection
- * @property maxRequestsPerIp Maximum requests per IP per window
- * @property rateLimitWindowMinutes Time window for rate limiting
- * @property maxRequestsPerUser Maximum requests per authenticated user
- * @property maxPayloadSize Maximum request payload size
- * @property allowedOriginsConfig Comma-separated allowed origins for CORS
+ * @param activeProfile Active Spring profile for environment detection
+ * @param maxRequestsPerIp Maximum requests per IP per window
+ * @param rateLimitWindowMinutes Time window for rate limiting
+ * @param maxRequestsPerUser Maximum requests per authenticated user
+ * @param maxPayloadSize Maximum request payload size
+ * @param allowedOriginsConfig Comma-separated allowed origins for CORS
  */
 @Component
 @Order(2) // Run after SecurityHeadersFilter

@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
  *
  * Provides CRUD operations for the user_weak_muscle table, representing user weak muscle groups.
  *
- * @property postgresClient PostgreSQL client for database operations
+ * @param postgresClient PostgreSQL client for database operations
  */
 @Component
 class UserWeakMuscleDAL(

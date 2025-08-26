@@ -14,13 +14,21 @@ import java.time.Instant
  * in response to a data portability request under GDPR Article 20. It provides
  * a complete snapshot of the user's data at the time of export.
  *
- * @property keycloakId Unique identifier from Keycloak
- * @property name User's full name (encrypted at rest)
- * @property createdAt When the user account was created
- * @property updatedAt When the user account was last updated
- * @property dataProcessingConsent Current consent status for data processing
- * @property consentTimestamp When consent was last given or withdrawn
- * @property exportTimestamp When this data export was generated
+ * @param keycloakId Unique identifier from Keycloak
+ * @param name User's full name (encrypted at rest)
+ * @param createdAt When the user account was created
+ * @param updatedAt When the user account was last updated
+ * @param dataProcessingConsent Current consent status for data processing
+ * @param consentTimestamp When consent was last given or withdrawn
+ * @param exportTimestamp When this data export was generated
+ * @param userEquipment User's equipment preferences
+ * @param userExercisePreferences User's exercise preferences
+ * @param userProgramPreferences User's program preferences
+ * @param userOneRepMax User's one-rep-max records
+ * @param userWeightUnitPreferences User's weight unit preferences
+ * @param trainingPrograms User's training programs
+ * @param auditLogs Audit logs for data access
+ * @param dataRetentionPolicies Data retention policies
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -101,7 +109,8 @@ data class UserDataExport(
  * This model extends the base Program model to include the complete workout structure
  * with stages, exercises, and set schemes for GDPR data portability exports.
  *
- * @property workouts Complete list of programmed workouts with their stages, exercises, and set schemes
+ * @param program The base program information
+ * @param workouts Complete list of programmed workouts with their stages, exercises, and set schemes
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -125,7 +134,8 @@ data class ProgramWithWorkouts(
  * This model extends the base ProgrammedWorkout model to include the complete stage structure
  * with exercises and set schemes.
  *
- * @property stages Complete list of workout stages with their exercises and set schemes
+ * @param workout The base programmed workout information
+ * @param stages Complete list of workout stages with their exercises and set schemes
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -149,7 +159,8 @@ data class ProgrammedWorkoutWithStages(
  * This model extends the base WorkoutStage model to include the complete exercise structure
  * with set schemes.
  *
- * @property exercises Complete list of programmed exercises with their set schemes
+ * @param stage The base workout stage information
+ * @param exercises Complete list of programmed exercises with their set schemes
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -172,7 +183,8 @@ data class WorkoutStageWithExercises(
  *
  * This model extends the base ProgrammedExercise model to include the complete set scheme structure.
  *
- * @property setSchemes Complete list of set schemes for this exercise
+ * @param exercise The base programmed exercise information
+ * @param setSchemes Complete list of set schemes for this exercise
  *
  * @author Congen Development Team
  * @since 1.0.0

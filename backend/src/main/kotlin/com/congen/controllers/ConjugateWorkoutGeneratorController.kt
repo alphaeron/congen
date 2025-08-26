@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono
  * - **Exercise Rotation**: Implements exercise rotation to prevent accommodation
  * - **Validation**: Comprehensive validation of program parameters
  *
- * @property conjugateWorkoutGeneratorService Service for generating conjugate workout programs
+ * @param conjugateWorkoutGeneratorService Service for generating conjugate workout programs
  *
  * @author Congen Development Team
  * @since 1.0.0

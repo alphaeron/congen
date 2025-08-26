@@ -18,10 +18,10 @@ import reactor.core.publisher.Mono
  * across multiple services, providing a single source of truth for determining
  * which exercises are available to a user.
  *
- * @property exerciseEquipmentDAL Data access layer for exercise equipment relationships
- * @property exerciseMuscleDAL Data access layer for exercise muscle relationships
- * @property exerciseWorkoutTypeDAL Data access layer for exercise workout type relationships
- * @property exerciseMatchingService Service for exercise matching and scoring
+ * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
+ * @param exerciseMuscleDAL Data access layer for exercise muscle relationships
+ * @param exerciseWorkoutTypeDAL Data access layer for exercise workout type relationships
+ * @param exerciseMatchingService Service for exercise matching and scoring
  *
  * @author Congen Development Team
  * @since 1.0.0

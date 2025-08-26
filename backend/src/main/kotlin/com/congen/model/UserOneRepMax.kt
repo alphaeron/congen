@@ -14,10 +14,10 @@ import java.time.Instant
  * This model allows users to track their maximum weight for different exercises,
  * which is used for workout generation and progression calculations.
  *
- * @property userId The ID of the user
- * @property exerciseName The name of the exercise
- * @property oneRepMax The one rep max weight value
- * @property updatedAt Timestamp when the one rep max was last updated
+ * @param userId The ID of the user
+ * @param exerciseName The name of the exercise
+ * @param oneRepMax The one rep max weight value
+ * @param updatedAt Timestamp when the one rep max was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0

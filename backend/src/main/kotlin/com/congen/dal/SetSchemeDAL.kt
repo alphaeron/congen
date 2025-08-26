@@ -67,7 +67,7 @@ import java.math.BigDecimal
  * - `rest_seconds`: Rest period after the set
  * - `updated_at`: Timestamp of the last update
  *
- * @property postgresClient Client for database operations
+ * @param postgresClient Client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0

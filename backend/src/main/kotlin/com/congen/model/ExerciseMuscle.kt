@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * This model links exercises to the muscle groups they target.
  *
- * @property exerciseName Name of the exercise (e.g., "Bench Press").
- * @property muscleName Name of the muscle group (e.g., "Chest").
+ * @param exerciseName Name of the exercise (e.g., "Bench Press").
+ * @param muscleName Name of the muscle group (e.g., "Chest").
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

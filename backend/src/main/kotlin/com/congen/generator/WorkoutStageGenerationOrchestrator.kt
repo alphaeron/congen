@@ -23,15 +23,15 @@ import reactor.core.publisher.Mono
  * - Business logic concerns: handled by modular services
  * - Orchestration concerns: handled by this class
  *
- * @property workoutStageDAL Data access layer for workout stage operations
- * @property workoutStageTypeDAL Data access layer for workout stage type operations
- * @property programmedExerciseDAL Data access layer for programmed exercise operations
- * @property setSchemeDAL Data access layer for set scheme operations
- * @property setSchemeService Service for set scheme operations
- * @property prilepinGuidelinesService Service for Prilepin-based guidelines
- * @property weightSelectionService Service for conjugate-specific weight selection
- * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
- * @property workoutStageGenerationServiceFactory Factory for selecting appropriate business logic service
+ * @param workoutStageDAL Data access layer for workout stage operations
+ * @param workoutStageTypeDAL Data access layer for workout stage type operations
+ * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param setSchemeDAL Data access layer for set scheme operations
+ * @param setSchemeService Service for set scheme operations
+ * @param prilepinGuidelinesService Service for Prilepin-based guidelines
+ * @param weightSelectionService Service for conjugate-specific weight selection
+ * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
+ * @param workoutStageGenerationServiceFactory Factory for selecting appropriate business logic service
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -59,9 +59,7 @@ class WorkoutStageGenerationOrchestrator(
      *
      * @param workout The workout to generate stages for
      * @param dayType The type of workout day (e.g., "ME_Upper", "DE_Lower")
-     * @param exercises Available exercises for selection
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param programPreferences User's program preferences
      * @param weakMuscles User's weak muscle groups

@@ -30,8 +30,9 @@ import java.time.Instant
  * - Response times and error details
  * - Version and release information
  *
- * @property postgresClient Client for database operations
- * @property versionConfig Configuration containing version information
+ * @param postgresClient Client for database operations
+ * @param keycloakClient Client for Keycloak operations
+ * @param versionConfig Configuration containing version information
  *
  * @author Congen Development Team
  * @since 1.0.0

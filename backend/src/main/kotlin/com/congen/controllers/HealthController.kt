@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono
  *
  * - `GET /health/` - Performs comprehensive health check
  *
- * @property healthCheckService Service for performing health checks
+ * @param healthCheckService Service for performing health checks
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -14,11 +14,11 @@ import java.time.Instant
  * data processing consent under GDPR Article 7. It tracks when consent was
  * given or withdrawn and when the record was last updated.
  *
- * @property keycloakId The user's Keycloak ID (primary identifier)
- * @property dataProcessingConsent Whether the user has given consent for data processing
- * @property consentTimestamp When consent was last given/withdrawn
- * @property createdAt When the consent record was created
- * @property updatedAt When the consent record was last updated
+ * @param keycloakId The user's Keycloak ID (primary identifier)
+ * @param dataProcessingConsent Whether the user has given consent for data processing
+ * @param consentTimestamp When consent was last given/withdrawn
+ * @param createdAt When the consent record was created
+ * @param updatedAt When the consent record was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0

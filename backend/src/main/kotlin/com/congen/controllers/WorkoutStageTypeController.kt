@@ -42,7 +42,7 @@ import reactor.core.publisher.Mono
  * - **404 Not Found**: When a workout stage type with the specified ID or name doesn't exist
  * - **500 Internal Server Error**: When database operations fail
  *
- * @property workoutStageTypeDAL Data access layer for workout stage type operations
+ * @param workoutStageTypeDAL Data access layer for workout stage type operations
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -37,8 +37,8 @@ import reactor.core.publisher.Mono
  * - **NoResultsFoundException**: When user program preferences don't exist
  * - **DatabaseException**: When database operations fail
  *
- * @property postgresClient PostgreSQL client for database operations
- * @property programmedWorkoutDAL Data access layer for programmed workout operations
+ * @param postgresClient PostgreSQL client for database operations
+ * @param programmedWorkoutDAL Data access layer for programmed workout operations
  *
  * @author Congen Development Team
  * @since 1.0.0

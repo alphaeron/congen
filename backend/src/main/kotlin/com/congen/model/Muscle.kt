@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Muscles are used to categorize exercises and track which areas of the body are being worked.
  *
- * @property name Name of the muscle group (e.g., "Chest").
- * @property description Description of the muscle group and its anatomical details.
+ * @param name Name of the muscle group (e.g., "Chest").
+ * @param description Description of the muscle group and its anatomical details.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

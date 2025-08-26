@@ -50,7 +50,7 @@ import reactor.core.publisher.Mono
  * - **422 Unprocessable Entity**: When validation fails
  * - **500 Internal Server Error**: When database operations fail
  *
- * @property programmedWorkoutDAL Data access layer for programmed workout operations
+ * @param programmedWorkoutDAL Data access layer for programmed workout operations
  *
  * @author Congen Development Team
  * @since 1.0.0

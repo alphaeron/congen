@@ -37,8 +37,8 @@ import java.time.Instant
  * - **WARN**: Sensitive operations (data export, consent withdrawal)
  * - **ERROR**: Failed operations, security violations
  *
- * @property postgresClient Client for database audit log storage
- * @property auditEnabled Whether audit logging is enabled
+ * @param postgresClient Client for database audit log storage
+ * @param auditEnabled Whether audit logging is enabled
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -253,7 +253,6 @@ class AuditService(
      * @param keycloakId The user's Keycloak ID.  NULL for system operations.
      * @param operation The operation performed
      * @param dataType The type of data involved
-     * @param timestamp When the operation occurred
      * @param userId User performing the operation
      * @param additionalInfo Additional context
      * @return Formatted audit log message

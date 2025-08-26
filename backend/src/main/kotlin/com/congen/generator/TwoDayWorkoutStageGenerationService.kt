@@ -32,10 +32,10 @@ import reactor.core.publisher.Mono
  * - **Accessory Stage**: Multiple accessory exercises based on available time
  * - **Conditioning Stage**: AMRAP/EMOM exercises (for DE components)
  *
- * @property exerciseSelectionService Service for exercise selection logic
- * @property workoutStageOrchestrator Service for generating workout stages
- * @property sessionTimeCalculator Service for session time calculations
- * @property conjugateTemplates Service for managing workout templates
+ * @param exerciseSelectionService Service for exercise selection logic
+ * @param workoutStageOrchestrator Service for generating workout stages
+ * @param sessionTimeCalculator Service for session time calculations
+ * @param conjugateTemplates Service for managing workout templates
  *
  * @author Congen Development Team
  * @since 1.0.0

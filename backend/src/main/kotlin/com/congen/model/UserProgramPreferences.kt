@@ -14,11 +14,11 @@ import java.time.Instant
  * frequency, duration, and other program-related settings. These preferences
  * are used to generate personalized workout programs.
  *
- * @property userId The ID of the user
- * @property programDaysPerWeek The number of days per week for the program
- * @property sessionTimeLengthInMinutes The session time length in minutes
- * @property createdAt Timestamp when the preferences were created
- * @property updatedAt Timestamp when the preferences were last updated
+ * @param userId The ID of the user
+ * @param programDaysPerWeek The number of days per week for the program
+ * @param sessionTimeLengthInMinutes The session time length in minutes
+ * @param createdAt Timestamp when the preferences were created
+ * @param updatedAt Timestamp when the preferences were last updated
  *
  * @author Congen Development Team
  * @since 1.0.0

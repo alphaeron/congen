@@ -40,7 +40,7 @@ import java.math.BigDecimal
  * - **NoResultsFoundException**: When user-exercise 1RM doesn't exist
  * - **DatabaseException**: When database operations fail
  *
- * @property postgresClient PostgreSQL client for database operations
+ * @param postgresClient PostgreSQL client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0

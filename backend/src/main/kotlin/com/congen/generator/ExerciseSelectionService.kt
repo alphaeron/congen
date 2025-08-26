@@ -47,6 +47,8 @@ class ExerciseSelectionService(
      * @param userExercisePool The user's exercise pool
      * @param targetMuscles List of target muscles to focus on
      * @param isAccessory Whether this is for an accessory exercise
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing selected exercise or null if none available
      */
@@ -91,6 +93,8 @@ class ExerciseSelectionService(
      * @param userExercisePool The user's exercise pool
      * @param targetMuscles List of target muscles to focus on
      * @param isAccessory Whether this is for an accessory exercise
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing selected exercise or null if none available
      */
@@ -234,6 +238,8 @@ class ExerciseSelectionService(
      *
      * @param primaryExercise The primary exercise to find a similar secondary exercise for
      * @param userExercisePool The user's exercise pool
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Selected secondary exercise or empty if none available
      */
@@ -413,9 +419,10 @@ class ExerciseSelectionService(
      * - Select 3 exercises that focus on the common muscles used for the ME and DE exercises that day
      *
      * @param userExercisePool The user's exercise pool
-     * @param dayType The type of workout day
      * @param primaryExercise The primary exercise for the day (if available)
      * @param isFourDayTemplate Whether this is a 4-day template
+     * @param dayType The type of workout day
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @return Mono containing list of selected warmup exercises
      */
     fun selectWarmupExercises(
@@ -447,8 +454,9 @@ class ExerciseSelectionService(
      * Selects warmup exercises for 4-day templates.
      *
      * @param userExercisePool The user's exercise pool
-     * @param dayType The type of workout day
      * @param primaryExercise The primary exercise for the day
+     * @param dayType The type of workout day
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectFourDayWarmupExercises(
@@ -512,6 +520,7 @@ class ExerciseSelectionService(
      *
      * @param userExercisePool The user's exercise pool
      * @param dayType The type of workout day
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectTwoThreeDayWarmupExercises(
@@ -549,6 +558,8 @@ class ExerciseSelectionService(
      * @param userExercisePool The user's exercise pool
      * @param targetMuscles Target muscles to focus on
      * @param count Number of exercises to select
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectMuscleFocusedWarmupExercises(
@@ -593,6 +604,8 @@ class ExerciseSelectionService(
      *
      * @param userExercisePool The user's exercise pool
      * @param primaryExercise The primary exercise
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @return Mono containing the selected warmup exercise or null
      */
     private fun selectMovementPatternWarmupExercise(
@@ -627,6 +640,8 @@ class ExerciseSelectionService(
      *
      * @param userExercisePool The user's exercise pool
      * @param count Number of exercises to select
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @return Mono containing list of selected warmup exercises
      */
     private fun selectGeneralWarmupExercises(

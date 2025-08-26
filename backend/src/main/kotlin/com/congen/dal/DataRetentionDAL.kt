@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
  * - **Impact Estimation**: Calculating cleanup impact before execution
  * - **Direct Queries**: Executing cleanup operations via direct SQL queries
  *
- * @property postgresClient Client for database operations
+ * @param postgresClient Client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0

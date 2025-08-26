@@ -34,13 +34,13 @@ import java.time.Instant
  * coaching cues that are relevant to this particular instance of the exercise
  * within the workout.
  *
- * @property id Unique identifier for the programmed exercise
- * @property workoutStageId ID of the workout stage this exercise belongs to
- * @property exerciseName Name of the exercise to be performed
- * @property position Position of the exercise within the stage
- * @property notes Optional notes or instructions for the exercise
- * @property createdAt Created at timestamp
- * @property updatedAt Updated at timestamp
+ * @param id Unique identifier for the programmed exercise
+ * @param workoutStageId ID of the workout stage this exercise belongs to
+ * @param exerciseName Name of the exercise to be performed
+ * @param position Position of the exercise within the stage
+ * @param notes Optional notes or instructions for the exercise
+ * @param createdAt Created at timestamp
+ * @param updatedAt Updated at timestamp
  *
  * @author Congen Development Team
  * @since 1.0.0

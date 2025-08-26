@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono
  * - **NoResultsFoundException**: When exercise with specified name doesn't exist
  * - **DatabaseException**: When database operations fail
  *
- * @property postgresClient PostgreSQL client for database operations
+ * @param postgresClient PostgreSQL client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -10,9 +10,9 @@ import java.time.Instant
 /**
  * Summary information about a cleanup operation.
  *
- * @property totalDeleted Total number of records deleted across all data types
- * @property dataTypesProcessed Number of data types that were processed
- * @property executionTime When the cleanup was executed
+ * @param totalDeleted Total number of records deleted across all data types
+ * @param dataTypesProcessed Number of data types that were processed
+ * @param executionTime When the cleanup was executed
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

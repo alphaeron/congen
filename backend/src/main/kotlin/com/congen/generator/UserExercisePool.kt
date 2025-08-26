@@ -17,10 +17,10 @@ import java.util.concurrent.ConcurrentHashMap
  * based on user preferences and equipment during construction. Exercises are removed from
  * the pool when they are selected to prevent duplicates.
  *
- * @property allExercises All available exercises in the system
- * @property preferences User's exercise preferences
- * @property userEquipment User's available equipment
- * @property exerciseEquipmentDAL Data access layer for exercise equipment relationships
+ * @param allExercises All available exercises in the system
+ * @param preferences User's exercise preferences
+ * @param userEquipment User's available equipment
+ * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
  *
  * @author Congen Development Team
  * @since 1.0.0

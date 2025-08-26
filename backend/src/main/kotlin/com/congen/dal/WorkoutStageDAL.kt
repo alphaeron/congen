@@ -48,7 +48,7 @@ import reactor.core.publisher.Mono
  * - `stage_type_id`: Foreign key to workout_stage_type table
  * - `position`: Position within the workout (must be > 0)
  *
- * @property postgresClient Client for database operations
+ * @param postgresClient Client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0

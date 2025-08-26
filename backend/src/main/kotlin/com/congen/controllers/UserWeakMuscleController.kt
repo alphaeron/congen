@@ -26,7 +26,7 @@ import reactor.core.publisher.Mono
  *
  * Provides endpoints to manage user weak muscle groups for targeted accessory selection.
  *
- * @property userWeakMuscleDAL Data access layer for user weak muscle operations
+ * @param userWeakMuscleDAL Data access layer for user weak muscle operations
  */
 @RestController
 @RequestMapping("/user_weak_muscle")

@@ -52,6 +52,15 @@ import kotlin.random.Random
  * @param weightSelectionService Service for conjugate-specific weight selection
  * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
  * @param exerciseSelectionService Service for exercise selection logic
+ * @param workoutStageDAL Data access layer for workout stage operations
+ * @param workoutStageTypeDAL Data access layer for workout stage type operations
+ * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param setSchemeDAL Data access layer for set scheme operations
+ * @param setSchemeService Service for set scheme operations
+ * @param prilepinGuidelinesService Service for Prilepin guidelines
+ * @param weightSelectionService Service for weight selection
+ * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preference operations
+ * @param exerciseSelectionService Service for exercise selection
  * @param movementBalanceService Service for movement balance
  * @param sessionTimeCalculator Service for session time calculations
  *
@@ -84,9 +93,7 @@ abstract class WorkoutStageGenerationService(
      *
      * @param workout The programmed workout to generate stages for
      * @param dayType The type of workout day
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param programPreferences User's program preferences
      * @param weakMuscles Target weak muscles
@@ -126,9 +133,7 @@ abstract class WorkoutStageGenerationService(
      *
      * @param workout The programmed workout
      * @param dayType The type of workout day
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param programPreferences User's program preferences
      * @param weakMuscles Target weak muscles
@@ -153,7 +158,6 @@ abstract class WorkoutStageGenerationService(
      * @param workout The programmed workout
      * @param exercise The primary exercise
      * @param setSchemes The set schemes for the exercise
-     * @param userId User ID
      * @return Mono<Void> indicating completion
      */
     protected fun createPrimaryStage(
@@ -188,7 +192,6 @@ abstract class WorkoutStageGenerationService(
      * @param workout The programmed workout
      * @param exercise The secondary exercise
      * @param setSchemes The set schemes for the exercise
-     * @param userId User ID
      * @return Mono<Void> indicating completion
      */
     protected fun createSecondaryStage(
@@ -222,7 +225,6 @@ abstract class WorkoutStageGenerationService(
      * @param secondaryExercise The secondary exercise (can be null)
      * @param primarySetSchemes The set schemes for the primary exercise
      * @param secondarySetSchemes The set schemes for the secondary exercise
-     * @param userId User ID
      * @return Mono<Void> indicating completion
      */
     protected fun createCombinedPrimaryStage(
@@ -284,14 +286,14 @@ abstract class WorkoutStageGenerationService(
      * Creates an accessory stage with multiple exercises.
      *
      * @param workout The programmed workout
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
+     * @param dayType The type of workout day
      * @param weakMuscles Target weak muscles
      * @param numAccessoryExercises Number of accessory exercises to create
-     * @param currentWeekNumber Current week number
      * @param userId User ID
+     * @param currentWeekNumber Current week number
+     * @param movementBalanceState Current movement balance state
      * @return Mono<Void> indicating completion
      */
     protected fun createAccessoryStage(
@@ -368,13 +370,12 @@ abstract class WorkoutStageGenerationService(
      * Creates a conditioning stage if applicable.
      *
      * @param workout The programmed workout
-     * @param dayType The type of workout day
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
+     * @param dayType The type of workout day
      * @param weakMuscles Target weak muscles
      * @param userId User ID
+     * @param movementBalanceState Current movement balance state
      * @return Mono<Void> indicating completion
      */
     protected fun createConditioningStage(
@@ -433,9 +434,7 @@ abstract class WorkoutStageGenerationService(
      * Creates a warmup stage with multiple exercises.
      *
      * @param workout The programmed workout
-     * @param exercises Available exercises
-     * @param preferences User exercise preferences
-     * @param userEquipment User's available equipment
+     * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param dayType The type of workout day
      * @param primaryExercise The primary exercise for the day (if available)
@@ -602,9 +601,9 @@ abstract class WorkoutStageGenerationService(
      * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
      *
      * @param userExercisePool The user's exercise pool
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param weakMuscles Target weak muscles
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -631,8 +630,8 @@ abstract class WorkoutStageGenerationService(
      *
      * @param userExercisePool The user's exercise pool
      * @param primaryExercise The primary exercise to base selection on
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
-     * @param weakMuscles Target weak muscles
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -663,8 +662,9 @@ abstract class WorkoutStageGenerationService(
      * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
      *
      * @param userExercisePool The user's exercise pool
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param weakMuscles Target weak muscles
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -691,6 +691,8 @@ abstract class WorkoutStageGenerationService(
      *
      * @param userExercisePool The user's exercise pool
      * @param weakMuscles Target weak muscles
+     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
+     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
      */
@@ -1027,7 +1029,6 @@ abstract class WorkoutStageGenerationService(
     /**
      * Creates set schemes for a programmed exercise.
      *
-     * @param userId User ID
      * @param programmedExerciseId The programmed exercise ID
      * @param setSchemes The set schemes to create
      * @param weightUnit The weight unit
@@ -1064,7 +1065,6 @@ abstract class WorkoutStageGenerationService(
     /**
      * Creates workout stages sequentially using the provided stage creation functions.
      *
-     * @param workout The programmed workout
      * @param stageCreators List of stage creation functions to execute sequentially
      * @return Mono<Void> indicating completion
      */

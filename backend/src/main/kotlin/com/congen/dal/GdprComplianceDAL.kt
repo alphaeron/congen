@@ -33,7 +33,7 @@ import java.time.Instant
  * - Consent queries are read-only to prevent unauthorized modifications
  * - Error handling ensures operations fail safely
  *
- * @property postgresClient Client for database operations
+ * @param postgresClient Client for database operations
  *
  * @author Congen Development Team
  * @since 1.0.0
