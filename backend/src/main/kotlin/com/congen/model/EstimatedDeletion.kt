@@ -9,8 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * Individual estimated deletion for a specific data type.
  *
- * @param dataType The type of data
- * @param estimatedRecordsToDelete Number of records estimated to be deleted
+ * @property dataType The type of data
+ * @property estimatedRecordsToDelete Number of records estimated to be deleted
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

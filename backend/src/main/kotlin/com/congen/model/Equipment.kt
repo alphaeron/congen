@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Equipment is used to perform various exercises and can include items such as barbells, dumbbells, machines, etc.
  *
- * @param name Name of the equipment (e.g., "Barbell").
- * @param description Description of the equipment and its use.
+ * @property name Name of the equipment (e.g., "Barbell").
+ * @property description Description of the equipment and its use.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

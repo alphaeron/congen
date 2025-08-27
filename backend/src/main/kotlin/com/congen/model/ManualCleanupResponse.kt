@@ -9,8 +9,8 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * Response for manual cleanup operations.
  *
- * @param cleanupResults List of cleanup results by data type
- * @param summary Summary information about the cleanup operation
+ * @property cleanupResults List of cleanup results by data type
+ * @property summary Summary information about the cleanup operation
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

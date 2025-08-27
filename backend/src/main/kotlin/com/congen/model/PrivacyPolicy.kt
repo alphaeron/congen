@@ -13,11 +13,11 @@ import io.swagger.v3.oas.annotations.media.Schema
  * information as required by GDPR Articles 13 and 14. It provides
  * transparency about data collection, processing, and user rights.
  *
- * @param dataController Information about the data controller
- * @param dataProcessing Details about data processing activities
- * @param userRights Information about user rights under GDPR
- * @param lastUpdated When the privacy policy was last updated
- * @param version The version of the privacy policy
+ * @property dataController Information about the data controller
+ * @property dataProcessing Details about data processing activities
+ * @property userRights Information about user rights under GDPR
+ * @property lastUpdated When the privacy policy was last updated
+ * @property version The version of the privacy policy
  *
  * @author Congen Development Team
  * @since 1.0.0

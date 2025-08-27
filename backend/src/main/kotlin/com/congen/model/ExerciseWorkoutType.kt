@@ -11,9 +11,9 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * This model links exercises to their movement and workout types for categorization and filtering.
  *
- * @param exerciseName Name of the exercise (e.g., "Bench Press").
- * @param movementType Type of movement (e.g., "horizontal_push").
- * @param workoutType Type of workout (e.g., "dynamic_effort").
+ * @property exerciseName Name of the exercise (e.g., "Bench Press").
+ * @property movementType Type of movement (e.g., "horizontal_push").
+ * @property workoutType Type of workout (e.g., "dynamic_effort").
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

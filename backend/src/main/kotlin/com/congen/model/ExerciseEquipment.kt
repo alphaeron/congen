@@ -11,8 +11,8 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * This model links exercises to the equipment required to perform them.
  *
- * @param exerciseName Name of the exercise (e.g., "Bench Press").
- * @param equipmentName Name of the equipment (e.g., "Barbell").
+ * @property exerciseName Name of the exercise (e.g., "Bench Press").
+ * @property equipmentName Name of the equipment (e.g., "Barbell").
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

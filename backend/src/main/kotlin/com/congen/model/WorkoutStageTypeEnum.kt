@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonValue
  * This enum maps to the workout_stage_type table in the database and provides
  * type-safe access to stage types instead of using string literals throughout the codebase.
  *
- * @param displayName The human-readable name for this stage type
- * @param position The position order for this stage type in a workout
+ * @property displayName The human-readable name for this stage type
+ * @property position The position order for this stage type in a workout
  */
 enum class WorkoutStageTypeEnum(
     @JsonValue val displayName: String,

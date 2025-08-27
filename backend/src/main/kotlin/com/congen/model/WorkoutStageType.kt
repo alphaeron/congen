@@ -33,9 +33,9 @@ import java.time.Instant
  * - **Mobility**: Flexibility and mobility work
  * - **Conditioning**: Cardio and conditioning work
  *
- * @param id Unique identifier for the workout stage type
- * @param name The name of the workout stage
- * @param createdAt Created at timestamp
+ * @property id Unique identifier for the workout stage type
+ * @property name The name of the workout stage
+ * @property createdAt Created at timestamp
  *
  * @author Congen Development Team
  * @since 1.0.0

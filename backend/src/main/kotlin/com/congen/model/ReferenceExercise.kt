@@ -13,13 +13,13 @@ import java.time.Instant
  * Reference exercises are used as benchmarks for estimating weights of other exercises
  * based on their movement patterns and similarity.
  *
- * @param id Unique identifier for the reference exercise configuration
- * @param referenceType The type of reference lift (e.g., "SQUAT", "BENCH", "DEADLIFT")
- * @param exerciseName The name of the exercise that serves as this reference
- * @param isActive Whether this reference configuration is currently active
- * @param priority Priority order for this reference (lower numbers = higher priority)
- * @param createdAt When this reference was created
- * @param updatedAt When this reference was last updated
+ * @property id Unique identifier for the reference exercise configuration
+ * @property referenceType The type of reference lift (e.g., "SQUAT", "BENCH", "DEADLIFT")
+ * @property exerciseName The name of the exercise that serves as this reference
+ * @property isActive Whether this reference configuration is currently active
+ * @property priority Priority order for this reference (lower numbers = higher priority)
+ * @property createdAt When this reference was created
+ * @property updatedAt When this reference was last updated
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

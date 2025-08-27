@@ -11,12 +11,12 @@ import io.swagger.v3.oas.annotations.media.Schema
  *
  * Exercises are the core building blocks of workouts and can be categorized by movement type, body part, and other attributes.
  *
- * @param name Name of the exercise (e.g., "Bench Press").
- * @param description Description of the exercise and its purpose.
- * @param movementType Type of movement (e.g., "horizontal_push").
- * @param isUnilateral Whether the exercise is performed one side at a time.
- * @param isUpper Whether the exercise targets the upper body.
- * @param isAccessory Whether the exercise is considered an accessory movement.
+ * @property name Name of the exercise (e.g., "Bench Press").
+ * @property description Description of the exercise and its purpose.
+ * @property movementType Type of movement (e.g., "horizontal_push").
+ * @property isUnilateral Whether the exercise is performed one side at a time.
+ * @property isUpper Whether the exercise targets the upper body.
+ * @property isAccessory Whether the exercise is considered an accessory movement.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

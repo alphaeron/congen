@@ -10,15 +10,15 @@ import java.time.Instant
  * Top-level health check response object following RFC specification.
  * https://datatracker.ietf.org/doc/html/draft-inadarei-api-health-check-06
  *
- * @param status Overall health status.
- * @param version API version.
- * @param releaseId Release identifier.
- * @param notes Additional notes.
- * @param output Output message.
- * @param checks Map of checks by component.
- * @param links Related links.
- * @param serviceId Service identifier.
- * @param description Description of the health check response.
+ * @property status Overall health status.
+ * @property version API version.
+ * @property releaseId Release identifier.
+ * @property notes Additional notes.
+ * @property output Output message.
+ * @property checks Map of checks by component.
+ * @property links Related links.
+ * @property serviceId Service identifier.
+ * @property description Description of the health check response.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Top-level health check response object.")

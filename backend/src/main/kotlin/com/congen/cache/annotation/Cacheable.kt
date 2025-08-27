@@ -33,10 +33,10 @@ import com.congen.cache.CacheTTL
  * fun selectUserByKeycloakId(keycloakId: String): Mono<User>
  * ```
  *
- * @param ttl The time-to-live duration for cached values
- * @param keyStrategy The strategy for generating cache keys
- * @param invalidationStrategy The strategy for invalidating related cache entries
- * @param entityName The name of the entity for key generation (optional)
+ * @property ttl The time-to-live duration for cached values
+ * @property keyStrategy The strategy for generating cache keys
+ * @property invalidationStrategy The strategy for invalidating related cache entries
+ * @property entityName The name of the entity for key generation (optional)
  *
  * @author Congen Development Team
  * @since 1.0.0

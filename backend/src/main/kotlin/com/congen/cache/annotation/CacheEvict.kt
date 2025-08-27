@@ -24,8 +24,8 @@ import com.congen.cache.CacheInvalidationStrategy
  * fun updateExerciseByName(name: String, ...): Mono<Exercise>
  * ```
  *
- * @param invalidationStrategy The strategy for invalidating related cache entries
- * @param entityName The name of the entity for invalidation (optional)
+ * @property invalidationStrategy The strategy for invalidating related cache entries
+ * @property entityName The name of the entity for invalidation (optional)
  *
  * @author Congen Development Team
  * @since 1.0.0

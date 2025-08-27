@@ -14,23 +14,23 @@ import java.time.Instant
  * A set scheme defines the specific parameters for individual sets within a
  * programmed exercise, including weight, reps, tempo, and rest periods.
  *
- * @param id Unique identifier for the set scheme
- * @param programmedExerciseId The ID of the programmed exercise this set belongs to
- * @param setNumber The set number within the exercise
- * @param isAmrap As Many Reps As Possible flag
- * @param isEmom Every Minute On the Minute flag
- * @param useTempo Whether to use tempo timing
- * @param eccentricTempo Eccentric phase tempo (0-9 seconds)
- * @param isometricTempo Isometric phase tempo (0-9 seconds)
- * @param concentricTempo Concentric phase tempo (0-9 seconds)
- * @param targetWeight Target weight for the set in kg
- * @param performedWeight Actual weight used in kg
- * @param targetRepCount Target number of repetitions
- * @param performedRepCount Actual number of repetitions completed
- * @param restSeconds Rest period after the set in seconds
- * @param createdAt Timestamp when the set scheme was created
- * @param updatedAt Timestamp when the set scheme was last updated
- * @param band The band information for Dynamic Effort exercises
+ * @property id Unique identifier for the set scheme
+ * @property programmedExerciseId The ID of the programmed exercise this set belongs to
+ * @property setNumber The set number within the exercise
+ * @property isAmrap As Many Reps As Possible flag
+ * @property isEmom Every Minute On the Minute flag
+ * @property useTempo Whether to use tempo timing
+ * @property eccentricTempo Eccentric phase tempo (0-9 seconds)
+ * @property isometricTempo Isometric phase tempo (0-9 seconds)
+ * @property concentricTempo Concentric phase tempo (0-9 seconds)
+ * @property targetWeight Target weight for the set in kg
+ * @property performedWeight Actual weight used in kg
+ * @property targetRepCount Target number of repetitions
+ * @property performedRepCount Actual number of repetitions completed
+ * @property restSeconds Rest period after the set in seconds
+ * @property createdAt Timestamp when the set scheme was created
+ * @property updatedAt Timestamp when the set scheme was last updated
+ * @property band The band information for Dynamic Effort exercises
  *
  * @author Congen Development Team
  * @since 1.0.0

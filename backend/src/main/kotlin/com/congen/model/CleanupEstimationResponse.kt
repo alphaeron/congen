@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * Response for cleanup estimation operations.
  *
- * @param estimatedDeletions List of estimated deletions by data type
+ * @property estimatedDeletions List of estimated deletions by data type
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

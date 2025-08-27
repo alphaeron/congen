@@ -29,13 +29,13 @@ import java.time.Instant
  * - **WorkoutStageType**: Each stage has a type that defines its purpose
  * - **ProgrammedExercise**: Stages contain multiple programmed exercises
  *
- * @param id Unique identifier for the workout stage
- * @param programmedWorkoutId ID of the programmed workout this stage belongs to
- * @param stageTypeId ID of the workout stage type (warm-up, main, cool-down, etc.)
- * @param position Order of this stage within the workout (1-based)
- * @param name Name of the workout stage
- * @param createdAt Created at timestamp
- * @param updatedAt Updated at timestamp
+ * @property id Unique identifier for the workout stage
+ * @property programmedWorkoutId ID of the programmed workout this stage belongs to
+ * @property stageTypeId ID of the workout stage type (warm-up, main, cool-down, etc.)
+ * @property position Order of this stage within the workout (1-based)
+ * @property name Name of the workout stage
+ * @property createdAt Created at timestamp
+ * @property updatedAt Updated at timestamp
  *
  * @author Congen Development Team
  * @since 1.0.0

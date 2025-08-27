@@ -36,12 +36,12 @@ import java.time.Instant
  * - Day 2: Second workout of the cycle
  * - Day 3: Third workout of the cycle
  *
- * @param id Unique identifier for the programmed workout
- * @param programId ID of the training program this workout belongs to
- * @param dayNumber Day number within the program (1-365)
- * @param name Optional name for the workout
- * @param createdAt Timestamp when the workout was created
- * @param updatedAt Timestamp when the workout was last updated
+ * @property id Unique identifier for the programmed workout
+ * @property programId ID of the training program this workout belongs to
+ * @property dayNumber Day number within the program (1-365)
+ * @property name Optional name for the workout
+ * @property createdAt Timestamp when the workout was created
+ * @property updatedAt Timestamp when the workout was last updated
  *
  * @author Congen Development Team
  * @since 1.0.0

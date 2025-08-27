@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 /**
  * Represents different types of movement patterns in strength training.
  *
- * @param displayName Human-readable name for the movement type
+ * @property displayName Human-readable name for the movement type
  */
 @JsonDeserialize(using = MovementTypeDeserializer::class)
 enum class MovementType(

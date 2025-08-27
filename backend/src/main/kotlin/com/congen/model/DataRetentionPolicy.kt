@@ -9,9 +9,9 @@ import io.swagger.v3.oas.annotations.media.Schema
 /**
  * Data class representing a data retention policy.
  *
- * @param dataType The type of data the policy applies to
- * @param retentionPeriodDays How long to retain the data in days
- * @param description Optional description of the policy
+ * @property dataType The type of data the policy applies to
+ * @property retentionPeriodDays How long to retain the data in days
+ * @property description Optional description of the policy
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
