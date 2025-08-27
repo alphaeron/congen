@@ -97,8 +97,10 @@ class DataRetentionController(
      * This endpoint allows administrators to modify TTL settings for different
      * types of data to ensure GDPR compliance and optimize storage usage.
      *
-     * @param policyUpdate Map containing dataType, retentionPeriodDays, and optional description
-     * @return ResponseEntity indicating success or failure
+     * @param dataType The data type to update policy for
+     * @param retentionPeriodDays The retention period in days
+     * @param description Optional description of the policy
+     * @return ResponseEntity containing the updated policy
      */
     @PutMapping("/policies")
     @PreAuthorize("hasRole('admin')")

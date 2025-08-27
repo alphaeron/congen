@@ -19,13 +19,13 @@ import org.springframework.context.annotation.Configuration
  * PostgreSQL database connections, including separate configurations for
  * reader and writer connections, authentication details, and SSL settings.
  *
- * @param writer Writer database host configuration
- * @param reader Reader database host configuration
- * @param port Database port number
- * @param username Database username
- * @param password Database password
- * @param dbName Database name
- * @param sslMode Whether SSL is enabled for database connections
+ * @property writer Writer database host configuration
+ * @property reader Reader database host configuration
+ * @property port Database port number
+ * @property username Database username
+ * @property password Database password
+ * @property dbName Database name
+ * @property sslMode Whether SSL is enabled for database connections
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -43,7 +43,7 @@ data class PostgresProperties(
     /**
      * Data class representing a database host configuration.
      *
-     * @param host The hostname or IP address of the database server.
+     * @property host The hostname or IP address of the database server.
      */
     data class Host(
         /**

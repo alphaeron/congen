@@ -15,8 +15,8 @@ import org.springframework.context.annotation.Configuration
  *
  * This class contains configuration properties for OpenAPI documentation generation.
  *
- * @param serverPort The port on which the server is running
- * @param activeProfile The active Spring profile (e.g., local, staging, production)
+ * @property serverPort The port on which the server is running
+ * @property activeProfile The active Spring profile (e.g., local, staging, production)
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -152,7 +152,7 @@ class PostgresClient(
      * @param query SQL update query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
-     * @return Mono containing the updated result
+     * @return Mono<T> containing the updated result
      * @throws DatabaseConnectionException if connection fails
      * @throws DatabaseQueryException if query execution fails
      */
@@ -171,7 +171,7 @@ class PostgresClient(
      * @param query SQL update query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
-     * @return Mono containing the updated result
+     * @return Mono<T> containing the updated result
      * @throws DatabaseConnectionException if connection fails
      * @throws DatabaseQueryException if query execution fails
      */
@@ -192,7 +192,7 @@ class PostgresClient(
      * @param query SQL query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
-     * @return Mono containing the single result
+     * @return Mono<T> containing the single result
      * @throws InvalidResultException if query returns multiple results
      * @throws NoResultsFoundException if query returns no results
      */
@@ -228,7 +228,7 @@ class PostgresClient(
      * @param query SQL query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
-     * @return Mono containing the list of results
+     * @return Mono<List<T>> containing the list of results
      */
     private inline fun <T : Any> query(
         sqlClient: SqlClient,

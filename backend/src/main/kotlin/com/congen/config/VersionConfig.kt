@@ -14,12 +14,12 @@ import org.springframework.context.annotation.Configuration
  *
  * This information is used for health checks, API documentation, and debugging purposes.
  *
- * @param version Application version number
- * @param releaseId Release identifier
- * @param buildTime Build timestamp
- * @param gitHash Git commit hash
- * @param gitBranch Git branch name
- * @param gitDirty Whether the Git working directory is dirty (has uncommitted changes)
+ * @property version Application version number
+ * @property releaseId Release identifier
+ * @property buildTime Build timestamp
+ * @property gitHash Git commit hash
+ * @property gitBranch Git branch name
+ * @property gitDirty Whether the Git working directory is dirty (has uncommitted changes)
  *
  * @author Congen Development Team
  * @since 1.0.0

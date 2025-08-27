@@ -43,17 +43,17 @@ import kotlin.random.Random
  * - Time-based accessory exercise allocation
  * - Stage creation and exercise programming
  *
- * @param workoutStageDAL Data access layer for workout stage operations
- * @param workoutStageTypeDAL Data access layer for workout stage type operations
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
- * @param setSchemeDAL Data access layer for set scheme operations
- * @param setSchemeService Service for set scheme operations
- * @param prilepinGuidelinesService Service for Prilepin-based guidelines
- * @param weightSelectionService Service for conjugate-specific weight selection
- * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
- * @param exerciseSelectionService Service for exercise selection logic
- * @param movementBalanceService Service for movement balance
- * @param sessionTimeCalculator Service for session time calculations
+ * @property workoutStageDAL Data access layer for workout stage operations
+ * @property workoutStageTypeDAL Data access layer for workout stage type operations
+ * @property programmedExerciseDAL Data access layer for programmed exercise operations
+ * @property setSchemeDAL Data access layer for set scheme operations
+ * @property setSchemeService Service for set scheme operations
+ * @property prilepinGuidelinesService Service for Prilepin-based guidelines
+ * @property weightSelectionService Service for conjugate-specific weight selection
+ * @property userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
+ * @property exerciseSelectionService Service for exercise selection logic
+ * @property movementBalanceService Service for movement balance
+ * @property sessionTimeCalculator Service for session time calculations
  *
  * @author Congen Development Team
  * @since 1.0.0

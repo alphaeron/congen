@@ -27,16 +27,16 @@ import java.util.concurrent.atomic.AtomicInteger
  * including server connection details, performance tuning parameters, and
  * custom scheduler configuration.
  *
- * @param host Memcached server hostname
- * @param port Memcached server port
- * @param connectionPoolSize Number of connections in the pool
- * @param opTimeout Operation timeout in milliseconds
- * @param maxQueuedNoReply Maximum queued no-reply operations
- * @param schedulerThreadPoolSize Number of threads in the custom scheduler pool
- * @param schedulerQueueCapacity Maximum queue capacity for the scheduler
- * @param schedulerThreadNamePrefix Prefix for scheduler thread names
- * @param useElasticache Whether to use AWS ElastiCache client instead of standard Memcached client
- * @param pollConfigIntervalMs Poll interval in milliseconds for AWS ElastiCache configuration updates
+ * @property host Memcached server hostname
+ * @property port Memcached server port
+ * @property connectionPoolSize Number of connections in the pool
+ * @property opTimeout Operation timeout in milliseconds
+ * @property maxQueuedNoReply Maximum queued no-reply operations
+ * @property schedulerThreadPoolSize Number of threads in the custom scheduler pool
+ * @property schedulerQueueCapacity Maximum queue capacity for the scheduler
+ * @property schedulerThreadNamePrefix Prefix for scheduler thread names
+ * @property useElasticache Whether to use AWS ElastiCache client instead of standard Memcached client
+ * @property pollConfigIntervalMs Poll interval in milliseconds for AWS ElastiCache configuration updates
  *
  * @author Congen Development Team
  * @since 1.0.0

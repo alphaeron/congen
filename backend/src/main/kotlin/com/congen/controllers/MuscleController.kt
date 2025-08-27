@@ -74,7 +74,8 @@ class MuscleController(
      * This endpoint creates a new muscle with the provided information.
      * The muscle name must be unique within the system.
      *
-     * @param muscle The muscle data to create
+     * @param name The name of the muscle to create
+     * @param description The description of the muscle
      * @return The created muscle with assigned ID
      *
      * @throws DatabaseException if database operation fails

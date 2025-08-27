@@ -65,10 +65,11 @@ class ReactiveMemcachedCache(
      * This method serializes the value to JSON and stores it in Memcached
      * with the given key and expiration time.
      *
+     * @param <T> The type of the value to cache
      * @param key The cache key
      * @param value The value to cache
      * @param ttl Time-to-live duration
-     * @return Mono that completes when the operation finishes
+     * @return Mono<Boolean> indicating success or failure of the operation
      */
     fun <T> set(
         key: String,
@@ -101,9 +102,10 @@ class ReactiveMemcachedCache(
      *
      * This method is useful for deserializing generic types like List<T>.
      *
+     * @param <T> The type of the value to retrieve
      * @param key The cache key
      * @param typeReference The TypeReference for the expected type
-     * @return Mono containing the cached value or empty if not found
+     * @return Mono<T> containing the cached value or throws CacheMissException if not found
      */
     fun <T : Any> get(
         key: String,
@@ -143,8 +145,9 @@ class ReactiveMemcachedCache(
      * the generic parameter. It automatically creates the proper TypeReference
      * to preserve generic type information.
      *
+     * @param <T> The type of the value to retrieve
      * @param key The cache key
-     * @return Mono containing the cached value or empty if not found
+     * @return Mono<T> containing the cached value or throws CacheMissException if not found
      */
     final inline fun <reified T : Any> get(key: String): Mono<T> {
         return get(key, object : TypeReference<T>() {})
@@ -154,7 +157,7 @@ class ReactiveMemcachedCache(
      * Deletes a value from the cache.
      *
      * @param key The cache key to delete
-     * @return Mono that completes when the operation finishes
+     * @return Mono<Boolean> indicating success or failure of the operation
      */
     fun delete(key: String): Mono<Boolean> {
         val cacheKey = generateKey(key)
@@ -181,7 +184,7 @@ class ReactiveMemcachedCache(
      *
      * @param key The cache key
      * @param delta The amount to increment by
-     * @return Mono containing the new value
+     * @return Mono<Long> containing the new value
      */
     fun increment(
         key: String,
