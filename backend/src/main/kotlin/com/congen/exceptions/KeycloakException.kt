@@ -9,9 +9,9 @@ import org.springframework.http.HttpStatus
  * such as user creation, updates, or deletions. It provides specific error
  * information from Keycloak and maps to appropriate HTTP status codes.
  *
- * @property message Descriptive error message explaining the Keycloak operation failure
+ * @param message Descriptive error message explaining the Keycloak operation failure
  * @property httpStatus The HTTP status code returned by Keycloak
- * @property cause The underlying cause of the exception
+ * @param cause The underlying cause of the exception
  *
  * @author Congen Development Team
  * @since 1.0.0

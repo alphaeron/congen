@@ -44,7 +44,7 @@ data class VersionProperties(
  *
  * This information is used for health checks, API documentation, and debugging purposes.
  *
- * @param versionProperties The version-related properties loaded from configuration.
+ * @property versionProperties The version-related properties loaded from configuration.
  *
  * @author Congen Development Team
  * @since 1.0.0

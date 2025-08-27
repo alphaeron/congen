@@ -42,7 +42,7 @@ import java.util.Base64
  * ```
  *
  * @param memcachedClient Memcached client for cache operations
- * @param objectMapper Jackson ObjectMapper for JSON serialization
+ * @property objectMapper Jackson ObjectMapper for JSON serialization
  * @param memcachedScheduler Dedicated scheduler for Memcached operations
  *
  * @author Congen Development Team
@@ -65,7 +65,7 @@ class ReactiveMemcachedCache(
      * This method serializes the value to JSON and stores it in Memcached
      * with the given key and expiration time.
      *
-     * @param <T> The type of the value to cache
+     * @param T The type of the value to cache
      * @param key The cache key
      * @param value The value to cache
      * @param ttl Time-to-live duration
@@ -102,7 +102,7 @@ class ReactiveMemcachedCache(
      *
      * This method is useful for deserializing generic types like List<T>.
      *
-     * @param <T> The type of the value to retrieve
+     * @param T The type of the value to retrieve
      * @param key The cache key
      * @param typeReference The TypeReference for the expected type
      * @return Mono<T> containing the cached value or throws CacheMissException if not found
@@ -145,7 +145,7 @@ class ReactiveMemcachedCache(
      * the generic parameter. It automatically creates the proper TypeReference
      * to preserve generic type information.
      *
-     * @param <T> The type of the value to retrieve
+     * @param T The type of the value to retrieve
      * @param key The cache key
      * @return Mono<T> containing the cached value or throws CacheMissException if not found
      */

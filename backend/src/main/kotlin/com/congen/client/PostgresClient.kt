@@ -54,9 +54,10 @@ class PostgresClient(
      * the generic parameter. It uses the reader connection pool for optimal
      * performance on read operations.
      *
+     * @param T The type of the result to retrieve
      * @param query SQL query to execute
      * @param queryArgs Query parameters
-     * @return Mono containing the single result
+     * @return Mono<T> containing the single result
      * @throws InvalidResultException if query returns multiple results
      * @throws NoResultsFoundException if query returns no results
      * @throws DatabaseConnectionException if connection fails
@@ -73,10 +74,11 @@ class PostgresClient(
      * This method executes a query and expects exactly one result. If the query
      * returns multiple results or no results, appropriate exceptions are thrown.
      *
+     * @param T The type of the result to retrieve
      * @param query SQL query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
-     * @return Mono containing the single result
+     * @return Mono<T> containing the single result
      * @throws InvalidResultException if query returns multiple results
      * @throws NoResultsFoundException if query returns no results
      * @throws DatabaseConnectionException if connection fails
@@ -95,9 +97,10 @@ class PostgresClient(
      * the generic parameter. It uses the reader connection pool for optimal
      * performance on read operations.
      *
+     * @param T The type of the results to retrieve
      * @param query SQL query to execute
      * @param queryArgs Query parameters
-     * @return Mono containing the list of results
+     * @return Mono<List<T>> containing the list of results
      * @throws DatabaseConnectionException if connection fails
      * @throws DatabaseQueryException if query execution fails
      */
@@ -112,10 +115,11 @@ class PostgresClient(
      * This method executes a query and returns all results as a list. The results
      * are automatically mapped to the specified class type using JSON mapping.
      *
+     * @param T The type of the results to retrieve
      * @param query SQL query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
-     * @return Mono containing the list of results
+     * @return Mono<List<T>> containing the list of results
      * @throws DatabaseConnectionException if connection fails
      * @throws DatabaseQueryException if query execution fails
      */
@@ -132,9 +136,10 @@ class PostgresClient(
      * the generic parameter. It uses the writer connection pool and automatically
      * appends "RETURNING *" to the query to return the updated data.
      *
+     * @param T The type of the result to retrieve
      * @param query SQL update query to execute
      * @param queryArgs Query parameters
-     * @return Mono containing the updated result
+     * @return Mono<T> containing the updated result
      * @throws DatabaseConnectionException if connection fails
      * @throws DatabaseQueryException if query execution fails
      */
@@ -149,6 +154,7 @@ class PostgresClient(
      * This method executes an update query and returns the updated data. The query
      * is automatically modified to include "RETURNING *" to return the result.
      *
+     * @param T The type of the result to retrieve
      * @param query SQL update query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
@@ -168,6 +174,7 @@ class PostgresClient(
      * This method executes an update query and returns the updated data. The query
      * is automatically modified to include "RETURNING *" to return the result.
      *
+     * @param T The type of the result to retrieve
      * @param query SQL update query to execute
      * @param cls Class type for result mapping
      * @param queryArgs Query parameters
@@ -188,6 +195,7 @@ class PostgresClient(
      * one result. It validates the result count and throws appropriate exceptions
      * if the expectation is not met.
      *
+     * @param T The type of the result to retrieve
      * @param sqlClient SQL client to use for the query
      * @param query SQL query to execute
      * @param cls Class type for result mapping
@@ -224,6 +232,7 @@ class PostgresClient(
      * This private method handles the execution of queries and maps the results
      * to the specified class type using JSON mapping.
      *
+     * @param T The type of the results to retrieve
      * @param sqlClient SQL client to use for the query
      * @param query SQL query to execute
      * @param cls Class type for result mapping
