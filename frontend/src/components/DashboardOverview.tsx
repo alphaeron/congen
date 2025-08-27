@@ -8,11 +8,10 @@ import {
   CardContent,
   Grid,
   Typography,
-  Alert,
   CircularProgress,
-  Tooltip,
   Chip,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -36,10 +35,10 @@ interface DashboardOverviewProps {
  */
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) => {
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const handleActiveProgramClick = () => {
     if (activeProgram) {
@@ -51,7 +50,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     const loadDashboardData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
 
         // Load all dashboard data in parallel
         const [programsData, oneRepMaxesData] = await Promise.all([
@@ -61,9 +59,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
         setPrograms(programsData);
         setOneRepMaxes(oneRepMaxesData);
-      } catch (err) {
-        console.error('Error loading dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again.');
+      } catch {
+        enqueueSnackbar('Failed to load dashboard data. Please try again.', { variant: 'error' });
       } finally {
         setIsLoading(false);
       }
@@ -78,10 +75,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         <CircularProgress />
       </Box>
     );
-  }
-
-  if (error) {
-    return <Alert severity="error">{error}</Alert>;
   }
 
   const activeProgram = programs.find(program => program.is_active);

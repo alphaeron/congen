@@ -4,7 +4,6 @@ import React from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
-import { EXERCISE } from '../__mocks__/data';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 

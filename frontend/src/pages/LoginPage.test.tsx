@@ -25,11 +25,8 @@ describe('LoginPage', () => {
       isLoading: false,
       login: mockLogin,
       logout: jest.fn(),
-      createProfile: jest.fn(),
-      clearError: jest.fn(),
       user: null,
       isAuthenticated: false,
-      error: null,
     });
   });
 
@@ -50,11 +47,8 @@ describe('LoginPage', () => {
       isLoading: true,
       login: mockLogin,
       logout: jest.fn(),
-      createProfile: jest.fn(),
-      clearError: jest.fn(),
       user: null,
       isAuthenticated: false,
-      error: null,
     });
 
     render(<LoginPage />);

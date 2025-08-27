@@ -8,7 +8,6 @@ import {
   CardContent,
   Typography,
   Grid,
-  Alert,
   CircularProgress,
   Chip,
   List,
@@ -18,6 +17,7 @@ import {
   Divider,
   Paper,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { getPrograms } from '../api/program';
@@ -38,10 +38,10 @@ interface WorkoutCalendarProps {
  * @return Workout calendar component
  */
 export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadCalendarData();
@@ -50,7 +50,6 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
   const loadCalendarData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
 
       const [programsData, workoutsData] = await Promise.all([
         getPrograms(),
@@ -59,9 +58,8 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
 
       setPrograms(programsData);
       setWorkouts(workoutsData);
-    } catch (err) {
-      console.error('Error loading calendar data:', err);
-      setError('Failed to load calendar data. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to load calendar data. Please try again.', { variant: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -132,12 +130,6 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
       <Typography variant="h5" gutterBottom>
         Workout Calendar
       </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
 
       {!activeProgram ? (
         <Card>

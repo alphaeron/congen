@@ -6,7 +6,6 @@ import {
   Typography,
   Button,
   Grid,
-  Alert,
   CircularProgress,
   Dialog,
   DialogTitle,
@@ -20,6 +19,7 @@ import {
   Link,
   Slide,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
@@ -51,11 +51,11 @@ interface WorkoutsProps {
 export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
@@ -79,7 +79,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
   useEffect(() => {
     const loadWorkoutData = async () => {
       setIsLoading(true);
-      setError(null);
       try {
         const [programsData, workoutsData] = await Promise.all([
           getPrograms(),
@@ -88,9 +87,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
 
         setPrograms(programsData);
         setWorkouts(workoutsData);
-      } catch (err) {
-        console.error('Error loading workout data:', err);
-        setError('Failed to load workout data. Please try again.');
+      } catch {
+        enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
       } finally {
         setIsLoading(false);
       }
@@ -125,7 +123,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
     if (!selectedProgram) return;
 
     setIsGenerating(true);
-    setError(null);
     try {
       await generateNextWeek(selectedProgram.id);
 
@@ -139,9 +136,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
 
       setGenerateDialogOpen(false);
       setSelectedProgram(null);
-    } catch (err) {
-      console.error('Error generating workouts:', err);
-      setError('Failed to generate workouts. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to generate workouts. Please try again.', { variant: 'error' });
     } finally {
       setIsGenerating(false);
     }
@@ -319,12 +315,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Error Display */}
-      {error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {error}
-        </Alert>
-      )}
     </React.Fragment>
   );
 };

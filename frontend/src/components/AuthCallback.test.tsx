@@ -37,11 +37,8 @@ describe('AuthCallback', () => {
       user: null,
       isAuthenticated: false,
       isLoading: true,
-      error: null,
       login: jest.fn(),
       logout: jest.fn(),
-      createProfile: jest.fn(),
-      clearError: jest.fn(),
     });
 
     render(
@@ -64,11 +61,8 @@ describe('AuthCallback', () => {
       user: null,
       isAuthenticated: false,
       isLoading: true,
-      error: null,
       login: jest.fn(),
       logout: jest.fn(),
-      createProfile: jest.fn(),
-      clearError: jest.fn(),
     });
 
     render(

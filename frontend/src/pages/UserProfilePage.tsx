@@ -1,5 +1,5 @@
-import { Container, Alert, CircularProgress, Typography } from '@mui/material';
-import React, { useEffect } from 'react';
+import { Container, CircularProgress, Typography } from '@mui/material';
+import React from 'react';
 import { useSearchParams } from 'react-router';
 
 import { LoadingSpinner } from '../components/LoadingSpinner';
@@ -17,28 +17,12 @@ import { useAuth } from '../contexts/AuthContext';
  * @return User profile page component
  */
 export const UserProfilePage: React.FC = () => {
-  const { user, isLoading, error, clearError } = useAuth();
+  const { user, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
-
-  // Clear any errors when component mounts
-  useEffect(() => {
-    if (error) {
-      clearError();
-    }
-  }, [error, clearError]);
 
   // Show loading spinner while checking authentication status or creating profile
   if (isLoading) {
     return <LoadingSpinner />;
-  }
-
-  // If there's an error, show the error
-  if (error) {
-    return (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">{error}</Alert>
-      </Container>
-    );
   }
 
   // If user doesn't have a profile yet, show a loading message

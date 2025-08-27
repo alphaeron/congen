@@ -44,8 +44,7 @@ describe('UserProfilePage', () => {
   it('should render user profile information when user exists', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
-      logout: jest.fn(),
-      clearError: jest.fn(),
+      isLoading: false,
     });
 
     renderWithProviders(<UserProfilePage />);
@@ -57,8 +56,7 @@ describe('UserProfilePage', () => {
   it('should show deactivate account button when user exists', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
-      logout: jest.fn(),
-      clearError: jest.fn(),
+      isLoading: false,
     });
 
     renderWithProviders(<UserProfilePage />);
@@ -71,8 +69,7 @@ describe('UserProfilePage', () => {
   it('should show edit profile button when user exists', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
-      logout: jest.fn(),
-      clearError: jest.fn(),
+      isLoading: false,
     });
 
     renderWithProviders(<UserProfilePage />);
@@ -80,19 +77,29 @@ describe('UserProfilePage', () => {
     expect(screen.getAllByText('Edit Profile')[0]).toBeInTheDocument();
   });
 
-  it('should show error alert when user is not available', () => {
+  it('should show loading message when user is not available', () => {
     mockUseAuth.mockReturnValue({
       user: null,
-      error: 'User information not available. Please log in to view your profile.',
-      logout: jest.fn(),
-      clearError: jest.fn(),
+      isLoading: false,
     });
 
     renderWithProviders(<UserProfilePage />);
 
-    expect(
-      screen.getByText('User information not available. Please log in to view your profile.')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Creating Your Profile')).toBeInTheDocument();
+    expect(screen.getByText('Your profile is being created automatically using your Keycloak information...')).toBeInTheDocument();
     expect(screen.queryByText('User Profile')).not.toBeInTheDocument();
+  });
+
+  it('should show loading spinner when isLoading is true', () => {
+    mockUseAuth.mockReturnValue({
+      user: null,
+      isLoading: true,
+    });
+
+    renderWithProviders(<UserProfilePage />);
+
+    // The LoadingSpinner component should be rendered
+    expect(screen.queryByText('User Profile')).not.toBeInTheDocument();
+    expect(screen.queryByText('Creating Your Profile')).not.toBeInTheDocument();
   });
 });

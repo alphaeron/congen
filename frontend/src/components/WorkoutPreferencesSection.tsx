@@ -25,6 +25,7 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { getExercises } from '../api/exercise';
@@ -44,6 +45,8 @@ import {
 } from '../api/userWeightUnitPreference';
 import { useAuth } from '../contexts/AuthContext';
 
+import type { AxiosError } from 'axios';
+
 /**
  * Workout preferences section component for user profile.
  *
@@ -54,9 +57,9 @@ import { useAuth } from '../contexts/AuthContext';
  */
 export function WorkoutPreferencesSection(): React.ReactElement {
   const { user } = useAuth();
+  const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Program preferences state
@@ -82,7 +85,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   const loadData = async () => {
     setLoading(true);
-    setError(null);
 
     // Load all data in parallel for better performance
     const [prefsResponse, unitResponse, exercisesResponse] = await Promise.allSettled([
@@ -109,7 +111,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     if (exercisesResponse.status === 'fulfilled') {
       setExercises(exercisesResponse.value);
     } else {
-      console.error('Failed to load exercises:', exercisesResponse.reason);
+      enqueueSnackbar('Failed to load exercises. Please try again.', { variant: 'error' });
       setExercises([]);
     }
 
@@ -121,7 +123,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
     try {
       setSaving(true);
-      setError(null);
 
       if (programPreferences) {
         // Update existing preferences
@@ -138,8 +139,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       setSuccessMessage('Program preferences saved successfully');
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to save program preferences');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to save program preferences', { variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -150,7 +151,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
     try {
       setSaving(true);
-      setError(null);
 
       await upsertUserWeightUnitPreference(user.keycloak_id, selectedExercise, selectedUnit);
 
@@ -163,8 +163,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSelectedUnit(WeightUnit.LBS);
       setSuccessMessage('Weight unit preference added successfully');
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to add weight unit preference');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to add weight unit preference', { variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -175,7 +175,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
     try {
       setSaving(true);
-      setError(null);
 
       await deleteUserWeightUnitPreference(user.keycloak_id, exerciseName);
 
@@ -185,8 +184,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       setSuccessMessage('Weight unit preference deleted successfully');
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to delete weight unit preference');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to delete weight unit preference', { variant: 'error' });
     } finally {
       setSaving(false);
     }
@@ -220,12 +219,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       <Typography variant="body1" color="text.secondary" paragraph>
         Manage your workout program preferences and settings.
       </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
 
       {successMessage && (
         <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage(null)}>

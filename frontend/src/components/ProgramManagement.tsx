@@ -16,7 +16,6 @@ import {
   TextField,
   Typography,
   Grid,
-  Alert,
   CircularProgress,
   Chip,
   IconButton,
@@ -24,6 +23,7 @@ import {
   FormControlLabel,
   Switch,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
@@ -44,10 +44,10 @@ interface ProgramManagementProps {
  * @return Program management component
  */
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -64,7 +64,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   const loadPrograms = async () => {
     try {
       setIsLoading(true);
-      setError(null);
 
       const [programsData, workoutsData] = await Promise.all([
         getPrograms(),
@@ -73,8 +72,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
       setPrograms(programsData);
       setWorkouts(workoutsData);
-    } catch (err) {
-      setError('Failed to load programs. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to load programs. Please try again.', { variant: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -86,8 +85,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setPrograms(prev => [...prev, newProgram]);
       setCreateDialogOpen(false);
       setFormData({ name: '', isActive: true });
-    } catch (err) {
-      setError('Failed to create program. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to create program. Please try again.', { variant: 'error' });
     }
   };
 
@@ -105,8 +104,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setEditDialogOpen(false);
       setSelectedProgram(null);
       setFormData({ name: '', isActive: true });
-    } catch (err) {
-      setError('Failed to update program. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to update program. Please try again.', { variant: 'error' });
     }
   };
 
@@ -118,8 +117,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       setPrograms(prev => prev.filter(p => p.id !== selectedProgram.id));
       setDeleteDialogOpen(false);
       setSelectedProgram(null);
-    } catch (err) {
-      setError('Failed to delete program. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to delete program. Please try again.', { variant: 'error' });
     }
   };
 
@@ -161,12 +160,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           Create Program
         </Button>
       </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
 
       {/* Programs Grid */}
       <Grid container spacing={3}>

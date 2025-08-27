@@ -10,10 +10,13 @@ import {
   Alert,
   CircularProgress,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import * as React from 'react';
 
 import { getPrivacyPolicy } from '../api/gdpr';
 import type { PrivacyPolicy } from '../api/types';
+
+import type { AxiosError } from 'axios';
 
 /**
  * Privacy Policy page component.
@@ -33,9 +36,9 @@ import type { PrivacyPolicy } from '../api/types';
  * @since 1.0.0
  */
 export function PrivacyPolicyPage(): React.ReactElement {
+  const { enqueueSnackbar } = useSnackbar();
   const [privacyPolicy, setPrivacyPolicy] = React.useState<PrivacyPolicy | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchPrivacyPolicy = async () => {
@@ -43,8 +46,8 @@ export function PrivacyPolicyPage(): React.ReactElement {
         const response = await getPrivacyPolicy();
         setPrivacyPolicy(response.data);
       } catch (err: unknown) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        setError(axiosError.response?.data?.message || 'Failed to load privacy policy');
+        const axiosError = err as AxiosError<{ message?: string }>;
+        enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load privacy policy', { variant: 'error' });
       } finally {
         setLoading(false);
       }
@@ -64,10 +67,10 @@ export function PrivacyPolicyPage(): React.ReactElement {
     );
   }
 
-  if (error || !privacyPolicy) {
+  if (!privacyPolicy) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="error">{error || 'Privacy policy not available'}</Alert>
+        <Alert severity="error">Privacy policy not available</Alert>
       </Container>
     );
   }

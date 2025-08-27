@@ -1,5 +1,3 @@
-remove console statements from frontend, if there is an error the user needs to be aware of use notistack to show it in a user-friendly fashion without implementation details
-
 test tests, no error logs in test.
 
 

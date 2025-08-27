@@ -6,7 +6,6 @@ import {
   CardContent,
   Typography,
   Grid,
-  Alert,
   CircularProgress,
   Chip,
   Tooltip,
@@ -15,6 +14,7 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -39,9 +39,9 @@ type TabName = 'onerepmax' | 'usage';
  */
 export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { enqueueSnackbar } = useSnackbar();
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<string>('all');
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
 
@@ -62,7 +62,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const loadExerciseHistoryData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
 
       const [oneRepMaxesData, allExercisesData] = await Promise.all([
         getUserOneRepMaxes(user.keycloak_id),
@@ -71,8 +70,8 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
 
       setOneRepMaxes(oneRepMaxesData);
       setAllExercises(allExercisesData);
-    } catch (err) {
-      setError('Failed to load exercise history data. Please try again.');
+    } catch {
+      enqueueSnackbar('Failed to load exercise history data. Please try again.', { variant: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -119,12 +118,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       <Typography variant="h5" gutterBottom>
         Exercise History
       </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
 
       {/* Exercise Filter */}
       <Card sx={{ mb: 3 }}>

@@ -57,10 +57,6 @@ describe('DashboardPage', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       isLoading: true,
-      error: null,
-      clearError: jest.fn(),
-      logout: jest.fn(),
-      isAuthenticated: false,
     });
 
     renderWithProviders(<DashboardPage />);
@@ -68,29 +64,10 @@ describe('DashboardPage', () => {
     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
-  it('should render error alert when there is an error', () => {
-    mockUseAuth.mockReturnValue({
-      user: null,
-      isLoading: false,
-      error: 'Test error message',
-      clearError: jest.fn(),
-      logout: jest.fn(),
-      isAuthenticated: false,
-    });
-
-    renderWithProviders(<DashboardPage />);
-
-    expect(screen.getByText('Test error message')).toBeInTheDocument();
-  });
-
   it('should render loading message when user has no profile', () => {
     mockUseAuth.mockReturnValue({
       user: null,
       isLoading: false,
-      error: null,
-      clearError: jest.fn(),
-      logout: jest.fn(),
-      isAuthenticated: false,
     });
 
     renderWithProviders(<DashboardPage />);
@@ -105,47 +82,11 @@ describe('DashboardPage', () => {
     mockUseAuth.mockReturnValue({
       user: mockUser,
       isLoading: false,
-      error: null,
-      clearError: jest.fn(),
-      logout: jest.fn(),
-      isAuthenticated: true,
     });
 
     renderWithProviders(<DashboardPage />);
 
     expect(screen.getByTestId('dashboard')).toBeInTheDocument();
     expect(screen.getByText('Dashboard for Test User')).toBeInTheDocument();
-  });
-
-  it('should call clearError when component mounts with error', () => {
-    const mockClearError = jest.fn();
-    mockUseAuth.mockReturnValue({
-      user: mockUser,
-      isLoading: false,
-      error: 'Test error',
-      clearError: mockClearError,
-      logout: jest.fn(),
-      isAuthenticated: true,
-    });
-
-    renderWithProviders(<DashboardPage />);
-
-    expect(mockClearError).toHaveBeenCalled();
-  });
-
-  it('should not call clearError when there is no error', () => {
-    const mockClearError = jest.fn();
-    mockUseAuth.mockReturnValue({
-      user: mockUser,
-      isLoading: false,
-      error: null,
-      clearError: mockClearError,
-      logout: jest.fn(),
-      isAuthenticated: true,
-    });
-
-    renderWithProviders(<DashboardPage />);
-
-    expect(mockClearError).not.toHaveBeenCalled();
   });
 });

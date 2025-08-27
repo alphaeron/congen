@@ -29,6 +29,7 @@ import {
   Snackbar,
   CircularProgress,
 } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React from 'react';
 import { Link } from 'react-router';
 
@@ -39,6 +40,8 @@ import {
   deleteAllPersonalData,
 } from '../api/gdpr';
 import type { UserConsent } from '../api/types';
+
+import type { AxiosError } from 'axios';
 
 /**
  * GDPR Compliance Section component for user profile.
@@ -59,10 +62,10 @@ import type { UserConsent } from '../api/types';
  * @since 1.0.0
  */
 export function GdprComplianceSection(): React.ReactElement {
+  const { enqueueSnackbar } = useSnackbar();
   const [consentStatus, setConsentStatus] = React.useState<UserConsent | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [operationLoading, setOperationLoading] = React.useState<string | null>(null);
-  const [error, setError] = React.useState<string | null>(null);
   const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
   // Dialog states
@@ -82,8 +85,8 @@ export function GdprComplianceSection(): React.ReactElement {
       const response = await getConsentStatus();
       setConsentStatus(response.data);
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to load consent status');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load consent status', { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -99,8 +102,8 @@ export function GdprComplianceSection(): React.ReactElement {
         newConsentValue ? 'Consent given successfully' : 'Consent withdrawn successfully'
       );
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to update consent');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to update consent', { variant: 'error' });
     } finally {
       setOperationLoading(null);
     }
@@ -125,8 +128,8 @@ export function GdprComplianceSection(): React.ReactElement {
 
       setSuccessMessage('Personal data exported successfully');
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to export data');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to export data', { variant: 'error' });
     } finally {
       setOperationLoading(null);
     }
@@ -134,7 +137,7 @@ export function GdprComplianceSection(): React.ReactElement {
 
   const handleDataDeletion = async () => {
     if (deleteConfirmation !== 'DELETE_ALL_MY_DATA') {
-      setError('Please type "DELETE_ALL_MY_DATA" to confirm deletion');
+      enqueueSnackbar('Please type "DELETE_ALL_MY_DATA" to confirm deletion', { variant: 'error' });
       return;
     }
 
@@ -148,8 +151,8 @@ export function GdprComplianceSection(): React.ReactElement {
         window.location.href = '/login';
       }, 3000);
     } catch (err: unknown) {
-      const axiosError = err as { response?: { data?: { message?: string } } };
-      setError(axiosError.response?.data?.message || 'Failed to delete data');
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to delete data', { variant: 'error' });
     } finally {
       setOperationLoading(null);
     }
@@ -415,11 +418,6 @@ export function GdprComplianceSection(): React.ReactElement {
         </Alert>
       </Snackbar>
 
-      <Snackbar open={!!error} autoHideDuration={6000} onClose={() => setError(null)}>
-        <Alert severity="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      </Snackbar>
     </React.Fragment>
   );
 }

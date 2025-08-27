@@ -1,3 +1,4 @@
+import { useSnackbar } from 'notistack';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
@@ -9,10 +10,8 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  error: string | null;
   login: () => Promise<void>;
   logout: () => Promise<void>;
-  clearError: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,16 +30,15 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const oidcAuth = useOidcAuth();
+  const { enqueueSnackbar } = useSnackbar();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const login = async (): Promise<void> => {
     try {
       await oidcAuth.signinRedirect();
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Login failed. Please try again.');
+    } catch {
+      enqueueSnackbar('Login failed. Please try again.', { variant: 'error' });
     }
   };
 
@@ -49,14 +47,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Use signoutRedirect to properly logout and redirect to the post_logout_redirect_uri
       await oidcAuth.signoutRedirect();
       setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      setError('Logout failed. Please try again.');
+    } catch {
+      enqueueSnackbar('Logout failed. Please try again.', { variant: 'error' });
     }
-  };
-
-  const clearError = (): void => {
-    setError(null);
   };
 
   // Set up token getter for API requests
@@ -77,8 +70,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const userProfile = await getCurrentUser();
           setUser(userProfile);
         } catch (error) {
-          console.error('Error syncing user profile:', error);
-
           // If user doesn't have a profile, create one automatically
           // This handles both 404 status codes and "Resource not found" error messages
           if (
@@ -97,12 +88,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           ) {
             try {
               setIsLoading(true);
-              setError(null);
               const newUserProfile = await createUserProfile();
               setUser(newUserProfile);
-            } catch (createError) {
-              console.error('Error creating profile:', createError);
-              setError('Failed to create profile. Please try again.');
+            } catch {
+              enqueueSnackbar('Failed to create profile. Please try again.', { variant: 'error' });
             } finally {
               setIsLoading(false);
             }
@@ -121,19 +110,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle OIDC errors
   useEffect(() => {
     if (oidcAuth.error) {
-      setError(oidcAuth.error.message);
+      enqueueSnackbar(oidcAuth.error.message, { variant: 'error' });
       setUser(null);
     }
-  }, [oidcAuth.error]);
+  }, [oidcAuth.error, enqueueSnackbar]);
 
   const value: AuthContextType = {
     user,
     isAuthenticated: oidcAuth.isAuthenticated,
     isLoading: oidcAuth.isLoading || isLoading,
-    error,
     login,
     logout,
-    clearError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

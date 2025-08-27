@@ -23,29 +23,21 @@ const mockUser: User = {
 };
 
 const TestComponent: React.FC = () => {
-  const { user, isAuthenticated, isLoading, error, login, logout, clearError } = useAuth();
+  const { user, isAuthenticated, isLoading, login, logout } = useAuth();
   return (
     <div>
       <div data-testid="user">{user ? user.name : 'No user'}</div>
       <div data-testid="isAuthenticated">{isAuthenticated.toString()}</div>
       <div data-testid="isLoading">{isLoading.toString()}</div>
-      <div data-testid="error">{error || 'No error'}</div>
       <button onClick={login}>Login</button>
       <button onClick={logout}>Logout</button>
-      <button onClick={clearError}>Clear Error</button>
     </div>
   );
 };
 
 describe('AuthContext', () => {
-  let originalConsoleError: typeof console.error;
-
   beforeEach(() => {
     jest.clearAllMocks();
-    // Suppress console.error during tests
-    originalConsoleError = console.error;
-    console.error = jest.fn();
-
     mockUseOidcAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
@@ -55,11 +47,6 @@ describe('AuthContext', () => {
       signoutRedirect: jest.fn(),
       removeUser: jest.fn(),
     } as unknown as ReturnType<typeof useOidcAuth>);
-  });
-
-  afterEach(() => {
-    // Restore console.error
-    console.error = originalConsoleError;
   });
 
   it('should provide authentication context', () => {
@@ -72,7 +59,6 @@ describe('AuthContext', () => {
     expect(screen.getByTestId('user')).toHaveTextContent('No user');
     expect(screen.getByTestId('isAuthenticated')).toHaveTextContent('false');
     expect(screen.getByTestId('isLoading')).toHaveTextContent('false');
-    expect(screen.getByTestId('error')).toHaveTextContent('No error');
   });
 
   it('should handle login', async () => {

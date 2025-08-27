@@ -15,6 +15,7 @@ import {
   flexRender,
   createColumnHelper,
 } from '@tanstack/react-table';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { getProgrammedExercisesByStage } from '../api/programmedExercise';
@@ -76,16 +77,15 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   onWorkoutDetailsUpdate,
 }) => {
   const theme = useTheme();
+  const { enqueueSnackbar } = useSnackbar();
   const [workout, setWorkout] = useState<ProgrammedWorkout | null>(null);
   const [stages, setStages] = useState<WorkoutStageWithExercises[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadWorkoutDetails = async () => {
       try {
         setIsLoading(true);
-        setError(null);
 
         // Load workout details
         const workoutData = await getProgrammedWorkout(workoutId);
@@ -117,9 +117,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         );
 
         setStages(stagesWithExercises);
-      } catch (err) {
-        console.error('Error loading workout details:', err);
-        setError('Failed to load workout details. Please try again.');
+      } catch {
+        enqueueSnackbar('Failed to load workout details. Please try again.', { variant: 'error' });
       } finally {
         setIsLoading(false);
       }
@@ -299,14 +298,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert severity="error" sx={{ mb: 3 }}>
-        {error}
-      </Alert>
     );
   }
 
