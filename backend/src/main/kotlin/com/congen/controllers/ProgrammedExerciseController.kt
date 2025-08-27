@@ -50,7 +50,10 @@ import reactor.core.publisher.Mono
  * - **422 Unprocessable Entity**: When validation fails
  * - **500 Internal Server Error**: When database operations fail
  *
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
+ * @param programmedExerciseService Service for programmed exercise operations
+ * @param workoutStageService Service for workout stage operations
+ * @param keycloakUtil Utility for Keycloak operations
+ * @param gdprComplianceService Service for GDPR compliance operations
  *
  * @author Congen Development Team
  * @since 1.0.0

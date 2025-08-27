@@ -53,6 +53,9 @@ import reactor.core.publisher.Mono
  * - **Bodyweight**: Pull-up bars, dip bars, resistance bands
  * - **Accessories**: Foam rollers, yoga mats, stability balls
  *
+ * @param equipmentDAL Data access layer for equipment operations
+ * @param exerciseEquipmentDAL Data access layer for exercise-equipment relationships
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

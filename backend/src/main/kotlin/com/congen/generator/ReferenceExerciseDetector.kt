@@ -17,9 +17,9 @@ class ReferenceExerciseDetector {
     /**
      * Represents a reference exercise candidate with a score.
      *
-     * @param exercise The reference exercise candidate
-     * @param score The overall similarity score (0.0 to 1.0)
-     * @param factors Detailed scoring factors for transparency
+     * @property exercise The reference exercise candidate
+     * @property score The overall similarity score (0.0 to 1.0)
+     * @property factors Detailed scoring factors for transparency
      */
     data class ReferenceCandidate(
         val exercise: Exercise,

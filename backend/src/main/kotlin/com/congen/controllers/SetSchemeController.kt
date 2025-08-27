@@ -51,6 +51,9 @@ import reactor.core.publisher.Mono
  * - **500 Internal Server Error**: When database operations fail
  *
  * @param setSchemeService Service layer for set scheme operations
+ * @param keycloakUtil Utility for Keycloak operations
+ * @param programmedExerciseService Service for programmed exercise operations
+ * @param gdprComplianceService Service for GDPR compliance operations
  *
  * @author Congen Development Team
  * @since 1.0.0

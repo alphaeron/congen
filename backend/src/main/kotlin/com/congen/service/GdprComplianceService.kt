@@ -377,6 +377,7 @@ class GdprComplianceService(
      * This method provides a convenient way to ensure operations are only
      * performed when the user has given consent for data processing.
      *
+     * @param T The type of the operation result
      * @param keycloakId The user's Keycloak ID
      * @param operation The operation to execute if consent is given
      * @return Mono containing the result of the operation, or empty if no consent

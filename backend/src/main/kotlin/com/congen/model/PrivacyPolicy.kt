@@ -54,9 +54,9 @@ data class PrivacyPolicy(
 /**
  * Data controller information for GDPR compliance.
  *
- * @param name Name of the data controller organization
- * @param contact Contact information for privacy inquiries
- * @param dpo Data Protection Officer contact (optional)
+ * @property name Name of the data controller organization
+ * @property contact Contact information for privacy inquiries
+ * @property dpo Data Protection Officer contact (optional)
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -73,10 +73,10 @@ data class DataController(
 /**
  * Data processing information for GDPR transparency.
  *
- * @param purposes List of purposes for data processing
- * @param legalBasis Legal basis for data processing
- * @param dataTypes Types of data collected
- * @param retentionPeriods Data retention periods by type
+ * @property purposes List of purposes for data processing
+ * @property legalBasis Legal basis for data processing
+ * @property dataTypes Types of data collected
+ * @property retentionPeriods Data retention periods by type
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -95,12 +95,12 @@ data class DataProcessing(
 /**
  * User rights information under GDPR.
  *
- * @param access Right of access information
- * @param rectification Right to rectification information
- * @param erasure Right to erasure information
- * @param portability Right to data portability information
- * @param objection Right to object information
- * @param complaint Right to file a complaint information
+ * @property access Right of access information
+ * @property rectification Right to rectification information
+ * @property erasure Right to erasure information
+ * @property portability Right to data portability information
+ * @property objection Right to object information
+ * @property complaint Right to file a complaint information
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @JsonIgnoreProperties(ignoreUnknown = true)

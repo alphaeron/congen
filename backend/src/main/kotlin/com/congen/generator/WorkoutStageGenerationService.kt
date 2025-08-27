@@ -52,15 +52,6 @@ import kotlin.random.Random
  * @param weightSelectionService Service for conjugate-specific weight selection
  * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preferences
  * @param exerciseSelectionService Service for exercise selection logic
- * @param workoutStageDAL Data access layer for workout stage operations
- * @param workoutStageTypeDAL Data access layer for workout stage type operations
- * @param programmedExerciseDAL Data access layer for programmed exercise operations
- * @param setSchemeDAL Data access layer for set scheme operations
- * @param setSchemeService Service for set scheme operations
- * @param prilepinGuidelinesService Service for Prilepin guidelines
- * @param weightSelectionService Service for weight selection
- * @param userWeightUnitPreferenceDAL Data access layer for user weight unit preference operations
- * @param exerciseSelectionService Service for exercise selection
  * @param movementBalanceService Service for movement balance
  * @param sessionTimeCalculator Service for session time calculations
  *

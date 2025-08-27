@@ -60,10 +60,9 @@ class AuditService(
      * This method creates a structured audit log entry with minimal necessary
      * information for GDPR compliance while respecting data minimization principles.
      *
-     * @param keycloakId The user's Keycloak ID.  NULL for system operations.
-     * @param operation The type of operation performed
+     * @param keycloakId The user's Keycloak ID
+     * @param operation The operation being performed
      * @param dataType The type of data accessed/modified
-     * @param timestamp When the operation occurred
      * @param userId Optional user ID performing the operation (for admin access)
      * @param additionalInfo Optional additional context
      * @return Mono that completes when log is written

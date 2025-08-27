@@ -61,10 +61,10 @@ class ExerciseMatchingService(
         /**
          * Result of exercise matching with similarity score and reference exercise.
          *
-         * @param referenceExercise The best matching reference exercise
-         * @param similarityScore The overall similarity score (0.0 to 1.0)
-         * @param movementPattern The classified movement pattern
-         * @param factors Detailed similarity factors for transparency
+         * @property referenceExercise The best matching reference exercise
+         * @property similarityScore The overall similarity score (0.0 to 1.0)
+         * @property movementPattern The classified movement pattern
+         * @property factors Detailed similarity factors for transparency
          */
         data class ExerciseMatch(
             val referenceExercise: Exercise,
@@ -76,10 +76,10 @@ class ExerciseMatchingService(
         /**
          * Detailed similarity factors for transparency.
          *
-         * @param nameSimilarity Similarity based on exercise name (0.0 to 1.0)
-         * @param movementPatternSimilarity Similarity based on movement pattern (0.0 or 1.0)
-         * @param equipmentSimilarity Similarity based on equipment overlap (0.0 to 1.0)
-         * @param muscleGroupSimilarity Similarity based on muscle group overlap (0.0 to 1.0)
+         * @property nameSimilarity Similarity based on exercise name (0.0 to 1.0)
+         * @property movementPatternSimilarity Similarity based on movement pattern (0.0 or 1.0)
+         * @property equipmentSimilarity Similarity based on equipment overlap (0.0 to 1.0)
+         * @property muscleGroupSimilarity Similarity based on muscle group overlap (0.0 to 1.0)
          */
         data class SimilarityFactors(
             val nameSimilarity: Double,

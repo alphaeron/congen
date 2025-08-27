@@ -50,6 +50,7 @@ import reactor.core.publisher.Mono
  *
  * @param userEquipmentDAL Data access layer for user equipment operations
  * @param keycloakUtil Utility for Keycloak operations
+ * @param gdprComplianceService Service for GDPR compliance operations
  *
  * @author Congen Development Team
  * @since 1.0.0

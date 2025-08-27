@@ -47,6 +47,8 @@ import reactor.core.publisher.Mono
  * - Build a workout focusing on back muscles
  * - Ensure balanced training across all muscle groups
  *
+ * @param exerciseMuscleDAL Data access layer for exercise-muscle relationships
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

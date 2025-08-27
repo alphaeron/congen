@@ -47,7 +47,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
  * @since 1.0.0
  */
 @ControllerAdvice
-public class ExceptionHandlingController {
+class ExceptionHandlingController {
     companion object {
         /** Logger instance for this class. */
         private val logger = LoggerFactory.getLogger(ExceptionHandlingController::class.java)

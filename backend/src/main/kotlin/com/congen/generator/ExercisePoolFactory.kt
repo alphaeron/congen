@@ -22,6 +22,9 @@ import reactor.core.publisher.Mono
  * @param exerciseMuscleDAL Data access layer for exercise muscle relationships
  * @param exerciseWorkoutTypeDAL Data access layer for exercise workout type relationships
  * @param exerciseMatchingService Service for exercise matching and scoring
+ * @param exerciseDAL Data access layer for exercise operations
+ * @param userEquipmentDAL Data access layer for user equipment operations
+ * @param userExercisePreferenceDAL Data access layer for user exercise preference operations
  *
  * @author Congen Development Team
  * @since 1.0.0

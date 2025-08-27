@@ -41,7 +41,6 @@ import java.util.Base64
  *     .subscribe()
  * ```
  *
- * @param memcachedClient The underlying Memcached client
  * @param memcachedClient Memcached client for cache operations
  * @param objectMapper Jackson ObjectMapper for JSON serialization
  * @param memcachedScheduler Dedicated scheduler for Memcached operations

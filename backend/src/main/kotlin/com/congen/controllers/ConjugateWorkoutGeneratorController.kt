@@ -43,6 +43,9 @@ import reactor.core.publisher.Mono
  * - **Validation**: Comprehensive validation of program parameters
  *
  * @param conjugateWorkoutGeneratorService Service for generating conjugate workout programs
+ * @param programService Service for program operations
+ * @param keycloakUtil Utility for Keycloak operations
+ * @param gdprComplianceService Service for GDPR compliance operations
  *
  * @author Congen Development Team
  * @since 1.0.0

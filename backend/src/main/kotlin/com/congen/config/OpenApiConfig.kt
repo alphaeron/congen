@@ -11,23 +11,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * OpenAPI configuration for automatic API documentation generation.
- *
- * This configuration sets up Swagger/OpenAPI documentation that is automatically
- * generated from the Spring Boot controllers and models. The documentation
- * includes:
- *
- * - API endpoints with request/response schemas
- * - Model definitions with validation rules
- * - Interactive API testing interface
- * - Server information and contact details
- *
- * @param openApiProps The OpenAPI properties loaded from configuration.
- *
- * @author Congen Development Team
- * @since 1.0.0
- */
-/**
  * Configuration properties for OpenAPI documentation.
  *
  * This class contains configuration properties for OpenAPI documentation generation.

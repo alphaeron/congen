@@ -54,6 +54,8 @@ data class HealthCheckResponse(
 
 /**
  * Possible health status values for a health check.
+ *
+ * @property value The string value representing this health status.
  */
 @Schema(description = "Possible health status values.")
 enum class HealthStatus(
@@ -82,15 +84,15 @@ enum class HealthStatus(
 /**
  * Represents the health check for a specific component.
  *
- * @param componentId Component identifier.
- * @param componentType Type of component.
- * @param observedValue Observed value.
- * @param observedUnit Observed unit.
- * @param status Status of the component.
- * @param affectedEndpoints Endpoints affected by this component.
- * @param time Timestamp of the check.
- * @param output Output message.
- * @param links Related links.
+ * @property componentId Component identifier.
+ * @property componentType Type of component.
+ * @property observedValue Observed value.
+ * @property observedUnit Observed unit.
+ * @property status Status of the component.
+ * @property affectedEndpoints Endpoints affected by this component.
+ * @property time Timestamp of the check.
+ * @property output Output message.
+ * @property links Related links.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Represents the health check for a specific component.")
@@ -127,10 +129,10 @@ data class HealthCheck(
 /**
  * Represents the health check for the database.
  *
- * @param status Status of the database.
- * @param responseTime Response time in milliseconds.
- * @param error Error message, if any.
- * @param details Additional details.
+ * @property status Status of the database.
+ * @property responseTime Response time in milliseconds.
+ * @property error Error message, if any.
+ * @property details Additional details.
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy::class)
 @Schema(description = "Represents the health check for the database.")

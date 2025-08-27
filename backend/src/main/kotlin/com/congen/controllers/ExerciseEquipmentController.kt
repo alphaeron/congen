@@ -48,6 +48,8 @@ import reactor.core.publisher.Mono
  * - Build a bodyweight-only workout
  * - Filter exercises based on home gym equipment
  *
+ * @param exerciseEquipmentDAL Data access layer for exercise-equipment relationships
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

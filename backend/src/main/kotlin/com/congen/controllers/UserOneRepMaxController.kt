@@ -50,6 +50,10 @@ import java.math.BigDecimal
  * - **500 Internal Server Error**: When database operations fail
  *
  * @param userOneRepMaxDAL Data access layer for user one rep max operations
+ * @param userOneRepMaxService Service for user one rep max operations
+ * @param validationUtil Utility for validation operations
+ * @param keycloakUtil Utility for Keycloak operations
+ * @param gdprComplianceService Service for GDPR compliance operations
  *
  * @author Congen Development Team
  * @since 1.0.0

@@ -49,6 +49,8 @@ import reactor.core.publisher.Mono
  * - Get all squat movements for power training
  * - Retrieve cardio exercises for endurance sessions
  *
+ * @param exerciseWorkoutTypeDAL Data access layer for exercise-workout type relationships
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

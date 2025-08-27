@@ -61,11 +61,10 @@ class MovementBalanceService {
     /**
      * Data class representing the current state of movement balance in a workout.
      *
-     * @param selectedExercises List of exercises already selected for the workout
-     * @param selectedExercises List of exercises currently selected for the workout
-     * @param movementTypeCounts Count of each movement type in the workout
-     * @param pushVolume Total volume of push movements (sets * reps * weight)
-     * @param pullVolume Total volume of pull movements (sets * reps * weight)
+     * @property selectedExercises List of exercises currently selected for the workout
+     * @property movementTypeCounts Count of each movement type in the workout
+     * @property pushVolume Total volume of push movements (sets * reps * weight)
+     * @property pullVolume Total volume of pull movements (sets * reps * weight)
      */
     data class MovementBalanceState(
         val selectedExercises: List<Exercise> = emptyList(),

@@ -27,6 +27,9 @@ import reactor.core.publisher.Mono
  * Provides endpoints for creating, retrieving, updating, and managing user profiles.
  * All operations require proper authentication and authorization.
  *
+ * @param userService Service for user operations
+ * @param keycloakUtil Utility for Keycloak operations
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

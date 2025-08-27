@@ -48,6 +48,9 @@ import reactor.core.publisher.Mono
  * - `404 Not Found`: Muscle not found or no exercises associated
  * - `500 Internal Server Error`: Database or system errors
  *
+ * @param muscleDAL Data access layer for muscle operations
+ * @param exerciseMuscleDAL Data access layer for exercise-muscle relationships
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */

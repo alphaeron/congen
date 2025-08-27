@@ -53,6 +53,10 @@ import reactor.core.publisher.Mono
  * - Get equipment requirements for an exercise
  * - Create new exercises for the system
  *
+ * @param exerciseDAL Data access layer for exercise operations
+ * @param exerciseEquipmentDAL Data access layer for exercise-equipment relationships
+ * @param exerciseMuscleDAL Data access layer for exercise-muscle relationships
+ *
  * @author Congen Development Team
  * @since 1.0.0
  */
