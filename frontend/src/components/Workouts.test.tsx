@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 

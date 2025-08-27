@@ -53,8 +53,12 @@ describe('DashboardOverview', () => {
 
   it('should render loading state initially', async () => {
     // Use a delayed response to ensure loading state is visible
-    mock.onGet('/program/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/program/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/user_one_rep_max/user/test-user-id')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -111,7 +115,9 @@ describe('DashboardOverview', () => {
     await waitFor(() => {
       expect(screen.getByText('Recent 1RM Records')).toBeInTheDocument();
       // Check for Bench Press in the Recent 1RM Records section specifically
-      const recentOneRepMaxSection = screen.getByText('Recent 1RM Records').closest('.MuiCard-root');
+      const recentOneRepMaxSection = screen
+        .getByText('Recent 1RM Records')
+        .closest('.MuiCard-root');
       expect(recentOneRepMaxSection).toHaveTextContent('Bench Press');
       expect(recentOneRepMaxSection).toHaveTextContent('225 KG');
     });

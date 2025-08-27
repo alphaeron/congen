@@ -47,7 +47,9 @@ export function PrivacyPolicyPage(): React.ReactElement {
         setPrivacyPolicy(response.data);
       } catch (err: unknown) {
         const axiosError = err as AxiosError<{ message?: string }>;
-        enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load privacy policy', { variant: 'error' });
+        enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load privacy policy', {
+          variant: 'error',
+        });
       } finally {
         setLoading(false);
       }

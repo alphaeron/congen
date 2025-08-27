@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import * as React from 'react';
 
 import { PrivacyPolicyPage } from './PrivacyPolicyPage';
@@ -42,11 +42,7 @@ const mockPrivacyPolicy = {
 
 // Custom render function with providers
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <SnackbarProvider>
-      {component}
-    </SnackbarProvider>
-  );
+  return render(<SnackbarProvider>{component}</SnackbarProvider>);
 };
 
 describe('PrivacyPolicyPage', () => {

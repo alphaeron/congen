@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 
 import { ProgramManagement } from './ProgramManagement';
@@ -17,9 +17,7 @@ const theme = createTheme();
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <SnackbarProvider>
-      <ThemeProvider theme={theme}>
-        {component}
-      </ThemeProvider>
+      <ThemeProvider theme={theme}>{component}</ThemeProvider>
     </SnackbarProvider>
   );
 };
@@ -67,7 +65,7 @@ describe('ProgramManagement', () => {
     renderWithProviders(<ProgramManagement user={mockUser} />);
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    
+
     // Wait for loading to complete to avoid act warnings
     await waitFor(() => {
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
@@ -118,9 +116,12 @@ describe('ProgramManagement', () => {
 
     renderWithProviders(<ProgramManagement user={mockUser} />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Failed to load programs. Please try again.')).toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Failed to load programs. Please try again.')).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
   it('opens create program dialog when create button is clicked', async () => {
@@ -300,9 +301,12 @@ describe('ProgramManagement', () => {
 
     renderWithProviders(<ProgramManagement user={mockUser} />);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Created:/)).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Created:/)).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   });
 
   it('shows pause/activate button for programs', async () => {

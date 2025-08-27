@@ -71,7 +71,9 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       setOneRepMaxes(oneRepMaxesData);
       setAllExercises(allExercisesData);
     } catch {
-      enqueueSnackbar('Failed to load exercise history data. Please try again.', { variant: 'error' });
+      enqueueSnackbar('Failed to load exercise history data. Please try again.', {
+        variant: 'error',
+      });
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +160,12 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             icon={<ShowChartIcon />}
             iconPosition="start"
           />
-          <Tab label="Exercise Information" value="usage" icon={<InfoIcon />} iconPosition="start" />
+          <Tab
+            label="Exercise Information"
+            value="usage"
+            icon={<InfoIcon />}
+            iconPosition="start"
+          />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
@@ -233,7 +240,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
                               size="small"
                               sx={{ mr: 1 }}
                             />
-
                           </Box>
 
                           {stat.oneRepMax && (

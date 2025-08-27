@@ -86,7 +86,11 @@ describe('UserProfilePage', () => {
     renderWithProviders(<UserProfilePage />);
 
     expect(screen.getByText('Creating Your Profile')).toBeInTheDocument();
-    expect(screen.getByText('Your profile is being created automatically using your Keycloak information...')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Your profile is being created automatically using your Keycloak information...'
+      )
+    ).toBeInTheDocument();
     expect(screen.queryByText('User Profile')).not.toBeInTheDocument();
   });
 

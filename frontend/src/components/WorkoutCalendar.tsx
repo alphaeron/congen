@@ -184,9 +184,7 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
                             }
                           />
                           <Box display="flex" alignItems="center" gap={1} sx={{ ml: 1 }}>
-                            {item.isToday && (
-                              <Chip label="Today" color="primary" size="small" />
-                            )}
+                            {item.isToday && <Chip label="Today" color="primary" size="small" />}
                             {item.isCompleted && (
                               <Chip
                                 icon={<CheckCircleIcon />}

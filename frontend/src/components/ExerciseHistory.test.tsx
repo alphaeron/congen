@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 
 import { ExerciseHistory } from './ExerciseHistory';
@@ -49,8 +49,6 @@ describe('ExerciseHistory', () => {
     updated_at: '2024-01-01T00:00:00Z',
   };
 
-
-
   beforeEach(() => {
     mock.reset();
     mockSetSearchParams.mockClear();
@@ -68,7 +66,7 @@ describe('ExerciseHistory', () => {
     renderWithProviders(<ExerciseHistory user={mockUser} />);
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
-    
+
     // Wait for loading to complete to avoid act warnings
     await waitFor(() => {
       expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();

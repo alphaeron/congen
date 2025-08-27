@@ -2,15 +2,7 @@ import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday'
 import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  Typography,
-  CircularProgress,
-  Chip,
-} from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography, CircularProgress, Chip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';

@@ -918,11 +918,12 @@ abstract class WorkoutStageGenerationService(
         userId: String,
         consistentRestSeconds: Int
     ): Mono<List<SetSchemeParams>> {
-        val undulatingPeriodizationGuidelines = prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-            dayType = dayType,
-            currentWeekNumber = currentWeekNumber,
-            movementRole = "accessory"
-        )
+        val undulatingPeriodizationGuidelines =
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber,
+                movementRole = "accessory"
+            )
         val intensity = undulatingPeriodizationGuidelines.second
 
         // For accessories, use "good" rep numbers (6, 8, 10, 12, 15) instead of random ranges

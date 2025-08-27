@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 
 import { WorkoutCalendar } from './WorkoutCalendar';
@@ -17,9 +17,7 @@ const theme = createTheme();
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <SnackbarProvider>
-      <ThemeProvider theme={theme}>
-        {component}
-      </ThemeProvider>
+      <ThemeProvider theme={theme}>{component}</ThemeProvider>
     </SnackbarProvider>
   );
 };
@@ -62,8 +60,12 @@ describe('WorkoutCalendar', () => {
 
   it('renders loading state initially', async () => {
     // Use a delayed response to ensure loading state is visible
-    mock.onGet('/program/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock.onGet('/programmed_workout/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/program/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/programmed_workout/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
 
     await act(async () => {
       render(<WorkoutCalendar user={mockUser} />);
@@ -87,7 +89,9 @@ describe('WorkoutCalendar', () => {
 
     // When no active program, it shows a message instead of sections
     expect(screen.getByText('No Active Program')).toBeInTheDocument();
-    expect(screen.getByText(/Create or activate a program to view your workout calendar/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Create or activate a program to view your workout calendar/)
+    ).toBeInTheDocument();
   }, 10000);
 
   it('displays active program information', async () => {

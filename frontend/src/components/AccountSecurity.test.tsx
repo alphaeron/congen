@@ -93,9 +93,7 @@ describe('AccountSecurity', () => {
   });
 
   it('deletes account successfully', async () => {
-    mock
-      .onDelete('/gdpr/delete_all_data')
-      .reply(200, { message: 'Account deleted successfully' });
+    mock.onDelete('/gdpr/delete_all_data').reply(200, { message: 'Account deleted successfully' });
 
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
 
@@ -115,9 +113,7 @@ describe('AccountSecurity', () => {
   }, 10000);
 
   it('shows error when account deletion fails', async () => {
-    mock
-      .onDelete('/gdpr/delete_all_data')
-      .reply(500, { message: 'Internal server error' });
+    mock.onDelete('/gdpr/delete_all_data').reply(500, { message: 'Internal server error' });
 
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
 
@@ -166,9 +162,7 @@ describe('AccountSecurity', () => {
   });
 
   it('verifies API call is made with correct endpoint', async () => {
-    mock
-      .onDelete('/gdpr/delete_all_data')
-      .reply(200, { message: 'Account deleted successfully' });
+    mock.onDelete('/gdpr/delete_all_data').reply(200, { message: 'Account deleted successfully' });
 
     renderWithTheme(<AccountSecurity user={mockUser} onAccountDeleted={mockOnAccountDeleted} />);
 

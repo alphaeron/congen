@@ -314,7 +314,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
           </Button>
         </DialogActions>
       </Dialog>
-
     </React.Fragment>
   );
 };

@@ -15,9 +15,7 @@ const mock = new MockAdapter(ENDPOINT);
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <SnackbarProvider>
-      <MemoryRouter>
-        {component}
-      </MemoryRouter>
+      <MemoryRouter>{component}</MemoryRouter>
     </SnackbarProvider>
   );
 };

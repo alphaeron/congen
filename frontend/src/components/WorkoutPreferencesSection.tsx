@@ -140,7 +140,9 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSuccessMessage('Program preferences saved successfully');
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to save program preferences', { variant: 'error' });
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to save program preferences', {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -164,7 +166,10 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSuccessMessage('Weight unit preference added successfully');
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to add weight unit preference', { variant: 'error' });
+      enqueueSnackbar(
+        axiosError.response?.data?.message || 'Failed to add weight unit preference',
+        { variant: 'error' }
+      );
     } finally {
       setSaving(false);
     }
@@ -185,7 +190,10 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setSuccessMessage('Weight unit preference deleted successfully');
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to delete weight unit preference', { variant: 'error' });
+      enqueueSnackbar(
+        axiosError.response?.data?.message || 'Failed to delete weight unit preference',
+        { variant: 'error' }
+      );
     } finally {
       setSaving(false);
     }

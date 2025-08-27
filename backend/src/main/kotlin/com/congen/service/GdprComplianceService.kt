@@ -211,7 +211,7 @@ class GdprComplianceService(
      * - Program preferences (days per week, session length)
      * - One-rep-max records
      * - Weight unit preferences
-      * - Complete training programs with workouts
+     * - Complete training programs with workouts
      * - Performance data and set schemes
      * - Audit logs for data access history
      * - Data retention policies

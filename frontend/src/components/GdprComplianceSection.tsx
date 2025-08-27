@@ -86,7 +86,9 @@ export function GdprComplianceSection(): React.ReactElement {
       setConsentStatus(response.data);
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load consent status', { variant: 'error' });
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load consent status', {
+        variant: 'error',
+      });
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,9 @@ export function GdprComplianceSection(): React.ReactElement {
       );
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to update consent', { variant: 'error' });
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to update consent', {
+        variant: 'error',
+      });
     } finally {
       setOperationLoading(null);
     }
@@ -129,7 +133,9 @@ export function GdprComplianceSection(): React.ReactElement {
       setSuccessMessage('Personal data exported successfully');
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to export data', { variant: 'error' });
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to export data', {
+        variant: 'error',
+      });
     } finally {
       setOperationLoading(null);
     }
@@ -152,7 +158,9 @@ export function GdprComplianceSection(): React.ReactElement {
       }, 3000);
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to delete data', { variant: 'error' });
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to delete data', {
+        variant: 'error',
+      });
     } finally {
       setOperationLoading(null);
     }
@@ -417,7 +425,6 @@ export function GdprComplianceSection(): React.ReactElement {
           {successMessage}
         </Alert>
       </Snackbar>
-
     </React.Fragment>
   );
 }

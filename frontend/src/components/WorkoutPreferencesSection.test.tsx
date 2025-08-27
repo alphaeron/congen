@@ -58,9 +58,12 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Wait for loading to complete
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     // Then check for the content
     expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
@@ -80,9 +83,12 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Wait for loading to complete first
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByDisplayValue('3')).toBeInTheDocument(); // Default days per week
     expect(screen.getByDisplayValue('60')).toBeInTheDocument(); // Default session length
@@ -99,9 +105,12 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Wait for loading to complete first
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByText('Save Program Preferences')).toBeInTheDocument();
   });
@@ -117,9 +126,12 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Wait for loading to complete first
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByText('Add Preference')).toBeInTheDocument();
   });
@@ -135,9 +147,12 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Wait for loading to complete first
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     const addButton = screen.getByText('Add Preference');
     fireEvent.click(addButton);
@@ -158,9 +173,12 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Wait for loading to complete first
-    await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByText('3 days/week')).toBeInTheDocument();
     expect(screen.getAllByText('60 minutes')).toHaveLength(2); // Appears in summary and select
@@ -170,7 +188,9 @@ describe('WorkoutPreferencesSection', () => {
 
   it('should handle loading state', async () => {
     // Mock slow API response to ensure loading state is visible
-    mock.onGet('/exercise/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/exercise/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
     mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
     mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
 

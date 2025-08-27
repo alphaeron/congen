@@ -165,9 +165,7 @@ describe('UserProfile', () => {
     fireEvent.click(deactivateButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Are you sure you want to delete your account/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Are you sure you want to delete your account/)).toBeInTheDocument();
     });
 
     expect(screen.getByText('Cancel')).toBeInTheDocument();

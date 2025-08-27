@@ -24,11 +24,7 @@ const mockUser: User = {
 };
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <SnackbarProvider>
-      {component}
-    </SnackbarProvider>
-  );
+  return render(<SnackbarProvider>{component}</SnackbarProvider>);
 };
 
 const TestComponent: React.FC = () => {
