@@ -163,40 +163,39 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
                           </ListItemIcon>
                           <ListItemText
                             primary={
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <Typography variant="body1">
-                                  {item.workout ? item.workout.name : 'Rest Day'}
-                                </Typography>
-                                {item.isToday && (
-                                  <Chip label="Today" color="primary" size="small" />
-                                )}
-                                {item.isCompleted && (
-                                  <Chip
-                                    icon={<CheckCircleIcon />}
-                                    label="Completed"
-                                    color="success"
-                                    size="small"
-                                  />
-                                )}
-                              </Box>
+                              <Typography component="span" variant="body1">
+                                {item.workout ? item.workout.name : 'Rest Day'}
+                              </Typography>
                             }
                             secondary={
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">
-                                  {item.date.toLocaleDateString('en-US', {
-                                    weekday: 'long',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })}
-                                </Typography>
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                {item.date.toLocaleDateString('en-US', {
+                                  weekday: 'long',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
                                 {item.workout && (
-                                  <Typography variant="caption" color="text.secondary">
+                                  <React.Fragment>
+                                    {' • '}
                                     Day {item.workout.day_number} • {activeProgram.name}
-                                  </Typography>
+                                  </React.Fragment>
                                 )}
-                              </Box>
+                              </Typography>
                             }
                           />
+                          <Box display="flex" alignItems="center" gap={1} sx={{ ml: 1 }}>
+                            {item.isToday && (
+                              <Chip label="Today" color="primary" size="small" />
+                            )}
+                            {item.isCompleted && (
+                              <Chip
+                                icon={<CheckCircleIcon />}
+                                label="Completed"
+                                color="success"
+                                size="small"
+                              />
+                            )}
+                          </Box>
                         </ListItem>
                         {index < upcomingWorkouts.length - 1 && <Divider />}
                       </React.Fragment>
@@ -234,37 +233,36 @@ export const WorkoutCalendar: React.FC<WorkoutCalendarProps> = () => {
                           </ListItemIcon>
                           <ListItemText
                             primary={
-                              <Box display="flex" alignItems="center" gap={1}>
-                                <Typography variant="body1">
-                                  {item.workout ? item.workout.name : 'Rest Day'}
-                                </Typography>
-                                {item.isCompleted && (
-                                  <Chip
-                                    icon={<CheckCircleIcon />}
-                                    label="Completed"
-                                    color="success"
-                                    size="small"
-                                  />
-                                )}
-                              </Box>
+                              <Typography component="span" variant="body1">
+                                {item.workout ? item.workout.name : 'Rest Day'}
+                              </Typography>
                             }
                             secondary={
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">
-                                  {item.date.toLocaleDateString('en-US', {
-                                    weekday: 'long',
-                                    month: 'short',
-                                    day: 'numeric',
-                                  })}
-                                </Typography>
+                              <Typography component="span" variant="body2" color="text.secondary">
+                                {item.date.toLocaleDateString('en-US', {
+                                  weekday: 'long',
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}
                                 {item.workout && (
-                                  <Typography variant="caption" color="text.secondary">
+                                  <React.Fragment>
+                                    {' • '}
                                     Day {item.workout.day_number} • {activeProgram.name}
-                                  </Typography>
+                                  </React.Fragment>
                                 )}
-                              </Box>
+                              </Typography>
                             }
                           />
+                          <Box display="flex" alignItems="center" gap={1} sx={{ ml: 1 }}>
+                            {item.isCompleted && (
+                              <Chip
+                                icon={<CheckCircleIcon />}
+                                label="Completed"
+                                color="success"
+                                size="small"
+                              />
+                            )}
+                          </Box>
                         </ListItem>
                         {index < pastWorkouts.length - 1 && <Divider />}
                       </React.Fragment>

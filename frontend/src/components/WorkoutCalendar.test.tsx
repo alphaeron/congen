@@ -103,8 +103,10 @@ describe('WorkoutCalendar', () => {
     });
 
     // The component shows the week number in the program summary section
-    expect(screen.getByText('2')).toBeInTheDocument(); // current_week_number
-    expect(screen.getByText('Current Week')).toBeInTheDocument();
+    // Look for the "2" that's specifically in the Current Week section
+    const currentWeekSection = screen.getByText('Current Week').closest('div');
+    expect(currentWeekSection).toBeInTheDocument();
+    expect(currentWeekSection).toHaveTextContent('2'); // current_week_number
   }, 10000);
 
   it('displays upcoming workouts', async () => {
