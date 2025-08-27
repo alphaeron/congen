@@ -1,5 +1,6 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 
@@ -13,8 +14,14 @@ const mock = new MockAdapter(ENDPOINT);
 // Create a theme for testing
 const theme = createTheme();
 
-const renderWithTheme = (component: React.ReactElement) => {
-  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <SnackbarProvider>
+      <ThemeProvider theme={theme}>
+        {component}
+      </ThemeProvider>
+    </SnackbarProvider>
+  );
 };
 
 describe('ProgramManagement', () => {
@@ -57,7 +64,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
     
@@ -71,7 +78,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByText('Program Management')).toBeInTheDocument();
@@ -83,7 +90,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByText('Test Program')).toBeInTheDocument();
@@ -97,7 +104,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByText('No Programs Yet')).toBeInTheDocument();
@@ -109,7 +116,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(500, { message: 'Internal server error' });
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByText('Failed to load programs. Please try again.')).toBeInTheDocument();
@@ -120,7 +127,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const createButton = screen.getByRole('button', { name: /create program/i });
@@ -138,7 +145,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onPost('/program/').reply(200, newProgram);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const createButton = screen.getByRole('button', { name: /create program/i });
@@ -165,7 +172,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const editButton = screen.getByLabelText(/edit program/i);
@@ -182,7 +189,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onPatch('/program/1').reply(200, updatedProgram);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const editButton = screen.getByLabelText(/edit program/i);
@@ -209,7 +216,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const deleteButton = screen.getByLabelText(/delete program/i);
@@ -225,7 +232,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onDelete('/program/1').reply(200, mockProgram);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const deleteButton = screen.getByLabelText(/delete program/i);
@@ -245,7 +252,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByText('Recent Workouts:')).toBeInTheDocument();
@@ -257,7 +264,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const createButton = screen.getByRole('button', { name: /create program/i });
@@ -272,7 +279,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       const createButton = screen.getByRole('button', { name: /create program/i });
@@ -291,7 +298,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByText(/Created:/)).toBeInTheDocument();
@@ -302,7 +309,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /pause/i })).toBeInTheDocument();
@@ -313,7 +320,7 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<ProgramManagement user={mockUser} />);
+    renderWithProviders(<ProgramManagement user={mockUser} />);
 
     await waitFor(() => {
       expect(mock.history.get).toHaveLength(2);

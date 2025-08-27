@@ -1,5 +1,6 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -11,11 +12,13 @@ import type { User, Program, ProgrammedWorkout } from '../api/types';
 const mock = new MockAdapter(ENDPOINT);
 const theme = createTheme();
 
-const renderWithTheme = (component: React.ReactElement) => {
+const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <MemoryRouter>
-      <ThemeProvider theme={theme}>{component}</ThemeProvider>
-    </MemoryRouter>
+    <SnackbarProvider>
+      <MemoryRouter>
+        <ThemeProvider theme={theme}>{component}</ThemeProvider>
+      </MemoryRouter>
+    </SnackbarProvider>
   );
 };
 
@@ -59,7 +62,7 @@ describe('Workouts', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
-    renderWithTheme(<Workouts user={mockUser} />);
+    renderWithProviders(<Workouts user={mockUser} />);
 
     // Should render the component without errors
     await waitFor(() => {
@@ -72,7 +75,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -86,7 +89,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -99,7 +102,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -113,7 +116,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -126,7 +129,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -146,7 +149,7 @@ describe('Workouts', () => {
     mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgram);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -170,7 +173,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -184,7 +187,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -200,7 +203,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout, workout2]);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
@@ -214,7 +217,7 @@ describe('Workouts', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
 
     await act(async () => {
-      renderWithTheme(<Workouts user={mockUser} />);
+      renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {

@@ -7,70 +7,8 @@ import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
-// Mock the APIs to return mock data directly
-jest.mock('../api/exercise', () => ({
-  getExercises: jest.fn().mockResolvedValue([
-    {
-      name: 'exerciseName',
-      description: 'exerciseDescription',
-      movement_type: 'movementType',
-      is_unilateral: true,
-      is_upper: true,
-      is_accessory: false,
-    },
-  ]),
-}));
-
-jest.mock('../api/userProgramPreferences', () => ({
-  getUserProgramPreferences: jest.fn().mockRejectedValue(new Error('Not found')),
-  updateUserProgramPreferences: jest.fn().mockResolvedValue({
-    data: {
-      user_id: 'test-user-id',
-      program_days_per_week: 4,
-      session_time_length_in_minutes: 75,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    },
-  }),
-  createUserProgramPreferences: jest.fn().mockResolvedValue({
-    data: {
-      user_id: 'test-user-id',
-      program_days_per_week: 3,
-      session_time_length_in_minutes: 60,
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    },
-  }),
-}));
-
-jest.mock('../api/userWeightUnitPreference', () => ({
-  getUserWeightUnitPreferences: jest.fn().mockRejectedValue(new Error('Not found')),
-  upsertUserWeightUnitPreference: jest.fn().mockResolvedValue({
-    data: {
-      user_id: 'test-user-id',
-      exercise_name: 'exerciseName',
-      preferred_unit: 'LBS',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    },
-  }),
-  deleteUserWeightUnitPreference: jest.fn().mockResolvedValue({
-    data: {
-      user_id: 'test-user-id',
-      exercise_name: 'exerciseName',
-      preferred_unit: 'LBS',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    },
-  }),
-  WeightUnit: {
-    KG: 'KG',
-    LBS: 'LBS',
-  },
-}));
-
 // Create axios mock adapter for the ENDPOINT instance
-const mockAdapter = new MockAdapter(ENDPOINT);
+const mock = new MockAdapter(ENDPOINT);
 
 const mockUser: User = {
   keycloak_id: 'test-user-id',
@@ -93,14 +31,28 @@ const renderWithProviders = (component: React.ReactElement) => {
 
 describe('WorkoutPreferencesSection', () => {
   beforeEach(() => {
-    mockAdapter.reset();
+    mock.reset();
   });
 
   afterAll(() => {
-    mockAdapter.restore();
+    mock.restore();
   });
 
   it('should render workout preferences section', async () => {
+    // Mock API responses
+    mock.onGet('/exercise/').reply(200, [
+      {
+        name: 'exerciseName',
+        description: 'exerciseDescription',
+        movement_type: 'movementType',
+        is_unilateral: true,
+        is_upper: true,
+        is_accessory: false,
+      },
+    ]);
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
     });
@@ -118,6 +70,11 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should show default program preferences', async () => {
+    // Mock API responses
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
     });
@@ -132,6 +89,11 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should show save button for program preferences', async () => {
+    // Mock API responses
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
     });
@@ -145,6 +107,11 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should show add preference button for weight units', async () => {
+    // Mock API responses
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
     });
@@ -158,6 +125,11 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should open dialog when add preference button is clicked', async () => {
+    // Mock API responses
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
     });
@@ -176,6 +148,11 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should show current settings summary', async () => {
+    // Mock API responses
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
     });
@@ -192,17 +169,22 @@ describe('WorkoutPreferencesSection', () => {
   });
 
   it('should handle loading state', async () => {
-    // Mock slow API response
-    mockAdapter.onGet('/exercise/').timeout();
+    // Mock slow API response to ensure loading state is visible
+    mock.onGet('/exercise/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
 
-    renderWithProviders(<WorkoutPreferencesSection />);
+    await act(async () => {
+      renderWithProviders(<WorkoutPreferencesSection />);
+    });
 
+    // Check for loading state immediately after rendering
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('should verify axios mock is working', async () => {
     // Test that the axios mock is working by making a simple request
-    mockAdapter.onGet('/test').reply(200, { message: 'test' });
+    mock.onGet('/test').reply(200, { message: 'test' });
 
     const response = await ENDPOINT.get('/test');
     expect(response.data.message).toBe('test');

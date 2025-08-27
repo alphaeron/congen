@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
 import * as React from 'react';
 
@@ -39,9 +40,13 @@ const mockPrivacyPolicy = {
   },
 };
 
-// Custom render function with theme provider
-const renderWithTheme = (component: React.ReactElement) => {
-  return render(component);
+// Custom render function with providers
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <SnackbarProvider>
+      {component}
+    </SnackbarProvider>
+  );
 };
 
 describe('PrivacyPolicyPage', () => {
@@ -56,7 +61,7 @@ describe('PrivacyPolicyPage', () => {
   it('should render privacy policy content', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     await waitFor(() => {
       expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
@@ -93,7 +98,7 @@ describe('PrivacyPolicyPage', () => {
   it('should handle loading state', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(() => new Promise(() => {})); // Never resolves
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     expect(screen.getByText('Loading Privacy Policy...')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -102,7 +107,7 @@ describe('PrivacyPolicyPage', () => {
   it('should handle error state', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(500, { message: 'Server error' });
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     await waitFor(() => {
       expect(screen.getByText('Server error')).toBeInTheDocument();
@@ -112,7 +117,7 @@ describe('PrivacyPolicyPage', () => {
   it('should handle network error', async () => {
     mock.onGet('/gdpr/privacy_policy').networkError();
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     await waitFor(() => {
       expect(screen.getByText('Failed to load privacy policy')).toBeInTheDocument();
@@ -122,7 +127,7 @@ describe('PrivacyPolicyPage', () => {
   it('should format data retention periods correctly', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     await waitFor(() => {
       expect(screen.getByText('User Profile:')).toBeInTheDocument();
@@ -135,7 +140,7 @@ describe('PrivacyPolicyPage', () => {
   it('should display contact information', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     await waitFor(() => {
       expect(screen.getByText('Questions about this privacy policy?')).toBeInTheDocument();
@@ -154,7 +159,7 @@ describe('PrivacyPolicyPage', () => {
 
     mock.onGet('/gdpr/privacy_policy').reply(200, policyWithoutDPO);
 
-    renderWithTheme(<PrivacyPolicyPage />);
+    renderWithProviders(<PrivacyPolicyPage />);
 
     await waitFor(() => {
       expect(screen.getByText('Congen Fitness Application')).toBeInTheDocument();

@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 
@@ -10,6 +11,16 @@ import type { UserConsent } from '../api/types';
 
 // Mock the endpoint
 const mock = new MockAdapter(ENDPOINT);
+
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <SnackbarProvider>
+      <MemoryRouter>
+        {component}
+      </MemoryRouter>
+    </SnackbarProvider>
+  );
+};
 
 const mockConsentStatus: UserConsent = {
   keycloak_id: 'test-user-123',
@@ -30,11 +41,7 @@ describe('GdprComplianceSection', () => {
   it('should render GDPR compliance section with consent status', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     // Wait for content to load
     await waitFor(() => {
@@ -58,11 +65,7 @@ describe('GdprComplianceSection', () => {
     mock.onPost('/gdpr/consent').reply(200, { success: true, message: 'Consent withdrawn' });
 
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
@@ -90,11 +93,7 @@ describe('GdprComplianceSection', () => {
     mock.onDelete('/gdpr/delete_all_data').reply(200, { success: true, message: 'Data deleted' });
 
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
@@ -129,11 +128,7 @@ describe('GdprComplianceSection', () => {
 
     mock.onGet('/gdpr/consent').reply(200, withdrawnConsentStatus);
 
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       expect(screen.getByText('Consent Withdrawn')).toBeInTheDocument();
@@ -144,11 +139,7 @@ describe('GdprComplianceSection', () => {
   it('should handle loading state', async () => {
     mock.onGet('/gdpr/consent').reply(() => new Promise(() => {})); // Never resolves
 
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       expect(screen.getByText('Loading GDPR compliance status...')).toBeInTheDocument();
@@ -159,11 +150,7 @@ describe('GdprComplianceSection', () => {
   it('should handle error state', async () => {
     mock.onGet('/gdpr/consent').reply(500, { message: 'Server error' });
 
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       expect(screen.getByText('Server error')).toBeInTheDocument();
@@ -174,11 +161,7 @@ describe('GdprComplianceSection', () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
@@ -198,11 +181,7 @@ describe('GdprComplianceSection', () => {
   it('should have privacy policy link', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
-    render(
-      <MemoryRouter>
-        <GdprComplianceSection />
-      </MemoryRouter>
-    );
+    renderWithProviders(<GdprComplianceSection />);
 
     await waitFor(() => {
       const privacyPolicyLink = screen.getByText('View Policy').closest('a');
