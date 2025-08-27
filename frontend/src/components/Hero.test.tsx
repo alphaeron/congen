@@ -4,7 +4,7 @@ import React from 'react';
 import { Hero } from './Hero';
 
 // Mock useTypewriter hook
-jest.mock('./useTypewriter', () => ({
+jest.mock('../hooks/useTypewriter', () => ({
   useTypewriter: jest.fn().mockReturnValue('Conjugate Method Programming, Without the Hastle'),
 }));
 

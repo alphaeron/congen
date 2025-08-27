@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { Dashboard } from './Dashboard';
 import type { User } from '../api/types';

@@ -55,6 +55,10 @@ jest.mock('./pages/RootPage', () => ({
   RootPage: () => <div data-testid="root-page">ConGen Home Page</div>,
 }));
 
+jest.mock('./pages/DashboardPage', () => ({
+  DashboardPage: () => <div data-testid="dashboard-page">Dashboard Page</div>,
+}));
+
 jest.mock('./pages/ExerciseOverviewPage', () => ({
   ExerciseOverviewPage: () => (
     <div data-testid="exercise-overview-page">Exercise Overview Page</div>
@@ -67,6 +71,14 @@ jest.mock('./pages/ExerciseDetailsPage', () => ({
 
 jest.mock('./pages/UserProfilePage', () => ({
   UserProfilePage: () => <div data-testid="user-profile-page">User Profile Page</div>,
+}));
+
+jest.mock('./pages/LoginPage', () => ({
+  LoginPage: () => <div data-testid="login-page">Login Page</div>,
+}));
+
+jest.mock('./pages/PrivacyPolicyPage', () => ({
+  PrivacyPolicyPage: () => <div data-testid="privacy-policy-page">Privacy Policy Page</div>,
 }));
 
 // Mock the AuthorizedElement component
@@ -157,7 +169,6 @@ describe('App', () => {
       register: jest.fn(),
       error: null,
     });
-    mockNavigate.mockClear();
   });
 
   afterEach(() => {
@@ -206,9 +217,44 @@ describe('App', () => {
     render(<App />);
 
     await waitFor(() => {
-      // Should redirect to dashboard when authenticated
-      expect(screen.getByTestId('navigate-to-/dashboard')).toBeInTheDocument();
-      expect(screen.getByText('Navigate to /dashboard')).toBeInTheDocument();
+      // Should show dashboard page when authenticated
+      expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+    });
+  });
+
+  it('shows dashboard page when navigating to /dashboard', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { keycloak_id: 'test-user-id', email: 'test@example.com' },
+      login: jest.fn(),
+      logout: jest.fn(),
+      register: jest.fn(),
+      error: null,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+    });
+  });
+
+  it('shows loading spinner when authentication is loading', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      isLoading: true,
+      user: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      register: jest.fn(),
+      error: null,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
     });
   });
 });

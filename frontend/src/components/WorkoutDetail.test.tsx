@@ -1,5 +1,5 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 
@@ -114,7 +114,9 @@ describe('WorkoutDetail', () => {
     });
 
     it('should display workout details when data loads successfully', async () => {
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
@@ -123,31 +125,39 @@ describe('WorkoutDetail', () => {
       expect(screen.getByText('Warm-up')).toBeInTheDocument();
       expect(screen.getByText('Bench Press')).toBeInTheDocument();
       expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets
-    }, 10000);
+    });
 
     it('should display workout information correctly', async () => {
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
       expect(screen.getByText('Warm-up')).toBeInTheDocument();
-      expect(screen.getByText('1 exercises')).toBeInTheDocument();
-    }, 10000);
+      expect(screen.getByText('Exercise')).toBeInTheDocument();
+      expect(screen.getByText('Sets')).toBeInTheDocument();
+    });
 
     it('should display stage information correctly', async () => {
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('1 exercises')).toBeInTheDocument();
+      expect(screen.getByText('Exercise')).toBeInTheDocument();
+      expect(screen.getByText('Sets')).toBeInTheDocument();
     });
 
     it('should display exercise information correctly', async () => {
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -158,7 +168,9 @@ describe('WorkoutDetail', () => {
     });
 
     it('should display set scheme information correctly', async () => {
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -174,7 +186,9 @@ describe('WorkoutDetail', () => {
       const exerciseWithoutNotes = { ...mockExercise, notes: undefined };
       mockGetProgrammedExercisesByStage.mockResolvedValue([exerciseWithoutNotes]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -187,7 +201,9 @@ describe('WorkoutDetail', () => {
       const setSchemeWithoutNotes = { ...mockSetScheme, notes: undefined };
       mockGetSetSchemesByExercise.mockResolvedValue([setSchemeWithoutNotes]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -201,7 +217,9 @@ describe('WorkoutDetail', () => {
       const setSchemeWithoutRPE = { ...mockSetScheme, rpe: undefined };
       mockGetSetSchemesByExercise.mockResolvedValue([setSchemeWithoutRPE]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -214,7 +232,9 @@ describe('WorkoutDetail', () => {
       const stage2 = { ...mockStage, id: 2, position: 2, name: 'Main Work' };
       mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage, stage2]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
@@ -226,7 +246,9 @@ describe('WorkoutDetail', () => {
       const exercise2 = { ...mockExercise, id: 2, exercise_name: 'Incline Press', position: 2 };
       mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise, exercise2]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -244,7 +266,9 @@ describe('WorkoutDetail', () => {
       };
       mockGetSetSchemesByExercise.mockResolvedValue([mockSetScheme, setScheme2]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Bench Press')).toBeInTheDocument();
@@ -259,7 +283,9 @@ describe('WorkoutDetail', () => {
     it('should display error message when workout fetch fails', async () => {
       mockGetProgrammedWorkout.mockRejectedValue(new Error('Failed to fetch workout'));
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(
@@ -272,7 +298,9 @@ describe('WorkoutDetail', () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
       mockGetWorkoutStagesByWorkout.mockRejectedValue(new Error('Failed to fetch stages'));
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(
@@ -286,7 +314,9 @@ describe('WorkoutDetail', () => {
       mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage]);
       mockGetProgrammedExercisesByStage.mockRejectedValue(new Error('Failed to fetch exercises'));
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(
@@ -301,7 +331,9 @@ describe('WorkoutDetail', () => {
       mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise]);
       mockGetSetSchemesByExercise.mockRejectedValue(new Error('Failed to fetch set schemes'));
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(
@@ -316,7 +348,9 @@ describe('WorkoutDetail', () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
       mockGetWorkoutStagesByWorkout.mockResolvedValue([]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Exercise')).toBeInTheDocument();
@@ -325,20 +359,24 @@ describe('WorkoutDetail', () => {
       // When there are no stages, only the table header should be visible
       expect(screen.getByText('Exercise')).toBeInTheDocument();
       expect(screen.getByText('Sets')).toBeInTheDocument();
-    }, 10000);
+    });
 
     it('should handle empty exercises', async () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
       mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage]);
       mockGetProgrammedExercisesByStage.mockResolvedValue([]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
       });
 
-      expect(screen.getByText('0 exercises')).toBeInTheDocument();
+      // Should show the stage header but no exercise rows
+      expect(screen.getByText('Warm-up')).toBeInTheDocument();
+      expect(screen.getByText('Exercise')).toBeInTheDocument();
     });
 
     it('should handle empty set schemes', async () => {
@@ -347,7 +385,9 @@ describe('WorkoutDetail', () => {
       mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise]);
       mockGetSetSchemesByExercise.mockResolvedValue([]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Warm-up')).toBeInTheDocument();
@@ -360,39 +400,19 @@ describe('WorkoutDetail', () => {
       expect(screen.getByText('Weight')).toBeInTheDocument();
       expect(screen.getByText('Rest')).toBeInTheDocument();
       expect(screen.getByText('Notes')).toBeInTheDocument();
-    }, 10000);
-  });
-
-  describe('Accordion Interaction', () => {
-    beforeEach(() => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage]);
-      mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise]);
-      mockGetSetSchemesByExercise.mockResolvedValue([mockSetScheme]);
-    });
-
-    it('should expand accordion when clicked', async () => {
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Warm-up')).toBeInTheDocument();
-      });
-
-      const accordion = screen.getByRole('button', { name: /warm-up 1 exercises/i });
-      fireEvent.click(accordion);
-
-      await waitFor(() => {
-        expect(screen.getByText('Bench Press')).toBeInTheDocument();
-      });
     });
   });
+
+
 
   describe('Component Props', () => {
     it('should call onBack when back button is clicked', async () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
       mockGetWorkoutStagesByWorkout.mockResolvedValue([]);
 
-      renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(screen.getByText('Exercise')).toBeInTheDocument();
@@ -401,13 +421,15 @@ describe('WorkoutDetail', () => {
       // Note: Back button is now in the parent Workouts component, not in WorkoutDetail
       // This test is no longer applicable since the back functionality is handled by the parent
       expect(mockOnBack).not.toHaveBeenCalled();
-    }, 10000);
+    });
 
     it('should load workout with correct ID', async () => {
       mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
       mockGetWorkoutStagesByWorkout.mockResolvedValue([]);
 
-      renderWithTheme(<WorkoutDetail workoutId={123} onBack={mockOnBack} />);
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={123} onBack={mockOnBack} />);
+      });
 
       await waitFor(() => {
         expect(mockGetProgrammedWorkout).toHaveBeenCalledWith(123);

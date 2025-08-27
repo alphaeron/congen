@@ -16,10 +16,10 @@ import {
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
+import { ExerciseHistory } from './ExerciseHistory';
 import { getPrograms } from '../api/program';
 import type { User, Program, UserOneRepMax } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { ExerciseHistory } from './ExerciseHistory';
 
 interface DashboardOverviewProps {
   user: User;
