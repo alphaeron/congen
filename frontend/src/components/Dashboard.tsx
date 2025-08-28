@@ -3,6 +3,7 @@ import {
   FitnessCenter as FitnessCenterIcon,
   Settings as SettingsIcon,
   History as HistoryIcon,
+  Tune as TuneIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -21,6 +22,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { DashboardOverview } from './DashboardOverview';
 import { ExerciseHistory } from './ExerciseHistory';
 import { ProgramManagement } from './ProgramManagement';
+import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
 import type { User } from '../api/types';
 
@@ -77,6 +79,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       label: 'Exercise History',
       icon: <HistoryIcon />,
       component: <ExerciseHistory user={user} />,
+    },
+    {
+      id: 'workout-preferences',
+      label: 'Workout Preferences',
+      icon: <TuneIcon />,
+      component: <WorkoutPreferencesSection user={user} />,
     },
   ];
 

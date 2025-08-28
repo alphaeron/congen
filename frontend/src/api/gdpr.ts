@@ -34,6 +34,26 @@ export async function exportUserData(): Promise<AxiosResponse<UserDataExport>> {
 }
 
 /**
+ * Fetches complete user data export including all workout data.
+ * 
+ * This endpoint returns all user data in a single call, including:
+ * - Training programs with complete workout hierarchy
+ * - Workout stages with exercises and set schemes
+ * - One-rep max records
+ * - User preferences
+ * 
+ * This is much more efficient than making separate API calls for each workout.
+ * 
+ * @returns Promise containing complete user data export
+ */
+export const getUserDataExport = async (): Promise<UserDataExport> => {
+  const response = await ENDPOINT.get('/gdpr/export', {
+    timeout: 5000, // 5 second timeout for large data export
+  });
+  return response.data;
+};
+
+/**
  * Permanently deletes all personal data for the authenticated user.
  * This implements the GDPR "Right to be Forgotten" (Article 17).
  *

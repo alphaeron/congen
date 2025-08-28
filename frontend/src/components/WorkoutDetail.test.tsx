@@ -5,79 +5,93 @@ import React from 'react';
 
 import { WorkoutDetail } from './WorkoutDetail';
 import { ENDPOINT } from '../api/endpoint';
-import { getProgrammedExercisesByStage } from '../api/programmedExercise';
-import { getProgrammedWorkout } from '../api/programmedWorkout';
-import { getSetSchemesByExercise } from '../api/setScheme';
-import type { ProgrammedWorkout, WorkoutStage, ProgrammedExercise, SetScheme } from '../api/types';
-import { getWorkoutStagesByWorkout } from '../api/workoutStage';
 
 const mock = new MockAdapter(ENDPOINT);
 
-// Mock the API functions
-jest.mock('../api/programmedWorkout');
-jest.mock('../api/workoutStage');
-jest.mock('../api/programmedExercise');
-jest.mock('../api/setScheme');
-
-const mockGetProgrammedWorkout = getProgrammedWorkout as jest.MockedFunction<
-  typeof getProgrammedWorkout
->;
-const mockGetWorkoutStagesByWorkout = getWorkoutStagesByWorkout as jest.MockedFunction<
-  typeof getWorkoutStagesByWorkout
->;
-const mockGetProgrammedExercisesByStage = getProgrammedExercisesByStage as jest.MockedFunction<
-  typeof getProgrammedExercisesByStage
->;
-const mockGetSetSchemesByExercise = getSetSchemesByExercise as jest.MockedFunction<
-  typeof getSetSchemesByExercise
->;
-
 const theme = createTheme();
 
-const mockWorkout: ProgrammedWorkout = {
-  id: 1,
-  program_id: 1,
-  day_number: 1,
-  name: 'Push Day',
+const mockUserDataExport = {
+  keycloak_id: 'test-user-id',
+  name: 'Test User',
   created_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
-};
-
-const mockStage: WorkoutStage = {
-  id: 1,
-  programmed_workout_id: 1,
-  stage_type_id: 1,
-  position: 1,
-  name: 'Warm-up',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
-const mockExercise: ProgrammedExercise = {
-  id: 1,
-  workout_stage_id: 1,
-  exercise_name: 'Bench Press',
-  position: 1,
-  notes: 'Focus on form',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
-const mockSetScheme: SetScheme = {
-  id: 1,
-  programmed_exercise_id: 1,
-  set_number: 1,
-  target_rep_count: 8,
-  target_weight: 135,
-  rest_seconds: 90,
-  is_amrap: false,
-  is_emom: false,
-  use_tempo: false,
-  eccentric_tempo: undefined,
-  isometric_tempo: undefined,
-  concentric_tempo: undefined,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  data_processing_consent: true,
+  export_timestamp: '2024-01-01T00:00:00Z',
+  user_equipment: [],
+  user_exercise_preferences: [],
+  user_one_rep_max: [],
+  user_weight_unit_preferences: [],
+  training_programs: [
+    {
+      program: {
+        id: 1,
+        user_id: 'test-user-id',
+        name: 'Test Program',
+        current_week_number: 1,
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+        is_active: true,
+      },
+      workouts: [
+        {
+          workout: {
+            id: 1,
+            program_id: 1,
+            day_number: 1,
+            name: 'Push Day',
+            created_at: '2024-01-01T00:00:00Z',
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+          stages: [
+            {
+              stage: {
+                id: 1,
+                programmed_workout_id: 1,
+                stage_type_id: 1,
+                position: 1,
+                name: 'Warm-up',
+                created_at: '2024-01-01T00:00:00Z',
+                updated_at: '2024-01-01T00:00:00Z',
+              },
+              exercises: [
+                {
+                  exercise: {
+                    id: 1,
+                    workout_stage_id: 1,
+                    exercise_name: 'Bench Press',
+                    position: 1,
+                    notes: 'Focus on form',
+                    created_at: '2024-01-01T00:00:00Z',
+                    updated_at: '2024-01-01T00:00:00Z',
+                  },
+                  set_schemes: [
+                    {
+                      id: 1,
+                      programmed_exercise_id: 1,
+                      set_number: 1,
+                      target_rep_count: 8,
+                      target_weight: 135,
+                      rest_seconds: 90,
+                      is_amrap: false,
+                      is_emom: false,
+                      use_tempo: false,
+                      eccentric_tempo: undefined,
+                      isometric_tempo: undefined,
+                      concentric_tempo: undefined,
+                      created_at: '2024-01-01T00:00:00Z',
+                      updated_at: '2024-01-01T00:00:00Z',
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  audit_logs: [],
+  data_retention_policies: [],
 };
 
 const renderWithTheme = (component: React.ReactElement) => {
@@ -94,10 +108,7 @@ describe('WorkoutDetail', () => {
 
   describe('Success State', () => {
     beforeEach(() => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage]);
-      mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise]);
-      mockGetSetSchemesByExercise.mockResolvedValue([mockSetScheme]);
+      mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
     });
 
     it('should display workout details when data loads successfully', async () => {
@@ -150,8 +161,35 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle exercise without notes', async () => {
-      const exerciseWithoutNotes = { ...mockExercise, notes: undefined };
-      mockGetProgrammedExercisesByStage.mockResolvedValue([exerciseWithoutNotes]);
+      const dataWithoutNotes = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [
+                  {
+                    ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
+                    exercises: [
+                      {
+                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                        exercise: {
+                          ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0].exercise,
+                          notes: undefined,
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mock.onGet('/gdpr/export').reply(200, dataWithoutNotes);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -160,32 +198,37 @@ describe('WorkoutDetail', () => {
       expect(screen.queryByTestId('NotesIcon')).not.toBeInTheDocument();
     });
 
-    it('should handle set scheme without notes', async () => {
-      const setSchemeWithoutNotes = { ...mockSetScheme, notes: undefined };
-      mockGetSetSchemesByExercise.mockResolvedValue([setSchemeWithoutNotes]);
-
-      await act(async () => {
-        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
-      });
-
-      // Notes icon should still be present since it comes from exercise notes, not set scheme notes
-      expect(screen.getByTestId('NotesIcon')).toBeInTheDocument();
-    });
-
-    it('should handle set scheme without RPE', async () => {
-      const setSchemeWithoutRPE = { ...mockSetScheme, rpe: undefined };
-      mockGetSetSchemesByExercise.mockResolvedValue([setSchemeWithoutRPE]);
-
-      await act(async () => {
-        renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
-      });
-
-      expect(screen.getByText('135 lbs')).toBeInTheDocument();
-    });
-
     it('should handle multiple stages', async () => {
-      const stage2 = { ...mockStage, id: 2, position: 2, name: 'Main Work' };
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage, stage2]);
+      const dataWithMultipleStages = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [
+                  mockUserDataExport.training_programs[0].workouts[0].stages[0],
+                  {
+                    stage: {
+                      id: 2,
+                      programmed_workout_id: 1,
+                      stage_type_id: 2,
+                      position: 2,
+                      name: 'Main Work',
+                      created_at: '2024-01-01T00:00:00Z',
+                      updated_at: '2024-01-01T00:00:00Z',
+                    },
+                    exercises: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mock.onGet('/gdpr/export').reply(200, dataWithMultipleStages);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -196,8 +239,58 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle multiple exercises', async () => {
-      const exercise2 = { ...mockExercise, id: 2, exercise_name: 'Incline Press', position: 2 };
-      mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise, exercise2]);
+      const dataWithMultipleExercises = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [
+                  {
+                    ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
+                    exercises: [
+                      mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                      {
+                        exercise: {
+                          id: 2,
+                          workout_stage_id: 1,
+                          exercise_name: 'Incline Press',
+                          position: 2,
+                          notes: undefined,
+                          created_at: '2024-01-01T00:00:00Z',
+                          updated_at: '2024-01-01T00:00:00Z',
+                        },
+                        set_schemes: [
+                          {
+                            id: 2,
+                            programmed_exercise_id: 2,
+                            set_number: 1,
+                            target_rep_count: 6,
+                            target_weight: 145,
+                            rest_seconds: 90,
+                            is_amrap: false,
+                            is_emom: false,
+                            use_tempo: false,
+                            eccentric_tempo: undefined,
+                            isometric_tempo: undefined,
+                            concentric_tempo: undefined,
+                            created_at: '2024-01-01T00:00:00Z',
+                            updated_at: '2024-01-01T00:00:00Z',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mock.onGet('/gdpr/export').reply(200, dataWithMultipleExercises);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -208,14 +301,50 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle multiple set schemes', async () => {
-      const setScheme2 = {
-        ...mockSetScheme,
-        id: 2,
-        set_number: 2,
-        target_rep_count: 6,
-        target_weight: 145,
+      const dataWithMultipleSets = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [
+                  {
+                    ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
+                    exercises: [
+                      {
+                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                        set_schemes: [
+                          mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0].set_schemes[0],
+                          {
+                            id: 2,
+                            programmed_exercise_id: 1,
+                            set_number: 2,
+                            target_rep_count: 6,
+                            target_weight: 145,
+                            rest_seconds: 90,
+                            is_amrap: false,
+                            is_emom: false,
+                            use_tempo: false,
+                            eccentric_tempo: undefined,
+                            isometric_tempo: undefined,
+                            concentric_tempo: undefined,
+                            created_at: '2024-01-01T00:00:00Z',
+                            updated_at: '2024-01-01T00:00:00Z',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
       };
-      mockGetSetSchemesByExercise.mockResolvedValue([mockSetScheme, setScheme2]);
+
+      mock.onGet('/gdpr/export').reply(200, dataWithMultipleSets);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -228,8 +357,22 @@ describe('WorkoutDetail', () => {
 
   describe('Empty State', () => {
     it('should handle empty stages', async () => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([]);
+      const dataWithEmptyStages = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [],
+              },
+            ],
+          },
+        ],
+      };
+
+      mock.onGet('/gdpr/export').reply(200, dataWithEmptyStages);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -241,9 +384,27 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle empty exercises', async () => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage]);
-      mockGetProgrammedExercisesByStage.mockResolvedValue([]);
+      const dataWithEmptyExercises = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [
+                  {
+                    ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
+                    exercises: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mock.onGet('/gdpr/export').reply(200, dataWithEmptyExercises);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -255,10 +416,32 @@ describe('WorkoutDetail', () => {
     });
 
     it('should handle empty set schemes', async () => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([mockStage]);
-      mockGetProgrammedExercisesByStage.mockResolvedValue([mockExercise]);
-      mockGetSetSchemesByExercise.mockResolvedValue([]);
+      const dataWithEmptySets = {
+        ...mockUserDataExport,
+        training_programs: [
+          {
+            ...mockUserDataExport.training_programs[0],
+            workouts: [
+              {
+                ...mockUserDataExport.training_programs[0].workouts[0],
+                stages: [
+                  {
+                    ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
+                    exercises: [
+                      {
+                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                        set_schemes: [],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+
+      mock.onGet('/gdpr/export').reply(200, dataWithEmptySets);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
@@ -274,31 +457,49 @@ describe('WorkoutDetail', () => {
     });
   });
 
-  describe('Component Props', () => {
-    it('should call onBack when back button is clicked', async () => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([]);
+  describe('Error State', () => {
+    it('should handle workout not found', async () => {
+      mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+
+      await act(async () => {
+        renderWithTheme(<WorkoutDetail workoutId={999} onBack={mockOnBack} />);
+      });
+
+      expect(screen.getByText('Workout not found.')).toBeInTheDocument();
+    });
+
+    it('should handle API failure', async () => {
+      mock.onGet('/gdpr/export').reply(500);
 
       await act(async () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
 
-      // Note: Back button is now in the parent Workouts component, not in WorkoutDetail
-      // This test is no longer applicable since the back functionality is handled by the parent
-      await act(async () => {
-        expect(mockOnBack).not.toHaveBeenCalled();
-      });
+      // Component should handle error gracefully
+      expect(screen.getByText('Workout not found.')).toBeInTheDocument();
     });
+  });
 
-    it('should load workout with correct ID', async () => {
-      mockGetProgrammedWorkout.mockResolvedValue(mockWorkout);
-      mockGetWorkoutStagesByWorkout.mockResolvedValue([]);
+  describe('Component Props', () => {
+    it('should call onWorkoutDetailsUpdate when workout data is loaded', async () => {
+      const mockOnWorkoutDetailsUpdate = jest.fn();
+      mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
 
       await act(async () => {
-        renderWithTheme(<WorkoutDetail workoutId={123} onBack={mockOnBack} />);
+        renderWithTheme(
+          <WorkoutDetail 
+            workoutId={1} 
+            onBack={mockOnBack} 
+            onWorkoutDetailsUpdate={mockOnWorkoutDetailsUpdate}
+          />
+        );
       });
 
-      expect(mockGetProgrammedWorkout).toHaveBeenCalledWith(123);
+      expect(mockOnWorkoutDetailsUpdate).toHaveBeenCalledWith({
+        name: 'Push Day',
+        day_number: 1,
+        stages: 1,
+      });
     });
   });
 });

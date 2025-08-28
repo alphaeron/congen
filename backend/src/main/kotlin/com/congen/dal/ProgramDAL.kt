@@ -8,9 +8,21 @@ import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
+import com.congen.model.ProgramWithWorkouts
+import com.congen.model.ProgrammedExercise
+import com.congen.model.ProgrammedExerciseWithSetSchemes
+import com.congen.model.ProgrammedWorkout
+import com.congen.model.ProgrammedWorkoutWithStages
+import com.congen.model.SetScheme
+import com.congen.model.WorkoutStage
+import com.congen.model.WorkoutStageWithExercises
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
+import java.math.BigDecimal
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 
 /**
  * Data Access Layer for Program entities.
@@ -102,15 +114,15 @@ class ProgramDAL(
     }
 
     /**
-     * Retrieves programs for a specific user, optionally filtered by active status.
+     * Retrieves all programs owned by a specific user.
      *
-     * This method queries the database for programs belonging to the specified user.
-     * If isActive is provided, only programs with that active status are returned.
-     * If no programs exist, an empty list is returned.
+     * This method queries the database for all program records owned by the
+     * specified user and returns them as a list, ordered by name. If no
+     * programs exist for the user, an empty list is returned.
      *
-     * @param userId The Keycloak user ID to filter programs by
-     * @param isActive Optional filter for active status. If null, returns all programs for the user
-     * @return Mono containing a list of programs for the user
+     * @param userId The Keycloak identifier of the user
+     * @param isActive Optional filter to return only active or inactive programs. If null, returns all programs
+     * @return Mono containing a list of programs owned by the user
      */
     @Cacheable(
         ttl = CacheTTL.USER_DATA,
@@ -121,19 +133,261 @@ class ProgramDAL(
         userId: String,
         isActive: Boolean? = null
     ): Mono<List<Program>> {
-        logger.debug("Selecting programs for user: {} with isActive filter: {}", userId, isActive)
+        logger.debug("Selecting programs by user id: {}", userId)
+        var query = "SELECT * FROM program WHERE user_id=$1 ORDER BY name"
+        val params = mutableListOf(userId)
 
-        val query =
-            if (isActive != null) {
-                "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name"
-            } else {
-                "SELECT * FROM program WHERE user_id=$1 ORDER BY name"
+        if (isActive != null) {
+            query += " AND is_active=$2"
+            params.add(isActive.toString())
+        }
+
+        return postgresClient.select(query, *params.toTypedArray())
+    }
+
+    /**
+     * Retrieves all programs with complete workout hierarchy for a specific user.
+     *
+     * This method efficiently fetches all programs and their complete workout hierarchy
+     * (workouts, stages, exercises, and set schemes) in a single optimized query using JOINs.
+     * This avoids the N+1 query problem that occurs when fetching each level separately.
+     *
+     * The query joins all related tables and returns the data in a flat structure that
+     * is then reconstructed into the proper hierarchical model.
+     *
+     * @param userId The Keycloak identifier of the user
+     * @return Mono containing a list of programs with complete workout hierarchy
+     */
+    @Cacheable(
+        ttl = CacheTTL.USER_DATA,
+        keyStrategy = CacheKeyStrategy.USER_SPECIFIC,
+        entityName = "program"
+    )
+    fun selectProgramsWithWorkoutHierarchyByUserId(userId: String): Mono<List<ProgramWithWorkouts>> {
+        logger.debug("Selecting programs with complete workout hierarchy for user: {}", userId)
+
+        return postgresClient.select<Map<String, Any>>(
+            """
+            SELECT 
+                p.id as program_id,
+                p.user_id as program_user_id,
+                p.name as program_name,
+                p.current_week_number as program_current_week_number,
+                p.is_active as program_is_active,
+                p.created_at as program_created_at,
+                p.updated_at as program_updated_at,
+                pw.id as workout_id,
+                pw.program_id as workout_program_id,
+                pw.day_number as workout_day_number,
+                pw.name as workout_name,
+                pw.created_at as workout_created_at,
+                pw.updated_at as workout_updated_at,
+                ws.id as stage_id,
+                ws.programmed_workout_id as stage_programmed_workout_id,
+                ws.stage_type_id as stage_stage_type_id,
+                ws.position as stage_position,
+                ws.name as stage_name,
+                ws.created_at as stage_created_at,
+                ws.updated_at as stage_updated_at,
+                pe.id as exercise_id,
+                pe.workout_stage_id as exercise_workout_stage_id,
+                pe.exercise_name as exercise_exercise_name,
+                pe.position as exercise_position,
+                pe.notes as exercise_notes,
+                pe.created_at as exercise_created_at,
+                pe.updated_at as exercise_updated_at,
+                ss.id as set_scheme_id,
+                ss.programmed_exercise_id as set_scheme_programmed_exercise_id,
+                ss.set_number as set_scheme_set_number,
+                ss.is_amrap as set_scheme_is_amrap,
+                ss.is_emom as set_scheme_is_emom,
+                ss.use_tempo as set_scheme_use_tempo,
+                ss.eccentric_tempo as set_scheme_eccentric_tempo,
+                ss.isometric_tempo as set_scheme_isometric_tempo,
+                ss.concentric_tempo as set_scheme_concentric_tempo,
+                ss.target_weight as set_scheme_target_weight,
+                ss.performed_weight as set_scheme_performed_weight,
+                ss.target_rep_count as set_scheme_target_rep_count,
+                ss.performed_rep_count as set_scheme_performed_rep_count,
+                ss.rest_seconds as set_scheme_rest_seconds,
+                ss.created_at as set_scheme_created_at,
+                ss.updated_at as set_scheme_updated_at
+            FROM program p
+            LEFT JOIN programmed_workout pw ON p.id = pw.program_id
+            LEFT JOIN workout_stage ws ON pw.id = ws.programmed_workout_id
+            LEFT JOIN programmed_exercise pe ON ws.id = pe.workout_stage_id
+            LEFT JOIN set_scheme ss ON pe.id = ss.programmed_exercise_id
+            WHERE p.user_id = $1
+            ORDER BY p.id, pw.day_number, ws.position, pe.position, ss.set_number
+            """.trimIndent(),
+            userId
+        ).map { rows: List<Map<String, Any>> ->
+            // Group the flat results into hierarchical structure
+            val programsMap = mutableMapOf<Long, MutableMap<String, Any>>()
+
+            rows.forEach { row: Map<String, Any> ->
+                val programId = row["program_id"] as Long
+                val workoutId = row["workout_id"] as Long?
+                val stageId = row["stage_id"] as Long?
+                val exerciseId = row["exercise_id"] as Long?
+                val setSchemeId = row["set_scheme_id"] as Long?
+
+                // Initialize program if not exists
+                if (!programsMap.containsKey(programId)) {
+                    programsMap[programId] =
+                        mutableMapOf(
+                            "program" to
+                                Program(
+                                    id = programId,
+                                    userId = row["program_user_id"] as String,
+                                    name = row["program_name"] as String,
+                                    currentWeekNumber = (row["program_current_week_number"] as? Number)?.toInt() ?: throw IllegalStateException("program_current_week_number is null"),
+                                    isActive = (row["program_is_active"] as? Boolean) ?: throw IllegalStateException("program_is_active is null"),
+                                    createdAt = parseTimestamp(row["program_created_at"]),
+                                    updatedAt = parseTimestamp(row["program_updated_at"])
+                                ),
+                            "workouts" to mutableMapOf<Long, MutableMap<String, Any>>()
+                        )
+                }
+
+                val program = programsMap[programId]!!
+                val workouts = program["workouts"] as MutableMap<Long, MutableMap<String, Any>>
+
+                // Add workout if exists and not already added
+                if (workoutId != null && !workouts.containsKey(workoutId)) {
+                    workouts[workoutId] =
+                        mutableMapOf(
+                            "workout" to
+                                ProgrammedWorkout(
+                                    id = workoutId,
+                                    programId = row["workout_program_id"] as Long,
+                                    dayNumber = (row["workout_day_number"] as? Number)?.toInt() ?: throw IllegalStateException("workout_day_number is null"),
+                                    name = row["workout_name"] as String,
+                                    createdAt = parseTimestamp(row["workout_created_at"]),
+                                    updatedAt = parseTimestamp(row["workout_updated_at"])
+                                ),
+                            "stages" to mutableMapOf<Long, MutableMap<String, Any>>()
+                        )
+                }
+
+                // Add stage if exists and not already added
+                if (stageId != null && workoutId != null) {
+                    val workout = workouts[workoutId]!!
+                    val stages = workout["stages"] as MutableMap<Long, MutableMap<String, Any>>
+
+                    if (!stages.containsKey(stageId)) {
+                        stages[stageId] =
+                            mutableMapOf(
+                                "stage" to
+                                    WorkoutStage(
+                                        id = stageId,
+                                        programmedWorkoutId = row["stage_programmed_workout_id"] as Long,
+                                        stageTypeId = (row["stage_stage_type_id"] as? Number)?.toInt() ?: throw IllegalStateException("stage_stage_type_id is null"),
+                                        position = (row["stage_position"] as? Number)?.toInt() ?: throw IllegalStateException("stage_position is null"),
+                                        name = row["stage_name"] as String,
+                                        createdAt = parseTimestamp(row["stage_created_at"]),
+                                        updatedAt = parseTimestamp(row["stage_updated_at"])
+                                    ),
+                                "exercises" to mutableMapOf<Long, MutableMap<String, Any>>()
+                            )
+                    }
+
+                    // Add exercise if exists and not already added
+                    if (exerciseId != null) {
+                        val stage = stages[stageId]!!
+                        val exercises = stage["exercises"] as MutableMap<Long, MutableMap<String, Any>>
+
+                        if (!exercises.containsKey(exerciseId)) {
+                            exercises[exerciseId] =
+                                mutableMapOf(
+                                    "exercise" to
+                                        ProgrammedExercise(
+                                            id = exerciseId,
+                                            workoutStageId = row["exercise_workout_stage_id"] as Long,
+                                            exerciseName = row["exercise_exercise_name"] as String,
+                                            position = (row["exercise_position"] as? Number)?.toInt() ?: throw IllegalStateException("exercise_position is null"),
+                                            notes = row["exercise_notes"] as String?,
+                                            createdAt = parseTimestamp(row["exercise_created_at"]),
+                                            updatedAt = parseTimestamp(row["exercise_updated_at"])
+                                        ),
+                                    "setSchemes" to mutableListOf<SetScheme>()
+                                )
+                        }
+
+                        // Add set scheme if exists
+                        if (setSchemeId != null) {
+                            val exercise = exercises[exerciseId]!!
+                            val setSchemes = exercise["setSchemes"] as MutableList<SetScheme>
+
+                            setSchemes.add(
+                                SetScheme(
+                                    id = setSchemeId,
+                                    programmedExerciseId = row["set_scheme_programmed_exercise_id"] as Long,
+                                    setNumber = (row["set_scheme_set_number"] as? Number)?.toInt() ?: throw IllegalStateException("set_scheme_set_number is null"),
+                                    isAmrap = (row["set_scheme_is_amrap"] as? Boolean) ?: throw IllegalStateException("set_scheme_is_amrap is null"),
+                                    isEmom = (row["set_scheme_is_emom"] as? Boolean) ?: throw IllegalStateException("set_scheme_is_emom is null"),
+                                    useTempo = (row["set_scheme_use_tempo"] as? Boolean) ?: throw IllegalStateException("set_scheme_use_tempo is null"),
+                                    eccentricTempo = row["set_scheme_eccentric_tempo"] as String?,
+                                    isometricTempo = row["set_scheme_isometric_tempo"] as String?,
+                                    concentricTempo = row["set_scheme_concentric_tempo"] as String?,
+                                    targetWeight = (row["set_scheme_target_weight"] as? Number)?.let { BigDecimal(it.toString()) },
+                                    performedWeight = (row["set_scheme_performed_weight"] as? Number)?.let { BigDecimal(it.toString()) },
+                                    targetRepCount = (row["set_scheme_target_rep_count"] as? Number)?.toInt(),
+                                    performedRepCount = (row["set_scheme_performed_rep_count"] as? Number)?.toInt(),
+                                    restSeconds = (row["set_scheme_rest_seconds"] as? Number)?.toInt(),
+                                    band = null, // Set schemes don't have band data in this context
+                                    createdAt = parseTimestamp(row["set_scheme_created_at"]),
+                                    updatedAt = parseTimestamp(row["set_scheme_updated_at"])
+                                )
+                            )
+                        }
+                    }
+                }
             }
 
-        return if (isActive != null) {
-            postgresClient.select(query, userId, isActive)
-        } else {
-            postgresClient.select(query, userId)
+            // Convert the hierarchical map to the final model structure
+            programsMap.values.map { programData ->
+                val program = programData["program"] as Program
+                val workoutsData = programData["workouts"] as Map<Long, MutableMap<String, Any>>
+
+                val workouts =
+                    workoutsData.values.map { workoutData ->
+                        val workout = workoutData["workout"] as ProgrammedWorkout
+                        val stagesData = workoutData["stages"] as Map<Long, MutableMap<String, Any>>
+
+                        val stages =
+                            stagesData.values.map { stageData ->
+                                val stage = stageData["stage"] as WorkoutStage
+                                val exercisesData = stageData["exercises"] as Map<Long, MutableMap<String, Any>>
+
+                                val exercises =
+                                    exercisesData.values.map { exerciseData ->
+                                        val exercise = exerciseData["exercise"] as ProgrammedExercise
+                                        val setSchemes = exerciseData["setSchemes"] as List<SetScheme>
+
+                                        ProgrammedExerciseWithSetSchemes(
+                                            exercise = exercise,
+                                            setSchemes = setSchemes
+                                        )
+                                    }
+
+                                WorkoutStageWithExercises(
+                                    stage = stage,
+                                    exercises = exercises
+                                )
+                            }
+
+                        ProgrammedWorkoutWithStages(
+                            workout = workout,
+                            stages = stages
+                        )
+                    }
+
+                ProgramWithWorkouts(
+                    program = program,
+                    workouts = workouts
+                )
+            }
         }
     }
 
@@ -272,5 +526,32 @@ class ProgramDAL(
             "DELETE FROM program WHERE id=$1",
             id,
         )
+    }
+
+    /**
+     * Parses timestamp from database format to Instant.
+     *
+     * @param value The timestamp value from database
+     * @return Instant representation of the timestamp
+     */
+    private fun parseTimestamp(value: Any?): Instant {
+        return when (value) {
+            is Instant -> value
+            is String -> {
+                try {
+                    // Try to parse as ISO-8601 format first
+                    Instant.parse(value)
+                } catch (e: Exception) {
+                    try {
+                        // Try to parse as LocalDateTime and convert to Instant
+                        LocalDateTime.parse(value).atZone(ZoneOffset.UTC).toInstant()
+                    } catch (e: Exception) {
+                        // Fallback to current time if parsing fails
+                        Instant.now()
+                    }
+                }
+            }
+            else -> Instant.now()
+        }
     }
 }

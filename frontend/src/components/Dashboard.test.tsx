@@ -42,6 +42,12 @@ jest.mock('./ExerciseHistory', () => ({
   ),
 }));
 
+jest.mock('./WorkoutPreferencesSection', () => ({
+  WorkoutPreferencesSection: ({ user }: { user: User }) => (
+    <div data-testid="workout-preferences">Workout Preferences for {user.name}</div>
+  ),
+}));
+
 // Create a theme for testing
 const theme = createTheme();
 
@@ -82,6 +88,7 @@ describe('Dashboard', () => {
     expect(screen.getByText('Programs')).toBeInTheDocument();
     expect(screen.getByText('Workouts')).toBeInTheDocument();
     expect(screen.getByText('Exercise History')).toBeInTheDocument();
+    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
   });
 
   it('shows overview as the default active tab', () => {
@@ -122,6 +129,17 @@ describe('Dashboard', () => {
 
     expect(exerciseHistoryButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('exercise-history')).toBeInTheDocument();
+    expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
+  });
+
+  it('switches to workout preferences when clicked', () => {
+    renderWithTheme(<Dashboard user={mockUser} />);
+
+    const workoutPreferencesButton = screen.getByRole('button', { name: 'Workout Preferences' });
+    fireEvent.click(workoutPreferencesButton);
+
+    expect(workoutPreferencesButton).toHaveClass('Mui-selected');
+    expect(screen.getByTestId('workout-preferences')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
   });
 
@@ -183,7 +201,7 @@ describe('Dashboard', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
     // Check that all menu items are present
-    const menuItems = ['Overview', 'Programs', 'Workouts', 'Exercise History'];
+    const menuItems = ['Overview', 'Programs', 'Workouts', 'Exercise History', 'Workout Preferences'];
     menuItems.forEach(item => {
       expect(screen.getByText(item)).toBeInTheDocument();
     });

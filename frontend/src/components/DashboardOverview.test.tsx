@@ -3,6 +3,31 @@ import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 
+// Mock Nivo components to avoid Jest configuration issues
+jest.mock('@nivo/line', () => ({
+  ResponsiveLine: ({ data }: any) => (
+    <div data-testid="line-chart">
+      {data.map((series: any) => (
+        <div key={series.id} data-testid={`line-series-${series.id}`}>
+          {series.data.length} points
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
+jest.mock('@nivo/pie', () => ({
+  ResponsivePie: ({ data }: any) => (
+    <div data-testid="pie-chart">
+      {data.map((item: any) => (
+        <div key={item.id} data-testid={`pie-item-${item.id}`}>
+          {item.value}
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
 import { DashboardOverview } from './DashboardOverview';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
@@ -32,6 +57,15 @@ const mockProgram = {
   is_active: true,
 };
 
+const mockWorkout = {
+  id: 1,
+  program_id: 1,
+  day_number: 1,
+  name: 'Test Workout',
+  created_at: '2024-01-01T00:00:00Z',
+  updated_at: '2024-01-01T00:00:00Z',
+};
+
 const mockOneRepMax = {
   user_id: 'test-user-id',
   exercise_name: 'Bench Press',
@@ -57,6 +91,9 @@ describe('DashboardOverview', () => {
       .onGet('/program/')
       .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
     mock
+      .onGet('/programmed_workout/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
       .onGet('/user_one_rep_max/user/test-user-id')
       .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
 
@@ -69,8 +106,8 @@ describe('DashboardOverview', () => {
 
   it('should render dashboard overview when data loads successfully', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
+    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise/').reply(200, []);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -88,8 +125,8 @@ describe('DashboardOverview', () => {
 
   it('should display active program when available', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
+    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise/').reply(200, []);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -98,15 +135,15 @@ describe('DashboardOverview', () => {
     await waitFor(() => {
       expect(screen.getByText('Active Program')).toBeInTheDocument();
       expect(screen.getByText('Test Program')).toBeInTheDocument();
-      expect(screen.getByText('Week 2')).toBeInTheDocument();
+      expect(screen.getByText('Week 1')).toBeInTheDocument(); // 1 workout = Week 1
       expect(screen.getByText('Active')).toBeInTheDocument();
     });
   });
 
   it('should display recent 1RM records when available', async () => {
     mock.onGet('/program/').reply(200, []);
+    mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
-    mock.onGet('/exercise/').reply(200, []);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -125,6 +162,7 @@ describe('DashboardOverview', () => {
 
   it('should display welcome message when no data is available', async () => {
     mock.onGet('/program/').reply(200, []);
+    mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
 
     await act(async () => {
@@ -142,14 +180,20 @@ describe('DashboardOverview', () => {
       { ...mockProgram, current_week_number: 3 },
       { ...mockProgram, id: 2, current_week_number: 2, is_active: false },
     ];
+    const multipleWorkouts = [
+      { ...mockWorkout, id: 1, program_id: 1 },
+      { ...mockWorkout, id: 2, program_id: 1 },
+      { ...mockWorkout, id: 3, program_id: 1 },
+      { ...mockWorkout, id: 4, program_id: 2 },
+    ];
     const multipleOneRepMaxes = [
       mockOneRepMax,
       { ...mockOneRepMax, exercise_name: 'Squat', one_rep_max: 315 },
     ];
 
     mock.onGet('/program/').reply(200, multiplePrograms);
+    mock.onGet('/programmed_workout/').reply(200, multipleWorkouts);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, multipleOneRepMaxes);
-    mock.onGet('/exercise/').reply(200, []);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -157,17 +201,18 @@ describe('DashboardOverview', () => {
 
     await waitFor(
       () => {
-        // Total workouts should be sum of current_week_number (3 + 2 = 5)
-        expect(screen.getByText('5')).toBeInTheDocument();
-        // 1RM records count - check the card with ShowChartIcon (first one in dashboard)
+        // Total workouts should be actual workout count (4 workouts)
+        expect(screen.getByText('4')).toBeInTheDocument();
+        // 1RM records count - check the card with ShowChartIcon
         const showChartIcons = screen.getAllByTestId('ShowChartIcon');
         const oneRepMaxCard = showChartIcons[0].closest('.MuiCard-root');
         expect(oneRepMaxCard).toHaveTextContent('2');
-        // Unique exercises count - check the card with TrendingUpIcon
-        const uniqueExercisesCard = screen.getByTestId('TrendingUpIcon').closest('.MuiCard-root');
+        // Unique exercises count - check the card with TrendingUpIcon (first one in dashboard)
+        const trendingUpIcons = screen.getAllByTestId('TrendingUpIcon');
+        const uniqueExercisesCard = trendingUpIcons[0].closest('.MuiCard-root');
         expect(uniqueExercisesCard).toHaveTextContent('2');
-        // Current week from active program
-        expect(screen.getByText('3')).toBeInTheDocument();
+        // Current week from active program (3 workouts = Week 1)
+        expect(screen.getByText('1')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -175,19 +220,21 @@ describe('DashboardOverview', () => {
 
   it('should verify API calls are made with correct endpoints', async () => {
     mock.onGet('/program/').reply(200, []);
+    mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/exercise/').reply(200, []);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
     });
 
     await waitFor(() => {
-      expect(mock.history.get).toHaveLength(4);
+      expect(mock.history.get).toHaveLength(5); // 3 from DashboardOverview + 2 from ConjugateProgression
       expect(mock.history.get[0].url).toBe('/program/');
-      expect(mock.history.get[1].url).toBe('/user_one_rep_max/user/test-user-id');
+      expect(mock.history.get[1].url).toBe('/programmed_workout/');
       expect(mock.history.get[2].url).toBe('/user_one_rep_max/user/test-user-id');
-      expect(mock.history.get[3].url).toBe('/exercise/');
+      // Additional calls from ConjugateProgression component
+      expect(mock.history.get[3].url).toBe('/programmed_workout/');
+      expect(mock.history.get[4].url).toBe('/user_one_rep_max/user/test-user-id');
     });
   }, 10000);
 });

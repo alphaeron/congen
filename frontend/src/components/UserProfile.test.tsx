@@ -55,26 +55,6 @@ describe('UserProfile', () => {
       updated_at: '2023-08-09T10:15:30Z',
     });
 
-    // Mock WorkoutPreferencesSection API calls
-    mock.onGet('/user_program_preferences/test-user-id').reply(200, {
-      data: {
-        user_id: 'test-user-id',
-        program_days_per_week: 3,
-        session_time_length_in_minutes: 60,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
-      },
-    });
-
-    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, {
-      data: [],
-    });
-
-    mock.onGet('/exercises').reply(200, [
-      { id: 1, name: 'Bench Press', category: 'strength' },
-      { id: 2, name: 'Squat', category: 'strength' },
-    ]);
-
     // Mock AccountSecurity API calls
     mock.onDelete('/gdpr/delete_all_data').reply(200, { message: 'Account deleted successfully' });
   });
@@ -95,7 +75,6 @@ describe('UserProfile', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     expect(screen.getAllByText('Profile Overview')).toHaveLength(2); // One in sidebar, one in content
-    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
     expect(screen.getByText('Account Security')).toBeInTheDocument();
   });
@@ -108,15 +87,6 @@ describe('UserProfile', () => {
     expect(screen.getByText('Member since December 31, 2023')).toBeInTheDocument();
     expect(screen.getByText('Roles: user')).toBeInTheDocument();
     expect(screen.getByText('Edit Profile')).toBeInTheDocument();
-  });
-
-  it('should navigate to workout preferences tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} initialSection="workout-preferences" />);
-
-    // Wait for the workout preferences content to load
-    await waitFor(() => {
-      expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
-    });
   });
 
   it('should navigate to privacy tab', async () => {
@@ -210,7 +180,6 @@ describe('UserProfile', () => {
     renderWithProviders(<UserProfile user={mockUser} />);
 
     // Check that the navigation items are available
-    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
     expect(screen.getByText('Account Security')).toBeInTheDocument();
   });

@@ -18,11 +18,10 @@ import {
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
-import { getProgrammedExercisesByStage } from '../api/programmedExercise';
-import { getProgrammedWorkout } from '../api/programmedWorkout';
-import { getSetSchemesByExercise } from '../api/setScheme';
-import type { ProgrammedWorkout, WorkoutStage, ProgrammedExercise, SetScheme } from '../api/types';
-import { getWorkoutStagesByWorkout } from '../api/workoutStage';
+import { getUserDataExport } from '../api/gdpr';
+import type { 
+  UserDataExport
+} from '../api/types';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -32,16 +31,6 @@ interface WorkoutDetailProps {
     day_number: number;
     stages: number;
   }) => void;
-}
-
-interface WorkoutStageWithExercises {
-  stage: WorkoutStage;
-  exercises: ProgrammedExerciseWithSetSchemes[];
-}
-
-interface ProgrammedExerciseWithSetSchemes {
-  exercise: ProgrammedExercise;
-  setSchemes: SetScheme[];
 }
 
 // Table row data type
@@ -67,6 +56,7 @@ const columnHelper = createColumnHelper<TableRow>();
  *
  * Shows all stages, exercises, and set schemes for a specific workout
  * with sticky section headers that pin under the table header when scrolling.
+ * Uses optimized data loading to avoid N+1 query problems.
  *
  * @param workoutId The ID of the workout to display
  * @param onBack Callback to go back to the workout list
@@ -78,8 +68,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 }) => {
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
-  const [workout, setWorkout] = useState<ProgrammedWorkout | null>(null);
-  const [stages, setStages] = useState<WorkoutStageWithExercises[]>([]);
+  const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -87,36 +76,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       try {
         setIsLoading(true);
 
-        // Load workout details
-        const workoutData = await getProgrammedWorkout(workoutId);
-        setWorkout(workoutData);
-
-        // Load stages for this workout
-        const stagesData = await getWorkoutStagesByWorkout(workoutId);
-
-        // Load exercises and set schemes for each stage
-        const stagesWithExercises = await Promise.all(
-          stagesData.map(async stage => {
-            const exercises = await getProgrammedExercisesByStage(stage.id);
-
-            const exercisesWithSetSchemes = await Promise.all(
-              exercises.map(async exercise => {
-                const setSchemes = await getSetSchemesByExercise(exercise.id);
-                return {
-                  exercise,
-                  setSchemes,
-                };
-              })
-            );
-
-            return {
-              stage,
-              exercises: exercisesWithSetSchemes,
-            };
-          })
-        );
-
-        setStages(stagesWithExercises);
+        // Load all data in a single optimized call
+        const dataExport = await getUserDataExport();
+        setUserData(dataExport);
       } catch {
         enqueueSnackbar('Failed to load workout details. Please try again.', { variant: 'error' });
       } finally {
@@ -127,22 +89,37 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     loadWorkoutDetails();
   }, [workoutId]);
 
+  // Find the specific workout from the exported data
+  const workoutData = useMemo(() => {
+    if (!userData?.training_programs) return null;
+
+    for (const program of userData.training_programs) {
+      const workout = program.workouts.find(w => w.workout.id === workoutId);
+      if (workout) {
+        return workout;
+      }
+    }
+    return null;
+  }, [userData, workoutId]);
+
   // Update parent component with workout details for breadcrumb
   useEffect(() => {
-    if (workout && stages.length > 0 && onWorkoutDetailsUpdate) {
+    if (workoutData && onWorkoutDetailsUpdate) {
       onWorkoutDetailsUpdate({
-        name: workout.name,
-        day_number: workout.day_number,
-        stages: stages.length,
+        name: workoutData.workout.name,
+        day_number: workoutData.workout.day_number,
+        stages: workoutData.stages.length,
       });
     }
-  }, [workout, stages, onWorkoutDetailsUpdate]);
+  }, [workoutData, onWorkoutDetailsUpdate]);
 
   // Transform data for table
   const tableData = useMemo(() => {
+    if (!workoutData) return [];
+
     const rows: TableRow[] = [];
 
-    stages.forEach(stageData => {
+    workoutData.stages.forEach(stageData => {
       // Add stage header row
       rows.push({
         id: `stage-${stageData.stage.id}`,
@@ -153,7 +130,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
       // Add exercise rows
       stageData.exercises.forEach(exerciseData => {
-        const setSchemes = exerciseData.setSchemes || [];
+        const setSchemes = exerciseData.set_schemes || [];
         if (setSchemes.length === 0) return;
 
         // Aggregate set scheme data
@@ -189,7 +166,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     });
 
     return rows;
-  }, [stages]);
+  }, [workoutData]);
 
   // Define columns
   const columns = useMemo(
@@ -301,7 +278,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     );
   }
 
-  if (!workout) {
+  if (!workoutData) {
     return <Alert severity="warning">Workout not found.</Alert>;
   }
 

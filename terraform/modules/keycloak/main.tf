@@ -21,6 +21,8 @@ resource "keycloak_realm" "congen" {
   remember_me                    = true
   login_with_email_allowed       = true
   duplicate_emails_allowed       = false
+  login_theme                    = "congen"
+  account_theme                  = "congen"
 }
 
 # Create roles

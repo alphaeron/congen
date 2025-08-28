@@ -18,6 +18,7 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
+import { ExerciseAnalytics } from './ExerciseAnalytics';
 import { getExercises } from '../api/exercise';
 import type { User, UserOneRepMax, Exercise } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
@@ -268,6 +269,9 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           )}
         </Box>
       </Card>
+
+      {/* Exercise Analytics Section */}
+      <ExerciseAnalytics user={user} />
     </React.Fragment>
   );
 };

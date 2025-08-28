@@ -23,6 +23,7 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { WorkoutAnalytics } from './WorkoutAnalytics';
 import { WorkoutDetail } from './WorkoutDetail';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getPrograms } from '../api/program';
@@ -48,7 +49,7 @@ interface WorkoutsProps {
  * @param selectedWorkout The selected workout ID (from URL)
  * @returns Workouts component
  */
-export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
+export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
@@ -298,6 +299,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ selectedWorkout }) => {
           )}
         </Box>
       )}
+
+      {/* Workout Analytics Section */}
+      <WorkoutAnalytics user={user} />
 
       {/* Generate Workouts Dialog */}
       <Dialog open={generateDialogOpen} onClose={() => setGenerateDialogOpen(false)}>

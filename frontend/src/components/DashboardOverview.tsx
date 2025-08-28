@@ -7,9 +7,10 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 
-import { ExerciseHistory } from './ExerciseHistory';
+import { ConjugateProgression } from './ConjugateProgression';
 import { getPrograms } from '../api/program';
-import type { User, Program, UserOneRepMax } from '../api/types';
+import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import type { User, Program, UserOneRepMax, ProgrammedWorkout } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 
 interface DashboardOverviewProps {
@@ -29,6 +30,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,12 +46,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         setIsLoading(true);
 
         // Load all dashboard data in parallel
-        const [programsData, oneRepMaxesData] = await Promise.all([
+        const [programsData, workoutsData, oneRepMaxesData] = await Promise.all([
           getPrograms(),
+          getProgrammedWorkouts(),
           getUserOneRepMaxes(user.keycloak_id),
         ]);
 
         setPrograms(programsData);
+        setWorkouts(workoutsData);
         setOneRepMaxes(oneRepMaxesData);
       } catch {
         enqueueSnackbar('Failed to load dashboard data. Please try again.', { variant: 'error' });
@@ -70,7 +74,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   }
 
   const activeProgram = programs.find(program => program.is_active);
-  const totalWorkouts = programs.reduce((total, program) => total + program.current_week_number, 0);
+  const activeProgramWorkouts = activeProgram 
+    ? workouts.filter(workout => workout.program_id === activeProgram.id)
+    : [];
+  
+  // Calculate actual total workouts across all programs
+  const totalWorkouts = workouts.length;
+  
+  // Calculate current week based on actual workout count (assuming 3-4 workouts per week)
+  const currentWeek = activeProgramWorkouts.length > 0 
+    ? Math.ceil(activeProgramWorkouts.length / 3) 
+    : 0;
+  
   const recentOneRepMaxes = oneRepMaxes.slice(-5); // Last 5 1RMs
 
   return (
@@ -170,7 +185,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 <CalendarTodayIcon color="primary" />
                 <Box display="flex" flexDirection="column" alignItems="center">
                   <Typography variant="h4" component="div" textAlign="center">
-                    {activeProgram ? activeProgram.current_week_number : 0}
+                    {currentWeek}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" textAlign="center">
                     Current Week
@@ -194,7 +209,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 {activeProgram.name}
               </Typography>
               <Chip
-                label={`Week ${activeProgram.current_week_number}`}
+                label={`Week ${currentWeek}`}
                 color="primary"
                 size="small"
               />
@@ -206,6 +221,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
           </CardContent>
         </Card>
       )}
+
+      {/* Conjugate Progression Section */}
+      <ConjugateProgression user={user} />
 
       {/* Recent 1RM Section */}
       {recentOneRepMaxes.length > 0 && (
@@ -241,9 +259,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
           </CardContent>
         </Card>
       )}
-
-      {/* Exercise History Section */}
-      <ExerciseHistory user={user} />
 
       {/* No Data State */}
       {!activeProgram && recentOneRepMaxes.length === 0 && (

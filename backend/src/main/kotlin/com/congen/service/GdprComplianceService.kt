@@ -2,30 +2,16 @@ package com.congen.service
 
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
-import com.congen.model.Program
-import com.congen.model.ProgramWithWorkouts
-import com.congen.model.ProgrammedExercise
-import com.congen.model.ProgrammedExerciseWithSetSchemes
-import com.congen.model.ProgrammedWorkout
-import com.congen.model.ProgrammedWorkoutWithStages
-import com.congen.model.SetScheme
 import com.congen.model.UserConsent
 import com.congen.model.UserDataExport
-import com.congen.model.WorkoutStage
-import com.congen.model.WorkoutStageWithExercises
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Instant
 
@@ -66,10 +52,6 @@ import java.time.Instant
  * @param userOneRepMaxDAL Data access layer for one-rep-max records
  * @param userWeightUnitPreferenceDAL Data access layer for weight unit preferences
  * @param programDAL Data access layer for training programs
- * @param programmedWorkoutDAL Data access layer for programmed workouts
- * @param workoutStageDAL Data access layer for workout stages
- * @param programmedExerciseDAL Data access layer for programmed exercises
- * @param setSchemeDAL Data access layer for set schemes
  * @param auditService Service for audit logging
  *
  * @author Congen Development Team
@@ -85,81 +67,10 @@ class GdprComplianceService(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val programDAL: ProgramDAL,
-    private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
-    private val workoutStageDAL: WorkoutStageDAL,
-    private val programmedExerciseDAL: ProgrammedExerciseDAL,
-    private val setSchemeDAL: SetSchemeDAL,
     private val auditService: AuditService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GdprComplianceService::class.java)
-    }
-
-    /**
-     * Helper function to fetch set schemes for an exercise.
-     */
-    private fun fetchSetSchemesForExercise(exercise: ProgrammedExercise): Mono<List<SetScheme>> {
-        return setSchemeDAL.selectSetSchemesByProgrammedExerciseId(exercise.id)
-    }
-
-    /**
-     * Helper function to fetch exercises for a stage.
-     */
-    private fun fetchExercisesForStage(stage: WorkoutStage): Mono<List<ProgrammedExerciseWithSetSchemes>> {
-        return programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(stage.id)
-            .flatMap { exercises ->
-                Flux.fromIterable(exercises)
-                    .flatMap { exercise ->
-                        fetchSetSchemesForExercise(exercise)
-                            .map { setSchemes ->
-                                ProgrammedExerciseWithSetSchemes(
-                                    exercise = exercise,
-                                    setSchemes = setSchemes
-                                )
-                            }
-                    }
-                    .collectList()
-            }
-    }
-
-    /**
-     * Helper function to fetch stages for a workout.
-     */
-    private fun fetchStagesForWorkout(workout: ProgrammedWorkout): Mono<List<WorkoutStageWithExercises>> {
-        return workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(workout.id)
-            .flatMap { stages ->
-                Flux.fromIterable(stages)
-                    .flatMap { stage ->
-                        fetchExercisesForStage(stage)
-                            .map { exercises ->
-                                WorkoutStageWithExercises(
-                                    stage = stage,
-                                    exercises = exercises
-                                )
-                            }
-                    }
-                    .collectList()
-            }
-    }
-
-    /**
-     * Helper function to fetch workouts for a program.
-     */
-    private fun fetchWorkoutsForProgram(program: Program): Mono<List<ProgrammedWorkoutWithStages>> {
-        return programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(program.id)
-            .flatMap { workouts ->
-                Flux.fromIterable(workouts)
-                    .flatMap { workout ->
-                        fetchStagesForWorkout(workout)
-                            .map { stages ->
-                                ProgrammedWorkoutWithStages(
-                                    workout = workout,
-                                    stages = stages
-                                )
-                            }
-                    }
-                    .collectList()
-            }
     }
 
     /**
@@ -262,22 +173,11 @@ class GdprComplianceService(
 
                             Mono.zip(programsMono, auditLogsMono, dataRetentionPoliciesMono)
                                 .flatMap { tuple3 ->
-                                    val programs = tuple3.t1 ?: emptyList()
                                     val auditLogs = tuple3.t2 ?: emptyList()
                                     val retentionPolicies = tuple3.t3 ?: emptyList()
 
-                                    // Fetch complete training programs with workouts, stages, exercises, and set schemes
-                                    Flux.fromIterable(programs)
-                                        .flatMap { program ->
-                                            fetchWorkoutsForProgram(program)
-                                                .map { workouts ->
-                                                    ProgramWithWorkouts(
-                                                        program = program,
-                                                        workouts = workouts
-                                                    )
-                                                }
-                                        }
-                                        .collectList()
+                                    // Use optimized single query to fetch complete training programs with workouts, stages, exercises, and set schemes
+                                    programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)
                                         .map { programsWithWorkouts ->
                                             UserDataExport(
                                                 keycloakId = user.keycloakId,
