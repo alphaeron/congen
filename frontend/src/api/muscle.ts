@@ -21,6 +21,6 @@ export const getMuscles = (): Promise<Muscle[]> =>
  */
 export const getIndividualMuscle = (muscleName: string): Promise<Muscle> =>
   REQUEST({
-    url: `/muscle/${muscleName}`,
+    url: `/muscle/${encodeURIComponent(muscleName)}`,
     method: 'GET',
   });

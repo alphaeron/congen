@@ -118,6 +118,7 @@ export const congenNivoTheme = {
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
       border: `1px solid ${gray[300]}`,
       padding: '8px 12px',
+      maxWidth: 200,
     },
   },
   
@@ -136,110 +137,88 @@ export const congenNivoTheme = {
  * Based on Congen's brand colors
  */
 export const congenColorSchemes = {
-  // Primary scheme using Congen's brand colors
-  congen: [
-    brand[500],    // Primary blue
-    secondary[500], // Orange
-    green[500],     // Success green
-    warning[500],   // Warning yellow
-    brand[300],     // Light blue
-    secondary[300], // Light orange
-    green[300],     // Light green
-    warning[300],   // Light yellow
-  ],
-  
-  // Strength-focused scheme
+  // Strength-focused color scheme
   strength: [
-    brand[600],     // Dark blue
-    brand[500],     // Blue
-    brand[400],     // Medium blue
-    brand[300],     // Light blue
-    secondary[600], // Dark orange
-    secondary[500], // Orange
-    secondary[400], // Medium orange
-    secondary[300], // Light orange
+    brand[500],    // Primary brand color
+    secondary[500], // Secondary color
+    green[500],    // Success green
+    warning[500],  // Warning orange
+    gray[600],     // Neutral gray
+    brand[300],    // Light brand
+    secondary[300], // Light secondary
+    green[300],    // Light green
   ],
   
-  // Performance scheme
-  performance: [
-    green[600],     // Dark green
-    green[500],     // Green
-    brand[500],     // Blue
-    secondary[500], // Orange
-    warning[500],   // Yellow
-    brand[300],     // Light blue
-    green[300],     // Light green
-    secondary[300], // Light orange
+  // Hierarchical color scheme for nested structures
+  hierarchical: [
+    brand[600],    // Dark primary for root
+    brand[500],    // Primary for level 1
+    brand[400],    // Medium for level 2
+    brand[300],    // Light for level 3
+    secondary[600], // Dark secondary for variety
+    secondary[500], // Secondary for level 1
+    secondary[400], // Medium secondary for level 2
+    secondary[300], // Light secondary for level 3
   ],
+  
+  // Exercise category colors
+  exercise: {
+    compound: brand[500],     // Compound lifts
+    accessory: secondary[500], // Accessory work
+    cardio: green[500],       // Cardio
+    mobility: warning[500],   // Mobility/flexibility
+    other: gray[500],         // Other exercises
+  },
 };
 
 /**
- * Congen gradient definitions for enhanced visual appeal
- * Based on Nivo gradients guide: https://nivo.rocks/guides/gradients/
+ * Congen-specific gradients for Nivo charts
  */
 export const congenGradients = [
-  // Primary gradient - blue to light blue
   {
-    id: 'congenPrimary',
+    id: 'brand',
     type: 'linearGradient',
     colors: [
-      { offset: 0, color: brand[600] },
+      { offset: 0, color: brand[300] },
       { offset: 50, color: brand[500] },
-      { offset: 100, color: brand[300] },
+      { offset: 100, color: brand[700] },
     ],
   },
-  
-  // Secondary gradient - orange to light orange
   {
-    id: 'congenSecondary',
+    id: 'secondary',
     type: 'linearGradient',
     colors: [
-      { offset: 0, color: secondary[600] },
+      { offset: 0, color: secondary[300] },
       { offset: 50, color: secondary[500] },
-      { offset: 100, color: secondary[300] },
+      { offset: 100, color: secondary[700] },
     ],
   },
-  
-  // Success gradient - green to light green
   {
-    id: 'congenSuccess',
+    id: 'success',
     type: 'linearGradient',
     colors: [
-      { offset: 0, color: green[600] },
+      { offset: 0, color: green[300] },
       { offset: 50, color: green[500] },
-      { offset: 100, color: green[300] },
+      { offset: 100, color: green[700] },
     ],
   },
-  
-  // Warning gradient - yellow to light yellow
   {
-    id: 'congenWarning',
+    id: 'neutral',
     type: 'linearGradient',
     colors: [
-      { offset: 0, color: warning[600] },
-      { offset: 50, color: warning[500] },
-      { offset: 100, color: warning[300] },
-    ],
-  },
-  
-  // Strength gradient - dark to light
-  {
-    id: 'congenStrength',
-    type: 'linearGradient',
-    colors: [
-      { offset: 0, color: gray[800] },
-      { offset: 50, color: gray[600] },
-      { offset: 100, color: gray[400] },
+      { offset: 0, color: gray[200] },
+      { offset: 50, color: gray[400] },
+      { offset: 100, color: gray[600] },
     ],
   },
 ];
 
 /**
- * Common legend configuration for Congen charts
+ * Common legend configuration for Congen charts with multiselection support
  * Based on Nivo legends guide: https://nivo.rocks/guides/legends/
  */
 export const congenLegendConfig = {
-  // Standard legend configuration with clickable legends
+  // Standard legend configuration with clickable legends and multiselection
   standard: {
     anchor: 'bottom-right' as const,
     direction: 'column' as const,
@@ -273,7 +252,7 @@ export const congenLegendConfig = {
     ],
   },
   
-  // Horizontal legend configuration with clickable legends
+  // Horizontal legend configuration with clickable legends and multiselection
   horizontal: {
     anchor: 'bottom' as const,
     direction: 'row' as const,
@@ -334,11 +313,11 @@ export const congenLegendConfig = {
 };
 
 /**
- * Common axis configuration for Congen charts
+ * Common axis configuration for Congen charts with text wrapping
  * Based on Nivo axes guide: https://nivo.rocks/guides/axes/
  */
 export const congenAxisConfig = {
-  // Standard bottom axis
+  // Standard bottom axis with text wrapping
   bottom: {
     tickSize: 5,
     tickPadding: 5,
@@ -377,4 +356,30 @@ export const congenAxisConfig = {
     legendOffset: 50,
     legendPosition: 'middle' as const,
   },
+};
+
+/**
+ * Helper function to create hierarchical color schemes
+ * @param depth The depth of the hierarchy
+ * @param baseColor The base color to start with
+ * @returns Array of colors for each level
+ */
+export const createHierarchicalColors = (depth: number, baseColor: string = brand[500]) => {
+  const colors = [];
+  for (let i = 0; i < depth; i++) {
+    const opacity = 1 - (i * 0.2);
+    colors.push(`${baseColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`);
+  }
+  return colors;
+};
+
+/**
+ * Helper function to truncate long text with ellipsis
+ * @param text The text to truncate
+ * @param maxLength The maximum length before truncation
+ * @returns Truncated text
+ */
+export const truncateText = (text: string, maxLength: number = 20) => {
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
 };

@@ -14,18 +14,21 @@ import {
 import { ResponsiveIcicle } from '@nivo/icicle';
 import { ResponsiveRadialBar } from '@nivo/radial-bar';
 import { ResponsiveSunburst } from '@nivo/sunburst';
-import { ResponsiveTreeMap } from '@nivo/treemap';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { getUserDataExport } from '../api/gdpr';
+import { getExerciseMuscle } from '../api/exerciseMuscle';
+import { getExerciseEquipment } from '../api/exerciseEquipment';
 import type { 
   User, 
   ProgrammedWorkout, 
   WorkoutStage, 
   ProgrammedExercise, 
   SetScheme,
-  UserOneRepMax 
+  UserOneRepMax,
+  ExerciseMuscle,
+  ExerciseEquipment
 } from '../api/types';
 import { congenNivoTheme } from '../theme/nivoTheme';
 
@@ -76,6 +79,8 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
+  const [exerciseEquipmentData, setExerciseEquipmentData] = useState<Map<string, string[]>>(new Map());
 
   // Load all workout data using optimized GDPR export endpoint
   useEffect(() => {
@@ -102,6 +107,44 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
 
         setWorkouts(workoutsData);
         setOneRepMaxes(userDataExport.user_one_rep_max as unknown as UserOneRepMax[]);
+
+        // Fetch all exercise muscle and equipment data in bulk (only 2 API calls instead of 278)
+        try {
+          const [allExerciseMuscles, allExerciseEquipment] = await Promise.all([
+            getExerciseMuscle(),
+            getExerciseEquipment()
+          ]);
+
+          // Transform the bulk data into Maps for efficient lookup
+          const muscleData = new Map<string, string[]>();
+          const equipmentData = new Map<string, string[]>();
+
+          // Group muscles by exercise name
+          allExerciseMuscles.forEach((exerciseMuscle: ExerciseMuscle) => {
+            const exerciseName = exerciseMuscle.exercise_name;
+            const existing = muscleData.get(exerciseName) || [];
+            if (!existing.includes(exerciseMuscle.muscle_name)) {
+              existing.push(exerciseMuscle.muscle_name);
+            }
+            muscleData.set(exerciseName, existing);
+          });
+
+          // Group equipment by exercise name
+          allExerciseEquipment.forEach((exerciseEquipment: ExerciseEquipment) => {
+            const exerciseName = exerciseEquipment.exercise_name;
+            const existing = equipmentData.get(exerciseName) || [];
+            if (!existing.includes(exerciseEquipment.equipment_name)) {
+              existing.push(exerciseEquipment.equipment_name);
+            }
+            equipmentData.set(exerciseName, existing);
+          });
+
+          setExerciseMuscleData(muscleData);
+          setExerciseEquipmentData(equipmentData);
+        } catch (err) {
+          enqueueSnackbar('Failed to load exercise muscle and equipment data. Some categories may be missing.', { variant: 'warning' });
+          console.error('Error loading exercise muscle and equipment data:', err);
+        }
       } catch (err) {
         enqueueSnackbar('Failed to load exercise analytics data. Please try again.', { variant: 'error' });
         console.error('Error loading exercise analytics data:', err);
@@ -111,33 +154,13 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
     };
 
     loadWorkoutData();
-  }, [user.keycloak_id]);
+  }, [user.keycloak_id, enqueueSnackbar]);
 
   // Calculate exercise statistics
   const exerciseStats = useMemo(() => {
     if (!workouts.length) return [];
 
     const exerciseMap = new Map<string, ExerciseData>();
-    
-    // Define muscle group and equipment mappings
-    const muscleGroupMappings: { [key: string]: string[] } = {
-      'Chest': ['bench', 'press', 'fly', 'dip'],
-      'Back': ['row', 'pull', 'deadlift', 'lat'],
-      'Legs': ['squat', 'leg', 'calf', 'lunge'],
-      'Shoulders': ['shoulder', 'overhead', 'lateral', 'rear'],
-      'Arms': ['curl', 'extension', 'tricep', 'bicep'],
-      'Core': ['ab', 'core', 'plank', 'crunch'],
-    };
-
-    const equipmentMappings: { [key: string]: string[] } = {
-      'Barbell': ['barbell', 'bar', 'squat', 'bench', 'deadlift', 'press'],
-      'Dumbbell': ['dumbbell', 'db'],
-      'Cable': ['cable', 'pulley'],
-      'Machine': ['machine', 'press', 'leg press'],
-      'Bodyweight': ['bodyweight', 'push-up', 'pull-up', 'dip'],
-      'Band': ['band', 'resistance'],
-      'Kettlebell': ['kettlebell', 'kb'],
-    };
 
     workouts.forEach((workoutData) => {
       workoutData.stages.forEach((stage) => {
@@ -150,25 +173,9 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
             maxWeight: 0,
             avgWeight: 0,
             totalSets: 0,
-            muscleGroup: 'Other',
-            equipment: 'Other',
+            muscleGroup: exerciseMuscleData.get(exerciseName)?.join(', ') || 'Unknown',
+            equipment: exerciseEquipmentData.get(exerciseName)?.join(', ') || 'Unknown',
           };
-
-          // Determine muscle group and equipment
-          const lowerName = exerciseName.toLowerCase();
-          for (const [group, keywords] of Object.entries(muscleGroupMappings)) {
-            if (keywords.some(keyword => lowerName.includes(keyword))) {
-              existing.muscleGroup = group;
-              break;
-            }
-          }
-
-          for (const [equip, keywords] of Object.entries(equipmentMappings)) {
-            if (keywords.some(keyword => lowerName.includes(keyword))) {
-              existing.equipment = equip;
-              break;
-            }
-          }
 
           // Calculate stats
           let totalWeight = 0;
@@ -197,7 +204,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
     return Array.from(exerciseMap.values())
       .sort((a, b) => b.totalVolume - a.totalVolume)
       .slice(0, 20); // Top 20 exercises
-  }, [workouts]);
+  }, [workouts, exerciseMuscleData, exerciseEquipmentData]);
 
   // Prepare chart data
   const radialBarData = useMemo(() => {
@@ -248,60 +255,30 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
     };
   }, [exerciseStats]);
 
-  const treemapData = useMemo(() => {
-    return {
-      name: 'Exercise Volume',
-      children: exerciseStats.slice(0, 15).map(exercise => ({
-        name: exercise.name,
-        loc: exercise.totalVolume,
-        children: [{
-          name: `${exercise.frequency} sessions`,
-          loc: exercise.totalVolume,
-        }],
-      })),
-    };
-  }, [exerciseStats]);
-
   const icicleData = useMemo(() => {
+    if (!exerciseStats.length) return null;
+
+    // Group by actual muscle groups from the exercise data
+    const muscleGroups = new Map<string, { volume: number; exercises: Map<string, number> }>();
+    
+    exerciseStats.forEach(exercise => {
+      // Use the actual muscle group from the exercise data
+      const group = exercise.muscleGroup;
+      const existing = muscleGroups.get(group) || { volume: 0, exercises: new Map() };
+      existing.volume += exercise.totalVolume;
+      existing.exercises.set(exercise.name, exercise.totalVolume);
+      muscleGroups.set(group, existing);
+    });
+
     return {
-      name: 'Training Structure',
-      loc: exerciseStats.reduce((sum, ex) => sum + ex.totalVolume, 0),
-      children: [
-        {
-          name: 'Compound Lifts',
-          loc: exerciseStats
-            .filter(ex => ['squat', 'bench', 'deadlift', 'press'].some(lift => 
-              ex.name.toLowerCase().includes(lift)
-            ))
-            .reduce((sum, ex) => sum + ex.totalVolume, 0),
-          children: exerciseStats
-            .filter(ex => ['squat', 'bench', 'deadlift', 'press'].some(lift => 
-              ex.name.toLowerCase().includes(lift)
-            ))
-            .slice(0, 5)
-            .map(ex => ({
-              name: ex.name,
-              loc: ex.totalVolume,
-            })),
-        },
-        {
-          name: 'Accessory Work',
-          loc: exerciseStats
-            .filter(ex => !['squat', 'bench', 'deadlift', 'press'].some(lift => 
-              ex.name.toLowerCase().includes(lift)
-            ))
-            .reduce((sum, ex) => sum + ex.totalVolume, 0),
-          children: exerciseStats
-            .filter(ex => !['squat', 'bench', 'deadlift', 'press'].some(lift => 
-              ex.name.toLowerCase().includes(lift)
-            ))
-            .slice(0, 5)
-            .map(ex => ({
-              name: ex.name,
-              loc: ex.totalVolume,
-            })),
-        },
-      ],
+      id: 'Exercise Volume Analysis',
+      children: Array.from(muscleGroups.entries()).map(([group, data]) => ({
+        id: group,
+        children: Array.from(data.exercises.entries()).slice(0, 8).map(([exercise, volume]) => ({
+          id: exercise,
+          value: volume,
+        })),
+      })),
     };
   }, [exerciseStats]);
 
@@ -430,49 +407,6 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
             </Card>
           </Grid>
 
-          {/* Treemap Chart - Exercise Volume */}
-          <Grid item xs={12} lg={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <BarChartIcon color="success" />
-                  <Typography variant="h6">Exercise Volume Distribution</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Total volume and frequency for each exercise
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveTreeMap
-                    data={treemapData}
-                    identity="name"
-                    value="loc"
-                    valueFormat=".0f"
-                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    labelSkipSize={12}
-                    labelTextColor={{
-                      from: 'color',
-                      modifiers: [['darker', 1.2]],
-                    }}
-                    parentLabelPosition="left"
-                    parentLabelTextColor={{
-                      from: 'color',
-                      modifiers: [['darker', 2]],
-                    }}
-                    borderColor={{
-                      from: 'color',
-                      modifiers: [['darker', 0.1]],
-                    }}
-                    colors={{ scheme: 'nivo' }}
-                    theme={congenNivoTheme}
-                    enableParentLabel={true}
-                    parentLabelSize={16}
-                    parentLabelPadding={6}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
           {/* Icicle Chart - Training Structure */}
           <Grid item xs={12} lg={6}>
             <Card variant="outlined">
@@ -488,7 +422,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
                   <ResponsiveIcicle
                     data={icicleData}
                     margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    value="loc"
+                    value="value"
                     colors={{ scheme: 'category10' }}
                     theme={congenNivoTheme}
                     enableLabels={true}

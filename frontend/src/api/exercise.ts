@@ -21,7 +21,7 @@ export const getExercises = (): Promise<Exercise[]> =>
  */
 export const getIndividualExercise = (exerciseName: string): Promise<Exercise> =>
   REQUEST({
-    url: `/exercise/${exerciseName}`,
+    url: `/exercise/${encodeURIComponent(exerciseName)}`,
     method: 'GET',
   });
 
@@ -34,7 +34,7 @@ export const getIndividualExercise = (exerciseName: string): Promise<Exercise> =
  */
 export const getExerciseMuscles = (exerciseName: string): Promise<ExerciseMuscle[]> =>
   REQUEST({
-    url: `/exercise/${exerciseName}/muscle`,
+    url: `/exercise/${encodeURIComponent(exerciseName)}/muscle`,
     method: 'GET',
   });
 
@@ -47,6 +47,6 @@ export const getExerciseMuscles = (exerciseName: string): Promise<ExerciseMuscle
  */
 export const getExerciseEquipment = (exerciseName: string): Promise<ExerciseEquipment[]> =>
   REQUEST({
-    url: `/exercise/${exerciseName}/equipment`,
+    url: `/exercise/${encodeURIComponent(exerciseName)}/equipment`,
     method: 'GET',
   });

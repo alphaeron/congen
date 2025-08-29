@@ -21,6 +21,6 @@ export const getEquipment = (): Promise<Equipment[]> =>
  */
 export const getIndividualEquipment = (equipmentName: string): Promise<Equipment> =>
   REQUEST({
-    url: `/equipment/${equipmentName}`,
+    url: `/equipment/${encodeURIComponent(equipmentName)}`,
     method: 'GET',
   });

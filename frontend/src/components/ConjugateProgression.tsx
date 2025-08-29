@@ -66,6 +66,11 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Legend selection state for each chart
+  const [volumeSelectedItems, setVolumeSelectedItems] = useState<string[]>([]);
+  const [pieSelectedItems, setPieSelectedItems] = useState<string[]>([]);
+  const [progressSelectedItems, setProgressSelectedItems] = useState<string[]>([]);
+
   // Load all workout data using optimized single API call
   useEffect(() => {
     const loadWorkoutData = async () => {
@@ -334,6 +339,36 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     };
   }, [exerciseCorrelations]);
 
+  // Filter volume data based on legend selection
+  const filteredVolumeChartData = useMemo(() => {
+    if (volumeSelectedItems.length === 0) {
+      return volumeChartData;
+    }
+    return volumeChartData.filter(item => 
+      volumeSelectedItems.includes(item.id)
+    );
+  }, [volumeChartData, volumeSelectedItems]);
+
+  // Filter pie data based on legend selection
+  const filteredCorrelationChartData = useMemo(() => {
+    if (pieSelectedItems.length === 0) {
+      return correlationChartData;
+    }
+    return correlationChartData.filter(item => 
+      pieSelectedItems.includes(item.category)
+    );
+  }, [correlationChartData, pieSelectedItems]);
+
+  // Filter progress data based on legend selection
+  const filteredProgressChartData = useMemo(() => {
+    if (progressSelectedItems.length === 0) {
+      return progressChartData;
+    }
+    return progressChartData.filter(item => 
+      progressSelectedItems.includes(item.id)
+    );
+  }, [progressChartData, progressSelectedItems]);
+
   if (isLoading) {
     return (
       <Card sx={{ mb: 4 }}>
@@ -386,8 +421,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                   Total weight lifted over time (including band resistance)
                 </Typography>
                 <Box sx={{ height: 300 }}>
-                                            <ResponsiveLine
-                            data={volumeChartData}
+                    <ResponsiveLine
+                        data={filteredVolumeChartData}
                             margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
                             xScale={{ type: 'point' }}
                             yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
@@ -467,7 +502,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                 </Typography>
                 <Box sx={{ height: 300 }}>
                   <ResponsivePie
-                    data={correlationChartData.map(d => ({
+                    data={filteredCorrelationChartData.map(d => ({
                       id: d.category,
                       label: d.category,
                       value: d.volume,
@@ -502,7 +537,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                         symbolSize: 18,
                         symbolShape: 'circle',
                         onClick: (data: any) => {
-                          console.log('Legend clicked:', data);
+                          const itemId = data.id || data.label;
+                          setPieSelectedItems(prev => {
+                            if (prev.includes(itemId)) {
+                              return prev.filter(id => id !== itemId);
+                            } else {
+                              return [...prev, itemId];
+                            }
+                          });
                         },
                         effects: [
                           {
@@ -533,7 +575,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                 </Typography>
                 <Box sx={{ height: 300 }}>
                   <ResponsiveLine
-                    data={progressChartData}
+                    data={filteredProgressChartData}
                     margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
                     xScale={{ type: 'point' }}
                     yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
@@ -579,7 +621,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                         symbolShape: 'circle',
                         symbolBorderColor: 'rgba(0, 0, 0, .5)',
                         onClick: (data: any) => {
-                          console.log('Legend clicked:', data);
+                          const itemId = data.id || data.label;
+                          setProgressSelectedItems(prev => {
+                            if (prev.includes(itemId)) {
+                              return prev.filter(id => id !== itemId);
+                            } else {
+                              return [...prev, itemId];
+                            }
+                          });
                         },
                         effects: [
                           {

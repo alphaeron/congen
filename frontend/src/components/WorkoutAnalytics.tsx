@@ -17,12 +17,14 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { getUserDataExport } from '../api/gdpr';
+import { getIndividualExercise } from '../api/exercise';
 import type { 
   User, 
   ProgrammedWorkout, 
   WorkoutStage, 
   ProgrammedExercise, 
   SetScheme,
+  Exercise,
   Program
 } from '../api/types';
 import { congenNivoTheme, congenLegendConfig } from '../theme/nivoTheme';
@@ -78,6 +80,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
 
   // Load all workout data using optimized GDPR export endpoint
   useEffect(() => {
@@ -105,6 +108,28 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
 
         setWorkouts(workoutsData);
         setPrograms(programsData);
+
+        // Fetch exercise data for all unique exercises
+        const uniqueExercises = new Set<string>();
+        workoutsData.forEach((workoutData) => {
+          workoutData.stages.forEach((stage) => {
+            stage.exercises.forEach((exerciseData) => {
+              uniqueExercises.add(exerciseData.exercise.exercise_name);
+            });
+          });
+        });
+
+        const exerciseMap = new Map<string, Exercise>();
+        for (const exerciseName of Array.from(uniqueExercises)) {
+          try {
+            const exercise = await getIndividualExercise(exerciseName);
+            exerciseMap.set(exerciseName, exercise);
+          } catch (err) {
+            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, { variant: 'error' });
+          }
+        }
+
+        setExerciseData(exerciseMap);
       } catch (err) {
         enqueueSnackbar('Failed to load workout analytics data. Please try again.', { variant: 'error' });
         console.error('Error loading workout analytics data:', err);
@@ -219,7 +244,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
 
   // Calculate training structure data for icicle chart
   const trainingStructureData = useMemo(() => {
-    if (!workouts.length || !programs.length) return null;
+    if (!workouts.length || !programs.length || !exerciseData.size) return null;
 
     const activeProgram = programs.find(program => program.is_active);
     if (!activeProgram) return null;
@@ -228,62 +253,64 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
       workout.workout.program_id === activeProgram.id
     );
 
+    // Group by exercise categories based on real exercise data
+    const categoryVolumes = new Map<string, number>();
+    const categoryExercises = new Map<string, Map<string, number>>();
+
+    programWorkouts.forEach(workout => {
+      workout.stages.forEach(stage => {
+        stage.exercises.forEach(exercise => {
+          const exerciseName = exercise.exercise.exercise_name;
+          let category = 'Other';
+          
+          // Use real exercise data to categorize
+          const exerciseInfo = exerciseData.get(exerciseName);
+          if (exerciseInfo) {
+            if (exerciseInfo.is_accessory) {
+              category = 'Accessory Work';
+            } else {
+              // Use the actual movement type as the category
+              category = exerciseInfo.movement_type
+                .split('_')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+            }
+          }
+
+          // Calculate volume for this exercise
+          let exerciseVolume = 0;
+          exercise.set_schemes.forEach(setScheme => {
+            const weight = setScheme.performed_weight || setScheme.target_weight || 0;
+            const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
+            const bandWeight = setScheme.band_weight_lbs ? 
+              (setScheme.band_weight_lbs as any)?.weight_lbs || 0 : 0;
+            exerciseVolume += (weight + bandWeight) * reps;
+          });
+
+          // Add to category totals
+          categoryVolumes.set(category, (categoryVolumes.get(category) || 0) + exerciseVolume);
+          
+          // Track exercises and their individual volumes in each category
+          if (!categoryExercises.has(category)) {
+            categoryExercises.set(category, new Map());
+          }
+          const exerciseMap = categoryExercises.get(category)!;
+          exerciseMap.set(exerciseName, (exerciseMap.get(exerciseName) || 0) + exerciseVolume);
+        });
+      });
+    });
+
     return {
-      name: activeProgram.name,
-      loc: programWorkouts.reduce((sum, workout) => {
-        let workoutVolume = 0;
-        workout.stages.forEach(stage => {
-          stage.exercises.forEach(exercise => {
-            exercise.set_schemes.forEach(setScheme => {
-              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight = setScheme.band_weight_lbs ? 
-                (setScheme.band_weight_lbs as any)?.weight_lbs || 0 : 0;
-              workoutVolume += (weight + bandWeight) * reps;
-            });
-          });
-        });
-        return sum + workoutVolume;
-      }, 0),
-      children: programWorkouts.slice(0, 5).map(workout => {
-        let workoutVolume = 0;
-        const exerciseCategories = new Map<string, number>();
-
-        workout.stages.forEach(stage => {
-          stage.exercises.forEach(exercise => {
-            exercise.set_schemes.forEach(setScheme => {
-              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight = setScheme.band_weight_lbs ? 
-                (setScheme.band_weight_lbs as any)?.weight_lbs || 0 : 0;
-              const setVolume = (weight + bandWeight) * reps;
-              workoutVolume += setVolume;
-
-              // Categorize exercise
-              const exerciseName = exercise.exercise.exercise_name.toLowerCase();
-              let category = 'Other';
-              if (['squat', 'bench', 'deadlift', 'press'].some(lift => exerciseName.includes(lift))) {
-                category = 'Compound Lifts';
-              } else if (['curl', 'extension', 'fly', 'raise'].some(keyword => exerciseName.includes(keyword))) {
-                category = 'Accessory Work';
-              }
-
-              exerciseCategories.set(category, (exerciseCategories.get(category) || 0) + setVolume);
-            });
-          });
-        });
-
-        return {
-          name: workout.workout.name,
-          loc: workoutVolume,
-          children: Array.from(exerciseCategories.entries()).map(([category, volume]) => ({
-            name: category,
-            loc: volume,
-          })),
-        };
-      }),
+      id: activeProgram.name,
+      children: Array.from(categoryVolumes.entries()).map(([category, totalVolume]) => ({
+        id: category,
+        children: Array.from(categoryExercises.get(category)?.entries() || []).map(([exerciseName, volume]) => ({
+          id: exerciseName,
+          value: volume,
+        })),
+      })),
     };
-  }, [workouts, programs]);
+  }, [workouts, programs, exerciseData]);
 
   // Prepare stream chart data
   const streamData = useMemo(() => {
@@ -349,8 +376,8 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
                     <ResponsiveIcicle
                       data={trainingStructureData}
                       margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                      value="loc"
-                      colors={{ scheme: 'category10' }}
+                      value="value"
+                      colors={{ scheme: 'paired' }}
                       theme={congenNivoTheme}
                       enableLabels={true}
                       labelTextColor={{

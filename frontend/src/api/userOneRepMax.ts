@@ -11,7 +11,7 @@ import type { UserOneRepMax } from './types';
 export const getUserOneRepMaxes = (userId: string, unit?: string): Promise<UserOneRepMax[]> => {
   return REQUEST({
     method: 'GET',
-    url: `/user_one_rep_max/user/${encodeURIComponent(userId)}`,
+    url: `/user_one_rep_max/user/${userId}`,
     params: unit ? { unit } : undefined,
   });
 };
@@ -31,7 +31,7 @@ export const getUserOneRepMax = (
 ): Promise<UserOneRepMax> => {
   return REQUEST({
     method: 'GET',
-    url: `/user_one_rep_max/user/${encodeURIComponent(userId)}/exercise/${encodeURIComponent(exerciseName)}`,
+    url: `/user_one_rep_max/user/${userId}/exercise/${encodeURIComponent(exerciseName)}`,
     params: unit ? { unit } : undefined,
   });
 };
@@ -76,6 +76,6 @@ export const deleteUserOneRepMax = (
 ): Promise<UserOneRepMax> => {
   return REQUEST({
     method: 'DELETE',
-    url: `/user_one_rep_max/user/${encodeURIComponent(userId)}/exercise/${encodeURIComponent(exerciseName)}`,
+    url: `/user_one_rep_max/user/${userId}/exercise/${encodeURIComponent(exerciseName)}`,
   });
 };
