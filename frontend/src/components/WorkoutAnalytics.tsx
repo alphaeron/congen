@@ -1,7 +1,3 @@
-import { default as BarChartIcon } from '@mui/icons-material/BarChart';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import {
   Box,
   Card,
@@ -9,12 +5,7 @@ import {
   Grid,
   Typography,
   CircularProgress,
-  useTheme,
 } from '@mui/material';
-import { ResponsiveBump } from '@nivo/bump';
-import { ResponsiveChord } from '@nivo/chord';
-import { ResponsiveIcicle } from '@nivo/icicle';
-import { ResponsiveStream } from '@nivo/stream';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
@@ -31,8 +22,10 @@ import type {
   Program
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { createCongenNivoTheme, congenLegendConfig } from '../theme/nivoTheme';
 import { categorizeExerciseVolume } from '../common/utils';
+import { ChordChart } from './ChordChart';
+import { StreamChart } from './StreamChart';
+import { IcicleChart } from './IcicleChart';
 
 interface WorkoutAnalyticsProps {
   user: User;
@@ -88,8 +81,6 @@ interface ExerciseCorrelationData {
  */
 export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const theme = useTheme();
-  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,13 +103,6 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
     }
     
     return weight;
-  };
-
-  // Helper function to get display unit for an exercise
-  const getDisplayUnit = (exerciseName: string): string => {
-    const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
-    const userUnit = preference?.preferred_unit || WeightUnit.LBS;
-    return userUnit === WeightUnit.KG ? 'kg' : 'lbs';
   };
 
   // Load all workout data using optimized GDPR export endpoint
@@ -160,8 +144,8 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         // Fetch exercise data for all unique exercises
         const uniqueExercises = new Set<string>();
         workoutsData.forEach((workoutData) => {
-          workoutData.stages.forEach((stage) => {
-            stage.exercises.forEach((exerciseData) => {
+          workoutData.stages.forEach((stage: any) => {
+            stage.exercises.forEach((exerciseData: any) => {
               uniqueExercises.add(exerciseData.exercise.exercise_name);
             });
           });
@@ -493,114 +477,36 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
           {/* Chord Diagram - Exercise Correlations */}
           {chordData.keys.length > 0 && (
             <Grid item xs={12} lg={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                    <TrendingUpIcon color="info" />
-                    <Typography variant="h6">Exercise Correlations</Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Exercise pairing patterns in your workouts
-                  </Typography>
-                  <Box sx={{ height: 400 }}>
-                    <ResponsiveChord
-                      data={chordData.matrix}
-                      keys={chordData.keys}
-                      margin={{ top: 60, right: 60, bottom: 90, left: 60 }}
-                      valueFormat=".0f"
-                      padAngle={0.02}
-                      innerRadiusRatio={0.96}
-                      innerRadiusOffset={0.02}
-                      inactiveArcOpacity={0.25}
-                      arcBorderWidth={1}
-                      arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                      activeRibbonOpacity={0.75}
-                      inactiveRibbonOpacity={0.25}
-                      ribbonBorderWidth={1}
-                      ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                      enableLabel={true}
-                      label="id"
-                      labelOffset={12}
-                      labelRotation={-90}
-                      labelTextColor={{
-                        from: 'color',
-                        modifiers: [['darker', 1]],
-                      }}
-                      colors={{ scheme: 'nivo' }}
-                      theme={nivoTheme}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
+              <ChordChart 
+                matrix={chordData.matrix}
+                keys={chordData.keys}
+                title="Exercise Correlations"
+                description="Exercise pairing patterns in your workouts"
+                height={400}
+              />
             </Grid>
           )}
 
           {/* Stream Chart - Volume Flow */}
           <Grid item xs={12} lg={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <ShowChartIcon color="secondary" />
-                  <Typography variant="h6">Volume Flow Over Time</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Training volume distribution across workout types
-                </Typography>
-                <Box sx={{ height: 400 }}>
-                  <ResponsiveStream
-                    data={streamData}
-                    keys={['Max Effort', 'Dynamic Effort', 'Accessory']}
-                    margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-                    colors={{ scheme: 'nivo' }}
-                    theme={nivoTheme}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
+            <StreamChart 
+              data={streamData}
+              keys={['Max Effort', 'Dynamic Effort', 'Accessory']}
+              title="Volume Flow Over Time"
+              description="Training volume distribution across workout types"
+              height={400}
+            />
           </Grid>
 
           {/* Training Structure Hierarchy */}
           {trainingStructureData && (
             <Grid item xs={12}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                    <FitnessCenterIcon color="primary" />
-                    <Typography variant="h6">Training Structure Hierarchy</Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Program → Workout → Exercise category breakdown
-                  </Typography>
-                  <Box sx={{ height: 400 }}>
-                    <ResponsiveIcicle
-                      data={trainingStructureData}
-                      margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                      value="value"
-                      colors={{ scheme: 'nivo' }}
-                      theme={nivoTheme}
-                      enableLabels={true}
-                      labelTextColor={{
-                        from: 'color',
-                        modifiers: [['darker', 2]],
-                      }}
-                      labelBoxAnchor="top"
-                      labelPaddingX={6}
-                      labelPaddingY={6}
-                      labelAlign="end"
-                      labelBaseline="center"
-                      labelRotation={270}
-                      labelSkipWidth={16}
-                      labelSkipHeight={48}
-                      borderWidth={1}
-                      borderColor={{
-                        from: 'color',
-                        modifiers: [['darker', 0.2]],
-                      }}
-                      borderRadius={4}
-                    />
-                  </Box>
-                </CardContent>
-              </Card>
+              <IcicleChart 
+                data={trainingStructureData}
+                title="Training Structure Hierarchy"
+                description="Program → Workout → Exercise category breakdown"
+                height={400}
+              />
             </Grid>
           )}
         </Grid>

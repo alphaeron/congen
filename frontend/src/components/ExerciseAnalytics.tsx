@@ -1,8 +1,3 @@
-import { default as BarChartIcon } from '@mui/icons-material/BarChart';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { default as SpeedIcon } from '@mui/icons-material/Speed';
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import {
   Box,
   Card,
@@ -10,11 +5,7 @@ import {
   Grid,
   Typography,
   CircularProgress,
-  useTheme,
 } from '@mui/material';
-import { ResponsiveIcicle } from '@nivo/icicle';
-import { ResponsiveRadialBar } from '@nivo/radial-bar';
-import { ResponsiveSunburst } from '@nivo/sunburst';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
@@ -33,7 +24,9 @@ import type {
   ExerciseEquipment
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { createCongenNivoTheme } from '../theme/nivoTheme';
+import { RadialBarChart } from './RadialBarChart';
+import { SunburstChart } from './SunburstChart';
+import { IcicleChart } from './IcicleChart';
 
 interface ExerciseAnalyticsProps {
   user: User;
@@ -79,8 +72,6 @@ interface ProgrammedExerciseWithSetSchemes {
  */
 export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const theme = useTheme();
-  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -297,6 +288,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
 
     return {
       name: 'Exercise Volume',
+      loc: 0, // Root node doesn't need a value
       children: Array.from(muscleGroups.entries()).map(([muscle, data]) => ({
         name: muscle,
         loc: data.volume,
@@ -309,7 +301,12 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
   }, [exerciseStats, weightUnitPreferences]);
 
   const icicleData = useMemo(() => {
-    if (!exerciseStats.length) return null;
+    if (!exerciseStats.length) {
+      return {
+        id: 'Volume',
+        children: [],
+      };
+    }
 
     // Group by individual muscles, not combined muscle groups
     const muscleGroups = new Map<string, { volume: number; exercises: Map<string, number> }>();
@@ -379,132 +376,17 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
         <Grid container spacing={3}>
           {/* Radial Bar Chart - Exercise Performance */}
           <Grid item xs={12} lg={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <FitnessCenterIcon color="primary" />
-                  <Typography variant="h6">Exercise Performance Metrics</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Volume, frequency, and max weight for top exercises
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveRadialBar
-                    data={radialBarData}
-                    valueFormat=">-0"
-                    padding={0.4}
-                    cornerRadius={2}
-                    margin={{ top: 40, right: 120, bottom: 40, left: 40 }}
-                    radialAxisStart={{ tickSize: 5, tickPadding: 5, tickRotation: 0 }}
-                    circularAxisOuter={{ tickSize: 2, tickPadding: 2, tickRotation: 0 }}
-                    labelsSkipAngle={10}
-                    colors={{ scheme: 'nivo' }}
-                    theme={nivoTheme}
-                    enableLabels={true}
-                    labelsRadiusOffset={0.5}
-                    legends={[
-                      {
-                        anchor: 'top-left',
-                        direction: 'column',
-                        justify: false,
-                        translateX: -40,
-                        translateY: 0,
-                        itemsSpacing: 2,
-                        itemDirection: 'left-to-right',
-                        itemWidth: 80,
-                        itemHeight: 20,
-                        itemTextColor: '#999',
-                        symbolSize: 12,
-                        symbolShape: 'circle',
-                        onClick: (data) => {
-                          console.log('Legend clicked:', data);
-                        },
-                      },
-                    ]}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
+            <RadialBarChart data={radialBarData} />
           </Grid>
 
           {/* Sunburst Chart - Exercise Hierarchy */}
           <Grid item xs={12} lg={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <ShowChartIcon color="secondary" />
-                  <Typography variant="h6">Exercise Volume Hierarchy</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Volume distribution by muscle groups and exercises
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveSunburst
-                    data={sunburstData}
-                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    id="name"
-                    value="loc"
-                    cornerRadius={2}
-                    borderColor={{ theme: 'background' }}
-                    colors={{ scheme: 'nivo' }}
-                    childColor={{
-                      from: 'color',
-                      modifiers: [['brighter', 0.1]],
-                    }}
-                    enableArcLabels={true}
-                    arcLabelsSkipAngle={10}
-                    arcLabelsTextColor={{
-                      from: 'color',
-                      modifiers: [['darker', 1.4]],
-                    }}
-                    theme={nivoTheme}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
+            <SunburstChart data={sunburstData} />
           </Grid>
 
           {/* Icicle Chart - Training Structure */}
           <Grid item xs={12} lg={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <TrendingUpIcon color="info" />
-                  <Typography variant="h6">Training Structure Analysis</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Volume breakdown by exercise categories
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveIcicle
-                    data={icicleData}
-                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    value="value"
-                    colors={{ scheme: 'nivo' }}
-                    theme={nivoTheme}
-                    enableLabels={true}
-                    labelTextColor={{
-                      from: 'color',
-                      modifiers: [['darker', 2]],
-                    }}
-                    labelBoxAnchor="top"
-                    labelPaddingX={6}
-                    labelPaddingY={6}
-                    labelAlign="end"
-                    labelBaseline="center"
-                    labelRotation={270}
-                    labelSkipWidth={16}
-                    labelSkipHeight={48}
-                    borderWidth={1}
-                    borderColor={{
-                      from: 'color',
-                      modifiers: [['darker', 0.2]],
-                    }}
-                    borderRadius={4}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
+            <IcicleChart data={icicleData} />
           </Grid>
         </Grid>
       </CardContent>

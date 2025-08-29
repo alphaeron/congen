@@ -1,6 +1,3 @@
-import { default as BarChartIcon } from '@mui/icons-material/BarChart';
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import {
   Box,
   Card,
@@ -8,10 +5,7 @@ import {
   Grid,
   Typography,
   CircularProgress,
-  useTheme,
 } from '@mui/material';
-import { ResponsiveLine } from '@nivo/line';
-import { ResponsivePie } from '@nivo/pie';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
@@ -23,8 +17,9 @@ import type {
   ProgrammedWorkoutWithStages,
   Exercise
 } from '../api/types';
-import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 import { categorizeExerciseVolume } from '../common/utils';
+import { LineChart } from './LineChart';
+import { PieChart } from './PieChart';
 
 interface ConjugateProgressionProps {
   user: User;
@@ -61,16 +56,9 @@ interface ProgressData {
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const theme = useTheme();
-  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-
-  // Legend selection state for each chart
-  const [volumeSelectedItems, setVolumeSelectedItems] = useState<string[]>([]);
-  const [pieSelectedItems, setPieSelectedItems] = useState<string[]>([]);
-  const [progressSelectedItems, setProgressSelectedItems] = useState<string[]>([]);
 
   // Load all workout data using optimized single API call
   useEffect(() => {
@@ -295,36 +283,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     },
   ], [progressData]);
 
-  // Filter volume data based on legend selection
-  const filteredVolumeChartData = useMemo(() => {
-    if (volumeSelectedItems.length === 0) {
-      return volumeChartData;
-    }
-    return volumeChartData.filter(item => 
-      volumeSelectedItems.includes(item.id)
-    );
-  }, [volumeChartData, volumeSelectedItems]);
-
-  // Filter pie data based on legend selection
-  const filteredCorrelationChartData = useMemo(() => {
-    if (pieSelectedItems.length === 0) {
-      return correlationChartData;
-    }
-    return correlationChartData.filter(item => 
-      pieSelectedItems.includes(item.category)
-    );
-  }, [correlationChartData, pieSelectedItems]);
-
-  // Filter progress data based on legend selection
-  const filteredProgressChartData = useMemo(() => {
-    if (progressSelectedItems.length === 0) {
-      return progressChartData;
-    }
-    return progressChartData.filter(item => 
-      progressSelectedItems.includes(item.id)
-    );
-  }, [progressChartData, progressSelectedItems]);
-
   if (isLoading) {
     return (
       <Card sx={{ mb: 4 }}>
@@ -367,248 +325,37 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         <Grid container spacing={3}>
           {/* Volume Tracking Chart */}
           <Grid item xs={12} lg={8}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <BarChartIcon color="primary" />
-                  <Typography variant="h6">Volume Progression</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Total weight lifted over time (including band resistance)
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                    <ResponsiveLine
-                        data={filteredVolumeChartData}
-                            margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                            xScale={{ type: 'point' }}
-                            yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
-                            axisTop={null}
-                            axisRight={null}
-                            axisBottom={{
-                              tickSize: 5,
-                              tickPadding: 5,
-                              tickRotation: -45,
-                              legend: 'Workout Date',
-                              legendOffset: 40,
-                              legendPosition: 'middle'
-                            }}
-                            axisLeft={{
-                              tickSize: 5,
-                              tickPadding: 5,
-                              tickRotation: 0,
-                              legend: 'Volume (lbs)',
-                              legendOffset: -50,
-                              legendPosition: 'middle'
-                            }}
-                            pointSize={8}
-                            pointColor={{ theme: 'background' }}
-                            pointBorderWidth={2}
-                            pointBorderColor={{ from: 'serieColor' }}
-                            pointLabelYOffset={-12}
-                            useMesh={true}
-                            colors={congenColorSchemes.strength}
-                            theme={nivoTheme}
-                            legends={[
-                              {
-                                anchor: 'top',
-                                direction: 'row',
-                                justify: false,
-                                translateX: 0,
-                                translateY: -20,
-                                itemsSpacing: 0,
-                                itemDirection: 'left-to-right',
-                                itemWidth: 80,
-                                itemHeight: 20,
-                                itemTextColor: '#333333',
-                                itemOpacity: 1,
-                                symbolSize: 12,
-                                symbolShape: 'circle',
-                                symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                                onClick: (data: any) => {
-                                  const itemId = data.id || data.label;
-                                  setVolumeSelectedItems(prev => {
-                                    if (prev.includes(itemId)) {
-                                      return prev.filter(id => id !== itemId);
-                                    } else {
-                                      return [...prev, itemId];
-                                    }
-                                  });
-                                },
-                                effects: [
-                                  {
-                                    on: 'hover',
-                                    style: {
-                                      itemBackground: 'rgba(0, 0, 0, .03)',
-                                      itemOpacity: 1,
-                                      itemTextColor: '#000'
-                                    }
-                                  }
-                                ]
-                              }
-                            ]}
-                          />
-                </Box>
-              </CardContent>
-            </Card>
+            <LineChart 
+              data={volumeChartData}
+              title="Volume Progression"
+              description="Total weight lifted over time (including band resistance)"
+              xAxisLabel="Workout Date"
+              yAxisLabel="Volume (lbs)"
+            />
           </Grid>
 
           {/* Exercise Category Distribution */}
           <Grid item xs={12} lg={4}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <ShowChartIcon color="secondary" />
-                  <Typography variant="h6">Exercise Distribution</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Volume by workout stage
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsivePie
-                    data={filteredCorrelationChartData.map(d => ({
-                      id: d.category,
-                      label: d.category,
-                      value: d.volume,
-                    }))}
-                    margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
-                    innerRadius={0.5}
-                    padAngle={0.7}
-                    cornerRadius={3}
-                    activeOuterRadiusOffset={8}
-                    borderWidth={1}
-                    borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
-                    arcLinkLabelsSkipAngle={10}
-                    arcLinkLabelsTextColor="#333333"
-                    arcLinkLabelsThickness={2}
-                    arcLinkLabelsColor={{ from: 'color' }}
-                    arcLabelsSkipAngle={10}
-                    arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
-                    theme={nivoTheme}
-                    legends={[
-                      {
-                        anchor: 'bottom',
-                        direction: 'row',
-                        justify: false,
-                        translateX: 0,
-                        translateY: 56,
-                        itemsSpacing: 0,
-                        itemWidth: 100,
-                        itemHeight: 18,
-                        itemTextColor: '#333333',
-                        itemDirection: 'left-to-right',
-                        itemOpacity: 1,
-                        symbolSize: 18,
-                        symbolShape: 'circle',
-                        onClick: (data: any) => {
-                          const itemId = data.id || data.label;
-                          setPieSelectedItems(prev => {
-                            if (prev.includes(itemId)) {
-                              return prev.filter(id => id !== itemId);
-                            } else {
-                              return [...prev, itemId];
-                            }
-                          });
-                        },
-                        effects: [
-                          {
-                            on: 'hover',
-                            style: {
-                              itemTextColor: '#000'
-                            }
-                          }
-                        ]
-                      }
-                    ]}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
+            <PieChart 
+              data={correlationChartData.map(d => ({
+                id: d.category,
+                label: d.category,
+                value: d.volume,
+              }))}
+              title="Exercise Distribution"
+              description="Volume by workout stage"
+            />
           </Grid>
 
           {/* Progress Tracking */}
           <Grid item xs={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <TrendingUpIcon color="success" />
-                  <Typography variant="h6">Progress Tracking</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  1RM improvements and volume progression over time
-                </Typography>
-                <Box sx={{ height: 300 }}>
-                  <ResponsiveLine
-                    data={filteredProgressChartData}
-                    margin={{ top: 20, right: 20, bottom: 50, left: 60 }}
-                    xScale={{ type: 'point' }}
-                    yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
-                    axisTop={null}
-                    axisRight={null}
-                    axisBottom={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: -45,
-                      legend: 'Date',
-                      legendOffset: 40,
-                      legendPosition: 'middle'
-                    }}
-                    axisLeft={{
-                      tickSize: 5,
-                      tickPadding: 5,
-                      tickRotation: 0,
-                      legend: 'Weight (lbs)',
-                      legendOffset: -50,
-                      legendPosition: 'middle'
-                    }}
-                    pointSize={8}
-                    pointColor={{ theme: 'background' }}
-                    pointBorderWidth={2}
-                    pointBorderColor={{ from: 'serieColor' }}
-                    pointLabelYOffset={-12}
-                    useMesh={true}
-                    theme={nivoTheme}
-                    legends={[
-                      {
-                        anchor: 'top',
-                        direction: 'row',
-                        justify: false,
-                        translateX: 0,
-                        translateY: -20,
-                        itemsSpacing: 0,
-                        itemDirection: 'left-to-right',
-                        itemWidth: 80,
-                        itemHeight: 20,
-                        itemTextColor: '#333333',
-                        itemOpacity: 1,
-                        symbolSize: 12,
-                        symbolShape: 'circle',
-                        symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                        onClick: (data: any) => {
-                          const itemId = data.id || data.label;
-                          setProgressSelectedItems(prev => {
-                            if (prev.includes(itemId)) {
-                              return prev.filter(id => id !== itemId);
-                            } else {
-                              return [...prev, itemId];
-                            }
-                          });
-                        },
-                        effects: [
-                          {
-                            on: 'hover',
-                            style: {
-                              itemBackground: 'rgba(0, 0, 0, .03)',
-                              itemOpacity: 1,
-                              itemTextColor: '#000'
-                            }
-                          }
-                        ]
-                      }
-                    ]}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
+            <LineChart 
+              data={progressChartData}
+              title="Progress Tracking"
+              description="1RM improvements and volume progression over time"
+              xAxisLabel="Date"
+              yAxisLabel="Weight (lbs)"
+            />
           </Grid>
 
                             {/* Key Performance Indicators */}
