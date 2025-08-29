@@ -73,7 +73,7 @@ describe('PrivacyPolicyPage', () => {
     // Check main sections
     expect(screen.getByText('Data Controller')).toBeInTheDocument();
     expect(screen.getByText('Data Processing')).toBeInTheDocument();
-    expect(screen.getByText('Your Rights Under GDPR')).toBeInTheDocument();
+    expect(screen.getByText('Your Rights')).toBeInTheDocument();
 
     // Check data controller information
     expect(screen.getByText('Congen Fitness Application')).toBeInTheDocument();

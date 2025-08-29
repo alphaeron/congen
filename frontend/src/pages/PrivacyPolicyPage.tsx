@@ -88,6 +88,15 @@ export function PrivacyPolicyPage(): React.ReactElement {
         {privacyPolicy.version})
       </Typography>
 
+      {/* Contact Information */}
+      <Alert severity="info" sx={{ mt: 3 }}>
+        <Typography variant="body2">
+          <strong>Questions about this privacy policy?</strong>
+          <br />
+          Contact us at: {privacyPolicy.data_controller.contact}
+        </Typography>
+      </Alert>
+
       {/* Data Controller Section */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" component="h2" gutterBottom>
@@ -171,7 +180,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
       {/* User Rights Section */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" component="h2" gutterBottom>
-          Your Rights Under GDPR
+          Your Rights
         </Typography>
 
         <Box sx={{ mb: 2 }}>
@@ -230,15 +239,6 @@ export function PrivacyPolicyPage(): React.ReactElement {
           <Typography variant="body2">{privacyPolicy.user_rights.complaint}</Typography>
         </Box>
       </Paper>
-
-      {/* Contact Information */}
-      <Alert severity="info" sx={{ mt: 3 }}>
-        <Typography variant="body2">
-          <strong>Questions about this privacy policy?</strong>
-          <br />
-          Contact us at: {privacyPolicy.data_controller.contact}
-        </Typography>
-      </Alert>
     </Container>
   );
 }
