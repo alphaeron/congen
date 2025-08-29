@@ -4,11 +4,15 @@ import { ENDPOINT } from './endpoint';
 import { getMuscles, getIndividualMuscle } from './muscle';
 import type { Muscle } from './types';
 
-const mockAdapter = new AxiosMockAdapter(ENDPOINT);
-
 describe('muscle API', () => {
+  let mockAdapter: AxiosMockAdapter;
+
   beforeEach(() => {
-    mockAdapter.reset();
+    mockAdapter = new AxiosMockAdapter(ENDPOINT);
+  });
+
+  afterEach(() => {
+    mockAdapter.restore();
   });
 
   describe('getMuscles', () => {
@@ -75,7 +79,7 @@ describe('muscle API', () => {
         description: 'The large chest muscle responsible for arm adduction and flexion',
       };
 
-      mockAdapter.onGet('/muscle/Pectoralis Major').reply(200, mockMuscle);
+      mockAdapter.onGet('/muscle/Pectoralis%20Major').reply(200, mockMuscle);
 
       const result = await getIndividualMuscle('Pectoralis Major');
 
@@ -93,14 +97,14 @@ describe('muscle API', () => {
 
     it('should handle API errors', async () => {
       const errorData = { error: 'Internal Server Error' };
-      mockAdapter.onGet('/muscle/Pectoralis Major').reply(500, errorData);
+      mockAdapter.onGet('/muscle/Pectoralis%20Major').reply(500, errorData);
 
       await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual(errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
-      mockAdapter.onGet('/muscle/Pectoralis Major').networkError();
+      mockAdapter.onGet('/muscle/Pectoralis%20Major').networkError();
 
       await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual({
         error: 'Network Error',
@@ -109,7 +113,7 @@ describe('muscle API', () => {
     });
 
     it('should handle timeout errors', async () => {
-      mockAdapter.onGet('/muscle/Pectoralis Major').timeout();
+      mockAdapter.onGet('/muscle/Pectoralis%20Major').timeout();
 
       await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual({
         error: 'timeout of 2500ms exceeded',
@@ -131,7 +135,7 @@ describe('muscle API', () => {
         description: 'The two-headed muscle on the front of the upper arm',
       };
 
-      mockAdapter.onGet('/muscle/Biceps Brachii').reply(200, mockMuscle);
+      mockAdapter.onGet('/muscle/Biceps%20Brachii').reply(200, mockMuscle);
 
       const result = await getIndividualMuscle('Biceps Brachii');
 
@@ -145,7 +149,7 @@ describe('muscle API', () => {
         description: 'The abdominal muscle commonly known as the six-pack',
       };
 
-      mockAdapter.onGet('/muscle/Rectus Abdominis').reply(200, mockMuscle);
+      mockAdapter.onGet('/muscle/Rectus%20Abdominis').reply(200, mockMuscle);
 
       const result = await getIndividualMuscle('Rectus Abdominis');
 

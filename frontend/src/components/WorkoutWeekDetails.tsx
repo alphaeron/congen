@@ -23,33 +23,39 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { WorkoutAnalytics } from './WorkoutAnalytics';
-import { WorkoutWeekDetails } from './WorkoutWeekDetails';
+import { WorkoutDetail } from './WorkoutDetail';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getPrograms } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type { Program, ProgrammedWorkout, User } from '../api/types';
 
-interface WorkoutsProps {
+interface WorkoutWeekDetailsProps {
   user: User;
   selectedWorkout?: string | null;
+  weekNumber: number;
 }
 
 /**
- * Workouts component for managing and viewing workout programs.
+ * WorkoutWeekDetails component for viewing workouts grouped by week.
  *
  * Features:
- * - Display active program and its weeks
- * - Generate new workouts for programs
- * - View week details with slide-left animation
+ * - Display workouts for a specific week
+ * - Generate new workouts for the week
+ * - View workout details with slide-left animation
  * - Auto-refresh functionality after workout generation
- * - URL query parameters for week and workout selection
+ * - URL query parameters for workout selection
+ * - Breadcrumb navigation with week number
  *
  * @param user The current user object
  * @param selectedWorkout The selected workout ID (from URL)
- * @returns Workouts component
+ * @param weekNumber The week number to display
+ * @returns WorkoutWeekDetails component
  */
-export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => {
+export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({ 
+  user, 
+  selectedWorkout, 
+  weekNumber 
+}) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
@@ -60,10 +66,21 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
+    name: string;
+    day_number: number;
+    stages: number;
+  } | null>(null);
 
   // URL query parameters
-  const selectedWeek = searchParams.get('week');
   const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
+
+  // Reset workout details when workout selection changes
+  useEffect(() => {
+    if (!selectedWorkoutId) {
+      setCurrentWorkoutDetails(null);
+    }
+  }, [selectedWorkoutId]);
 
   // Load workout data
   useEffect(() => {
@@ -89,15 +106,13 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
   const activeProgram = programs.find(program => program.is_active);
   
-  // Group workouts by week
-  const weeks = useMemo(() => {
+  // Group workouts by week and filter for the current week
+  const weekWorkouts = useMemo(() => {
     if (!activeProgram) return [];
     
     const programWorkouts = workouts.filter(
       workout => workout.program_id === activeProgram.id
     );
-    
-    if (programWorkouts.length === 0) return [];
     
     // Calculate which week each workout belongs to based on day_number
     // Assuming workouts are generated in weekly cycles (e.g., 3-4 workouts per week)
@@ -105,39 +120,36 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       Math.ceil(programWorkouts.length / activeProgram.current_week_number) : 
       programWorkouts.length;
     
-    const weekMap = new Map<number, ProgrammedWorkout[]>();
-    
-    programWorkouts.forEach(workout => {
-      const weekNum = Math.ceil(workout.day_number / workoutsPerWeek);
-      if (!weekMap.has(weekNum)) {
-        weekMap.set(weekNum, []);
-      }
-      weekMap.get(weekNum)!.push(workout);
-    });
-    
-    return Array.from(weekMap.entries())
-      .map(([weekNumber, weekWorkouts]) => ({
-        weekNumber,
-        workoutCount: weekWorkouts.length,
-        workouts: weekWorkouts.sort((a, b) => a.day_number - b.day_number)
-      }))
-      .sort((a, b) => a.weekNumber - b.weekNumber);
-  }, [workouts, activeProgram]);
+    return programWorkouts
+      .map(workout => {
+        const weekNum = Math.ceil(workout.day_number / workoutsPerWeek);
+        const dayInWeek = ((workout.day_number - 1) % workoutsPerWeek) + 1;
+        return { workout, weekNumber: weekNum, dayInWeek };
+      })
+      .filter(weekWorkout => weekWorkout.weekNumber === weekNumber)
+      .sort((a, b) => a.dayInWeek - b.dayInWeek);
+  }, [workouts, activeProgram, weekNumber]);
 
   const openGenerateDialog = (program: Program) => {
     setSelectedProgram(program);
     setGenerateDialogOpen(true);
   };
 
-  const handleWeekClick = (weekNumber: number) => {
+  const handleWorkoutClick = (workoutId: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('week', weekNumber.toString());
+    newSearchParams.set('workout', workoutId.toString());
     navigate(`?${newSearchParams.toString()}`);
   };
 
   const handleBackToWorkouts = () => {
     const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete('workout');
     newSearchParams.delete('week');
+    navigate(`?${newSearchParams.toString()}`);
+  };
+
+  const handleBackToWeekList = () => {
+    const newSearchParams = new URLSearchParams(searchParams);
     newSearchParams.delete('workout');
     navigate(`?${newSearchParams.toString()}`);
   };
@@ -185,9 +197,23 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         >
           Workouts
         </Link>
-        {selectedWeek && (
+        <Link
+          component="button"
+          variant="body1"
+          onClick={() => handleBreadcrumbClick('week')}
+          sx={{ color: 'text.secondary' }}
+        >
+          Week {weekNumber}
+        </Link>
+        {selectedWorkoutId && currentWorkoutDetails && (
           <Typography variant="body1" color="text.primary">
-            Week {selectedWeek}
+            {currentWorkoutDetails.name} (Day {currentWorkoutDetails.day_number}) •{' '}
+            {currentWorkoutDetails.stages} stages
+          </Typography>
+        )}
+        {selectedWorkoutId && !currentWorkoutDetails && (
+          <Typography variant="body1" color="text.primary">
+            Workout Details
           </Typography>
         )}
       </Breadcrumbs>
@@ -197,19 +223,17 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const handleBreadcrumbClick = (path: string) => {
     if (path === 'workouts') {
       handleBackToWorkouts();
+    } else if (path === 'week') {
+      handleBackToWeekList();
     }
   };
 
-  // If a week is selected, show the WorkoutWeekDetails component
-  if (selectedWeek) {
-    return (
-      <WorkoutWeekDetails
-        user={user}
-        selectedWorkout={selectedWorkoutId}
-        weekNumber={parseInt(selectedWeek)}
-      />
-    );
-  }
+  const handleWorkoutDetailsUpdate = useCallback(
+    (workoutDetails: { name: string; day_number: number; stages: number }) => {
+      setCurrentWorkoutDetails(workoutDetails);
+    },
+    []
+  );
 
   return (
     <React.Fragment>
@@ -228,21 +252,21 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         </Card>
       ) : (
         <Box sx={{ display: 'flex', gap: 3 }}>
-          {/* Week List - Slides right when week is selected */}
-          <Slide direction="right" in={!selectedWeek} mountOnEnter unmountOnExit>
+          {/* Workout List - Slides right when workout is selected */}
+          <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Grid container spacing={3}>
-                {/* Program Overview and Generation */}
+                {/* Week Overview and Generation */}
                 <Grid item xs={12}>
                   <Card>
                     <CardContent>
                       <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box>
                           <Typography variant="h6" gutterBottom>
-                            {activeProgram.name}
+                            {activeProgram.name} - Week {weekNumber}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Week {activeProgram.current_week_number} • {weeks.length} weeks • {workouts.filter(w => w.program_id === activeProgram.id).length} total workouts
+                            {weekWorkouts.length} workouts • Week {weekNumber} of {activeProgram.current_week_number}
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>
@@ -260,37 +284,38 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                   </Card>
                 </Grid>
 
-                {/* Week List */}
+                {/* Week Workout List */}
                 <Grid item xs={12}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        Training Weeks
+                        Week {weekNumber} Workouts
                       </Typography>
                       {isLoading ? (
                         <Box display="flex" justifyContent="center" p={3}>
                           <CircularProgress />
                         </Box>
-                      ) : weeks.length === 0 ? (
+                      ) : weekWorkouts.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">
-                          No workouts generated yet. Click &quot;Generate Next Week&quot; to create
-                          your first workout week.
+                          No workouts found for Week {weekNumber}. 
+                          {weekNumber === activeProgram.current_week_number && 
+                            ' Click "Generate Next Week" to create new workouts.'}
                         </Typography>
                       ) : (
                         <List>
-                          {weeks.map((week) => (
+                          {weekWorkouts.map((weekWorkout) => (
                             <ListItem
-                              key={week.weekNumber}
+                              key={weekWorkout.workout.id}
                               disablePadding
                               sx={{
                                 cursor: 'pointer',
                                 '&:hover': { backgroundColor: 'action.hover' },
                               }}
-                              onClick={() => handleWeekClick(week.weekNumber)}
+                              onClick={() => handleWorkoutClick(weekWorkout.workout.id)}
                             >
                               <ListItemText
-                                primary={`Week ${week.weekNumber}`}
-                                secondary={`${week.workoutCount} workouts • ${week.workouts.map(w => w.name || `Workout ${w.day_number}`).join(', ')}`}
+                                primary={`Day ${weekWorkout.dayInWeek}`}
+                                secondary={`${weekWorkout.workout.name || `Workout ${weekWorkout.workout.day_number}`}`}
                               />
                             </ListItem>
                           ))}
@@ -302,11 +327,21 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
               </Grid>
             </Box>
           </Slide>
+
+          {/* Workout Details - Slides in from left when workout is selected */}
+          {selectedWorkoutId && (
+            <Slide direction="left" in={!!selectedWorkoutId} mountOnEnter unmountOnExit>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <WorkoutDetail
+                  workoutId={parseInt(selectedWorkoutId)}
+                  onBack={handleBackToWeekList}
+                  onWorkoutDetailsUpdate={handleWorkoutDetailsUpdate}
+                />
+              </Box>
+            </Slide>
+          )}
         </Box>
       )}
-
-      {/* Workout Analytics Section */}
-      <WorkoutAnalytics user={user} />
 
       {/* Generate Workouts Dialog */}
       <Dialog open={generateDialogOpen} onClose={() => setGenerateDialogOpen(false)}>

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import { SnackbarProvider } from 'notistack';
 import * as React from 'react';
@@ -6,58 +6,65 @@ import * as React from 'react';
 import { PrivacyPolicyPage } from './PrivacyPolicyPage';
 import { ENDPOINT } from '../api/endpoint';
 
-// Mock the endpoint
-const mock = new MockAdapter(ENDPOINT);
-
-const mockPrivacyPolicy = {
-  version: '1.0.0',
-  last_updated: '2023-08-09T10:15:30Z',
-  data_controller: {
-    name: 'Congen Fitness Application',
-    contact: 'privacy@congen.app',
-    dpo: 'dpo@congen.app',
-  },
-  data_processing: {
-    purposes: ['Fitness tracking', 'Workout generation'],
-    legal_basis: ['Consent', 'Legitimate interest'],
-    data_types: ['Profile information', 'Exercise history'],
-    retention_periods: {
-      user_profile: '7 years after account deletion',
-      exercise_history: '3 years',
-    },
-  },
-  user_rights: {
-    access: 'You can request a copy of your data',
-    rectification: 'You can correct inaccurate data',
-    erasure: 'You can request deletion of your data',
-    portability: 'You can export your data',
-    objection: 'You can object to data processing',
-    complaint: 'You can file a complaint with the data protection authority',
-  },
-  contact_information: {
-    privacy_email: 'privacy@congen.app',
-    dpo_email: 'dpo@congen.app',
-  },
-};
-
-// Custom render function with providers
-const renderWithProviders = (component: React.ReactElement) => {
-  return render(<SnackbarProvider>{component}</SnackbarProvider>);
-};
-
 describe('PrivacyPolicyPage', () => {
+  // Create a new mock adapter for each test to prevent interference
+  let mock: MockAdapter;
+
+  const mockPrivacyPolicy = {
+    version: '1.0.0',
+    last_updated: '2023-08-09T10:15:30Z',
+    data_controller: {
+      name: 'Congen Fitness Application',
+      contact: 'privacy@congen.app',
+      dpo: 'dpo@congen.app',
+    },
+    data_processing: {
+      purposes: ['Fitness tracking', 'Workout generation'],
+      legal_basis: ['Consent', 'Legitimate interest'],
+      data_types: ['Profile information', 'Exercise history'],
+      retention_periods: {
+        user_profile: '7 years after account deletion',
+        exercise_history: '3 years',
+      },
+    },
+    user_rights: {
+      access: 'You can request a copy of your data',
+      rectification: 'You can correct inaccurate data',
+      erasure: 'You can request deletion of your data',
+      portability: 'You can export your data',
+      objection: 'You can object to data processing',
+      complaint: 'You can file a complaint with the data protection authority',
+    },
+    contact_information: {
+      privacy_email: 'privacy@congen.app',
+      dpo_email: 'dpo@congen.app',
+    },
+  };
+
+  // Custom render function with providers
+  const renderWithProviders = (component: React.ReactElement) => {
+    return render(<SnackbarProvider>{component}</SnackbarProvider>);
+  };
+
   beforeEach(() => {
-    mock.reset();
+    // Create a fresh mock adapter for each test
+    mock = new MockAdapter(ENDPOINT);
+    jest.clearAllMocks();
   });
 
-  afterAll(() => {
-    mock.restore();
+  afterEach(() => {
+    // Properly clean up the mock adapter
+    if (mock) {
+      mock.restore();
+    }
   });
 
   it('should render privacy policy content', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
@@ -94,7 +101,9 @@ describe('PrivacyPolicyPage', () => {
   it('should handle loading state', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(() => new Promise(() => {})); // Never resolves
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     expect(screen.getByText('Loading Privacy Policy...')).toBeInTheDocument();
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
@@ -103,7 +112,9 @@ describe('PrivacyPolicyPage', () => {
   it('should handle error state', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(500, { message: 'Server error' });
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Server error')).toBeInTheDocument();
@@ -113,7 +124,9 @@ describe('PrivacyPolicyPage', () => {
   it('should handle network error', async () => {
     mock.onGet('/gdpr/privacy_policy').networkError();
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Failed to load privacy policy')).toBeInTheDocument();
@@ -123,7 +136,9 @@ describe('PrivacyPolicyPage', () => {
   it('should format data retention periods correctly', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('User Profile:')).toBeInTheDocument();
@@ -136,13 +151,15 @@ describe('PrivacyPolicyPage', () => {
   it('should display contact information', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Questions about this privacy policy?')).toBeInTheDocument();
-      expect(screen.getByText('privacy@congen.app')).toBeInTheDocument(); // Only one instance in the rendered component
+      expect(screen.getByText('privacy@congen.app')).toBeInTheDocument();
     });
-  }, 10000); // Increase timeout for this test
+  });
 
   it('should handle missing DPO information', async () => {
     const policyWithoutDPO = {
@@ -155,7 +172,9 @@ describe('PrivacyPolicyPage', () => {
 
     mock.onGet('/gdpr/privacy_policy').reply(200, policyWithoutDPO);
 
-    renderWithProviders(<PrivacyPolicyPage />);
+    await act(async () => {
+      renderWithProviders(<PrivacyPolicyPage />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Congen Fitness Application')).toBeInTheDocument();

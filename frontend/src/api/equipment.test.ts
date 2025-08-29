@@ -4,11 +4,15 @@ import { ENDPOINT } from './endpoint';
 import { getEquipment, getIndividualEquipment } from './equipment';
 import type { Equipment } from './types';
 
-const mockAdapter = new AxiosMockAdapter(ENDPOINT);
-
 describe('equipment API', () => {
+  let mockAdapter: AxiosMockAdapter;
+
   beforeEach(() => {
-    mockAdapter.reset();
+    mockAdapter = new AxiosMockAdapter(ENDPOINT);
+  });
+
+  afterEach(() => {
+    mockAdapter.restore();
   });
 
   describe('getEquipment', () => {
@@ -116,7 +120,8 @@ describe('equipment API', () => {
         description: 'A weight machine with guided barbell',
       };
 
-      mockAdapter.onGet('/equipment/Smith Machine').reply(200, mockEquipment);
+      // Handle URL encoding for spaces
+      mockAdapter.onGet('/equipment/Smith%20Machine').reply(200, mockEquipment);
 
       const result = await getIndividualEquipment('Smith Machine');
 

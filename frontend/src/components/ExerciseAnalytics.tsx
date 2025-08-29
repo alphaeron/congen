@@ -115,7 +115,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
           const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
           setWeightUnitPreferences(unitResponse.data);
         } catch (err) {
-          console.warn('No weight unit preferences found, using defaults');
+          enqueueSnackbar('Failed to load weight unit preferences. Some categories may be missing.', { variant: 'warning' });
           setWeightUnitPreferences([]);
         }
 
@@ -174,11 +174,9 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
           setExerciseEquipmentData(equipmentData);
         } catch (err) {
           enqueueSnackbar('Failed to load exercise muscle and equipment data. Some categories may be missing.', { variant: 'warning' });
-          console.error('Error loading exercise muscle and equipment data:', err);
         }
       } catch (err) {
         enqueueSnackbar('Failed to load exercise analytics data. Please try again.', { variant: 'error' });
-        console.error('Error loading exercise analytics data:', err);
       } finally {
         setIsLoading(false);
       }

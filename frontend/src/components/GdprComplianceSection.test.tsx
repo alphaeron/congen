@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MockAdapter from 'axios-mock-adapter';
 import { SnackbarProvider } from 'notistack';
@@ -9,37 +9,44 @@ import { GdprComplianceSection } from './GdprComplianceSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { UserConsent } from '../api/types';
 
-// Mock the endpoint
-const mock = new MockAdapter(ENDPOINT);
-
-const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <SnackbarProvider>
-      <MemoryRouter>{component}</MemoryRouter>
-    </SnackbarProvider>
-  );
-};
-
-const mockConsentStatus: UserConsent = {
-  keycloak_id: 'test-user-123',
-  data_processing_consent: true,
-  consent_timestamp: '2023-08-09T10:15:30Z',
-  updated_at: '2023-08-09T10:15:30Z',
-};
-
 describe('GdprComplianceSection', () => {
+  // Create a new mock adapter for each test to prevent interference
+  let mock: MockAdapter;
+  
+  const renderWithProviders = (component: React.ReactElement) => {
+    return render(
+      <SnackbarProvider>
+        <MemoryRouter>{component}</MemoryRouter>
+      </SnackbarProvider>
+    );
+  };
+  
+  const mockConsentStatus: UserConsent = {
+    keycloak_id: 'test-user-123',
+    data_processing_consent: true,
+    consent_timestamp: '2023-08-09T10:15:30Z',
+    updated_at: '2023-08-09T10:15:30Z',
+  };
+
   beforeEach(() => {
-    mock.reset();
+    // Create a fresh mock adapter for each test
+    mock = new MockAdapter(ENDPOINT);
+    jest.clearAllMocks();
   });
 
-  afterAll(() => {
-    mock.restore();
+  afterEach(() => {
+    // Properly clean up the mock adapter
+    if (mock) {
+      mock.restore();
+    }
   });
 
   it('should render GDPR compliance section with consent status', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
-    renderWithProviders(<GdprComplianceSection />);
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     // Wait for content to load
     await waitFor(() => {
@@ -63,7 +70,10 @@ describe('GdprComplianceSection', () => {
     mock.onPost('/gdpr/consent').reply(200, { success: true, message: 'Consent withdrawn' });
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Withdraw Consent' })).toBeInTheDocument();
@@ -91,7 +101,10 @@ describe('GdprComplianceSection', () => {
     mock.onDelete('/gdpr/delete_all_data').reply(200, { success: true, message: 'Data deleted' });
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
@@ -126,7 +139,9 @@ describe('GdprComplianceSection', () => {
 
     mock.onGet('/gdpr/consent').reply(200, withdrawnConsentStatus);
 
-    renderWithProviders(<GdprComplianceSection />);
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Consent Withdrawn')).toBeInTheDocument();
@@ -137,7 +152,9 @@ describe('GdprComplianceSection', () => {
   it('should handle loading state', async () => {
     mock.onGet('/gdpr/consent').reply(() => new Promise(() => {})); // Never resolves
 
-    renderWithProviders(<GdprComplianceSection />);
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Loading GDPR compliance status...')).toBeInTheDocument();
@@ -148,7 +165,9 @@ describe('GdprComplianceSection', () => {
   it('should handle error state', async () => {
     mock.onGet('/gdpr/consent').reply(500, { message: 'Server error' });
 
-    renderWithProviders(<GdprComplianceSection />);
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Server error')).toBeInTheDocument();
@@ -159,7 +178,10 @@ describe('GdprComplianceSection', () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
     const user = userEvent.setup();
-    renderWithProviders(<GdprComplianceSection />);
+    
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeInTheDocument();
@@ -179,7 +201,9 @@ describe('GdprComplianceSection', () => {
   it('should have privacy policy link', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
-    renderWithProviders(<GdprComplianceSection />);
+    await act(async () => {
+      renderWithProviders(<GdprComplianceSection />);
+    });
 
     await waitFor(() => {
       const privacyPolicyLink = screen.getByText('View Policy').closest('a');

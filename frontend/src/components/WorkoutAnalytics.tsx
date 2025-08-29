@@ -116,7 +116,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
           const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
           setWeightUnitPreferences(unitResponse.data);
         } catch (err) {
-          console.warn('No weight unit preferences found, using defaults');
+          enqueueSnackbar('No weight unit preferences found, using defaults', { variant: 'warning' });
           setWeightUnitPreferences([]);
         }
 
@@ -164,7 +164,6 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         setExerciseData(exerciseMap);
       } catch (err) {
         enqueueSnackbar('Failed to load workout analytics data. Please try again.', { variant: 'error' });
-        console.error('Error loading workout analytics data:', err);
       } finally {
         setIsLoading(false);
       }

@@ -7,9 +7,6 @@ import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
-// Create axios mock adapter for the ENDPOINT instance
-const mock = new MockAdapter(ENDPOINT);
-
 const mockUser: User = {
   keycloak_id: 'test-user-id',
   name: 'John Doe',
@@ -30,12 +27,19 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('WorkoutPreferencesSection', () => {
+  // Create a new mock adapter for each test to prevent interference
+  let mock: MockAdapter;
+
   beforeEach(() => {
-    mock.reset();
+    // Create a fresh mock adapter for each test
+    mock = new MockAdapter(ENDPOINT);
   });
 
-  afterAll(() => {
-    mock.restore();
+  afterEach(() => {
+    // Properly clean up the mock adapter
+    if (mock) {
+      mock.restore();
+    }
   });
 
   it('should render workout preferences section', async () => {
@@ -50,8 +54,8 @@ describe('WorkoutPreferencesSection', () => {
         is_accessory: false,
       },
     ]);
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
@@ -75,8 +79,8 @@ describe('WorkoutPreferencesSection', () => {
   it('should show default program preferences', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
@@ -97,8 +101,8 @@ describe('WorkoutPreferencesSection', () => {
   it('should show save button for program preferences', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
@@ -118,8 +122,8 @@ describe('WorkoutPreferencesSection', () => {
   it('should show add preference button for weight units', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
@@ -139,8 +143,8 @@ describe('WorkoutPreferencesSection', () => {
   it('should open dialog when add preference button is clicked', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
@@ -165,8 +169,8 @@ describe('WorkoutPreferencesSection', () => {
   it('should show current settings summary', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);
@@ -191,8 +195,8 @@ describe('WorkoutPreferencesSection', () => {
     mock
       .onGet('/exercise/')
       .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock.onGet('/user_program_preferences/user/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/user/test-user-id').reply(404);
+    mock.onGet('/user_program_preferences/test-user-id').reply(404);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
       renderWithProviders(<WorkoutPreferencesSection />);

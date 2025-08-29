@@ -3,6 +3,10 @@ import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 
+import { DashboardOverview } from './DashboardOverview';
+import { ENDPOINT } from '../api/endpoint';
+import type { User } from '../api/types';
+
 // Mock Nivo components to avoid Jest configuration issues
 jest.mock('@nivo/line', () => ({
   ResponsiveLine: ({ data }: any) => (
@@ -28,61 +32,61 @@ jest.mock('@nivo/pie', () => ({
   ),
 }));
 
-import { DashboardOverview } from './DashboardOverview';
-import { ENDPOINT } from '../api/endpoint';
-import type { User } from '../api/types';
-
-// Create axios mock adapter for the ENDPOINT instance
-const mock = new MockAdapter(ENDPOINT);
-
-const renderWithProviders = (component: React.ReactElement) => {
-  return render(<MemoryRouter>{component}</MemoryRouter>);
-};
-
-const mockUser: User = {
-  keycloak_id: 'test-user-id',
-  name: 'Test User',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-  roles: ['user'],
-};
-
-const mockProgram = {
-  id: 1,
-  user_id: 'test-user-id',
-  name: 'Test Program',
-  current_week_number: 2,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-  is_active: true,
-};
-
-const mockWorkout = {
-  id: 1,
-  program_id: 1,
-  day_number: 1,
-  name: 'Test Workout',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
-const mockOneRepMax = {
-  user_id: 'test-user-id',
-  exercise_name: 'Bench Press',
-  one_rep_max: 225,
-  unit: 'KG',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
 describe('DashboardOverview', () => {
+  // Create a new mock adapter for each test to prevent interference
+  let mock: MockAdapter;
+  
+  const renderWithProviders = (component: React.ReactElement) => {
+    return render(<MemoryRouter>{component}</MemoryRouter>);
+  };
+
+  const mockUser: User = {
+    keycloak_id: 'test-user-id',
+    name: 'Test User',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    roles: ['user'],
+  };
+  
+  const mockProgram = {
+    id: 1,
+    user_id: 'test-user-id',
+    name: 'Test Program',
+    current_week_number: 2,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    is_active: true,
+  };
+  
+  const mockWorkout = {
+    id: 1,
+    program_id: 1,
+    day_number: 1,
+    name: 'Test Workout',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  };
+  
+  const mockOneRepMax = {
+    user_id: 'test-user-id',
+    exercise_name: 'Bench Press',
+    one_rep_max: 225,
+    unit: 'KG',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+  };
+
   beforeEach(() => {
-    mock.reset();
+    // Create a fresh mock adapter for each test
+    mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
   });
 
-  afterAll(() => {
-    mock.restore();
+  afterEach(() => {
+    // Properly clean up the mock adapter
+    if (mock) {
+      mock.restore();
+    }
   });
 
   it('should render loading state initially', async () => {
@@ -158,7 +162,7 @@ describe('DashboardOverview', () => {
       expect(recentOneRepMaxSection).toHaveTextContent('Bench Press');
       expect(recentOneRepMaxSection).toHaveTextContent('225 KG');
     });
-  }, 10000);
+  });
 
   it('should display welcome message when no data is available', async () => {
     mock.onGet('/program/').reply(200, []);
@@ -216,12 +220,43 @@ describe('DashboardOverview', () => {
       },
       { timeout: 10000 }
     );
-  }, 15000);
+  });
 
   it('should verify API calls are made with correct endpoints', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
+    // Mock ConjugateProgression dependencies
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [{
+        program: { id: 1, name: 'Test Program' },
+        workouts: [{
+          workout: { id: 1, name: 'Test Workout' },
+          stages: [{
+            stage: { name: 'Test Stage' },
+            exercises: [{
+              exercise: { exercise_name: 'Bench Press' },
+              set_schemes: [{
+                performed_weight: 100,
+                performed_rep_count: 10,
+                band_weight_lbs: null
+              }]
+            }]
+          }]
+        }]
+      }], 
+      data_retention_policies: [] 
+    });
+    mock.onGet(/\/exercise\/.*/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -233,8 +268,8 @@ describe('DashboardOverview', () => {
       expect(mock.history.get[1].url).toBe('/programmed_workout/');
       expect(mock.history.get[2].url).toBe('/user_one_rep_max/user/test-user-id');
       // Additional calls from ConjugateProgression component
-      expect(mock.history.get[3].url).toBe('/programmed_workout/');
-      expect(mock.history.get[4].url).toBe('/user_one_rep_max/user/test-user-id');
+      expect(mock.history.get[3].url).toBe('/gdpr/export');
+      expect(mock.history.get[4].url).toMatch(/\/exercise\/.*/);
     });
-  }, 10000);
+  });
 });

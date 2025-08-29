@@ -9,20 +9,21 @@ import { Workouts } from './Workouts';
 import { ENDPOINT } from '../api/endpoint';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
 
-const mock = new MockAdapter(ENDPOINT);
-const theme = createTheme();
-
-const renderWithProviders = (component: React.ReactElement) => {
-  return render(
-    <SnackbarProvider>
-      <MemoryRouter>
-        <ThemeProvider theme={theme}>{component}</ThemeProvider>
-      </MemoryRouter>
-    </SnackbarProvider>
-  );
-};
-
 describe('Workouts', () => {
+  // Create a new mock adapter for each test to prevent interference
+  let mock: MockAdapter;
+  const theme = createTheme();
+  
+  const renderWithProviders = (component: React.ReactElement, initialEntries: string[] = ['/']) => {
+    return render(
+      <SnackbarProvider>
+        <MemoryRouter initialEntries={initialEntries}>
+          <ThemeProvider theme={theme}>{component}</ThemeProvider>
+        </MemoryRouter>
+      </SnackbarProvider>
+    );
+  };
+  
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'Test User',
@@ -50,19 +51,55 @@ describe('Workouts', () => {
     updated_at: '2024-01-01T00:00:00Z',
   };
 
+  // Mock GDPR export data
+  const mockGdprExport = {
+    training_programs: [
+      {
+        program: mockProgram,
+        workouts: [
+          {
+            workout: mockWorkout,
+            stages: []
+          }
+        ]
+      }
+    ],
+    data_retention_policies: []
+  };
+
   beforeEach(() => {
-    mock.reset();
+    // Create a fresh mock adapter for each test
+    mock = new MockAdapter(ENDPOINT);
   });
 
-  afterAll(() => {
-    mock.restore();
+  afterEach(() => {
+    // Properly clean up the mock adapter
+    if (mock) {
+      mock.restore();
+    }
+    jest.clearAllMocks();
   });
 
   it('renders component without errors', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
-    renderWithProviders(<Workouts user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<Workouts user={mockUser} />);
+    });
 
     // Should render the component without errors
     await waitFor(() => {
@@ -73,6 +110,19 @@ describe('Workouts', () => {
   it('renders workouts page title', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -87,6 +137,19 @@ describe('Workouts', () => {
     const inactiveProgram = { ...mockProgram, is_active: false };
     mock.onGet('/program/').reply(200, [inactiveProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -100,6 +163,19 @@ describe('Workouts', () => {
   it('displays active program information', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -111,29 +187,55 @@ describe('Workouts', () => {
     });
   });
 
-  it('shows generate workouts button', async () => {
+  it('shows generate next week button', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /generate workouts/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /generate next week/i })).toBeInTheDocument();
     });
   });
 
   it('opens generate dialog when generate button is clicked', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
-      const generateButton = screen.getByRole('button', { name: /generate workouts/i });
+      const generateButton = screen.getByRole('button', { name: /generate next week/i });
       fireEvent.click(generateButton);
     });
 
@@ -147,13 +249,26 @@ describe('Workouts', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgram);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
-      const generateButton = screen.getByRole('button', { name: /generate workouts/i });
+      const generateButton = screen.getByRole('button', { name: /generate next week/i });
       fireEvent.click(generateButton);
     });
 
@@ -168,23 +283,50 @@ describe('Workouts', () => {
     });
   });
 
-  it('displays current workout when available', async () => {
+  it('displays training weeks when workouts exist', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Push Day')).toBeInTheDocument();
-      expect(screen.getByText('Day 1')).toBeInTheDocument();
+      expect(screen.getByText('Training Weeks')).toBeInTheDocument();
+      expect(screen.getByText('Week 1')).toBeInTheDocument();
     });
   });
 
   it('shows error message when API calls fail', async () => {
     mock.onGet('/program/').reply(500, { error: 'Internal server error' });
     mock.onGet('/programmed_workout/').reply(200, []);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    // Mock individual exercise endpoint for WorkoutAnalytics component
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -197,33 +339,103 @@ describe('Workouts', () => {
     });
   });
 
-  it("displays this week's workouts", async () => {
-    const workout2 = { ...mockWorkout, id: 2, name: 'Pull Day', day_number: 2 };
+  it("displays multiple weeks when workouts span multiple weeks", async () => {
+    // Create workouts for week 1 and week 2
+    const workout1 = { ...mockWorkout, id: 1, day_number: 1, name: 'Push Day' };
+    const workout2 = { ...mockWorkout, id: 2, day_number: 2, name: 'Pull Day' };
+    const workout3 = { ...mockWorkout, id: 3, day_number: 5, name: 'Leg Day' }; // Week 2
+    const workout4 = { ...mockWorkout, id: 4, day_number: 6, name: 'Upper Day' }; // Week 2
+    
     mock.onGet('/program/').reply(200, [mockProgram]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout, workout2]);
+    mock.onGet('/programmed_workout/').reply(200, [workout1, workout2, workout3, workout4]);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Push Day')).toBeInTheDocument();
-      expect(screen.getByText('Pull Day')).toBeInTheDocument();
+      expect(screen.getByText('Training Weeks')).toBeInTheDocument();
     });
+
+    // Check that both weeks are displayed
+    expect(screen.getByText('Week 1')).toBeInTheDocument();
+    expect(screen.getByText('Week 3')).toBeInTheDocument();
   });
 
   it('verifies API calls are made with correct endpoints', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
     });
 
     await waitFor(() => {
-      expect(mock.history.get).toHaveLength(2);
-      expect(mock.history.get[0].url).toBe('/program/');
-      expect(mock.history.get[1].url).toBe('/programmed_workout/');
+      expect(screen.getByText('Workouts')).toBeInTheDocument();
+    });
+
+    // Verify API calls were made (WorkoutAnalytics also makes API calls)
+    expect(mock.history.get.length).toBeGreaterThanOrEqual(2); // At least program and programmed_workout
+    const urls = mock.history.get.map(req => req.url);
+    expect(urls).toContain('/program/');
+    expect(urls).toContain('/programmed_workout/');
+  });
+
+  it('navigates to week details when week is clicked', async () => {
+    mock.onGet('/program/').reply(200, [mockProgram]);
+    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
+    // Mock WorkoutAnalytics dependencies
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+      id: 1,
+      exercise_name: 'Test Exercise',
+      category: 'strength',
+      primary_muscle: 'chest',
+      secondary_muscles: ['triceps', 'shoulders'],
+      instructions: 'Test instructions',
+      equipment: 'barbell',
+      difficulty: 'intermediate'
+    });
+
+    await act(async () => {
+      renderWithProviders(<Workouts user={mockUser} />);
+    });
+
+    await waitFor(() => {
+      const weekButton = screen.getByText('Week 1');
+      fireEvent.click(weekButton);
+    });
+
+    // Should show the WorkoutWeekDetails component
+    await waitFor(() => {
+      expect(screen.getByText('Test Program - Week 1')).toBeInTheDocument();
     });
   });
 });

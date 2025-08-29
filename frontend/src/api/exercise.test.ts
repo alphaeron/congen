@@ -9,11 +9,15 @@ import {
 } from './exercise';
 import type { Exercise, ExerciseMuscle, ExerciseEquipment } from './types';
 
-const mockAdapter = new AxiosMockAdapter(ENDPOINT);
-
 describe('exercise API', () => {
+  let mockAdapter: AxiosMockAdapter;
+
   beforeEach(() => {
-    mockAdapter.reset();
+    mockAdapter = new AxiosMockAdapter(ENDPOINT);
+  });
+
+  afterEach(() => {
+    mockAdapter.restore();
   });
 
   describe('getExercises', () => {
@@ -79,7 +83,7 @@ describe('exercise API', () => {
         is_accessory: false,
       };
 
-      mockAdapter.onGet('/exercise/Bench Press').reply(200, mockExercise);
+      mockAdapter.onGet('/exercise/Bench%20Press').reply(200, mockExercise);
 
       const result = await getIndividualExercise('Bench Press');
 
@@ -97,14 +101,14 @@ describe('exercise API', () => {
 
     it('should handle API errors', async () => {
       const errorData = { error: 'Internal Server Error' };
-      mockAdapter.onGet('/exercise/Bench Press').reply(500, errorData);
+      mockAdapter.onGet('/exercise/Bench%20Press').reply(500, errorData);
 
       await expect(getIndividualExercise('Bench Press')).rejects.toEqual(errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
-      mockAdapter.onGet('/exercise/Bench Press').networkError();
+      mockAdapter.onGet('/exercise/Bench%20Press').networkError();
 
       await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
         error: 'Network Error',
@@ -113,7 +117,7 @@ describe('exercise API', () => {
     });
 
     it('should handle timeout errors', async () => {
-      mockAdapter.onGet('/exercise/Bench Press').timeout();
+      mockAdapter.onGet('/exercise/Bench%20Press').timeout();
 
       await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
         error: 'timeout of 2500ms exceeded',
@@ -143,7 +147,7 @@ describe('exercise API', () => {
         },
       ];
 
-      mockAdapter.onGet('/exercise/Bench Press/muscle').reply(200, mockExerciseMuscles);
+      mockAdapter.onGet('/exercise/Bench%20Press/muscle').reply(200, mockExerciseMuscles);
 
       const result = await getExerciseMuscles('Bench Press');
 
@@ -161,21 +165,21 @@ describe('exercise API', () => {
 
     it('should handle API errors', async () => {
       const errorData = { error: 'Internal Server Error' };
-      mockAdapter.onGet('/exercise/Bench Press/muscle').reply(500, errorData);
+      mockAdapter.onGet('/exercise/Bench%20Press/muscle').reply(500, errorData);
 
       await expect(getExerciseMuscles('Bench Press')).rejects.toEqual(errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
-      mockAdapter.onGet('/exercise/Bench Press/muscle').networkError();
+      mockAdapter.onGet('/exercise/Bench%20Press/muscle').networkError();
 
       await expect(getExerciseMuscles('Bench Press')).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
-      mockAdapter.onGet('/exercise/Bench Press/muscle').timeout();
+      mockAdapter.onGet('/exercise/Bench%20Press/muscle').timeout();
 
       await expect(getExerciseMuscles('Bench Press')).rejects.toEqual({
         error: 'timeout of 2500ms exceeded',
@@ -205,7 +209,7 @@ describe('exercise API', () => {
         },
       ];
 
-      mockAdapter.onGet('/exercise/Bench Press/equipment').reply(200, mockExerciseEquipment);
+      mockAdapter.onGet('/exercise/Bench%20Press/equipment').reply(200, mockExerciseEquipment);
 
       const result = await getExerciseEquipment('Bench Press');
 
@@ -223,21 +227,21 @@ describe('exercise API', () => {
 
     it('should handle API errors', async () => {
       const errorData = { error: 'Internal Server Error' };
-      mockAdapter.onGet('/exercise/Bench Press/equipment').reply(500, errorData);
+      mockAdapter.onGet('/exercise/Bench%20Press/equipment').reply(500, errorData);
 
       await expect(getExerciseEquipment('Bench Press')).rejects.toEqual(errorData);
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle network errors', async () => {
-      mockAdapter.onGet('/exercise/Bench Press/equipment').networkError();
+      mockAdapter.onGet('/exercise/Bench%20Press/equipment').networkError();
 
       await expect(getExerciseEquipment('Bench Press')).rejects.toEqual({ error: 'Network Error' });
       expect(mockAdapter.history.get.length).toBe(1);
     });
 
     it('should handle timeout errors', async () => {
-      mockAdapter.onGet('/exercise/Bench Press/equipment').timeout();
+      mockAdapter.onGet('/exercise/Bench%20Press/equipment').timeout();
 
       await expect(getExerciseEquipment('Bench Press')).rejects.toEqual({
         error: 'timeout of 2500ms exceeded',

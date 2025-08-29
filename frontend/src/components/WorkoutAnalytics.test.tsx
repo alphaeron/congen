@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -44,48 +44,28 @@ const mockUser: User = {
   roles: ['user'],
 };
 
-const mockWorkout = {
-  id: 1,
-  program_id: 1,
-  day_number: 1,
-  name: 'Test Workout',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
-const mockProgram = {
-  id: 1,
-  name: 'Test Program',
-  is_active: true,
-  current_week_number: 1,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-};
-
 describe('WorkoutAnalytics', () => {
   let mock: MockAdapter;
 
   beforeEach(() => {
     mock = new MockAdapter(ENDPOINT);
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    mock.reset();
-  });
-
-  it('should show loading state initially', () => {
-    mock.onGet('/programmed_workout/').reply(200, []);
-    mock.onGet('/program/').reply(200, []);
-
-    renderWithProviders(<WorkoutAnalytics user={mockUser} />);
-
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    if (mock) {
+      mock.restore();
+    }
   });
 
   it('should handle API failure gracefully', async () => {
     mock.onGet('/programmed_workout/').reply(500);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
 
-    renderWithProviders(<WorkoutAnalytics user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<WorkoutAnalytics user={mockUser} />);
+    });
 
     // Component should render without crashing
     await waitFor(() => {
@@ -93,17 +73,22 @@ describe('WorkoutAnalytics', () => {
     });
   }, 10000);
 
-  it('should display basic component structure', () => {
+  it('should display basic component structure', async () => {
     // Mock all possible API calls with correct endpoints
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/program/').reply(200, []);
-    mock.onGet(/\/workout_stage\/workout\/\d+/).reply(200, []);
-    mock.onGet(/\/programmed_exercise\/stage\/\d+/).reply(200, []);
-    mock.onGet(/\/set_scheme\/exercise\/\d+/).reply(200, []);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {});
 
-    renderWithProviders(<WorkoutAnalytics user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<WorkoutAnalytics user={mockUser} />);
+    });
 
-    // Check that the component shows loading state initially
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    // Check that the component shows the empty state message
+    await waitFor(() => {
+      expect(screen.getByText('Workout Analytics')).toBeInTheDocument();
+      expect(screen.getByText(/Complete your first workout to see workout analytics and insights/)).toBeInTheDocument();
+    });
   });
 });

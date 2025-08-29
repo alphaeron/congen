@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -7,17 +7,6 @@ import { UserProfile } from './UserProfile';
 import { ENDPOINT } from '../api/endpoint';
 import { deleteAllPersonalData } from '../api/gdpr';
 import type { User } from '../api/types';
-
-// Create axios mock adapter for the ENDPOINT instance
-const mock = new MockAdapter(ENDPOINT);
-
-const mockUser: User = {
-  keycloak_id: 'test-user-id',
-  name: 'John Doe',
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
-  roles: ['user'],
-};
 
 // Mock react-router
 const mockNavigate = jest.fn();
@@ -43,9 +32,21 @@ const renderWithProviders = (component: React.ReactElement) => {
 };
 
 describe('UserProfile', () => {
+  // Create a new mock adapter for each test to prevent interference
+  let mock: MockAdapter;
+  
+  const mockUser: User = {
+    keycloak_id: 'test-user-id',
+    name: 'John Doe',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
+    roles: ['user'],
+  };
+
   beforeEach(() => {
+    // Create a fresh mock adapter for each test
+    mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
-    mock.reset();
 
     // Mock GDPR API calls that GdprComplianceSection makes
     mock.onGet('/gdpr/consent').reply(200, {
@@ -59,12 +60,17 @@ describe('UserProfile', () => {
     mock.onDelete('/gdpr/delete_all_data').reply(200, { message: 'Account deleted successfully' });
   });
 
-  afterAll(() => {
-    mock.restore();
+  afterEach(() => {
+    // Properly clean up the mock adapter
+    if (mock) {
+      mock.restore();
+    }
   });
 
   it('should render user profile information', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
     expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -72,7 +78,9 @@ describe('UserProfile', () => {
   });
 
   it('should render all tab navigation items', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
     expect(screen.getAllByText('Profile Overview')).toHaveLength(2); // One in sidebar, one in content
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
@@ -80,7 +88,9 @@ describe('UserProfile', () => {
   });
 
   it('should show overview content by default', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
     // Check for the main user information that's actually rendered
     expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -90,7 +100,9 @@ describe('UserProfile', () => {
   });
 
   it('should navigate to privacy tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} initialSection="privacy" />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} initialSection="privacy" />);
+    });
 
     // Wait for the privacy content to load
     await waitFor(() => {
@@ -99,7 +111,9 @@ describe('UserProfile', () => {
   }, 10000);
 
   it('should navigate to account security tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Security Settings')).toBeInTheDocument();
@@ -110,7 +124,9 @@ describe('UserProfile', () => {
   }, 10000);
 
   it('should show deactivate account button in security tab', async () => {
-    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
@@ -118,14 +134,18 @@ describe('UserProfile', () => {
   }, 10000);
 
   it('should show edit profile button in overview', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
     // In the new layout, there's only one Edit Profile button in the overview
     expect(screen.getByText('Edit Profile')).toBeInTheDocument();
   });
 
   it('should open delete confirmation dialog when deactivate button is clicked', async () => {
-    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
@@ -144,7 +164,9 @@ describe('UserProfile', () => {
   }, 10000);
 
   it('should close dialog when cancel is clicked', async () => {
-    renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
@@ -168,7 +190,9 @@ describe('UserProfile', () => {
   }, 10000);
 
   it('should call onEditProfile when edit button is clicked', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
     const editButton = screen.getByText('Edit Profile');
     fireEvent.click(editButton);
@@ -177,7 +201,9 @@ describe('UserProfile', () => {
   });
 
   it('should show quick action buttons in overview', async () => {
-    renderWithProviders(<UserProfile user={mockUser} />);
+    await act(async () => {
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
     // Check that the navigation items are available
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();

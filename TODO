@@ -1,6 +1,22 @@
-the top corners of the drawers should not be rounded
+after generating a workout the dialog does not automatically go away and show the loader until the generation is done, causing confusion
 
 display charts inline
+
+remove keycloak username, just use email?
+
+integration test all user profile sidebar functionality to make sure it works
+
+com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
+
+"how it works" on root spa with workout generation algorithm flowchart
+
+congen database for congen?  Or maybe aws terraform will handle that.
+
+workout type enum
+
+https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
+
+add reloader config for keycloak so it restarts on configmap change
 
 Interface to show users what exercises are available as they add preferences, equipment, …
 
@@ -13,8 +29,6 @@ remove all hardcoded exercises, use muscles from primary exercise.
 weak muscles taken into account
 
 Display for workout detail title (should not be "DE_Upper Day (Day 4) • 5 stages")
-
-after generating a workout the dialog does not automatically go away and show the loader until the generation is done, causing confusion
 
 update program button not working
 
@@ -43,7 +57,7 @@ Currently, we generate a week of workouts, however what we would like the flow t
 1. go to workout portion of dashboard.
 2. If you would like to generate a workout today, click a "generate today's workout" button.
 3. If you already generated all the workouts for your program for the week though, return an error and tell the user they already completed their workouts for this week and need to wait until next week to generate their next workout.
-4. We want a calendar display under the current information to show the historical workouts.  use react-big-calendar npm package for that, using version 1.19.4.  currently, we also have a workout calendar component that is unused, but we would like to move relevant functionality into the workout and workout details components, then delete the unused workout calnedar component.
+4. We want a calendar display under the current information to show the historical workouts.  use react-big-calendar npm package for that, using version 1.19.4.  but we would like to move relevant functionality into the workout, workout week details and workout details components as appropriate.
 5. the calendar should be populated with all the workouts for that program, using the creation date as the day to place the workout on the calendar.  this includes any newly-generated workouts
 6. you should be able to click on the workouts in the calendar and it'll take you to the workout details for that workout.
 
@@ -63,15 +77,11 @@ use this everwhere an exercise name is rendered for consistency
 
 
 
-Remove the workout calendar component since it is unused
-
 support print / export (pdf or xlsx) and add corresponding icon buttons on workout and program to expose this functionality
 
 remove timeout duration from workout generation exceeded error message.  the user facing error messages should not contain implementation details
 
 check the frontend for common patterns we can abstract into our own custom components to promote reusse
-
-workout calendar / putting workouts generated in timeline?
 
 support edit profile with keycloak, or other backend integration?
 
@@ -79,16 +89,10 @@ Implement change password functionality
 
 Fix dates: Member since January 21, 1970
 
-integration test all user profile sidebar functionality to make sure it works
-
-com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
 
 
 assets, and object storage for assets
 
-"how it works" on root spa with workout generation algorithm flowchart
-
-congen database for congen?  Or maybe aws terraform will handle that.
 
 
 
@@ -121,17 +125,6 @@ Health metric visualization impact on performance page.
 hashicorp vault for staging/production
 
 Write a gradle task to check for all component updates and apply them
-
-remove keycloak username, just use email?
-
-workout type enum
-
-
-https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
-
-
-
-add reloader config for keycloak so it restarts on configmap change
 
 
 

@@ -252,8 +252,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     // Aggregate volume by workout stage
     const stageVolumeMap = new Map<string, number>();
     
-    console.log('exerciseCorrelationData:', exerciseCorrelationData);
-    
     exerciseCorrelationData.forEach(ex => {
       const currentVolume = stageVolumeMap.get(ex.category) || 0;
       stageVolumeMap.set(ex.category, currentVolume + ex.volume);
@@ -263,8 +261,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
       category,
       volume,
     }));
-    
-    console.log('correlationChartData result:', result);
+
     return result;
   }, [exerciseCorrelationData]);
 

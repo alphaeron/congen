@@ -23,9 +23,11 @@ import { BrowserRouter, Link, Routes, Route, Navigate } from 'react-router';
 import { getAuthProviderConfig } from './auth/OidcConfig';
 import { AuthCallback } from './components/AuthCallback';
 import { AuthorizedElement } from './components/AuthorizedElement';
+import { CookieConsentManager } from './components/CookieConsentManager';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CookieProvider } from './contexts/CookieContext';
 import { DashboardPage } from './pages/DashboardPage';
 import { ExerciseDetailsPage } from './pages/ExerciseDetailsPage';
 import { ExerciseOverviewPage } from './pages/ExerciseOverviewPage';
@@ -540,6 +542,9 @@ function AppContent(): React.ReactElement {
             </Routes>
           </Container>
         </Box>
+
+        {/* Cookie Consent Banner */}
+        <CookieConsentManager />
       </DrawerContext.Provider>
     </ThemeProvider>
   );
@@ -555,7 +560,9 @@ export function App(): React.ReactElement {
     <BrowserRouter>
       <OidcAuthProvider {...getAuthProviderConfig()}>
         <AuthProvider>
-          <AppContent />
+          <CookieProvider>
+            <AppContent />
+          </CookieProvider>
         </AuthProvider>
       </OidcAuthProvider>
     </BrowserRouter>
