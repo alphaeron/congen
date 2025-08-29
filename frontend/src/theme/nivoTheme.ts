@@ -32,7 +32,7 @@ export const congenNivoTheme = {
       },
       text: {
         fontSize: 11,
-        fill: gray[900],
+        fill: gray[100],
         outlineWidth: 0,
         outlineColor: 'transparent',
         fontWeight: 600,
@@ -41,7 +41,7 @@ export const congenNivoTheme = {
     legend: {
       text: {
         fontSize: 12,
-        fill: gray[900],
+        fill: gray[100],
         outlineWidth: 0,
         outlineColor: 'transparent',
         fontWeight: 700,

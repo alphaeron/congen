@@ -30,6 +30,7 @@ import type {
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { congenNivoTheme, congenLegendConfig } from '../theme/nivoTheme';
+import { categorizeExerciseVolume } from '../common/utils';
 
 interface WorkoutAnalyticsProps {
   user: User;
@@ -199,49 +200,18 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
             const totalWeight = weight + bandWeight;
             const setVolume = totalWeight * reps;
 
-            // Get exercise data to properly categorize using the is_accessory field
+            // Get exercise data and categorize volume using shared helper
             const exerciseName = exerciseWithSchemes.exercise.exercise_name;
             const exerciseInfo = exerciseData.get(exerciseName);
+            const categorizedVolume = categorizeExerciseVolume(
+              exerciseInfo,
+              workoutData.workout.name,
+              setVolume
+            );
             
-            if (exerciseInfo?.is_accessory) {
-              // Accessory exercises go to accessory volume
-              accessoryVolume += setVolume;
-            } else {
-              // Primary exercises (non-accessory) are categorized by workout type
-              const workoutName = workoutData.workout.name.toLowerCase();
-              if (workoutName.includes('me') && !workoutName.includes('de')) {
-                // Pure Max Effort workout
-                maxEffortVolume += setVolume;
-              } else if (workoutName.includes('de') && !workoutName.includes('me')) {
-                // Pure Dynamic Effort workout
-                dynamicEffortVolume += setVolume;
-              } else if (workoutName.includes('me') && workoutName.includes('de')) {
-                // Combined ME+DE workout - categorize based on exercise body part
-                if (workoutName.includes('upper') && exerciseInfo?.is_upper) {
-                  // ME Upper part of combined workout
-                  maxEffortVolume += setVolume;
-                } else if (workoutName.includes('lower') && !exerciseInfo?.is_upper) {
-                  // DE Lower part of combined workout
-                  dynamicEffortVolume += setVolume;
-                } else if (workoutName.includes('lower') && exerciseInfo?.is_upper) {
-                  // DE Upper part of combined workout
-                  dynamicEffortVolume += setVolume;
-                } else if (workoutName.includes('upper') && !exerciseInfo?.is_upper) {
-                  // ME Lower part of combined workout
-                  maxEffortVolume += setVolume;
-                } else {
-                  // Default for combined days - use body part to determine
-                  if (exerciseInfo?.is_upper) {
-                    maxEffortVolume += setVolume;
-                  } else {
-                    dynamicEffortVolume += setVolume;
-                  }
-                }
-              } else {
-                // Default to dynamic effort for unknown workout types
-                dynamicEffortVolume += setVolume;
-              }
-            }
+            maxEffortVolume += categorizedVolume.maxEffortVolume;
+            dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
+            accessoryVolume += categorizedVolume.accessoryVolume;
           });
         });
       });

@@ -24,6 +24,7 @@ import type {
   Exercise
 } from '../api/types';
 import { congenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import { categorizeExerciseVolume } from '../common/utils';
 
 interface ConjugateProgressionProps {
   user: User;
@@ -31,7 +32,7 @@ interface ConjugateProgressionProps {
 
 interface ExerciseCorrelation {
   exercise: string;
-  category: 'Big 3' | 'Big 4' | 'Accessory';
+  category: string; // Will be the workout stage name
   volume: number;
   frequency: number;
   maxWeight: number;
@@ -55,7 +56,7 @@ interface ExerciseCorrelationData {
  *
  * Based on Westside Barbell conjugate method principles, shows:
  * - Volume tracking (total weight lifted including bands)
- * - Exercise correlation analysis (Big 3/4 lifts vs accessories)
+ * - Exercise volume by workout stage analysis
  * - Progress tracking (1RM improvements over time)
  * - Training intensity distribution
  *
@@ -142,49 +143,18 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
             const totalWeight = weight + bandWeight;
             const setVolume = totalWeight * reps;
 
-            // Get exercise data to properly categorize using the is_accessory field
+            // Get exercise data and categorize volume using shared helper
             const exerciseName = exerciseWithSchemes.exercise.exercise_name;
             const exerciseInfo = exerciseData.get(exerciseName);
+            const categorizedVolume = categorizeExerciseVolume(
+              exerciseInfo,
+              workoutData.workout.name,
+              setVolume
+            );
             
-            if (exerciseInfo?.is_accessory) {
-              // Accessory exercises go to accessory volume
-              accessoryVolume += setVolume;
-            } else {
-              // Primary exercises (non-accessory) are categorized by workout type
-              const workoutName = workoutData.workout.name.toLowerCase();
-              if (workoutName.includes('me') && !workoutName.includes('de')) {
-                // Pure Max Effort workout
-                maxEffortVolume += setVolume;
-              } else if (workoutName.includes('de') && !workoutName.includes('me')) {
-                // Pure Dynamic Effort workout
-                dynamicEffortVolume += setVolume;
-              } else if (workoutName.includes('me') && workoutName.includes('de')) {
-                // Combined ME+DE workout - categorize based on exercise body part
-                if (workoutName.includes('upper') && exerciseInfo?.is_upper) {
-                  // ME Upper part of combined workout
-                  maxEffortVolume += setVolume;
-                } else if (workoutName.includes('lower') && !exerciseInfo?.is_upper) {
-                  // DE Lower part of combined workout
-                  dynamicEffortVolume += setVolume;
-                } else if (workoutName.includes('lower') && exerciseInfo?.is_upper) {
-                  // DE Upper part of combined workout
-                  dynamicEffortVolume += setVolume;
-                } else if (workoutName.includes('upper') && !exerciseInfo?.is_upper) {
-                  // ME Lower part of combined workout
-                  maxEffortVolume += setVolume;
-                } else {
-                  // Default for combined days - use body part to determine
-                  if (exerciseInfo?.is_upper) {
-                    maxEffortVolume += setVolume;
-                  } else {
-                    dynamicEffortVolume += setVolume;
-                  }
-                }
-              } else {
-                // Default to dynamic effort for unknown workout types
-                dynamicEffortVolume += setVolume;
-              }
-            }
+            maxEffortVolume += categorizedVolume.maxEffortVolume;
+            dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
+            accessoryVolume += categorizedVolume.accessoryVolume;
           });
         });
       });
@@ -199,11 +169,11 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     }).slice(-10); // Last 10 workouts
   }, [userData, exerciseData]);
 
-  // Calculate exercise correlation data
+  // Calculate exercise volume by workout stage data
   const exerciseCorrelationData = useMemo(() => {
     if (!userData?.training_programs) return [];
 
-    const exerciseStats = new Map<string, ExerciseCorrelation>();
+    const stageVolumeMap = new Map<string, number>();
     const allWorkouts: ProgrammedWorkoutWithStages[] = [];
     userData.training_programs.forEach(program => {
       allWorkouts.push(...program.workouts);
@@ -211,54 +181,35 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
 
     allWorkouts.forEach((workoutData) => {
       workoutData.stages.forEach((stage) => {
+        const stageName = stage.stage.name || 'Unknown Stage';
+        
         stage.exercises.forEach((exerciseWithSchemes) => {
-          const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-          const existing = exerciseStats.get(exerciseName) || {
-            exercise: exerciseName,
-            category: 'Accessory' as const,
-            volume: 0,
-            frequency: 0,
-            maxWeight: 0,
-          };
-
-          // Determine category using exercise data
-          const exerciseInfo = exerciseData.get(exerciseName);
-          if (exerciseInfo) {
-            if (exerciseInfo.is_accessory) {
-              existing.category = 'Accessory';
-            } else {
-              // For primary exercises, categorize based on movement type
-              const movementType = exerciseInfo.movement_type.toLowerCase();
-              if (['squat', 'bench', 'deadlift'].some(lift => movementType.includes(lift))) {
-                existing.category = 'Big 3';
-              } else if (movementType.includes('overhead') || movementType.includes('press')) {
-                existing.category = 'Big 4';
-              } else {
-                existing.category = 'Accessory'; // Default for other primary exercises
-              }
-            }
-          }
-
-          // Calculate stats
+          // Calculate volume for this exercise in this stage
+          let stageVolume = 0;
           exerciseWithSchemes.set_schemes.forEach((setScheme) => {
             const weight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
             const bandWeight = setScheme.band_weight_lbs ? 
               (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0 : 0;
             
-            existing.volume += (weight + bandWeight) * reps;
-            existing.maxWeight = Math.max(existing.maxWeight, weight + bandWeight);
+            stageVolume += (weight + bandWeight) * reps;
           });
 
-          existing.frequency += 1;
-          exerciseStats.set(exerciseName, existing);
+          // Add to stage volume
+          const currentVolume = stageVolumeMap.get(stageName) || 0;
+          stageVolumeMap.set(stageName, currentVolume + stageVolume);
         });
       });
     });
 
-    return Array.from(exerciseStats.values())
-      .sort((a, b) => b.volume - a.volume)
-      .slice(0, 8); // Top 8 exercises
+    // Convert to the expected format for the donut chart
+    return Array.from(stageVolumeMap.entries()).map(([stageName, volume]) => ({
+      exercise: stageName, // Using stage name as exercise name for the chart
+      category: stageName,
+      volume,
+      frequency: 1, // Not used for donut chart
+      maxWeight: 0, // Not used for donut chart
+    }));
   }, [userData, exerciseData]);
 
   // Calculate progress data
@@ -312,13 +263,23 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   ], [volumeData]);
 
   const correlationChartData = useMemo(() => {
-    const categories = ['Big 3', 'Big 4', 'Accessory'];
-    return categories.map(category => ({
+    // Aggregate volume by workout stage
+    const stageVolumeMap = new Map<string, number>();
+    
+    console.log('exerciseCorrelationData:', exerciseCorrelationData);
+    
+    exerciseCorrelationData.forEach(ex => {
+      const currentVolume = stageVolumeMap.get(ex.category) || 0;
+      stageVolumeMap.set(ex.category, currentVolume + ex.volume);
+    });
+    
+    const result = Array.from(stageVolumeMap.entries()).map(([category, volume]) => ({
       category,
-      volume: exerciseCorrelationData
-        .filter(ex => ex.category === category)
-        .reduce((sum, ex) => sum + ex.volume, 0),
+      volume,
     }));
+    
+    console.log('correlationChartData result:', result);
+    return result;
   }, [exerciseCorrelationData]);
 
   const progressChartData = useMemo(() => [
@@ -369,12 +330,12 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     // Convert to chord diagram format
     exercisePairs.forEach((value, pair) => {
       const [source, target] = pair.split('|');
-      if (value > 1) { // Only show correlations that appear more than once
-        correlations.push({ source, target, value });
-      }
+      correlations.push({ source, target, value });
     });
 
-    return correlations.slice(0, 10); // Top 10 correlations
+    return correlations
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10); // Top 10 correlations
   }, [userData, exerciseData]);
 
   const chordData = useMemo(() => {
@@ -564,7 +525,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                   <Typography variant="h6">Exercise Distribution</Typography>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Volume by exercise category
+                  Volume by workout stage
                 </Typography>
                 <Box sx={{ height: 300 }}>
                   <ResponsivePie
