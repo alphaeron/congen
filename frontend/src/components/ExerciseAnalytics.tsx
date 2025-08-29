@@ -10,6 +10,7 @@ import {
   Grid,
   Typography,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveIcicle } from '@nivo/icicle';
 import { ResponsiveRadialBar } from '@nivo/radial-bar';
@@ -32,7 +33,7 @@ import type {
   ExerciseEquipment
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { congenNivoTheme } from '../theme/nivoTheme';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface ExerciseAnalyticsProps {
   user: User;
@@ -78,6 +79,8 @@ interface ProgrammedExerciseWithSetSchemes {
  */
 export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -396,7 +399,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
                     circularAxisOuter={{ tickSize: 2, tickPadding: 2, tickRotation: 0 }}
                     labelsSkipAngle={10}
                     colors={{ scheme: 'nivo' }}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                     enableLabels={true}
                     labelsRadiusOffset={0.5}
                     legends={[
@@ -454,7 +457,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
                       from: 'color',
                       modifiers: [['darker', 1.4]],
                     }}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                   />
                 </Box>
               </CardContent>
@@ -478,7 +481,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
                     margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
                     value="value"
                     colors={{ scheme: 'nivo' }}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                     enableLabels={true}
                     labelTextColor={{
                       from: 'color',

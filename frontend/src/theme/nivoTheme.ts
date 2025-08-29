@@ -1,136 +1,147 @@
 import { brand, secondary, gray, green, warning } from '../theme';
+import type { PaletteMode } from '@mui/material';
 
 /**
- * Comprehensive Nivo theme that matches Congen's design system
+ * Creates a comprehensive Nivo theme that matches Congen's design system
+ * and adapts to light/dark mode
  * Based on Nivo theming guide: https://nivo.rocks/guides/theming/
  */
-export const congenNivoTheme = {
-  // Typography - matches Congen's font system
-  fontSize: 12,
-  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+export function createCongenNivoTheme(mode: PaletteMode) {
+  const isDark = mode === 'dark';
   
-  // Colors - using Congen's brand colors with better contrast
-  text: {
+  return {
+    // Typography - matches Congen's font system
     fontSize: 12,
-    fill: gray[800],
-    outlineWidth: 0,
-    outlineColor: 'transparent',
-  },
-  
-  // Axes styling - clean and modern with better contrast
-  axis: {
-    domain: {
-      line: {
-        stroke: gray[600],
-        strokeWidth: 2,
+    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    
+    // Colors - using Congen's brand colors with better contrast
+    text: {
+      fontSize: 12,
+      fill: isDark ? gray[100] : gray[800],
+      outlineWidth: 0,
+      outlineColor: 'transparent',
+    },
+    
+    // Axes styling - clean and modern with better contrast
+    axis: {
+      domain: {
+        line: {
+          stroke: isDark ? gray[600] : gray[400],
+          strokeWidth: 2,
+        },
+      },
+      ticks: {
+        line: {
+          stroke: isDark ? gray[600] : gray[400],
+          strokeWidth: 1,
+        },
+        text: {
+          fontSize: 11,
+          fill: isDark ? gray[100] : gray[700],
+          outlineWidth: 0,
+          outlineColor: 'transparent',
+          fontWeight: 600,
+        },
+      },
+      legend: {
+        text: {
+          fontSize: 12,
+          fill: isDark ? gray[100] : gray[700],
+          outlineWidth: 0,
+          outlineColor: 'transparent',
+          fontWeight: 700,
+        },
       },
     },
-    ticks: {
+    
+    // Grid styling
+    grid: {
       line: {
-        stroke: gray[600],
+        stroke: isDark ? gray[700] : gray[200],
         strokeWidth: 1,
+        strokeDasharray: '4 4',
       },
+    },
+    
+    // Legends - clean and readable with better contrast
+    legends: {
       text: {
         fontSize: 11,
-        fill: gray[100],
+        fill: isDark ? gray[100] : gray[800],
         outlineWidth: 0,
         outlineColor: 'transparent',
-        fontWeight: 600,
+        fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+        outlineOpacity: 0,
+        fontWeight: 500,
       },
     },
-    legend: {
+    
+    // Labels styling with better contrast
+    labels: {
       text: {
-        fontSize: 12,
-        fill: gray[100],
+        fontSize: 11,
+        fill: isDark ? gray[100] : gray[800],
         outlineWidth: 0,
         outlineColor: 'transparent',
-        fontWeight: 700,
+        fontWeight: 500,
       },
     },
-  },
-  
-  // Grid styling
-  grid: {
-    line: {
-      stroke: gray[300],
-      strokeWidth: 1,
-      strokeDasharray: '4 4',
+    
+    // Markers styling
+    markers: {
+      lineColor: isDark ? gray[600] : gray[300],
+      lineStrokeWidth: 1,
+      text: {
+        fontSize: 11,
+        fill: isDark ? gray[300] : gray[600],
+        outlineWidth: 0,
+        outlineColor: 'transparent',
+        fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+        outlineOpacity: 0,
+      },
     },
-  },
-  
-  // Legends - clean and readable with better contrast
-  legends: {
-    text: {
-      fontSize: 11,
-      fill: gray[800],
-      outlineWidth: 0,
-      outlineColor: 'transparent',
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      outlineOpacity: 0,
-      fontWeight: 500,
+    
+    // Dots styling
+    dots: {
+      text: {
+        fontSize: 11,
+        fill: isDark ? gray[300] : gray[600],
+        outlineWidth: 0,
+        outlineColor: 'transparent',
+        fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+        outlineOpacity: 0,
+      },
     },
-  },
-  
-  // Labels styling with better contrast
-  labels: {
-    text: {
-      fontSize: 11,
-      fill: gray[800],
-      outlineWidth: 0,
-      outlineColor: 'transparent',
-      fontWeight: 500,
+    
+    // Tooltip styling with better visibility
+    tooltip: {
+      container: {
+        background: isDark ? gray[800] : 'white',
+        color: isDark ? gray[100] : gray[900],
+        fontSize: 12,
+        borderRadius: 8,
+        boxShadow: isDark 
+          ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
+          : '0 4px 12px rgba(0, 0, 0, 0.15)',
+        border: `1px solid ${isDark ? gray[600] : gray[300]}`,
+        padding: '8px 12px',
+        maxWidth: 200,
+      },
     },
-  },
-  
-  // Markers styling
-  markers: {
-    lineColor: gray[300],
-    lineStrokeWidth: 1,
-    text: {
-      fontSize: 11,
-      fill: gray[600],
-      outlineWidth: 0,
-      outlineColor: 'transparent',
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      outlineOpacity: 0,
+    
+    // Crosshair styling
+    crosshair: {
+      line: {
+        stroke: brand[500],
+        strokeWidth: 1,
+        strokeOpacity: 0.75,
+      },
     },
-  },
-  
-  // Dots styling
-  dots: {
-    text: {
-      fontSize: 11,
-      fill: gray[600],
-      outlineWidth: 0,
-      outlineColor: 'transparent',
-      fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-      outlineOpacity: 0,
-    },
-  },
-  
-  // Tooltip styling with better visibility
-  tooltip: {
-    container: {
-      background: 'white',
-      color: gray[900],
-      fontSize: 12,
-      borderRadius: 8,
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-      border: `1px solid ${gray[300]}`,
-      padding: '8px 12px',
-      maxWidth: 200,
-    },
-  },
-  
-  // Crosshair styling
-  crosshair: {
-    line: {
-      stroke: brand[500],
-      strokeWidth: 1,
-      strokeOpacity: 0.75,
-    },
-  },
-};
+  };
+}
+
+// Legacy export for backward compatibility (defaults to dark mode)
+export const congenNivoTheme = createCongenNivoTheme('dark');
 
 /**
  * Congen-specific color schemes for Nivo charts

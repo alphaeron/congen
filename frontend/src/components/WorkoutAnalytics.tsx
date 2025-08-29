@@ -9,6 +9,7 @@ import {
   Grid,
   Typography,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveBump } from '@nivo/bump';
 import { ResponsiveIcicle } from '@nivo/icicle';
@@ -29,7 +30,7 @@ import type {
   Program
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { congenNivoTheme, congenLegendConfig } from '../theme/nivoTheme';
+import { createCongenNivoTheme, congenLegendConfig } from '../theme/nivoTheme';
 import { categorizeExerciseVolume } from '../common/utils';
 
 interface WorkoutAnalyticsProps {
@@ -80,6 +81,8 @@ interface ExerciseRankingData {
  */
 export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [workouts, setWorkouts] = useState<WorkoutData[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -419,7 +422,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
                       margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
                       value="value"
                       colors={{ scheme: 'nivo' }}
-                      theme={congenNivoTheme}
+                      theme={nivoTheme}
                       enableLabels={true}
                       labelTextColor={{
                         from: 'color',
@@ -463,7 +466,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
                     keys={['Max Effort', 'Dynamic Effort', 'Accessory']}
                     margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
                     colors={{ scheme: 'nivo' }}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                   />
                 </Box>
               </CardContent>
@@ -486,7 +489,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
                     data={exerciseRankingData}
                     margin={{ top: 40, right: 100, bottom: 40, left: 60 }}
                     colors={{ scheme: 'nivo' }}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                   />
                 </Box>
               </CardContent>

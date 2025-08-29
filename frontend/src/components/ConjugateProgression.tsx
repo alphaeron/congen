@@ -8,6 +8,7 @@ import {
   Grid,
   Typography,
   CircularProgress,
+  useTheme,
 } from '@mui/material';
 import { ResponsiveChord } from '@nivo/chord';
 import { ResponsiveLine } from '@nivo/line';
@@ -23,7 +24,7 @@ import type {
   ProgrammedWorkoutWithStages,
   Exercise
 } from '../api/types';
-import { congenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 import { categorizeExerciseVolume } from '../common/utils';
 
 interface ConjugateProgressionProps {
@@ -65,6 +66,8 @@ interface ExerciseCorrelationData {
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
+  const theme = useTheme();
+  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
@@ -471,7 +474,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                             pointLabelYOffset={-12}
                             useMesh={true}
                             colors={congenColorSchemes.strength}
-                            theme={congenNivoTheme}
+                            theme={nivoTheme}
                             legends={[
                               {
                                 anchor: 'top',
@@ -547,7 +550,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                     arcLinkLabelsColor={{ from: 'color' }}
                     arcLabelsSkipAngle={10}
                     arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                     legends={[
                       {
                         anchor: 'bottom',
@@ -630,7 +633,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                     pointBorderColor={{ from: 'serieColor' }}
                     pointLabelYOffset={-12}
                     useMesh={true}
-                    theme={congenNivoTheme}
+                    theme={nivoTheme}
                     legends={[
                       {
                         anchor: 'top',
@@ -765,7 +768,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                                 modifiers: [['darker', 1]],
                               }}
                               colors={{ scheme: 'nivo' }}
-                              theme={congenNivoTheme}
+                              theme={nivoTheme}
                             />
                           </Box>
                         </CardContent>
