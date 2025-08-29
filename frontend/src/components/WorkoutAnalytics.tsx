@@ -377,19 +377,27 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
                       data={trainingStructureData}
                       margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
                       value="value"
-                      colors={{ scheme: 'paired' }}
+                      colors={{ scheme: 'nivo' }}
                       theme={congenNivoTheme}
                       enableLabels={true}
                       labelTextColor={{
                         from: 'color',
-                        modifiers: [['darker', 1.4]],
+                        modifiers: [['darker', 2]],
                       }}
+                      labelBoxAnchor="top"
+                      labelPaddingX={6}
+                      labelPaddingY={6}
+                      labelAlign="end"
+                      labelBaseline="center"
+                      labelRotation={270}
+                      labelSkipWidth={12}
+                      labelSkipHeight={32}
                       borderWidth={1}
                       borderColor={{
                         from: 'color',
-                        modifiers: [['darker', 0.1]],
+                        modifiers: [['darker', 0.2]],
                       }}
-                      borderRadius={3}
+                      borderRadius={4}
                     />
                   </Box>
                 </CardContent>
