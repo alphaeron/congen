@@ -390,8 +390,8 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
                       labelAlign="end"
                       labelBaseline="center"
                       labelRotation={270}
-                      labelSkipWidth={12}
-                      labelSkipHeight={32}
+                      labelSkipWidth={16}
+                      labelSkipHeight={48}
                       borderWidth={1}
                       borderColor={{
                         from: 'color',

@@ -231,21 +231,27 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
     const muscleGroups = new Map<string, { volume: number; exercises: string[] }>();
     
     exerciseStats.forEach(exercise => {
-      const existing = muscleGroups.get(exercise.muscleGroup) || {
-        volume: 0,
-        exercises: [],
-      };
-      existing.volume += exercise.totalVolume;
-      if (!existing.exercises.includes(exercise.name)) {
-        existing.exercises.push(exercise.name);
-      }
-      muscleGroups.set(exercise.muscleGroup, existing);
+      // Split the muscle group string into individual muscles
+      const individualMuscles = exercise.muscleGroup.split(', ').filter(muscle => muscle.trim() !== '');
+      
+      // For each individual muscle, add the exercise volume
+      individualMuscles.forEach(muscle => {
+        const existing = muscleGroups.get(muscle) || {
+          volume: 0,
+          exercises: [],
+        };
+        existing.volume += exercise.totalVolume;
+        if (!existing.exercises.includes(exercise.name)) {
+          existing.exercises.push(exercise.name);
+        }
+        muscleGroups.set(muscle, existing);
+      });
     });
 
     return {
       name: 'Exercise Volume',
-      children: Array.from(muscleGroups.entries()).map(([group, data]) => ({
-        name: group,
+      children: Array.from(muscleGroups.entries()).map(([muscle, data]) => ({
+        name: muscle,
         loc: data.volume,
         children: data.exercises.slice(0, 5).map(exercise => ({
           name: exercise,
@@ -258,22 +264,26 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
   const icicleData = useMemo(() => {
     if (!exerciseStats.length) return null;
 
-    // Group by actual muscle groups from the exercise data
+    // Group by individual muscles, not combined muscle groups
     const muscleGroups = new Map<string, { volume: number; exercises: Map<string, number> }>();
     
     exerciseStats.forEach(exercise => {
-      // Use the actual muscle group from the exercise data
-      const group = exercise.muscleGroup;
-      const existing = muscleGroups.get(group) || { volume: 0, exercises: new Map() };
-      existing.volume += exercise.totalVolume;
-      existing.exercises.set(exercise.name, exercise.totalVolume);
-      muscleGroups.set(group, existing);
+      // Split the muscle group string into individual muscles
+      const individualMuscles = exercise.muscleGroup.split(', ').filter(muscle => muscle.trim() !== '');
+      
+      // For each individual muscle, add the exercise volume
+      individualMuscles.forEach(muscle => {
+        const existing = muscleGroups.get(muscle) || { volume: 0, exercises: new Map() };
+        existing.volume += exercise.totalVolume;
+        existing.exercises.set(exercise.name, exercise.totalVolume);
+        muscleGroups.set(muscle, existing);
+      });
     });
 
     return {
-      id: 'Exercise Volume Analysis',
-      children: Array.from(muscleGroups.entries()).map(([group, data]) => ({
-        id: group,
+      id: 'Volume',
+      children: Array.from(muscleGroups.entries()).map(([muscle, data]) => ({
+        id: muscle,
         children: Array.from(data.exercises.entries()).slice(0, 8).map(([exercise, volume]) => ({
           id: exercise,
           value: volume,
@@ -436,8 +446,8 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
                     labelAlign="end"
                     labelBaseline="center"
                     labelRotation={270}
-                    labelSkipWidth={12}
-                    labelSkipHeight={32}
+                    labelSkipWidth={16}
+                    labelSkipHeight={48}
                     borderWidth={1}
                     borderColor={{
                       from: 'color',
