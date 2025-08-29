@@ -100,7 +100,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 userId = any()
             )
         ).thenReturn(Mono.empty())
-        whenever(programService.updateProgram(PROGRAM_ID, "Conjugate Powerlifting - Week 2", 2, true)).thenReturn(Mono.just(program))
+        whenever(programService.updateProgram(PROGRAM_ID, "Week 2", 2, true)).thenReturn(Mono.just(program))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 

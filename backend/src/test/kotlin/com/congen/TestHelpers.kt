@@ -513,10 +513,6 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
     val userOneRepMaxDAL = mock<UserOneRepMaxDAL>()
     val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
     val programDAL = mock<ProgramDAL>()
-    val programmedWorkoutDAL = mock<ProgrammedWorkoutDAL>()
-    val workoutStageDAL = mock<WorkoutStageDAL>()
-    val programmedExerciseDAL = mock<ProgrammedExerciseDAL>()
-    val setSchemeDAL = mock<SetSchemeDAL>()
     val auditService = mock<AuditService>()
 
     val gdprComplianceService =
@@ -529,10 +525,6 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             userOneRepMaxDAL = userOneRepMaxDAL,
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
             programDAL = programDAL,
-            programmedWorkoutDAL = programmedWorkoutDAL,
-            workoutStageDAL = workoutStageDAL,
-            programmedExerciseDAL = programmedExerciseDAL,
-            setSchemeDAL = setSchemeDAL,
             auditService = auditService
         )
 

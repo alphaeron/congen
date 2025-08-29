@@ -18,6 +18,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 
 import { getUserDataExport } from '../api/gdpr';
 import { getIndividualExercise } from '../api/exercise';
+import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
 import type { 
   User, 
   ProgrammedWorkout, 
@@ -27,6 +28,7 @@ import type {
   Exercise,
   Program
 } from '../api/types';
+import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { congenNivoTheme, congenLegendConfig } from '../theme/nivoTheme';
 
 interface WorkoutAnalyticsProps {
@@ -81,12 +83,47 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+
+  // Helper function to convert weight to user's preferred unit
+  const convertWeightToUserUnit = (weight: number, exerciseName: string): number => {
+    // Find user's preferred unit for this exercise
+    const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
+    const userUnit = preference?.preferred_unit || WeightUnit.LBS; // Default to LBS
+    
+    // If weight is already in user's preferred unit, return as is
+    // For now, assume all weights in database are in LBS (this should be improved in backend)
+    if (userUnit === WeightUnit.LBS) {
+      return weight;
+    } else if (userUnit === WeightUnit.KG) {
+      // Convert from LBS to KG
+      return weight * 0.453592;
+    }
+    
+    return weight;
+  };
+
+  // Helper function to get display unit for an exercise
+  const getDisplayUnit = (exerciseName: string): string => {
+    const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
+    const userUnit = preference?.preferred_unit || WeightUnit.LBS;
+    return userUnit === WeightUnit.KG ? 'kg' : 'lbs';
+  };
 
   // Load all workout data using optimized GDPR export endpoint
   useEffect(() => {
     const loadWorkoutData = async () => {
       try {
         setIsLoading(true);
+
+        // Load weight unit preferences first
+        try {
+          const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
+          setWeightUnitPreferences(unitResponse.data);
+        } catch (err) {
+          console.warn('No weight unit preferences found, using defaults');
+          setWeightUnitPreferences([]);
+        }
 
         // Use optimized single query to get all workout data
         const userDataExport = await getUserDataExport();
@@ -210,14 +247,19 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
             frequency: 0,
           };
 
-          // Calculate volume for this exercise
+          // Calculate volume for this exercise with weight unit conversion
           let exerciseVolume = 0;
           exerciseData.set_schemes.forEach((setScheme) => {
-            const weight = setScheme.performed_weight || setScheme.target_weight || 0;
+            const rawWeight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-            const bandWeight = setScheme.band_weight_lbs ? 
+            const rawBandWeight = setScheme.band_weight_lbs ? 
               (setScheme.band_weight_lbs as any)?.weight_lbs || 0 : 0;
-            exerciseVolume += (weight + bandWeight) * reps;
+            
+            // Convert weights to user's preferred unit
+            const convertedWeight = convertWeightToUserUnit(rawWeight, exerciseName);
+            const convertedBandWeight = convertWeightToUserUnit(rawBandWeight, exerciseName);
+            
+            exerciseVolume += (convertedWeight + convertedBandWeight) * reps;
           });
 
           existing.volume += exerciseVolume;
@@ -240,7 +282,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         y: exerciseStats.get(exerciseName)?.volume || 0,
       })),
     }));
-  }, [workouts, volumeData]);
+  }, [workouts, volumeData, weightUnitPreferences]);
 
   // Calculate training structure data for icicle chart
   const trainingStructureData = useMemo(() => {
@@ -277,14 +319,19 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
             }
           }
 
-          // Calculate volume for this exercise
+          // Calculate volume for this exercise with weight unit conversion
           let exerciseVolume = 0;
           exercise.set_schemes.forEach(setScheme => {
-            const weight = setScheme.performed_weight || setScheme.target_weight || 0;
+            const rawWeight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-            const bandWeight = setScheme.band_weight_lbs ? 
+            const rawBandWeight = setScheme.band_weight_lbs ? 
               (setScheme.band_weight_lbs as any)?.weight_lbs || 0 : 0;
-            exerciseVolume += (weight + bandWeight) * reps;
+            
+            // Convert weights to user's preferred unit
+            const convertedWeight = convertWeightToUserUnit(rawWeight, exerciseName);
+            const convertedBandWeight = convertWeightToUserUnit(rawBandWeight, exerciseName);
+            
+            exerciseVolume += (convertedWeight + convertedBandWeight) * reps;
           });
 
           // Add to category totals
@@ -310,7 +357,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         })),
       })),
     };
-  }, [workouts, programs, exerciseData]);
+  }, [workouts, programs, exerciseData, weightUnitPreferences]);
 
   // Prepare stream chart data
   const streamData = useMemo(() => {

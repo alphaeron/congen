@@ -45,10 +45,6 @@ class GdprComplianceServiceTest {
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var programDAL: ProgramDAL
-    private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
-    private lateinit var workoutStageDAL: WorkoutStageDAL
-    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
-    private lateinit var setSchemeDAL: SetSchemeDAL
     private lateinit var gdprComplianceService: GdprComplianceService
 
     @BeforeEach
@@ -62,10 +58,6 @@ class GdprComplianceServiceTest {
         userOneRepMaxDAL = mock()
         userWeightUnitPreferenceDAL = mock()
         programDAL = mock()
-        programmedWorkoutDAL = mock()
-        workoutStageDAL = mock()
-        programmedExerciseDAL = mock()
-        setSchemeDAL = mock()
 
         gdprComplianceService =
             GdprComplianceService(
@@ -77,10 +69,6 @@ class GdprComplianceServiceTest {
                 userOneRepMaxDAL = userOneRepMaxDAL,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
                 programDAL = programDAL,
-                programmedWorkoutDAL = programmedWorkoutDAL,
-                workoutStageDAL = workoutStageDAL,
-                programmedExerciseDAL = programmedExerciseDAL,
-                setSchemeDAL = setSchemeDAL,
                 auditService = auditService
             )
     }
@@ -203,12 +191,6 @@ class GdprComplianceServiceTest {
         whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getUserAuditLogs(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getDataRetentionPolicies()).thenReturn(Mono.just(emptyList()))
-
-        // Mock the nested calls for programs with workouts - these are called when programs exist
-        whenever(programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(any())).thenReturn(Mono.just(emptyList()))
-        whenever(workoutStageDAL.selectWorkoutStagesByProgrammedWorkoutId(any())).thenReturn(Mono.just(emptyList()))
-        whenever(programmedExerciseDAL.selectProgrammedExercisesByWorkoutStageId(any())).thenReturn(Mono.just(emptyList()))
-        whenever(setSchemeDAL.selectSetSchemesByProgrammedExerciseId(any())).thenReturn(Mono.just(emptyList()))
 
         StepVerifier.create(
             gdprComplianceService.exportUserData(keycloakId)
