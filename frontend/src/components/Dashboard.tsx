@@ -122,6 +122,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             borderRight: 1,
             borderColor: 'divider',
             overflow: 'hidden', // Prevent drawer content overflow
+            borderRadius: 0, // Remove rounded corners
           },
         }}
       >

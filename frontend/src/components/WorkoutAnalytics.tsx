@@ -189,8 +189,8 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
       let accessoryVolume = 0;
 
       workoutData.stages.forEach((stage) => {
-        stage.exercises.forEach((exerciseData) => {
-          exerciseData.set_schemes.forEach((setScheme) => {
+        stage.exercises.forEach((exerciseWithSchemes) => {
+          exerciseWithSchemes.set_schemes.forEach((setScheme) => {
             const weight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
             const bandWeight = setScheme.band_weight_lbs ? 
@@ -199,24 +199,48 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
             const totalWeight = weight + bandWeight;
             const setVolume = totalWeight * reps;
 
-            // Categorize by exercise type
-            const exerciseName = exerciseData.exercise.exercise_name.toLowerCase();
-            const isBigLift = ['squat', 'bench', 'deadlift', 'overhead press'].some(lift => 
-              exerciseName.includes(lift)
-            );
-            const isAccessory = exerciseName.includes('curl') || exerciseName.includes('extension') || 
-                               exerciseName.includes('fly') || exerciseName.includes('raise');
-
-            if (isBigLift) {
-              if (weight > 200) { // Assume heavy weight = max effort
-                maxEffortVolume += setVolume;
-              } else {
-                dynamicEffortVolume += setVolume;
-              }
-            } else if (isAccessory) {
+            // Get exercise data to properly categorize using the is_accessory field
+            const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+            const exerciseInfo = exerciseData.get(exerciseName);
+            
+            if (exerciseInfo?.is_accessory) {
+              // Accessory exercises go to accessory volume
               accessoryVolume += setVolume;
             } else {
-              totalVolume += setVolume;
+              // Primary exercises (non-accessory) are categorized by workout type
+              const workoutName = workoutData.workout.name.toLowerCase();
+              if (workoutName.includes('me') && !workoutName.includes('de')) {
+                // Pure Max Effort workout
+                maxEffortVolume += setVolume;
+              } else if (workoutName.includes('de') && !workoutName.includes('me')) {
+                // Pure Dynamic Effort workout
+                dynamicEffortVolume += setVolume;
+              } else if (workoutName.includes('me') && workoutName.includes('de')) {
+                // Combined ME+DE workout - categorize based on exercise body part
+                if (workoutName.includes('upper') && exerciseInfo?.is_upper) {
+                  // ME Upper part of combined workout
+                  maxEffortVolume += setVolume;
+                } else if (workoutName.includes('lower') && !exerciseInfo?.is_upper) {
+                  // DE Lower part of combined workout
+                  dynamicEffortVolume += setVolume;
+                } else if (workoutName.includes('lower') && exerciseInfo?.is_upper) {
+                  // DE Upper part of combined workout
+                  dynamicEffortVolume += setVolume;
+                } else if (workoutName.includes('upper') && !exerciseInfo?.is_upper) {
+                  // ME Lower part of combined workout
+                  maxEffortVolume += setVolume;
+                } else {
+                  // Default for combined days - use body part to determine
+                  if (exerciseInfo?.is_upper) {
+                    maxEffortVolume += setVolume;
+                  } else {
+                    dynamicEffortVolume += setVolume;
+                  }
+                }
+              } else {
+                // Default to dynamic effort for unknown workout types
+                dynamicEffortVolume += setVolume;
+              }
             }
           });
         });
@@ -230,7 +254,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         accessoryVolume: Math.round(accessoryVolume),
       };
     }).slice(-10); // Last 10 workouts
-  }, [workouts]);
+  }, [workouts, exerciseData]);
 
   // Calculate exercise ranking data for bump chart
   const exerciseRankingData = useMemo(() => {
@@ -240,8 +264,8 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
     
     workouts.forEach((workoutData) => {
       workoutData.stages.forEach((stage) => {
-        stage.exercises.forEach((exerciseData) => {
-          const exerciseName = exerciseData.exercise.exercise_name;
+        stage.exercises.forEach((exerciseWithSchemes) => {
+          const exerciseName = exerciseWithSchemes.exercise.exercise_name;
           const existing = exerciseStats.get(exerciseName) || {
             volume: 0,
             frequency: 0,
@@ -249,7 +273,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
 
           // Calculate volume for this exercise with weight unit conversion
           let exerciseVolume = 0;
-          exerciseData.set_schemes.forEach((setScheme) => {
+          exerciseWithSchemes.set_schemes.forEach((setScheme) => {
             const rawWeight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
             const rawBandWeight = setScheme.band_weight_lbs ? 
@@ -302,11 +326,11 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
     programWorkouts.forEach(workout => {
       workout.stages.forEach(stage => {
         stage.exercises.forEach(exercise => {
+          // Get exercise data to properly categorize using the is_accessory field
           const exerciseName = exercise.exercise.exercise_name;
+          const exerciseInfo = exerciseData.get(exerciseName);
           let category = 'Other';
           
-          // Use real exercise data to categorize
-          const exerciseInfo = exerciseData.get(exerciseName);
           if (exerciseInfo) {
             if (exerciseInfo.is_accessory) {
               category = 'Accessory Work';

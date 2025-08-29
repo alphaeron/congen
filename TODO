@@ -1,3 +1,5 @@
+the top corners of the drawers should not be rounded
+
 display charts inline
 
 Interface to show users what exercises are available as they add preferences, equipment, …
@@ -60,8 +62,6 @@ tooltip to hover over exercise to get exercise information, relation information
 use this everwhere an exercise name is rendered for consistency
 
 
-
-the top corners of the drawers should not be rounded
 
 Remove the workout calendar component since it is unused
 

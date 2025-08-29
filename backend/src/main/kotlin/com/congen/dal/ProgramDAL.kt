@@ -134,13 +134,15 @@ class ProgramDAL(
         isActive: Boolean? = null
     ): Mono<List<Program>> {
         logger.debug("Selecting programs by user id: {}", userId)
-        var query = "SELECT * FROM program WHERE user_id=$1 ORDER BY name"
+        var query = "SELECT * FROM program WHERE user_id=$1"
         val params = mutableListOf(userId)
 
         if (isActive != null) {
             query += " AND is_active=$2"
             params.add(isActive.toString())
         }
+
+        query += " ORDER BY name"
 
         return postgresClient.select(query, *params.toTypedArray())
     }

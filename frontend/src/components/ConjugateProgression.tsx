@@ -16,11 +16,12 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { getUserDataExport } from '../api/gdpr';
+import { getIndividualExercise } from '../api/exercise';
 import type { 
   User, 
   UserDataExport,
   ProgrammedWorkoutWithStages,
-  WorkoutStageWithExercises
+  Exercise
 } from '../api/types';
 import { congenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
 
@@ -65,6 +66,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   const { enqueueSnackbar } = useSnackbar();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
 
   // Legend selection state for each chart
   const [volumeSelectedItems, setVolumeSelectedItems] = useState<string[]>([]);
@@ -80,9 +82,32 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         // Load all data in a single optimized call
         const dataExport = await getUserDataExport();
         setUserData(dataExport);
+
+        // Fetch exercise data for all unique exercises
+        const uniqueExercises = new Set<string>();
+        dataExport.training_programs.forEach(program => {
+          program.workouts.forEach(workout => {
+            workout.stages.forEach(stage => {
+              stage.exercises.forEach(exercise => {
+                uniqueExercises.add(exercise.exercise.exercise_name);
+              });
+            });
+          });
+        });
+
+        const exerciseMap = new Map<string, Exercise>();
+        for (const exerciseName of Array.from(uniqueExercises)) {
+          try {
+            const exercise = await getIndividualExercise(exerciseName);
+            exerciseMap.set(exerciseName, exercise);
+          } catch (err) {
+            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, { variant: 'error' });
+          }
+        }
+
+        setExerciseData(exerciseMap);
       } catch (err) {
         enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
-        console.error('Error loading workout data:', err);
       } finally {
         setIsLoading(false);
       }
@@ -107,8 +132,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
       let accessoryVolume = 0;
 
       workoutData.stages.forEach((stage) => {
-        stage.exercises.forEach((exerciseData) => {
-          exerciseData.set_schemes.forEach((setScheme) => {
+        stage.exercises.forEach((exerciseWithSchemes) => {
+          exerciseWithSchemes.set_schemes.forEach((setScheme) => {
             const weight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
             const bandWeight = setScheme.band_weight_lbs ? 
@@ -117,24 +142,48 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
             const totalWeight = weight + bandWeight;
             const setVolume = totalWeight * reps;
 
-            // Categorize by exercise type
-            const exerciseName = exerciseData.exercise.exercise_name.toLowerCase();
-            const isBigLift = ['squat', 'bench', 'deadlift', 'overhead press'].some(lift => 
-              exerciseName.includes(lift)
-            );
-            const isAccessory = exerciseName.includes('curl') || exerciseName.includes('extension') || 
-                               exerciseName.includes('fly') || exerciseName.includes('raise');
-
-            if (isBigLift) {
-              if (weight > 200) { // Assume heavy weight = max effort
-                maxEffortVolume += setVolume;
-              } else {
-                dynamicEffortVolume += setVolume;
-              }
-            } else if (isAccessory) {
+            // Get exercise data to properly categorize using the is_accessory field
+            const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+            const exerciseInfo = exerciseData.get(exerciseName);
+            
+            if (exerciseInfo?.is_accessory) {
+              // Accessory exercises go to accessory volume
               accessoryVolume += setVolume;
             } else {
-              totalVolume += setVolume;
+              // Primary exercises (non-accessory) are categorized by workout type
+              const workoutName = workoutData.workout.name.toLowerCase();
+              if (workoutName.includes('me') && !workoutName.includes('de')) {
+                // Pure Max Effort workout
+                maxEffortVolume += setVolume;
+              } else if (workoutName.includes('de') && !workoutName.includes('me')) {
+                // Pure Dynamic Effort workout
+                dynamicEffortVolume += setVolume;
+              } else if (workoutName.includes('me') && workoutName.includes('de')) {
+                // Combined ME+DE workout - categorize based on exercise body part
+                if (workoutName.includes('upper') && exerciseInfo?.is_upper) {
+                  // ME Upper part of combined workout
+                  maxEffortVolume += setVolume;
+                } else if (workoutName.includes('lower') && !exerciseInfo?.is_upper) {
+                  // DE Lower part of combined workout
+                  dynamicEffortVolume += setVolume;
+                } else if (workoutName.includes('lower') && exerciseInfo?.is_upper) {
+                  // DE Upper part of combined workout
+                  dynamicEffortVolume += setVolume;
+                } else if (workoutName.includes('upper') && !exerciseInfo?.is_upper) {
+                  // ME Lower part of combined workout
+                  maxEffortVolume += setVolume;
+                } else {
+                  // Default for combined days - use body part to determine
+                  if (exerciseInfo?.is_upper) {
+                    maxEffortVolume += setVolume;
+                  } else {
+                    dynamicEffortVolume += setVolume;
+                  }
+                }
+              } else {
+                // Default to dynamic effort for unknown workout types
+                dynamicEffortVolume += setVolume;
+              }
             }
           });
         });
@@ -148,7 +197,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         accessoryVolume: Math.round(accessoryVolume),
       };
     }).slice(-10); // Last 10 workouts
-  }, [userData]);
+  }, [userData, exerciseData]);
 
   // Calculate exercise correlation data
   const exerciseCorrelationData = useMemo(() => {
@@ -162,8 +211,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
 
     allWorkouts.forEach((workoutData) => {
       workoutData.stages.forEach((stage) => {
-        stage.exercises.forEach((exerciseData) => {
-          const exerciseName = exerciseData.exercise.exercise_name;
+        stage.exercises.forEach((exerciseWithSchemes) => {
+          const exerciseName = exerciseWithSchemes.exercise.exercise_name;
           const existing = exerciseStats.get(exerciseName) || {
             exercise: exerciseName,
             category: 'Accessory' as const,
@@ -172,16 +221,26 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
             maxWeight: 0,
           };
 
-          // Determine category
-          const lowerName = exerciseName.toLowerCase();
-          if (['squat', 'bench', 'deadlift'].some(lift => lowerName.includes(lift))) {
-            existing.category = 'Big 3';
-          } else if (lowerName.includes('overhead') || lowerName.includes('press')) {
-            existing.category = 'Big 4';
+          // Determine category using exercise data
+          const exerciseInfo = exerciseData.get(exerciseName);
+          if (exerciseInfo) {
+            if (exerciseInfo.is_accessory) {
+              existing.category = 'Accessory';
+            } else {
+              // For primary exercises, categorize based on movement type
+              const movementType = exerciseInfo.movement_type.toLowerCase();
+              if (['squat', 'bench', 'deadlift'].some(lift => movementType.includes(lift))) {
+                existing.category = 'Big 3';
+              } else if (movementType.includes('overhead') || movementType.includes('press')) {
+                existing.category = 'Big 4';
+              } else {
+                existing.category = 'Accessory'; // Default for other primary exercises
+              }
+            }
           }
 
           // Calculate stats
-          exerciseData.set_schemes.forEach((setScheme) => {
+          exerciseWithSchemes.set_schemes.forEach((setScheme) => {
             const weight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
             const bandWeight = setScheme.band_weight_lbs ? 
@@ -200,7 +259,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     return Array.from(exerciseStats.values())
       .sort((a, b) => b.volume - a.volume)
       .slice(0, 8); // Top 8 exercises
-  }, [userData]);
+  }, [userData, exerciseData]);
 
   // Calculate progress data
   const progressData = useMemo(() => {
@@ -292,8 +351,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
       const workoutExercises = new Set<string>();
       
       workoutData.stages.forEach((stage) => {
-        stage.exercises.forEach((exerciseData) => {
-          workoutExercises.add(exerciseData.exercise.exercise_name);
+        stage.exercises.forEach((exerciseWithSchemes) => {
+          workoutExercises.add(exerciseWithSchemes.exercise.exercise_name);
         });
       });
 
@@ -316,7 +375,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     });
 
     return correlations.slice(0, 10); // Top 10 correlations
-  }, [userData]);
+  }, [userData, exerciseData]);
 
   const chordData = useMemo(() => {
     const uniqueExercises = new Set<string>();
@@ -469,7 +528,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                                 symbolShape: 'circle',
                                 symbolBorderColor: 'rgba(0, 0, 0, .5)',
                                 onClick: (data: any) => {
-                                  console.log('Legend clicked:', data);
+                                  const itemId = data.id || data.label;
+                                  setVolumeSelectedItems(prev => {
+                                    if (prev.includes(itemId)) {
+                                      return prev.filter(id => id !== itemId);
+                                    } else {
+                                      return [...prev, itemId];
+                                    }
+                                  });
                                 },
                                 effects: [
                                   {

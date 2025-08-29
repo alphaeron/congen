@@ -21,21 +21,21 @@ export const congenNivoTheme = {
   axis: {
     domain: {
       line: {
-        stroke: gray[400],
-        strokeWidth: 1,
+        stroke: gray[600],
+        strokeWidth: 2,
       },
     },
     ticks: {
       line: {
-        stroke: gray[400],
+        stroke: gray[600],
         strokeWidth: 1,
       },
       text: {
         fontSize: 11,
-        fill: gray[800],
+        fill: gray[900],
         outlineWidth: 0,
         outlineColor: 'transparent',
-        fontWeight: 500,
+        fontWeight: 600,
       },
     },
     legend: {
@@ -44,7 +44,7 @@ export const congenNivoTheme = {
         fill: gray[900],
         outlineWidth: 0,
         outlineColor: 'transparent',
-        fontWeight: 600,
+        fontWeight: 700,
       },
     },
   },
@@ -52,7 +52,7 @@ export const congenNivoTheme = {
   // Grid styling
   grid: {
     line: {
-      stroke: gray[200],
+      stroke: gray[300],
       strokeWidth: 1,
       strokeDasharray: '4 4',
     },
@@ -236,8 +236,6 @@ export const congenLegendConfig = {
     symbolBorderColor: gray[400],
     symbolBorderWidth: 1,
     onClick: (data: any) => {
-      // This will be overridden by individual chart components
-      console.log('Legend clicked:', data);
     },
     effects: [
       {
@@ -268,8 +266,6 @@ export const congenLegendConfig = {
     symbolSize: 18,
     symbolShape: 'circle' as const,
     onClick: (data: any) => {
-      // This will be overridden by individual chart components
-      console.log('Legend clicked:', data);
     },
     effects: [
       {

@@ -6,6 +6,7 @@ import com.congen.mockProgram
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -320,9 +321,10 @@ class ProgramDALTest {
         val activePrograms = listOf(mockProgram(isActive = true))
         whenever(
             postgresClient.select<Program>(
-                "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
-                program.userId,
-                true
+                any(),
+                any(),
+                any(),
+                any()
             )
         ).thenReturn(Mono.just(activePrograms))
 
@@ -334,7 +336,7 @@ class ProgramDALTest {
         verify(postgresClient).select<Program>(
             "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
             program.userId,
-            true
+            "true"
         )
     }
 
@@ -343,9 +345,10 @@ class ProgramDALTest {
         val inactivePrograms = listOf(mockProgram(isActive = false))
         whenever(
             postgresClient.select<Program>(
-                "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
-                program.userId,
-                false
+                any(),
+                any(),
+                any(),
+                any()
             )
         ).thenReturn(Mono.just(inactivePrograms))
 
@@ -357,7 +360,7 @@ class ProgramDALTest {
         verify(postgresClient).select<Program>(
             "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
             program.userId,
-            false
+            "false"
         )
     }
 }

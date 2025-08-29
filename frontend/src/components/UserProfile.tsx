@@ -101,6 +101,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
             borderRight: 1,
             borderColor: 'divider',
             overflow: 'hidden', // Prevent drawer content overflow
+            borderRadius: 0, // Remove rounded corners
           },
         }}
       >
