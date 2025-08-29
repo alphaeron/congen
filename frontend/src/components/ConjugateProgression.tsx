@@ -10,7 +10,6 @@ import {
   CircularProgress,
   useTheme,
 } from '@mui/material';
-import { ResponsiveChord } from '@nivo/chord';
 import { ResponsiveLine } from '@nivo/line';
 import { ResponsivePie } from '@nivo/pie';
 import { useSnackbar } from 'notistack';
@@ -46,11 +45,7 @@ interface ProgressData {
   type: '1RM' | 'Volume';
 }
 
-interface ExerciseCorrelationData {
-  source: string;
-  target: string;
-  value: number;
-}
+
 
 /**
  * Enhanced Conjugate Progression component displaying actual user statistics and progress.
@@ -299,68 +294,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         .map(d => ({ x: d.date, y: d.weight / 1000 })), // Scale down for visibility
     },
   ], [progressData]);
-
-  // Calculate exercise correlations for chord diagram
-  const exerciseCorrelations = useMemo(() => {
-    if (!userData?.training_programs) return [];
-
-    const correlations: ExerciseCorrelationData[] = [];
-    const exercisePairs = new Map<string, number>();
-    const allWorkouts: ProgrammedWorkoutWithStages[] = [];
-    userData.training_programs.forEach(program => {
-      allWorkouts.push(...program.workouts);
-    });
-
-    allWorkouts.forEach((workoutData) => {
-      const workoutExercises = new Set<string>();
-      
-      workoutData.stages.forEach((stage) => {
-        stage.exercises.forEach((exerciseWithSchemes) => {
-          workoutExercises.add(exerciseWithSchemes.exercise.exercise_name);
-        });
-      });
-
-      // Count exercise pairs in the same workout
-      const exerciseArray = Array.from(workoutExercises);
-      for (let i = 0; i < exerciseArray.length; i++) {
-        for (let j = i + 1; j < exerciseArray.length; j++) {
-          const pair = [exerciseArray[i], exerciseArray[j]].sort().join('|');
-          exercisePairs.set(pair, (exercisePairs.get(pair) || 0) + 1);
-        }
-      }
-    });
-
-    // Convert to chord diagram format
-    exercisePairs.forEach((value, pair) => {
-      const [source, target] = pair.split('|');
-      correlations.push({ source, target, value });
-    });
-
-    return correlations
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10); // Top 10 correlations
-  }, [userData, exerciseData]);
-
-  const chordData = useMemo(() => {
-    const uniqueExercises = new Set<string>();
-    exerciseCorrelations.forEach(corr => {
-      uniqueExercises.add(corr.source);
-      uniqueExercises.add(corr.target);
-    });
-
-    return {
-      matrix: Array.from(uniqueExercises).map(source => 
-        Array.from(uniqueExercises).map(target => {
-          const correlation = exerciseCorrelations.find(
-            corr => (corr.source === source && corr.target === target) ||
-                   (corr.source === target && corr.target === source)
-          );
-          return correlation?.value || 0;
-        })
-      ),
-      keys: Array.from(uniqueExercises),
-    };
-  }, [exerciseCorrelations]);
 
   // Filter volume data based on legend selection
   const filteredVolumeChartData = useMemo(() => {
@@ -730,51 +663,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
                       </CardContent>
                     </Card>
                   </Grid>        
-
-                  {/* Chord Diagram - Exercise Correlations */}
-                  {chordData.keys.length > 0 && (
-                    <Grid item xs={12} lg={6}>
-                      <Card variant="outlined">
-                        <CardContent>
-                          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                            <TrendingUpIcon color="info" />
-                            <Typography variant="h6">Exercise Correlations</Typography>
-                          </Box>
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                            Exercise pairing patterns in your workouts
-                          </Typography>
-                          <Box sx={{ height: 300 }}>
-                            <ResponsiveChord
-                              data={chordData.matrix}
-                              keys={chordData.keys}
-                              margin={{ top: 60, right: 60, bottom: 90, left: 60 }}
-                              valueFormat=".0f"
-                              padAngle={0.02}
-                              innerRadiusRatio={0.96}
-                              innerRadiusOffset={0.02}
-                              inactiveArcOpacity={0.25}
-                              arcBorderWidth={1}
-                              arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                              activeRibbonOpacity={0.75}
-                              inactiveRibbonOpacity={0.25}
-                              ribbonBorderWidth={1}
-                              ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
-                              enableLabel={true}
-                              label="id"
-                              labelOffset={12}
-                              labelRotation={-90}
-                              labelTextColor={{
-                                from: 'color',
-                                modifiers: [['darker', 1]],
-                              }}
-                              colors={{ scheme: 'nivo' }}
-                              theme={nivoTheme}
-                            />
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  )}
         </Grid>
       </CardContent>
     </Card>

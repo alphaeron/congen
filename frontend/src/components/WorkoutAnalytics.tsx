@@ -12,6 +12,7 @@ import {
   useTheme,
 } from '@mui/material';
 import { ResponsiveBump } from '@nivo/bump';
+import { ResponsiveChord } from '@nivo/chord';
 import { ResponsiveIcicle } from '@nivo/icicle';
 import { ResponsiveStream } from '@nivo/stream';
 import { useSnackbar } from 'notistack';
@@ -66,6 +67,12 @@ interface ExerciseRankingData {
     x: string;
     y: number;
   }>;
+}
+
+interface ExerciseCorrelationData {
+  source: string;
+  target: string;
+  value: number;
 }
 
 /**
@@ -233,18 +240,18 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
   const exerciseRankingData = useMemo(() => {
     if (!workouts.length) return [];
 
-    const exerciseStats = new Map<string, { volume: number; frequency: number }>();
+    // Calculate volume for each exercise per workout
+    const workoutExerciseVolumes: Array<Map<string, number>> = [];
     
     workouts.forEach((workoutData) => {
+      const workoutVolumes = new Map<string, number>();
+      
       workoutData.stages.forEach((stage) => {
         stage.exercises.forEach((exerciseWithSchemes) => {
           const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-          const existing = exerciseStats.get(exerciseName) || {
-            volume: 0,
-            frequency: 0,
-          };
+          const existing = workoutVolumes.get(exerciseName) || 0;
 
-          // Calculate volume for this exercise with weight unit conversion
+          // Calculate volume for this exercise in this workout with weight unit conversion
           let exerciseVolume = 0;
           exerciseWithSchemes.set_schemes.forEach((setScheme) => {
             const rawWeight = setScheme.performed_weight || setScheme.target_weight || 0;
@@ -259,27 +266,48 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
             exerciseVolume += (convertedWeight + convertedBandWeight) * reps;
           });
 
-          existing.volume += exerciseVolume;
-          existing.frequency += 1;
-          exerciseStats.set(exerciseName, existing);
+          workoutVolumes.set(exerciseName, existing + exerciseVolume);
         });
+      });
+      
+      workoutExerciseVolumes.push(workoutVolumes);
+    });
+
+    // Get all unique exercises that appear in any workout
+    const allExercises = new Set<string>();
+    workoutExerciseVolumes.forEach(workoutVolumes => {
+      workoutVolumes.forEach((volume, exerciseName) => {
+        if (volume > 0) {
+          allExercises.add(exerciseName);
+        }
       });
     });
 
-    // Get top 8 exercises by volume
-    const topExercises = Array.from(exerciseStats.entries())
-      .sort((a, b) => b[1].volume - a[1].volume)
+    // Calculate total volume for each exercise across all workouts to determine top exercises
+    const totalExerciseVolumes = new Map<string, number>();
+    allExercises.forEach(exerciseName => {
+      let totalVolume = 0;
+      workoutExerciseVolumes.forEach(workoutVolumes => {
+        totalVolume += workoutVolumes.get(exerciseName) || 0;
+      });
+      totalExerciseVolumes.set(exerciseName, totalVolume);
+    });
+
+    // Get top 8 exercises by total volume
+    const topExercises = Array.from(totalExerciseVolumes.entries())
+      .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([name]) => name);
 
+    // Create ranking data showing volume per workout for top exercises
     return topExercises.map(exerciseName => ({
       id: exerciseName,
-      data: volumeData.map((volume, index) => ({
+      data: workoutExerciseVolumes.map((workoutVolumes, index) => ({
         x: `Workout ${index + 1}`,
-        y: exerciseStats.get(exerciseName)?.volume || 0,
+        y: workoutVolumes.get(exerciseName) || 0,
       })),
     }));
-  }, [workouts, volumeData, weightUnitPreferences]);
+  }, [workouts, weightUnitPreferences]);
 
   // Calculate training structure data for icicle chart
   const trainingStructureData = useMemo(() => {
@@ -356,6 +384,64 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
     };
   }, [workouts, programs, exerciseData, weightUnitPreferences]);
 
+  // Calculate exercise correlations for chord diagram
+  const exerciseCorrelations = useMemo(() => {
+    if (!workouts.length) return [];
+
+    const correlations: ExerciseCorrelationData[] = [];
+    const exercisePairs = new Map<string, number>();
+
+    workouts.forEach((workoutData) => {
+      const workoutExercises = new Set<string>();
+      
+      workoutData.stages.forEach((stage) => {
+        stage.exercises.forEach((exerciseWithSchemes) => {
+          workoutExercises.add(exerciseWithSchemes.exercise.exercise_name);
+        });
+      });
+
+      // Count exercise pairs in the same workout
+      const exerciseArray = Array.from(workoutExercises);
+      for (let i = 0; i < exerciseArray.length; i++) {
+        for (let j = i + 1; j < exerciseArray.length; j++) {
+          const pair = [exerciseArray[i], exerciseArray[j]].sort().join('|');
+          exercisePairs.set(pair, (exercisePairs.get(pair) || 0) + 1);
+        }
+      }
+    });
+
+    // Convert to chord diagram format
+    exercisePairs.forEach((value, pair) => {
+      const [source, target] = pair.split('|');
+      correlations.push({ source, target, value });
+    });
+
+    return correlations
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 10); // Top 10 correlations
+  }, [workouts]);
+
+  const chordData = useMemo(() => {
+    const uniqueExercises = new Set<string>();
+    exerciseCorrelations.forEach(corr => {
+      uniqueExercises.add(corr.source);
+      uniqueExercises.add(corr.target);
+    });
+
+    return {
+      matrix: Array.from(uniqueExercises).map(source => 
+        Array.from(uniqueExercises).map(target => {
+          const correlation = exerciseCorrelations.find(
+            corr => (corr.source === source && corr.target === target) ||
+                   (corr.source === target && corr.target === source)
+          );
+          return correlation?.value || 0;
+        })
+      ),
+      keys: Array.from(uniqueExercises),
+    };
+  }, [exerciseCorrelations]);
+
   // Prepare stream chart data
   const streamData = useMemo(() => {
     return volumeData.map(volume => ({
@@ -404,9 +490,78 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         </Typography>
 
         <Grid container spacing={3}>
-          {/* Icicle Chart - Training Structure */}
-          {trainingStructureData && (
+          {/* Chord Diagram - Exercise Correlations */}
+          {chordData.keys.length > 0 && (
             <Grid item xs={12} lg={6}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+                    <TrendingUpIcon color="info" />
+                    <Typography variant="h6">Exercise Correlations</Typography>
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Exercise pairing patterns in your workouts
+                  </Typography>
+                  <Box sx={{ height: 400 }}>
+                    <ResponsiveChord
+                      data={chordData.matrix}
+                      keys={chordData.keys}
+                      margin={{ top: 60, right: 60, bottom: 90, left: 60 }}
+                      valueFormat=".0f"
+                      padAngle={0.02}
+                      innerRadiusRatio={0.96}
+                      innerRadiusOffset={0.02}
+                      inactiveArcOpacity={0.25}
+                      arcBorderWidth={1}
+                      arcBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                      activeRibbonOpacity={0.75}
+                      inactiveRibbonOpacity={0.25}
+                      ribbonBorderWidth={1}
+                      ribbonBorderColor={{ from: 'color', modifiers: [['darker', 0.4]] }}
+                      enableLabel={true}
+                      label="id"
+                      labelOffset={12}
+                      labelRotation={-90}
+                      labelTextColor={{
+                        from: 'color',
+                        modifiers: [['darker', 1]],
+                      }}
+                      colors={{ scheme: 'nivo' }}
+                      theme={nivoTheme}
+                    />
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+
+          {/* Stream Chart - Volume Flow */}
+          <Grid item xs={12} lg={6}>
+            <Card variant="outlined">
+              <CardContent>
+                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+                  <ShowChartIcon color="secondary" />
+                  <Typography variant="h6">Volume Flow Over Time</Typography>
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Training volume distribution across workout types
+                </Typography>
+                <Box sx={{ height: 400 }}>
+                  <ResponsiveStream
+                    data={streamData}
+                    keys={['Max Effort', 'Dynamic Effort', 'Accessory']}
+                    margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
+                    colors={{ scheme: 'nivo' }}
+                    theme={nivoTheme}
+                  />
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Training Structure Hierarchy */}
+          {trainingStructureData && (
+            <Grid item xs={12}>
               <Card variant="outlined">
                 <CardContent>
                   <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
@@ -448,53 +603,6 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
               </Card>
             </Grid>
           )}
-
-          {/* Stream Chart - Volume Flow */}
-          <Grid item xs={12} lg={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <ShowChartIcon color="secondary" />
-                  <Typography variant="h6">Volume Flow Over Time</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  Training volume distribution across workout types
-                </Typography>
-                <Box sx={{ height: 400 }}>
-                  <ResponsiveStream
-                    data={streamData}
-                    keys={['Max Effort', 'Dynamic Effort', 'Accessory']}
-                    margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
-                    colors={{ scheme: 'nivo' }}
-                    theme={nivoTheme}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Bump Chart - Exercise Ranking */}
-          <Grid item xs={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                  <TrendingUpIcon color="success" />
-                  <Typography variant="h6">Exercise Volume Ranking Trends</Typography>
-                </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  How exercise volume rankings change across workouts
-                </Typography>
-                <Box sx={{ height: 400 }}>
-                  <ResponsiveBump
-                    data={exerciseRankingData}
-                    margin={{ top: 40, right: 100, bottom: 40, left: 60 }}
-                    colors={{ scheme: 'nivo' }}
-                    theme={nivoTheme}
-                  />
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
         </Grid>
       </CardContent>
     </Card>
