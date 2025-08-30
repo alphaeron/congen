@@ -123,7 +123,8 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
         const userDataExport = await getUserDataExport();
         
         // Extract workouts and one-rep maxes from the export data
-        const workoutsData = userDataExport.training_programs.flatMap((program: any) => 
+        // Handle case where user has no training programs (empty array)
+        const workoutsData = userDataExport.training_programs?.flatMap((program: any) => 
           program.workouts.map((workoutWithStages: any) => ({
             workout: workoutWithStages.workout,
             stages: workoutWithStages.stages.map((stageWithExercises: any) => ({
@@ -134,7 +135,7 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
               }))
             }))
           }))
-        );
+        ) || [];
 
         setWorkouts(workoutsData);
         setOneRepMaxes(userDataExport.user_one_rep_max as unknown as UserOneRepMax[]);

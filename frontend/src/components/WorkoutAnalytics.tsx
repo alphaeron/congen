@@ -124,8 +124,9 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         const userDataExport = await getUserDataExport();
         
         // Extract programs and workouts from the export data
-        const programsData = userDataExport.training_programs.map((p: any) => p.program);
-        const workoutsData = userDataExport.training_programs.flatMap((program: any) => 
+        // Handle case where user has no training programs (empty array)
+        const programsData = userDataExport.training_programs?.map((p: any) => p.program) || [];
+        const workoutsData = userDataExport.training_programs?.flatMap((program: any) => 
           program.workouts.map((workoutWithStages: any) => ({
             workout: workoutWithStages.workout,
             stages: workoutWithStages.stages.map((stageWithExercises: any) => ({
@@ -136,7 +137,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
               }))
             }))
           }))
-        );
+        ) || [];
 
         setWorkouts(workoutsData);
         setPrograms(programsData);

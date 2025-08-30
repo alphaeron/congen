@@ -107,9 +107,20 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .uri("/api/v1/gdpr/export")
             .header("Authorization", "Bearer $userToken")
             .exchange()
-            .expectStatus().isNotFound()
+            .expectStatus().isOk()
             .expectBody()
-            .jsonPath("$.error").isEqualTo("Resource not found")
+            .jsonPath("$.keycloak_id").isEqualTo(testUserId)
+            .jsonPath("$.training_programs").isArray()
+            .jsonPath("$.training_programs").isEmpty()
+            .jsonPath("$.user_equipment").isArray()
+            .jsonPath("$.user_equipment").isEmpty()
+            .jsonPath("$.user_exercise_preferences").isArray()
+            .jsonPath("$.user_exercise_preferences").isEmpty()
+            .jsonPath("$.user_one_rep_max").isArray()
+            .jsonPath("$.user_one_rep_max").isEmpty()
+            .jsonPath("$.user_weight_unit_preferences").isArray()
+            .jsonPath("$.user_weight_unit_preferences").isEmpty()
+            .jsonPath("$.data_processing_consent").isEqualTo(true)
     }
 
     @Test
@@ -152,19 +163,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_rights").exists()
             .jsonPath("$.last_updated").isEqualTo("2025-08-25T00:00:00Z")
             .jsonPath("$.version").isEqualTo("1.0.0")
-    }
-
-    @Test
-    fun `Data export should include all user information when available`() {
-        webTestClient
-            .get()
-            .uri("/api/v1/gdpr/export")
-            .header("Authorization", "Bearer $userToken")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody()
-            .jsonPath("$.error").isEqualTo("Resource not found")
     }
 
     @Test
@@ -330,20 +328,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isOk
             .expectBody()
             .jsonPath("$.data_processing_consent").isEqualTo(false)
-    }
-
-    @Test
-    fun `should handle data export with empty user data`() {
-        // Create user consent but no other data
-        IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-
-        webTestClient.get()
-            .uri("/api/v1/gdpr/export")
-            .header("Authorization", "Bearer $userToken")
-            .exchange()
-            .expectStatus().isNotFound()
-            .expectBody()
-            .jsonPath("$.error").isEqualTo("Resource not found")
     }
 
     @Test

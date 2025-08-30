@@ -172,42 +172,43 @@ class GdprComplianceService(
                                     // Use optimized single query to fetch complete training programs with workouts, stages, exercises, and set schemes
                                     programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)
                                         .flatMap { programsWithWorkouts ->
-                                            // If no programs are found, throw NoResultsFoundException
+                                            // If no programs are found, return empty list instead of throwing error
+                                            // This ensures GDPR compliance by returning all available data
                                             if (programsWithWorkouts.isEmpty()) {
-                                                Mono.error(NoResultsFoundException("No training programs found for user"))
+                                                Mono.just(emptyList<ProgramWithWorkouts>())
                                             } else {
-                                            // For each program, fetch its preferences and create enriched program data
-                                            Flux.fromIterable(programsWithWorkouts)
-                                                .flatMap { programWithWorkouts ->
-                                                    programPreferencesDAL.selectProgramPreferences(programWithWorkouts.program.id)
-                                                        .map { preferences ->
-                                                            ProgramWithWorkouts(
-                                                                program = programWithWorkouts.program,
-                                                                programPreferences = preferences,
-                                                                workouts = programWithWorkouts.workouts
-                                                            )
-                                                        }
-                                                }
-                                                .collectList()
-                                                .map { enrichedPrograms ->
-                                                    UserDataExport(
-                                                        keycloakId = user.keycloakId,
-                                                        name = user.name,
-                                                        createdAt = user.createdAt,
-                                                        updatedAt = user.updatedAt,
-                                                        dataProcessingConsent = consent.dataProcessingConsent,
-                                                        consentTimestamp = consent.consentTimestamp,
-                                                        userEquipment = equipment,
-                                                        userExercisePreferences = exercisePreferences,
-                                                        userOneRepMax = oneRepMax,
-                                                        userWeightUnitPreferences = weightUnitPreferences,
-                                                        trainingPrograms = enrichedPrograms,
-                                                        auditLogs = auditLogs,
-                                                        dataRetentionPolicies = retentionPolicies,
-                                                        exportTimestamp = Instant.now()
-                                                    )
-                                                }
+                                                // For each program, fetch its preferences and create enriched program data
+                                                Flux.fromIterable(programsWithWorkouts)
+                                                    .flatMap { programWithWorkouts ->
+                                                        programPreferencesDAL.selectProgramPreferences(programWithWorkouts.program.id)
+                                                            .map { preferences ->
+                                                                ProgramWithWorkouts(
+                                                                    program = programWithWorkouts.program,
+                                                                    programPreferences = preferences,
+                                                                    workouts = programWithWorkouts.workouts
+                                                                )
+                                                            }
+                                                    }
+                                                    .collectList()
                                             }
+                                        }
+                                        .map { enrichedPrograms ->
+                                            UserDataExport(
+                                                keycloakId = user.keycloakId,
+                                                name = user.name,
+                                                createdAt = user.createdAt,
+                                                updatedAt = user.updatedAt,
+                                                dataProcessingConsent = consent.dataProcessingConsent,
+                                                consentTimestamp = consent.consentTimestamp,
+                                                userEquipment = equipment,
+                                                userExercisePreferences = exercisePreferences,
+                                                userOneRepMax = oneRepMax,
+                                                userWeightUnitPreferences = weightUnitPreferences,
+                                                trainingPrograms = enrichedPrograms,
+                                                auditLogs = auditLogs,
+                                                dataRetentionPolicies = retentionPolicies,
+                                                exportTimestamp = Instant.now()
+                                            )
                                         }
                                 }
                         }

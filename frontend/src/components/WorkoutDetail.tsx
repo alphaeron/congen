@@ -91,7 +91,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   // Find the specific workout from the exported data
   const workoutData = useMemo(() => {
-    if (!userData?.training_programs) return null;
+    if (!userData?.training_programs?.length) return null;
 
     for (const program of userData.training_programs) {
       const workout = program.workouts.find(w => w.workout.id === workoutId);

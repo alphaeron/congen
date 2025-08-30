@@ -71,8 +71,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         setUserData(dataExport);
 
         // Fetch exercise data for all unique exercises
+        // Handle case where user has no training programs (empty array)
         const uniqueExercises = new Set<string>();
-        dataExport.training_programs.forEach(program => {
+        dataExport.training_programs?.forEach(program => {
           program.workouts.forEach(workout => {
             workout.stages.forEach(stage => {
               stage.exercises.forEach(exercise => {
@@ -105,7 +106,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
 
   // Calculate volume data for charts
   const volumeData = useMemo(() => {
-    if (!userData?.training_programs) return [];
+    if (!userData?.training_programs?.length) return [];
 
     const allWorkouts: ProgrammedWorkoutWithStages[] = [];
     userData.training_programs.forEach(program => {
@@ -157,7 +158,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
 
   // Calculate exercise volume by workout stage data
   const exerciseCorrelationData = useMemo(() => {
-    if (!userData?.training_programs) return [];
+    if (!userData?.training_programs?.length) return [];
 
     const stageVolumeMap = new Map<string, number>();
     const allWorkouts: ProgrammedWorkoutWithStages[] = [];
