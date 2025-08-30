@@ -6,7 +6,7 @@ import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface SunburstData {
   name: string;
-  loc: number;
+  loc?: number;
   children?: SunburstData[];
 }
 

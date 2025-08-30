@@ -226,50 +226,62 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
     if (!exerciseStats.length) {
       return {
         name: 'Exercise Volume',
-        loc: 0,
         children: [],
       };
     }
 
-    // Build the Nivo data structure directly
-    const muscleGroups = new Map<string, { name: string; loc: number; children: Array<{ name: string; loc: number }> }>();
+    // Build the Nivo data structure following the correct pattern
+    // Group exercises by muscle groups to avoid duplicates
+    const muscleGroups = new Map<string, { name: string; children: Array<{ name: string; loc: number }> }>();
 
     exerciseStats.forEach(exercise => {
       const individualMuscles = exerciseMuscleData.get(exercise.name) || [];
       
-      individualMuscles.forEach(muscle => {
-        const existing = muscleGroups.get(muscle);
-        if (existing) {
-          existing.loc += exercise.totalVolume;
-          // Check if this exercise already exists in this muscle group
-          const existingExercise = existing.children.find(child => child.name === exercise.name);
-          if (existingExercise) {
-            existingExercise.loc += exercise.totalVolume;
+      // If no muscle data, create a default group
+      if (individualMuscles.length === 0) {
+        const defaultGroup = muscleGroups.get('Other') || { name: 'Other', children: [] };
+        defaultGroup.children.push({
+          name: exercise.name,
+          loc: exercise.totalVolume,
+        });
+        muscleGroups.set('Other', defaultGroup);
+      } else {
+        // Add exercise to each muscle group it belongs to
+        individualMuscles.forEach(muscle => {
+          const existing = muscleGroups.get(muscle);
+          if (existing) {
+            // Check if this exercise already exists in this muscle group
+            const existingExercise = existing.children.find(child => child.name === exercise.name);
+            if (existingExercise) {
+              existingExercise.loc += exercise.totalVolume;
+            } else {
+              existing.children.push({
+                name: exercise.name,
+                loc: exercise.totalVolume,
+              });
+            }
           } else {
-            existing.children.push({
-              name: exercise.name,
-              loc: exercise.totalVolume,
+            muscleGroups.set(muscle, {
+              name: muscle,
+              children: [{
+                name: exercise.name,
+                loc: exercise.totalVolume,
+              }],
             });
           }
-        } else {
-          muscleGroups.set(muscle, {
-            name: muscle,
-            loc: exercise.totalVolume,
-            children: [{
-              name: exercise.name,
-              loc: exercise.totalVolume,
-            }],
-          });
-        }
-      });
+        });
+      }
     });
 
-    const totalVolume = Array.from(muscleGroups.values()).reduce((sum, child) => sum + child.loc, 0);
+    // Convert to array and ensure unique names at all levels
+    const children = Array.from(muscleGroups.values()).map(group => ({
+      name: group.name,
+      children: group.children,
+    }));
 
     return {
       name: 'Exercise Volume',
-      loc: totalVolume,
-      children: Array.from(muscleGroups.values()),
+      children,
     };
   }, [exerciseStats, exerciseMuscleData]);
 
