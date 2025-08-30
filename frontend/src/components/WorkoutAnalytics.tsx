@@ -26,7 +26,6 @@ import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { categorizeExerciseVolume } from '../common/utils';
 import { ChordChart } from './ChordChart';
 import { StreamChart } from './StreamChart';
-import { IcicleChart } from './IcicleChart';
 
 interface WorkoutAnalyticsProps {
   user: User;
@@ -498,18 +497,6 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
               height={400}
             />
           </Grid>
-
-          {/* Training Structure Hierarchy */}
-          {trainingStructureData && (
-            <Grid item xs={12}>
-              <IcicleChart 
-                data={trainingStructureData}
-                title="Training Structure Hierarchy"
-                description="Program → Workout → Exercise category breakdown"
-                height={400}
-              />
-            </Grid>
-          )}
         </Grid>
       </CardContent>
     </Card>

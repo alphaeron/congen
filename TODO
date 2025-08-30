@@ -1,3 +1,7 @@
+update package-lock.json
+
+update material-ui
+
 prompt the user for confirmation on that so they are aware of what is happening when they do create a new program.  also ensure that you can edit the program to change the session duration (in minutes)
 
 test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
