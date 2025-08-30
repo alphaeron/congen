@@ -148,18 +148,6 @@ jest.mock('@mui/material/useMediaQuery', () => () => false);
 
 describe('App', () => {
   beforeEach(() => {
-    // Suppress console warnings about refs in test environment
-    jest.spyOn(console, 'error').mockImplementation((...args) => {
-      const message = args[0];
-      if (
-        typeof message === 'string' &&
-        (message.includes('Function components cannot be given refs') ||
-          message.includes('Link: `ref` is not a prop'))
-      ) {
-        return;
-      }
-    });
-
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       isLoading: false,
