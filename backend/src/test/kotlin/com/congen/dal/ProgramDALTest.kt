@@ -336,7 +336,7 @@ class ProgramDALTest {
         verify(postgresClient).select<Program>(
             "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
             program.userId,
-            "true"
+            true
         )
     }
 
@@ -360,7 +360,7 @@ class ProgramDALTest {
         verify(postgresClient).select<Program>(
             "SELECT * FROM program WHERE user_id=$1 AND is_active=$2 ORDER BY name",
             program.userId,
-            "false"
+            false
         )
     }
 }

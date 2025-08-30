@@ -54,7 +54,6 @@ describe('WorkoutPreferencesSection', () => {
         is_accessory: false,
       },
     ]);
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
@@ -70,59 +69,13 @@ describe('WorkoutPreferencesSection', () => {
     );
 
     // Then check for the content
-    expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
-    expect(screen.getByText('Program Settings')).toBeInTheDocument();
-    expect(screen.getAllByText('Weight Unit Preferences')).toHaveLength(2); // Appears in summary and main section
-    expect(screen.getByText('Current Settings Summary')).toBeInTheDocument();
-  });
-
-  it('should show default program preferences', async () => {
-    // Mock API responses
-    mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
-
-    await act(async () => {
-      renderWithProviders(<WorkoutPreferencesSection />);
-    });
-
-    // Wait for loading to complete first
-    await waitFor(
-      () => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
-
-    expect(screen.getByDisplayValue('3')).toBeInTheDocument(); // Default days per week
-    expect(screen.getByDisplayValue('60')).toBeInTheDocument(); // Default session length
-  });
-
-  it('should show save button for program preferences', async () => {
-    // Mock API responses
-    mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
-    mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
-
-    await act(async () => {
-      renderWithProviders(<WorkoutPreferencesSection />);
-    });
-
-    // Wait for loading to complete first
-    await waitFor(
-      () => {
-        expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
-
-    expect(screen.getByText('Save Program Preferences')).toBeInTheDocument();
+    expect(screen.getAllByText('Weight Unit Preferences')).toHaveLength(2); // Main heading and card heading
+    expect(screen.getByText('Set your preferred weight units for specific exercises.')).toBeInTheDocument();
   });
 
   it('should show add preference button for weight units', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
@@ -143,7 +96,6 @@ describe('WorkoutPreferencesSection', () => {
   it('should open dialog when add preference button is clicked', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
@@ -166,10 +118,9 @@ describe('WorkoutPreferencesSection', () => {
     expect(screen.getAllByText('Preferred Unit')[0]).toBeInTheDocument();
   });
 
-  it('should show current settings summary', async () => {
+  it('should show no preferences message when no weight unit preferences exist', async () => {
     // Mock API responses
     mock.onGet('/exercise/').reply(200, []);
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {
@@ -184,10 +135,7 @@ describe('WorkoutPreferencesSection', () => {
       { timeout: 10000 }
     );
 
-    expect(screen.getByText('3 days/week')).toBeInTheDocument();
-    expect(screen.getAllByText('60 minutes')).toHaveLength(2); // Appears in summary and select
-    expect(screen.getByText('0 exercises')).toBeInTheDocument();
-    expect(screen.getByText('Never')).toBeInTheDocument();
+    expect(screen.getByText('No weight unit preferences set yet.')).toBeInTheDocument();
   });
 
   it('should handle loading state', async () => {
@@ -195,7 +143,6 @@ describe('WorkoutPreferencesSection', () => {
     mock
       .onGet('/exercise/')
       .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock.onGet('/user_program_preferences/test-user-id').reply(404);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(404);
 
     await act(async () => {

@@ -136,11 +136,11 @@ class ProgramDAL(
     ): Mono<List<Program>> {
         logger.debug("Selecting programs by user id: {}", userId)
         var query = "SELECT * FROM program WHERE user_id=$1"
-        val params = mutableListOf(userId)
+        val params = mutableListOf<Any?>(userId)
 
         if (isActive != null) {
             query += " AND is_active=$2"
-            params.add(isActive.toString())
+            params.add(isActive)
         }
 
         query += " ORDER BY name"

@@ -35,7 +35,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { error ->
-                assert(error.contains("Session time length must be between 15 and 180 minutes"))
+                assert(error.contains("Session time length must be between 15 and 300 minutes"))
             }
     }
 
@@ -54,17 +54,17 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(
                 "$.error",
-            ).isEqualTo("Session time length must be between 15 and 180 minutes. Only valid session times are between 15 and 180 minutes, got: 14")
+            ).isEqualTo("Session time length must be between 15 and 300 minutes, got: 14")
     }
 
     @Test
-    fun `should return 422 when session_time_length_in_minutes is 181`() {
+    fun `should return 422 when session_time_length_in_minutes is 301`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
         
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
-                    "&session_time_length_in_minutes=181"
+                    "&session_time_length_in_minutes=301"
             )
             .header("Authorization", "Bearer $userToken")
             .exchange()
@@ -72,7 +72,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(
                 "$.error",
-            ).isEqualTo("Session time length must be between 15 and 180 minutes. Only valid session times are between 15 and 180 minutes, got: 181")
+            ).isEqualTo("Session time length must be between 15 and 300 minutes, got: 301")
     }
 
     @Test
@@ -90,7 +90,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(
                 "$.error",
-            ).isEqualTo("Session time length must be between 15 and 180 minutes. Only valid session times are between 15 and 180 minutes, got: -1")
+            ).isEqualTo("Session time length must be between 15 and 300 minutes, got: -1")
     }
 
     @Test

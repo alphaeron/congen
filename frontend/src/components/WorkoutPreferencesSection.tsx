@@ -183,57 +183,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         </Alert>
       )}
 
-      {/* Current Settings Summary */}
-      <Grid item xs={12}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Current Settings Summary
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Program Days
-                  </Typography>
-                  <Typography variant="h6">{programDaysPerWeek} days/week</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Session Length
-                  </Typography>
-                  <Typography variant="h6">{sessionTimeLength} minutes</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Weight Unit Preferences
-                  </Typography>
-                  <Typography variant="h6">{weightUnitPreferences.length} exercises</Typography>
-                </Box>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Last Updated
-                  </Typography>
-                  <Typography variant="h6">
-                    {programPreferences?.updated_at
-                      ? new Date(programPreferences.updated_at).toLocaleDateString()
-                      : 'Never'}
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
-      </Grid>
-
       <Grid container spacing={3}>
         {/* Weight Unit Preferences */}
         <Grid item xs={12}>
