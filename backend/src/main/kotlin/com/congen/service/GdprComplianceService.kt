@@ -8,6 +8,7 @@ import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserConsent
 import com.congen.model.UserDataExport
 import com.congen.model.ProgramWithWorkouts
@@ -154,14 +155,7 @@ class GdprComplianceService(
             // Combine data in smaller groups to avoid type inference issues
             Mono.zip(userConsentMono, userEquipmentMono, userExercisePreferencesMono)
                 .flatMap { tuple ->
-                    val consent =
-                        tuple.t1 ?: UserConsent(
-                            keycloakId = keycloakId,
-                            dataProcessingConsent = false,
-                            consentTimestamp = null,
-                            createdAt = Instant.now(),
-                            updatedAt = Instant.now()
-                        )
+                    val consent = tuple.t1
                     val equipment = tuple.t2 ?: emptyList()
                     val exercisePreferences = tuple.t3 ?: emptyList()
 
@@ -178,6 +172,10 @@ class GdprComplianceService(
                                     // Use optimized single query to fetch complete training programs with workouts, stages, exercises, and set schemes
                                     programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)
                                         .flatMap { programsWithWorkouts ->
+                                            // If no programs are found, throw NoResultsFoundException
+                                            if (programsWithWorkouts.isEmpty()) {
+                                                Mono.error(NoResultsFoundException("No training programs found for user"))
+                                            } else {
                                             // For each program, fetch its preferences and create enriched program data
                                             Flux.fromIterable(programsWithWorkouts)
                                                 .flatMap { programWithWorkouts ->
@@ -209,6 +207,7 @@ class GdprComplianceService(
                                                         exportTimestamp = Instant.now()
                                                     )
                                                 }
+                                            }
                                         }
                                 }
                         }
