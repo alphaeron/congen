@@ -233,18 +233,35 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       };
     }
 
-    // Group by muscle groups
-    const muscleGroups = new Map<string, { totalVolume: number; exercises: Map<string, number> }>();
+    // Create a flat structure to avoid duplicate exercise names
+    // Group exercises by their primary muscle group (first muscle in the list)
+    const muscleGroups = new Map<string, { totalVolume: number; exercises: Array<{ name: string; volume: number }> }>();
     
     exerciseStats.forEach(exercise => {
       const individualMuscles = exerciseMuscleData.get(exercise.name) || [];
       
-      individualMuscles.forEach(muscle => {
-        const existing = muscleGroups.get(muscle) || { totalVolume: 0, exercises: new Map() };
+      if (individualMuscles.length > 0) {
+        // Use the first muscle as the primary muscle group to avoid duplicates
+        const primaryMuscle = individualMuscles[0];
+        const existing = muscleGroups.get(primaryMuscle) || { totalVolume: 0, exercises: [] };
+        
         existing.totalVolume += exercise.totalVolume;
-        existing.exercises.set(exercise.name, exercise.totalVolume);
-        muscleGroups.set(muscle, existing);
-      });
+        existing.exercises.push({
+          name: exercise.name,
+          volume: exercise.totalVolume,
+        });
+        
+        muscleGroups.set(primaryMuscle, existing);
+      } else {
+        // If no muscle data, put in a default group
+        const defaultGroup = muscleGroups.get('Other') || { totalVolume: 0, exercises: [] };
+        defaultGroup.totalVolume += exercise.totalVolume;
+        defaultGroup.exercises.push({
+          name: exercise.name,
+          volume: exercise.totalVolume,
+        });
+        muscleGroups.set('Other', defaultGroup);
+      }
     });
 
     return {
@@ -253,9 +270,9 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       children: Array.from(muscleGroups.entries()).map(([muscle, data]) => ({
         name: muscle,
         loc: data.totalVolume,
-        children: Array.from(data.exercises.entries()).map(([exerciseName, volume]) => ({
-          name: exerciseName,
-          loc: volume,
+        children: data.exercises.map(exercise => ({
+          name: exercise.name,
+          loc: exercise.volume,
         })),
       })),
     };
