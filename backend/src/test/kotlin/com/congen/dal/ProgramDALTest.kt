@@ -243,8 +243,8 @@ class ProgramDALTest {
     }
 
     @Test
-    fun `updateProgram should return updated program`() {
-        val updatedProgram = mockProgram(name = "Updated Conjugate Program", currentWeekNumber = 2)
+    fun `updateProgram should return updated program when setting to inactive`() {
+        val updatedProgram = mockProgram(name = "Updated Conjugate Program", currentWeekNumber = 2, isActive = false)
         val newName = "Test Program"
         val expectedQuery =
             """
@@ -258,11 +258,11 @@ class ProgramDALTest {
                 updatedProgram.id,
                 newName,
                 updatedProgram.currentWeekNumber,
-                updatedProgram.isActive,
+                false,
             ),
         ).thenReturn(Mono.just(updatedProgram))
 
-        val result = programDAL.updateProgram(updatedProgram.id, newName, updatedProgram.currentWeekNumber, updatedProgram.isActive)
+        val result = programDAL.updateProgram(updatedProgram.id, newName, updatedProgram.currentWeekNumber, false)
 
         StepVerifier.create(result)
             .expectNext(updatedProgram)
@@ -272,7 +272,145 @@ class ProgramDALTest {
             updatedProgram.id,
             newName,
             updatedProgram.currentWeekNumber,
-            updatedProgram.isActive,
+            false,
+        )
+    }
+
+    @Test
+    fun `updateProgram should deactivate other programs when setting to active`() {
+        val programToUpdate = mockProgram(name = "Program to Activate", isActive = true)
+        val newName = "Updated Program Name"
+        val expectedUpdateQuery =
+            """
+            UPDATE program
+            SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
+            WHERE id=$1
+            """.trimIndent()
+        val expectedDeactivateQuery = "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1"
+
+        // Mock selectProgramById to return the program
+        whenever(
+            postgresClient.selectIndividual<Program>(
+                "SELECT * FROM program WHERE id=$1",
+                programToUpdate.id
+            )
+        ).thenReturn(Mono.just(programToUpdate))
+
+        // Mock deactivateProgramsForUser
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                expectedDeactivateQuery,
+                Any::class,
+                programToUpdate.userId
+            )
+        ).thenReturn(Mono.empty())
+
+        // Mock the final update
+        whenever(
+            postgresClient.update<Program>(
+                expectedUpdateQuery,
+                programToUpdate.id,
+                newName,
+                programToUpdate.currentWeekNumber,
+                true,
+            ),
+        ).thenReturn(Mono.just(programToUpdate))
+
+        val result = programDAL.updateProgram(programToUpdate.id, newName, programToUpdate.currentWeekNumber, true)
+
+        StepVerifier.create(result)
+            .expectNext(programToUpdate)
+            .verifyComplete()
+        
+        // Verify that selectProgramById was called
+        verify(postgresClient).selectIndividual<Program>(
+            "SELECT * FROM program WHERE id=$1",
+            programToUpdate.id
+        )
+        
+        // Verify that deactivateProgramsForUser was called
+        verify(postgresClient).updateLiteral<Any>(
+            expectedDeactivateQuery,
+            Any::class,
+            programToUpdate.userId
+        )
+        
+        // Verify that the final update was called
+        verify(postgresClient).update<Program>(
+            expectedUpdateQuery,
+            programToUpdate.id,
+            newName,
+            programToUpdate.currentWeekNumber,
+            true,
+        )
+    }
+
+    @Test
+    fun `updateProgram should handle NoResultsFoundException when deactivating programs`() {
+        val programToUpdate = mockProgram(name = "Program to Activate", isActive = true)
+        val newName = "Updated Program Name"
+        val expectedUpdateQuery =
+            """
+            UPDATE program
+            SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
+            WHERE id=$1
+            """.trimIndent()
+        val expectedDeactivateQuery = "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1"
+
+        // Mock selectProgramById to return the program
+        whenever(
+            postgresClient.selectIndividual<Program>(
+                "SELECT * FROM program WHERE id=$1",
+                programToUpdate.id
+            )
+        ).thenReturn(Mono.just(programToUpdate))
+
+        // Mock deactivateProgramsForUser to throw NoResultsFoundException
+        whenever(
+            postgresClient.updateLiteral<Any>(
+                expectedDeactivateQuery,
+                Any::class,
+                programToUpdate.userId
+            )
+        ).thenReturn(Mono.error(NoResultsFoundException("No programs found to deactivate")))
+
+        // Mock the final update
+        whenever(
+            postgresClient.update<Program>(
+                expectedUpdateQuery,
+                programToUpdate.id,
+                newName,
+                programToUpdate.currentWeekNumber,
+                true,
+            ),
+        ).thenReturn(Mono.just(programToUpdate))
+
+        val result = programDAL.updateProgram(programToUpdate.id, newName, programToUpdate.currentWeekNumber, true)
+
+        StepVerifier.create(result)
+            .expectNext(programToUpdate)
+            .verifyComplete()
+        
+        // Verify that selectProgramById was called
+        verify(postgresClient).selectIndividual<Program>(
+            "SELECT * FROM program WHERE id=$1",
+            programToUpdate.id
+        )
+        
+        // Verify that deactivateProgramsForUser was called
+        verify(postgresClient).updateLiteral<Any>(
+            expectedDeactivateQuery,
+            Any::class,
+            programToUpdate.userId
+        )
+        
+        // Verify that the final update was called
+        verify(postgresClient).update<Program>(
+            expectedUpdateQuery,
+            programToUpdate.id,
+            newName,
+            programToUpdate.currentWeekNumber,
+            true,
         )
     }
 

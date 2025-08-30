@@ -487,7 +487,9 @@ class ProgramDAL(
      * Updates an existing program in the database.
      *
      * This method updates the program record with the specified ID using the
-     * provided parameters. If no program exists with the given ID, a
+     * provided parameters. If the program is being set to active, all other
+     * programs for the same user are automatically deactivated to ensure only
+     * one active program per user. If no program exists with the given ID, a
      * [NoResultsFoundException] is thrown.
      *
      * @param id The unique identifier of the program to update
@@ -509,17 +511,37 @@ class ProgramDAL(
     ): Mono<Program> {
         logger.debug("Updating program: {} with isActive: {}", id, isActive)
 
-        return postgresClient.update(
-            """
-            UPDATE program
-            SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
-            WHERE id=$1
-            """.trimIndent(),
-            id,
-            name,
-            currentWeekNumber,
-            isActive,
-        )
+        return if (isActive) {
+            // If setting to active, first get the program to find the user ID, then deactivate others
+            selectProgramById(id).flatMap { program ->
+                deactivateProgramsForUser(program.userId).then(
+                    postgresClient.update(
+                        """
+                        UPDATE program
+                        SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
+                        WHERE id=$1
+                        """.trimIndent(),
+                        id,
+                        name,
+                        currentWeekNumber,
+                        isActive,
+                    )
+                )
+            }
+        } else {
+            // If setting to inactive, just update the program
+            postgresClient.update(
+                """
+                UPDATE program
+                SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
+                WHERE id=$1
+                """.trimIndent(),
+                id,
+                name,
+                currentWeekNumber,
+                isActive,
+            )
+        }
     }
 
     /**

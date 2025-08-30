@@ -123,7 +123,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       </Typography>
 
       {/* Exercise Filter */}
-      <Card sx={{ mb: 3 }}>
+      <Card sx={{ mb: 4 }}>
         <CardContent>
           <Autocomplete
             options={['all', ...uniqueExercises]}
@@ -147,7 +147,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       </Card>
 
       {/* Visualization Tabs */}
-      <Card>
+      <Card sx={{ mb: 4 }}>
         <Tabs
           value={activeTab}
           onChange={handleTabChange}

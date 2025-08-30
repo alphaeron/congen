@@ -29,7 +29,7 @@ import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, User, ProgramPreferences } from '../api/types';
+import type { Program, ProgrammedWorkout, User, ProgramPreferences, ProgramWithPreferences } from '../api/types';
 
 interface WorkoutsProps {
   user: User;
@@ -55,7 +55,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramPreferences>>([]);
+  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramWithPreferences>>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -88,14 +88,14 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     loadWorkoutData();
   }, []); // Only load once on mount
 
-  const activeProgram = programsWithPreferences.find(program => program.is_active);
+  const activeProgram = programsWithPreferences.find(program => program.program.is_active);
   
   // Group workouts by week
   const weeks = useMemo(() => {
     if (!activeProgram) return [];
     
     const programWorkouts = workouts.filter(
-      workout => workout.program_id === activeProgram.id
+      workout => workout.program_id === activeProgram.program.id
     );
     
     if (programWorkouts.length === 0) return [];
@@ -217,7 +217,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     <React.Fragment>
       {renderBreadcrumbs()}
       {!activeProgram ? (
-        <Card>
+        <Card sx={{ mb: 4 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               No Active Program
@@ -241,17 +241,17 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                       <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box>
                           <Typography variant="h6" gutterBottom>
-                            {activeProgram.name}
+                            {activeProgram.program.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Week {activeProgram.current_week_number} • {weeks.length} weeks • {workouts.filter(w => w.program_id === activeProgram.id).length} total workouts
+                            Week {activeProgram.program.current_week_number} • {weeks.length} weeks • {workouts.filter(w => w.program_id === activeProgram.program.id).length} total workouts
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>
                           <Button
                             variant="contained"
                             startIcon={isGenerating ? <CircularProgress size={16} /> : <AddIcon />}
-                            onClick={() => openGenerateDialog(activeProgram)}
+                            onClick={() => openGenerateDialog(activeProgram.program)}
                             disabled={isGenerating}
                           >
                             {isGenerating ? 'Generating...' : 'Generate Next Week'}
@@ -264,7 +264,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
                 {/* Week List */}
                 <Grid item xs={12}>
-                  <Card>
+                  <Card sx={{ mb: 4 }}>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
                         Training Weeks

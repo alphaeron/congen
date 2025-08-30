@@ -57,7 +57,11 @@ class ReactiveMemcachedCache(
     companion object {
         private val logger = LoggerFactory.getLogger(ReactiveMemcachedCache::class.java)
         private const val DEFAULT_NAMESPACE = "congen"
+        private const val KEY_INDEX_PREFIX = "congen:key_index:"
     }
+
+    // In-memory index of cache keys for pattern-based deletion
+    private val keyIndex = mutableSetOf<String>()
 
     /**
      * Stores a value in the cache with the specified TTL.
@@ -88,6 +92,10 @@ class ReactiveMemcachedCache(
             .doOnSuccess { success ->
                 if (success) {
                     logger.debug("Successfully cached key: {}", cacheKey)
+                    // Track the key for pattern-based deletion
+                    synchronized(keyIndex) {
+                        keyIndex.add(key)
+                    }
                 } else {
                     logger.warn("Failed to cache key: {}", cacheKey)
                 }
@@ -170,12 +178,57 @@ class ReactiveMemcachedCache(
             .doOnSuccess { success: Boolean ->
                 if (success) {
                     logger.debug("Successfully deleted cache key: {}", cacheKey)
+                    // Remove from key index
+                    synchronized(keyIndex) {
+                        keyIndex.remove(key)
+                    }
                 } else {
                     logger.debug("Cache key not found for deletion: {}", cacheKey)
                 }
             }
             .doOnError { error: Throwable ->
                 logger.error("Error deleting cache key: {}", cacheKey, error)
+            }
+    }
+
+    /**
+     * Deletes all cache keys matching the given pattern.
+     *
+     * This method uses pattern matching to find and delete multiple cache keys.
+     * The pattern supports wildcards (*) for matching any sequence of characters.
+     *
+     * @param pattern The pattern to match against cache keys
+     * @return Mono<List<String>> containing the list of deleted keys
+     */
+    fun deletePattern(pattern: String): Mono<List<String>> {
+        logger.debug("Deleting cache keys matching pattern: {}", pattern)
+
+        return Mono.fromCallable {
+            val regexPattern = pattern.replace("*", ".*")
+            val regex = regexPattern.toRegex()
+            
+            synchronized(keyIndex) {
+                val matchingKeys = keyIndex.filter { key -> regex.matches(key) }
+                val deletedKeys = mutableListOf<String>()
+                
+                matchingKeys.forEach { key ->
+                    val cacheKey = generateKey(key)
+                    val success = memcachedClient.delete(cacheKey)
+                    if (success) {
+                        deletedKeys.add(key)
+                        keyIndex.remove(key)
+                        logger.debug("Deleted cache key: {}", key)
+                    }
+                }
+                
+                deletedKeys.toList()
+            }
+        }.subscribeOn(memcachedScheduler)
+            .doOnSuccess { deletedKeys ->
+                logger.debug("Successfully deleted {} cache keys matching pattern: {}", deletedKeys.size, pattern)
+            }
+            .doOnError { error ->
+                logger.error("Error deleting cache keys matching pattern: {}", pattern, error)
             }
     }
 

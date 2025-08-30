@@ -21,7 +21,8 @@ import type {
   SetScheme,
   UserOneRepMax,
   ExerciseMuscle,
-  ExerciseEquipment
+  ExerciseEquipment,
+  ProgramWithWorkouts
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { RadialBarChart } from './RadialBarChart';
@@ -124,12 +125,12 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
         
         // Extract workouts and one-rep maxes from the export data
         // Handle case where user has no training programs (empty array)
-        const workoutsData = userDataExport.training_programs?.flatMap((program: any) => 
-          program.workouts.map((workoutWithStages: any) => ({
+        const workoutsData = userDataExport.training_programs?.flatMap((program: ProgramWithWorkouts) => 
+          program.workouts.map((workoutWithStages) => ({
             workout: workoutWithStages.workout,
-            stages: workoutWithStages.stages.map((stageWithExercises: any) => ({
+            stages: workoutWithStages.stages.map((stageWithExercises) => ({
               stage: stageWithExercises.stage,
-              exercises: stageWithExercises.exercises.map((exerciseWithSetSchemes: any) => ({
+              exercises: stageWithExercises.exercises.map((exerciseWithSetSchemes) => ({
                 exercise: exerciseWithSetSchemes.exercise,
                 set_schemes: exerciseWithSetSchemes.set_schemes
               }))

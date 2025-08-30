@@ -311,4 +311,162 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$[0].id").isEqualTo(programId1)
             .jsonPath("$[0].is_active").isEqualTo(true)
     }
+
+    @Test
+    fun `should handle single program activation without affecting other programs`() {
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
+
+        // Create a single program (should be active by default)
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Single Program", token = token)
+        
+        // Verify the program is active
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+
+        // Deactivate the program
+        webTestClient.patch()
+            .uri("/api/v1/program/$programId?name=Single Program&current_week_number=1&is_active=false")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+
+        // Verify the program is now inactive
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=false")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId)
+            .jsonPath("$[0].is_active").isEqualTo(false)
+
+        // Reactivate the program
+        webTestClient.patch()
+            .uri("/api/v1/program/$programId?name=Single Program&current_week_number=1&is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+
+        // Verify the program is active again
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+    }
+
+    @Test
+    fun `should deactivate other programs when updating a program to active`() {
+        val token = getValidToken("user")
+        val userId = IntegrationTestHelpers.createTestUser(webTestClient, token = token)
+        // Create user consent for GDPR compliance
+        IntegrationTestHelpers.createUserConsent(webTestClient, token)
+
+        // Create first program (should be active by default)
+        val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
+        
+        // Create second program as active (should deactivate the first one)
+        val secondProgramId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program", token = token, isActive = true)
+
+        // Verify the first program is inactive and the second program is active
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(secondProgramId)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=false")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId1)
+            .jsonPath("$[0].is_active").isEqualTo(false)
+
+        // Update the first program to be active
+        webTestClient.patch()
+            .uri("/api/v1/program/$programId1?name=First Program&current_week_number=1&is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+
+        // Verify the first program is active and the second program is inactive
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId1)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=false")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(secondProgramId)
+            .jsonPath("$[0].is_active").isEqualTo(false)
+
+        // Update the second program to be active
+        webTestClient.patch()
+            .uri("/api/v1/program/$secondProgramId?name=Second Program&current_week_number=1&is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+
+        // Verify the second program is active and the first program is inactive
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=true")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(secondProgramId)
+            .jsonPath("$[0].is_active").isEqualTo(true)
+
+        webTestClient.get()
+            .uri("/api/v1/program/user/$userId?is_active=false")
+            .header("Authorization", "Bearer $token")
+            .exchange()
+            .expectStatus().isOk()
+            .expectBody()
+            .jsonPath("$").isArray()
+            .jsonPath("$.length()").isEqualTo(1)
+            .jsonPath("$[0].id").isEqualTo(programId1)
+            .jsonPath("$[0].is_active").isEqualTo(false)
+    }
 }

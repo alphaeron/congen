@@ -308,9 +308,13 @@ class DALCachingAspectTest {
         val invalidationKeys = listOf("exercise:byName:bench-press", "exercise:*")
         val method = createMockMethod()
 
-        // Mock successful cache deletion
+        // Mock successful cache deletion for exact key
         Mockito.`when`(reactiveCache.delete("exercise:byName:bench-press"))
             .thenReturn(Mono.just(true))
+
+        // Mock successful pattern-based cache deletion
+        Mockito.`when`(reactiveCache.deletePattern("exercise:*"))
+            .thenReturn(Mono.just(listOf("exercise:all", "exercise:list")))
 
         // Mock key generation with specific parameters
         Mockito.`when`(
@@ -327,8 +331,9 @@ class DALCachingAspectTest {
         assert(result != null)
         assert(result == exercise)
 
-        // Verify that cache entries were invalidated
+        // Verify that both exact and pattern-based cache entries were invalidated
         Mockito.verify(reactiveCache).delete("exercise:byName:bench-press")
+        Mockito.verify(reactiveCache).deletePattern("exercise:*")
     }
 
     @Test
@@ -398,6 +403,10 @@ class DALCachingAspectTest {
         )
             .thenReturn(invalidationKeys)
 
+        // Mock successful pattern-based cache deletion
+        Mockito.`when`(reactiveCache.deletePattern("exercise:*"))
+            .thenReturn(Mono.just(listOf("exercise:byName:bench-press", "exercise:all", "exercise:list")))
+
         val result =
             dalCachingAspect.evictCache(
                 createJoinPointForEviction(exerciseName, exercise, method),
@@ -407,9 +416,8 @@ class DALCachingAspectTest {
         assert(result != null)
         assert(result == exercise)
 
-        // Verify that pattern-based invalidation was logged but not executed
-        // (pattern-based invalidation is not yet implemented)
-        Mockito.verify(reactiveCache, Mockito.never()).delete("exercise:*")
+        // Verify that pattern-based invalidation was executed
+        Mockito.verify(reactiveCache).deletePattern("exercise:*")
     }
 
     @Test
@@ -518,6 +526,177 @@ class DALCachingAspectTest {
 
         // Verify that cache entries were invalidated with custom entity name
         Mockito.verify(reactiveCache).delete("custom:byName:bench-press")
+    }
+
+    @Test
+    fun `should handle cache eviction with mixed exact and pattern keys`() {
+        val exerciseName = "bench-press"
+        val exercise =
+            Exercise(
+                name = exerciseName,
+                description = "Updated bench press exercise",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
+
+        val invalidationKeys = listOf("exercise:byName:bench-press", "exercise:*", "exercise:all")
+        val method = createMockMethod()
+
+        // Mock key generation
+        Mockito.`when`(
+            cacheKeyGenerator.generateInvalidationKeys("exercise", CacheInvalidationStrategy.ENTITY_BY_NAME, arrayOf(exerciseName))
+        )
+            .thenReturn(invalidationKeys)
+
+        // Mock successful cache deletion for exact keys
+        Mockito.`when`(reactiveCache.delete("exercise:byName:bench-press"))
+            .thenReturn(Mono.just(true))
+        Mockito.`when`(reactiveCache.delete("exercise:all"))
+            .thenReturn(Mono.just(true))
+
+        // Mock successful pattern-based cache deletion
+        Mockito.`when`(reactiveCache.deletePattern("exercise:*"))
+            .thenReturn(Mono.just(listOf("exercise:byName:bench-press", "exercise:all", "exercise:list")))
+
+        val result =
+            dalCachingAspect.evictCache(
+                createJoinPointForEviction(exerciseName, exercise, method),
+                createCacheEvictAnnotation()
+            )
+
+        assert(result != null)
+        assert(result == exercise)
+
+        // Verify that both exact and pattern-based invalidations were executed
+        Mockito.verify(reactiveCache).delete("exercise:byName:bench-press")
+        Mockito.verify(reactiveCache).delete("exercise:all")
+        Mockito.verify(reactiveCache).deletePattern("exercise:*")
+    }
+
+    @Test
+    fun `should handle cache eviction with pattern keys returning empty list`() {
+        val exerciseName = "bench-press"
+        val exercise =
+            Exercise(
+                name = exerciseName,
+                description = "Updated bench press exercise",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
+
+        val invalidationKeys = listOf("exercise:*")
+        val method = createMockMethod()
+
+        // Mock key generation
+        Mockito.`when`(
+            cacheKeyGenerator.generateInvalidationKeys("exercise", CacheInvalidationStrategy.ENTITY_BY_NAME, arrayOf(exerciseName))
+        )
+            .thenReturn(invalidationKeys)
+
+        // Mock pattern-based cache deletion returning empty list (no matching keys)
+        Mockito.`when`(reactiveCache.deletePattern("exercise:*"))
+            .thenReturn(Mono.just(emptyList<String>()))
+
+        val result =
+            dalCachingAspect.evictCache(
+                createJoinPointForEviction(exerciseName, exercise, method),
+                createCacheEvictAnnotation()
+            )
+
+        assert(result != null)
+        assert(result == exercise)
+
+        // Verify that pattern-based invalidation was executed
+        Mockito.verify(reactiveCache).deletePattern("exercise:*")
+    }
+
+    @Test
+    fun `should handle cache eviction with pattern keys error`() {
+        val exerciseName = "bench-press"
+        val exercise =
+            Exercise(
+                name = exerciseName,
+                description = "Updated bench press exercise",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
+
+        val invalidationKeys = listOf("exercise:*")
+        val method = createMockMethod()
+
+        // Mock key generation
+        Mockito.`when`(
+            cacheKeyGenerator.generateInvalidationKeys("exercise", CacheInvalidationStrategy.ENTITY_BY_NAME, arrayOf(exerciseName))
+        )
+            .thenReturn(invalidationKeys)
+
+        // Mock pattern-based cache deletion error
+        Mockito.`when`(reactiveCache.deletePattern("exercise:*"))
+            .thenReturn(Mono.error(RuntimeException("Pattern deletion error")))
+
+        val result =
+            dalCachingAspect.evictCache(
+                createJoinPointForEviction(exerciseName, exercise, method),
+                createCacheEvictAnnotation()
+            )
+
+        assert(result != null)
+        assert(result == exercise)
+
+        // Verify that pattern-based invalidation was attempted
+        Mockito.verify(reactiveCache).deletePattern("exercise:*")
+    }
+
+    @Test
+    fun `should handle cache eviction with reactive result`() {
+        val exerciseName = "bench-press"
+        val exercise =
+            Exercise(
+                name = exerciseName,
+                description = "Updated bench press exercise",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
+
+        val invalidationKeys = listOf("exercise:byName:bench-press", "exercise:*")
+        val method = createMockMethod()
+
+        // Mock key generation
+        Mockito.`when`(
+            cacheKeyGenerator.generateInvalidationKeys("exercise", CacheInvalidationStrategy.ENTITY_BY_NAME, arrayOf(exerciseName))
+        )
+            .thenReturn(invalidationKeys)
+
+        // Mock successful cache deletion for exact key
+        Mockito.`when`(reactiveCache.delete("exercise:byName:bench-press"))
+            .thenReturn(Mono.just(true))
+
+        // Mock successful pattern-based cache deletion
+        Mockito.`when`(reactiveCache.deletePattern("exercise:*"))
+            .thenReturn(Mono.just(listOf("exercise:all", "exercise:list")))
+
+        val result =
+            dalCachingAspect.evictCache(
+                createJoinPointForEvictionReactive(exerciseName, exercise, method),
+                createCacheEvictAnnotation()
+            )
+
+        assert(result != null)
+        StepVerifier.create(result as Mono<*>)
+            .expectNext(exercise)
+            .verifyComplete()
+
+        // Verify that both exact and pattern-based invalidations were executed
+        Mockito.verify(reactiveCache).delete("exercise:byName:bench-press")
+        Mockito.verify(reactiveCache).deletePattern("exercise:*")
     }
 
     private fun createMockMethod(): Method {
@@ -639,6 +818,22 @@ class DALCachingAspectTest {
         Mockito.`when`(joinPoint.signature).thenReturn(methodSignature)
         Mockito.`when`(methodSignature.method).thenReturn(method)
         Mockito.`when`(joinPoint.proceed()).thenThrow(error)
+
+        return joinPoint
+    }
+
+    private fun createJoinPointForEvictionReactive(
+        exerciseName: String,
+        exercise: Exercise,
+        method: Method
+    ): ProceedingJoinPoint {
+        val joinPoint = Mockito.mock(ProceedingJoinPoint::class.java)
+        val methodSignature = Mockito.mock(MethodSignature::class.java)
+
+        Mockito.`when`(joinPoint.args).thenReturn(arrayOf(exerciseName))
+        Mockito.`when`(joinPoint.signature).thenReturn(methodSignature)
+        Mockito.`when`(methodSignature.method).thenReturn(method)
+        Mockito.`when`(joinPoint.proceed()).thenReturn(Mono.just(exercise))
 
         return joinPoint
     }

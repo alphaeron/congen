@@ -85,6 +85,14 @@ export interface UserDataExport {
 } // end interface UserDataExport
 
 /**
+ * Program with preferences structure returned by the backend.
+ */
+export interface ProgramWithPreferences {
+  program: Program;
+  program_preferences: ProgramPreferences;
+} // end interface ProgramWithPreferences
+
+/**
  * Program with complete workout hierarchy for export.
  */
 export interface ProgramWithWorkouts {

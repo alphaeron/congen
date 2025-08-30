@@ -19,7 +19,8 @@ import type {
   ProgrammedExercise, 
   SetScheme,
   Exercise,
-  Program
+  Program,
+  ProgramWithWorkouts
 } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { categorizeExerciseVolume } from '../common/utils';
@@ -125,13 +126,13 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         
         // Extract programs and workouts from the export data
         // Handle case where user has no training programs (empty array)
-        const programsData = userDataExport.training_programs?.map((p: any) => p.program) || [];
-        const workoutsData = userDataExport.training_programs?.flatMap((program: any) => 
-          program.workouts.map((workoutWithStages: any) => ({
+        const programsData = userDataExport.training_programs?.map((p: ProgramWithWorkouts) => p.program) || [];
+        const workoutsData = userDataExport.training_programs?.flatMap((program: ProgramWithWorkouts) => 
+          program.workouts.map((workoutWithStages) => ({
             workout: workoutWithStages.workout,
-            stages: workoutWithStages.stages.map((stageWithExercises: any) => ({
+            stages: workoutWithStages.stages.map((stageWithExercises) => ({
               stage: stageWithExercises.stage,
-              exercises: stageWithExercises.exercises.map((exerciseWithSetSchemes: any) => ({
+              exercises: stageWithExercises.exercises.map((exerciseWithSetSchemes) => ({
                 exercise: exerciseWithSetSchemes.exercise,
                 set_schemes: exerciseWithSetSchemes.set_schemes
               }))
@@ -145,8 +146,8 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         // Fetch exercise data for all unique exercises
         const uniqueExercises = new Set<string>();
         workoutsData.forEach((workoutData) => {
-          workoutData.stages.forEach((stage: any) => {
-            stage.exercises.forEach((exerciseData: any) => {
+          workoutData.stages.forEach((stage) => {
+            stage.exercises.forEach((exerciseData) => {
               uniqueExercises.add(exerciseData.exercise.exercise_name);
             });
           });

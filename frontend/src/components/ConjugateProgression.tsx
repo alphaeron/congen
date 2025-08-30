@@ -15,7 +15,8 @@ import type {
   User, 
   UserDataExport,
   ProgrammedWorkoutWithStages,
-  Exercise
+  Exercise,
+  ProgramWithWorkouts
 } from '../api/types';
 import { categorizeExerciseVolume } from '../common/utils';
 import { LineChart } from './LineChart';
@@ -73,7 +74,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         // Fetch exercise data for all unique exercises
         // Handle case where user has no training programs (empty array)
         const uniqueExercises = new Set<string>();
-        dataExport.training_programs?.forEach(program => {
+        dataExport.training_programs?.forEach((program: ProgramWithWorkouts) => {
           program.workouts.forEach(workout => {
             workout.stages.forEach(stage => {
               stage.exercises.forEach(exercise => {

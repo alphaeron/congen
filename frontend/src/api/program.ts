@@ -1,16 +1,17 @@
 import { REQUEST } from './endpoint';
-import type { Program, ProgramPreferences } from './types';
+import type { Program, ProgramWithPreferences } from './types';
 
 /**
  * Create a new program for the current user.
  *
  * @param name The name of the program
- * @param isActive Whether the program should be active (defaults to true)
+ * @param numDaysPerWeek The number of days per week for the program (defaults to 4)
+ * @param userId The user ID
  * @return The created program
  */
 export const createProgram = (
   name: string,
-  isActive: boolean = true,
+  numDaysPerWeek: number = 4,
   userId: string
 ): Promise<Program> => {
   return REQUEST({
@@ -19,7 +20,8 @@ export const createProgram = (
     params: {
       user_id: userId,
       name,
-      is_active: isActive,
+      num_days_per_week: numDaysPerWeek,
+      is_active: true, // New programs are always active
     },
   });
 };
@@ -41,7 +43,7 @@ export const getPrograms = (): Promise<Program[]> => {
  *
  * @return List of programs with preferences for the current user
  */
-export const getProgramsWithPreferences = (): Promise<Array<Program & { program_preferences?: ProgramPreferences }>> => {
+export const getProgramsWithPreferences = (): Promise<Array<ProgramWithPreferences>> => {
   return REQUEST({
     method: 'GET',
     url: '/program/with-preferences',

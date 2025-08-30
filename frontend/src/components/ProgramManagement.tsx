@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   CardContent,
-  CardActions,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -20,13 +19,12 @@ import {
   Chip,
   IconButton,
   Tooltip,
-  FormControlLabel,
-  Switch,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
+import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
 
@@ -51,10 +49,14 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [stopDialogOpen, setStopDialogOpen] = useState(false);
+  const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    numDaysPerWeek: 4,
     isActive: true,
+    sessionTimeLengthInMinutes: 60,
   });
 
   useEffect(() => {
@@ -81,31 +83,68 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
   const handleCreateProgram = async () => {
     try {
-      const newProgram = await createProgram(formData.name, formData.isActive, user.keycloak_id);
+      const newProgram = await createProgram(formData.name, formData.numDaysPerWeek, user.keycloak_id);
       setPrograms(prev => [...prev, newProgram]);
       setCreateDialogOpen(false);
-      setFormData({ name: '', isActive: true });
+      setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
     } catch {
       enqueueSnackbar('Failed to create program. Please try again.', { variant: 'error' });
     }
   };
 
-  const handleUpdateProgram = async () => {
+  const handleUpdateSessionDuration = async () => {
+    if (!selectedProgram) return;
+
+    try {
+      await updateProgramPreferences(selectedProgram.id, formData.sessionTimeLengthInMinutes);
+      setEditDialogOpen(false);
+      setSelectedProgram(null);
+      setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
+      enqueueSnackbar('Session duration updated successfully.', { variant: 'success' });
+    } catch {
+      enqueueSnackbar('Failed to update session duration. Please try again.', { variant: 'error' });
+    }
+  };
+
+  const handleStopProgram = async () => {
     if (!selectedProgram) return;
 
     try {
       const updatedProgram = await updateProgram(
         selectedProgram.id,
-        formData.name,
+        selectedProgram.name,
         selectedProgram.current_week_number,
-        formData.isActive
+        false // Set to inactive
       );
       setPrograms(prev => prev.map(p => (p.id === selectedProgram.id ? updatedProgram : p)));
-      setEditDialogOpen(false);
+      setStopDialogOpen(false);
       setSelectedProgram(null);
-      setFormData({ name: '', isActive: true });
+      enqueueSnackbar('Program stopped successfully.', { variant: 'success' });
     } catch {
-      enqueueSnackbar('Failed to update program. Please try again.', { variant: 'error' });
+      enqueueSnackbar('Failed to stop program. Please try again.', { variant: 'error' });
+    }
+  };
+
+  const handleResumeProgram = async () => {
+    if (!selectedProgram) return;
+
+    try {
+      const updatedProgram = await updateProgram(
+        selectedProgram.id,
+        selectedProgram.name,
+        selectedProgram.current_week_number,
+        true // Set to active
+      );
+      
+      // Refresh the entire programs list since other programs may have been deactivated
+      const refreshedPrograms = await getPrograms();
+      setPrograms(refreshedPrograms);
+      
+      setResumeDialogOpen(false);
+      setSelectedProgram(null);
+      enqueueSnackbar('Program resumed successfully.', { variant: 'success' });
+    } catch {
+      enqueueSnackbar('Failed to resume program. Please try again.', { variant: 'error' });
     }
   };
 
@@ -122,18 +161,44 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     }
   };
 
-  const openEditDialog = (program: Program) => {
+  const openEditDialog = async (program: Program) => {
     setSelectedProgram(program);
-    setFormData({
-      name: program.name,
-      isActive: program.is_active,
-    });
+    
+    try {
+      // Load program preferences to get session time
+      const preferences = await getProgramPreferences(program.id);
+      setFormData({
+        name: program.name,
+        numDaysPerWeek: 4, // Not editable
+        isActive: program.is_active,
+        sessionTimeLengthInMinutes: preferences.data.session_time_length_in_minutes,
+      });
+    } catch {
+      // Fallback to default values if preferences can't be loaded
+      setFormData({
+        name: program.name,
+        numDaysPerWeek: 4,
+        isActive: program.is_active,
+        sessionTimeLengthInMinutes: 60,
+      });
+    }
+    
     setEditDialogOpen(true);
   };
 
   const openDeleteDialog = (program: Program) => {
     setSelectedProgram(program);
     setDeleteDialogOpen(true);
+  };
+
+  const openStopDialog = (program: Program) => {
+    setSelectedProgram(program);
+    setStopDialogOpen(true);
+  };
+
+  const openResumeDialog = (program: Program) => {
+    setSelectedProgram(program);
+    setResumeDialogOpen(true);
   };
 
   const getWorkoutsForProgram = (programId: number) => {
@@ -179,11 +244,34 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                       {program.name}
                     </Typography>
                     <Box>
-                      <Tooltip title="Edit Program">
-                        <IconButton size="small" onClick={() => openEditDialog(program)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
+                      {program.is_active ? (
+                        <>
+                          <Tooltip title="Change Session Duration">
+                            <IconButton size="small" onClick={() => openEditDialog(program)}>
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title="Stop Program">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => openStopDialog(program)}
+                            >
+                              <PauseIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </>
+                      ) : (
+                        <Tooltip title="Resume Program">
+                          <IconButton
+                            size="small"
+                            color="primary"
+                            onClick={() => openResumeDialog(program)}
+                          >
+                            <PlayArrowIcon />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                       <Tooltip title="Delete Program">
                         <IconButton
                           size="small"
@@ -236,15 +324,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                     </Box>
                   )}
                 </CardContent>
-                <CardActions>
-                  <Button
-                    size="small"
-                    startIcon={program.is_active ? <PauseIcon /> : <PlayArrowIcon />}
-                    onClick={() => openEditDialog(program)}
-                  >
-                    {program.is_active ? 'Pause' : 'Activate'}
-                  </Button>
-                </CardActions>
               </Card>
             </Grid>
           );
@@ -274,6 +353,9 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       >
         <DialogTitle>Create New Program</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Your new program will be created and set as your active program. If you have any other active programs, they will be marked as inactive.
+          </Typography>
           <TextField
             autoFocus
             margin="dense"
@@ -284,14 +366,15 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
             onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
             sx={{ mb: 2 }}
           />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.isActive}
-                onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-              />
-            }
-            label="Set as active program"
+          <TextField
+            margin="dense"
+            label="Days per Week"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={formData.numDaysPerWeek}
+            onChange={e => setFormData(prev => ({ ...prev, numDaysPerWeek: parseInt(e.target.value) || 4 }))}
+            helperText="Number of training days per week (2, 3, or 4)"
           />
         </DialogContent>
         <DialogActions>
@@ -306,43 +389,39 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Program Dialog */}
+      {/* Change Session Duration Dialog */}
       <Dialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Edit Program</DialogTitle>
+        <DialogTitle>Change Session Duration</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Program: {formData.name}
+          </Typography>
           <TextField
             autoFocus
             margin="dense"
-            label="Program Name"
+            label="Session Duration (minutes)"
+            type="number"
             fullWidth
             variant="outlined"
-            value={formData.name}
-            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            sx={{ mb: 2 }}
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formData.isActive}
-                onChange={e => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-              />
-            }
-            label="Set as active program"
+            value={formData.sessionTimeLengthInMinutes}
+            onChange={e => setFormData(prev => ({ ...prev, sessionTimeLengthInMinutes: parseInt(e.target.value) || 60 }))}
+            inputProps={{ min: 15, max: 300 }}
+            helperText="Session duration in minutes (15-300)"
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
           <Button
-            onClick={handleUpdateProgram}
+            onClick={handleUpdateSessionDuration}
             variant="contained"
-            disabled={!formData.name.trim()}
+            disabled={!formData.sessionTimeLengthInMinutes || formData.sessionTimeLengthInMinutes < 15 || formData.sessionTimeLengthInMinutes > 300}
           >
-            Update Program
+            Update Session Duration
           </Button>
         </DialogActions>
       </Dialog>
@@ -359,6 +438,38 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleDeleteProgram} color="error" variant="contained">
             Delete Program
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Stop Program Dialog */}
+      <Dialog open={stopDialogOpen} onClose={() => setStopDialogOpen(false)}>
+        <DialogTitle>Stop Program</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to stop this program? You can resume it later if needed.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setStopDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleStopProgram} color="warning" variant="contained">
+            Stop Program
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Resume Program Dialog */}
+      <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)}>
+        <DialogTitle>Resume Program</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to resume this program? Any other active programs will be marked as inactive.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResumeDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleResumeProgram} color="primary" variant="contained">
+            Resume Program
           </Button>
         </DialogActions>
       </Dialog>

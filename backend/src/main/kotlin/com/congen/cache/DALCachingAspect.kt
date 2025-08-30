@@ -82,39 +82,15 @@ class DALCachingAspect(
 
         logger.debug("Cache lookup for key: {} with TTL: {}", cacheKey, ttl)
 
-        return try {
-            // Execute the method first to get the result
-            val result = joinPoint.proceed()
+        // Execute the method first to get the result
+        val result = joinPoint.proceed()
 
-            if (result is Mono<*>) {
-                // Handle reactive results
-                result.flatMap { value ->
-                    if (value != null) {
-                        // Cache the result asynchronously and return the original value
-                        reactiveCache.set(cacheKey, value, ttl)
-                            .doOnSuccess { success ->
-                                if (success) {
-                                    logger.debug("Successfully cached result for key: {}", cacheKey)
-                                } else {
-                                    logger.warn("Failed to cache result for key: {}", cacheKey)
-                                }
-                            }
-                            .doOnError { error ->
-                                logger.error("Error caching result for key: {}", cacheKey, error)
-                            }
-                            .subscribe()
-
-                        Mono.just(value)
-                    } else {
-                        Mono.just(value)
-                    }
-                }
-            } else {
-                // Handle non-reactive results
-                if (result != null) {
-                    // For non-reactive results, we need to handle caching differently
-                    // Since we can't block in reactive context, we'll cache asynchronously
-                    reactiveCache.set(cacheKey, result, ttl)
+        return if (result is Mono<*>) {
+            // Handle reactive results
+            result.flatMap { value ->
+                if (value != null) {
+                    // Cache the result and return the original value
+                    reactiveCache.set(cacheKey, value, ttl)
                         .doOnSuccess { success ->
                             if (success) {
                                 logger.debug("Successfully cached result for key: {}", cacheKey)
@@ -125,13 +101,39 @@ class DALCachingAspect(
                         .doOnError { error ->
                             logger.error("Error caching result for key: {}", cacheKey, error)
                         }
-                        .subscribe()
+                        .onErrorReturn(false) // Return false on error to continue the chain
+                        .then(Mono.just(value))
+                } else {
+                    Mono.just(value)
                 }
-                result
             }
-        } catch (e: Exception) {
-            logger.error("Error in cache method execution for key: {}", cacheKey, e)
-            throw e
+        } else {
+            // Handle non-reactive results
+            if (result != null) {
+                // For non-reactive results, we need to handle caching differently
+                // Since we can't block in reactive context, we'll cache asynchronously
+                reactiveCache.set(cacheKey, result, ttl)
+                    .doOnSuccess { success ->
+                        if (success) {
+                            logger.debug("Successfully cached result for key: {}", cacheKey)
+                        } else {
+                            logger.warn("Failed to cache result for key: {}", cacheKey)
+                        }
+                    }
+                    .doOnError { error ->
+                        logger.error("Error caching result for key: {}", cacheKey, error)
+                    }
+                    .onErrorReturn(false) // Return false on error to continue the chain
+                    .subscribe(
+                        { success ->
+                            logger.debug("Cache operation completed for key: {}", cacheKey)
+                        },
+                        { error ->
+                            logger.error("Cache operation failed for key: {}", cacheKey, error)
+                        }
+                    )
+            }
+            result
         }
     }
 
@@ -167,19 +169,39 @@ class DALCachingAspect(
 
         logger.debug("Executing write operation with invalidation keys: {}", invalidationKeys)
 
-        return try {
-            // Execute the write operation
-            val result = joinPoint.proceed()
+        // Execute the write operation
+        val result = joinPoint.proceed()
 
-            // Invalidate cache entries
+        // Invalidate cache entries reactively
+        // Convert the result to Mono and chain cache invalidation
+        return if (result is Mono<*>) {
+            result.flatMap { value ->
+                // Chain all cache invalidations
+                val invalidationMonos = invalidationKeys.map { keyPattern ->
+                    invalidateCacheEntries(keyPattern)
+                }
+                
+                // Wait for all invalidations to complete, then return the original value
+                if (invalidationMonos.isNotEmpty()) {
+                    // Chain all invalidations sequentially
+                    invalidationMonos.fold(Mono.just(emptyList<String>())) { acc, mono ->
+                        acc.flatMap { accResult ->
+                            mono.map { monoResult ->
+                                accResult + monoResult
+                            }
+                        }
+                    }.then(Mono.just(value))
+                } else {
+                    Mono.just(value)
+                }
+            }
+        } else {
+            // For non-reactive results, invalidate cache asynchronously but don't block
             invalidationKeys.forEach { keyPattern ->
                 invalidateCacheEntries(keyPattern)
+                    .subscribe()
             }
-
             result
-        } catch (e: Exception) {
-            logger.error("Error in cache eviction for keys: {}", invalidationKeys, e)
-            throw e
         }
     }
 
@@ -187,31 +209,42 @@ class DALCachingAspect(
      * Invalidates cache entries matching the given pattern.
      *
      * @param keyPattern The key pattern to match for invalidation
+     * @return Mono<List<String>> containing the list of deleted keys
      */
-    private fun invalidateCacheEntries(keyPattern: String) {
-        // For now, we'll use a simple approach to invalidate related keys
-        // In a production environment, you might want to use a more sophisticated
-        // approach with key indexing or pattern-based invalidation
-
+    private fun invalidateCacheEntries(keyPattern: String): Mono<List<String>> {
         logger.debug("Invalidating cache entries matching pattern: {}", keyPattern)
 
-        // This is a simplified invalidation - in practice, you might need
-        // to implement pattern-based key discovery and deletion
-        if (!keyPattern.contains("*")) {
+        return if (!keyPattern.contains("*")) {
+            // Exact key match - delete the specific key
             reactiveCache.delete(keyPattern)
-                .doOnSuccess { success ->
+                .map { success ->
                     if (success) {
                         logger.debug("Successfully invalidated cache key: {}", keyPattern)
+                        listOf(keyPattern)
                     } else {
                         logger.debug("Cache key not found for invalidation: {}", keyPattern)
+                        emptyList<String>()
                     }
                 }
                 .doOnError { error ->
                     logger.error("Error invalidating cache key: {}", keyPattern, error)
                 }
-                .subscribe()
         } else {
-            logger.debug("Pattern-based invalidation not yet implemented for: {}", keyPattern)
+            // Pattern-based invalidation - delete all keys matching the pattern
+            reactiveCache.deletePattern(keyPattern)
+                .doOnSuccess { deletedKeys: List<String> ->
+                    if (deletedKeys.isNotEmpty()) {
+                        logger.debug("Successfully invalidated {} cache keys matching pattern: {}", deletedKeys.size, keyPattern)
+                        deletedKeys.forEach { key: String ->
+                            logger.debug("Invalidated cache key: {}", key)
+                        }
+                    } else {
+                        logger.debug("No cache keys found matching pattern: {}", keyPattern)
+                    }
+                }
+                .doOnError { error: Throwable ->
+                    logger.error("Error invalidating cache keys matching pattern: {}", keyPattern, error)
+                }
         }
     }
 
