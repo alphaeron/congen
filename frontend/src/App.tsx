@@ -47,21 +47,18 @@ const logoStyle = {
   cursor: 'pointer',
 };
 
-// Create named forwardRef components for links
-const ExercisesLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithRef<'a'>>(
-  (props, ref) => <Link to="/exercises" {...props} ref={ref} />
+// Create named components for links
+const ExercisesLink: React.FC<React.ComponentPropsWithRef<'a'>> = (props) => (
+  <Link to="/exercises" {...props} />
 );
-ExercisesLink.displayName = 'ExercisesLink';
 
-const ProfileLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithRef<'a'>>(
-  (props, ref) => <Link to="/profile" {...props} ref={ref} />
+const ProfileLink: React.FC<React.ComponentPropsWithRef<'a'>> = (props) => (
+  <Link to="/profile" {...props} />
 );
-ProfileLink.displayName = 'ProfileLink';
 
-const PrivacyPolicyLink = React.forwardRef<HTMLAnchorElement, React.ComponentPropsWithRef<'a'>>(
-  (props, ref) => <Link to="/privacy_policy" {...props} ref={ref} />
+const PrivacyPolicyLink: React.FC<React.ComponentPropsWithRef<'a'>> = (props) => (
+  <Link to="/privacy_policy" {...props} />
 );
-PrivacyPolicyLink.displayName = 'PrivacyPolicyLink';
 
 // Drawer context for sharing drawer state across components
 interface DrawerContextType {
@@ -98,7 +95,7 @@ function RootRedirect(): React.ReactElement | null {
 
   // Redirect to dashboard if authenticated
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard?section=overview" replace />;
   }
 
   // Show root page if not authenticated

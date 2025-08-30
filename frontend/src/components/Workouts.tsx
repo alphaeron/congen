@@ -129,15 +129,17 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
   const handleWeekClick = (weekNumber: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'workouts');
     newSearchParams.set('week', weekNumber.toString());
-    navigate(`?${newSearchParams.toString()}`);
+    navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
   const handleBackToWorkouts = () => {
     const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'workouts');
     newSearchParams.delete('week');
     newSearchParams.delete('workout');
-    navigate(`?${newSearchParams.toString()}`);
+    navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
   const handleGenerateWorkouts = async () => {
@@ -213,6 +215,18 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     );
   }
 
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <React.Fragment>
+        {renderBreadcrumbs()}
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+          <CircularProgress />
+        </Box>
+      </React.Fragment>
+    );
+  }
+  
   return (
     <React.Fragment>
       {renderBreadcrumbs()}

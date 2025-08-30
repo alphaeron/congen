@@ -1,8 +1,10 @@
-test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
-
 prompt the user for confirmation on that so they are aware of what is happening when they do create a new program.  also ensure that you can edit the program to change the session duration (in minutes)
 
-there was an unused value in a frontend component for data that should be displayed or updated for one of the components using charts
+test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
+
+space between privacy policy alert
+
+show 1rm on exercise analysis component, currently the state is unused
 
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
 

@@ -89,7 +89,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
       </Typography>
 
       {/* Contact Information */}
-      <Alert severity="info" sx={{ mt: 3 }}>
+      <Alert severity="info" sx={{ mt: 3, mb: 3 }}>
         <Typography variant="body2">
           <strong>Questions about this privacy policy?</strong>
           <br />

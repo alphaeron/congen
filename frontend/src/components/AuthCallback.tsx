@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { useNavigate } from 'react-router';
 
@@ -17,15 +17,9 @@ import { useAuth } from '../contexts/AuthContext';
  */
 export const AuthCallback: React.FC = () => {
   const oidcAuth = useOidcAuth();
-  const { isAuthenticated, user, error: authError } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [hasCheckedProfile, setHasCheckedProfile] = useState(false);
-  const navigateRef = useRef(navigate);
-
-  // Update the ref when navigate changes
-  useEffect(() => {
-    navigateRef.current = navigate;
-  }, [navigate]);
 
   useEffect(() => {
     // Only run this effect once when OIDC finishes loading and AuthContext has processed the user
@@ -42,7 +36,7 @@ export const AuthCallback: React.FC = () => {
 
       // If OIDC authentication failed, redirect to login
       if (oidcAuth.error) {
-        navigateRef.current('/login');
+        navigate('/login');
         setHasCheckedProfile(true);
         return;
       }
@@ -53,15 +47,9 @@ export const AuthCallback: React.FC = () => {
         // Give AuthContext time to process the user profile
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (isAuthenticated && user) {
-          // User has a profile, redirect to home
-          navigateRef.current('/');
-        } else if (authError && authError.includes('Profile not found')) {
-          // User doesn't have a profile, redirect to profile page (which will show creation form)
-          navigateRef.current('/profile');
-        } else if (authError && authError.includes('Authentication failed')) {
-          // Authentication error, redirect to login
-          navigateRef.current('/login');
+        if (isAuthenticated) {
+          // User is authenticated (AuthContext handles profile creation automatically)
+          navigate('/');
         } else {
           // Still processing, wait a bit more
           setTimeout(() => {
@@ -85,7 +73,6 @@ export const AuthCallback: React.FC = () => {
     oidcAuth.error,
     isAuthenticated,
     user,
-    authError,
     hasCheckedProfile,
   ]);
 

@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Typography,
@@ -19,7 +20,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { WorkoutDetail } from './WorkoutDetail';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
+import type { Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -49,7 +50,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramPreferences>>([]);
+  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramWithPreferences>>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
@@ -59,6 +60,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   } | null>(null);
 
   // URL query parameters
+  const selectedWeek = searchParams.get('week');
   const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
 
   // Reset workout details when workout selection changes
@@ -90,14 +92,14 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     loadWorkoutData();
   }, []); // Only load once on mount
 
-  const activeProgram = programsWithPreferences.find(program => program.is_active);
+  const activeProgram = programsWithPreferences.find(program => program.program.is_active);
   
   // Group workouts by week and filter for the current week
   const weekWorkouts = useMemo(() => {
     if (!activeProgram) return [];
     
     const programWorkouts = workouts.filter(
-      workout => workout.program_id === activeProgram.id
+      workout => workout.program_id === activeProgram.program.id
     );
     
     // Use program preferences
@@ -115,21 +117,26 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
 
   const handleWorkoutClick = (workoutId: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'workouts');
+    newSearchParams.set('week', weekNumber.toString());
     newSearchParams.set('workout', workoutId.toString());
-    navigate(`?${newSearchParams.toString()}`);
+    navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
   const handleBackToWorkouts = () => {
     const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.delete('workout');
+    newSearchParams.set('section', 'workouts');
     newSearchParams.delete('week');
-    navigate(`?${newSearchParams.toString()}`);
+    newSearchParams.delete('workout');
+    navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
   const handleBackToWeekList = () => {
     const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'workouts');
+    newSearchParams.set('week', weekNumber.toString());
     newSearchParams.delete('workout');
-    navigate(`?${newSearchParams.toString()}`);
+    navigate(`/dashboard?${newSearchParams.toString()}`);
   };
 
   // Render breadcrumbs
@@ -147,22 +154,34 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       }}
     >
       <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          component="button"
-          variant="body1"
+        <Button
+          variant="text"
           onClick={() => handleBreadcrumbClick('workouts')}
-          sx={{ color: 'text.secondary' }}
+          sx={{ 
+            color: 'text.secondary',
+            textTransform: 'none',
+            fontSize: '1rem',
+            fontWeight: 'normal',
+            p: 0,
+            minWidth: 'auto'
+          }}
         >
           Workouts
-        </Link>
-        <Link
-          component="button"
-          variant="body1"
+        </Button>
+        <Button
+          variant="text"
           onClick={() => handleBreadcrumbClick('week')}
-          sx={{ color: 'text.secondary' }}
+          sx={{ 
+            color: 'text.secondary',
+            textTransform: 'none',
+            fontSize: '1rem',
+            fontWeight: 'normal',
+            p: 0,
+            minWidth: 'auto'
+          }}
         >
           Week {weekNumber}
-        </Link>
+        </Button>
         {selectedWorkoutId && currentWorkoutDetails && (
           <Typography variant="body1" color="text.primary">
             {currentWorkoutDetails.name} (Day {currentWorkoutDetails.day_number}) •{' '}
@@ -193,6 +212,18 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     []
   );
 
+  // Show loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <React.Fragment>
+        {renderBreadcrumbs()}
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
+          <CircularProgress />
+        </Box>
+      </React.Fragment>
+    );
+  }
+  
   return (
     <React.Fragment>
       {renderBreadcrumbs()}
@@ -220,10 +251,10 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                     <CardContent>
                       <Box>
                         <Typography variant="h6" gutterBottom>
-                          {activeProgram.name} - Week {weekNumber}
+                          {activeProgram.program.name} - Week {weekNumber}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {weekWorkouts.length} workouts • Week {weekNumber} of {activeProgram.current_week_number}
+                          {weekWorkouts.length} workouts • Week {weekNumber} of {activeProgram.program.current_week_number}
                         </Typography>
                       </Box>
                     </CardContent>

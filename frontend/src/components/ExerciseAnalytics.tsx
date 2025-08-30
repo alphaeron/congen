@@ -197,23 +197,31 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
       workoutData.stages.forEach((stage) => {
         stage.exercises.forEach((exerciseData) => {
           const exerciseName = exerciseData.exercise.exercise_name;
-          const existing = exerciseMap.get(exerciseName) || {
-            name: exerciseName,
-            totalVolume: 0,
-            frequency: 0,
-            maxWeight: 0,
-            avgWeight: 0,
-            totalSets: 0,
-            muscleGroup: exerciseMuscleData.get(exerciseName)?.join(', ') || 'Unknown',
-            equipment: exerciseEquipmentData.get(exerciseName)?.join(', ') || 'Unknown',
-          };
+          let existing = exerciseMap.get(exerciseName);
+
+          // Create new exercise entry if it doesn't exist
+          if (!existing) {
+            const muscleGroup = exerciseMuscleData.get(exerciseName)?.join(', ') || 'Unknown';
+            const equipment = exerciseEquipmentData.get(exerciseName)?.join(', ') || 'Unknown';
+            existing = {
+              name: exerciseName,
+              totalVolume: 0,
+              frequency: 0,
+              maxWeight: 0,
+              avgWeight: 0,
+              totalSets: 0,
+              muscleGroup,
+              equipment,
+            };
+            exerciseMap.set(exerciseName, existing);
+          }
 
           // Calculate stats with weight unit conversion
           let totalWeight = 0;
           let weightCount = 0;
           exerciseData.set_schemes.forEach((setScheme) => {
-            const rawWeight = setScheme.performed_weight || setScheme.target_weight || 0;
-            const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
+            const rawWeight = setScheme.performed_weight ?? setScheme.target_weight!;
+            const reps = setScheme.performed_rep_count ?? setScheme.target_rep_count!;
             const rawBandWeight = setScheme.band_weight_lbs ? 
               (setScheme.band_weight_lbs as any)?.weight_lbs || 0 : 0;
             
@@ -222,16 +230,15 @@ export const ExerciseAnalytics: React.FC<ExerciseAnalyticsProps> = ({ user }) =>
             const convertedBandWeight = convertWeightToUserUnit(rawBandWeight, exerciseName);
             
             const totalSetWeight = convertedWeight + convertedBandWeight;
-            existing.totalVolume += totalSetWeight * reps;
-            existing.maxWeight = Math.max(existing.maxWeight, totalSetWeight);
+            existing!.totalVolume += totalSetWeight * reps;
+            existing!.maxWeight = Math.max(existing!.maxWeight, totalSetWeight);
             totalWeight += totalSetWeight;
             weightCount += 1;
-            existing.totalSets += 1;
+            existing!.totalSets += 1;
           });
 
-          existing.avgWeight = weightCount > 0 ? totalWeight / weightCount : 0;
-          existing.frequency += 1;
-          exerciseMap.set(exerciseName, existing);
+          existing!.avgWeight = weightCount > 0 ? totalWeight / weightCount : 0;
+          existing!.frequency += 1;
         });
       });
     });

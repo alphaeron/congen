@@ -227,7 +227,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
               {exerciseStats.length > 0 ? (
                 <Grid container spacing={3}>
                   {exerciseStats.map((stat, index) => (
-                    <Grid item xs={12} md={6} lg={4} key={index}>
+                    <Grid item xs={12} md={6} lg={4} key={stat.key}>
                       <Card variant="outlined">
                         <CardContent>
                           <Typography variant="h6" gutterBottom>
