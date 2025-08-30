@@ -28,7 +28,6 @@ class UserDataExportTest {
                 consentTimestamp = now,
                 userEquipment = emptyList(),
                 userExercisePreferences = emptyList(),
-                userProgramPreferences = null,
                 userOneRepMax = emptyList(),
                 userWeightUnitPreferences = emptyList(),
                 trainingPrograms = emptyList(),
@@ -59,7 +58,6 @@ class UserDataExportTest {
                 consentTimestamp = now,
                 userEquipment = emptyList(),
                 userExercisePreferences = emptyList(),
-                userProgramPreferences = null,
                 userOneRepMax = emptyList(),
                 userWeightUnitPreferences = emptyList(),
                 trainingPrograms = emptyList(),
@@ -84,7 +82,6 @@ class UserDataExportTest {
                 consentTimestamp = null,
                 userEquipment = emptyList(),
                 userExercisePreferences = emptyList(),
-                userProgramPreferences = null,
                 userOneRepMax = emptyList(),
                 userWeightUnitPreferences = emptyList(),
                 trainingPrograms = emptyList(),
@@ -112,7 +109,14 @@ class UserDataExportTest {
         val programWithWorkouts =
             ProgramWithWorkouts(
                 program = program,
-                workouts = emptyList()
+                workouts = emptyList(),
+                programPreferences = ProgramPreferences(
+                    programId = 1L,
+                    programDaysPerWeek = 4,
+                    sessionTimeLengthInMinutes = 60,
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
 
         val userDataExport =
@@ -125,7 +129,6 @@ class UserDataExportTest {
                 consentTimestamp = now,
                 userEquipment = emptyList(),
                 userExercisePreferences = emptyList(),
-                userProgramPreferences = null,
                 userOneRepMax = emptyList(),
                 userWeightUnitPreferences = emptyList(),
                 trainingPrograms = listOf(programWithWorkouts),
@@ -226,7 +229,14 @@ class UserDataExportTest {
         val programWithWorkouts =
             ProgramWithWorkouts(
                 program = program,
-                workouts = listOf(programmedWorkoutWithStages)
+                workouts = listOf(programmedWorkoutWithStages),
+                programPreferences = ProgramPreferences(
+                    programId = 1L,
+                    programDaysPerWeek = 4,
+                    sessionTimeLengthInMinutes = 60,
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
 
         val userDataExport =
@@ -239,7 +249,6 @@ class UserDataExportTest {
                 consentTimestamp = now,
                 userEquipment = emptyList(),
                 userExercisePreferences = emptyList(),
-                userProgramPreferences = null,
                 userOneRepMax = emptyList(),
                 userWeightUnitPreferences = emptyList(),
                 trainingPrograms = listOf(programWithWorkouts),
@@ -254,5 +263,7 @@ class UserDataExportTest {
         assertEquals(1, userDataExport.trainingPrograms[0].workouts[0].stages.size)
         assertEquals(1, userDataExport.trainingPrograms[0].workouts[0].stages[0].exercises.size)
         assertEquals(1, userDataExport.trainingPrograms[0].workouts[0].stages[0].exercises[0].setSchemes.size)
+        assertEquals(4, userDataExport.trainingPrograms[0].programPreferences.programDaysPerWeek)
+        assertEquals(60, userDataExport.trainingPrograms[0].programPreferences.sessionTimeLengthInMinutes)
     }
 }

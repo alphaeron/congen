@@ -9,7 +9,7 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.model.User
@@ -41,7 +41,7 @@ class GdprComplianceServiceTest {
     private lateinit var gdprComplianceDAL: GdprComplianceDAL
     private lateinit var userEquipmentDAL: UserEquipmentDAL
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
-    private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
+    private lateinit var programPreferencesDAL: ProgramPreferencesDAL
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var programDAL: ProgramDAL
@@ -54,7 +54,7 @@ class GdprComplianceServiceTest {
         gdprComplianceDAL = mock()
         userEquipmentDAL = mock()
         userExercisePreferenceDAL = mock()
-        userProgramPreferencesDAL = mock()
+        programPreferencesDAL = mock()
         userOneRepMaxDAL = mock()
         userWeightUnitPreferenceDAL = mock()
         programDAL = mock()
@@ -65,7 +65,7 @@ class GdprComplianceServiceTest {
                 userDAL = userDAL,
                 userEquipmentDAL = userEquipmentDAL,
                 userExercisePreferenceDAL = userExercisePreferenceDAL,
-                userProgramPreferencesDAL = userProgramPreferencesDAL,
+                programPreferencesDAL = programPreferencesDAL,
                 userOneRepMaxDAL = userOneRepMaxDAL,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
                 programDAL = programDAL,
@@ -185,16 +185,18 @@ class GdprComplianceServiceTest {
         whenever(gdprComplianceDAL.getUserConsent(keycloakId)).thenReturn(Mono.just(userConsent))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(keycloakId)).thenReturn(Mono.empty())
+        whenever(programPreferencesDAL.selectProgramPreferences(any())).thenReturn(Mono.empty())
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(programDAL.selectProgramsByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
+        whenever(programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getUserAuditLogs(keycloakId)).thenReturn(Mono.just(emptyList()))
         whenever(gdprComplianceDAL.getDataRetentionPolicies()).thenReturn(Mono.just(emptyList()))
 
         StepVerifier.create(
             gdprComplianceService.exportUserData(keycloakId)
         )
+            .expectNextCount(1)
             .verifyComplete()
 
         verify(auditService).logDataOperation(

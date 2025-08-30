@@ -1,4 +1,6 @@
-after generating a workout the dialog does not automatically go away and show the loader until the generation is done, causing confusion
+expose program days per week in frontend creation dialog, remove the is active slider since the program you create will always be the active one and olders are deactivated.  prompt the user for confirmation on that so they are aware of what is happening when they do create a new program.
+
+WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
 
 display charts inline
 
@@ -33,8 +35,6 @@ Display for workout detail title (should not be "DE_Upper Day (Day 4) • 5 stag
 update program button not working
 
 After generation prompted for current 1rm, sets reps can do for accessories and other portions of workout not recorded.  After record all that, then edit the workout to reflect current abilities.  Over time you won’t be prompted anymore, or can decline to answer and the default will be used.  Wizard  interface, show generating while it waits to load, then some screen like to further customize/taylor the workout generation for you can you provide…
-
-WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage
 
 
 

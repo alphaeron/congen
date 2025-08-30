@@ -1,7 +1,9 @@
 package com.congen.service
 
 import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.exceptions.NoResultsFoundException
+import com.congen.mockProgramPreferences
 import com.congen.model.Program
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -19,6 +21,9 @@ class ProgramServiceTest {
     @Mock
     private lateinit var programDAL: ProgramDAL
 
+    @Mock
+    private lateinit var programPreferencesDAL: ProgramPreferencesDAL
+
     private lateinit var programService: ProgramService
 
     private val testProgram =
@@ -34,7 +39,7 @@ class ProgramServiceTest {
 
     @BeforeEach
     fun setUp() {
-        programService = ProgramService(programDAL)
+        programService = ProgramService(programDAL, programPreferencesDAL)
     }
 
     @Test
@@ -129,13 +134,17 @@ class ProgramServiceTest {
         whenever(
             programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
         ).thenReturn(Mono.just(testProgram))
+        whenever(
+            programPreferencesDAL.insertProgramPreferences(testProgram.id, 4, 60)
+        ).thenReturn(Mono.just(mockProgramPreferences(testProgram.id)))
 
-        val result = programService.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        val result = programService.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true, 4)
 
         StepVerifier.create(result)
             .expectNext(testProgram)
             .verifyComplete()
         verify(programDAL).insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        verify(programPreferencesDAL).insertProgramPreferences(testProgram.id, 4, 60)
     }
 
     @Test
@@ -143,6 +152,9 @@ class ProgramServiceTest {
         whenever(
             programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
         ).thenReturn(Mono.just(testProgram))
+        whenever(
+            programPreferencesDAL.insertProgramPreferences(testProgram.id, 4, 60)
+        ).thenReturn(Mono.just(mockProgramPreferences(testProgram.id)))
 
         val result = programService.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1)
 
@@ -150,6 +162,25 @@ class ProgramServiceTest {
             .expectNext(testProgram)
             .verifyComplete()
         verify(programDAL).insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        verify(programPreferencesDAL).insertProgramPreferences(testProgram.id, 4, 60)
+    }
+
+    @Test
+    fun `createProgram should use custom numDaysPerWeek value`() {
+        whenever(
+            programDAL.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        ).thenReturn(Mono.just(testProgram))
+        whenever(
+            programPreferencesDAL.insertProgramPreferences(testProgram.id, 3, 60)
+        ).thenReturn(Mono.just(mockProgramPreferences(testProgram.id)))
+
+        val result = programService.insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true, 3)
+
+        StepVerifier.create(result)
+            .expectNext(testProgram)
+            .verifyComplete()
+        verify(programDAL).insertProgram("b226d772-c063-4974-ae08-ab64134abbcf", "Test Program", 1, true)
+        verify(programPreferencesDAL).insertProgramPreferences(testProgram.id, 3, 60)
     }
 
     @Test

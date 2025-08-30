@@ -49,15 +49,16 @@ class ExceptionHandlingIntegrationTest : BaseIntegrationTest() {
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, token)
 
-        // Test validation errors by trying to create user program preferences with invalid days per week
-        webTestClient.post()
-            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
+        // Test validation errors by trying to update program preferences with invalid session time
+        val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = token)
+        webTestClient.patch()
+            .uri("/api/v1/program_preferences/?program_id=$programId&session_time_length_in_minutes=0")
             .header("Authorization", "Bearer $token")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath("$.error").value<String> { errorMessage ->
-                errorMessage.contains("Program days per week must be 2, 3, or 4 days")
+                errorMessage.contains("Session time length must be between 15 and 180 minutes")
             }
     }
 

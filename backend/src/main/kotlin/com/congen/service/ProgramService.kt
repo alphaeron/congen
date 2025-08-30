@@ -1,8 +1,11 @@
 package com.congen.service
 
 import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
+import com.congen.model.ProgramPreferences
+import com.congen.model.ProgramWithPreferences
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 
@@ -18,6 +21,7 @@ import reactor.core.publisher.Mono
 @Service
 class ProgramService(
     private val programDAL: ProgramDAL,
+    private val programPreferencesDAL: ProgramPreferencesDAL,
 ) {
     /**
      * Gets the owner of the program.
@@ -90,6 +94,7 @@ class ProgramService(
      * @param name The name of the new program
      * @param currentWeekNumber The current week number for the new program
      * @param isActive Whether the new program should be active (default: true)
+     * @param numDaysPerWeek The number of days per week for the program (default: 4)
      * @return Mono containing the inserted program
      * @throws NoResultsFoundException if the insert operation fails
      */
@@ -97,9 +102,18 @@ class ProgramService(
         userId: String,
         name: String,
         currentWeekNumber: Int,
-        isActive: Boolean = true
+        isActive: Boolean = true,
+        numDaysPerWeek: Int = 4
     ): Mono<Program> {
         return programDAL.insertProgram(userId, name, currentWeekNumber, isActive)
+            .flatMap { program ->
+                // Create program preferences with specified days per week and 60 minutes per session
+                programPreferencesDAL.insertProgramPreferences(
+                    program.id,
+                    numDaysPerWeek,
+                    60
+                ).thenReturn(program)
+            }
     }
 
     /**
@@ -130,5 +144,21 @@ class ProgramService(
      */
     fun deleteProgram(id: Long): Mono<Program> {
         return programDAL.deleteProgram(id)
+    }
+
+    /**
+     * Retrieves a program with its preferences.
+     *
+     * @param programId The unique identifier of the program
+     * @return Mono containing the program with its preferences
+     */
+    fun getProgramWithPreferences(programId: Long): Mono<ProgramWithPreferences> {
+        return programDAL.selectProgramById(programId)
+            .flatMap { program ->
+                programPreferencesDAL.selectProgramPreferences(programId)
+                    .map { preferences ->
+                        ProgramWithPreferences(program, preferences)
+                    }
+            }
     }
 }

@@ -372,7 +372,7 @@ describe('Workouts', () => {
 
     // Check that both weeks are displayed
     expect(screen.getByText('Week 1')).toBeInTheDocument();
-    expect(screen.getByText('Week 3')).toBeInTheDocument();
+    expect(screen.getByText('Week 2')).toBeInTheDocument();
   });
 
   it('verifies API calls are made with correct endpoints', async () => {

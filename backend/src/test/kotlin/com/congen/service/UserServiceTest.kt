@@ -2,11 +2,9 @@ package com.congen.service
 
 import com.congen.client.KeycloakClient
 import com.congen.dal.UserDAL
-import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.model.UserConsent
-import com.congen.model.UserProgramPreferences
 import com.congen.util.KeycloakUtil
 import com.congen.util.UnitConverter
 import org.junit.jupiter.api.BeforeEach
@@ -26,7 +24,6 @@ import java.time.Instant
 @ExtendWith(MockitoExtension::class)
 class UserServiceTest {
     private lateinit var userDAL: UserDAL
-    private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
     private lateinit var unitConverter: UnitConverter
     private lateinit var keycloakClient: KeycloakClient
     private lateinit var keycloakUtil: KeycloakUtil
@@ -45,12 +42,11 @@ class UserServiceTest {
     @BeforeEach
     fun setUp() {
         userDAL = mock()
-        userProgramPreferencesDAL = mock()
         unitConverter = mock()
         keycloakClient = mock()
         keycloakUtil = mock()
         gdprComplianceService = mock()
-        userService = UserService(userDAL, userProgramPreferencesDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService)
+        userService = UserService(userDAL, unitConverter, keycloakClient, keycloakUtil, gdprComplianceService)
     }
 
     @Test
@@ -71,18 +67,6 @@ class UserServiceTest {
                 )
             )
         )
-        whenever(userProgramPreferencesDAL.insertUserProgramPreferences(any(), any(), any()))
-            .thenReturn(
-                Mono.just(
-                    UserProgramPreferences(
-                        userId = keycloakId,
-                        programDaysPerWeek = 4,
-                        sessionTimeLengthInMinutes = 60,
-                        createdAt = now,
-                        updatedAt = now
-                    )
-                )
-            )
 
         val result = userService.insertUser()
 
@@ -93,7 +77,6 @@ class UserServiceTest {
         verify(keycloakUtil).getCurrentUserName()
         verify(userDAL).insertUser(keycloakId, name)
         verify(gdprComplianceService).updateUserConsent(keycloakId, true)
-        verify(userProgramPreferencesDAL).insertUserProgramPreferences(any(), any(), any())
     }
 
     @Test

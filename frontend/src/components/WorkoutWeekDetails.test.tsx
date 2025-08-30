@@ -87,7 +87,7 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
     });
 
     // Should render the component without errors
@@ -104,7 +104,7 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
     });
 
     await waitFor(() => {
@@ -119,76 +119,12 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
 
     await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
+      renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
     });
 
     await waitFor(() => {
       expect(screen.getByText('Test Program - Week 1')).toBeInTheDocument();
       expect(screen.getByText(/Week 1 of 2/)).toBeInTheDocument();
-    });
-  });
-
-  it('shows generate next week button', async () => {
-    mock.onGet('/program/').reply(200, [mockProgram]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
-
-    await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /generate next week/i })).toBeInTheDocument();
-    });
-  });
-
-  it('opens generate dialog when generate button is clicked', async () => {
-    mock.onGet('/program/').reply(200, [mockProgram]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
-
-    await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
-    });
-
-    await waitFor(() => {
-      const generateButton = screen.getByRole('button', { name: /generate next week/i });
-      fireEvent.click(generateButton);
-    });
-
-    // Use getAllByText to handle multiple elements and check for dialog title specifically
-    const dialogTitles = screen.getAllByText('Generate Workouts');
-    expect(dialogTitles.some(title => title.tagName === 'H2')).toBe(true);
-    expect(screen.getByText(/Generate next week's workouts for/)).toBeInTheDocument();
-  });
-
-  it('generates workouts successfully', async () => {
-    mock.onGet('/program/').reply(200, [mockProgram]);
-    mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgram);
-    // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
-    mock.onGet('/user_weight_unit_preference/').reply(200, []);
-
-    await act(async () => {
-      renderWithProviders(<WorkoutWeekDetails user={mockUser} weekNumber={1} />);
-    });
-
-    await waitFor(() => {
-      const generateButton = screen.getByRole('button', { name: /generate next week/i });
-      fireEvent.click(generateButton);
-    });
-
-    await waitFor(() => {
-      const confirmButton = screen.getByRole('button', { name: /generate/i });
-      fireEvent.click(confirmButton);
-    });
-
-    await waitFor(() => {
-      expect(mock.history.post).toHaveLength(1);
-      expect(mock.history.post[0].url).toBe('/conjugate_workout_generator/1');
     });
   });
 

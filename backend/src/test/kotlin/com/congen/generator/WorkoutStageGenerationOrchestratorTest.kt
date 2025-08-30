@@ -7,7 +7,7 @@ import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -236,9 +236,9 @@ class WorkoutStageGenerationOrchestratorTest {
         )
     }
 
-    private fun createSampleProgramPreferences(): UserProgramPreferences {
-        return UserProgramPreferences(
-            userId = "user123",
+    private fun createSampleProgramPreferences(): ProgramPreferences {
+        return ProgramPreferences(
+            programId = 1L,
             programDaysPerWeek = 4,
             sessionTimeLengthInMinutes = 60,
             createdAt = Instant.now(),

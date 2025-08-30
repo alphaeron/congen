@@ -16,7 +16,7 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
@@ -29,7 +29,7 @@ import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
 import com.congen.model.Muscle
 import com.congen.model.User
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
@@ -75,7 +75,7 @@ class CacheWarmupServiceTest {
 
     @Mock private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
 
-    @Mock private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
+    @Mock private lateinit var programPreferencesDAL: ProgramPreferencesDAL
 
     @Mock private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
 
@@ -112,7 +112,7 @@ class CacheWarmupServiceTest {
                 userExercisePreferenceDAL,
                 userOneRepMaxDAL,
                 userWeakMuscleDAL,
-                userProgramPreferencesDAL,
+                programPreferencesDAL,
                 userWeightUnitPreferenceDAL,
                 gdprComplianceDAL,
                 programmedWorkoutDAL,
@@ -441,9 +441,6 @@ class CacheWarmupServiceTest {
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser("user1")).thenReturn(Mono.just(listOf()))
-        whenever(
-            userProgramPreferencesDAL.selectUserProgramPreferences("user1")
-        ).thenReturn(Mono.just(createMockUserProgramPreferences("user1")))
         whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser("user1")).thenReturn(Mono.just(listOf()))
         whenever(gdprComplianceDAL.hasUserConsent("user1")).thenReturn(Mono.just(true))
         whenever(programDAL.selectProgramsByUserId("user1")).thenReturn(Mono.just(listOf()))
@@ -501,9 +498,9 @@ class CacheWarmupServiceTest {
         return User(keycloakId = keycloakId, name = "Test User $keycloakId", createdAt = Instant.now(), updatedAt = Instant.now())
     }
 
-    private fun createMockUserProgramPreferences(userId: String): UserProgramPreferences {
-        return UserProgramPreferences(
-            userId = userId,
+    private fun createMockProgramPreferences(programId: Long): ProgramPreferences {
+        return ProgramPreferences(
+            programId = programId,
             programDaysPerWeek = 3,
             sessionTimeLengthInMinutes = 60,
             createdAt = Instant.now(),

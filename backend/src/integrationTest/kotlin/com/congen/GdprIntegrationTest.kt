@@ -22,17 +22,6 @@ class GdprIntegrationTest : BaseIntegrationTest() {
         // Create a test user with real Keycloak authentication
         userToken = getValidToken("user")
         testUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
-
-        // Clean up any existing user program preferences to avoid duplicates
-        try {
-            webTestClient.delete()
-                .uri("/api/v1/user_program_preferences/$testUserId")
-                .header("Authorization", "Bearer $userToken")
-                .exchange()
-                .expectStatus().isOk()
-        } catch (e: Exception) {
-            // Ignore errors if no preferences exist
-        }
     }
 
     @Test
@@ -90,9 +79,9 @@ class GdprIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should export user data successfully`() {
-        // First create user program preferences so the export doesn't fail
+        // First create user consent and a program (program preferences are created automatically)
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, testUserId, token = userToken)
+        IntegrationTestHelpers.createTestProgram(webTestClient, testUserId, token = userToken)
 
         webTestClient.get()
             .uri("/api/v1/gdpr/export")
@@ -109,11 +98,11 @@ class GdprIntegrationTest : BaseIntegrationTest() {
             .jsonPath("$.user_one_rep_max").exists()
             .jsonPath("$.user_weight_unit_preferences").exists()
             .jsonPath("$.training_programs").exists()
-            .jsonPath("$.user_program_preferences").exists()
+            .jsonPath("$.training_programs").isArray()
     }
 
     @Test
-    fun `should handle export when user program preferences do not exist`() {
+    fun `should handle export when user has no programs`() {
         webTestClient.get()
             .uri("/api/v1/gdpr/export")
             .header("Authorization", "Bearer $userToken")

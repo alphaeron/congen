@@ -2,7 +2,6 @@ package com.congen.service
 
 import com.congen.client.KeycloakClient
 import com.congen.dal.UserDAL
-import com.congen.dal.UserProgramPreferencesDAL
 import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.util.KeycloakUtil
@@ -22,7 +21,6 @@ import reactor.core.publisher.Mono
 @Service
 class UserService(
     private val userDAL: UserDAL,
-    private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
     private val unitConverter: UnitConverter,
     private val keycloakClient: KeycloakClient,
     private val keycloakUtil: KeycloakUtil,
@@ -61,14 +59,6 @@ class UserService(
                                 .flatMap { user ->
                                     // Automatically create consent record for basic service provision
                                     gdprComplianceService.updateUserConsent(keycloakId, true)
-                                        .then(
-                                            // Create default program preferences (4 days per week, 60 minutes per session)
-                                            userProgramPreferencesDAL.insertUserProgramPreferences(
-                                                keycloakId,
-                                                4,
-                                                60,
-                                            )
-                                        )
                                         .thenReturn(user)
                                 }
                                 .doOnSuccess { logger.debug("Created user profile with Keycloak ID: {}", it.keycloakId) }

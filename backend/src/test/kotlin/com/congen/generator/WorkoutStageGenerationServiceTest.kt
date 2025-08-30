@@ -9,7 +9,7 @@ import com.congen.model.Exercise
 import com.congen.model.MovementType
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -288,7 +288,7 @@ class WorkoutStageGenerationServiceTest {
             dayType: String,
             userExercisePool: UserExercisePool,
             oneRepMaxes: List<UserOneRepMax>,
-            programPreferences: UserProgramPreferences,
+            programPreferences: ProgramPreferences,
             weakMuscles: List<String>,
             currentWeekNumber: Int,
             userId: String,
@@ -347,9 +347,9 @@ class WorkoutStageGenerationServiceTest {
         )
     }
 
-    private fun createSampleProgramPreferences(): UserProgramPreferences {
-        return UserProgramPreferences(
-            userId = "user123",
+    private fun createSampleProgramPreferences(): ProgramPreferences {
+        return ProgramPreferences(
+            programId = 1L,
             programDaysPerWeek = 4,
             sessionTimeLengthInMinutes = 60,
             createdAt = Instant.now(),

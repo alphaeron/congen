@@ -183,6 +183,7 @@ object IntegrationTestHelpers {
         keycloakId: String,
         name: String = TEST_PROGRAM_NAME,
         isActive: Boolean = true,
+        numDaysPerWeek: Int = 4,
         token: String? = null
     ): Long {
         val request =
@@ -190,7 +191,8 @@ object IntegrationTestHelpers {
                 .uri(
                     "/api/v1/program/?user_id=$keycloakId" +
                         "&name=$name" +
-                        "&is_active=$isActive"
+                        "&is_active=$isActive" +
+                        "&num_days_per_week=$numDaysPerWeek"
                 )
 
         // Add authorization header if token is provided
@@ -382,36 +384,6 @@ object IntegrationTestHelpers {
     }
 
     /**
-     * Creates test user program preferences via the API.
-     */
-    fun createTestUserProgramPreferences(
-        webTestClient: WebTestClient,
-        keycloakId: String,
-        programDaysPerWeek: Int = 3,
-        sessionTimeLengthInMinutes: Int = 60,
-        token: String? = null
-    ) {
-        val request =
-            webTestClient.post()
-                .uri(
-                    "/api/v1/user_program_preferences/?user_id=$keycloakId" +
-                        "&program_days_per_week=$programDaysPerWeek" +
-                        "&session_time_length_in_minutes=$sessionTimeLengthInMinutes"
-                )
-
-        // Add authorization header if token is provided
-        if (token != null) {
-            request.header("Authorization", "Bearer $token")
-        } else {
-            request.header("Authorization", "Bearer ${BaseIntegrationTest.getDefaultTestToken()}")
-        }
-
-        request
-            .exchange()
-            .expectStatus().isOk()
-    }
-
-    /**
      * Creates minimal reference data for a user (just program preferences and one piece of equipment).
      * This is much faster than creating all reference data.
      */
@@ -420,7 +392,6 @@ object IntegrationTestHelpers {
         keycloakId: String,
         token: String? = null
     ) {
-        createTestUserProgramPreferences(webTestClient, keycloakId, token = token)
         createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME, token = token)
     }
 
@@ -434,9 +405,6 @@ object IntegrationTestHelpers {
         programDaysPerWeek: Int = 3,
         token: String? = null
     ) {
-        // Create program preferences
-        createTestUserProgramPreferences(webTestClient, keycloakId, programDaysPerWeek, token = token)
-
         // Create user equipment (bench and power bar)
         createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME, token = token)
         createTestUserEquipment(webTestClient, keycloakId, TEST_EQUIPMENT_NAME_2, token = token)

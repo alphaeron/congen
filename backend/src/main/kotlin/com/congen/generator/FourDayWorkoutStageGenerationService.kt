@@ -8,7 +8,7 @@ import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -89,7 +89,7 @@ class FourDayWorkoutStageGenerationService(
         dayType: String,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: UserProgramPreferences,
+        programPreferences: ProgramPreferences,
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,

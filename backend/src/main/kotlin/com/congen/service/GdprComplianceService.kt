@@ -6,12 +6,14 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.UserConsent
 import com.congen.model.UserDataExport
+import com.congen.model.ProgramWithWorkouts
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Instant
 
@@ -48,7 +50,7 @@ import java.time.Instant
  * @param userDAL Data access layer for user operations
  * @param userEquipmentDAL Data access layer for user equipment
  * @param userExercisePreferenceDAL Data access layer for exercise preferences
- * @param userProgramPreferencesDAL Data access layer for program preferences
+ * @param programPreferencesDAL Data access layer for program preferences
  * @param userOneRepMaxDAL Data access layer for one-rep-max records
  * @param userWeightUnitPreferenceDAL Data access layer for weight unit preferences
  * @param programDAL Data access layer for training programs
@@ -63,7 +65,7 @@ class GdprComplianceService(
     private val userDAL: UserDAL,
     private val userEquipmentDAL: UserEquipmentDAL,
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
-    private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
+    private val programPreferencesDAL: ProgramPreferencesDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val programDAL: ProgramDAL,
@@ -144,10 +146,8 @@ class GdprComplianceService(
             val userConsentMono = gdprComplianceDAL.getUserConsent(keycloakId)
             val userEquipmentMono = userEquipmentDAL.selectUserEquipmentByUser(keycloakId)
             val userExercisePreferencesMono = userExercisePreferenceDAL.selectUserExercisePreferencesByUser(keycloakId)
-            val userProgramPreferencesMono = userProgramPreferencesDAL.selectUserProgramPreferences(keycloakId)
             val userOneRepMaxMono = userOneRepMaxDAL.selectUserOneRepMaxByUser(keycloakId)
             val userWeightUnitPreferencesMono = userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(keycloakId)
-            val programsMono = programDAL.selectProgramsByUserId(keycloakId)
             val auditLogsMono = gdprComplianceDAL.getUserAuditLogs(keycloakId)
             val dataRetentionPoliciesMono = gdprComplianceDAL.getDataRetentionPolicies()
 
@@ -165,37 +165,50 @@ class GdprComplianceService(
                     val equipment = tuple.t2 ?: emptyList()
                     val exercisePreferences = tuple.t3 ?: emptyList()
 
-                    Mono.zip(userProgramPreferencesMono, userOneRepMaxMono, userWeightUnitPreferencesMono)
+                    Mono.zip(userOneRepMaxMono, userWeightUnitPreferencesMono)
                         .flatMap { tuple2 ->
-                            val programPreferences = tuple2.t1
-                            val oneRepMax = tuple2.t2 ?: emptyList()
-                            val weightUnitPreferences = tuple2.t3 ?: emptyList()
+                            val oneRepMax = tuple2.t1 ?: emptyList()
+                            val weightUnitPreferences = tuple2.t2 ?: emptyList()
 
-                            Mono.zip(programsMono, auditLogsMono, dataRetentionPoliciesMono)
+                            Mono.zip(auditLogsMono, dataRetentionPoliciesMono)
                                 .flatMap { tuple3 ->
-                                    val auditLogs = tuple3.t2 ?: emptyList()
-                                    val retentionPolicies = tuple3.t3 ?: emptyList()
+                                    val auditLogs = tuple3.t1 ?: emptyList()
+                                    val retentionPolicies = tuple3.t2 ?: emptyList()
 
                                     // Use optimized single query to fetch complete training programs with workouts, stages, exercises, and set schemes
                                     programDAL.selectProgramsWithWorkoutHierarchyByUserId(keycloakId)
-                                        .map { programsWithWorkouts ->
-                                            UserDataExport(
-                                                keycloakId = user.keycloakId,
-                                                name = user.name,
-                                                createdAt = user.createdAt,
-                                                updatedAt = user.updatedAt,
-                                                dataProcessingConsent = consent.dataProcessingConsent,
-                                                consentTimestamp = consent.consentTimestamp,
-                                                userEquipment = equipment,
-                                                userExercisePreferences = exercisePreferences,
-                                                userProgramPreferences = programPreferences,
-                                                userOneRepMax = oneRepMax,
-                                                userWeightUnitPreferences = weightUnitPreferences,
-                                                trainingPrograms = programsWithWorkouts,
-                                                auditLogs = auditLogs,
-                                                dataRetentionPolicies = retentionPolicies,
-                                                exportTimestamp = Instant.now()
-                                            )
+                                        .flatMap { programsWithWorkouts ->
+                                            // For each program, fetch its preferences and create enriched program data
+                                            Flux.fromIterable(programsWithWorkouts)
+                                                .flatMap { programWithWorkouts ->
+                                                    programPreferencesDAL.selectProgramPreferences(programWithWorkouts.program.id)
+                                                        .map { preferences ->
+                                                            ProgramWithWorkouts(
+                                                                program = programWithWorkouts.program,
+                                                                programPreferences = preferences,
+                                                                workouts = programWithWorkouts.workouts
+                                                            )
+                                                        }
+                                                }
+                                                .collectList()
+                                                .map { enrichedPrograms ->
+                                                    UserDataExport(
+                                                        keycloakId = user.keycloakId,
+                                                        name = user.name,
+                                                        createdAt = user.createdAt,
+                                                        updatedAt = user.updatedAt,
+                                                        dataProcessingConsent = consent.dataProcessingConsent,
+                                                        consentTimestamp = consent.consentTimestamp,
+                                                        userEquipment = equipment,
+                                                        userExercisePreferences = exercisePreferences,
+                                                        userOneRepMax = oneRepMax,
+                                                        userWeightUnitPreferences = weightUnitPreferences,
+                                                        trainingPrograms = enrichedPrograms,
+                                                        auditLogs = auditLogs,
+                                                        dataRetentionPolicies = retentionPolicies,
+                                                        exportTimestamp = Instant.now()
+                                                    )
+                                                }
                                         }
                                 }
                         }

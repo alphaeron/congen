@@ -22,17 +22,6 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
         userId = IntegrationTestHelpers.createTestUser(webTestClient, token = userToken)
         // Create user consent for GDPR compliance
         IntegrationTestHelpers.createUserConsent(webTestClient, userToken)
-
-        // Clean up any existing user program preferences to avoid duplicates
-        try {
-            webTestClient.delete()
-                .uri("/api/v1/user_program_preferences/$userId")
-                .header("Authorization", "Bearer $userToken")
-                .exchange()
-                .expectStatus().isOk()
-        } catch (e: Exception) {
-            // Ignore errors if no preferences exist
-        }
     }
 
     // User creation is centralized in setUp() to avoid duplicate key constraint issues
@@ -49,22 +38,6 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
                 .exchange()
                 .expectStatus().isOk
         }
-    }
-
-    private fun setupUserProgramPreferences(
-        userId: String,
-        daysPerWeek: Int,
-        sessionLength: Int,
-        token: String
-    ) {
-        webTestClient.post()
-            .uri(
-                "/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=$daysPerWeek" +
-                    "&session_time_length_in_minutes=$sessionLength&weight_unit=${WeightUnit.KG.name}"
-            )
-            .header("Authorization", "Bearer $token")
-            .exchange()
-            .expectStatus().isOk
     }
 
     private fun setupUserOneRepMaxes(
@@ -110,9 +83,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
     fun `should generate workout with balanced movement types for multiple users`() {
         val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
-        // Setup user equipment, program preferences, and one rep maxes
+        // Setup user equipment and one rep maxes (program preferences are created automatically with the program)
         setupUserEquipment(testUser.keycloakId, userToken)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -173,7 +145,6 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
         // Setup user equipment, program preferences, and one rep maxes
         setupUserEquipment(testUser.keycloakId, userToken)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -231,7 +202,6 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
         // Setup user equipment and program preferences
         setupUserEquipment(testUser.keycloakId, userToken)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         // Test with balanced one rep maxes
         val balancedOneRepMaxes =
@@ -290,7 +260,6 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
 
         // Setup user equipment, program preferences, and one rep maxes
         setupUserEquipment(testUser.keycloakId, userToken)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(
@@ -346,9 +315,8 @@ class MovementBalanceIntegrationTest : BaseIntegrationTest() {
     fun `should generate workout with balanced movement types for different movement patterns`() {
         val testUser = IntegrationTestHelpers.getTestUser(webTestClient, token = userToken)
 
-        // Setup user equipment, program preferences, and one rep maxes
+        // Setup user equipment and one rep maxes (program preferences are created automatically with the program)
         setupUserEquipment(testUser.keycloakId, userToken)
-        setupUserProgramPreferences(testUser.keycloakId, 4, 60, userToken)
 
         val oneRepMaxes =
             listOf(

@@ -18,17 +18,18 @@ import {
   Breadcrumbs,
   Link,
   Slide,
+  Backdrop,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { WorkoutAnalytics } from './WorkoutAnalytics';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
-import { getPrograms } from '../api/program';
+import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, User } from '../api/types';
+import type { Program, ProgrammedWorkout, User, ProgramPreferences } from '../api/types';
 
 interface WorkoutsProps {
   user: User;
@@ -54,7 +55,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramPreferences>>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -71,11 +72,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       setIsLoading(true);
       try {
         const [programsData, workoutsData] = await Promise.all([
-          getPrograms(),
+          getProgramsWithPreferences(),
           getProgrammedWorkouts(),
         ]);
 
-        setPrograms(programsData);
+        setProgramsWithPreferences(programsData);
         setWorkouts(workoutsData);
       } catch {
         enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
@@ -87,7 +88,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     loadWorkoutData();
   }, []); // Only load once on mount
 
-  const activeProgram = programs.find(program => program.is_active);
+  const activeProgram = programsWithPreferences.find(program => program.is_active);
   
   // Group workouts by week
   const weeks = useMemo(() => {
@@ -99,11 +100,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     
     if (programWorkouts.length === 0) return [];
     
-    // Calculate which week each workout belongs to based on day_number
-    // Assuming workouts are generated in weekly cycles (e.g., 3-4 workouts per week)
-    const workoutsPerWeek = activeProgram.current_week_number > 1 ? 
-      Math.ceil(programWorkouts.length / activeProgram.current_week_number) : 
-      programWorkouts.length;
+    // Use program preferences
+    const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
     
     const weekMap = new Map<number, ProgrammedWorkout[]>();
     
@@ -145,20 +143,21 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const handleGenerateWorkouts = async () => {
     if (!selectedProgram) return;
 
+    // Close dialog immediately and show loading state
+    setGenerateDialogOpen(false);
+    setSelectedProgram(null);
     setIsGenerating(true);
+    
     try {
       await generateNextWeek(selectedProgram.id);
 
       // Refresh data after generation
       const [programsData, workoutsData] = await Promise.all([
-        getPrograms(),
+        getProgramsWithPreferences(),
         getProgrammedWorkouts(),
       ]);
-      setPrograms(programsData);
+      setProgramsWithPreferences(programsData);
       setWorkouts(workoutsData);
-
-      setGenerateDialogOpen(false);
-      setSelectedProgram(null);
     } catch {
       enqueueSnackbar('Failed to generate workouts. Please try again.', { variant: 'error' });
     } finally {
@@ -173,7 +172,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       top={0}
       zIndex={1001}
       sx={{
-        pb: 3,
+        backgroundColor: 'background.default',
+        pt: 2,
+        pb: 2,
+        borderBottom: 1,
+        borderColor: 'divider',
       }}
     >
       <Breadcrumbs sx={{ mb: 2 }}>
@@ -204,7 +207,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   if (selectedWeek) {
     return (
       <WorkoutWeekDetails
-        user={user}
         selectedWorkout={selectedWorkoutId}
         weekNumber={parseInt(selectedWeek)}
       />
@@ -323,6 +325,26 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Full-screen loading overlay during workout generation */}
+      <Backdrop
+        sx={{
+          color: '#fff',
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+        open={isGenerating}
+      >
+        <CircularProgress color="inherit" size={60} />
+        <Typography variant="h6" color="inherit">
+          Generating workouts...
+        </Typography>
+        <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
+          This may take a few moments
+        </Typography>
+      </Backdrop>
     </React.Fragment>
   );
 };

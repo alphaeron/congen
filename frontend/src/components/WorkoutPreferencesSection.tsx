@@ -1,5 +1,4 @@
 import { default as RefreshIcon } from '@mui/icons-material/Refresh';
-import { default as SaveIcon } from '@mui/icons-material/Save';
 import {
   Box,
   Button,
@@ -7,7 +6,6 @@ import {
   CardContent,
   Divider,
   FormControl,
-  FormHelperText,
   Grid,
   InputLabel,
   MenuItem,
@@ -31,12 +29,6 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { getExercises } from '../api/exercise';
 import type { Exercise } from '../api/types';
 import {
-  getUserProgramPreferences,
-  updateUserProgramPreferences,
-  createUserProgramPreferences,
-  type UserProgramPreferences,
-} from '../api/userProgramPreferences';
-import {
   getUserWeightUnitPreferences,
   upsertUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
@@ -50,8 +42,9 @@ import type { AxiosError } from 'axios';
 /**
  * Workout preferences section component for user profile.
  *
- * This component allows users to manage their workout program preferences
- * including workout frequency, duration, and weight unit preferences for exercises.
+ * This component allows users to manage their weight unit preferences for exercises.
+ * Program preferences (workout frequency, duration) are now managed at the program level
+ * when creating or editing programs.
  *
  * @return Workout preferences section component
  */
@@ -61,11 +54,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  // Program preferences state
-  const [programPreferences, setProgramPreferences] = useState<UserProgramPreferences | null>(null);
-  const [programDaysPerWeek, setProgramDaysPerWeek] = useState(3);
-  const [sessionTimeLength, setSessionTimeLength] = useState(60);
 
   // Weight unit preferences state
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
@@ -87,19 +75,10 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     setLoading(true);
 
     // Load all data in parallel for better performance
-    const [prefsResponse, unitResponse, exercisesResponse] = await Promise.allSettled([
-      getUserProgramPreferences(user!.keycloak_id),
+    const [unitResponse, exercisesResponse] = await Promise.allSettled([
       getUserWeightUnitPreferences(user!.keycloak_id),
       getExercises(),
     ]);
-
-    // Handle program preferences
-    if (prefsResponse.status === 'fulfilled') {
-      setProgramPreferences(prefsResponse.value.data);
-      setProgramDaysPerWeek(prefsResponse.value.data.program_days_per_week);
-      setSessionTimeLength(prefsResponse.value.data.session_time_length_in_minutes);
-    }
-    // If rejected, program preferences don't exist yet, use defaults
 
     // Handle weight unit preferences
     if (unitResponse.status === 'fulfilled') {
@@ -116,36 +95,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     }
 
     setLoading(false);
-  };
-
-  const handleSaveProgramPreferences = async () => {
-    if (!user?.keycloak_id) return;
-
-    try {
-      setSaving(true);
-
-      if (programPreferences) {
-        // Update existing preferences
-        await updateUserProgramPreferences(user.keycloak_id, programDaysPerWeek, sessionTimeLength);
-      } else {
-        // Create new preferences
-        const response = await createUserProgramPreferences(
-          user.keycloak_id,
-          programDaysPerWeek,
-          sessionTimeLength
-        );
-        setProgramPreferences(response.data);
-      }
-
-      setSuccessMessage('Program preferences saved successfully');
-    } catch (err: unknown) {
-      const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to save program preferences', {
-        variant: 'error',
-      });
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handleAddWeightUnitPreference = async () => {
@@ -222,10 +171,10 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Workout Preferences
+        Weight Unit Preferences
       </Typography>
       <Typography variant="body1" color="text.secondary" paragraph>
-        Manage your workout program preferences and settings.
+        Manage your weight unit preferences for exercises.
       </Typography>
 
       {successMessage && (
@@ -286,68 +235,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       </Grid>
 
       <Grid container spacing={3}>
-        {/* Program Preferences */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Program Settings
-              </Typography>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Configure your workout frequency and duration.
-              </Typography>
-
-              <Divider sx={{ mb: 3 }} />
-
-              <Box display="flex" flexDirection="column" gap={3}>
-                <FormControl fullWidth>
-                  <InputLabel>Days per Week</InputLabel>
-                  <Select
-                    value={programDaysPerWeek}
-                    label="Days per Week"
-                    onChange={e => setProgramDaysPerWeek(e.target.value as number)}
-                  >
-                    <MenuItem value={2}>2 days</MenuItem>
-                    <MenuItem value={3}>3 days</MenuItem>
-                    <MenuItem value={4}>4 days</MenuItem>
-                    <MenuItem value={5}>5 days</MenuItem>
-                    <MenuItem value={6}>6 days</MenuItem>
-                  </Select>
-                  <FormHelperText>Number of workout days per week for your program</FormHelperText>
-                </FormControl>
-
-                <FormControl fullWidth>
-                  <InputLabel>Session Length (minutes)</InputLabel>
-                  <Select
-                    value={sessionTimeLength}
-                    label="Session Length (minutes)"
-                    onChange={e => setSessionTimeLength(e.target.value as number)}
-                  >
-                    <MenuItem value={30}>30 minutes</MenuItem>
-                    <MenuItem value={45}>45 minutes</MenuItem>
-                    <MenuItem value={60}>60 minutes</MenuItem>
-                    <MenuItem value={75}>75 minutes</MenuItem>
-                    <MenuItem value={90}>90 minutes</MenuItem>
-                  </Select>
-                  <FormHelperText>Target duration for each workout session</FormHelperText>
-                </FormControl>
-
-                <Button
-                  variant="contained"
-                  startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
-                  onClick={handleSaveProgramPreferences}
-                  disabled={saving}
-                  fullWidth
-                >
-                  {saving ? 'Saving...' : 'Save Program Preferences'}
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
         {/* Weight Unit Preferences */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12}>
           <Card>
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

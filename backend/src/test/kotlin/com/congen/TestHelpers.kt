@@ -9,7 +9,7 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.generator.DayTemplate
@@ -35,7 +35,7 @@ import com.congen.model.User
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
@@ -161,15 +161,15 @@ fun mockUserExercisePreference(
         createdAt = createdAt
     )
 
-fun mockUserProgramPreferences(
-    userId: String = "b226d772-c063-4974-ae08-ab64134abbcf",
+fun mockProgramPreferences(
+    programId: Long = 1L,
     programDaysPerWeek: Int = 3,
     sessionTimeLengthInMinutes: Int = 60,
     createdAt: Instant = sampleInstant(),
     updatedAt: Instant = sampleInstant()
-): UserProgramPreferences =
-    UserProgramPreferences(
-        userId = userId,
+): ProgramPreferences =
+    ProgramPreferences(
+        programId = programId,
         programDaysPerWeek = programDaysPerWeek,
         sessionTimeLengthInMinutes = sessionTimeLengthInMinutes,
         createdAt = createdAt,
@@ -509,7 +509,7 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
     val userDAL = mock<UserDAL>()
     val userEquipmentDAL = mock<UserEquipmentDAL>()
     val userExercisePreferenceDAL = mock<UserExercisePreferenceDAL>()
-    val userProgramPreferencesDAL = mock<UserProgramPreferencesDAL>()
+    val programPreferencesDAL = mock<ProgramPreferencesDAL>()
     val userOneRepMaxDAL = mock<UserOneRepMaxDAL>()
     val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
     val programDAL = mock<ProgramDAL>()
@@ -521,7 +521,7 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             userDAL = userDAL,
             userEquipmentDAL = userEquipmentDAL,
             userExercisePreferenceDAL = userExercisePreferenceDAL,
-            userProgramPreferencesDAL = userProgramPreferencesDAL,
+            programPreferencesDAL = programPreferencesDAL,
             userOneRepMaxDAL = userOneRepMaxDAL,
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
             programDAL = programDAL,

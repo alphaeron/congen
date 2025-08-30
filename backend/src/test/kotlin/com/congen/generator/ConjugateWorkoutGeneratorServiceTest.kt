@@ -2,12 +2,12 @@ package com.congen.generator
 
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.Program
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.model.UserWeakMuscle
 import com.congen.service.ProgramService
 import org.junit.jupiter.api.BeforeEach
@@ -30,7 +30,7 @@ import java.time.Instant
 class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
-    private lateinit var userProgramPreferencesDAL: UserProgramPreferencesDAL
+    private lateinit var programPreferencesDAL: ProgramPreferencesDAL
     private lateinit var programService: ProgramService
     private lateinit var programmedWorkoutDAL: ProgrammedWorkoutDAL
     private lateinit var conjugateTemplates: ConjugateTemplates
@@ -46,7 +46,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     @BeforeEach
     fun setUp() {
         userOneRepMaxDAL = mock()
-        userProgramPreferencesDAL = mock()
+        programPreferencesDAL = mock()
         programService = mock()
         programmedWorkoutDAL = mock()
         conjugateTemplates = mock()
@@ -57,7 +57,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         conjugateWorkoutGeneratorService =
             ConjugateWorkoutGeneratorService(
                 userOneRepMaxDAL = userOneRepMaxDAL,
-                userProgramPreferencesDAL = userProgramPreferencesDAL,
+                programPreferencesDAL = programPreferencesDAL,
                 programService = programService,
                 programmedWorkoutDAL = programmedWorkoutDAL,
                 conjugateTemplates = conjugateTemplates,
@@ -78,7 +78,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
@@ -110,7 +110,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         verify(programService).selectProgramById(PROGRAM_ID)
         verify(userOneRepMaxDAL).selectUserOneRepMaxByUser(USER_ID)
-        verify(userProgramPreferencesDAL).selectUserProgramPreferences(USER_ID)
+        verify(programPreferencesDAL).selectProgramPreferences(PROGRAM_ID)
         verify(userWeakMuscleDAL).selectUserWeakMusclesByUser(USER_ID)
         verify(conjugateTemplates).selectTemplate(4)
         verify(exercisePoolFactory).createPoolForUser(USER_ID)
@@ -127,7 +127,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(emptyUserWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
@@ -185,7 +185,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
@@ -202,7 +202,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Database error")))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -222,7 +222,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.error(RuntimeException("Pool creation error")))
@@ -245,7 +245,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
@@ -281,7 +281,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
@@ -318,7 +318,7 @@ class ConjugateWorkoutGeneratorServiceTest {
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
-        whenever(userProgramPreferencesDAL.selectUserProgramPreferences(USER_ID)).thenReturn(Mono.just(programPreferences))
+        whenever(programPreferencesDAL.selectProgramPreferences(PROGRAM_ID)).thenReturn(Mono.just(programPreferences))
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(3)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
@@ -375,9 +375,9 @@ class ConjugateWorkoutGeneratorServiceTest {
         )
     }
 
-    private fun createSampleProgramPreferences(): UserProgramPreferences {
-        return UserProgramPreferences(
-            userId = USER_ID,
+    private fun createSampleProgramPreferences(): ProgramPreferences {
+        return ProgramPreferences(
+            programId = PROGRAM_ID,
             programDaysPerWeek = 4,
             sessionTimeLengthInMinutes = 60,
             createdAt = Instant.now(),

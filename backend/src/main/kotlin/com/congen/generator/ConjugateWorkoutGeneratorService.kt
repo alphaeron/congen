@@ -2,11 +2,11 @@ package com.congen.generator
 
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.Program
 import com.congen.model.UserOneRepMax
-import com.congen.model.UserProgramPreferences
+import com.congen.model.ProgramPreferences
 import com.congen.service.ProgramService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono
  * - **Conditioning**: Cardio and recovery work
  *
  * @param userOneRepMaxDAL Data access layer for user one rep max values
- * @param userProgramPreferencesDAL Data access layer for user program preferences
+ * @param programPreferencesDAL Data access layer for program preferences
  * @param programService Service for program operations
  * @param programmedWorkoutDAL Data access layer for programmed workout operations
  * @param conjugateTemplates Service for managing workout templates
@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono
 @Service
 class ConjugateWorkoutGeneratorService(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
-    private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
+    private val programPreferencesDAL: ProgramPreferencesDAL,
     private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val conjugateTemplates: ConjugateTemplates,
@@ -86,7 +86,7 @@ class ConjugateWorkoutGeneratorService(
             .flatMap { program ->
                 Mono.zip(
                     userOneRepMaxDAL.selectUserOneRepMaxByUser(program.userId),
-                    userProgramPreferencesDAL.selectUserProgramPreferences(program.userId),
+                    programPreferencesDAL.selectProgramPreferences(program.id),
                     userWeakMuscleDAL.selectUserWeakMusclesByUser(program.userId)
                 ).flatMap { tuple ->
                     val oneRepMaxes = tuple.t1
@@ -143,7 +143,7 @@ class ConjugateWorkoutGeneratorService(
         program: Program,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
-        programPreferences: UserProgramPreferences,
+        programPreferences: ProgramPreferences,
         template: List<DayTemplate>,
         weakMuscles: List<String>,
         currentWeekNumber: Int

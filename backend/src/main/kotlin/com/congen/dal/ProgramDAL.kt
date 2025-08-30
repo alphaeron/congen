@@ -9,6 +9,7 @@ import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
 import com.congen.model.ProgramWithWorkouts
+import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedExerciseWithSetSchemes
 import com.congen.model.ProgrammedWorkout
@@ -178,6 +179,10 @@ class ProgramDAL(
                 p.is_active as program_is_active,
                 p.created_at as program_created_at,
                 p.updated_at as program_updated_at,
+                pp.program_days_per_week as program_preferences_days_per_week,
+                pp.session_time_length_in_minutes as program_preferences_session_time,
+                pp.created_at as program_preferences_created_at,
+                pp.updated_at as program_preferences_updated_at,
                 pw.id as workout_id,
                 pw.program_id as workout_program_id,
                 pw.day_number as workout_day_number,
@@ -215,6 +220,7 @@ class ProgramDAL(
                 ss.created_at as set_scheme_created_at,
                 ss.updated_at as set_scheme_updated_at
             FROM program p
+            LEFT JOIN program_preferences pp ON p.id = pp.program_id
             LEFT JOIN programmed_workout pw ON p.id = pw.program_id
             LEFT JOIN workout_stage ws ON pw.id = ws.programmed_workout_id
             LEFT JOIN programmed_exercise pe ON ws.id = pe.workout_stage_id
@@ -247,6 +253,14 @@ class ProgramDAL(
                                     isActive = (row["program_is_active"] as? Boolean) ?: throw IllegalStateException("program_is_active is null"),
                                     createdAt = parseTimestamp(row["program_created_at"]),
                                     updatedAt = parseTimestamp(row["program_updated_at"])
+                                ),
+                            "programPreferences" to
+                                ProgramPreferences(
+                                    programId = programId,
+                                    programDaysPerWeek = (row["program_preferences_days_per_week"] as? Number)?.toInt() ?: 4,
+                                    sessionTimeLengthInMinutes = (row["program_preferences_session_time"] as? Number)?.toInt() ?: 60,
+                                    createdAt = parseTimestamp(row["program_preferences_created_at"]) ?: parseTimestamp(row["program_created_at"]),
+                                    updatedAt = parseTimestamp(row["program_preferences_updated_at"]) ?: parseTimestamp(row["program_updated_at"])
                                 ),
                             "workouts" to mutableMapOf<Long, MutableMap<String, Any>>()
                         )
@@ -350,6 +364,7 @@ class ProgramDAL(
             // Convert the hierarchical map to the final model structure
             programsMap.values.map { programData ->
                 val program = programData["program"] as Program
+                val programPreferences = programData["programPreferences"] as ProgramPreferences
                 val workoutsData = programData["workouts"] as Map<Long, MutableMap<String, Any>>
 
                 val workouts =
@@ -387,6 +402,7 @@ class ProgramDAL(
 
                 ProgramWithWorkouts(
                     program = program,
+                    programPreferences = programPreferences,
                     workouts = workouts
                 )
             }

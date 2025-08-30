@@ -406,7 +406,7 @@ abstract class BaseIntegrationTest {
                     programmed_workout,
                     program,
                     user_exercise_preference,
-                    user_program_preferences,
+                    program_preferences,
                     user_equipment,
                     "user",
                     user_one_rep_max

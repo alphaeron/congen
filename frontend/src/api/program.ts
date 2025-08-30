@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import type { Program } from './types';
+import type { Program, ProgramPreferences } from './types';
 
 /**
  * Create a new program for the current user.
@@ -33,6 +33,18 @@ export const getPrograms = (): Promise<Program[]> => {
   return REQUEST({
     method: 'GET',
     url: '/program/',
+  });
+};
+
+/**
+ * Get all programs with their preferences for the current user.
+ *
+ * @return List of programs with preferences for the current user
+ */
+export const getProgramsWithPreferences = (): Promise<Array<Program & { program_preferences?: ProgramPreferences }>> => {
+  return REQUEST({
+    method: 'GET',
+    url: '/program/with-preferences',
   });
 };
 

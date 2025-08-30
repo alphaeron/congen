@@ -77,7 +77,6 @@ export interface UserDataExport {
   export_timestamp: string;
   user_equipment: Record<string, unknown>[];
   user_exercise_preferences: Record<string, unknown>[];
-  user_program_preferences?: Record<string, unknown>;
   user_one_rep_max: Record<string, unknown>[];
   user_weight_unit_preferences: Record<string, unknown>[];
   training_programs: ProgramWithWorkouts[];
@@ -98,6 +97,7 @@ export interface ProgramWithWorkouts {
     updated_at: string;
     is_active: boolean;
   };
+  program_preferences: ProgramPreferences;
   workouts: ProgrammedWorkoutWithStages[];
 } // end interface ProgramWithWorkouts
 
@@ -210,6 +210,17 @@ export interface Program {
   updated_at: string;
   is_active: boolean;
 } // end interface Program
+
+/**
+ * Program preferences for workout frequency and duration.
+ */
+export interface ProgramPreferences {
+  program_id: number;
+  program_days_per_week: number;
+  session_time_length_in_minutes: number;
+  created_at: string;
+  updated_at: string;
+} // end interface ProgramPreferences
 
 /**
  * A programmed workout within a program.

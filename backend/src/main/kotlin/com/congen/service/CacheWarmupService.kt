@@ -16,7 +16,7 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.UserProgramPreferencesDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
@@ -54,7 +54,7 @@ class CacheWarmupService(
     private val userExercisePreferenceDAL: UserExercisePreferenceDAL,
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
-    private val userProgramPreferencesDAL: UserProgramPreferencesDAL,
+    private val programPreferencesDAL: ProgramPreferencesDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val gdprComplianceDAL: GdprComplianceDAL,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
@@ -297,11 +297,6 @@ class CacheWarmupService(
                 .doOnSuccess { logger.debug("Warmed up user weak muscles for: {}", userId) }
                 .doOnError { logger.warn("Failed to warm up user weak muscles for: {}", userId, it) }
                 .onErrorComplete(),
-            // User program preferences
-            userProgramPreferencesDAL.selectUserProgramPreferences(userId)
-                .doOnSuccess { logger.debug("Warmed up user program preferences for: {}", userId) }
-                .doOnError { logger.warn("Failed to warm up user program preferences for: {}", userId, it) }
-                .onErrorComplete(),
             // User weight unit preferences
             userWeightUnitPreferenceDAL.selectUserWeightUnitPreferencesByUser(userId)
                 .doOnSuccess { logger.debug("Warmed up user weight unit preferences for: {}", userId) }
@@ -319,6 +314,7 @@ class CacheWarmupService(
      * Warms up program-related data for a specific program.
      *
      * This method pre-loads all program-related data including:
+     * - Program preferences for the program
      * - Programmed workouts for the program
      * - Workout stages for each programmed workout
      * - Programmed exercises for each workout stage
@@ -328,22 +324,30 @@ class CacheWarmupService(
      * @return Mono that completes when all program data is warmed up
      */
     private fun warmupProgramData(programId: Long): Mono<Unit> {
-        return programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)
-            .flatMap { programmedWorkouts ->
-                if (programmedWorkouts.isEmpty()) {
-                    Mono.just(Unit)
-                } else {
-                    Flux.fromIterable(programmedWorkouts)
-                        .flatMap { programmedWorkout ->
-                            warmupWorkoutData(programmedWorkout.id)
-                        }
-                        .collectList()
-                        .flatMap { Mono.just(Unit) }
+        return Flux.concat(
+            // Program preferences
+            programPreferencesDAL.selectProgramPreferences(programId)
+                .doOnSuccess { logger.debug("Warmed up program preferences for program: {}", programId) }
+                .doOnError { logger.warn("Failed to warm up program preferences for program: {}", programId, it) }
+                .onErrorComplete(),
+            // Programmed workouts
+            programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)
+                .flatMap { programmedWorkouts ->
+                    if (programmedWorkouts.isEmpty()) {
+                        Mono.just(Unit)
+                    } else {
+                        Flux.fromIterable(programmedWorkouts)
+                            .flatMap { programmedWorkout ->
+                                warmupWorkoutData(programmedWorkout.id)
+                            }
+                            .collectList()
+                            .flatMap { Mono.just(Unit) }
+                    }
                 }
-            }
-            .doOnSuccess { logger.debug("Warmed up program data for program: {}", programId) }
-            .doOnError { logger.warn("Failed to warm up program data for program: {}", programId, it) }
-            .onErrorComplete()
+                .doOnSuccess { logger.debug("Warmed up programmed workouts for program: {}", programId) }
+                .doOnError { logger.warn("Failed to warm up programmed workouts for program: {}", programId, it) }
+                .onErrorComplete()
+        ).then(Mono.just(Unit))
     }
 
     /**

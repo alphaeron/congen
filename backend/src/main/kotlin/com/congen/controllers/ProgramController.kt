@@ -1,6 +1,8 @@
 package com.congen.controllers
 
 import com.congen.model.Program
+import com.congen.model.ProgramPreferences
+import com.congen.model.ProgramWithPreferences
 import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
@@ -84,6 +86,7 @@ class ProgramController(
      *
      * @param userId The Keycloak user ID for the program
      * @param name The name of the program
+     * @param numDaysPerWeek The number of days per week for the program (defaults to 4)
      * @param isActive Whether the program should be active (defaults to true)
      * @return Mono containing the created program with generated ID
      */
@@ -105,6 +108,7 @@ class ProgramController(
     fun save(
         @RequestParam("user_id") userId: String,
         @RequestParam name: String,
+        @RequestParam(name = "num_days_per_week", defaultValue = "4") numDaysPerWeek: Int,
         @RequestParam(name = "is_active", defaultValue = "true") isActive: Boolean,
     ): Mono<ResponseEntity<Program>> {
         return keycloakUtil.getCurrentUserId().flatMap { keycloakId ->
@@ -116,17 +120,17 @@ class ProgramController(
                         } else {
                             Mono.just(keycloakId)
                         }
-                    consentUserIdMono.flatMap { ownerId ->
-                        gdprComplianceService.withUserConsent(ownerId) {
-                            logger.info("Saving program: {} for user {} with week number 1 and isActive: {}", name, userId, isActive)
-                            val startingCurrentWeekNumber = 1
-                            programService.insertProgram(userId, name, startingCurrentWeekNumber, isActive)
-                                .map { savedProgram ->
-                                    logger.debug("Saved program with id: {}", savedProgram.id)
-                                    ResponseEntity.ok(savedProgram)
-                                }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
+                                logger.info("Saving program: {} for user {} with week number 1, {} days per week, and isActive: {}", name, userId, numDaysPerWeek, isActive)
+                                val startingCurrentWeekNumber = 1
+                                programService.insertProgram(userId, name, startingCurrentWeekNumber, isActive, numDaysPerWeek)
+                                    .map { savedProgram ->
+                                        logger.debug("Saved program with id: {}", savedProgram.id)
+                                        ResponseEntity.ok(savedProgram)
+                                    }
+                            }
                         }
-                    }
                 } else {
                     Mono.error(AccessDeniedException("User not authorized to create programs for other users"))
                 }
@@ -245,6 +249,70 @@ class ProgramController(
                 gdprComplianceService.withUserConsent(userId) {
                     programService.selectProgramsByUserId(userId, null)
                         .map { programs -> ResponseEntity.ok(programs) }
+                }
+            }
+        }
+    }
+
+    /**
+     * Retrieves all programs with their preferences from the database.
+     *
+     * This endpoint fetches all program records along with their associated
+     * program preferences and returns them as a list. If no programs exist,
+     * an empty list is returned.
+     *
+     * @return ResponseEntity containing a list of all programs with their preferences
+     */
+    @GetMapping("/with-preferences")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get all programs with preferences",
+        description = "Retrieves a list of all programs with their associated preferences.",
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Programs with preferences retrieved successfully",
+                content = [Content(mediaType = "application/json")],
+            ),
+        ],
+    )
+    fun getAllWithPreferences(): Mono<ResponseEntity<List<ProgramWithPreferences>>> {
+        return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
+            Pair(userId, roles)
+        }.flatMap { (userId, roles) ->
+            val isAdminOrService = roles.contains("admin") || roles.contains("service")
+            if (isAdminOrService) {
+                programService.selectPrograms()
+                    .flatMap { programs ->
+                        Flux.fromIterable(programs)
+                            .flatMap { program ->
+                                gdprComplianceService.hasUserConsent(program.userId)
+                                    .filter { hasConsent -> hasConsent }
+                                    .map { program }
+                            }
+                            .collectList()
+                    }
+                    .flatMap { programs ->
+                        Flux.fromIterable(programs)
+                            .flatMap { program ->
+                                programService.getProgramWithPreferences(program.id)
+                            }
+                            .collectList()
+                    }
+                    .map { programsWithPreferences -> ResponseEntity.ok(programsWithPreferences) }
+            } else {
+                gdprComplianceService.withUserConsent(userId) {
+                    programService.selectProgramsByUserId(userId, null)
+                        .flatMap { programs ->
+                            Flux.fromIterable(programs)
+                                .flatMap { program ->
+                                    programService.getProgramWithPreferences(program.id)
+                                }
+                                .collectList()
+                        }
+                        .map { programsWithPreferences -> ResponseEntity.ok(programsWithPreferences) }
                 }
             }
         }

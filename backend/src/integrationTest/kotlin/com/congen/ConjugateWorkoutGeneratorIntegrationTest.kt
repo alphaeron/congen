@@ -23,26 +23,20 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create program
         programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program $unique", token = userToken)
 
-        // Clean up any existing user program preferences to avoid duplicates
-        try {
-            webTestClient.delete()
-                .uri("/api/v1/user_program_preferences/$userId")
-                .header("Authorization", "Bearer $userToken")
-                .exchange()
-                .expectStatus().isOk()
-        } catch (e: Exception) {
-            // Ignore errors if no preferences exist
-        }
+        // Program preferences are created automatically with the program, no cleanup needed
     }
 
     @Test
     fun `should generate 3-day conjugate workout program successfully`() {
+        // Create a new program with 3 days per week
+        val programId3Day = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program 3-Day", numDaysPerWeek = 3, token = userToken)
+        
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId3Day")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -50,7 +44,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programId3Day)
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
@@ -64,12 +58,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate 2-day conjugate workout program successfully`() {
+        // Create a new program with 2 days per week
+        val programId2Day = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program 2-Day", numDaysPerWeek = 2, token = userToken)
+        
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId2Day")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -77,7 +74,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programId2Day)
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
@@ -91,12 +88,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate 4-day conjugate workout program successfully`() {
+        // Create a new program with 4 days per week
+        val programId4Day = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program 4-Day", numDaysPerWeek = 4, token = userToken)
+        
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId4Day")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -104,7 +104,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .returnResult()
                 .responseBody!!
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programId4Day)
         assert(programResponse.name.contains("Week 2"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
@@ -117,17 +117,17 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     }
 
     @Test
-    fun `should handle invalid programDaysPerWeek in database`() {
-        // Create user program preferences with invalid days per week should fail
-        webTestClient.post()
-            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=5&session_time_length_in_minutes=60")
+    fun `should handle invalid session time in database`() {
+        // Try to update program preferences with invalid session time should fail
+        webTestClient.patch()
+            .uri("/api/v1/program_preferences/?program_id=$programId&session_time_length_in_minutes=0")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
             .expectBody()
             .jsonPath(
                 "$.error"
-            ).isEqualTo("Program days per week must be 2, 3, or 4 days. Only valid program lengths are 2, 3, or 4 days, got: 5")
+            ).isEqualTo("Session time length must be between 15 and 300 minutes, got: 0")
     }
 
     @Test
@@ -141,8 +141,10 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should generate workout with user exercise preferences`() {
-        // Create minimal reference data (program preferences and equipment) but not exercise preferences
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = userToken)
+        // Create a new program with default 4 days per week
+        val programIdExercise = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program Exercise", token = userToken)
+        
+        // Create minimal reference data (equipment) - program preferences are created automatically with the program
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bench", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
 
@@ -163,7 +165,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programIdExercise")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -172,13 +174,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programIdExercise)
     }
 
     @Test
     fun `should generate workout with user equipment`() {
-        // Create minimal reference data (program preferences and equipment)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = userToken)
+        // Create a new program with default 4 days per week
+        val programIdEquipment = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program Equipment", token = userToken)
+        
+        // Create minimal reference data (equipment) - program preferences are created automatically with the program
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bench", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
 
@@ -189,7 +193,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programIdEquipment")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -198,13 +202,15 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programIdEquipment)
     }
 
     @Test
     fun `should generate workout with user one rep max data`() {
-        // Create minimal reference data (program preferences and equipment)
-        IntegrationTestHelpers.createTestUserProgramPreferences(webTestClient, userId, 3, token = userToken)
+        // Create a new program with default 4 days per week
+        val programIdOneRepMax = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program One Rep Max", token = userToken)
+        
+        // Create minimal reference data (equipment) - program preferences are created automatically with the program
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bench", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
 
@@ -216,7 +222,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programIdOneRepMax")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -225,21 +231,19 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programIdOneRepMax)
     }
 
     @Test
-    fun `should generate workout with user program preferences`() {
-        // Add program preferences
-        webTestClient.post()
-            .uri("/api/v1/user_program_preferences/?user_id=$userId&program_days_per_week=3&session_time_length_in_minutes=60")
-            .header("Authorization", "Bearer $userToken")
-            .exchange()
-            .expectStatus().isOk()
+    fun `should generate workout with program preferences`() {
+        // Create a new program with default 4 days per week
+        val programIdPreferences = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program Preferences", token = userToken)
+        
+        // Program preferences are created automatically when the program is created
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programIdPreferences")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -248,11 +252,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
 
         assert(programResponse.userId == userId)
-        assert(programResponse.id == programId)
+        assert(programResponse.id == programIdPreferences)
     }
 
     @Test
     fun `should generate DE set scheme with correct band and bar weights`() {
+        // Create a new program with 3 days per week
+        val programIdBanded = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program Banded", numDaysPerWeek = 3, token = userToken)
+        
         // Set up user with 1RM for banded exercises specifically
         IntegrationTestHelpers.createTestUserOneRepMax(webTestClient, userId, "Banded Bench Press", oneRepMax = 200.0, token = userToken)
         IntegrationTestHelpers.createTestUserOneRepMax(
@@ -271,7 +278,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Generate conjugate program
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programIdBanded")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -395,11 +402,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 2-day template invariants`() {
+        // Create a new program with 2 days per week
+        val programId2DayTemplate = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program 2-Day Template", numDaysPerWeek = 2, token = userToken)
+        
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId2DayTemplate")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -443,11 +453,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 3-day template invariants`() {
+        // Create a new program with 3 days per week
+        val programId3DayTemplate = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program 3-Day Template", numDaysPerWeek = 3, token = userToken)
+        
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId3DayTemplate")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()
@@ -491,11 +504,14 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
     @Test
     fun `should validate 4-day template invariants`() {
+        // Create a new program with 4 days per week
+        val programId4DayTemplate = IntegrationTestHelpers.createTestProgram(webTestClient, userId, name = "Test Program 4-Day Template", numDaysPerWeek = 4, token = userToken)
+        
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
 
         val programResponse =
             webTestClient.post()
-                .uri("/api/v1/conjugate_workout_generator/$programId")
+                .uri("/api/v1/conjugate_workout_generator/$programId4DayTemplate")
                 .header("Authorization", "Bearer $userToken")
                 .exchange()
                 .expectStatus().isOk()

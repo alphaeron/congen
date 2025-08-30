@@ -23,7 +23,7 @@ import java.time.Instant
  * @property exportTimestamp When this data export was generated
  * @property userEquipment User's equipment preferences
  * @property userExercisePreferences User's exercise preferences
- * @property userProgramPreferences User's program preferences
+ * @property trainingPrograms User's training programs with their preferences
  * @property userOneRepMax User's one-rep-max records
  * @property userWeightUnitPreferences User's weight unit preferences
  * @property trainingPrograms User's training programs
@@ -89,8 +89,6 @@ data class UserDataExport(
     @param:JsonProperty("user_equipment") val userEquipment: List<Any>,
     /** User's exercise preferences. */
     @param:JsonProperty("user_exercise_preferences") val userExercisePreferences: List<Any>,
-    /** User's program preferences. */
-    @param:JsonProperty("user_program_preferences") val userProgramPreferences: Any?,
     /** User's one-rep-max records. */
     @param:JsonProperty("user_one_rep_max") val userOneRepMax: List<Any>,
     /** User's weight unit preferences. */
@@ -124,6 +122,8 @@ data class UserDataExport(
 data class ProgramWithWorkouts(
     /** The base program information. */
     val program: Program,
+    /** Program preferences for this specific program. */
+    @param:JsonProperty("program_preferences") val programPreferences: ProgramPreferences,
     /** Complete list of programmed workouts with their stages, exercises, and set schemes. */
     @param:JsonProperty("workouts") val workouts: List<ProgrammedWorkoutWithStages>
 )

@@ -1,17 +1,10 @@
-import { Add as AddIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
   CardContent,
   Typography,
-  Button,
   Grid,
   CircularProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   List,
   ListItem,
   ListItemText,
@@ -24,13 +17,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { WorkoutDetail } from './WorkoutDetail';
-import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
-import { getPrograms } from '../api/program';
+import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, User } from '../api/types';
+import type { Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
 
 interface WorkoutWeekDetailsProps {
-  user: User;
   selectedWorkout?: string | null;
   weekNumber: number;
 }
@@ -46,13 +37,11 @@ interface WorkoutWeekDetailsProps {
  * - URL query parameters for workout selection
  * - Breadcrumb navigation with week number
  *
- * @param user The current user object
  * @param selectedWorkout The selected workout ID (from URL)
  * @param weekNumber The week number to display
  * @returns WorkoutWeekDetails component
  */
 export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({ 
-  user, 
   selectedWorkout, 
   weekNumber 
 }) => {
@@ -60,12 +49,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [programs, setPrograms] = useState<Program[]>([]);
+  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramPreferences>>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
-  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
     name: string;
     day_number: number;
@@ -88,11 +74,11 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       setIsLoading(true);
       try {
         const [programsData, workoutsData] = await Promise.all([
-          getPrograms(),
+          getProgramsWithPreferences(),
           getProgrammedWorkouts(),
         ]);
 
-        setPrograms(programsData);
+        setProgramsWithPreferences(programsData);
         setWorkouts(workoutsData);
       } catch {
         enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
@@ -104,7 +90,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     loadWorkoutData();
   }, []); // Only load once on mount
 
-  const activeProgram = programs.find(program => program.is_active);
+  const activeProgram = programsWithPreferences.find(program => program.is_active);
   
   // Group workouts by week and filter for the current week
   const weekWorkouts = useMemo(() => {
@@ -114,11 +100,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       workout => workout.program_id === activeProgram.id
     );
     
-    // Calculate which week each workout belongs to based on day_number
-    // Assuming workouts are generated in weekly cycles (e.g., 3-4 workouts per week)
-    const workoutsPerWeek = activeProgram.current_week_number > 1 ? 
-      Math.ceil(programWorkouts.length / activeProgram.current_week_number) : 
-      programWorkouts.length;
+    // Use program preferences
+    const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
     
     return programWorkouts
       .map(workout => {
@@ -129,11 +112,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       .filter(weekWorkout => weekWorkout.weekNumber === weekNumber)
       .sort((a, b) => a.dayInWeek - b.dayInWeek);
   }, [workouts, activeProgram, weekNumber]);
-
-  const openGenerateDialog = (program: Program) => {
-    setSelectedProgram(program);
-    setGenerateDialogOpen(true);
-  };
 
   const handleWorkoutClick = (workoutId: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -154,30 +132,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     navigate(`?${newSearchParams.toString()}`);
   };
 
-  const handleGenerateWorkouts = async () => {
-    if (!selectedProgram) return;
-
-    setIsGenerating(true);
-    try {
-      await generateNextWeek(selectedProgram.id);
-
-      // Refresh data after generation
-      const [programsData, workoutsData] = await Promise.all([
-        getPrograms(),
-        getProgrammedWorkouts(),
-      ]);
-      setPrograms(programsData);
-      setWorkouts(workoutsData);
-
-      setGenerateDialogOpen(false);
-      setSelectedProgram(null);
-    } catch {
-      enqueueSnackbar('Failed to generate workouts. Please try again.', { variant: 'error' });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
   // Render breadcrumbs
   const renderBreadcrumbs = () => (
     <Box
@@ -185,7 +139,11 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       top={0}
       zIndex={1001}
       sx={{
-        pb: 3,
+        backgroundColor: 'background.default',
+        pt: 2,
+        pb: 2,
+        borderBottom: 1,
+        borderColor: 'divider',
       }}
     >
       <Breadcrumbs sx={{ mb: 2 }}>
@@ -260,25 +218,13 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                 <Grid item xs={12}>
                   <Card>
                     <CardContent>
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Box>
-                          <Typography variant="h6" gutterBottom>
-                            {activeProgram.name} - Week {weekNumber}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {weekWorkouts.length} workouts • Week {weekNumber} of {activeProgram.current_week_number}
-                          </Typography>
-                        </Box>
-                        <Box display="flex" gap={1}>
-                          <Button
-                            variant="contained"
-                            startIcon={isGenerating ? <CircularProgress size={16} /> : <AddIcon />}
-                            onClick={() => openGenerateDialog(activeProgram)}
-                            disabled={isGenerating}
-                          >
-                            {isGenerating ? 'Generating...' : 'Generate Next Week'}
-                          </Button>
-                        </Box>
+                      <Box>
+                        <Typography variant="h6" gutterBottom>
+                          {activeProgram.name} - Week {weekNumber}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {weekWorkouts.length} workouts • Week {weekNumber} of {activeProgram.current_week_number}
+                        </Typography>
                       </Box>
                     </CardContent>
                   </Card>
@@ -297,9 +243,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                         </Box>
                       ) : weekWorkouts.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">
-                          No workouts found for Week {weekNumber}. 
-                          {weekNumber === activeProgram.current_week_number && 
-                            ' Click "Generate Next Week" to create new workouts.'}
+                          No workouts found for Week {weekNumber}.
                         </Typography>
                       ) : (
                         <List>
@@ -343,21 +287,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         </Box>
       )}
 
-      {/* Generate Workouts Dialog */}
-      <Dialog open={generateDialogOpen} onClose={() => setGenerateDialogOpen(false)}>
-        <DialogTitle>Generate Workouts</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Generate next week&apos;s workouts for {selectedProgram?.name}?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setGenerateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleGenerateWorkouts} variant="contained">
-            Generate
-          </Button>
-        </DialogActions>
-      </Dialog>
     </React.Fragment>
   );
 };

@@ -1,25 +1,25 @@
 package com.congen.model
 
-import com.congen.mockUserProgramPreferences
+import com.congen.mockProgramPreferences
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
-class UserProgramPreferencesTest {
+class ProgramPreferencesTest {
     private val now = Instant.now()
 
     @Test
-    fun `should create user program preferences with correct properties`() {
+    fun `should create program preferences with correct properties`() {
         val prefs =
-            mockUserProgramPreferences(
-                userId = "test-keycloak-user-id",
+            mockProgramPreferences(
+                programId = 1L,
                 programDaysPerWeek = 4,
                 sessionTimeLengthInMinutes = 60,
                 createdAt = now,
                 updatedAt = now
             )
 
-        assertEquals("test-keycloak-user-id", prefs.userId)
+        assertEquals(1L, prefs.programId)
         assertEquals(4, prefs.programDaysPerWeek)
         assertEquals(60, prefs.sessionTimeLengthInMinutes)
         assertEquals(now, prefs.createdAt)
