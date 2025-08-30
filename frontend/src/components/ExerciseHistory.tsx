@@ -246,17 +246,22 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
         });
         muscleGroups.set('Other', defaultGroup);
       } else {
-        // Add exercise to each muscle group it belongs to
+        // For exercises that belong to multiple muscle groups, create unique keys
+        // by combining exercise name with muscle group
         individualMuscles.forEach(muscle => {
           const existing = muscleGroups.get(muscle);
+          const uniqueExerciseName = individualMuscles.length > 1 
+            ? `${exercise.name} (${muscle})` 
+            : exercise.name;
+          
           if (existing) {
             // Check if this exercise already exists in this muscle group
-            const existingExercise = existing.children.find(child => child.name === exercise.name);
+            const existingExercise = existing.children.find(child => child.name === uniqueExerciseName);
             if (existingExercise) {
               existingExercise.loc += exercise.totalVolume;
             } else {
               existing.children.push({
-                name: exercise.name,
+                name: uniqueExerciseName,
                 loc: exercise.totalVolume,
               });
             }
@@ -264,7 +269,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             muscleGroups.set(muscle, {
               name: muscle,
               children: [{
-                name: exercise.name,
+                name: uniqueExerciseName,
                 loc: exercise.totalVolume,
               }],
             });
