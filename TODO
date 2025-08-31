@@ -6,8 +6,6 @@ prompt the user for confirmation on that so they are aware of what is happening 
 
 test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
 
-space between privacy policy alert
-
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
 
 display charts inline
