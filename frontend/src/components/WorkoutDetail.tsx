@@ -1,4 +1,4 @@
-import { Notes as NotesIcon } from '@mui/icons-material';
+import { Notes as NotesIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -69,6 +69,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const { enqueueSnackbar } = useSnackbar();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const loadWorkoutDetails = async () => {
@@ -112,6 +113,19 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     }
   }, [workoutData, onWorkoutDetailsUpdate]);
 
+  // Toggle stage collapse state
+  const toggleStage = (stageId: number) => {
+    setCollapsedStages(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(stageId)) {
+        newSet.delete(stageId);
+      } else {
+        newSet.add(stageId);
+      }
+      return newSet;
+    });
+  };
+
   // Transform data for table
   const tableData = useMemo(() => {
     if (!workoutData) return [];
@@ -119,6 +133,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     const rows: TableRow[] = [];
 
     workoutData.stages.forEach(stageData => {
+      const isCollapsed = collapsedStages.has(stageData.stage.id);
+      
       // Add stage header row
       rows.push({
         id: `stage-${stageData.stage.id}`,
@@ -127,45 +143,47 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         stageId: stageData.stage.id,
       });
 
-      // Add exercise rows
-      stageData.exercises.forEach(exerciseData => {
-        const setSchemes = exerciseData.set_schemes || [];
-        if (setSchemes.length === 0) return;
+      // Add exercise rows only if stage is not collapsed
+      if (!isCollapsed) {
+        stageData.exercises.forEach(exerciseData => {
+          const setSchemes = exerciseData.set_schemes || [];
+          if (setSchemes.length === 0) return;
 
-        // Aggregate set scheme data
-        const firstSetScheme = setSchemes[0];
-        const totalSets = setSchemes.length;
-        const reps = firstSetScheme.target_rep_count;
-        const weight = firstSetScheme.target_weight;
-        const rest = firstSetScheme.rest_seconds;
+          // Aggregate set scheme data
+          const firstSetScheme = setSchemes[0];
+          const totalSets = setSchemes.length;
+          const reps = firstSetScheme.target_rep_count;
+          const weight = firstSetScheme.target_weight;
+          const rest = firstSetScheme.rest_seconds;
 
-        // Format tempo if available
-        const tempo =
-          firstSetScheme.use_tempo &&
-          firstSetScheme.eccentric_tempo &&
-          firstSetScheme.isometric_tempo &&
-          firstSetScheme.concentric_tempo
-            ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
-            : '-';
+          // Format tempo if available
+          const tempo =
+            firstSetScheme.use_tempo &&
+            firstSetScheme.eccentric_tempo &&
+            firstSetScheme.isometric_tempo &&
+            firstSetScheme.concentric_tempo
+              ? `${firstSetScheme.eccentric_tempo}-${firstSetScheme.isometric_tempo}-${firstSetScheme.concentric_tempo}`
+              : '-';
 
-        rows.push({
-          id: `exercise-${exerciseData.exercise.id}`,
-          type: 'exercise',
-          exerciseName: exerciseData.exercise.exercise_name,
-          sets: totalSets,
-          reps: reps || undefined,
-          tempo: tempo !== '-' ? tempo : undefined,
-          weight: weight ? `${weight} lbs` : undefined,
-          rest: rest ? `${rest}s` : undefined,
-          notes: '-',
-          exerciseNotes: exerciseData.exercise.notes,
-          stageId: stageData.stage.id,
+          rows.push({
+            id: `exercise-${exerciseData.exercise.id}`,
+            type: 'exercise',
+            exerciseName: exerciseData.exercise.exercise_name,
+            sets: totalSets,
+            reps: reps || undefined,
+            tempo: tempo !== '-' ? tempo : undefined,
+            weight: weight ? `${weight} lbs` : undefined,
+            rest: rest ? `${rest}s` : undefined,
+            notes: '-',
+            exerciseNotes: exerciseData.exercise.notes,
+            stageId: stageData.stage.id,
+          });
         });
-      });
+      }
     });
 
     return rows;
-  }, [workoutData]);
+  }, [workoutData, collapsedStages]);
 
   // Define columns
   const columns = useMemo(
@@ -334,7 +352,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                   }}
                 >
                   {row.original.type === 'stage' ? (
-                    // Stage header row - spans all columns (no longer sticky)
+                    // Stage header row - spans all columns with collapse functionality
                     <td
                       colSpan={columns.length}
                       style={{
@@ -349,11 +367,29 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                               : theme.palette.grey[100]
                             : theme.palette.background.paper,
                         borderBottom: `1px solid ${theme.palette.divider}`,
+                        cursor: 'pointer',
                       }}
+                      onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
                     >
-                      <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
-                        {row.original.stageName}
-                      </Typography>
+                      <Box display="flex" alignItems="center" justifyContent="space-between">
+                        <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                          {row.original.stageName}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            row.original.stageId && toggleStage(row.original.stageId);
+                          }}
+                          sx={{ color: theme.palette.primary.main }}
+                        >
+                          {row.original.stageId && collapsedStages.has(row.original.stageId) ? (
+                            <ExpandMoreIcon />
+                          ) : (
+                            <ExpandLessIcon />
+                          )}
+                        </IconButton>
+                      </Box>
                     </td>
                   ) : (
                     // Exercise row - normal columns
