@@ -18,16 +18,17 @@ import {
   Chip,
   IconButton,
   Tooltip,
+  Backdrop,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
+import { LoadingSpinner } from './LoadingSpinner';
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
 import { formatDate } from '../common/utils';
-import { LoadingSpinner } from './LoadingSpinner';
 
 interface ProgramManagementProps {
   user: User;
@@ -48,6 +49,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(new Map());
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -103,18 +105,23 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   };
 
   const handleCreateProgram = async () => {
+    // Close dialog immediately and show loading state
+    setCreateDialogOpen(false);
+    setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
+    setIsCreating(true);
+
     try {
-      const newProgram = await createProgram(
+      await createProgram(
         formData.name,
         formData.numDaysPerWeek,
         user.keycloak_id
       );
-      setCreateDialogOpen(false);
-      setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
       // Reload programs to get the updated data with preferences
       loadPrograms();
     } catch {
       enqueueSnackbar('Failed to create program. Please try again.', { variant: 'error' });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -525,6 +532,23 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Full-screen loading overlay during program creation */}
+      <Backdrop
+        sx={{
+          color: '#fff',
+          zIndex: theme => theme.zIndex.drawer + 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+        open={isCreating}
+      >
+        <LoadingSpinner message="Creating program..." size={60} />
+        <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
+          This may take a few moments
+        </Typography>
+      </Backdrop>
     </React.Fragment>
   );
 };

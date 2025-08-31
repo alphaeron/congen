@@ -23,8 +23,8 @@ describe('ProgramManagement', () => {
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'Test User',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00Z'),
+    updated_at: new Date('2024-01-01T00:00:00Z'),
     roles: ['user'],
   };
 
@@ -33,8 +33,8 @@ describe('ProgramManagement', () => {
     user_id: 'test-user-id',
     name: 'Test Program',
     current_week_number: 2,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00Z'),
+    updated_at: new Date('2024-01-01T00:00:00Z'),
     is_active: true,
   };
 
@@ -43,8 +43,8 @@ describe('ProgramManagement', () => {
     program_id: 1,
     day_number: 1,
     name: 'Push Day',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: '2024-01-01T00:00:00Z' as unknown as Date,
+    updated_at: '2024-01-01T00:00:00Z' as unknown as Date,
   };
 
   // Create a new mock adapter for each test to prevent interference

@@ -5,6 +5,9 @@ metadata:
   namespace: congen
   labels:
     app: keycloak
+  annotations:
+    reloader.stakater.com/auto: "true"
+    reloader.stakater.com/search: "keycloak-theme"
 spec:
   serviceName: keycloak-discovery
   replicas: 1

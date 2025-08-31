@@ -1,3 +1,5 @@
+add weak muscles UI to program preferences (name target muscles in the interface)
+
 test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
 
 update package-lock.json
@@ -21,8 +23,6 @@ congen database for congen?  Or maybe aws terraform will handle that.
 workout type enum
 
 https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
-
-add reloader config for keycloak so it restarts on configmap change
 
 Interface to show users what exercises are available as they add preferences, equipment, …
 
