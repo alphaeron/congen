@@ -110,13 +110,14 @@ class UserDataExportTest {
             ProgramWithWorkouts(
                 program = program,
                 workouts = emptyList(),
-                programPreferences = ProgramPreferences(
-                    programId = 1L,
-                    programDaysPerWeek = 4,
-                    sessionTimeLengthInMinutes = 60,
-                    createdAt = now,
-                    updatedAt = now
-                )
+                programPreferences =
+                    ProgramPreferences(
+                        programId = 1L,
+                        programDaysPerWeek = 4,
+                        sessionTimeLengthInMinutes = 60,
+                        createdAt = now,
+                        updatedAt = now
+                    )
             )
 
         val userDataExport =
@@ -230,13 +231,14 @@ class UserDataExportTest {
             ProgramWithWorkouts(
                 program = program,
                 workouts = listOf(programmedWorkoutWithStages),
-                programPreferences = ProgramPreferences(
-                    programId = 1L,
-                    programDaysPerWeek = 4,
-                    sessionTimeLengthInMinutes = 60,
-                    createdAt = now,
-                    updatedAt = now
-                )
+                programPreferences =
+                    ProgramPreferences(
+                        programId = 1L,
+                        programDaysPerWeek = 4,
+                        sessionTimeLengthInMinutes = 60,
+                        createdAt = now,
+                        updatedAt = now
+                    )
             )
 
         val userDataExport =

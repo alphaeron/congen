@@ -1,6 +1,7 @@
 import * as React from 'react';
-import { useCookie } from '../contexts/CookieContext';
+
 import { CookieConsentBanner } from './CookieConsentBanner';
+import { useCookie } from '../contexts/CookieContext';
 
 export const CookieConsentManager: React.FC = () => {
   const { hasConsented } = useCookie();

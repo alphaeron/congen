@@ -1,11 +1,5 @@
 import { default as BarChartIcon } from '@mui/icons-material/BarChart';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import React, { useState, useMemo } from 'react';
 
@@ -43,15 +37,15 @@ interface LineChartProps {
  * @param colors Optional color scheme
  * @return Line Chart component
  */
-export const LineChart: React.FC<LineChartProps> = ({ 
-  data, 
-  title = "Volume Progression",
-  description = "Total weight lifted over time (including band resistance)",
-  xAxisLabel = "Workout Date",
-  yAxisLabel = "Volume (lbs)",
+export const LineChart: React.FC<LineChartProps> = ({
+  data,
+  title = 'Volume Progression',
+  description = 'Total weight lifted over time (including band resistance)',
+  xAxisLabel = 'Workout Date',
+  yAxisLabel = 'Volume (lbs)',
   height = 300,
   showLegend = true,
-  colors
+  colors,
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
@@ -65,7 +59,7 @@ export const LineChart: React.FC<LineChartProps> = ({
     return data.filter(item => selectedItems.includes(item.id));
   }, [data, selectedItems]);
 
-  const handleLegendClick = (data: any) => {
+  const handleLegendClick = (data: { id?: string; label?: string }) => {
     const itemId = data.id || data.label;
     setSelectedItems(prev => {
       if (prev.includes(itemId)) {
@@ -100,7 +94,7 @@ export const LineChart: React.FC<LineChartProps> = ({
               tickRotation: -45,
               legend: xAxisLabel,
               legendOffset: 40,
-              legendPosition: 'middle'
+              legendPosition: 'middle',
             }}
             axisLeft={{
               tickSize: 5,
@@ -108,7 +102,7 @@ export const LineChart: React.FC<LineChartProps> = ({
               tickRotation: 0,
               legend: yAxisLabel,
               legendOffset: -50,
-              legendPosition: 'middle'
+              legendPosition: 'middle',
             }}
             pointSize={8}
             pointColor={{ theme: 'background' }}
@@ -118,35 +112,39 @@ export const LineChart: React.FC<LineChartProps> = ({
             useMesh={true}
             colors={colors || congenColorSchemes.strength}
             theme={nivoTheme}
-            legends={showLegend ? [
-              {
-                anchor: 'top',
-                direction: 'row',
-                justify: false,
-                translateX: 0,
-                translateY: -20,
-                itemsSpacing: 0,
-                itemDirection: 'left-to-right',
-                itemWidth: 80,
-                itemHeight: 20,
-                itemTextColor: '#333333',
-                itemOpacity: 1,
-                symbolSize: 12,
-                symbolShape: 'circle',
-                symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                onClick: handleLegendClick,
-                effects: [
-                  {
-                    on: 'hover',
-                    style: {
-                      itemBackground: 'rgba(0, 0, 0, .03)',
+            legends={
+              showLegend
+                ? [
+                    {
+                      anchor: 'top',
+                      direction: 'row',
+                      justify: false,
+                      translateX: 0,
+                      translateY: -20,
+                      itemsSpacing: 0,
+                      itemDirection: 'left-to-right',
+                      itemWidth: 80,
+                      itemHeight: 20,
+                      itemTextColor: '#333333',
                       itemOpacity: 1,
-                      itemTextColor: '#000'
-                    }
-                  }
-                ]
-              }
-            ] : []}
+                      symbolSize: 12,
+                      symbolShape: 'circle',
+                      symbolBorderColor: 'rgba(0, 0, 0, .5)',
+                      onClick: handleLegendClick,
+                      effects: [
+                        {
+                          on: 'hover',
+                          style: {
+                            itemBackground: 'rgba(0, 0, 0, .03)',
+                            itemOpacity: 1,
+                            itemTextColor: '#000',
+                          },
+                        },
+                      ],
+                    },
+                  ]
+                : []
+            }
           />
         </Box>
       </CardContent>

@@ -48,15 +48,15 @@ const logoStyle = {
 };
 
 // Create named components for links
-const ExercisesLink: React.FC<React.ComponentPropsWithRef<'a'>> = (props) => (
+const ExercisesLink: React.FC<React.ComponentPropsWithRef<'a'>> = props => (
   <Link to="/exercises" {...props} />
 );
 
-const ProfileLink: React.FC<React.ComponentPropsWithRef<'a'>> = (props) => (
+const ProfileLink: React.FC<React.ComponentPropsWithRef<'a'>> = props => (
   <Link to="/profile" {...props} />
 );
 
-const PrivacyPolicyLink: React.FC<React.ComponentPropsWithRef<'a'>> = (props) => (
+const PrivacyPolicyLink: React.FC<React.ComponentPropsWithRef<'a'>> = props => (
   <Link to="/privacy_policy" {...props} />
 );
 

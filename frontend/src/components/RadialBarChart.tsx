@@ -55,7 +55,7 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({ data }) => {
             itemTextColor: '#999',
             symbolSize: 12,
             symbolShape: 'circle',
-            onClick: (data) => {},
+            onClick: () => {},
           },
         ]}
       />

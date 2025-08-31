@@ -74,18 +74,17 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   }
 
   const activeProgram = programs.find(program => program.is_active);
-  const activeProgramWorkouts = activeProgram 
+  const activeProgramWorkouts = activeProgram
     ? workouts.filter(workout => workout.program_id === activeProgram.id)
     : [];
-  
+
   // Calculate actual total workouts across all programs
   const totalWorkouts = workouts.length;
-  
+
   // Calculate current week based on actual workout count (assuming 3-4 workouts per week)
-  const currentWeek = activeProgramWorkouts.length > 0 
-    ? Math.ceil(activeProgramWorkouts.length / 3) 
-    : 0;
-  
+  const currentWeek =
+    activeProgramWorkouts.length > 0 ? Math.ceil(activeProgramWorkouts.length / 3) : 0;
+
   const recentOneRepMaxes = oneRepMaxes.slice(-5); // Last 5 1RMs
 
   return (
@@ -208,11 +207,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
               <Typography variant="body1" fontWeight="medium">
                 {activeProgram.name}
               </Typography>
-              <Chip
-                label={`Week ${currentWeek}`}
-                color="primary"
-                size="small"
-              />
+              <Chip label={`Week ${currentWeek}`} color="primary" size="small" />
               <Chip label="Active" color="success" size="small" />
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>

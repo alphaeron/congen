@@ -2,16 +2,12 @@ package com.congen.service
 
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
 import com.congen.model.User
 import com.congen.model.UserConsent
 import org.junit.jupiter.api.BeforeEach

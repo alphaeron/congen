@@ -10,7 +10,6 @@ import {
   ListItem,
   ListItemText,
   Breadcrumbs,
-  Link,
   Slide,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
@@ -20,7 +19,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { WorkoutDetail } from './WorkoutDetail';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
+import type { ProgrammedWorkout, ProgramWithPreferences } from '../api/types';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -42,15 +41,17 @@ interface WorkoutWeekDetailsProps {
  * @param weekNumber The week number to display
  * @returns WorkoutWeekDetails component
  */
-export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({ 
-  selectedWorkout, 
-  weekNumber 
+export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
+  selectedWorkout,
+  weekNumber,
 }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramWithPreferences>>([]);
+  const [programsWithPreferences, setProgramsWithPreferences] = useState<
+    Array<ProgramWithPreferences>
+  >([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
@@ -60,7 +61,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   } | null>(null);
 
   // URL query parameters
-  const selectedWeek = searchParams.get('week');
   const selectedWorkoutId = searchParams.get('workout') || selectedWorkout;
 
   // Reset workout details when workout selection changes
@@ -93,18 +93,18 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   }, []); // Only load once on mount
 
   const activeProgram = programsWithPreferences.find(program => program.program.is_active);
-  
+
   // Group workouts by week and filter for the current week
   const weekWorkouts = useMemo(() => {
     if (!activeProgram) return [];
-    
+
     const programWorkouts = workouts.filter(
       workout => workout.program_id === activeProgram.program.id
     );
-    
+
     // Use program preferences
     const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
-    
+
     return programWorkouts
       .map(workout => {
         const weekNum = Math.ceil(workout.day_number / workoutsPerWeek);
@@ -157,13 +157,13 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         <Button
           variant="text"
           onClick={() => handleBreadcrumbClick('workouts')}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             textTransform: 'none',
             fontSize: '1rem',
             fontWeight: 'normal',
             p: 0,
-            minWidth: 'auto'
+            minWidth: 'auto',
           }}
         >
           Workouts
@@ -171,13 +171,13 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         <Button
           variant="text"
           onClick={() => handleBreadcrumbClick('week')}
-          sx={{ 
+          sx={{
             color: 'text.secondary',
             textTransform: 'none',
             fontSize: '1rem',
             fontWeight: 'normal',
             p: 0,
-            minWidth: 'auto'
+            minWidth: 'auto',
           }}
         >
           Week {weekNumber}
@@ -223,7 +223,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       </React.Fragment>
     );
   }
-  
+
   return (
     <React.Fragment>
       {renderBreadcrumbs()}
@@ -254,7 +254,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                           {activeProgram.program.name} - Week {weekNumber}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {weekWorkouts.length} workouts • Week {weekNumber} of {activeProgram.program.current_week_number}
+                          {weekWorkouts.length} workouts • Week {weekNumber} of{' '}
+                          {activeProgram.program.current_week_number}
                         </Typography>
                       </Box>
                     </CardContent>
@@ -278,7 +279,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                         </Typography>
                       ) : (
                         <List>
-                          {weekWorkouts.map((weekWorkout) => (
+                          {weekWorkouts.map(weekWorkout => (
                             <ListItem
                               key={weekWorkout.workout.id}
                               disablePadding
@@ -317,7 +318,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           )}
         </Box>
       )}
-
     </React.Fragment>
   );
 };

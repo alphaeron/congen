@@ -14,11 +14,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -27,7 +25,7 @@ import reactor.core.publisher.Mono
 /**
  * REST controller for ProgramPreferences entity operations.
  *
- * This controller provides CRUD operations for program preferences in the Congen API.
+ * This controller provides operations for program preferences in the Congen API.
  * Program preferences allow programs to specify their workout frequency, duration,
  * and other program-related settings.
  *
@@ -40,10 +38,8 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /program_preferences/` - Create new program preferences
  * - `GET /program_preferences/{programId}` - Retrieve program preferences
  * - `PATCH /program_preferences/` - Update program preferences
- * - `DELETE /program_preferences/{programId}` - Delete program preferences
  *
  * ## Error Handling
  *
@@ -53,6 +49,7 @@ import reactor.core.publisher.Mono
  * @param programPreferencesDAL Data access layer for program preferences operations
  * @param keycloakUtil Utility for Keycloak operations
  * @param gdprComplianceService Service for GDPR compliance operations
+ * @param programService Service for program operations
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -71,13 +68,14 @@ class ProgramPreferencesController(
     }
 
     /**
-     * Retrieves user program preferences by user ID.
+     * Retrieves program preferences by program ID.
      *
-     * This endpoint fetches the program preferences for the specified user,
-     * returning their workout program settings and preferences.
+     * This endpoint fetches the program preferences for the specified program,
+     * returning the workout program settings and preferences. Access is restricted
+     * to program owners or admin/service users.
      *
-     * @param userId The Keycloak identifier of the user
-     * @return Mono containing the user program preferences
+     * @param programId The ID of the program to retrieve preferences for
+     * @return Mono containing the program preferences
      */
     @GetMapping("/{program_id}")
     @PreAuthorize("isAuthenticated()")
@@ -129,7 +127,9 @@ class ProgramPreferencesController(
                                 }
                         }
                     }
-                    .switchIfEmpty(Mono.error(AccessDeniedException("Access denied: User can only view preferences for their own programs")))
+                    .switchIfEmpty(
+                        Mono.error(AccessDeniedException("Access denied: User can only view preferences for their own programs"))
+                    )
             }
         }
     }
@@ -195,7 +195,9 @@ class ProgramPreferencesController(
                                 }
                         }
                     }
-                    .switchIfEmpty(Mono.error(AccessDeniedException("Access denied: User can only update preferences for their own programs")))
+                    .switchIfEmpty(
+                        Mono.error(AccessDeniedException("Access denied: User can only update preferences for their own programs"))
+                    )
             }
         }
     }

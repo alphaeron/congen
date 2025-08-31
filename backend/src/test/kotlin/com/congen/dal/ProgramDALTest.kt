@@ -321,20 +321,20 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(programToUpdate)
             .verifyComplete()
-        
+
         // Verify that selectProgramById was called
         verify(postgresClient).selectIndividual<Program>(
             "SELECT * FROM program WHERE id=$1",
             programToUpdate.id
         )
-        
+
         // Verify that deactivateProgramsForUser was called
         verify(postgresClient).updateLiteral<Any>(
             expectedDeactivateQuery,
             Any::class,
             programToUpdate.userId
         )
-        
+
         // Verify that the final update was called
         verify(postgresClient).update<Program>(
             expectedUpdateQuery,
@@ -390,20 +390,20 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(programToUpdate)
             .verifyComplete()
-        
+
         // Verify that selectProgramById was called
         verify(postgresClient).selectIndividual<Program>(
             "SELECT * FROM program WHERE id=$1",
             programToUpdate.id
         )
-        
+
         // Verify that deactivateProgramsForUser was called
         verify(postgresClient).updateLiteral<Any>(
             expectedDeactivateQuery,
             Any::class,
             programToUpdate.userId
         )
-        
+
         // Verify that the final update was called
         verify(postgresClient).update<Program>(
             expectedUpdateQuery,

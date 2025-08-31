@@ -34,7 +34,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('UserProfile', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
-  
+
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'John Doe',

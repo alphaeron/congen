@@ -1,7 +1,6 @@
 import {
   Person as PersonIcon,
   Security as SecurityIcon,
-  FitnessCenter as FitnessCenterIcon,
   PrivacyTip as PrivacyIcon,
 } from '@mui/icons-material';
 import {

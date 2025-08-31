@@ -24,7 +24,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should return 422 when session_time_length_in_minutes is 0`() {
         // First create a program (program preferences are created automatically)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -42,7 +42,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when session_time_length_in_minutes is 14`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -60,7 +60,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when session_time_length_in_minutes is 301`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -78,7 +78,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 422 when session_time_length_in_minutes is negative`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -96,7 +96,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid session_time_length_in_minutes value 15`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -113,7 +113,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid session_time_length_in_minutes value 180`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -127,7 +127,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should accept valid session_time_length_in_minutes value 90`() {
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
@@ -167,7 +167,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should return 404 when program does not exist`() {
         val nonExistentProgramId = 99999L
-        
+
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$nonExistentProgramId" +
@@ -184,7 +184,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         val otherUserToken = getValidToken("user")
         val otherUserId = IntegrationTestHelpers.createTestUser(webTestClient, token = otherUserToken)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, otherUserId, "Other User's Program", token = otherUserToken)
-        
+
         // Try to update program preferences for a program owned by another user
         webTestClient.patch()
             .uri(
@@ -200,7 +200,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     fun `should allow changing session time when no workouts exist`() {
         // Create a program (program preferences are created automatically)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, token = userToken)
-        
+
         // Should allow changing session time when no workouts exist
         webTestClient.patch()
             .uri(

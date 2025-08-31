@@ -1,11 +1,5 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 
@@ -33,11 +27,11 @@ interface PieChartProps {
  * @param height Optional height for the chart container
  * @return Pie Chart component
  */
-export const PieChart: React.FC<PieChartProps> = ({ 
-  data, 
-  title = "Exercise Distribution",
-  description = "Volume by workout stage",
-  height = 300
+export const PieChart: React.FC<PieChartProps> = ({
+  data,
+  title = 'Exercise Distribution',
+  description = 'Volume by workout stage',
+  height = 300,
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
@@ -51,7 +45,7 @@ export const PieChart: React.FC<PieChartProps> = ({
     return data.filter(item => selectedItems.includes(item.id));
   }, [data, selectedItems]);
 
-  const handleLegendClick = (data: any) => {
+  const handleLegendClick = (data: { id?: string; label?: string }) => {
     const itemId = data.id || data.label;
     setSelectedItems(prev => {
       if (prev.includes(itemId)) {
@@ -109,11 +103,11 @@ export const PieChart: React.FC<PieChartProps> = ({
                   {
                     on: 'hover',
                     style: {
-                      itemTextColor: '#000'
-                    }
-                  }
-                ]
-              }
+                      itemTextColor: '#000',
+                    },
+                  },
+                ],
+              },
             ]}
           />
         </Box>

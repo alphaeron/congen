@@ -310,19 +310,19 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     fun `should delete exact key`() {
         val deleteKey = "delete-test-${UUID.randomUUID()}"
         val testValue = "delete-test-value"
-        
+
         // Set the value
         val setResult = reactiveCache.set(deleteKey, testValue, Duration.ofMinutes(5))
         StepVerifier.create(setResult).expectNext(true).verifyComplete()
-        
+
         // Verify it exists
         val getBeforeDelete = reactiveCache.get<String>(deleteKey)
         StepVerifier.create(getBeforeDelete).expectNext(testValue).verifyComplete()
-        
+
         // Delete the key
         val deleteResult = reactiveCache.delete(deleteKey)
         StepVerifier.create(deleteResult).expectNext(true).verifyComplete()
-        
+
         // Verify it's gone
         val getAfterDelete = reactiveCache.get<String>(deleteKey)
         StepVerifier.create(getAfterDelete).expectError().verify()
@@ -331,7 +331,7 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should delete non-existent key gracefully`() {
         val nonExistentKey = "non-existent-delete-${UUID.randomUUID()}"
-        
+
         // Try to delete non-existent key
         val deleteResult = reactiveCache.delete(nonExistentKey)
         StepVerifier.create(deleteResult).expectNext(false).verifyComplete()
@@ -340,56 +340,56 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should delete pattern matching multiple keys`() {
         val pattern = "pattern-test-${UUID.randomUUID()}"
-        val key1 = "${pattern}:user:123:programs"
-        val key2 = "${pattern}:user:123:preferences"
-        val key3 = "${pattern}:user:456:programs"
+        val key1 = "$pattern:user:123:programs"
+        val key2 = "$pattern:user:123:preferences"
+        val key3 = "$pattern:user:456:programs"
         val key4 = "other-pattern:user:123:programs" // Should not be deleted
-        
+
         val testValue = "pattern-test-value"
-        
+
         // Set multiple keys
         val set1 = reactiveCache.set(key1, testValue, Duration.ofMinutes(5))
         val set2 = reactiveCache.set(key2, testValue, Duration.ofMinutes(5))
         val set3 = reactiveCache.set(key3, testValue, Duration.ofMinutes(5))
         val set4 = reactiveCache.set(key4, testValue, Duration.ofMinutes(5))
-        
+
         StepVerifier.create(set1).expectNext(true).verifyComplete()
         StepVerifier.create(set2).expectNext(true).verifyComplete()
         StepVerifier.create(set3).expectNext(true).verifyComplete()
         StepVerifier.create(set4).expectNext(true).verifyComplete()
-        
+
         // Verify all keys exist
         val get1 = reactiveCache.get<String>(key1)
         val get2 = reactiveCache.get<String>(key2)
         val get3 = reactiveCache.get<String>(key3)
         val get4 = reactiveCache.get<String>(key4)
-        
+
         StepVerifier.create(get1).expectNext(testValue).verifyComplete()
         StepVerifier.create(get2).expectNext(testValue).verifyComplete()
         StepVerifier.create(get3).expectNext(testValue).verifyComplete()
         StepVerifier.create(get4).expectNext(testValue).verifyComplete()
-        
+
         // Delete pattern matching keys
-        val deletePatternResult = reactiveCache.deletePattern("${pattern}:*")
+        val deletePatternResult = reactiveCache.deletePattern("$pattern:*")
         StepVerifier.create(deletePatternResult)
             .expectNextMatches { deletedKeys ->
-                deletedKeys.size == 3 && 
-                deletedKeys.contains(key1) && 
-                deletedKeys.contains(key2) && 
-                deletedKeys.contains(key3) &&
-                !deletedKeys.contains(key4)
+                deletedKeys.size == 3 &&
+                    deletedKeys.contains(key1) &&
+                    deletedKeys.contains(key2) &&
+                    deletedKeys.contains(key3) &&
+                    !deletedKeys.contains(key4)
             }
             .verifyComplete()
-        
+
         // Verify pattern keys are deleted
         val getAfterDelete1 = reactiveCache.get<String>(key1)
         val getAfterDelete2 = reactiveCache.get<String>(key2)
         val getAfterDelete3 = reactiveCache.get<String>(key3)
-        
+
         StepVerifier.create(getAfterDelete1).expectError().verify()
         StepVerifier.create(getAfterDelete2).expectError().verify()
         StepVerifier.create(getAfterDelete3).expectError().verify()
-        
+
         // Verify non-matching key still exists
         val getAfterDelete4 = reactiveCache.get<String>(key4)
         StepVerifier.create(getAfterDelete4).expectNext(testValue).verifyComplete()
@@ -398,37 +398,37 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should delete pattern with wildcard at end`() {
         val basePattern = "wildcard-end-${UUID.randomUUID()}"
-        val key1 = "${basePattern}:user:123"
-        val key2 = "${basePattern}:user:456"
-        val key3 = "${basePattern}:program:789"
-        
+        val key1 = "$basePattern:user:123"
+        val key2 = "$basePattern:user:456"
+        val key3 = "$basePattern:program:789"
+
         val testValue = "wildcard-test-value"
-        
+
         // Set keys
         val set1 = reactiveCache.set(key1, testValue, Duration.ofMinutes(5))
         val set2 = reactiveCache.set(key2, testValue, Duration.ofMinutes(5))
         val set3 = reactiveCache.set(key3, testValue, Duration.ofMinutes(5))
-        
+
         StepVerifier.create(set1).expectNext(true).verifyComplete()
         StepVerifier.create(set2).expectNext(true).verifyComplete()
         StepVerifier.create(set3).expectNext(true).verifyComplete()
-        
+
         // Delete with wildcard pattern
-        val deletePatternResult = reactiveCache.deletePattern("${basePattern}:*")
+        val deletePatternResult = reactiveCache.deletePattern("$basePattern:*")
         StepVerifier.create(deletePatternResult)
             .expectNextMatches { deletedKeys ->
-                deletedKeys.size == 3 && 
-                deletedKeys.contains(key1) && 
-                deletedKeys.contains(key2) && 
-                deletedKeys.contains(key3)
+                deletedKeys.size == 3 &&
+                    deletedKeys.contains(key1) &&
+                    deletedKeys.contains(key2) &&
+                    deletedKeys.contains(key3)
             }
             .verifyComplete()
-        
+
         // Verify all are deleted
         val get1 = reactiveCache.get<String>(key1)
         val get2 = reactiveCache.get<String>(key2)
         val get3 = reactiveCache.get<String>(key3)
-        
+
         StepVerifier.create(get1).expectError().verify()
         StepVerifier.create(get2).expectError().verify()
         StepVerifier.create(get3).expectError().verify()
@@ -437,42 +437,42 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should delete pattern with wildcard in middle`() {
         val basePattern = "wildcard-middle-${UUID.randomUUID()}"
-        val key1 = "${basePattern}:user:123:programs"
-        val key2 = "${basePattern}:user:456:programs"
-        val key3 = "${basePattern}:program:789:details"
-        val key4 = "${basePattern}:user:123:preferences" // Different suffix
-        
+        val key1 = "$basePattern:user:123:programs"
+        val key2 = "$basePattern:user:456:programs"
+        val key3 = "$basePattern:program:789:details"
+        val key4 = "$basePattern:user:123:preferences" // Different suffix
+
         val testValue = "wildcard-middle-test-value"
-        
+
         // Set keys
         val set1 = reactiveCache.set(key1, testValue, Duration.ofMinutes(5))
         val set2 = reactiveCache.set(key2, testValue, Duration.ofMinutes(5))
         val set3 = reactiveCache.set(key3, testValue, Duration.ofMinutes(5))
         val set4 = reactiveCache.set(key4, testValue, Duration.ofMinutes(5))
-        
+
         StepVerifier.create(set1).expectNext(true).verifyComplete()
         StepVerifier.create(set2).expectNext(true).verifyComplete()
         StepVerifier.create(set3).expectNext(true).verifyComplete()
         StepVerifier.create(set4).expectNext(true).verifyComplete()
-        
+
         // Delete with wildcard in middle pattern
-        val deletePatternResult = reactiveCache.deletePattern("${basePattern}:user:*:programs")
+        val deletePatternResult = reactiveCache.deletePattern("$basePattern:user:*:programs")
         StepVerifier.create(deletePatternResult)
             .expectNextMatches { deletedKeys ->
-                deletedKeys.size == 2 && 
-                deletedKeys.contains(key1) && 
-                deletedKeys.contains(key2) &&
-                !deletedKeys.contains(key3) &&
-                !deletedKeys.contains(key4)
+                deletedKeys.size == 2 &&
+                    deletedKeys.contains(key1) &&
+                    deletedKeys.contains(key2) &&
+                    !deletedKeys.contains(key3) &&
+                    !deletedKeys.contains(key4)
             }
             .verifyComplete()
-        
+
         // Verify only matching keys are deleted
         val get1 = reactiveCache.get<String>(key1)
         val get2 = reactiveCache.get<String>(key2)
         val get3 = reactiveCache.get<String>(key3)
         val get4 = reactiveCache.get<String>(key4)
-        
+
         StepVerifier.create(get1).expectError().verify()
         StepVerifier.create(get2).expectError().verify()
         StepVerifier.create(get3).expectNext(testValue).verifyComplete()
@@ -482,9 +482,9 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle delete pattern with no matching keys`() {
         val nonMatchingPattern = "non-matching-${UUID.randomUUID()}"
-        
+
         // Try to delete pattern with no matching keys
-        val deletePatternResult = reactiveCache.deletePattern("${nonMatchingPattern}:*")
+        val deletePatternResult = reactiveCache.deletePattern("$nonMatchingPattern:*")
         StepVerifier.create(deletePatternResult)
             .expectNext(emptyList<String>())
             .verifyComplete()
@@ -493,32 +493,32 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle delete pattern with special characters`() {
         val specialPattern = "special-chars-${UUID.randomUUID()}"
-        val key1 = "${specialPattern}:user:123:programs"
-        val key2 = "${specialPattern}:user:456:programs"
-        
+        val key1 = "$specialPattern:user:123:programs"
+        val key2 = "$specialPattern:user:456:programs"
+
         val testValue = "special-chars-test-value"
-        
+
         // Set keys
         val set1 = reactiveCache.set(key1, testValue, Duration.ofMinutes(5))
         val set2 = reactiveCache.set(key2, testValue, Duration.ofMinutes(5))
-        
+
         StepVerifier.create(set1).expectNext(true).verifyComplete()
         StepVerifier.create(set2).expectNext(true).verifyComplete()
-        
+
         // Delete with pattern containing special characters
-        val deletePatternResult = reactiveCache.deletePattern("${specialPattern}:user:*:programs")
+        val deletePatternResult = reactiveCache.deletePattern("$specialPattern:user:*:programs")
         StepVerifier.create(deletePatternResult)
             .expectNextMatches { deletedKeys ->
-                deletedKeys.size == 2 && 
-                deletedKeys.contains(key1) && 
-                deletedKeys.contains(key2)
+                deletedKeys.size == 2 &&
+                    deletedKeys.contains(key1) &&
+                    deletedKeys.contains(key2)
             }
             .verifyComplete()
-        
+
         // Verify keys are deleted
         val get1 = reactiveCache.get<String>(key1)
         val get2 = reactiveCache.get<String>(key2)
-        
+
         StepVerifier.create(get1).expectError().verify()
         StepVerifier.create(get2).expectError().verify()
     }
@@ -526,45 +526,45 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle concurrent pattern deletions`() {
         val concurrentPattern = "concurrent-${UUID.randomUUID()}"
-        val key1 = "${concurrentPattern}:user:123:programs"
-        val key2 = "${concurrentPattern}:user:456:programs"
-        val key3 = "${concurrentPattern}:user:789:programs"
-        
+        val key1 = "$concurrentPattern:user:123:programs"
+        val key2 = "$concurrentPattern:user:456:programs"
+        val key3 = "$concurrentPattern:user:789:programs"
+
         val testValue = "concurrent-test-value"
-        
+
         // Set keys
         val set1 = reactiveCache.set(key1, testValue, Duration.ofMinutes(5))
         val set2 = reactiveCache.set(key2, testValue, Duration.ofMinutes(5))
         val set3 = reactiveCache.set(key3, testValue, Duration.ofMinutes(5))
-        
+
         StepVerifier.create(set1).expectNext(true).verifyComplete()
         StepVerifier.create(set2).expectNext(true).verifyComplete()
         StepVerifier.create(set3).expectNext(true).verifyComplete()
-        
+
         // Execute concurrent pattern deletions
-        val delete1 = reactiveCache.deletePattern("${concurrentPattern}:*")
-        val delete2 = reactiveCache.deletePattern("${concurrentPattern}:*")
-        val delete3 = reactiveCache.deletePattern("${concurrentPattern}:*")
-        
+        val delete1 = reactiveCache.deletePattern("$concurrentPattern:*")
+        val delete2 = reactiveCache.deletePattern("$concurrentPattern:*")
+        val delete3 = reactiveCache.deletePattern("$concurrentPattern:*")
+
         val concurrentDeletes = Mono.zip(delete1, delete2, delete3)
         StepVerifier.create(concurrentDeletes)
             .expectNextMatches { tuple ->
                 val result1 = tuple.t1
                 val result2 = tuple.t2
                 val result3 = tuple.t3
-                
+
                 // Due to race conditions, some may return keys and others may return empty
                 // The important thing is that all keys are eventually deleted
                 val totalDeleted = result1.size + result2.size + result3.size
                 totalDeleted >= 3 // At least 3 keys should be deleted across all operations
             }
             .verifyComplete()
-        
+
         // Verify all keys are eventually deleted
         val get1 = reactiveCache.get<String>(key1)
         val get2 = reactiveCache.get<String>(key2)
         val get3 = reactiveCache.get<String>(key3)
-        
+
         StepVerifier.create(get1).expectError().verify()
         StepVerifier.create(get2).expectError().verify()
         StepVerifier.create(get3).expectError().verify()
@@ -573,45 +573,45 @@ class MemcachedIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle key index tracking correctly`() {
         val indexTestPattern = "index-test-${UUID.randomUUID()}"
-        val key1 = "${indexTestPattern}:key1"
-        val key2 = "${indexTestPattern}:key2"
-        val key3 = "${indexTestPattern}:key3"
-        
+        val key1 = "$indexTestPattern:key1"
+        val key2 = "$indexTestPattern:key2"
+        val key3 = "$indexTestPattern:key3"
+
         val testValue = "index-test-value"
-        
+
         // Set keys
         val set1 = reactiveCache.set(key1, testValue, Duration.ofMinutes(5))
         val set2 = reactiveCache.set(key2, testValue, Duration.ofMinutes(5))
         val set3 = reactiveCache.set(key3, testValue, Duration.ofMinutes(5))
-        
+
         StepVerifier.create(set1).expectNext(true).verifyComplete()
         StepVerifier.create(set2).expectNext(true).verifyComplete()
         StepVerifier.create(set3).expectNext(true).verifyComplete()
-        
+
         // Delete individual keys and verify they're removed from index
         val delete1 = reactiveCache.delete(key1)
         StepVerifier.create(delete1).expectNext(true).verifyComplete()
-        
+
         val delete2 = reactiveCache.delete(key2)
         StepVerifier.create(delete2).expectNext(true).verifyComplete()
-        
+
         // Verify individual deletes work
         val get1 = reactiveCache.get<String>(key1)
         val get2 = reactiveCache.get<String>(key2)
         val get3 = reactiveCache.get<String>(key3)
-        
+
         StepVerifier.create(get1).expectError().verify()
         StepVerifier.create(get2).expectError().verify()
         StepVerifier.create(get3).expectNext(testValue).verifyComplete()
-        
+
         // Now delete remaining key with pattern
-        val deletePatternResult = reactiveCache.deletePattern("${indexTestPattern}:*")
+        val deletePatternResult = reactiveCache.deletePattern("$indexTestPattern:*")
         StepVerifier.create(deletePatternResult)
             .expectNextMatches { deletedKeys ->
                 deletedKeys.size == 1 && deletedKeys.contains(key3)
             }
             .verifyComplete()
-        
+
         // Verify all keys are deleted
         val finalGet = reactiveCache.get<String>(key3)
         StepVerifier.create(finalGet).expectError().verify()

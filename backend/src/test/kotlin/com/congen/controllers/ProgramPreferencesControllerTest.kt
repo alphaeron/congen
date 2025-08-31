@@ -55,7 +55,13 @@ class ProgramPreferencesControllerTest {
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
         programService = mock()
-        programPreferencesController = ProgramPreferencesController(programPreferencesDAL, keycloakUtil, gdprComplianceService, programService)
+        programPreferencesController =
+            ProgramPreferencesController(
+                programPreferencesDAL,
+                keycloakUtil,
+                gdprComplianceService,
+                programService
+            )
 
         // Mock KeycloakUtil methods for all tests
         doReturn(Mono.just("test-keycloak-user-id")).whenever(keycloakUtil).getCurrentUserId()
@@ -63,7 +69,7 @@ class ProgramPreferencesControllerTest {
 
         // Mock GDPR compliance service for all tests
         doReturn(Mono.just(true)).whenever(gdprComplianceService).hasUserConsent(any<String>())
-        
+
         // Mock ProgramService methods for all tests
         doReturn(Mono.just(mockProgram(userId = "test-keycloak-user-id"))).whenever(programService).selectProgramById(any())
     }

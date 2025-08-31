@@ -12,7 +12,7 @@ describe('cookieUtils', () => {
         necessary: true,
         timestamp: Date.now(),
       };
-      
+
       expect(isCookieAllowed(consent)).toBe(true);
     });
 
@@ -21,7 +21,7 @@ describe('cookieUtils', () => {
         necessary: false,
         timestamp: Date.now(),
       };
-      
+
       expect(isCookieAllowed(consent)).toBe(false);
     });
   });

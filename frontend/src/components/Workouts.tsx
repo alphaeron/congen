@@ -29,7 +29,7 @@ import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, User, ProgramPreferences, ProgramWithPreferences } from '../api/types';
+import type { Program, ProgrammedWorkout, User, ProgramWithPreferences } from '../api/types';
 
 interface WorkoutsProps {
   user: User;
@@ -55,7 +55,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
 
-  const [programsWithPreferences, setProgramsWithPreferences] = useState<Array<ProgramWithPreferences>>([]);
+  const [programsWithPreferences, setProgramsWithPreferences] = useState<
+    Array<ProgramWithPreferences>
+  >([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -89,22 +91,22 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   }, []); // Only load once on mount
 
   const activeProgram = programsWithPreferences.find(program => program.program.is_active);
-  
+
   // Group workouts by week
   const weeks = useMemo(() => {
     if (!activeProgram) return [];
-    
+
     const programWorkouts = workouts.filter(
       workout => workout.program_id === activeProgram.program.id
     );
-    
+
     if (programWorkouts.length === 0) return [];
-    
+
     // Use program preferences
     const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
-    
+
     const weekMap = new Map<number, ProgrammedWorkout[]>();
-    
+
     programWorkouts.forEach(workout => {
       const weekNum = Math.ceil(workout.day_number / workoutsPerWeek);
       if (!weekMap.has(weekNum)) {
@@ -112,12 +114,12 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       }
       weekMap.get(weekNum)!.push(workout);
     });
-    
+
     return Array.from(weekMap.entries())
       .map(([weekNumber, weekWorkouts]) => ({
         weekNumber,
         workoutCount: weekWorkouts.length,
-        workouts: weekWorkouts.sort((a, b) => a.day_number - b.day_number)
+        workouts: weekWorkouts.sort((a, b) => a.day_number - b.day_number),
       }))
       .sort((a, b) => a.weekNumber - b.weekNumber);
   }, [workouts, activeProgram]);
@@ -149,7 +151,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     setGenerateDialogOpen(false);
     setSelectedProgram(null);
     setIsGenerating(true);
-    
+
     try {
       await generateNextWeek(selectedProgram.id);
 
@@ -208,10 +210,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   // If a week is selected, show the WorkoutWeekDetails component
   if (selectedWeek) {
     return (
-      <WorkoutWeekDetails
-        selectedWorkout={selectedWorkoutId}
-        weekNumber={parseInt(selectedWeek)}
-      />
+      <WorkoutWeekDetails selectedWorkout={selectedWorkoutId} weekNumber={parseInt(selectedWeek)} />
     );
   }
 
@@ -226,7 +225,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       </React.Fragment>
     );
   }
-  
+
   return (
     <React.Fragment>
       {renderBreadcrumbs()}
@@ -258,7 +257,10 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                             {activeProgram.program.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Week {activeProgram.program.current_week_number} • {weeks.length} weeks • {workouts.filter(w => w.program_id === activeProgram.program.id).length} total workouts
+                            Week {activeProgram.program.current_week_number} • {weeks.length} weeks
+                            •{' '}
+                            {workouts.filter(w => w.program_id === activeProgram.program.id).length}{' '}
+                            total workouts
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>
@@ -294,7 +296,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                         </Typography>
                       ) : (
                         <List>
-                          {weeks.map((week) => (
+                          {weeks.map(week => (
                             <ListItem
                               key={week.weekNumber}
                               disablePadding
@@ -344,7 +346,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       <Backdrop
         sx={{
           color: '#fff',
-          zIndex: (theme) => theme.zIndex.drawer + 1,
+          zIndex: theme => theme.zIndex.drawer + 1,
           display: 'flex',
           flexDirection: 'column',
           gap: 2,

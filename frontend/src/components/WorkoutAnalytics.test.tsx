@@ -8,27 +8,29 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
 // Mock Nivo charts to avoid rendering issues in tests
+interface ChartData {
+  children?: Array<{ id: string }>;
+}
+
+interface StreamData {
+  length?: number;
+}
+
 jest.mock('@nivo/icicle', () => ({
-  ResponsiveIcicle: ({ data }: any) => (
-    <div data-testid="icicle-chart">
-      {data?.children?.length || 0} children
-    </div>
+  ResponsiveIcicle: ({ data }: { data: ChartData }) => (
+    <div data-testid="icicle-chart">{data?.children?.length || 0} children</div>
   ),
 }));
 
 jest.mock('@nivo/stream', () => ({
-  ResponsiveStream: ({ data }: any) => (
-    <div data-testid="stream-chart">
-      {data?.length || 0} data points
-    </div>
+  ResponsiveStream: ({ data }: { data: StreamData }) => (
+    <div data-testid="stream-chart">{data?.length || 0} data points</div>
   ),
 }));
 
 jest.mock('@nivo/bump', () => ({
-  ResponsiveBump: ({ data }: any) => (
-    <div data-testid="bump-chart">
-      {data?.length || 0} series
-    </div>
+  ResponsiveBump: ({ data }: { data: StreamData }) => (
+    <div data-testid="bump-chart">{data?.length || 0} series</div>
   ),
 }));
 
@@ -79,7 +81,7 @@ describe('WorkoutAnalytics', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {});
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {});
 
     await act(async () => {
       renderWithProviders(<WorkoutAnalytics user={mockUser} />);
@@ -88,7 +90,9 @@ describe('WorkoutAnalytics', () => {
     // Check that the component shows the empty state message
     await waitFor(() => {
       expect(screen.getByText('Workout Analytics')).toBeInTheDocument();
-      expect(screen.getByText(/Complete your first workout to see workout analytics and insights/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Complete your first workout to see workout analytics and insights/)
+      ).toBeInTheDocument();
     });
   });
 });

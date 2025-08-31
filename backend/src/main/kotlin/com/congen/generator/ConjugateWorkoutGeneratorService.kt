@@ -1,12 +1,12 @@
 package com.congen.generator
 
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.model.Program
-import com.congen.model.UserOneRepMax
 import com.congen.model.ProgramPreferences
+import com.congen.model.UserOneRepMax
 import com.congen.service.ProgramService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service

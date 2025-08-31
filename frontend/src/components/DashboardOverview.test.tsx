@@ -8,10 +8,20 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
 // Mock Nivo components to avoid Jest configuration issues
+interface LineChartData {
+  id: string;
+  data: Array<{ x: number; y: number }>;
+}
+
+interface PieChartData {
+  id: string;
+  value: number;
+}
+
 jest.mock('@nivo/line', () => ({
-  ResponsiveLine: ({ data }: any) => (
+  ResponsiveLine: ({ data }: { data: LineChartData[] }) => (
     <div data-testid="line-chart">
-      {data.map((series: any) => (
+      {data.map((series: LineChartData) => (
         <div key={series.id} data-testid={`line-series-${series.id}`}>
           {series.data.length} points
         </div>
@@ -21,9 +31,9 @@ jest.mock('@nivo/line', () => ({
 }));
 
 jest.mock('@nivo/pie', () => ({
-  ResponsivePie: ({ data }: any) => (
+  ResponsivePie: ({ data }: { data: PieChartData[] }) => (
     <div data-testid="pie-chart">
-      {data.map((item: any) => (
+      {data.map((item: PieChartData) => (
         <div key={item.id} data-testid={`pie-item-${item.id}`}>
           {item.value}
         </div>
@@ -35,7 +45,7 @@ jest.mock('@nivo/pie', () => ({
 describe('DashboardOverview', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
-  
+
   const renderWithProviders = (component: React.ReactElement) => {
     return render(<MemoryRouter>{component}</MemoryRouter>);
   };
@@ -47,7 +57,7 @@ describe('DashboardOverview', () => {
     updated_at: '2024-01-01T00:00:00Z',
     roles: ['user'],
   };
-  
+
   const mockProgram = {
     id: 1,
     user_id: 'test-user-id',
@@ -57,7 +67,7 @@ describe('DashboardOverview', () => {
     updated_at: '2024-01-01T00:00:00Z',
     is_active: true,
   };
-  
+
   const mockWorkout = {
     id: 1,
     program_id: 1,
@@ -66,7 +76,7 @@ describe('DashboardOverview', () => {
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
   };
-  
+
   const mockOneRepMax = {
     user_id: 'test-user-id',
     exercise_name: 'Bench Press',
@@ -227,25 +237,35 @@ describe('DashboardOverview', () => {
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
     // Mock ConjugateProgression dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [{
-        program: { id: 1, name: 'Test Program' },
-        workouts: [{
-          workout: { id: 1, name: 'Test Workout' },
-          stages: [{
-            stage: { name: 'Test Stage' },
-            exercises: [{
-              exercise: { exercise_name: 'Bench Press' },
-              set_schemes: [{
-                performed_weight: 100,
-                performed_rep_count: 10,
-                band_weight_lbs: null
-              }]
-            }]
-          }]
-        }]
-      }], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [
+        {
+          program: { id: 1, name: 'Test Program' },
+          workouts: [
+            {
+              workout: { id: 1, name: 'Test Workout' },
+              stages: [
+                {
+                  stage: { name: 'Test Stage' },
+                  exercises: [
+                    {
+                      exercise: { exercise_name: 'Bench Press' },
+                      set_schemes: [
+                        {
+                          performed_weight: 100,
+                          performed_rep_count: 10,
+                          band_weight_lbs: null,
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      data_retention_policies: [],
     });
     mock.onGet(/\/exercise\/.*/).reply(200, {
       id: 1,
@@ -255,7 +275,7 @@ describe('DashboardOverview', () => {
       secondary_muscles: ['triceps', 'shoulders'],
       instructions: 'Test instructions',
       equipment: 'barbell',
-      difficulty: 'intermediate'
+      difficulty: 'intermediate',
     });
 
     await act(async () => {

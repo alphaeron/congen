@@ -7,10 +7,10 @@ import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Exercise
+import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.ProgramPreferences
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage
 import com.congen.model.WorkoutStageTypeEnum

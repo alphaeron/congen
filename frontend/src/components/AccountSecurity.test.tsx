@@ -10,7 +10,7 @@ import type { User } from '../api/types';
 describe('AccountSecurity', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
-  
+
   // Create a theme for testing
   const theme = createTheme();
 

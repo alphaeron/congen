@@ -201,7 +201,13 @@ describe('Dashboard', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
     // Check that all menu items are present
-    const menuItems = ['Overview', 'Programs', 'Workouts', 'Exercise History', 'Workout Preferences'];
+    const menuItems = [
+      'Overview',
+      'Programs',
+      'Workouts',
+      'Exercise History',
+      'Workout Preferences',
+    ];
     menuItems.forEach(item => {
       expect(screen.getByText(item)).toBeInTheDocument();
     });

@@ -1,7 +1,6 @@
 package com.congen.controllers
 
 import com.congen.model.Program
-import com.congen.model.ProgramPreferences
 import com.congen.model.ProgramWithPreferences
 import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
@@ -120,17 +119,23 @@ class ProgramController(
                         } else {
                             Mono.just(keycloakId)
                         }
-                        consentUserIdMono.flatMap { ownerId ->
-                            gdprComplianceService.withUserConsent(ownerId) {
-                                logger.info("Saving program: {} for user {} with week number 1, {} days per week, and isActive: {}", name, userId, numDaysPerWeek, isActive)
-                                val startingCurrentWeekNumber = 1
-                                programService.insertProgram(userId, name, startingCurrentWeekNumber, isActive, numDaysPerWeek)
-                                    .map { savedProgram ->
-                                        logger.debug("Saved program with id: {}", savedProgram.id)
-                                        ResponseEntity.ok(savedProgram)
-                                    }
-                            }
+                    consentUserIdMono.flatMap { ownerId ->
+                        gdprComplianceService.withUserConsent(ownerId) {
+                            logger.info(
+                                "Saving program: {} for user {} with week number 1, {} days per week, and isActive: {}",
+                                name,
+                                userId,
+                                numDaysPerWeek,
+                                isActive
+                            )
+                            val startingCurrentWeekNumber = 1
+                            programService.insertProgram(userId, name, startingCurrentWeekNumber, isActive, numDaysPerWeek)
+                                .map { savedProgram ->
+                                    logger.debug("Saved program with id: {}", savedProgram.id)
+                                    ResponseEntity.ok(savedProgram)
+                                }
                         }
+                    }
                 } else {
                     Mono.error(AccessDeniedException("User not authorized to create programs for other users"))
                 }

@@ -23,10 +23,9 @@ import java.time.Instant
  * @property exportTimestamp When this data export was generated
  * @property userEquipment User's equipment preferences
  * @property userExercisePreferences User's exercise preferences
- * @property trainingPrograms User's training programs with their preferences
  * @property userOneRepMax User's one-rep-max records
  * @property userWeightUnitPreferences User's weight unit preferences
- * @property trainingPrograms User's training programs
+ * @property trainingPrograms User's training programs with their preferences and complete workout hierarchy
  * @property auditLogs Audit logs for data access
  * @property dataRetentionPolicies Data retention policies
  *
@@ -108,6 +107,7 @@ data class UserDataExport(
  * with stages, exercises, and set schemes for GDPR data portability exports.
  *
  * @property program The base program information
+ * @property programPreferences Program preferences for this specific program
  * @property workouts Complete list of programmed workouts with their stages, exercises, and set schemes
  *
  * @author Congen Development Team

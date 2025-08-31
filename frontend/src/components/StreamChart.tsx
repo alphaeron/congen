@@ -1,11 +1,5 @@
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveStream } from '@nivo/stream';
 import React from 'react';
 
@@ -34,12 +28,12 @@ interface StreamChartProps {
  * @param height Optional height for the chart container
  * @return Stream Chart component
  */
-export const StreamChart: React.FC<StreamChartProps> = ({ 
-  data, 
+export const StreamChart: React.FC<StreamChartProps> = ({
+  data,
   keys,
-  title = "Volume Flow Over Time",
-  description = "Training volume distribution across workout types",
-  height = 400
+  title = 'Volume Flow Over Time',
+  description = 'Training volume distribution across workout types',
+  height = 400,
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);

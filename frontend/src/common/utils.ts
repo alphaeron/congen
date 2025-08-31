@@ -25,18 +25,40 @@ export function capitalizeEachWord(str: string): string {
 } // capitalizeEachWord
 
 /**
+ * Convert weight to pounds based on user's preferred unit.
+ *
+ * @param weight The weight value to convert
+ * @param preferredUnit The user's preferred unit for this exercise
+ * @returns Weight converted to pounds
+ */
+export function convertWeightToPounds(
+  weight: number,
+  preferredUnit: 'KG' | 'LBS' | undefined
+): number {
+  if (!weight) return 0;
+
+  switch (preferredUnit) {
+    case 'KG':
+      return weight * 2.20462; // Convert kg to lbs
+    case 'LBS':
+    default:
+      return weight; // Already in lbs or default to lbs
+  }
+}
+
+/**
  * Categorizes exercise volume based on workout type and exercise properties.
- * 
+ *
  * This function determines whether an exercise's volume should be counted as
  * Max Effort, Dynamic Effort, or Accessory based on:
  * - Whether the exercise is marked as accessory
  * - The workout type (ME, DE, combined ME+DE)
  * - The exercise's body part (upper/lower)
- * 
+ *
  * @param exerciseInfo The exercise information from the database
  * @param workoutName The name of the workout (e.g., "ME Upper Day", "DE Lower Day")
- * @param setVolume The volume for this set (weight * reps)
- * 
+ * @param setVolume The volume for this set (weight * reps) - should be in consistent units (lbs)
+ *
  * @returns Object with categorized volumes
  */
 export function categorizeExerciseVolume(
@@ -56,7 +78,7 @@ export function categorizeExerciseVolume(
   } else {
     // Primary exercises (non-accessory) are categorized by workout type
     const workoutNameLower = workoutName.toLowerCase();
-    
+
     if (workoutNameLower.includes('me') && !workoutNameLower.includes('de')) {
       // Pure Max Effort workout
       result.maxEffortVolume = setVolume;

@@ -24,8 +24,8 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
-import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgrammedWorkout } from '../api/types';
 
 interface ProgramManagementProps {
@@ -83,7 +83,11 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
   const handleCreateProgram = async () => {
     try {
-      const newProgram = await createProgram(formData.name, formData.numDaysPerWeek, user.keycloak_id);
+      const newProgram = await createProgram(
+        formData.name,
+        formData.numDaysPerWeek,
+        user.keycloak_id
+      );
       setPrograms(prev => [...prev, newProgram]);
       setCreateDialogOpen(false);
       setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
@@ -129,17 +133,17 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     if (!selectedProgram) return;
 
     try {
-      const updatedProgram = await updateProgram(
+      await updateProgram(
         selectedProgram.id,
         selectedProgram.name,
         selectedProgram.current_week_number,
         true // Set to active
       );
-      
+
       // Refresh the entire programs list since other programs may have been deactivated
       const refreshedPrograms = await getPrograms();
       setPrograms(refreshedPrograms);
-      
+
       setResumeDialogOpen(false);
       setSelectedProgram(null);
       enqueueSnackbar('Program resumed successfully.', { variant: 'success' });
@@ -163,7 +167,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
   const openEditDialog = async (program: Program) => {
     setSelectedProgram(program);
-    
+
     try {
       // Load program preferences to get session time
       const preferences = await getProgramPreferences(program.id);
@@ -182,7 +186,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         sessionTimeLengthInMinutes: 60,
       });
     }
-    
+
     setEditDialogOpen(true);
   };
 
@@ -245,7 +249,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                     </Typography>
                     <Box>
                       {program.is_active ? (
-                        <>
+                        <React.Fragment>
                           <Tooltip title="Change Session Duration">
                             <IconButton size="small" onClick={() => openEditDialog(program)}>
                               <EditIcon />
@@ -260,7 +264,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                               <PauseIcon />
                             </IconButton>
                           </Tooltip>
-                        </>
+                        </React.Fragment>
                       ) : (
                         <Tooltip title="Resume Program">
                           <IconButton
@@ -354,7 +358,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         <DialogTitle>Create New Program</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Your new program will be created and set as your active program. If you have any other active programs, they will be marked as inactive.
+            Your new program will be created and set as your active program. If you have any other
+            active programs, they will be marked as inactive.
           </Typography>
           <TextField
             autoFocus
@@ -373,7 +378,9 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
             fullWidth
             variant="outlined"
             value={formData.numDaysPerWeek}
-            onChange={e => setFormData(prev => ({ ...prev, numDaysPerWeek: parseInt(e.target.value) || 4 }))}
+            onChange={e =>
+              setFormData(prev => ({ ...prev, numDaysPerWeek: parseInt(e.target.value) || 4 }))
+            }
             helperText="Number of training days per week (2, 3, or 4)"
           />
         </DialogContent>
@@ -409,7 +416,12 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
             fullWidth
             variant="outlined"
             value={formData.sessionTimeLengthInMinutes}
-            onChange={e => setFormData(prev => ({ ...prev, sessionTimeLengthInMinutes: parseInt(e.target.value) || 60 }))}
+            onChange={e =>
+              setFormData(prev => ({
+                ...prev,
+                sessionTimeLengthInMinutes: parseInt(e.target.value) || 60,
+              }))
+            }
             inputProps={{ min: 15, max: 300 }}
             helperText="Session duration in minutes (15-300)"
           />
@@ -419,7 +431,11 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           <Button
             onClick={handleUpdateSessionDuration}
             variant="contained"
-            disabled={!formData.sessionTimeLengthInMinutes || formData.sessionTimeLengthInMinutes < 15 || formData.sessionTimeLengthInMinutes > 300}
+            disabled={
+              !formData.sessionTimeLengthInMinutes ||
+              formData.sessionTimeLengthInMinutes < 15 ||
+              formData.sessionTimeLengthInMinutes > 300
+            }
           >
             Update Session Duration
           </Button>
@@ -463,7 +479,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         <DialogTitle>Resume Program</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to resume this program? Any other active programs will be marked as inactive.
+            Are you sure you want to resume this program? Any other active programs will be marked
+            as inactive.
           </Typography>
         </DialogContent>
         <DialogActions>

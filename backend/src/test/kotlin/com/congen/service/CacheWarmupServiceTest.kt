@@ -9,6 +9,7 @@ import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.MuscleDAL
 import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.SetSchemeDAL
@@ -16,7 +17,6 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
@@ -29,7 +29,6 @@ import com.congen.model.ExerciseWorkoutType
 import com.congen.model.MovementType
 import com.congen.model.Muscle
 import com.congen.model.User
-import com.congen.model.ProgramPreferences
 import com.congen.model.WorkoutStageType
 import com.congen.model.WorkoutStageTypeEnum
 import org.junit.jupiter.api.BeforeEach
@@ -496,15 +495,5 @@ class CacheWarmupServiceTest {
 
     private fun createMockUser(keycloakId: String): User {
         return User(keycloakId = keycloakId, name = "Test User $keycloakId", createdAt = Instant.now(), updatedAt = Instant.now())
-    }
-
-    private fun createMockProgramPreferences(programId: Long): ProgramPreferences {
-        return ProgramPreferences(
-            programId = programId,
-            programDaysPerWeek = 3,
-            sessionTimeLengthInMinutes = 60,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
     }
 }

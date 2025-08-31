@@ -2,16 +2,15 @@ package com.congen.service
 
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.exceptions.NoResultsFoundException
+import com.congen.model.ProgramWithWorkouts
 import com.congen.model.UserConsent
 import com.congen.model.UserDataExport
-import com.congen.model.ProgramWithWorkouts
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux

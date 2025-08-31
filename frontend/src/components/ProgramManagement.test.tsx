@@ -11,7 +11,7 @@ import type { User, Program, ProgrammedWorkout } from '../api/types';
 describe('ProgramManagement', () => {
   // Create a theme for testing
   const theme = createTheme();
-  
+
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
       <SnackbarProvider>
@@ -19,7 +19,7 @@ describe('ProgramManagement', () => {
       </SnackbarProvider>
     );
   };
-  
+
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'Test User',
@@ -64,8 +64,12 @@ describe('ProgramManagement', () => {
 
   it('renders loading state initially', async () => {
     // Use a delayed response to ensure loading state is visible
-    mock.onGet('/program/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
-    mock.onGet('/programmed_workout/').reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/program/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/programmed_workout/')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -97,11 +101,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -110,31 +114,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -198,16 +202,16 @@ describe('ProgramManagement', () => {
 
   it('creates a new program successfully', async () => {
     const newProgram = { ...mockProgram, id: 2, name: 'New Program' };
-    
+
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onPost('/program/').reply(200, newProgram);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -216,31 +220,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -271,11 +275,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -284,31 +288,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -325,16 +329,16 @@ describe('ProgramManagement', () => {
 
   it('updates a program successfully', async () => {
     const updatedProgram = { ...mockProgram, name: 'Updated Program' };
-    
+
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onPatch('/program/1').reply(200, updatedProgram);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -343,31 +347,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -398,11 +402,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -411,31 +415,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -454,12 +458,12 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onDelete('/program/1').reply(200, mockProgram);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -468,31 +472,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -516,11 +520,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -529,31 +533,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -607,11 +611,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -620,31 +624,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -662,11 +666,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -675,31 +679,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
@@ -714,11 +718,11 @@ describe('ProgramManagement', () => {
     // Mock user-related API calls from AuthContext
     mock.onGet('/user/me').reply(200, mockUser);
     mock.onPost('/user/').reply(200, mockUser);
-    
+
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
-    
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -727,31 +731,31 @@ describe('ProgramManagement', () => {
       programmed_exercises: [],
       set_schemes: [],
       user_one_rep_max: [],
-      user_weight_unit_preferences: []
+      user_weight_unit_preferences: [],
     });
-    
+
     // Fix: getUserWeightUnitPreferences needs user ID in URL
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    
+
     mock.onGet('/exercise_muscle/').reply(200, []);
-    
+
     mock.onGet('/exercise_equipment/').reply(200, []);
-    
+
     // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       name: 'Test Exercise',
       description: 'Test Description',
       movement_type: 'push',
       is_unilateral: false,
       is_upper: true,
-      is_accessory: false
+      is_accessory: false,
     });
-    
+
     // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^\/]+\/muscle$/).reply(200, []);
-    
-    // Fix: getExerciseEquipment needs exercise name in URL  
-    mock.onGet(/\/exercise\/[^\/]+\/equipment$/).reply(200, []);
+    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
+
+    // Fix: getExerciseEquipment needs exercise name in URL
+    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);

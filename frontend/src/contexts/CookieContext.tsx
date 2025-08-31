@@ -62,19 +62,18 @@ export const CookieProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return consent !== null;
   }, [consent]);
 
-  const value = React.useMemo(() => ({
-    consent,
-    hasConsented,
-    setConsent,
-    acceptAll,
-    rejectAll,
-  }), [consent, hasConsented, setConsent, acceptAll, rejectAll]);
-
-  return (
-    <CookieContext.Provider value={value}>
-      {children}
-    </CookieContext.Provider>
+  const value = React.useMemo(
+    () => ({
+      consent,
+      hasConsented,
+      setConsent,
+      acceptAll,
+      rejectAll,
+    }),
+    [consent, hasConsented, setConsent, acceptAll, rejectAll]
   );
+
+  return <CookieContext.Provider value={value}>{children}</CookieContext.Provider>;
 };
 
 export const useCookie = (): CookieContextType => {

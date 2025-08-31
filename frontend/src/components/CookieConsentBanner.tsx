@@ -1,4 +1,5 @@
-import * as React from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InfoIcon from '@mui/icons-material/Info';
 import {
   Box,
   Button,
@@ -12,9 +13,8 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import InfoIcon from '@mui/icons-material/Info';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import * as React from 'react';
+
 import { useCookie } from '../contexts/CookieContext';
 
 interface CookieConsentBannerProps {
@@ -51,33 +51,31 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
     >
       <CardContent sx={{ p: 3 }}>
         <Stack spacing={2}>
-                          {/* Header */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <InfoIcon
-                    sx={{
-                      color: 'primary.main',
-                      fontSize: 24,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <Typography variant="h6" component="h2">
-                    Cookie Notice
-                  </Typography>
-                </Box>
-                <Typography variant="caption" color="text.secondary" sx={{ mt: -1, mb: 2 }}>
-                  We use essential cookies to ensure our website functions properly, including authentication and security features.
-                </Typography>
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <InfoIcon
+              sx={{
+                color: 'primary.main',
+                fontSize: 24,
+                flexShrink: 0,
+              }}
+            />
+            <Typography variant="h6" component="h2">
+              Cookie Notice
+            </Typography>
+          </Box>
+          <Typography variant="caption" color="text.secondary" sx={{ mt: -1, mb: 2 }}>
+            We use essential cookies to ensure our website functions properly, including
+            authentication and security features.
+          </Typography>
 
           {/* Cookie Information */}
           <Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}
+            >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Chip
-                  label="Essential"
-                  size="small"
-                  color="success"
-                  variant="outlined"
-                />
+                <Chip label="Essential" size="small" color="success" variant="outlined" />
                 <Typography variant="subtitle2">Authentication Cookies</Typography>
               </Box>
               <IconButton
@@ -91,12 +89,12 @@ export const CookieConsentBanner: React.FC<CookieConsentBannerProps> = ({ onClos
                 <ExpandMoreIcon />
               </IconButton>
             </Box>
-                            <Collapse in={expanded}>
-                  <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
-                    These cookies are essential for the website to function properly. 
-                    They enable secure authentication and maintain your login session.
-                  </Typography>
-                </Collapse>
+            <Collapse in={expanded}>
+              <Typography variant="caption" color="text.secondary" sx={{ mb: 2 }}>
+                These cookies are essential for the website to function properly. They enable secure
+                authentication and maintain your login session.
+              </Typography>
+            </Collapse>
           </Box>
 
           {/* Action */}

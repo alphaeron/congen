@@ -19,9 +19,7 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { getUserDataExport } from '../api/gdpr';
-import type { 
-  UserDataExport
-} from '../api/types';
+import type { UserDataExport } from '../api/types';
 
 interface WorkoutDetailProps {
   workoutId: number;

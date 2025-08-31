@@ -8,8 +8,8 @@ import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
-import com.congen.model.ProgramWithWorkouts
 import com.congen.model.ProgramPreferences
+import com.congen.model.ProgramWithWorkouts
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedExerciseWithSetSchemes
 import com.congen.model.ProgrammedWorkout
@@ -171,7 +171,7 @@ class ProgramDAL(
 
         return postgresClient.select<Map<String, Any>>(
             """
-            SELECT 
+            SELECT
                 p.id as program_id,
                 p.user_id as program_user_id,
                 p.name as program_name,
@@ -249,8 +249,13 @@ class ProgramDAL(
                                     id = programId,
                                     userId = row["program_user_id"] as String,
                                     name = row["program_name"] as String,
-                                    currentWeekNumber = (row["program_current_week_number"] as? Number)?.toInt() ?: throw IllegalStateException("program_current_week_number is null"),
-                                    isActive = (row["program_is_active"] as? Boolean) ?: throw IllegalStateException("program_is_active is null"),
+                                    currentWeekNumber =
+                                        (row["program_current_week_number"] as? Number)?.toInt()
+                                            ?: throw IllegalStateException("program_current_week_number is null"),
+                                    isActive =
+                                        (row["program_is_active"] as? Boolean) ?: throw IllegalStateException(
+                                            "program_is_active is null"
+                                        ),
                                     createdAt = parseTimestamp(row["program_created_at"]),
                                     updatedAt = parseTimestamp(row["program_updated_at"])
                                 ),
@@ -259,8 +264,14 @@ class ProgramDAL(
                                     programId = programId,
                                     programDaysPerWeek = (row["program_preferences_days_per_week"] as? Number)?.toInt() ?: 4,
                                     sessionTimeLengthInMinutes = (row["program_preferences_session_time"] as? Number)?.toInt() ?: 60,
-                                    createdAt = parseTimestamp(row["program_preferences_created_at"]) ?: parseTimestamp(row["program_created_at"]),
-                                    updatedAt = parseTimestamp(row["program_preferences_updated_at"]) ?: parseTimestamp(row["program_updated_at"])
+                                    createdAt =
+                                        parseTimestamp(
+                                            row["program_preferences_created_at"]
+                                        ) ?: parseTimestamp(row["program_created_at"]),
+                                    updatedAt =
+                                        parseTimestamp(
+                                            row["program_preferences_updated_at"]
+                                        ) ?: parseTimestamp(row["program_updated_at"])
                                 ),
                             "workouts" to mutableMapOf<Long, MutableMap<String, Any>>()
                         )
@@ -277,7 +288,10 @@ class ProgramDAL(
                                 ProgrammedWorkout(
                                     id = workoutId,
                                     programId = row["workout_program_id"] as Long,
-                                    dayNumber = (row["workout_day_number"] as? Number)?.toInt() ?: throw IllegalStateException("workout_day_number is null"),
+                                    dayNumber =
+                                        (row["workout_day_number"] as? Number)?.toInt() ?: throw IllegalStateException(
+                                            "workout_day_number is null"
+                                        ),
                                     name = row["workout_name"] as String,
                                     createdAt = parseTimestamp(row["workout_created_at"]),
                                     updatedAt = parseTimestamp(row["workout_updated_at"])
@@ -298,8 +312,14 @@ class ProgramDAL(
                                     WorkoutStage(
                                         id = stageId,
                                         programmedWorkoutId = row["stage_programmed_workout_id"] as Long,
-                                        stageTypeId = (row["stage_stage_type_id"] as? Number)?.toInt() ?: throw IllegalStateException("stage_stage_type_id is null"),
-                                        position = (row["stage_position"] as? Number)?.toInt() ?: throw IllegalStateException("stage_position is null"),
+                                        stageTypeId =
+                                            (row["stage_stage_type_id"] as? Number)?.toInt() ?: throw IllegalStateException(
+                                                "stage_stage_type_id is null"
+                                            ),
+                                        position =
+                                            (row["stage_position"] as? Number)?.toInt() ?: throw IllegalStateException(
+                                                "stage_position is null"
+                                            ),
                                         name = row["stage_name"] as String,
                                         createdAt = parseTimestamp(row["stage_created_at"]),
                                         updatedAt = parseTimestamp(row["stage_updated_at"])
@@ -321,7 +341,10 @@ class ProgramDAL(
                                             id = exerciseId,
                                             workoutStageId = row["exercise_workout_stage_id"] as Long,
                                             exerciseName = row["exercise_exercise_name"] as String,
-                                            position = (row["exercise_position"] as? Number)?.toInt() ?: throw IllegalStateException("exercise_position is null"),
+                                            position =
+                                                (row["exercise_position"] as? Number)?.toInt() ?: throw IllegalStateException(
+                                                    "exercise_position is null"
+                                                ),
                                             notes = row["exercise_notes"] as String?,
                                             createdAt = parseTimestamp(row["exercise_created_at"]),
                                             updatedAt = parseTimestamp(row["exercise_updated_at"])
@@ -339,10 +362,22 @@ class ProgramDAL(
                                 SetScheme(
                                     id = setSchemeId,
                                     programmedExerciseId = row["set_scheme_programmed_exercise_id"] as Long,
-                                    setNumber = (row["set_scheme_set_number"] as? Number)?.toInt() ?: throw IllegalStateException("set_scheme_set_number is null"),
-                                    isAmrap = (row["set_scheme_is_amrap"] as? Boolean) ?: throw IllegalStateException("set_scheme_is_amrap is null"),
-                                    isEmom = (row["set_scheme_is_emom"] as? Boolean) ?: throw IllegalStateException("set_scheme_is_emom is null"),
-                                    useTempo = (row["set_scheme_use_tempo"] as? Boolean) ?: throw IllegalStateException("set_scheme_use_tempo is null"),
+                                    setNumber =
+                                        (row["set_scheme_set_number"] as? Number)?.toInt() ?: throw IllegalStateException(
+                                            "set_scheme_set_number is null"
+                                        ),
+                                    isAmrap =
+                                        (row["set_scheme_is_amrap"] as? Boolean) ?: throw IllegalStateException(
+                                            "set_scheme_is_amrap is null"
+                                        ),
+                                    isEmom =
+                                        (row["set_scheme_is_emom"] as? Boolean) ?: throw IllegalStateException(
+                                            "set_scheme_is_emom is null"
+                                        ),
+                                    useTempo =
+                                        (row["set_scheme_use_tempo"] as? Boolean) ?: throw IllegalStateException(
+                                            "set_scheme_use_tempo is null"
+                                        ),
                                     eccentricTempo = row["set_scheme_eccentric_tempo"] as String?,
                                     isometricTempo = row["set_scheme_isometric_tempo"] as String?,
                                     concentricTempo = row["set_scheme_concentric_tempo"] as String?,
@@ -351,7 +386,8 @@ class ProgramDAL(
                                     targetRepCount = (row["set_scheme_target_rep_count"] as? Number)?.toInt(),
                                     performedRepCount = (row["set_scheme_performed_rep_count"] as? Number)?.toInt(),
                                     restSeconds = (row["set_scheme_rest_seconds"] as? Number)?.toInt(),
-                                    band = null, // Set schemes don't have band data in this context
+                                    // Set schemes don't have band data in this context
+                                    band = null,
                                     createdAt = parseTimestamp(row["set_scheme_created_at"]),
                                     updatedAt = parseTimestamp(row["set_scheme_updated_at"])
                                 )

@@ -4,7 +4,6 @@ import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgramPreferencesDAL
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.Program
-import com.congen.model.ProgramPreferences
 import com.congen.model.ProgramWithPreferences
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono

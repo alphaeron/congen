@@ -9,6 +9,7 @@ import com.congen.dal.ExerciseWorkoutTypeDAL
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.MuscleDAL
 import com.congen.dal.ProgramDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
 import com.congen.dal.SetSchemeDAL
@@ -16,7 +17,6 @@ import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeakMuscleDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL

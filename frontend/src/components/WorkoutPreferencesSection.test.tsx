@@ -70,7 +70,9 @@ describe('WorkoutPreferencesSection', () => {
 
     // Then check for the content
     expect(screen.getAllByText('Weight Unit Preferences')).toHaveLength(2); // Main heading and card heading
-    expect(screen.getByText('Set your preferred weight units for specific exercises.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Set your preferred weight units for specific exercises.')
+    ).toBeInTheDocument();
   });
 
   it('should show add preference button for weight units', async () => {

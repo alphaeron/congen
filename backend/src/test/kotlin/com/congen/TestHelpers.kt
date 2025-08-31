@@ -2,16 +2,12 @@ package com.congen
 
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
-import com.congen.dal.ProgrammedExerciseDAL
-import com.congen.dal.ProgrammedWorkoutDAL
-import com.congen.dal.SetSchemeDAL
+import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.dal.UserOneRepMaxDAL
-import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
-import com.congen.dal.WorkoutStageDAL
 import com.congen.generator.DayTemplate
 import com.congen.generator.PrilepinGuidelines
 import com.congen.generator.SetSchemeParams
@@ -28,6 +24,7 @@ import com.congen.model.HealthStatus
 import com.congen.model.MovementType
 import com.congen.model.Muscle
 import com.congen.model.Program
+import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedExercise
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.SetScheme
@@ -35,7 +32,6 @@ import com.congen.model.User
 import com.congen.model.UserEquipment
 import com.congen.model.UserExercisePreference
 import com.congen.model.UserOneRepMax
-import com.congen.model.ProgramPreferences
 import com.congen.model.UserWeightUnitPreference
 import com.congen.model.WeightUnit
 import com.congen.model.WorkoutStage

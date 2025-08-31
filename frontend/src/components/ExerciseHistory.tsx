@@ -1,7 +1,6 @@
+import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
 import { default as InfoIcon } from '@mui/icons-material/Info';
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import {
   Box,
   Card,
@@ -23,12 +22,23 @@ import { useSearchParams } from 'react-router';
 import { RadialBarChart } from './RadialBarChart';
 import { SunburstChart } from './SunburstChart';
 import { getExercises } from '../api/exercise';
-import { getUserDataExport } from '../api/gdpr';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
-import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
-import type { User, UserOneRepMax, Exercise, ExerciseMuscle } from '../api/types';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
+import { getUserDataExport } from '../api/gdpr';
+import type {
+  User,
+  UserOneRepMax,
+  Exercise,
+  ExerciseMuscle,
+  UserDataExport,
+  ProgramWithWorkouts,
+  ProgrammedWorkoutWithStages,
+  WorkoutStageWithExercises,
+  ProgrammedExerciseWithSetSchemes,
+  SetScheme,
+} from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
+import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 
 interface ExerciseHistoryProps {
   user: User;
@@ -53,8 +63,10 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const [selectedExercise, setSelectedExercise] = useState<string>('all');
   const [allExercises, setAllExercises] = useState<Exercise[]>([]);
   const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
-  const [workoutData, setWorkoutData] = useState<any>(null);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
+  const [workoutData, setWorkoutData] = useState<UserDataExport | null>(null);
 
   // Get active tab from URL parameters, default to 'onerepmax'
   const activeTab = (searchParams.get('tab') as TabName) || 'onerepmax';
@@ -74,7 +86,13 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
     try {
       setIsLoading(true);
 
-      const [oneRepMaxesData, allExercisesData, exerciseMuscleData, weightUnitPreferencesData, userDataExport] = await Promise.all([
+      const [
+        oneRepMaxesData,
+        allExercisesData,
+        exerciseMuscleData,
+        weightUnitPreferencesData,
+        userDataExport,
+      ] = await Promise.all([
         getUserOneRepMaxes(user.keycloak_id),
         getExercises(),
         getExerciseMuscle(),
@@ -84,7 +102,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
 
       setOneRepMaxes(oneRepMaxesData);
       setAllExercises(allExercisesData);
-      
+
       // Convert exercise muscle data to Map
       const muscleMap = new Map<string, string[]>();
       exerciseMuscleData.forEach((item: ExerciseMuscle) => {
@@ -93,7 +111,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
         muscleMap.set(item.exercise_name, existing);
       });
       setExerciseMuscleData(muscleMap);
-      
+
       setWeightUnitPreferences(weightUnitPreferencesData.data || []);
       setWorkoutData(userDataExport);
     } catch {
@@ -123,59 +141,70 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const convertWeightToUserUnit = (weight: number, exerciseName: string): number => {
     const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
     const userUnit = preference?.preferred_unit || WeightUnit.LBS;
-    
+
     if (userUnit === WeightUnit.LBS) {
       return weight;
     } else if (userUnit === WeightUnit.KG) {
       return weight * 0.453592;
     }
-    
+
     return weight;
   };
 
   // Create exerciseMap from workout data for volume and frequency calculations
   const exerciseMap = useMemo(() => {
-    const map = new Map<string, { totalVolume: number; frequency: number; lastPerformed: string | null }>();
+    const map = new Map<
+      string,
+      { totalVolume: number; frequency: number; lastPerformed: string | null }
+    >();
 
     if (!workoutData?.training_programs) return map;
 
-    workoutData.training_programs.forEach((program: any) => {
-      program.workouts?.forEach((workout: any) => {
-        workout.stages?.forEach((stage: any) => {
-          stage.exercises?.forEach((exercise: any) => {
+    workoutData.training_programs.forEach((program: ProgramWithWorkouts) => {
+      program.workouts?.forEach((workout: ProgrammedWorkoutWithStages) => {
+        workout.stages?.forEach((stage: WorkoutStageWithExercises) => {
+          stage.exercises?.forEach((exercise: ProgrammedExerciseWithSetSchemes) => {
             const exerciseName = exercise.exercise.exercise_name;
-            const existing = map.get(exerciseName) || { totalVolume: 0, frequency: 0, lastPerformed: null };
-            
+            const existing = map.get(exerciseName) || {
+              totalVolume: 0,
+              frequency: 0,
+              lastPerformed: null,
+            };
+
             // Calculate volume from set schemes with weight unit conversion
             let exerciseVolume = 0;
-            exercise.set_schemes?.forEach((setScheme: any) => {
+            exercise.set_schemes?.forEach((setScheme: SetScheme) => {
               // Use performed values if available, otherwise use target values
               const weight = setScheme.performed_weight || setScheme.target_weight;
               const reps = setScheme.performed_rep_count || setScheme.target_rep_count;
-              
+
               if (weight && reps) {
                 const convertedWeight = convertWeightToUserUnit(weight, exerciseName);
                 exerciseVolume += convertedWeight * reps;
               }
             });
-            
+
             existing.totalVolume += exerciseVolume;
             // Count frequency if there are any set schemes (programmed or performed)
             if (exercise.set_schemes && exercise.set_schemes.length > 0) {
               existing.frequency += 1;
             }
-            
+
             // Update last performed date
-            if (!existing.lastPerformed || (workout.workout.created_at && new Date(workout.workout.created_at) > new Date(existing.lastPerformed))) {
+            if (
+              !existing.lastPerformed ||
+              (workout.workout.created_at &&
+                new Date(workout.workout.created_at) > new Date(existing.lastPerformed))
+            ) {
               existing.lastPerformed = workout.workout.created_at;
             }
-            
+
             map.set(exerciseName, existing);
           });
         });
       });
     });
-    
+
     return map;
   }, [workoutData, weightUnitPreferences]);
 
@@ -201,25 +230,27 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const radialBarData = useMemo(() => {
     if (!exerciseStats.length) return [];
 
-    return exerciseStats.map(exercise => {
-      return {
-        id: exercise.name,
-        data: [
-          {
-            x: 'Volume',
-            y: exercise.totalVolume,
-          },
-          {
-            x: 'Frequency',
-            y: exercise.frequency,
-          },
-          {
-            x: '1RM Weight',
-            y: exercise.oneRepMax?.one_rep_max || 0,
-          },
-        ],
-      };
-    }).slice(0, 10); // Top 10 exercises
+    return exerciseStats
+      .map(exercise => {
+        return {
+          id: exercise.name,
+          data: [
+            {
+              x: 'Volume',
+              y: exercise.totalVolume,
+            },
+            {
+              x: 'Frequency',
+              y: exercise.frequency,
+            },
+            {
+              x: '1RM Weight',
+              y: exercise.oneRepMax?.one_rep_max || 0,
+            },
+          ],
+        };
+      })
+      .slice(0, 10); // Top 10 exercises
   }, [exerciseStats]);
 
   const sunburstData = useMemo(() => {
@@ -232,11 +263,14 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
 
     // Build the Nivo data structure following the correct pattern
     // Group exercises by muscle groups to avoid duplicates
-    const muscleGroups = new Map<string, { name: string; children: Array<{ name: string; loc: number }> }>();
+    const muscleGroups = new Map<
+      string,
+      { name: string; children: Array<{ name: string; loc: number }> }
+    >();
 
     exerciseStats.forEach(exercise => {
       const individualMuscles = exerciseMuscleData.get(exercise.name) || [];
-      
+
       // If no muscle data, create a default group
       if (individualMuscles.length === 0) {
         const defaultGroup = muscleGroups.get('Other') || { name: 'Other', children: [] };
@@ -250,13 +284,14 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
         // by combining exercise name with muscle group
         individualMuscles.forEach(muscle => {
           const existing = muscleGroups.get(muscle);
-          const uniqueExerciseName = individualMuscles.length > 1 
-            ? `${exercise.name} (${muscle})` 
-            : exercise.name;
-          
+          const uniqueExerciseName =
+            individualMuscles.length > 1 ? `${exercise.name} (${muscle})` : exercise.name;
+
           if (existing) {
             // Check if this exercise already exists in this muscle group
-            const existingExercise = existing.children.find(child => child.name === uniqueExerciseName);
+            const existingExercise = existing.children.find(
+              child => child.name === uniqueExerciseName
+            );
             if (existingExercise) {
               existingExercise.loc += exercise.totalVolume;
             } else {
@@ -268,10 +303,12 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           } else {
             muscleGroups.set(muscle, {
               name: muscle,
-              children: [{
-                name: uniqueExerciseName,
-                loc: exercise.totalVolume,
-              }],
+              children: [
+                {
+                  name: uniqueExerciseName,
+                  loc: exercise.totalVolume,
+                },
+              ],
             });
           }
         });

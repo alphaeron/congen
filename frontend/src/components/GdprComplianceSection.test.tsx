@@ -12,7 +12,7 @@ import type { UserConsent } from '../api/types';
 describe('GdprComplianceSection', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
-  
+
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
       <SnackbarProvider>
@@ -20,7 +20,7 @@ describe('GdprComplianceSection', () => {
       </SnackbarProvider>
     );
   };
-  
+
   const mockConsentStatus: UserConsent = {
     keycloak_id: 'test-user-123',
     data_processing_consent: true,
@@ -70,7 +70,7 @@ describe('GdprComplianceSection', () => {
     mock.onPost('/gdpr/consent').reply(200, { success: true, message: 'Consent withdrawn' });
 
     const user = userEvent.setup();
-    
+
     await act(async () => {
       renderWithProviders(<GdprComplianceSection />);
     });
@@ -101,7 +101,7 @@ describe('GdprComplianceSection', () => {
     mock.onDelete('/gdpr/delete_all_data').reply(200, { success: true, message: 'Data deleted' });
 
     const user = userEvent.setup();
-    
+
     await act(async () => {
       renderWithProviders(<GdprComplianceSection />);
     });
@@ -178,7 +178,7 @@ describe('GdprComplianceSection', () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 
     const user = userEvent.setup();
-    
+
     await act(async () => {
       renderWithProviders(<GdprComplianceSection />);
     });

@@ -5,9 +5,9 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
+import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.ProgramPreferences
 import com.congen.service.SetSchemeService
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono

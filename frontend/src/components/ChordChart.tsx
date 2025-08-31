@@ -1,11 +1,5 @@
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  useTheme,
-} from '@mui/material';
+import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveChord } from '@nivo/chord';
 import React from 'react';
 
@@ -29,12 +23,12 @@ interface ChordChartProps {
  * @param height Optional height for the chart container
  * @return Chord Chart component
  */
-export const ChordChart: React.FC<ChordChartProps> = ({ 
-  matrix, 
+export const ChordChart: React.FC<ChordChartProps> = ({
+  matrix,
   keys,
-  title = "Exercise Correlations",
-  description = "Exercise pairing patterns in your workouts",
-  height = 400
+  title = 'Exercise Correlations',
+  description = 'Exercise pairing patterns in your workouts',
+  height = 400,
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);

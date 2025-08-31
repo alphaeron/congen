@@ -1,29 +1,38 @@
+import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 import { Box, useTheme, Typography, IconButton } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState } from 'react';
-import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 // Custom layer to display total volume in the center
-const CenterMetric = (props: any) => {
+interface CenterMetricProps {
+  centerX: number;
+  centerY: number;
+  data: SunburstData;
+}
+
+const CenterMetric = (props: CenterMetricProps) => {
   const theme = useTheme();
   const { centerX, centerY, data } = props;
-  
+
   // Calculate total volume from current data
-  const calculateTotalVolume = (node: any): number => {
+  const calculateTotalVolume = (node: SunburstData): number => {
     if (!node) return 0;
     if (node.children && node.children.length > 0) {
-      return node.children.reduce((sum: number, child: any) => sum + calculateTotalVolume(child), 0);
+      return node.children.reduce(
+        (sum: number, child: SunburstData) => sum + calculateTotalVolume(child),
+        0
+      );
     }
     return node.loc || 0;
   };
-  
+
   const totalVolume = calculateTotalVolume(data);
-  
+
   console.log('CenterMetric - data:', data);
   console.log('CenterMetric - totalVolume:', totalVolume);
-  
+
   return (
     <g transform={`translate(${centerX},${centerY})`}>
       <circle
@@ -82,7 +91,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({ data }) => {
   const [currentData, setCurrentData] = useState<SunburstData>(data);
 
   // Handle click on sunburst segments
-  const handleArcClick = (node: any) => {
+  const handleArcClick = (node: { data?: SunburstData }) => {
     console.log('Arc clicked:', node);
     if (node.data?.children && node.data.children.length > 0) {
       setCurrentData(node.data);
@@ -98,11 +107,7 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({ data }) => {
     <Box>
       {/* Navigation */}
       <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <IconButton 
-          onClick={handleHomeClick}
-          size="small"
-          title="Reset chart"
-        >
+        <IconButton onClick={handleHomeClick} size="small" title="Reset chart">
           <RefreshIcon />
         </IconButton>
         <Typography variant="body2" color="text.secondary">
@@ -132,7 +137,13 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({ data }) => {
           }}
           theme={nivoTheme}
           onClick={handleArcClick}
-          layers={['arcs', 'arcLabels', (props: any) => <CenterMetric {...props} data={currentData} />]}
+          layers={[
+            'arcs',
+            'arcLabels',
+            (props: { centerX: number; centerY: number }) => (
+              <CenterMetric {...props} data={currentData} />
+            ),
+          ]}
         />
       </Box>
     </Box>

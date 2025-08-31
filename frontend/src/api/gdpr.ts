@@ -35,15 +35,15 @@ export async function exportUserData(): Promise<AxiosResponse<UserDataExport>> {
 
 /**
  * Fetches complete user data export including all workout data.
- * 
+ *
  * This endpoint returns all user data in a single call, including:
  * - Training programs with complete workout hierarchy
  * - Workout stages with exercises and set schemes
  * - One-rep max records
  * - User preferences
- * 
+ *
  * This is much more efficient than making separate API calls for each workout.
- * 
+ *
  * @returns Promise containing complete user data export
  */
 export const getUserDataExport = async (): Promise<UserDataExport> => {

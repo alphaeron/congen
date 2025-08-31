@@ -8,10 +8,25 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
 // Mock Nivo charts to avoid rendering issues in tests
+interface LineChartData {
+  id: string;
+  data: Array<{ x: number; y: number }>;
+}
+
+interface PieChartData {
+  id: string;
+  value: number;
+}
+
+interface ChordChartData {
+  data: unknown[];
+  keys?: string[];
+}
+
 jest.mock('@nivo/line', () => ({
-  ResponsiveLine: ({ data }: any) => (
+  ResponsiveLine: ({ data }: { data: LineChartData[] }) => (
     <div data-testid="line-chart">
-      {data.map((series: any) => (
+      {data.map((series: LineChartData) => (
         <div key={series.id} data-testid={`line-series-${series.id}`}>
           {series.data.length} points
         </div>
@@ -21,9 +36,9 @@ jest.mock('@nivo/line', () => ({
 }));
 
 jest.mock('@nivo/pie', () => ({
-  ResponsivePie: ({ data }: any) => (
+  ResponsivePie: ({ data }: { data: PieChartData[] }) => (
     <div data-testid="pie-chart">
-      {data.map((item: any) => (
+      {data.map((item: PieChartData) => (
         <div key={item.id} data-testid={`pie-item-${item.id}`}>
           {item.value}
         </div>
@@ -33,10 +48,8 @@ jest.mock('@nivo/pie', () => ({
 }));
 
 jest.mock('@nivo/chord', () => ({
-  ResponsiveChord: ({ data, keys }: any) => (
-    <div data-testid="chord-chart">
-      {keys?.length || 0} keys
-    </div>
+  ResponsiveChord: ({ keys }: ChordChartData) => (
+    <div data-testid="chord-chart">{keys?.length || 0} keys</div>
   ),
 }));
 
@@ -97,9 +110,9 @@ describe('ConjugateProgression', () => {
       user_weight_unit_preferences: [],
       training_programs: [],
       audit_logs: [],
-      data_retention_policies: []
+      data_retention_policies: [],
     });
-    mock.onGet(/\/exercise\/[^\/]+$/).reply(200, {});
+    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {});
 
     await act(async () => {
       renderWithProviders(<ConjugateProgression user={mockUser} />);
@@ -108,7 +121,9 @@ describe('ConjugateProgression', () => {
     // Check that the component shows the empty state message
     await waitFor(() => {
       expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
-      expect(screen.getByText(/Complete your first workout to see progress statistics and correlations/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Complete your first workout to see progress statistics and correlations/)
+      ).toBeInTheDocument();
     });
   });
 });

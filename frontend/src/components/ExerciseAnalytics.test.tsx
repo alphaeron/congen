@@ -8,10 +8,19 @@ import { ENDPOINT } from '../api/endpoint';
 import type { User } from '../api/types';
 
 // Mock Nivo charts to avoid rendering issues in tests
+interface RadialBarData {
+  id: string;
+  data: Array<{ x: number; y: number }>;
+}
+
+interface ChartData {
+  children?: Array<{ id: string }>;
+}
+
 jest.mock('@nivo/radial-bar', () => ({
-  ResponsiveRadialBar: ({ data }: any) => (
+  ResponsiveRadialBar: ({ data }: { data: RadialBarData[] }) => (
     <div data-testid="radial-bar-chart">
-      {data.map((series: any) => (
+      {data.map((series: RadialBarData) => (
         <div key={series.id} data-testid={`radial-series-${series.id}`}>
           {series.data.length} points
         </div>
@@ -21,26 +30,20 @@ jest.mock('@nivo/radial-bar', () => ({
 }));
 
 jest.mock('@nivo/sunburst', () => ({
-  ResponsiveSunburst: ({ data }: any) => (
-    <div data-testid="sunburst-chart">
-      {data.children?.length || 0} children
-    </div>
+  ResponsiveSunburst: ({ data }: { data: ChartData }) => (
+    <div data-testid="sunburst-chart">{data.children?.length || 0} children</div>
   ),
 }));
 
 jest.mock('@nivo/treemap', () => ({
-  ResponsiveTreeMap: ({ data }: any) => (
-    <div data-testid="treemap-chart">
-      {data.children?.length || 0} items
-    </div>
+  ResponsiveTreeMap: ({ data }: { data: ChartData }) => (
+    <div data-testid="treemap-chart">{data.children?.length || 0} items</div>
   ),
 }));
 
 jest.mock('@nivo/icicle', () => ({
-  ResponsiveIcicle: ({ data }: any) => (
-    <div data-testid="icicle-chart">
-      {data.children?.length || 0} children
-    </div>
+  ResponsiveIcicle: ({ data }: { data: ChartData }) => (
+    <div data-testid="icicle-chart">{data.children?.length || 0} children</div>
   ),
 }));
 
@@ -101,7 +104,9 @@ describe('ExerciseAnalytics', () => {
     // Check that the component shows the empty state message
     await waitFor(() => {
       expect(screen.getByText('Exercise Analytics')).toBeInTheDocument();
-      expect(screen.getByText(/Complete your first workout to see exercise analytics and insights/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Complete your first workout to see exercise analytics and insights/)
+      ).toBeInTheDocument();
     });
   });
 });

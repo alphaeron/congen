@@ -402,7 +402,6 @@ object IntegrationTestHelpers {
     fun createAllReferenceDataForUser(
         webTestClient: WebTestClient,
         keycloakId: String,
-        programDaysPerWeek: Int = 3,
         token: String? = null
     ) {
         // Create user equipment (bench and power bar)

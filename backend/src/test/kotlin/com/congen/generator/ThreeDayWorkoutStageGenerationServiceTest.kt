@@ -7,9 +7,9 @@ import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
 import com.congen.model.Exercise
 import com.congen.model.MovementType
+import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
-import com.congen.model.ProgramPreferences
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

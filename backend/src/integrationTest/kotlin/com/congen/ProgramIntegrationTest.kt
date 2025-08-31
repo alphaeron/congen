@@ -321,7 +321,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Create a single program (should be active by default)
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Single Program", token = token)
-        
+
         // Verify the program is active
         webTestClient.get()
             .uri("/api/v1/program/user/$userId?is_active=true")
@@ -382,9 +382,16 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
 
         // Create first program (should be active by default)
         val programId1 = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "First Program", token = token)
-        
+
         // Create second program as active (should deactivate the first one)
-        val secondProgramId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Second Program", token = token, isActive = true)
+        val secondProgramId =
+            IntegrationTestHelpers.createTestProgram(
+                webTestClient,
+                userId,
+                "Second Program",
+                token = token,
+                isActive = true
+            )
 
         // Verify the first program is inactive and the second program is active
         webTestClient.get()

@@ -1,10 +1,7 @@
 import MockAdapter from 'axios-mock-adapter';
 
 import { ENDPOINT } from './endpoint';
-import {
-  getProgramPreferences,
-  updateProgramPreferences,
-} from './programPreferences';
+import { getProgramPreferences, updateProgramPreferences } from './programPreferences';
 import type { ProgramPreferences } from './types';
 
 // Create axios mock adapter for the ENDPOINT instance

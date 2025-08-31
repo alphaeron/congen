@@ -1,4 +1,5 @@
 import { brand, secondary, gray, green, warning } from '../theme';
+
 import type { PaletteMode } from '@mui/material';
 
 /**
@@ -8,12 +9,12 @@ import type { PaletteMode } from '@mui/material';
  */
 export function createCongenNivoTheme(mode: PaletteMode) {
   const isDark = mode === 'dark';
-  
+
   return {
     // Typography - matches Congen's font system
     fontSize: 12,
     fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    
+
     // Colors - using Congen's brand colors with better contrast
     text: {
       fontSize: 12,
@@ -21,7 +22,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
       outlineWidth: 0,
       outlineColor: 'transparent',
     },
-    
+
     // Axes styling - clean and modern with better contrast
     axis: {
       domain: {
@@ -53,7 +54,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         },
       },
     },
-    
+
     // Grid styling
     grid: {
       line: {
@@ -62,7 +63,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         strokeDasharray: '4 4',
       },
     },
-    
+
     // Legends - clean and readable with better contrast
     legends: {
       text: {
@@ -75,7 +76,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         fontWeight: 500,
       },
     },
-    
+
     // Labels styling with better contrast
     labels: {
       text: {
@@ -86,7 +87,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         fontWeight: 500,
       },
     },
-    
+
     // Markers styling
     markers: {
       lineColor: isDark ? gray[600] : gray[300],
@@ -100,7 +101,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         outlineOpacity: 0,
       },
     },
-    
+
     // Dots styling
     dots: {
       text: {
@@ -112,7 +113,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         outlineOpacity: 0,
       },
     },
-    
+
     // Tooltip styling with better visibility and overflow handling
     tooltip: {
       container: {
@@ -120,9 +121,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         color: isDark ? gray[100] : gray[900],
         fontSize: 12,
         borderRadius: 8,
-        boxShadow: isDark 
-          ? '0 4px 12px rgba(0, 0, 0, 0.3)' 
-          : '0 4px 12px rgba(0, 0, 0, 0.15)',
+        boxShadow: isDark ? '0 4px 12px rgba(0, 0, 0, 0.3)' : '0 4px 12px rgba(0, 0, 0, 0.15)',
         border: `1px solid ${isDark ? gray[600] : gray[300]}`,
         padding: '8px 12px',
         maxWidth: 400,
@@ -132,7 +131,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
         zIndex: 9999,
       },
     },
-    
+
     // Crosshair styling
     crosshair: {
       line: {
@@ -154,35 +153,35 @@ export const congenNivoTheme = createCongenNivoTheme('dark');
 export const congenColorSchemes = {
   // Strength-focused color scheme
   strength: [
-    brand[500],    // Primary brand color
+    brand[500], // Primary brand color
     secondary[500], // Secondary color
-    green[500],    // Success green
-    warning[500],  // Warning orange
-    gray[600],     // Neutral gray
-    brand[300],    // Light brand
+    green[500], // Success green
+    warning[500], // Warning orange
+    gray[600], // Neutral gray
+    brand[300], // Light brand
     secondary[300], // Light secondary
-    green[300],    // Light green
+    green[300], // Light green
   ],
-  
+
   // Hierarchical color scheme for nested structures
   hierarchical: [
-    brand[600],    // Dark primary for root
-    brand[500],    // Primary for level 1
-    brand[400],    // Medium for level 2
-    brand[300],    // Light for level 3
+    brand[600], // Dark primary for root
+    brand[500], // Primary for level 1
+    brand[400], // Medium for level 2
+    brand[300], // Light for level 3
     secondary[600], // Dark secondary for variety
     secondary[500], // Secondary for level 1
     secondary[400], // Medium secondary for level 2
     secondary[300], // Light secondary for level 3
   ],
-  
+
   // Exercise category colors
   exercise: {
-    compound: brand[500],     // Compound lifts
+    compound: brand[500], // Compound lifts
     accessory: secondary[500], // Accessory work
-    cardio: green[500],       // Cardio
-    mobility: warning[500],   // Mobility/flexibility
-    other: gray[500],         // Other exercises
+    cardio: green[500], // Cardio
+    mobility: warning[500], // Mobility/flexibility
+    other: gray[500], // Other exercises
   },
 };
 
@@ -250,8 +249,7 @@ export const congenLegendConfig = {
     symbolShape: 'circle' as const,
     symbolBorderColor: gray[400],
     symbolBorderWidth: 1,
-    onClick: (data: any) => {
-    },
+    onClick: () => {},
     effects: [
       {
         on: 'hover',
@@ -264,7 +262,7 @@ export const congenLegendConfig = {
       },
     ],
   },
-  
+
   // Horizontal legend configuration with clickable legends and multiselection
   horizontal: {
     anchor: 'bottom' as const,
@@ -280,8 +278,7 @@ export const congenLegendConfig = {
     itemOpacity: 1,
     symbolSize: 18,
     symbolShape: 'circle' as const,
-    onClick: (data: any) => {
-    },
+    onClick: () => {},
     effects: [
       {
         on: 'hover',
@@ -292,7 +289,7 @@ export const congenLegendConfig = {
       },
     ],
   },
-  
+
   // Compact legend configuration
   compact: {
     anchor: 'top-right' as const,
@@ -337,7 +334,7 @@ export const congenAxisConfig = {
     legendOffset: 40,
     legendPosition: 'middle' as const,
   },
-  
+
   // Standard left axis
   left: {
     tickSize: 5,
@@ -347,7 +344,7 @@ export const congenAxisConfig = {
     legendOffset: -50,
     legendPosition: 'middle' as const,
   },
-  
+
   // Standard top axis
   top: {
     tickSize: 5,
@@ -357,7 +354,7 @@ export const congenAxisConfig = {
     legendOffset: -40,
     legendPosition: 'middle' as const,
   },
-  
+
   // Standard right axis
   right: {
     tickSize: 5,
@@ -378,8 +375,12 @@ export const congenAxisConfig = {
 export const createHierarchicalColors = (depth: number, baseColor: string = brand[500]) => {
   const colors = [];
   for (let i = 0; i < depth; i++) {
-    const opacity = 1 - (i * 0.2);
-    colors.push(`${baseColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`);
+    const opacity = 1 - i * 0.2;
+    colors.push(
+      `${baseColor}${Math.round(opacity * 255)
+        .toString(16)
+        .padStart(2, '0')}`
+    );
   }
   return colors;
 };

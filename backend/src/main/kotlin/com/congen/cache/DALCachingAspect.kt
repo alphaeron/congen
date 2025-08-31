@@ -177,10 +177,11 @@ class DALCachingAspect(
         return if (result is Mono<*>) {
             result.flatMap { value ->
                 // Chain all cache invalidations
-                val invalidationMonos = invalidationKeys.map { keyPattern ->
-                    invalidateCacheEntries(keyPattern)
-                }
-                
+                val invalidationMonos =
+                    invalidationKeys.map { keyPattern ->
+                        invalidateCacheEntries(keyPattern)
+                    }
+
                 // Wait for all invalidations to complete, then return the original value
                 if (invalidationMonos.isNotEmpty()) {
                     // Chain all invalidations sequentially

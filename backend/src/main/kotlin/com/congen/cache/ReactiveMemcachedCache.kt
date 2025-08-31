@@ -206,11 +206,11 @@ class ReactiveMemcachedCache(
         return Mono.fromCallable {
             val regexPattern = pattern.replace("*", ".*")
             val regex = regexPattern.toRegex()
-            
+
             synchronized(keyIndex) {
                 val matchingKeys = keyIndex.filter { key -> regex.matches(key) }
                 val deletedKeys = mutableListOf<String>()
-                
+
                 matchingKeys.forEach { key ->
                     val cacheKey = generateKey(key)
                     val success = memcachedClient.delete(cacheKey)
@@ -220,7 +220,7 @@ class ReactiveMemcachedCache(
                         logger.debug("Deleted cache key: {}", key)
                     }
                 }
-                
+
                 deletedKeys.toList()
             }
         }.subscribeOn(memcachedScheduler)

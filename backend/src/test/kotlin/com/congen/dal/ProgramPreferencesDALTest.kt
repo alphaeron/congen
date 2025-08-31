@@ -1,7 +1,6 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
-import com.congen.exceptions.ValidationException
 import com.congen.mockProgramPreferences
 import com.congen.model.ProgramPreferences
 import org.junit.jupiter.api.BeforeEach

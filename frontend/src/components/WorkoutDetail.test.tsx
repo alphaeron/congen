@@ -174,9 +174,11 @@ describe('WorkoutDetail', () => {
                     ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
                     exercises: [
                       {
-                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0]
+                          .exercises[0],
                         exercise: {
-                          ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0].exercise,
+                          ...mockUserDataExport.training_programs[0].workouts[0].stages[0]
+                            .exercises[0].exercise,
                           notes: undefined,
                         },
                       },
@@ -314,9 +316,11 @@ describe('WorkoutDetail', () => {
                     ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
                     exercises: [
                       {
-                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0]
+                          .exercises[0],
                         set_schemes: [
-                          mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0].set_schemes[0],
+                          mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0]
+                            .set_schemes[0],
                           {
                             id: 2,
                             programmed_exercise_id: 1,
@@ -429,7 +433,8 @@ describe('WorkoutDetail', () => {
                     ...mockUserDataExport.training_programs[0].workouts[0].stages[0],
                     exercises: [
                       {
-                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0].exercises[0],
+                        ...mockUserDataExport.training_programs[0].workouts[0].stages[0]
+                          .exercises[0],
                         set_schemes: [],
                       },
                     ],
@@ -487,9 +492,9 @@ describe('WorkoutDetail', () => {
 
       await act(async () => {
         renderWithTheme(
-          <WorkoutDetail 
-            workoutId={1} 
-            onBack={mockOnBack} 
+          <WorkoutDetail
+            workoutId={1}
+            onBack={mockOnBack}
             onWorkoutDetailsUpdate={mockOnWorkoutDetailsUpdate}
           />
         );
