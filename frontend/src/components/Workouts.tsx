@@ -258,7 +258,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                             {activeProgram.program.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Current Week: {activeProgram.program.current_week_number}
+                            {`Current Week: ${Math.max(activeProgram.program.current_week_number, 1)}`}
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>
