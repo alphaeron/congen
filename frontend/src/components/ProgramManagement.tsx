@@ -15,7 +15,6 @@ import {
   TextField,
   Typography,
   Grid,
-  CircularProgress,
   Chip,
   IconButton,
   Tooltip,
@@ -28,6 +27,7 @@ import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
 import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
 import { formatDate } from '../common/utils';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface ProgramManagementProps {
   user: User;
@@ -253,9 +253,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-        <CircularProgress />
-      </Box>
+      <LoadingSpinner message="Loading programs..." fullHeight={false} />
     );
   }
 

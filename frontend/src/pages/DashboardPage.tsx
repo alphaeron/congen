@@ -1,4 +1,4 @@
-import { Container, CircularProgress, Typography } from '@mui/material';
+import { Container, Typography } from '@mui/material';
 import React from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -28,10 +28,7 @@ export const DashboardPage: React.FC = () => {
   if (!user) {
     return (
       <Container component="main" maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress sx={{ mb: 2 }} />
-        <Typography variant="h6" component="h1" gutterBottom>
-          Loading Dashboard
-        </Typography>
+        <LoadingSpinner message="Loading Dashboard" />
         <Typography variant="body2" color="text.secondary">
           Please ensure you have a profile to access the dashboard...
         </Typography>

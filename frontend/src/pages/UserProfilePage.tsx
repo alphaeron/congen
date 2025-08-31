@@ -1,4 +1,4 @@
-import { Container, CircularProgress, Typography } from '@mui/material';
+import { Container, Typography } from '@mui/material';
 import React from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -29,10 +29,7 @@ export const UserProfilePage: React.FC = () => {
   if (!user) {
     return (
       <Container component="main" maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
-        <CircularProgress sx={{ mb: 2 }} />
-        <Typography variant="h6" component="h1" gutterBottom>
-          Creating Your Profile
-        </Typography>
+        <LoadingSpinner message="Creating Your Profile" />
         <Typography variant="body2" color="text.secondary">
           Your profile is being created automatically using your Keycloak information...
         </Typography>

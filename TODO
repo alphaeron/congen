@@ -1,12 +1,10 @@
-we have three different loaders, the loader used for generate workouts, the loader when workout analytics, exercise analytics, conjugate progression, and others are loading, and the custom loader component we have.  use the custom loader component for everything.
+Make table workout stage sections collapsable
+
+test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
 
 update package-lock.json
 
 update material-ui
-
-prompt the user for confirmation on that so they are aware of what is happening when they do create a new program.  also ensure that you can edit the program to change the session duration (in minutes)
-
-test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
 
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
 
@@ -29,8 +27,6 @@ https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_pra
 add reloader config for keycloak so it restarts on configmap change
 
 Interface to show users what exercises are available as they add preferences, equipment, …
-
-Make table workout stage sections collapsable
 
 View current exercise weight preferences in dashboard, dive in from the count displayed
 

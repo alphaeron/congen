@@ -1,9 +1,10 @@
-import { Box, Card, CardContent, Grid, Typography, CircularProgress } from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import type {
@@ -286,9 +287,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     return (
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-            <CircularProgress />
-          </Box>
+          <LoadingSpinner message="Loading conjugate progression..." fullHeight={false} />
         </CardContent>
       </Card>
     );

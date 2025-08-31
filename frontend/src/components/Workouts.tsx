@@ -6,7 +6,6 @@ import {
   Typography,
   Button,
   Grid,
-  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -26,6 +25,7 @@ import { useNavigate, useSearchParams, useLocation } from 'react-router';
 
 import { WorkoutAnalytics } from './WorkoutAnalytics';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
+import { LoadingSpinner } from './LoadingSpinner';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
@@ -228,9 +228,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     return (
       <React.Fragment>
         {renderBreadcrumbs()}
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-          <CircularProgress />
-        </Box>
+        <LoadingSpinner message="Loading workout data..." fullHeight={false} />
       </React.Fragment>
     );
   }
@@ -269,7 +267,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                         <Box display="flex" gap={1}>
                           <Button
                             variant="contained"
-                            startIcon={isGenerating ? <CircularProgress size={16} /> : <AddIcon />}
+                            startIcon={isGenerating ? <LoadingSpinner size={16} message="" /> : <AddIcon />}
                             onClick={() => openGenerateDialog(activeProgram.program)}
                             disabled={isGenerating}
                           >
@@ -290,7 +288,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                       </Typography>
                       {isLoading ? (
                         <Box display="flex" justifyContent="center" p={3}>
-                          <CircularProgress />
+                          <LoadingSpinner message="Loading weeks..." size={40} />
                         </Box>
                       ) : weeks.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">
@@ -356,10 +354,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         }}
         open={isGenerating}
       >
-        <CircularProgress color="inherit" size={60} />
-        <Typography variant="h6" color="inherit">
-          Generating workouts...
-        </Typography>
+        <LoadingSpinner message="Generating workouts..." size={60} />
         <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
           This may take a few moments
         </Typography>

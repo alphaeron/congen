@@ -1,18 +1,10 @@
-import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 import {
   Box,
-  Button,
   Card,
   CardContent,
-  Divider,
-  FormControl,
-  Grid,
-  InputLabel,
-  MenuItem,
-  Select,
   Typography,
-  Alert,
-  CircularProgress,
+  Button,
+  Grid,
   List,
   ListItem,
   ListItemText,
@@ -22,10 +14,18 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Alert,
+  Divider,
 } from '@mui/material';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
+import { LoadingSpinner } from './LoadingSpinner';
 import { getExercises } from '../api/exercise';
 import type { Exercise } from '../api/types';
 import {
@@ -162,9 +162,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={200}>
-        <CircularProgress />
-      </Box>
+      <LoadingSpinner message="Loading workout preferences..." fullHeight={false} />
     );
   }
 

@@ -2,7 +2,6 @@ import { Notes as NotesIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
-  CircularProgress,
   Alert,
   IconButton,
   Tooltip,
@@ -18,6 +17,7 @@ import {
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
+import { LoadingSpinner } from './LoadingSpinner';
 import { getUserDataExport } from '../api/gdpr';
 import type { UserDataExport } from '../api/types';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
@@ -271,9 +271,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-        <CircularProgress />
-      </Box>
+      <LoadingSpinner message="Loading workout details..." fullHeight={false} />
     );
   }
 

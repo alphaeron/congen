@@ -2,7 +2,7 @@ import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday'
 import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
 import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import { Box, Card, CardContent, Grid, Typography, CircularProgress, Chip } from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography, Chip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
@@ -13,6 +13,7 @@ import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type { User, Program, UserOneRepMax, ProgrammedWorkout } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { formatDate } from '../common/utils';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface DashboardOverviewProps {
   user: User;
@@ -68,9 +69,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-        <CircularProgress />
-      </Box>
+      <LoadingSpinner message="Loading dashboard..." fullHeight={false} />
     );
   }
 

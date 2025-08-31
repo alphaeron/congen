@@ -7,13 +7,12 @@ import {
   CardContent,
   Typography,
   Grid,
-  CircularProgress,
-  Chip,
-  Tooltip,
   Tabs,
   Tab,
-  Autocomplete,
   TextField,
+  Autocomplete,
+  Chip,
+  Tooltip,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
@@ -40,6 +39,7 @@ import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { formatDate } from '../common/utils';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface ExerciseHistoryProps {
   user: User;
@@ -330,9 +330,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
 
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-        <CircularProgress />
-      </Box>
+      <LoadingSpinner message="Loading exercise history..." fullHeight={false} />
     );
   }
 

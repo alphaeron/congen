@@ -8,11 +8,11 @@ import {
   ListItemText,
   Divider,
   Alert,
-  CircularProgress,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 
+import { LoadingSpinner } from '../components/LoadingSpinner';
 import { getPrivacyPolicy } from '../api/gdpr';
 import type { PrivacyPolicy } from '../api/types';
 import { formatDate } from '../common/utils';
@@ -62,10 +62,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
   if (loading) {
     return (
       <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading Privacy Policy...
-        </Typography>
+        <LoadingSpinner message="Loading Privacy Policy..." />
       </Container>
     );
   }

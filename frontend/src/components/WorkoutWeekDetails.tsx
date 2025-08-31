@@ -5,7 +5,6 @@ import {
   CardContent,
   Typography,
   Grid,
-  CircularProgress,
   List,
   ListItem,
   ListItemText,
@@ -17,6 +16,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { WorkoutDetail } from './WorkoutDetail';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkoutsByProgram } from '../api/programmedWorkout';
 import type { ProgrammedWorkout, ProgramWithPreferences } from '../api/types';
@@ -225,9 +225,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     return (
       <React.Fragment>
         {renderBreadcrumbs()}
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-          <CircularProgress />
-        </Box>
+        <LoadingSpinner message="Loading week details..." fullHeight={false} />
       </React.Fragment>
     );
   }
@@ -266,7 +264,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                         </Typography>
                       {isLoading ? (
                         <Box display="flex" justifyContent="center" p={3}>
-                          <CircularProgress />
+                          <LoadingSpinner message="Loading workouts..." size={40} />
                         </Box>
                       ) : weekWorkouts.length === 0 ? (
                         <Typography variant="body2" color="text.secondary">

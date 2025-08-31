@@ -1,9 +1,10 @@
-import { Box, Card, CardContent, Grid, Typography, CircularProgress } from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { ChordChart } from './ChordChart';
 import { StreamChart } from './StreamChart';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import type {
@@ -268,9 +269,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
     return (
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={400}>
-            <CircularProgress />
-          </Box>
+          <LoadingSpinner message="Loading workout analytics..." fullHeight={false} />
         </CardContent>
       </Card>
     );

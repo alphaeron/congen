@@ -27,10 +27,9 @@ import {
   Typography,
   Alert,
   Snackbar,
-  CircularProgress,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router';
 
 import {
@@ -43,6 +42,7 @@ import type { UserConsent } from '../api/types';
 import { formatDate } from '../common/utils';
 
 import type { AxiosError } from 'axios';
+import { LoadingSpinner } from './LoadingSpinner';
 
 /**
  * GDPR Compliance Section component for user profile.
@@ -172,7 +172,7 @@ export function GdprComplianceSection(): React.ReactElement {
       <Card>
         <CardContent>
           <Box display="flex" alignItems="center" gap={2}>
-            <CircularProgress size={24} />
+            <LoadingSpinner size={24} message="" />
             <Typography>Loading GDPR compliance status...</Typography>
           </Box>
         </CardContent>
