@@ -267,7 +267,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                         <Box display="flex" gap={1}>
                           <Button
                             variant="contained"
-                            startIcon={isGenerating ? <LoadingSpinner size={16} message="" /> : <AddIcon />}
+                            startIcon={<AddIcon />}
                             onClick={() => openGenerateDialog(activeProgram.program)}
                             disabled={isGenerating}
                           >

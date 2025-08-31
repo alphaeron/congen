@@ -1,7 +1,5 @@
 add weak muscles UI to program preferences (name target muscles in the interface)
 
-test the create program dialog disappears and the loader shows, workout day grouping correct, week number correct
-
 update package-lock.json
 
 update material-ui
