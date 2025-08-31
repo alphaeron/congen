@@ -113,7 +113,7 @@ export function createCongenNivoTheme(mode: PaletteMode) {
       },
     },
     
-    // Tooltip styling with better visibility
+    // Tooltip styling with better visibility and overflow handling
     tooltip: {
       container: {
         background: isDark ? gray[800] : 'white',
@@ -125,7 +125,11 @@ export function createCongenNivoTheme(mode: PaletteMode) {
           : '0 4px 12px rgba(0, 0, 0, 0.15)',
         border: `1px solid ${isDark ? gray[600] : gray[300]}`,
         padding: '8px 12px',
-        maxWidth: 200,
+        maxWidth: 400,
+        wordBreak: 'break-word' as const,
+        whiteSpace: 'normal' as const,
+        overflowWrap: 'break-word' as const,
+        zIndex: 9999,
       },
     },
     
