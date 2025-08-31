@@ -82,8 +82,81 @@ describe('DashboardOverview', () => {
     exercise_name: 'Bench Press',
     one_rep_max: 225,
     unit: 'KG',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00Z'),
+    updated_at: new Date('2024-01-01T00:00:00Z'),
+  };
+
+  const mockUserDataExport = {
+    training_programs: [
+      {
+        program: { id: 1, name: 'Test Program' },
+        workouts: [
+          {
+            workout: { 
+              id: 1, 
+              name: 'Test Workout', 
+              created_at: new Date('2024-01-01T00:00:00Z'),
+              updated_at: new Date('2024-01-01T00:00:00Z'),
+              program_id: 1,
+              day_number: 1
+            },
+            stages: [
+              {
+                stage: { 
+                  name: 'Test Stage',
+                  id: 1,
+                  programmed_workout_id: 1,
+                  stage_type_id: 1,
+                  position: 1,
+                  created_at: new Date('2024-01-01T00:00:00Z'),
+                  updated_at: new Date('2024-01-01T00:00:00Z')
+                },
+                exercises: [
+                  {
+                    exercise: { 
+                      exercise_name: 'Bench Press',
+                      id: 1,
+                      workout_stage_id: 1,
+                      position: 1,
+                      created_at: new Date('2024-01-01T00:00:00Z'),
+                      updated_at: new Date('2024-01-01T00:00:00Z')
+                    },
+                    set_schemes: [
+                      {
+                        performed_weight: 100,
+                        performed_rep_count: 10,
+                        band_weight_lbs: null,
+                        id: 1,
+                        programmed_exercise_id: 1,
+                        set_number: 1,
+                        is_amrap: false,
+                        is_emom: false,
+                        use_tempo: false,
+                        created_at: new Date('2024-01-01T00:00:00Z'),
+                        updated_at: new Date('2024-01-01T00:00:00Z')
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    user_one_rep_max: [mockOneRepMax],
+    data_retention_policies: [],
+  };
+
+  const mockExercise = {
+    id: 1,
+    exercise_name: 'Bench Press',
+    category: 'strength',
+    primary_muscle: 'chest',
+    secondary_muscles: ['triceps', 'shoulders'],
+    instructions: 'Test instructions',
+    equipment: 'barbell',
+    difficulty: 'intermediate',
   };
 
   beforeEach(() => {
@@ -110,18 +183,23 @@ describe('DashboardOverview', () => {
     mock
       .onGet('/user_one_rep_max/user/test-user-id')
       .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
+    mock
+      .onGet('/gdpr/export')
+      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, mockUserDataExport]), 100)));
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
     });
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
   });
 
   it('should render dashboard overview when data loads successfully', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -131,16 +209,19 @@ describe('DashboardOverview', () => {
       expect(screen.getByText('Dashboard Overview')).toBeInTheDocument();
     });
 
+    expect(screen.getByText('Key Performance Indicators')).toBeInTheDocument();
     expect(screen.getByText('Total Workouts')).toBeInTheDocument();
     expect(screen.getByText('1RM Records')).toBeInTheDocument();
-    expect(screen.getByText('Unique Exercises')).toBeInTheDocument();
-    expect(screen.getByText('Current Week')).toBeInTheDocument();
+    expect(screen.getByText('Total Volume (lbs)')).toBeInTheDocument();
+    expect(screen.getByText('Latest Volume (lbs)')).toBeInTheDocument();
   });
 
   it('should display active program when available', async () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -158,6 +239,8 @@ describe('DashboardOverview', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, [mockOneRepMax]);
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -178,6 +261,7 @@ describe('DashboardOverview', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], user_one_rep_max: [], data_retention_policies: [] });
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -205,56 +289,105 @@ describe('DashboardOverview', () => {
       { ...mockOneRepMax, exercise_name: 'Squat', one_rep_max: 315 },
     ];
 
-    mock.onGet('/program/').reply(200, multiplePrograms);
-    mock.onGet('/programmed_workout/').reply(200, multipleWorkouts);
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, multipleOneRepMaxes);
-
-    await act(async () => {
-      renderWithProviders(<DashboardOverview user={mockUser} />);
-    });
-
-    await waitFor(
-      () => {
-        // Total workouts should be actual workout count (4 workouts)
-        expect(screen.getByText('4')).toBeInTheDocument();
-        // 1RM records count - check the card with ShowChartIcon
-        const showChartIcons = screen.getAllByTestId('ShowChartIcon');
-        const oneRepMaxCard = showChartIcons[0].closest('.MuiCard-root');
-        expect(oneRepMaxCard).toHaveTextContent('2');
-        // Unique exercises count - check the card with TrendingUpIcon (first one in dashboard)
-        const trendingUpIcons = screen.getAllByTestId('TrendingUpIcon');
-        const uniqueExercisesCard = trendingUpIcons[0].closest('.MuiCard-root');
-        expect(uniqueExercisesCard).toHaveTextContent('2');
-        // Current week from active program (3 workouts = Week 1)
-        expect(screen.getByText('1')).toBeInTheDocument();
-      },
-      { timeout: 10000 }
-    );
-  });
-
-  it('should verify API calls are made with correct endpoints', async () => {
-    mock.onGet('/program/').reply(200, []);
-    mock.onGet('/programmed_workout/').reply(200, []);
-    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    // Mock ConjugateProgression dependencies
-    mock.onGet('/gdpr/export').reply(200, {
+    const multipleWorkoutsDataExport = {
+      ...mockUserDataExport,
       training_programs: [
         {
           program: { id: 1, name: 'Test Program' },
           workouts: [
             {
-              workout: { id: 1, name: 'Test Workout' },
+              workout: { 
+                id: 1, 
+                name: 'Test Workout 1', 
+                created_at: new Date('2024-01-01T00:00:00Z'),
+                updated_at: new Date('2024-01-01T00:00:00Z'),
+                program_id: 1,
+                day_number: 1
+              },
               stages: [
                 {
-                  stage: { name: 'Test Stage' },
+                  stage: { 
+                    name: 'Test Stage',
+                    id: 1,
+                    programmed_workout_id: 1,
+                    stage_type_id: 1,
+                    position: 1,
+                    created_at: new Date('2024-01-01T00:00:00Z'),
+                    updated_at: new Date('2024-01-01T00:00:00Z')
+                  },
                   exercises: [
                     {
-                      exercise: { exercise_name: 'Bench Press' },
+                      exercise: { 
+                        exercise_name: 'Bench Press',
+                        id: 1,
+                        workout_stage_id: 1,
+                        position: 1,
+                        created_at: new Date('2024-01-01T00:00:00Z'),
+                        updated_at: new Date('2024-01-01T00:00:00Z')
+                      },
                       set_schemes: [
                         {
                           performed_weight: 100,
                           performed_rep_count: 10,
                           band_weight_lbs: null,
+                          id: 1,
+                          programmed_exercise_id: 1,
+                          set_number: 1,
+                          is_amrap: false,
+                          is_emom: false,
+                          use_tempo: false,
+                          created_at: new Date('2024-01-01T00:00:00Z'),
+                          updated_at: new Date('2024-01-01T00:00:00Z')
+                        },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              workout: { 
+                id: 2, 
+                name: 'Test Workout 2', 
+                created_at: new Date('2024-01-02T00:00:00Z'),
+                updated_at: new Date('2024-01-02T00:00:00Z'),
+                program_id: 1,
+                day_number: 2
+              },
+              stages: [
+                {
+                  stage: { 
+                    name: 'Test Stage',
+                    id: 2,
+                    programmed_workout_id: 2,
+                    stage_type_id: 1,
+                    position: 1,
+                    created_at: new Date('2024-01-02T00:00:00Z'),
+                    updated_at: new Date('2024-01-02T00:00:00Z')
+                  },
+                  exercises: [
+                    {
+                      exercise: { 
+                        exercise_name: 'Squat',
+                        id: 2,
+                        workout_stage_id: 2,
+                        position: 1,
+                        created_at: new Date('2024-01-02T00:00:00Z'),
+                        updated_at: new Date('2024-01-02T00:00:00Z')
+                      },
+                      set_schemes: [
+                        {
+                          performed_weight: 150,
+                          performed_rep_count: 8,
+                          band_weight_lbs: null,
+                          id: 2,
+                          programmed_exercise_id: 2,
+                          set_number: 1,
+                          is_amrap: false,
+                          is_emom: false,
+                          use_tempo: false,
+                          created_at: new Date('2024-01-02T00:00:00Z'),
+                          updated_at: new Date('2024-01-02T00:00:00Z')
                         },
                       ],
                     },
@@ -265,18 +398,38 @@ describe('DashboardOverview', () => {
           ],
         },
       ],
-      data_retention_policies: [],
+      user_one_rep_max: multipleOneRepMaxes,
+    };
+
+    mock.onGet('/program/').reply(200, multiplePrograms);
+    mock.onGet('/programmed_workout/').reply(200, multipleWorkouts);
+    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, multipleOneRepMaxes);
+    mock.onGet('/gdpr/export').reply(200, multipleWorkoutsDataExport);
+    mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
+
+    await act(async () => {
+      renderWithProviders(<DashboardOverview user={mockUser} />);
     });
-    mock.onGet(/\/exercise\/.*/).reply(200, {
-      id: 1,
-      exercise_name: 'Test Exercise',
-      category: 'strength',
-      primary_muscle: 'chest',
-      secondary_muscles: ['triceps', 'shoulders'],
-      instructions: 'Test instructions',
-      equipment: 'barbell',
-      difficulty: 'intermediate',
-    });
+
+    await waitFor(
+      () => {
+        // Check Key Performance Indicators
+        expect(screen.getByText('Key Performance Indicators')).toBeInTheDocument();
+        // Total workouts should be from the data export (2 workouts)
+        expect(screen.getByText('2')).toBeInTheDocument();
+        // 1RM records count
+        expect(screen.getByText('2')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
+  });
+
+  it('should verify API calls are made with correct endpoints', async () => {
+    mock.onGet('/program/').reply(200, []);
+    mock.onGet('/programmed_workout/').reply(200, []);
+    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);

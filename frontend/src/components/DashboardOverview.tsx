@@ -4,15 +4,17 @@ import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import { Box, Card, CardContent, Grid, Typography, Chip } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ConjugateProgression } from './ConjugateProgression';
 import { getPrograms } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { User, Program, UserOneRepMax, ProgrammedWorkout } from '../api/types';
+import { getIndividualExercise } from '../api/exercise';
+import { getUserDataExport } from '../api/gdpr';
+import type { User, Program, UserOneRepMax, ProgrammedWorkout, Exercise, ProgramWithWorkouts, ProgrammedWorkoutWithStages, WorkoutStageWithExercises, ProgrammedExerciseWithSetSchemes, SetScheme } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { formatDate } from '../common/utils';
+import { formatDate, categorizeExerciseVolume, replaceUnderscoresWithSpaces } from '../common/utils';
 import { LoadingSpinner } from './LoadingSpinner';
 
 interface DashboardOverviewProps {
@@ -34,6 +36,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const [programs, setPrograms] = useState<Program[]>([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
+  const [userData, setUserData] = useState<any>(null);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
   const handleActiveProgramClick = () => {
@@ -48,15 +52,43 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         setIsLoading(true);
 
         // Load all dashboard data in parallel
-        const [programsData, workoutsData, oneRepMaxesData] = await Promise.all([
+        const [programsData, workoutsData, oneRepMaxesData, dataExport] = await Promise.all([
           getPrograms(),
           getProgrammedWorkouts(),
           getUserOneRepMaxes(user.keycloak_id),
+          getUserDataExport(),
         ]);
 
         setPrograms(programsData);
         setWorkouts(workoutsData);
         setOneRepMaxes(oneRepMaxesData);
+        setUserData(dataExport);
+
+        // Fetch exercise data for all unique exercises
+        const uniqueExercises = new Set<string>();
+        dataExport.training_programs?.forEach((program: ProgramWithWorkouts) => {
+          program.workouts.forEach(workout => {
+            workout.stages.forEach(stage => {
+              stage.exercises.forEach(exercise => {
+                uniqueExercises.add(exercise.exercise.exercise_name);
+              });
+            });
+          });
+        });
+
+        const exerciseMap = new Map<string, Exercise>();
+        for (const exerciseName of Array.from(uniqueExercises)) {
+          try {
+            const exercise = await getIndividualExercise(exerciseName);
+            exerciseMap.set(exerciseName, exercise);
+          } catch {
+            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
+              variant: 'error',
+            });
+          }
+        }
+
+        setExerciseData(exerciseMap);
       } catch {
         enqueueSnackbar('Failed to load dashboard data. Please try again.', { variant: 'error' });
       } finally {
@@ -66,6 +98,63 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
     loadDashboardData();
   }, [user.keycloak_id]);
+
+  // Calculate volume data for accurate metrics
+  const volumeData = useMemo(() => {
+    if (!userData?.training_programs?.length) return [];
+
+    const allWorkouts: ProgrammedWorkoutWithStages[] = [];
+    userData.training_programs.forEach((program: ProgramWithWorkouts) => {
+      allWorkouts.push(...program.workouts);
+    });
+
+    return allWorkouts
+      .map(workoutData => {
+        let totalVolume = 0;
+        let maxEffortVolume = 0;
+        let dynamicEffortVolume = 0;
+        let accessoryVolume = 0;
+
+        workoutData.stages.forEach((stage: WorkoutStageWithExercises) => {
+          stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
+            exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
+              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
+              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
+              const bandWeight = setScheme.band_weight_lbs
+                ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
+                : 0;
+
+              const totalWeight = weight + bandWeight;
+              const setVolume = totalWeight * reps;
+
+              // Get exercise data and categorize volume using shared helper
+              const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+              const exerciseInfo = exerciseData.get(exerciseName);
+              const categorizedVolume = categorizeExerciseVolume(
+                exerciseInfo,
+                replaceUnderscoresWithSpaces(workoutData.workout.name),
+                setVolume
+              );
+
+              maxEffortVolume += categorizedVolume.maxEffortVolume;
+              dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
+              accessoryVolume += categorizedVolume.accessoryVolume;
+            });
+          });
+        });
+
+        return {
+          date: formatDate(workoutData.workout.created_at),
+          totalVolume: Math.round(
+            totalVolume + maxEffortVolume + dynamicEffortVolume + accessoryVolume
+          ),
+          maxEffortVolume: Math.round(maxEffortVolume),
+          dynamicEffortVolume: Math.round(dynamicEffortVolume),
+          accessoryVolume: Math.round(accessoryVolume),
+        };
+      })
+      .slice(-10); // Last 10 workouts
+  }, [userData, exerciseData]);
 
   if (isLoading) {
     return (
@@ -79,122 +168,72 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     : [];
 
   // Calculate actual total workouts across all programs
-  const totalWorkouts = workouts.length;
+  const totalWorkouts = userData?.training_programs?.reduce(
+    (total: number, program: ProgramWithWorkouts) => total + program.workouts.length,
+    0
+  ) || 0;
 
   // Calculate current week based on actual workout count (assuming 3-4 workouts per week)
-  const currentWeek =
-    activeProgramWorkouts.length > 0 ? Math.ceil(activeProgramWorkouts.length / 3) : 0;
+  const currentWeek = activeProgram?.current_week_number ?? 0
 
   const recentOneRepMaxes = oneRepMaxes.slice(-5); // Last 5 1RMs
 
+  // Calculate total volume and latest volume
+  const totalVolume = volumeData.reduce((sum, d) => sum + d.totalVolume, 0);
+  const latestVolume = volumeData[volumeData.length - 1]?.totalVolume || 0;
+
   return (
     <React.Fragment>
-      <Typography variant="h5" gutterBottom>
-        Dashboard Overview
-      </Typography>
-
-      {/* Key Statistics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent
-              sx={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                <FitnessCenterIcon color="primary" />
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h4" component="div" textAlign="center">
-                    {totalWorkouts}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Total Workouts
-                  </Typography>
-                </Box>
+      {/* Key Performance Indicators */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            Key Performance Indicators
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Typography variant="h4" color="primary">
+                  {totalWorkouts}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Workouts
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent
-              sx={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                <ShowChartIcon color="primary" />
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h4" component="div" textAlign="center">
-                    {oneRepMaxes.length}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" textAlign="center">
-                    1RM Records
-                  </Typography>
-                </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Typography variant="h4" color="secondary">
+                  {Math.round(totalVolume / 1000)}k
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Volume (lbs)
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent
-              sx={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                <TrendingUpIcon color="primary" />
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h4" component="div" textAlign="center">
-                    {new Set(oneRepMaxes.map(orm => orm.exercise_name)).size}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Unique Exercises
-                  </Typography>
-                </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Typography variant="h4" color="success">
+                  {oneRepMaxes.length}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  1RM Records
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent
-              sx={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
-                <CalendarTodayIcon color="primary" />
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <Typography variant="h4" component="div" textAlign="center">
-                    {currentWeek}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" textAlign="center">
-                    Current Week
-                  </Typography>
-                </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box textAlign="center">
+                <Typography variant="h4" color="info">
+                  {Math.round(latestVolume)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Latest Volume (lbs)
+                </Typography>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
 
       {/* Active Program Section */}
       {activeProgram && (
@@ -251,21 +290,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 </Grid>
               ))}
             </Grid>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* No Data State */}
-      {!activeProgram && recentOneRepMaxes.length === 0 && (
-        <Card>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Welcome to Your Dashboard!
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Start by creating your first program and tracking your 1RM values to see your progress
-              here.
-            </Typography>
           </CardContent>
         </Card>
       )}

@@ -309,109 +309,43 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   }
 
   return (
-    <Card sx={{ mb: 4 }}>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          Conjugate Progress Tracking
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Based on Westside Barbell conjugate method principles - tracking volume, correlations, and
-          progress
-        </Typography>
-
-        <Grid container spacing={3}>
-          {/* Volume Tracking Chart */}
-          <Grid item xs={12} lg={8}>
-            <LineChart
-              data={volumeChartData}
-              title="Volume Progression"
-              description="Total weight lifted over time (including band resistance)"
-              xAxisLabel="Workout Date"
-              yAxisLabel="Volume (lbs)"
-            />
-          </Grid>
-
-          {/* Exercise Category Distribution */}
-          <Grid item xs={12} lg={4}>
-            <PieChart
-              data={correlationChartData.map(d => ({
-                id: d.category,
-                label: d.category,
-                value: d.volume,
-              }))}
-              title="Exercise Distribution"
-              description="Volume by workout stage"
-            />
-          </Grid>
-
-          {/* Progress Tracking */}
-          <Grid item xs={12}>
-            <LineChart
-              data={progressChartData}
-              title="Progress Tracking"
-              description="1RM improvements and volume progression over time"
-              xAxisLabel="Date"
-              yAxisLabel="Weight (lbs)"
-            />
-          </Grid>
-
-          {/* Key Performance Indicators */}
-          <Grid item xs={12}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Key Performance Indicators
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box textAlign="center">
-                      <Typography variant="h4" color="primary">
-                        {userData?.training_programs?.reduce(
-                          (total, program) => total + program.workouts.length,
-                          0
-                        ) || 0}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total Workouts
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box textAlign="center">
-                      <Typography variant="h4" color="secondary">
-                        {Math.round(volumeData.reduce((sum, d) => sum + d.totalVolume, 0) / 1000)}k
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Total Volume (lbs)
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box textAlign="center">
-                      <Typography variant="h4" color="success">
-                        {userData?.user_one_rep_max?.length || 0}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        1RM Records
-                      </Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box textAlign="center">
-                      <Typography variant="h4" color="info">
-                        {Math.round(volumeData[volumeData.length - 1]?.totalVolume || 0)}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Latest Volume (lbs)
-                      </Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
+    <React.Fragment>
+      <Grid container spacing={3}>
+        {/* Volume Tracking Chart */}
+        <Grid item xs={12} lg={8}>
+          <LineChart
+            data={volumeChartData}
+            title="Volume Progression"
+            description="Total weight lifted over time (including band resistance)"
+            xAxisLabel="Workout Date"
+            yAxisLabel="Volume (lbs)"
+          />
         </Grid>
-      </CardContent>
-    </Card>
+
+        {/* Exercise Category Distribution */}
+        <Grid item xs={12} lg={4}>
+          <PieChart
+            data={correlationChartData.map(d => ({
+              id: d.category,
+              label: d.category,
+              value: d.volume,
+            }))}
+            title="Exercise Distribution"
+            description="Volume by workout stage"
+          />
+        </Grid>
+
+        {/* Progress Tracking */}
+        <Grid item xs={12}>
+          <LineChart
+            data={progressChartData}
+            title="Progress Tracking"
+            description="1RM improvements and volume progression over time"
+            xAxisLabel="Date"
+            yAxisLabel="Weight (lbs)"
+          />
+        </Grid>
+      </Grid>
+    </React.Fragment>
   );
 };
