@@ -1,7 +1,7 @@
 import { Box, useTheme, Typography, IconButton } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState } from 'react';
-import { default as HomeIcon } from '@mui/icons-material/Home';
+import { default as RefreshIcon } from '@mui/icons-material/Refresh';
 
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
@@ -101,9 +101,9 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({ data }) => {
         <IconButton 
           onClick={handleHomeClick}
           size="small"
-          title="Back to root"
+          title="Reset chart"
         >
-          <HomeIcon />
+          <RefreshIcon />
         </IconButton>
         <Typography variant="body2" color="text.secondary">
           {currentData.name === data.name ? 'Exercise Volume' : currentData.name}
