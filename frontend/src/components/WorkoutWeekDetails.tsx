@@ -168,26 +168,32 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             minWidth: 'auto',
           }}
         >
-          Workouts
+          {activeProgram?.program.name || 'Workouts'}
         </Button>
-        <Button
-          variant="text"
-          onClick={() => handleBreadcrumbClick('week')}
-          sx={{
-            color: 'text.secondary',
-            textTransform: 'none',
-            fontSize: '1rem',
-            fontWeight: 'normal',
-            p: 0,
-            minWidth: 'auto',
-          }}
-        >
-          Week {weekNumber}
-        </Button>
+        {/* Only show Week as a clickable button if we're viewing workout details */}
+        {selectedWorkoutId ? (
+          <Button
+            variant="text"
+            onClick={() => handleBreadcrumbClick('week')}
+            sx={{
+              color: 'text.secondary',
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 'normal',
+              p: 0,
+              minWidth: 'auto',
+            }}
+          >
+            Week {weekNumber}
+          </Button>
+        ) : (
+          <Typography variant="body1" color="text.primary">
+            Week {weekNumber}
+          </Typography>
+        )}
         {selectedWorkoutId && currentWorkoutDetails && (
           <Typography variant="body1" color="text.primary">
-            {currentWorkoutDetails.name} (Day {currentWorkoutDetails.day_number}) •{' '}
-            {currentWorkoutDetails.stages} stages
+            {currentWorkoutDetails.name}
           </Typography>
         )}
         {selectedWorkoutId && !currentWorkoutDetails && (
@@ -247,30 +253,17 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Grid container spacing={3}>
-                {/* Week Overview and Generation */}
-                <Grid item xs={12}>
-                  <Card>
-                    <CardContent>
-                      <Box>
-                        <Typography variant="h6" gutterBottom>
-                          {activeProgram.program.name} - Week {weekNumber}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {weekWorkouts.length} workouts • Week {weekNumber} of{' '}
-                          {activeProgram.program.current_week_number}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-
                 {/* Week Workout List */}
                 <Grid item xs={12}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
-                        Week {weekNumber} Workouts
+                        Workouts
                       </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                          {weekWorkouts.length} workouts • Week {weekNumber} of{' '}
+                          {activeProgram.program.current_week_number}
+                        </Typography>
                       {isLoading ? (
                         <Box display="flex" justifyContent="center" p={3}>
                           <CircularProgress />

@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams, useLocation } from 'react-router';
 
 import { WorkoutAnalytics } from './WorkoutAnalytics';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
@@ -54,6 +54,7 @@ interface WorkoutsProps {
 export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
@@ -185,14 +186,21 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       }}
     >
       <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          component="button"
-          variant="body1"
-          onClick={() => handleBreadcrumbClick('workouts')}
-          sx={{ color: 'text.secondary' }}
-        >
-          Workouts
-        </Link>
+        {/* Show program name instead of "Workouts" */}
+        {selectedWeek ? (
+          <Link
+            component="button"
+            variant="body1"
+            onClick={() => handleBreadcrumbClick('workouts')}
+            sx={{ color: 'text.secondary' }}
+          >
+            {activeProgram?.program.name || 'Workouts'}
+          </Link>
+        ) : (
+          <Typography variant="body1" color="text.primary">
+            {activeProgram?.program.name || 'Workouts'}
+          </Typography>
+        )}
         {selectedWeek && (
           <Typography variant="body1" color="text.primary">
             Week {selectedWeek}
@@ -255,10 +263,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                       <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box>
                           <Typography variant="h6" gutterBottom>
-                            {activeProgram.program.name}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            {`Current Week: ${Math.max(activeProgram.program.current_week_number, 1)}`}
+                          {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>

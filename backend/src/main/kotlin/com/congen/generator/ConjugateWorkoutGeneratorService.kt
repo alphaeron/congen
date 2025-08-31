@@ -114,7 +114,7 @@ class ConjugateWorkoutGeneratorService(
                             ).then(
                                 programService.updateProgram(
                                     program.id,
-                                    "Week ${program.currentWeekNumber + 1}",
+                                    program.name,
                                     program.currentWeekNumber + 1,
                                     program.isActive
                                 )
@@ -153,9 +153,9 @@ class ConjugateWorkoutGeneratorService(
             .concatMap { tuple ->
                 val dayIndex = tuple.t1
                 val dayTemplate = tuple.t2
-                val dayNumber = (currentWeekNumber - 1) * template.size + dayIndex.toInt() + 1
+                val dayNumber = currentWeekNumber * template.size + dayIndex.toInt() + 1
 
-                programmedWorkoutDAL.insertProgrammedWorkout(program.id, dayNumber, "${dayTemplate.type} Day")
+                programmedWorkoutDAL.insertProgrammedWorkout(program.id, dayNumber, dayTemplate.type)
                     .doOnError { error ->
                         logger.error("Error inserting programmed workout: {}", error.message)
                     }
