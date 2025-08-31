@@ -14,6 +14,7 @@ import type {
   ProgramWithWorkouts,
 } from '../api/types';
 import { categorizeExerciseVolume } from '../common/utils';
+import { replaceUnderscoresWithSpaces, formatDate } from '../common/utils';
 
 interface ConjugateProgressionProps {
   user: User;
@@ -123,7 +124,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
               const exerciseInfo = exerciseData.get(exerciseName);
               const categorizedVolume = categorizeExerciseVolume(
                 exerciseInfo,
-                workoutData.workout.name,
+                replaceUnderscoresWithSpaces(workoutData.workout.name),
                 setVolume
               );
 
@@ -135,7 +136,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         });
 
         return {
-          date: new Date(workoutData.workout.created_at).toLocaleDateString(),
+          date: formatDate(workoutData.workout.created_at),
           totalVolume: Math.round(
             totalVolume + maxEffortVolume + dynamicEffortVolume + accessoryVolume
           ),
@@ -199,12 +200,12 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     if (userData?.user_one_rep_max) {
       userData.user_one_rep_max.forEach(oneRepMax => {
         const typedOneRepMax = oneRepMax as {
-          updated_at: string;
+          updated_at: Date;
           exercise_name: string;
           one_rep_max: number;
         };
         progress.push({
-          date: new Date(typedOneRepMax.updated_at).toLocaleDateString(),
+          date: formatDate(typedOneRepMax.updated_at),
           exercise: typedOneRepMax.exercise_name,
           weight: typedOneRepMax.one_rep_max,
           type: '1RM',

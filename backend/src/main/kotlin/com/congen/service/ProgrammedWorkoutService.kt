@@ -33,8 +33,8 @@ class ProgrammedWorkoutService(
      * Retrieves all programmed workouts for a specific program.
      * @see ProgrammedWorkoutDAL.selectProgrammedWorkoutsByProgramId
      */
-    fun selectProgrammedWorkoutsByProgramId(programId: Long): Mono<List<ProgrammedWorkout>> =
-        programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId)
+    fun selectProgrammedWorkoutsByProgramId(programId: Long, weekNumber: Int? = null): Mono<List<ProgrammedWorkout>> =
+        programmedWorkoutDAL.selectProgrammedWorkoutsByProgramId(programId, weekNumber)
 
     /**
      * Retrieves all programmed workout records from the database.

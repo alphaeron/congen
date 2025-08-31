@@ -18,8 +18,9 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { WorkoutDetail } from './WorkoutDetail';
 import { getProgramsWithPreferences } from '../api/program';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import { getProgrammedWorkoutsByProgram } from '../api/programmedWorkout';
 import type { ProgrammedWorkout, ProgramWithPreferences } from '../api/types';
+import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -75,13 +76,16 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     const loadWorkoutData = async () => {
       setIsLoading(true);
       try {
-        const [programsData, workoutsData] = await Promise.all([
-          getProgramsWithPreferences(),
-          getProgrammedWorkouts(),
-        ]);
-
+        const programsData = await getProgramsWithPreferences();
         setProgramsWithPreferences(programsData);
-        setWorkouts(workoutsData);
+        
+        const activeProgram = programsData.find(program => program.program.is_active);
+        if (activeProgram) {
+          const workoutsData = await getProgrammedWorkoutsByProgram(activeProgram.program.id, weekNumber);
+          setWorkouts(workoutsData);
+        } else {
+          setWorkouts([]);
+        }
       } catch {
         enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
       } finally {
@@ -90,28 +94,26 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     };
 
     loadWorkoutData();
-  }, []); // Only load once on mount
+  }, [weekNumber]); // Reload when week number changes
 
   const activeProgram = programsWithPreferences.find(program => program.program.is_active);
 
   // Group workouts by week and filter for the current week
   const weekWorkouts = useMemo(() => {
     if (!activeProgram) return [];
-
+    
     const programWorkouts = workouts.filter(
       workout => workout.program_id === activeProgram.program.id
     );
-
-    // Use program preferences
-    const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
-
+    
+    // Since we're now getting workouts filtered by week from the backend,
+    // we just need to sort them by day number within the week
     return programWorkouts
       .map(workout => {
-        const weekNum = Math.ceil(workout.day_number / workoutsPerWeek);
+        const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
         const dayInWeek = ((workout.day_number - 1) % workoutsPerWeek) + 1;
-        return { workout, weekNumber: weekNum, dayInWeek };
+        return { workout, weekNumber: weekNumber, dayInWeek };
       })
-      .filter(weekWorkout => weekWorkout.weekNumber === weekNumber)
       .sort((a, b) => a.dayInWeek - b.dayInWeek);
   }, [workouts, activeProgram, weekNumber]);
 
@@ -291,7 +293,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                             >
                               <ListItemText
                                 primary={`Day ${weekWorkout.dayInWeek}`}
-                                secondary={`${weekWorkout.workout.name || `Workout ${weekWorkout.workout.day_number}`}`}
+                                secondary={`${replaceUnderscoresWithSpaces(weekWorkout.workout.name || `Workout ${weekWorkout.workout.day_number}`)}`}
                               />
                             </ListItem>
                           ))}

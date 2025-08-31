@@ -39,6 +39,7 @@ import type {
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
+import { formatDate } from '../common/utils';
 
 interface ExerciseHistoryProps {
   user: User;
@@ -155,7 +156,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const exerciseMap = useMemo(() => {
     const map = new Map<
       string,
-      { totalVolume: number; frequency: number; lastPerformed: string | null }
+      { totalVolume: number; frequency: number; lastPerformed: Date | null }
     >();
 
     if (!workoutData?.training_programs) return map;
@@ -194,7 +195,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             if (
               !existing.lastPerformed ||
               (workout.workout.created_at &&
-                new Date(workout.workout.created_at) > new Date(existing.lastPerformed))
+                workout.workout.created_at > existing.lastPerformed)
             ) {
               existing.lastPerformed = workout.workout.created_at;
             }
@@ -415,7 +416,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
                             {oneRepMax.one_rep_max} {oneRepMax.unit}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Last Updated: {new Date(oneRepMax.updated_at).toLocaleDateString()}
+                            Last Updated: {formatDate(oneRepMax.updated_at)}
                           </Typography>
 
                           <Tooltip title="This 1RM value is used for workout generation and progression calculations">

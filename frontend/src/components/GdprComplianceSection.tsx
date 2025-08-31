@@ -40,6 +40,7 @@ import {
   deleteAllPersonalData,
 } from '../api/gdpr';
 import type { UserConsent } from '../api/types';
+import { formatDate } from '../common/utils';
 
 import type { AxiosError } from 'axios';
 
@@ -166,10 +167,6 @@ export function GdprComplianceSection(): React.ReactElement {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
   if (loading) {
     return (
       <Card>
@@ -217,7 +214,13 @@ export function GdprComplianceSection(): React.ReactElement {
               )}
               {consentStatus?.consent_timestamp && (
                 <Typography variant="caption" color="text.secondary">
-                  Last updated: {formatDate(consentStatus.consent_timestamp)}
+                  Last updated: {formatDate(consentStatus.consent_timestamp, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </Typography>
               )}
             </Box>

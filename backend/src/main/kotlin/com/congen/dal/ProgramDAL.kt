@@ -456,9 +456,9 @@ class ProgramDAL(
         entityName = "program"
     )
     private fun deactivateProgramsForUser(userId: String): Mono<Unit> {
-        return postgresClient.updateLiteral<Any>(
-            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-            Any::class,
+        return postgresClient.updateLiteral<Int>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+            Int::class,
             userId
         ).then(Mono.just(Unit))
             .onErrorResume(NoResultsFoundException::class.java) {

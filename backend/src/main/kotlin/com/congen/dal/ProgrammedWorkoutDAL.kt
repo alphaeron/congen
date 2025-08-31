@@ -82,8 +82,10 @@ class ProgrammedWorkoutDAL(
      *
      * This method fetches all programmed workouts that are assigned to the specified program.
      * If no programmed workouts exist for the program, an empty list is returned.
+     * Optionally filters by week number if provided.
      *
      * @param programId The unique identifier of the program
+     * @param weekNumber Optional week number to filter workouts (1-based)
      * @return Mono containing a list of programmed workouts
      */
     @Cacheable(
@@ -91,12 +93,28 @@ class ProgrammedWorkoutDAL(
         keyStrategy = CacheKeyStrategy.STANDARD,
         entityName = "programmed_workout"
     )
-    fun selectProgrammedWorkoutsByProgramId(programId: Long): Mono<List<ProgrammedWorkout>> {
-        logger.debug("Selecting programmed workouts by program id: {}", programId)
-        return postgresClient.select(
-            "SELECT * FROM programmed_workout WHERE program_id=$1 ORDER BY day_number",
-            programId,
-        )
+    fun selectProgrammedWorkoutsByProgramId(programId: Long, weekNumber: Int? = null): Mono<List<ProgrammedWorkout>> {
+        logger.debug("Selecting programmed workouts by program id: {} and week: {}", programId, weekNumber)
+        
+        val query = if (weekNumber != null) {
+            """
+            SELECT pw.*
+            FROM programmed_workout pw
+            JOIN program p ON pw.program_id = p.id
+            JOIN program_preferences pp ON p.id = pp.program_id
+            WHERE pw.program_id = $1 
+            AND CEIL(pw.day_number::float / pp.program_days_per_week) = $2
+            ORDER BY pw.day_number
+            """.trimIndent()
+        } else {
+            "SELECT * FROM programmed_workout WHERE program_id = $1 ORDER BY day_number"
+        }
+        
+        return if (weekNumber != null) {
+            postgresClient.select(query, programId, weekNumber)
+        } else {
+            postgresClient.select(query, programId)
+        }
     }
 
     /**

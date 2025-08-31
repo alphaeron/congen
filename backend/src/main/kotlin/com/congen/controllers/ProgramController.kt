@@ -128,7 +128,10 @@ class ProgramController(
                                 numDaysPerWeek,
                                 isActive
                             )
-                            val startingCurrentWeekNumber = 1
+                            // We don't have a current week until the first week of the program is generated.
+                            // start at 0 and then once the generator is called it will get incremented to 1
+                            // to indicate you are on your first week of the program.
+                            val startingCurrentWeekNumber = 0
                             programService.insertProgram(userId, name, startingCurrentWeekNumber, isActive, numDaysPerWeek)
                                 .map { savedProgram ->
                                     logger.debug("Saved program with id: {}", savedProgram.id)

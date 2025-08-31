@@ -4,6 +4,7 @@ import { Box, Card, CardContent, Grid, Typography, Avatar, Button } from '@mui/m
 import React from 'react';
 
 import type { User } from '../api/types';
+import { formatDate } from '../common/utils';
 
 interface ProfileOverviewProps {
   user: User;
@@ -20,14 +21,6 @@ interface ProfileOverviewProps {
  * @return Profile overview component
  */
 export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditProfile }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   const handleEditProfile = () => {
     if (onEditProfile) {
       onEditProfile();
@@ -56,7 +49,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditPr
                     {user.name}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Member since {user.created_at ? formatDate(user.created_at) : 'N/A'}
+                    Member since {formatDate(user.created_at)}
                   </Typography>
                   {user.roles && user.roles.length > 0 && (
                     <Box sx={{ mt: 1 }}>

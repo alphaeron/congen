@@ -15,6 +15,7 @@ import * as React from 'react';
 
 import { getPrivacyPolicy } from '../api/gdpr';
 import type { PrivacyPolicy } from '../api/types';
+import { formatDate } from '../common/utils';
 
 import type { AxiosError } from 'axios';
 
@@ -84,7 +85,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Last updated: {new Date(privacyPolicy.last_updated).toLocaleDateString()} (Version{' '}
+        Last updated: {formatDate(privacyPolicy.last_updated)} (Version{' '}
         {privacyPolicy.version})
       </Typography>
 

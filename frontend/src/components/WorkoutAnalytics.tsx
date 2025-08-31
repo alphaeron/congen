@@ -18,6 +18,7 @@ import type {
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { categorizeExerciseVolume, convertWeightToPounds } from '../common/utils';
+import { replaceUnderscoresWithSpaces, formatDate } from '../common/utils';
 
 interface WorkoutAnalyticsProps {
   user: User;
@@ -174,7 +175,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
               const exerciseInfo = exerciseData.get(exerciseName);
               const categorizedVolume = categorizeExerciseVolume(
                 exerciseInfo,
-                workoutData.workout.name,
+                replaceUnderscoresWithSpaces(workoutData.workout.name),
                 setVolume
               );
 
@@ -186,7 +187,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         });
 
         return {
-          date: new Date(workoutData.workout.created_at).toLocaleDateString(),
+          date: formatDate(workoutData.workout.created_at),
           totalVolume: Math.round(maxEffortVolume + dynamicEffortVolume + accessoryVolume),
           maxEffortVolume: Math.round(maxEffortVolume),
           dynamicEffortVolume: Math.round(dynamicEffortVolume),

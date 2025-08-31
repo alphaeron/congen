@@ -213,14 +213,17 @@ class ProgrammedWorkoutController(
      *
      * This endpoint fetches all programmed workouts that belong to a specific
      * program, ordered by their day number within the program.
+     * Optionally filters by week number if provided.
      *
      * @param programId The unique identifier of the program
+     * @param week Optional week number to filter workouts (1-based)
      * @return ResponseEntity containing a list of programmed workouts for the program
      */
     @GetMapping("/program/{program_id}")
     @PreAuthorize("isAuthenticated()")
     fun getByProgramId(
         @PathVariable("program_id") programId: Long,
+        @RequestParam("week", required = false) week: Int? = null,
     ): Mono<ResponseEntity<List<ProgrammedWorkout>>> {
         return keycloakUtil.getCurrentUserId().zipWith(keycloakUtil.getCurrentUserRoles()) { userId, roles ->
             Pair(userId, roles)
@@ -236,14 +239,25 @@ class ProgrammedWorkoutController(
                         }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
-                            programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
-                                .map { programmedWorkouts ->
-                                    logger.debug("Found {} programmed workouts for program: {}", programmedWorkouts.size, programId)
-                                    ResponseEntity.ok(programmedWorkouts)
+                            val workoutMono = if (week != null) {
+                                // Validate week number
+                                if (week < 1) {
+                                    Mono.error(IllegalArgumentException("Week number must be at least 1, got: $week"))
+                                } else {
+                                    programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId, week)
                                 }
-                                .doOnError { e ->
-                                    logger.error("Error getting programmed workouts for program: {}", programId, e)
-                                }
+                            } else {
+                                programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
+                            }
+                            
+                            workoutMono.map { programmedWorkouts ->
+                                val weekDescription = if (week != null) " for week $week" else ""
+                                logger.debug("Found {} programmed workouts for program: {}{}", programmedWorkouts.size, programId, weekDescription)
+                                ResponseEntity.ok(programmedWorkouts)
+                            }
+                            .doOnError { e ->
+                                logger.error("Error getting programmed workouts for program: {}", programId, e)
+                            }
                         }
                     }
                 } else {

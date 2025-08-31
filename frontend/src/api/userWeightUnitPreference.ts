@@ -15,8 +15,8 @@ export interface UserWeightUnitPreference {
   user_id: string;
   exercise_name: string;
   preferred_unit: WeightUnit;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 }
 
 /**

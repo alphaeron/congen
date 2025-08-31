@@ -5,6 +5,42 @@ import { BACKEND_URL } from '../globals';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 /**
+ * Converts Unix timestamps (in seconds) to Date objects.
+ * Recursively processes objects and arrays to find timestamp fields.
+ */
+function convertTimestampsToDates(obj: any): any {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(convertTimestampsToDates);
+  }
+
+  if (typeof obj === 'object') {
+    const converted: any = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (key === 'created_at' || key === 'updated_at' || key === 'consent_timestamp' || key === 'export_timestamp' || key === 'last_updated' || key === 'timestamp') {
+        // Convert Unix timestamp in seconds to Date object, or ISO date string to Date object
+        if (typeof value === 'number') {
+          converted[key] = new Date(value * 1000);
+        } else if (typeof value === 'string' && (value.includes('T') || value.includes('Z') || /^\d{4}-\d{2}-\d{2}/.test(value))) {
+          // Handle ISO date strings like "2025-08-25T00:00:00Z" or "2025-08-25"
+          converted[key] = new Date(value);
+        } else {
+          converted[key] = value;
+        }
+      } else {
+        converted[key] = convertTimestampsToDates(value);
+      }
+    }
+    return converted;
+  }
+
+  return obj;
+}
+
+/**
  * Congen backend endpoint.
  */
 export const ENDPOINT = axios.create({
@@ -59,9 +95,15 @@ ENDPOINT.interceptors.request.use(async config => {
   return config;
 });
 
-// Add response interceptor to handle token refresh on 401 errors
+// Add response interceptor to handle token refresh on 401 errors and convert timestamps
 ENDPOINT.interceptors.response.use(
-  response => response,
+  response => {
+    // Convert Unix timestamps to Date objects in the response data
+    if (response.data) {
+      response.data = convertTimestampsToDates(response.data);
+    }
+    return response;
+  },
   async error => {
     if (error.response?.status === 401) {
       // The OIDC library should handle token refresh automatically

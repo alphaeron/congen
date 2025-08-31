@@ -30,6 +30,7 @@ import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type { Program, ProgrammedWorkout, User, ProgramWithPreferences } from '../api/types';
+import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutsProps {
   user: User;
@@ -257,10 +258,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                             {activeProgram.program.name}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            Week {activeProgram.program.current_week_number} • {weeks.length} weeks
-                            •{' '}
-                            {workouts.filter(w => w.program_id === activeProgram.program.id).length}{' '}
-                            total workouts
+                            Current Week: {activeProgram.program.current_week_number}
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>
@@ -308,7 +306,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                             >
                               <ListItemText
                                 primary={`Week ${week.weekNumber}`}
-                                secondary={`${week.workoutCount} workouts • ${week.workouts.map(w => w.name || `Workout ${w.day_number}`).join(', ')}`}
+                                secondary={`${week.workoutCount} workouts • ${week.workouts.map(w => replaceUnderscoresWithSpaces(w.name || `Workout ${w.day_number}`)).join(', ')}`}
                               />
                             </ListItem>
                           ))}

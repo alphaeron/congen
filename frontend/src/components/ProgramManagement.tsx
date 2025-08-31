@@ -26,7 +26,8 @@ import React, { useEffect, useState } from 'react';
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
-import type { User, Program, ProgrammedWorkout } from '../api/types';
+import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
+import { formatDate } from '../common/utils';
 
 interface ProgramManagementProps {
   user: User;
@@ -44,6 +45,7 @@ interface ProgramManagementProps {
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
+  const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(new Map());
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -74,6 +76,25 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
       setPrograms(programsData);
       setWorkouts(workoutsData);
+
+      // Load program preferences for each program
+      const preferencesMap = new Map<number, ProgramPreferences>();
+      for (const program of programsData) {
+        try {
+          const preferences = await getProgramPreferences(program.id);
+          preferencesMap.set(program.id, preferences.data);
+        } catch {
+          // Use default preferences if loading fails
+          preferencesMap.set(program.id, {
+            program_id: program.id,
+            program_days_per_week: 4,
+            session_time_length_in_minutes: 60,
+            created_at: program.created_at,
+            updated_at: program.updated_at,
+          });
+        }
+      }
+      setProgramPreferences(preferencesMap);
     } catch {
       enqueueSnackbar('Failed to load programs. Please try again.', { variant: 'error' });
     } finally {
@@ -88,9 +109,10 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         formData.numDaysPerWeek,
         user.keycloak_id
       );
-      setPrograms(prev => [...prev, newProgram]);
       setCreateDialogOpen(false);
       setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
+      // Reload programs to get the updated data with preferences
+      loadPrograms();
     } catch {
       enqueueSnackbar('Failed to create program. Please try again.', { variant: 'error' });
     }
@@ -101,6 +123,22 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       await updateProgramPreferences(selectedProgram.id, formData.sessionTimeLengthInMinutes);
+      
+      // Update the local program preferences state
+      setProgramPreferences(prev => {
+        const newMap = new Map(prev);
+        const existingPreferences = prev.get(selectedProgram.id);
+        if (existingPreferences) {
+          const updatedPreferences = {
+            ...existingPreferences,
+            session_time_length_in_minutes: formData.sessionTimeLengthInMinutes,
+            updated_at: new Date().toISOString(),
+          };
+          newMap.set(selectedProgram.id, updatedPreferences);
+        }
+        return newMap;
+      });
+      
       setEditDialogOpen(false);
       setSelectedProgram(null);
       setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
@@ -140,9 +178,8 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         true // Set to active
       );
 
-      // Refresh the entire programs list since other programs may have been deactivated
-      const refreshedPrograms = await getPrograms();
-      setPrograms(refreshedPrograms);
+      // Reload programs to get the updated data
+      loadPrograms();
 
       setResumeDialogOpen(false);
       setSelectedProgram(null);
@@ -158,6 +195,11 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     try {
       await deleteProgram(selectedProgram.id);
       setPrograms(prev => prev.filter(p => p.id !== selectedProgram.id));
+      setProgramPreferences(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(selectedProgram.id);
+        return newMap;
+      });
       setDeleteDialogOpen(false);
       setSelectedProgram(null);
     } catch {
@@ -295,7 +337,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                       size="small"
                     />
                     <Chip
-                      label={`Week ${program.current_week_number}`}
+                      label={`Week ${Math.max(program.current_week_number, 1)}`}
                       color="primary"
                       size="small"
                     />
@@ -306,27 +348,22 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                     />
                   </Box>
 
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Created: {new Date(program.created_at).toLocaleDateString()}
-                  </Typography>
+                  {(() => {
+                    const preferences = programPreferences.get(program.id);
+                    const sessionDuration = preferences?.session_time_length_in_minutes || 60;
+                    return (
+                      <Chip
+                        label={`Session Duration: ${sessionDuration} min`}
+                        size="small"
+                        variant="outlined"
+                        sx={{ mb: 2 }}
+                      />
+                    );
+                  })()}
 
-                  {programWorkouts.length > 0 && (
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Recent Workouts:
-                      </Typography>
-                      <Box display="flex" flexWrap="wrap" gap={0.5}>
-                        {programWorkouts.slice(-3).map(workout => (
-                          <Chip
-                            key={workout.id}
-                            label={`Day ${workout.day_number}: ${workout.name}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
-                    </Box>
-                  )}
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Created: {formatDate(program.created_at)}
+                  </Typography>
                 </CardContent>
               </Card>
             </Grid>

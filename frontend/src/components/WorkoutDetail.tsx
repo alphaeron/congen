@@ -20,6 +20,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 
 import { getUserDataExport } from '../api/gdpr';
 import type { UserDataExport } from '../api/types';
+import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -104,7 +105,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   useEffect(() => {
     if (workoutData && onWorkoutDetailsUpdate) {
       onWorkoutDetailsUpdate({
-        name: workoutData.workout.name,
+        name: replaceUnderscoresWithSpaces(workoutData.workout.name),
         day_number: workoutData.workout.day_number,
         stages: workoutData.stages.length,
       });

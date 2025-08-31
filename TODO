@@ -1,3 +1,9 @@
+Fix dates: Member since January 21, 1970
+
+Display for workout detail title (should not be "DE_Upper Day (Day 4) • 5 stages")
+
+we have three different loaders, the loader used for generate workouts, the loader when workout analytics, exercise analytics, conjugate progression, and others are loading, and the custom loader component we have.  use the custom loader component for everything.
+
 update package-lock.json
 
 update material-ui
@@ -35,10 +41,6 @@ View current exercise weight preferences in dashboard, dive in from the count di
 remove all hardcoded exercises, use muscles from primary exercise.
 
 weak muscles taken into account
-
-Display for workout detail title (should not be "DE_Upper Day (Day 4) • 5 stages")
-
-update program button not working
 
 After generation prompted for current 1rm, sets reps can do for accessories and other portions of workout not recorded.  After record all that, then edit the workout to reflect current abilities.  Over time you won’t be prompted anymore, or can decline to answer and the default will be used.  Wizard  interface, show generating while it waits to load, then some screen like to further customize/taylor the workout generation for you can you provide…
 
@@ -92,8 +94,6 @@ check the frontend for common patterns we can abstract into our own custom compo
 support edit profile with keycloak, or other backend integration?
 
 Implement change password functionality
-
-Fix dates: Member since January 21, 1970
 
 
 

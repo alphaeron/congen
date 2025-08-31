@@ -12,6 +12,7 @@ import { getPrograms } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import type { User, Program, UserOneRepMax, ProgrammedWorkout } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { formatDate } from '../common/utils';
 
 interface DashboardOverviewProps {
   user: User;
@@ -245,7 +246,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                       {oneRepMax.one_rep_max} {oneRepMax.unit}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Updated: {new Date(oneRepMax.updated_at).toLocaleDateString()}
+                      Updated: {formatDate(oneRepMax.updated_at)}
                     </Typography>
                   </Box>
                 </Grid>

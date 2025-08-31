@@ -25,6 +25,39 @@ export function capitalizeEachWord(str: string): string {
 } // capitalizeEachWord
 
 /**
+ * Replaces underscores with spaces in a string.
+ * 
+ * @param str The string to format
+ * @returns The formatted string with underscores replaced by spaces
+ */
+export function replaceUnderscoresWithSpaces(str: string): string {
+  return str.replace(/_/g, ' ');
+}
+
+/**
+ * Safely formats a Date object to a readable format in the local timezone.
+ *
+ * @param dateInput The date to format (can be null, undefined, or Date object)
+ * @param options Optional formatting options for toLocaleDateString
+ * @returns Formatted date string or 'N/A' if invalid
+ */
+export function formatDate(
+  dateInput: Date | null | undefined,
+  options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }
+): string {
+  if (!dateInput || !(dateInput instanceof Date) || isNaN(dateInput.getTime())) {
+    return 'N/A';
+  }
+
+  // Display the date in the local timezone
+  return dateInput.toLocaleDateString('en-US', options);
+}
+
+/**
  * Convert weight to pounds based on user's preferred unit.
  *
  * @param weight The weight value to convert

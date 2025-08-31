@@ -48,8 +48,8 @@ export interface Muscle {
 export interface User {
   keycloak_id: string;
   name: string;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
   roles?: string[];
 } // end interface User
 
@@ -60,8 +60,8 @@ export interface User {
 export interface UserConsent {
   keycloak_id: string;
   data_processing_consent: boolean;
-  consent_timestamp?: string;
-  updated_at: string;
+  consent_timestamp?: Date;
+  updated_at: Date;
 } // end interface UserConsent
 
 /**
@@ -70,11 +70,11 @@ export interface UserConsent {
 export interface UserDataExport {
   keycloak_id: string;
   name: string;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
   data_processing_consent: boolean;
-  consent_timestamp?: string;
-  export_timestamp: string;
+  consent_timestamp?: Date;
+  export_timestamp: Date;
   user_equipment: Record<string, unknown>[];
   user_exercise_preferences: Record<string, unknown>[];
   user_one_rep_max: Record<string, unknown>[];
@@ -101,8 +101,8 @@ export interface ProgramWithWorkouts {
     user_id: string;
     name: string;
     current_week_number: number;
-    created_at: string;
-    updated_at: string;
+    created_at: Date;
+    updated_at: Date;
     is_active: boolean;
   };
   program_preferences: ProgramPreferences;
@@ -118,8 +118,8 @@ export interface ProgrammedWorkoutWithStages {
     program_id: number;
     day_number: number;
     name: string;
-    created_at: string;
-    updated_at: string;
+    created_at: Date;
+    updated_at: Date;
   };
   stages: WorkoutStageWithExercises[];
 } // end interface ProgrammedWorkoutWithStages
@@ -134,8 +134,8 @@ export interface WorkoutStageWithExercises {
     stage_type_id: number;
     position: number;
     name: string;
-    created_at: string;
-    updated_at: string;
+    created_at: Date;
+    updated_at: Date;
   };
   exercises: ProgrammedExerciseWithSetSchemes[];
 } // end interface WorkoutStageWithExercises
@@ -150,8 +150,8 @@ export interface ProgrammedExerciseWithSetSchemes {
     exercise_name: string;
     position: number;
     notes?: string;
-    created_at: string;
-    updated_at: string;
+    created_at: Date;
+    updated_at: Date;
   };
   set_schemes: SetScheme[];
 } // end interface ProgrammedExerciseWithSetSchemes
@@ -174,8 +174,8 @@ export interface SetScheme {
   target_rep_count?: number;
   performed_rep_count?: number;
   rest_seconds?: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
   band_weight_lbs?: Record<string, unknown>;
 } // end interface SetScheme
 
@@ -202,7 +202,7 @@ export interface PrivacyPolicy {
     objection: string;
     complaint: string;
   };
-  last_updated: string;
+  last_updated: Date;
   version: string;
 } // end interface PrivacyPolicy
 
@@ -214,8 +214,8 @@ export interface Program {
   user_id: string;
   name: string;
   current_week_number: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
   is_active: boolean;
 } // end interface Program
 
@@ -226,8 +226,8 @@ export interface ProgramPreferences {
   program_id: number;
   program_days_per_week: number;
   session_time_length_in_minutes: number;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 } // end interface ProgramPreferences
 
 /**
@@ -238,8 +238,8 @@ export interface ProgrammedWorkout {
   program_id: number;
   day_number: number;
   name: string;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 } // end interface ProgrammedWorkout
 
 /**
@@ -251,8 +251,8 @@ export interface WorkoutStage {
   stage_type_id: number;
   position: number;
   name: string;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 } // end interface WorkoutStage
 
 /**
@@ -264,8 +264,8 @@ export interface ProgrammedExercise {
   exercise_name: string;
   position: number;
   notes?: string;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 } // end interface ProgrammedExercise
 
 /**
@@ -276,8 +276,8 @@ export interface UserOneRepMax {
   exercise_name: string;
   one_rep_max: number;
   unit: string;
-  created_at: string;
-  updated_at: string;
+  created_at: Date;
+  updated_at: Date;
 } // end interface UserOneRepMax
 
 /**
