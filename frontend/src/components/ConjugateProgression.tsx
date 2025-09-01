@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
@@ -9,23 +9,11 @@ import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import type {
   User,
-  UserDataExport,
-  ProgrammedWorkoutWithStages,
   Exercise,
-  ProgramWithWorkouts,
 } from '../api/types';
-import { categorizeExerciseVolume } from '../common/utils';
-import { replaceUnderscoresWithSpaces, formatDate } from '../common/utils';
 
 interface ConjugateProgressionProps {
   user: User;
-}
-
-interface ProgressData {
-  date: string;
-  exercise: string;
-  weight: number;
-  type: '1RM' | 'Volume';
 }
 
 /**
@@ -42,7 +30,7 @@ interface ProgressData {
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [userData, setUserData] = useState<UserDataExport | null>(null);
+  const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
 
@@ -59,10 +47,10 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         // Fetch exercise data for all unique exercises
         // Handle case where user has no training programs (empty array)
         const uniqueExercises = new Set<string>();
-        dataExport.training_programs?.forEach((program: ProgramWithWorkouts) => {
-          program.workouts.forEach(workout => {
-            workout.stages.forEach(stage => {
-              stage.exercises.forEach(exercise => {
+        dataExport.training_programs?.forEach((program: any) => {
+          program.workouts.forEach((workout: any) => {
+            workout.stages.forEach((stage: any) => {
+              stage.exercises.forEach((exercise: any) => {
                 uniqueExercises.add(exercise.exercise.exercise_name);
               });
             });
@@ -91,197 +79,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
 
     loadWorkoutData();
   }, [user.keycloak_id]);
-
-  // Calculate volume data for charts
-  const volumeData = useMemo(() => {
-    if (!userData?.training_programs?.length) return [];
-
-    const allWorkouts: ProgrammedWorkoutWithStages[] = [];
-    userData.training_programs.forEach(program => {
-      allWorkouts.push(...program.workouts);
-    });
-
-    return allWorkouts
-      .map(workoutData => {
-        const totalVolume = 0;
-        let maxEffortVolume = 0;
-        let dynamicEffortVolume = 0;
-        let accessoryVolume = 0;
-
-        workoutData.stages.forEach(stage => {
-          stage.exercises.forEach(exerciseWithSchemes => {
-            exerciseWithSchemes.set_schemes.forEach(setScheme => {
-              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-              const bandWeight = setScheme.band_weight_lbs
-                ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
-                : 0;
-
-              const totalWeight = weight + bandWeight;
-              const setVolume = totalWeight * reps;
-
-              // Get exercise data and categorize volume using shared helper
-              const exerciseName = exerciseWithSchemes.exercise.exercise_name;
-              const exerciseInfo = exerciseData.get(exerciseName);
-              const categorizedVolume = categorizeExerciseVolume(
-                exerciseInfo,
-                replaceUnderscoresWithSpaces(workoutData.workout.name),
-                setVolume
-              );
-
-              maxEffortVolume += categorizedVolume.maxEffortVolume;
-              dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
-              accessoryVolume += categorizedVolume.accessoryVolume;
-            });
-          });
-        });
-
-        return {
-          date: formatDate(workoutData.workout.created_at),
-          totalVolume: Math.round(
-            totalVolume + maxEffortVolume + dynamicEffortVolume + accessoryVolume
-          ),
-          maxEffortVolume: Math.round(maxEffortVolume),
-          dynamicEffortVolume: Math.round(dynamicEffortVolume),
-          accessoryVolume: Math.round(accessoryVolume),
-        };
-      })
-      .slice(-10); // Last 10 workouts
-  }, [userData, exerciseData]);
-
-  // Calculate exercise volume by workout stage data
-  const exerciseCorrelationData = useMemo(() => {
-    if (!userData?.training_programs?.length) return [];
-
-    const stageVolumeMap = new Map<string, number>();
-    const allWorkouts: ProgrammedWorkoutWithStages[] = [];
-    userData.training_programs.forEach(program => {
-      allWorkouts.push(...program.workouts);
-    });
-
-    allWorkouts.forEach(workoutData => {
-      workoutData.stages.forEach(stage => {
-        const stageName = stage.stage.name || 'Unknown Stage';
-
-        stage.exercises.forEach(exerciseWithSchemes => {
-          // Calculate volume for this exercise in this stage
-          let stageVolume = 0;
-          exerciseWithSchemes.set_schemes.forEach(setScheme => {
-            const weight = setScheme.performed_weight || setScheme.target_weight || 0;
-            const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
-            const bandWeight = setScheme.band_weight_lbs
-              ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
-              : 0;
-
-            stageVolume += (weight + bandWeight) * reps;
-          });
-
-          // Add to stage volume
-          const currentVolume = stageVolumeMap.get(stageName) || 0;
-          stageVolumeMap.set(stageName, currentVolume + stageVolume);
-        });
-      });
-    });
-
-    // Convert to the expected format for the donut chart
-    return Array.from(stageVolumeMap.entries()).map(([stageName, volume]) => ({
-      exercise: stageName, // Using stage name as exercise name for the chart
-      category: stageName,
-      volume,
-      frequency: 1, // Not used for donut chart
-      maxWeight: 0, // Not used for donut chart
-    }));
-  }, [userData, exerciseData]);
-
-  // Calculate progress data
-  const progressData = useMemo(() => {
-    const progress: ProgressData[] = [];
-
-    // Add 1RM data
-    if (userData?.user_one_rep_max) {
-      userData.user_one_rep_max.forEach(oneRepMax => {
-        const typedOneRepMax = oneRepMax as {
-          updated_at: Date;
-          exercise_name: string;
-          one_rep_max: number;
-        };
-        progress.push({
-          date: formatDate(typedOneRepMax.updated_at),
-          exercise: typedOneRepMax.exercise_name,
-          weight: typedOneRepMax.one_rep_max,
-          type: '1RM',
-        });
-      });
-    }
-
-    // Add volume data from recent workouts
-    volumeData.forEach(volume => {
-      progress.push({
-        date: volume.date,
-        exercise: 'Total Volume',
-        weight: volume.totalVolume,
-        type: 'Volume',
-      });
-    });
-
-    return progress.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [userData, volumeData]);
-
-  // Prepare chart data
-  const volumeChartData = useMemo(
-    () => [
-      {
-        id: 'Total Volume',
-        data: volumeData.map(d => ({ x: d.date, y: d.totalVolume })),
-      },
-      {
-        id: 'Max Effort',
-        data: volumeData.map(d => ({ x: d.date, y: d.maxEffortVolume })),
-      },
-      {
-        id: 'Dynamic Effort',
-        data: volumeData.map(d => ({ x: d.date, y: d.dynamicEffortVolume })),
-      },
-      {
-        id: 'Accessory',
-        data: volumeData.map(d => ({ x: d.date, y: d.accessoryVolume })),
-      },
-    ],
-    [volumeData]
-  );
-
-  const correlationChartData = useMemo(() => {
-    // Aggregate volume by workout stage
-    const stageVolumeMap = new Map<string, number>();
-
-    exerciseCorrelationData.forEach(ex => {
-      const currentVolume = stageVolumeMap.get(ex.category) || 0;
-      stageVolumeMap.set(ex.category, currentVolume + ex.volume);
-    });
-
-    const result = Array.from(stageVolumeMap.entries()).map(([category, volume]) => ({
-      category,
-      volume,
-    }));
-
-    return result;
-  }, [exerciseCorrelationData]);
-
-  const progressChartData = useMemo(
-    () => [
-      {
-        id: '1RM Progress',
-        data: progressData.filter(d => d.type === '1RM').map(d => ({ x: d.date, y: d.weight })),
-      },
-      {
-        id: 'Volume Progress',
-        data: progressData
-          .filter(d => d.type === 'Volume')
-          .map(d => ({ x: d.date, y: d.weight / 1000 })), // Scale down for visibility
-      },
-    ],
-    [progressData]
-  );
 
   if (isLoading) {
     return (
@@ -314,7 +111,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         {/* Volume Tracking Chart */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <LineChart
-            data={volumeChartData}
+            userDataExport={userData}
+            exerciseData={exerciseData}
+            chartType="volume"
             title="Volume Progression"
             description="Total weight lifted over time (including band resistance)"
             xAxisLabel="Workout Date"
@@ -325,11 +124,8 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         {/* Exercise Category Distribution */}
         <Grid size={{ xs: 12, lg: 4 }}>
           <PieChart
-            data={correlationChartData.map(d => ({
-              id: d.category,
-              label: d.category,
-              value: d.volume,
-            }))}
+            userDataExport={userData}
+            exerciseData={exerciseData}
             title="Exercise Distribution"
             description="Volume by workout stage"
           />
@@ -338,7 +134,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         {/* Progress Tracking */}
         <Grid size={{ xs: 12 }}>
           <LineChart
-            data={progressChartData}
+            userDataExport={userData}
+            exerciseData={exerciseData}
+            chartType="progress"
             title="Progress Tracking"
             description="1RM improvements and volume progression over time"
             xAxisLabel="Date"

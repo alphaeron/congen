@@ -1,6 +1,6 @@
-add weak muscles UI to program preferences (name target muscles in the interface)
+remove console statements
 
-update package-lock.json
+add weak muscles UI to program preferences (name target muscles in the interface)
 
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
 

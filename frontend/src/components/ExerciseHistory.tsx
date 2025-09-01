@@ -15,7 +15,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { RadialBarChart } from './RadialBarChart';
@@ -28,15 +28,9 @@ import type {
   UserOneRepMax,
   Exercise,
   ExerciseMuscle,
-  UserDataExport,
-  ProgramWithWorkouts,
-  ProgrammedWorkoutWithStages,
-  WorkoutStageWithExercises,
-  ProgrammedExerciseWithSetSchemes,
-  SetScheme,
 } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { formatDate } from '../common/utils';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -67,7 +61,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
     []
   );
-  const [workoutData, setWorkoutData] = useState<UserDataExport | null>(null);
+  const [workoutData, setWorkoutData] = useState<any>(null);
 
   // Get active tab from URL parameters, default to 'onerepmax'
   const activeTab = (searchParams.get('tab') as TabName) || 'onerepmax';
@@ -137,196 +131,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
     selectedExercise === 'all'
       ? oneRepMaxes
       : oneRepMaxes.filter(orm => orm.exercise_name === selectedExercise);
-
-  // Helper function to convert weight to user's preferred unit
-  const convertWeightToUserUnit = (weight: number, exerciseName: string): number => {
-    const preference = weightUnitPreferences.find(pref => pref.exercise_name === exerciseName);
-    const userUnit = preference?.preferred_unit || WeightUnit.LBS;
-
-    if (userUnit === WeightUnit.LBS) {
-      return weight;
-    } else if (userUnit === WeightUnit.KG) {
-      return weight * 0.453592;
-    }
-
-    return weight;
-  };
-
-  // Create exerciseMap from workout data for volume and frequency calculations
-  const exerciseMap = useMemo(() => {
-    const map = new Map<
-      string,
-      { totalVolume: number; frequency: number; lastPerformed: Date | null }
-    >();
-
-    if (!workoutData?.training_programs) return map;
-
-    workoutData.training_programs.forEach((program: ProgramWithWorkouts) => {
-      program.workouts?.forEach((workout: ProgrammedWorkoutWithStages) => {
-        workout.stages?.forEach((stage: WorkoutStageWithExercises) => {
-          stage.exercises?.forEach((exercise: ProgrammedExerciseWithSetSchemes) => {
-            const exerciseName = exercise.exercise.exercise_name;
-            const existing = map.get(exerciseName) || {
-              totalVolume: 0,
-              frequency: 0,
-              lastPerformed: null,
-            };
-
-            // Calculate volume from set schemes with weight unit conversion
-            let exerciseVolume = 0;
-            exercise.set_schemes?.forEach((setScheme: SetScheme) => {
-              // Use performed values if available, otherwise use target values
-              const weight = setScheme.performed_weight || setScheme.target_weight;
-              const reps = setScheme.performed_rep_count || setScheme.target_rep_count;
-
-              if (weight && reps) {
-                const convertedWeight = convertWeightToUserUnit(weight, exerciseName);
-                exerciseVolume += convertedWeight * reps;
-              }
-            });
-
-            existing.totalVolume += exerciseVolume;
-            // Count frequency if there are any set schemes (programmed or performed)
-            if (exercise.set_schemes && exercise.set_schemes.length > 0) {
-              existing.frequency += 1;
-            }
-
-            // Update last performed date
-            if (
-              !existing.lastPerformed ||
-              (workout.workout.created_at &&
-                workout.workout.created_at > existing.lastPerformed)
-            ) {
-              existing.lastPerformed = workout.workout.created_at;
-            }
-
-            map.set(exerciseName, existing);
-          });
-        });
-      });
-    });
-
-    return map;
-  }, [workoutData, weightUnitPreferences]);
-
-  // Calculate exercise statistics based on filtered data
-  const exerciseStats = (selectedExercise === 'all' ? uniqueExercises : [selectedExercise]).map(
-    exerciseName => {
-      const exerciseOneRepMax = filteredOneRepMaxes.find(orm => orm.exercise_name === exerciseName);
-      const exercise = allExercises.find(ex => ex.name === exerciseName);
-      const performanceData = exerciseMap.get(exerciseName);
-
-      return {
-        name: exerciseName,
-        oneRepMax: exerciseOneRepMax,
-        isAccessory: exercise?.is_accessory || false,
-        totalVolume: performanceData?.totalVolume || 0,
-        frequency: performanceData?.frequency || 0,
-        lastPerformed: performanceData?.lastPerformed || null,
-      };
-    }
-  );
-
-  // Chart data calculations
-  const radialBarData = useMemo(() => {
-    if (!exerciseStats.length) return [];
-
-    return exerciseStats
-      .map(exercise => {
-        return {
-          id: exercise.name,
-          data: [
-            {
-              x: 'Volume',
-              y: exercise.totalVolume,
-            },
-            {
-              x: 'Frequency',
-              y: exercise.frequency,
-            },
-            {
-              x: '1RM Weight',
-              y: exercise.oneRepMax?.one_rep_max || 0,
-            },
-          ],
-        };
-      })
-      .slice(0, 10); // Top 10 exercises
-  }, [exerciseStats]);
-
-  const sunburstData = useMemo(() => {
-    if (!exerciseStats.length) {
-      return {
-        name: 'Exercise Volume',
-        children: [],
-      };
-    }
-
-    // Build the Nivo data structure following the correct pattern
-    // Group exercises by muscle groups to avoid duplicates
-    const muscleGroups = new Map<
-      string,
-      { name: string; children: Array<{ name: string; loc: number }> }
-    >();
-
-    exerciseStats.forEach(exercise => {
-      const individualMuscles = exerciseMuscleData.get(exercise.name) || [];
-
-      // If no muscle data, create a default group
-      if (individualMuscles.length === 0) {
-        const defaultGroup = muscleGroups.get('Other') || { name: 'Other', children: [] };
-        defaultGroup.children.push({
-          name: exercise.name,
-          loc: exercise.totalVolume,
-        });
-        muscleGroups.set('Other', defaultGroup);
-      } else {
-        // For exercises that belong to multiple muscle groups, create unique keys
-        // by combining exercise name with muscle group
-        individualMuscles.forEach(muscle => {
-          const existing = muscleGroups.get(muscle);
-          const uniqueExerciseName =
-            individualMuscles.length > 1 ? `${exercise.name} (${muscle})` : exercise.name;
-
-          if (existing) {
-            // Check if this exercise already exists in this muscle group
-            const existingExercise = existing.children.find(
-              child => child.name === uniqueExerciseName
-            );
-            if (existingExercise) {
-              existingExercise.loc += exercise.totalVolume;
-            } else {
-              existing.children.push({
-                name: uniqueExerciseName,
-                loc: exercise.totalVolume,
-              });
-            }
-          } else {
-            muscleGroups.set(muscle, {
-              name: muscle,
-              children: [
-                {
-                  name: uniqueExerciseName,
-                  loc: exercise.totalVolume,
-                },
-              ],
-            });
-          }
-        });
-      }
-    });
-
-    // Convert to array and ensure unique names at all levels
-    const children = Array.from(muscleGroups.values()).map(group => ({
-      name: group.name,
-      children: group.children,
-    }));
-
-    return {
-      name: 'Exercise Volume',
-      children,
-    };
-  }, [exerciseStats, exerciseMuscleData]);
 
   if (isLoading) {
     return (
@@ -444,14 +248,24 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
           {/* Exercise Performance Tab */}
           {activeTab === 'radial' && (
             <Box>
-              <RadialBarChart data={radialBarData} />
+              <RadialBarChart
+                userDataExport={workoutData}
+                oneRepMaxes={oneRepMaxes}
+                weightUnitPreferences={weightUnitPreferences}
+                selectedExercise={selectedExercise}
+              />
             </Box>
           )}
 
           {/* Exercise Volume Hierarchy Tab */}
           {activeTab === 'sunburst' && (
             <Box>
-              <SunburstChart data={sunburstData} />
+              <SunburstChart
+                userDataExport={workoutData}
+                exerciseMuscleData={exerciseMuscleData}
+                weightUnitPreferences={weightUnitPreferences}
+                selectedExercise={selectedExercise}
+              />
             </Box>
           )}
         </Box>

@@ -4,6 +4,9 @@ import { ResponsiveLine } from '@nivo/line';
 import React, { useState, useMemo } from 'react';
 
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
+import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
+import { categorizeExerciseVolume } from '../common/utils';
+import { replaceUnderscoresWithSpaces, formatDate } from '../common/utils';
 
 interface LineData {
   id: string;
@@ -14,7 +17,8 @@ interface LineData {
 }
 
 interface LineChartProps {
-  data: LineData[];
+  userDataExport: UserDataExport | null;
+  exerciseData?: Map<string, Exercise>;
   title?: string;
   description?: string;
   xAxisLabel?: string;
@@ -22,12 +26,17 @@ interface LineChartProps {
   height?: number;
   showLegend?: boolean;
   colors?: string[];
+  chartType: 'volume' | 'progress';
 }
 
 /**
  * Line Chart component for displaying progression data.
+ * 
+ * This component accepts raw workout data and handles all data transformations
+ * internally to calculate and display different types of line charts.
  *
- * @param data The chart data in line format
+ * @param userDataExport The raw user data export containing all workout information
+ * @param exerciseData Map of exercise data for categorization (required for volume charts)
  * @param title Optional title for the chart
  * @param description Optional description for the chart
  * @param xAxisLabel Optional x-axis label
@@ -35,10 +44,12 @@ interface LineChartProps {
  * @param height Optional height for the chart container
  * @param showLegend Whether to show the legend
  * @param colors Optional color scheme
+ * @param chartType Type of chart to render ('volume' or 'progress')
  * @return Line Chart component
  */
 export const LineChart: React.FC<LineChartProps> = ({
-  data,
+  userDataExport,
+  exerciseData,
   title = 'Volume Progression',
   description = 'Total weight lifted over time (including band resistance)',
   xAxisLabel = 'Workout Date',
@@ -46,29 +57,176 @@ export const LineChart: React.FC<LineChartProps> = ({
   height = 300,
   showLegend = true,
   colors,
+  chartType,
 }) => {
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
+  // Extract workouts from the raw data
+  const workouts = useMemo(() => {
+    if (!userDataExport?.training_programs?.length) return [];
+
+    const allWorkouts: any[] = [];
+    userDataExport.training_programs.forEach(program => {
+      allWorkouts.push(...program.workouts);
+    });
+
+    return allWorkouts;
+  }, [userDataExport]);
+
+  // Calculate volume data for volume charts
+  const volumeData = useMemo(() => {
+    if (chartType !== 'volume' || !workouts.length || !exerciseData) return [];
+
+    return workouts
+      .map(workoutData => {
+        const totalVolume = 0;
+        let maxEffortVolume = 0;
+        let dynamicEffortVolume = 0;
+        let accessoryVolume = 0;
+
+        workoutData.stages.forEach((stage: any) => {
+          stage.exercises.forEach((exerciseWithSchemes: any) => {
+            exerciseWithSchemes.set_schemes.forEach((setScheme: any) => {
+              const weight = setScheme.performed_weight || setScheme.target_weight || 0;
+              const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
+              const bandWeight = setScheme.band_weight_lbs
+                ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
+                : 0;
+
+              const totalWeight = weight + bandWeight;
+              const setVolume = totalWeight * reps;
+
+              // Get exercise data and categorize volume using shared helper
+              const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+              const exerciseInfo = exerciseData.get(exerciseName);
+              const categorizedVolume = categorizeExerciseVolume(
+                exerciseInfo,
+                replaceUnderscoresWithSpaces(workoutData.workout.name),
+                setVolume
+              );
+
+              maxEffortVolume += categorizedVolume.maxEffortVolume;
+              dynamicEffortVolume += categorizedVolume.dynamicEffortVolume;
+              accessoryVolume += categorizedVolume.accessoryVolume;
+            });
+          });
+        });
+
+        return {
+          date: formatDate(workoutData.workout.created_at),
+          totalVolume: Math.round(
+            totalVolume + maxEffortVolume + dynamicEffortVolume + accessoryVolume
+          ),
+          maxEffortVolume: Math.round(maxEffortVolume),
+          dynamicEffortVolume: Math.round(dynamicEffortVolume),
+          accessoryVolume: Math.round(accessoryVolume),
+        };
+      })
+      .slice(-10); // Last 10 workouts
+  }, [workouts, exerciseData, chartType]);
+
+  // Calculate progress data for progress charts
+  const progressData = useMemo(() => {
+    if (chartType !== 'progress' || !userDataExport) return [];
+
+    const progress: Array<{ date: string; exercise: string; weight: number; type: '1RM' | 'Volume' }> = [];
+
+    // Add 1RM data
+    if (userDataExport.user_one_rep_max) {
+      userDataExport.user_one_rep_max.forEach(oneRepMax => {
+        const typedOneRepMax = oneRepMax as {
+          updated_at: Date;
+          exercise_name: string;
+          one_rep_max: number;
+        };
+        progress.push({
+          date: formatDate(typedOneRepMax.updated_at),
+          exercise: typedOneRepMax.exercise_name,
+          weight: typedOneRepMax.one_rep_max,
+          type: '1RM',
+        });
+      });
+    }
+
+    // Add volume data from recent workouts
+    volumeData.forEach(volume => {
+      progress.push({
+        date: volume.date,
+        exercise: 'Total Volume',
+        weight: volume.totalVolume,
+        type: 'Volume',
+      });
+    });
+
+    return progress.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [userDataExport, volumeData, chartType]);
+
+  // Prepare chart data based on chart type
+  const chartData = useMemo(() => {
+    if (chartType === 'volume') {
+      return [
+        {
+          id: 'Total Volume',
+          data: volumeData.map(d => ({ x: d.date, y: d.totalVolume })),
+        },
+        {
+          id: 'Max Effort',
+          data: volumeData.map(d => ({ x: d.date, y: d.maxEffortVolume })),
+        },
+        {
+          id: 'Dynamic Effort',
+          data: volumeData.map(d => ({ x: d.date, y: d.dynamicEffortVolume })),
+        },
+        {
+          id: 'Accessory',
+          data: volumeData.map(d => ({ x: d.date, y: d.accessoryVolume })),
+        },
+      ];
+    } else if (chartType === 'progress') {
+      return [
+        {
+          id: '1RM Progress',
+          data: progressData.filter(d => d.type === '1RM').map(d => ({ x: d.date, y: d.weight })),
+        },
+        {
+          id: 'Volume Progress',
+          data: progressData
+            .filter(d => d.type === 'Volume')
+            .map(d => ({ x: d.date, y: d.weight / 1000 })), // Scale down for visibility
+        },
+      ];
+    } else {
+      return [];
+    }
+  }, [chartType, volumeData, progressData]);
+
   // Filter data based on legend selection
   const filteredData = useMemo(() => {
     if (selectedItems.length === 0) {
-      return data;
+      return chartData;
     }
-    return data.filter(item => selectedItems.includes(item.id));
-  }, [data, selectedItems]);
+    return chartData.filter(item => selectedItems.includes(item.id));
+  }, [chartData, selectedItems]);
 
   const handleLegendClick = (data: { id?: string; label?: string }) => {
     const itemId = data.id || data.label;
-    setSelectedItems(prev => {
-      if (prev.includes(itemId)) {
-        return prev.filter(id => id !== itemId);
-      } else {
-        return [...prev, itemId];
-      }
-    });
+    if (itemId) {
+      setSelectedItems(prev => {
+        if (prev.includes(itemId)) {
+          return prev.filter(id => id !== itemId);
+        } else {
+          return [...prev, itemId];
+        }
+      });
+    }
   };
+
+  // Don't render if no data
+  if (!chartData.length || !chartData[0].data.length) {
+    return null;
+  }
 
   return (
     <Card variant="outlined">
@@ -130,7 +288,18 @@ export const LineChart: React.FC<LineChartProps> = ({
                       symbolSize: 12,
                       symbolShape: 'circle',
                       symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                      onClick: handleLegendClick,
+                      onClick: (datum: any) => {
+                        const itemId = typeof datum.id === 'string' ? datum.id : datum.label;
+                        if (itemId) {
+                          setSelectedItems(prev => {
+                            if (prev.includes(itemId)) {
+                              return prev.filter(id => id !== itemId);
+                            } else {
+                              return [...prev, itemId];
+                            }
+                          });
+                        }
+                      },
                       effects: [
                         {
                           on: 'hover',
