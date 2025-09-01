@@ -321,8 +321,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         </Card>
       ) : (
         <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
-          {/* Workout List - 2/3 width */}
-          <Grid size={{ xs: 12, lg: 8 }}>
+          {/* Workout List and Details - Full width when workout selected, 2/3 when not */}
+          <Grid size={{ xs: 12, lg: selectedWorkoutId ? 12 : 8 }}>
             <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
               <Box sx={{ height: '100%' }}>
                 <Card sx={{
@@ -389,37 +389,39 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             )}
           </Grid>
 
-          {/* Charts - 1/3 width */}
-          <Grid size={{ xs: 12, lg: 4 }}>
-            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-              <RadarChart
-                weekWorkouts={weekWorkouts}
-                exerciseData={exerciseData}
-                title="Movement Type Distribution"
-                height={300}
-              />
-              {weekWorkouts.length > 0 && (
-                <SunburstChart
-                  workoutData={{
-                    id: `week-${weekNumber}`,
-                    name: `Week ${weekNumber} Aggregated`,
-                    day_number: weekNumber,
-                    stages: weekWorkouts.reduce((acc: any, weekWorkout: any) => {
-                      const workoutWithStages = weekWorkout.workout;
-                      if (workoutWithStages.stages) {
-                        return [...acc, ...workoutWithStages.stages];
-                      }
-                      return acc;
-                    }, [])
-                  }}
+          {/* Charts - 1/3 width - Only show when no workout is selected */}
+          {!selectedWorkoutId && (
+            <Grid size={{ xs: 12, lg: 4 }}>
+              <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <RadarChart
+                  weekWorkouts={weekWorkouts}
                   exerciseData={exerciseData}
-                  exerciseMuscleData={exerciseMuscleData}
-                  weightUnitPreferences={weightUnitPreferences}
-                  selectedExercise="all"
+                  title="Movement Type Distribution"
+                  height={300}
                 />
-              )}
-            </Box>
-          </Grid>
+                {weekWorkouts.length > 0 && (
+                  <SunburstChart
+                    workoutData={{
+                      id: `week-${weekNumber}`,
+                      name: `Week ${weekNumber} Aggregated`,
+                      day_number: weekNumber,
+                      stages: weekWorkouts.reduce((acc: any, weekWorkout: any) => {
+                        const workoutWithStages = weekWorkout.workout;
+                        if (workoutWithStages.stages) {
+                          return [...acc, ...workoutWithStages.stages];
+                        }
+                        return acc;
+                      }, [])
+                    }}
+                    exerciseData={exerciseData}
+                    exerciseMuscleData={exerciseMuscleData}
+                    weightUnitPreferences={weightUnitPreferences}
+                    selectedExercise="all"
+                  />
+                )}
+              </Box>
+            </Grid>
+          )}
         </Grid>
       )}
     </React.Fragment>
