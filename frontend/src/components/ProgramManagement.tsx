@@ -282,7 +282,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         {programs.map(program => {
           const programWorkouts = getWorkoutsForProgram(program.id);
           return (
-            <Grid item xs={12} md={6} lg={4} key={program.id}>
+            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={program.id}>
               <Card>
                 <CardContent>
                   <Box

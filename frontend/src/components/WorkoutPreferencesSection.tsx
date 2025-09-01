@@ -183,7 +183,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       <Grid container spacing={3}>
         {/* Weight Unit Preferences */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

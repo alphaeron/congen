@@ -312,7 +312,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     <React.Fragment>
       <Grid container spacing={3}>
         {/* Volume Tracking Chart */}
-        <Grid item xs={12} lg={8}>
+        <Grid size={{ xs: 12, lg: 8 }}>
           <LineChart
             data={volumeChartData}
             title="Volume Progression"
@@ -323,7 +323,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         </Grid>
 
         {/* Exercise Category Distribution */}
-        <Grid item xs={12} lg={4}>
+        <Grid size={{ xs: 12, lg: 4 }}>
           <PieChart
             data={correlationChartData.map(d => ({
               id: d.category,
@@ -336,7 +336,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         </Grid>
 
         {/* Progress Tracking */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <LineChart
             data={progressChartData}
             title="Progress Tracking"

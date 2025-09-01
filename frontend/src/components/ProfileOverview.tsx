@@ -37,7 +37,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditPr
 
       <Grid container spacing={3}>
         {/* Profile Header */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card>
             <CardContent>
               <Box display="flex" alignItems="center" gap={2}>

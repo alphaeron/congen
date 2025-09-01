@@ -252,7 +252,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Grid container spacing={3}>
                 {/* Week Workout List */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Card>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>

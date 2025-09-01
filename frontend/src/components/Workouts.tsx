@@ -255,7 +255,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Grid container spacing={3}>
                 {/* Program Overview and Generation */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Card>
                     <CardContent>
                       <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -280,7 +280,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                 </Grid>
 
                 {/* Week List */}
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                   <Card sx={{ mb: 4 }}>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>

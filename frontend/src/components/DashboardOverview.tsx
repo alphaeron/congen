@@ -191,7 +191,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
             Key Performance Indicators
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box textAlign="center">
                 <Typography variant="h4" color="primary">
                   {totalWorkouts}
@@ -201,7 +201,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box textAlign="center">
                 <Typography variant="h4" color="secondary">
                   {Math.round(totalVolume / 1000)}k
@@ -211,7 +211,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box textAlign="center">
                 <Typography variant="h4" color="success">
                   {oneRepMaxes.length}
@@ -221,7 +221,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box textAlign="center">
                 <Typography variant="h4" color="info">
                   {Math.round(latestVolume)}
@@ -268,7 +268,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
             </Typography>
             <Grid container spacing={2}>
               {recentOneRepMaxes.map((oneRepMax, index) => (
-                <Grid item xs={12} sm={6} md={4} key={index}>
+                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
                   <Box
                     sx={{
                       p: 2,

@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
+import { Card, CardContent, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
@@ -303,7 +303,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         <Grid container spacing={3}>
           {/* Chord Diagram - Exercise Correlations */}
           {chordData.keys.length > 0 && (
-            <Grid item xs={12} lg={6}>
+            <Grid size={{ xs: 12, lg: 6 }}>
               <ChordChart
                 matrix={chordData.matrix}
                 keys={chordData.keys}
@@ -315,7 +315,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
           )}
 
           {/* Stream Chart - Volume Flow */}
-          <Grid item xs={12} lg={6}>
+          <Grid size={{ xs: 12, lg: 6 }}>
             <StreamChart
               data={streamData}
               keys={['Max Effort', 'Dynamic Effort', 'Accessory']}

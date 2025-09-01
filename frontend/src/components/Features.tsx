@@ -82,7 +82,7 @@ export function Features() {
 
       <Grid container spacing={4}>
         {FEATURE_ITEMS.map((item, index) => (
-          <Grid item xs={12} sm={6} md={4} key={index}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
             <Card
               sx={{
                 p: 4,

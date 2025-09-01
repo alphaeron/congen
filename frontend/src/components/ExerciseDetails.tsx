@@ -2,7 +2,7 @@ import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
-import Grid from '@mui/material/Grid2';
+import Grid from '@mui/material/Grid';
 import Skeleton from '@mui/material/Skeleton';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
@@ -182,7 +182,7 @@ export function ExerciseDetails(
           {exercise.name}
         </Typography>
         <Grid container={true} spacing={2}>
-          <Grid size={12}>
+          <Grid size={{ xs: 12 }}>
             <Stack direction="row" spacing={2}>
               <Chip
                 label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
@@ -208,7 +208,7 @@ export function ExerciseDetails(
               />
             </Stack>
           </Grid>
-          <Grid size={9}>
+          <Grid size={{ xs: 9 }}>
             <Stack spacing={2}>
               <Skeleton variant="rectangular" height={360} />
               <Slate
@@ -228,9 +228,9 @@ export function ExerciseDetails(
               </Slate>
             </Stack>
           </Grid>
-          <Grid size={3}>
+          <Grid size={{ xs: 3 }}>
             <Grid container={true} spacing={2}>
-              <Grid size={12}>
+              <Grid size={{ xs: 12 }}>
                 <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
                   <Typography variant="h3">Muscles Worked</Typography>
                 </Divider>
@@ -238,16 +238,16 @@ export function ExerciseDetails(
                   {exerciseMuscles?.map(em => {
                     const muscle = muscles.find(elem => elem.name === em.muscle_name);
                     return (
-                      <Grid size={12} key={em.muscle_name}>
-                        <Tooltip arrow={true} title={muscle?.description}>
-                          <Chip label={`${capitalizeEachWord(em.muscle_name)}`} />
-                        </Tooltip>
-                      </Grid>
+                        <Grid size={{ xs: 12 }} key={em.muscle_name}>
+                          <Tooltip arrow={true} title={muscle?.description}>
+                            <Chip label={`${capitalizeEachWord(em.muscle_name)}`} />
+                          </Tooltip>
+                        </Grid>
                     );
                   })}
                 </Grid>
               </Grid>
-              <Grid size={12}>
+              <Grid size={{ xs: 12 }}>
                 <Divider textAlign="left" sx={{ marginBottom: '16px' }}>
                   <Typography variant="h3">Equipment Needed</Typography>
                 </Divider>
@@ -255,7 +255,7 @@ export function ExerciseDetails(
                   {exerciseEquipment?.map(ee => {
                     const equip = equipment.find(elem => elem.name === ee.equipment_name);
                     return (
-                      <Grid size={12} key={ee.equipment_name}>
+                      <Grid size={{ xs: 12 }} key={ee.equipment_name}>
                         <Tooltip arrow={true} title={equip?.description}>
                           <Chip label={`${capitalizeEachWord(ee.equipment_name)}`} />
                         </Tooltip>
