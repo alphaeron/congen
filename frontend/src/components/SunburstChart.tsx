@@ -4,7 +4,7 @@ import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import type { UserDataExport, ProgramWithWorkouts, Exercise, ExerciseMuscle } from '../api/types';
+import type { Exercise, ExerciseMuscle } from '../api/types';
 import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 
@@ -76,7 +76,7 @@ interface SunburstData {
 }
 
 interface SunburstChartProps {
-  userDataExport: UserDataExport | null;
+  workoutData: any; // Single workout data
   exerciseData: Map<string, Exercise>;
   exerciseMuscleData: Map<string, string[]>;
   weightUnitPreferences: UserWeightUnitPreference[];
@@ -86,10 +86,10 @@ interface SunburstChartProps {
 /**
  * Sunburst Chart component for displaying exercise volume hierarchy with drill-down functionality.
  *
- * This component accepts raw workout data and handles all data transformations
+ * This component accepts single workout data and handles all data transformations
  * internally to calculate exercise volume hierarchy and display it in a sunburst chart.
  *
- * @param userDataExport The raw user data export containing all workout information
+ * @param workoutData Single workout data to display
  * @param exerciseData Map of exercise data for categorization
  * @param exerciseMuscleData Map of exercise to muscle group mappings
  * @param weightUnitPreferences User's weight unit preferences
@@ -97,7 +97,7 @@ interface SunburstChartProps {
  * @return Sunburst Chart component
  */
 export const SunburstChart: React.FC<SunburstChartProps> = ({
-  userDataExport,
+  workoutData,
   exerciseData,
   exerciseMuscleData,
   weightUnitPreferences,
@@ -107,17 +107,10 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
   const [currentData, setCurrentData] = useState<SunburstData | null>(null);
 
-  // Extract workouts from the raw data
+  // Use the single workout data
   const workouts = useMemo(() => {
-    if (!userDataExport?.training_programs?.length) return [];
-
-    const allWorkouts: any[] = [];
-    userDataExport.training_programs.forEach(program => {
-      allWorkouts.push(...program.workouts);
-    });
-
-    return allWorkouts;
-  }, [userDataExport]);
+    return workoutData ? [workoutData] : [];
+  }, [workoutData]);
 
   // Helper function to convert weight to user's preferred unit
   const convertWeightToUserUnit = (weight: number, exerciseName: string): number => {

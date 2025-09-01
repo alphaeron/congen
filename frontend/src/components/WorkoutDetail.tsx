@@ -1,4 +1,4 @@
-import { Notes as NotesIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
+import { Notes as NotesIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, ShowChart as ShowChartIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -7,6 +7,8 @@ import {
   Tooltip,
   Paper,
   useTheme,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   useReactTable,
@@ -18,8 +20,14 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { SunburstChart } from './SunburstChart';
 import { getUserDataExport } from '../api/gdpr';
-import type { UserDataExport } from '../api/types';
+import { getExercises } from '../api/exercise';
+import { getExerciseMuscle } from '../api/exerciseMuscle';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import type { UserDataExport, Exercise, ExerciseMuscle } from '../api/types';
+import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
+import { useAuth } from '../contexts/AuthContext';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutDetailProps {
@@ -67,18 +75,51 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 }) => {
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
+  const { user } = useAuth();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
 
   useEffect(() => {
     const loadWorkoutDetails = async () => {
       try {
         setIsLoading(true);
 
-        // Load all data in a single optimized call
+        // Load user data first to get the workout data, then load chart data
         const dataExport = await getUserDataExport();
         setUserData(dataExport);
+
+        // Load data needed for the chart
+        const [
+          exercisesData,
+          exerciseMuscleData,
+          weightUnitPreferencesData,
+        ] = await Promise.all([
+          getExercises(),
+          getExerciseMuscle(),
+          getUserWeightUnitPreferences(user?.keycloak_id || ''),
+        ]);
+
+        // Convert exercise data to Map
+        const exerciseMap = new Map<string, Exercise>();
+        exercisesData.forEach(exercise => {
+          exerciseMap.set(exercise.name, exercise);
+        });
+        setExerciseData(exerciseMap);
+
+        // Convert exercise muscle data to Map
+        const muscleMap = new Map<string, string[]>();
+        exerciseMuscleData.forEach((item: ExerciseMuscle) => {
+          const existing = muscleMap.get(item.exercise_name) || [];
+          existing.push(item.muscle_name);
+          muscleMap.set(item.exercise_name, existing);
+        });
+        setExerciseMuscleData(muscleMap);
+
+        setWeightUnitPreferences(weightUnitPreferencesData.data || []);
       } catch {
         enqueueSnackbar('Failed to load workout details. Please try again.', { variant: 'error' });
       } finally {
@@ -87,7 +128,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     };
 
     loadWorkoutDetails();
-  }, [workoutId]);
+  }, [workoutId, user?.keycloak_id]);
 
   // Find the specific workout from the exported data
   const workoutData = useMemo(() => {
@@ -299,6 +340,26 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
+      {/* Exercise Volume Hierarchy Chart */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+            <ShowChartIcon color="primary" />
+            <Typography variant="h6">Exercise Volume Hierarchy</Typography>
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Volume distribution by muscle groups for this workout
+          </Typography>
+          <SunburstChart
+            workoutData={workoutData}
+            exerciseData={exerciseData}
+            exerciseMuscleData={exerciseMuscleData}
+            weightUnitPreferences={weightUnitPreferences}
+            selectedExercise="all"
+          />
+        </CardContent>
+      </Card>
+
       {/* Table Container */}
       <Paper sx={{ width: '100%', overflow: 'hidden' }}>
         <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>

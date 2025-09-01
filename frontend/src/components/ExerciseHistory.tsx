@@ -19,7 +19,6 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { RadialBarChart } from './RadialBarChart';
-import { SunburstChart } from './SunburstChart';
 import { getExercises } from '../api/exercise';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getUserDataExport } from '../api/gdpr';
@@ -39,7 +38,7 @@ interface ExerciseHistoryProps {
   user: User;
 }
 
-type TabName = 'onerepmax' | 'radial' | 'sunburst' | 'icicle';
+type TabName = 'onerepmax' | 'radial';
 
 /**
  * Exercise History page component for exercise history and trends.
@@ -189,12 +188,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             icon={<FitnessCenterIcon />}
             iconPosition="start"
           />
-          <Tab
-            label="Exercise Volume Hierarchy"
-            value="sunburst"
-            icon={<ShowChartIcon />}
-            iconPosition="start"
-          />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
@@ -250,6 +243,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             <Box>
               <RadialBarChart
                 userDataExport={workoutData}
+                exerciseData={new Map()}
                 oneRepMaxes={oneRepMaxes}
                 weightUnitPreferences={weightUnitPreferences}
                 selectedExercise={selectedExercise}
@@ -257,17 +251,6 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
             </Box>
           )}
 
-          {/* Exercise Volume Hierarchy Tab */}
-          {activeTab === 'sunburst' && (
-            <Box>
-              <SunburstChart
-                userDataExport={workoutData}
-                exerciseMuscleData={exerciseMuscleData}
-                weightUnitPreferences={weightUnitPreferences}
-                selectedExercise={selectedExercise}
-              />
-            </Box>
-          )}
         </Box>
       </Card>
     </React.Fragment>
