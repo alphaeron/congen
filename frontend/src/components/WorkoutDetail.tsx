@@ -20,6 +20,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
 import { SunburstChart } from './SunburstChart';
+import { ChordChart } from './ChordChart';
 import { getUserDataExport } from '../api/gdpr';
 import { getExercises } from '../api/exercise';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
@@ -500,15 +501,25 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           </Paper>
         </Grid>
 
-        {/* Exercise Volume Hierarchy Chart - 1/3 width */}
+        {/* Charts - 1/3 width */}
         <Grid size={{ xs: 12, lg: 4 }}>
-          <SunburstChart
-            workoutData={workoutData}
-            exerciseData={exerciseData}
-            exerciseMuscleData={exerciseMuscleData}
-            weightUnitPreferences={weightUnitPreferences}
-            selectedExercise="all"
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Exercise Correlations Chord Chart */}
+            <ChordChart
+              workoutData={workoutData}
+              title="Exercise Correlations"
+              height={300}
+            />
+            
+            {/* Exercise Volume Hierarchy Chart */}
+            <SunburstChart
+              workoutData={workoutData}
+              exerciseData={exerciseData}
+              exerciseMuscleData={exerciseMuscleData}
+              weightUnitPreferences={weightUnitPreferences}
+              selectedExercise="all"
+            />
+          </Box>
         </Grid>
       </Grid>
     </Box>

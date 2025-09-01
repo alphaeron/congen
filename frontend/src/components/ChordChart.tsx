@@ -1,5 +1,5 @@
 import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
-import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
+import { Box, Card, CardContent, Typography, useTheme, Tooltip } from '@mui/material';
 import { ResponsiveChord } from '@nivo/chord';
 import React, { useMemo } from 'react';
 
@@ -22,7 +22,7 @@ interface ProgrammedExerciseWithSetSchemes {
 }
 
 interface ChordChartProps {
-  userDataExport: UserDataExport | null;
+  workoutData: any; // Single workout data
   title?: string;
   description?: string;
   height?: number;
@@ -31,17 +31,17 @@ interface ChordChartProps {
 /**
  * Chord Chart component for displaying exercise correlations.
  * 
- * This component accepts raw workout data and handles all data transformations
+ * This component accepts single workout data and handles all data transformations
  * internally to calculate exercise correlations and display them in a chord diagram.
  *
- * @param userDataExport The raw user data export containing all workout information
+ * @param workoutData The single workout data containing exercise information
  * @param title Optional title for the chart
  * @param description Optional description for the chart
  * @param height Optional height for the chart container
  * @return Chord Chart component
  */
 export const ChordChart: React.FC<ChordChartProps> = ({
-  userDataExport,
+  workoutData,
   title = 'Exercise Correlations',
   description = 'Exercise pairing patterns in your workouts',
   height = 400,
@@ -49,23 +49,10 @@ export const ChordChart: React.FC<ChordChartProps> = ({
   const theme = useTheme();
   const nivoTheme = createCongenNivoTheme(theme.palette.mode);
 
-  // Extract workouts from the raw data
+  // Use the single workout data
   const workouts = useMemo(() => {
-    if (!userDataExport?.training_programs?.length) return [];
-
-    return userDataExport.training_programs.flatMap((program: ProgramWithWorkouts) =>
-      program.workouts.map(workoutWithStages => ({
-        workout: workoutWithStages.workout,
-        stages: workoutWithStages.stages.map(stageWithExercises => ({
-          stage: stageWithExercises.stage,
-          exercises: stageWithExercises.exercises.map(exerciseWithSetSchemes => ({
-            exercise: exerciseWithSetSchemes.exercise,
-            set_schemes: exerciseWithSetSchemes.set_schemes,
-          })),
-        })),
-      }))
-    );
-  }, [userDataExport]);
+    return workoutData ? [workoutData] : [];
+  }, [workoutData]);
 
   // Calculate exercise correlations for chord diagram
   const exerciseCorrelations = useMemo(() => {
@@ -77,8 +64,8 @@ export const ChordChart: React.FC<ChordChartProps> = ({
     workouts.forEach(workoutData => {
       const workoutExercises = new Set<string>();
 
-      workoutData.stages.forEach(stage => {
-        stage.exercises.forEach(exerciseWithSchemes => {
+      workoutData.stages.forEach((stage: any) => {
+        stage.exercises.forEach((exerciseWithSchemes: any) => {
           workoutExercises.add(exerciseWithSchemes.exercise.exercise_name);
         });
       });
@@ -131,15 +118,19 @@ export const ChordChart: React.FC<ChordChartProps> = ({
   }
 
   return (
-    <Card variant="outlined">
+    <Card sx={{ 
+      '&:hover': {
+        transform: 'none',
+        boxShadow: 'none'
+      }
+    }}>
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <TrendingUpIcon color="info" />
-          <Typography variant="h6">{title}</Typography>
+          <Tooltip title="Exercise pairing patterns in your workouts" arrow>
+            <Typography variant="h6">{title}</Typography>
+          </Tooltip>
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {description}
-        </Typography>
         <Box sx={{ height }}>
           <ResponsiveChord
             data={chordData.matrix}
