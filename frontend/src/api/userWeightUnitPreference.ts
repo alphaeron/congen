@@ -1,4 +1,4 @@
-import { ENDPOINT } from './endpoint';
+import { REQUEST } from './endpoint';
 
 /**
  * Weight unit enum.
@@ -31,15 +31,16 @@ export const upsertUserWeightUnitPreference = async (
   userId: string,
   exerciseName: string,
   preferredUnit: WeightUnit
-): Promise<{ data: UserWeightUnitPreference }> => {
-  const response = await ENDPOINT.put('/user_weight_unit_preference/', null, {
+): Promise<UserWeightUnitPreference> => {
+  return REQUEST({
+    method: 'PUT',
+    url: '/user_weight_unit_preference/',
     params: {
       user_id: userId,
       exercise_name: exerciseName,
       preferred_unit: preferredUnit,
     },
   });
-  return response;
 };
 
 /**
@@ -50,9 +51,11 @@ export const upsertUserWeightUnitPreference = async (
  */
 export const getUserWeightUnitPreferences = async (
   userId: string
-): Promise<{ data: UserWeightUnitPreference[] }> => {
-  const response = await ENDPOINT.get(`/user_weight_unit_preference/${userId}`);
-  return response;
+): Promise<UserWeightUnitPreference[]> => {
+  return REQUEST({
+    method: 'GET',
+    url: `/user_weight_unit_preference/${userId}`,
+  });
 };
 
 /**
@@ -65,11 +68,11 @@ export const getUserWeightUnitPreferences = async (
 export const getUserWeightUnitPreference = async (
   userId: string,
   exerciseName: string
-): Promise<{ data: UserWeightUnitPreference }> => {
-  const response = await ENDPOINT.get(
-    `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`
-  );
-  return response;
+): Promise<UserWeightUnitPreference> => {
+  return REQUEST({
+    method: 'GET',
+    url: `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`,
+  });
 };
 
 /**
@@ -82,9 +85,9 @@ export const getUserWeightUnitPreference = async (
 export const deleteUserWeightUnitPreference = async (
   userId: string,
   exerciseName: string
-): Promise<{ data: UserWeightUnitPreference }> => {
-  const response = await ENDPOINT.delete(
-    `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`
-  );
-  return response;
+): Promise<UserWeightUnitPreference> => {
+  return REQUEST({
+    method: 'DELETE',
+    url: `/user_weight_unit_preference/${userId}/${encodeURIComponent(exerciseName)}`,
+  });
 };

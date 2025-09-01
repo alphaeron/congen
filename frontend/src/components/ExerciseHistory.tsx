@@ -106,7 +106,7 @@ export const ExerciseHistory: React.FC<ExerciseHistoryProps> = ({ user }) => {
       });
       setExerciseMuscleData(muscleMap);
 
-      setWeightUnitPreferences(weightUnitPreferencesData.data || []);
+      setWeightUnitPreferences(weightUnitPreferencesData || []);
       setWorkoutData(userDataExport);
     } catch {
       enqueueSnackbar('Failed to load exercise history data. Please try again.', {

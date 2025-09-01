@@ -47,7 +47,7 @@ export const WorkoutAnalytics: React.FC<WorkoutAnalyticsProps> = ({ user }) => {
         // Load weight unit preferences first
         try {
           const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
-          setWeightUnitPreferences(unitResponse.data);
+          setWeightUnitPreferences(unitResponse);
         } catch {
           enqueueSnackbar('No weight unit preferences found, using defaults', {
             variant: 'warning',

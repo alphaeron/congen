@@ -1,7 +1,5 @@
-import { ENDPOINT } from './endpoint';
+import { REQUEST } from './endpoint';
 import type { UserConsent, UserDataExport, PrivacyPolicy } from './types';
-
-import type { AxiosResponse } from 'axios';
 
 /**
  * Records user consent for data processing.
@@ -9,8 +7,10 @@ import type { AxiosResponse } from 'axios';
  * @param consent Whether consent is given (true) or withdrawn (false)
  * @returns Promise that resolves when consent is recorded
  */
-export async function recordConsent(consent: boolean): Promise<AxiosResponse<UserConsent>> {
-  return ENDPOINT.post('/gdpr/consent', null, {
+export async function recordConsent(consent: boolean): Promise<UserConsent> {
+  return REQUEST({
+    method: 'POST',
+    url: '/gdpr/consent',
     params: { consent },
   });
 }
@@ -20,8 +20,11 @@ export async function recordConsent(consent: boolean): Promise<AxiosResponse<Use
  *
  * @returns Promise that resolves to the user's current consent status
  */
-export async function getConsentStatus(): Promise<AxiosResponse<UserConsent>> {
-  return ENDPOINT.get('/gdpr/consent');
+export async function getConsentStatus(): Promise<UserConsent> {
+  return REQUEST({
+    method: 'GET',
+    url: '/gdpr/consent',
+  });
 }
 
 /**
@@ -29,8 +32,11 @@ export async function getConsentStatus(): Promise<AxiosResponse<UserConsent>> {
  *
  * @returns Promise that resolves to the user's complete data export
  */
-export async function exportUserData(): Promise<AxiosResponse<UserDataExport>> {
-  return ENDPOINT.get('/gdpr/export');
+export async function exportUserData(): Promise<UserDataExport> {
+  return REQUEST({
+    method: 'GET',
+    url: '/gdpr/export',
+  });
 }
 
 /**
@@ -47,10 +53,11 @@ export async function exportUserData(): Promise<AxiosResponse<UserDataExport>> {
  * @returns Promise containing complete user data export
  */
 export const getUserDataExport = async (): Promise<UserDataExport> => {
-  const response = await ENDPOINT.get('/gdpr/export', {
+  return REQUEST({
+    method: 'GET',
+    url: '/gdpr/export',
     timeout: 5000, // 5 second timeout for large data export
   });
-  return response.data;
 };
 
 /**
@@ -60,8 +67,10 @@ export const getUserDataExport = async (): Promise<UserDataExport> => {
  * @param confirmation Must be "DELETE_ALL_MY_DATA" to confirm deletion
  * @returns Promise that resolves when deletion is complete
  */
-export async function deleteAllPersonalData(confirmation: string): Promise<AxiosResponse<void>> {
-  return ENDPOINT.delete('/gdpr/delete_all_data', {
+export async function deleteAllPersonalData(confirmation: string): Promise<void> {
+  return REQUEST({
+    method: 'DELETE',
+    url: '/gdpr/delete_all_data',
     params: { confirmation },
   });
 }
@@ -72,6 +81,9 @@ export async function deleteAllPersonalData(confirmation: string): Promise<Axios
  *
  * @returns Promise that resolves to the privacy policy information
  */
-export async function getPrivacyPolicy(): Promise<AxiosResponse<PrivacyPolicy>> {
-  return ENDPOINT.get('/gdpr/privacy_policy');
+export async function getPrivacyPolicy(): Promise<PrivacyPolicy> {
+  return REQUEST({
+    method: 'GET',
+    url: '/gdpr/privacy_policy',
+  });
 }

@@ -82,7 +82,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
     // Handle weight unit preferences
     if (unitResponse.status === 'fulfilled') {
-      setWeightUnitPreferences(unitResponse.value.data);
+      setWeightUnitPreferences(unitResponse.value);
     }
     // If rejected, no weight unit preferences yet
 
@@ -107,7 +107,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       // Refresh weight unit preferences
       const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
-      setWeightUnitPreferences(unitResponse.data);
+      setWeightUnitPreferences(unitResponse);
 
       setUnitDialogOpen(false);
       setSelectedExercise('');
@@ -134,7 +134,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
       // Refresh weight unit preferences
       const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
-      setWeightUnitPreferences(unitResponse.data);
+      setWeightUnitPreferences(unitResponse);
 
       setSuccessMessage('Weight unit preference deleted successfully');
     } catch (err: unknown) {

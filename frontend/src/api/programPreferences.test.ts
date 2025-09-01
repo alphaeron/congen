@@ -30,7 +30,7 @@ describe('programPreferences API', () => {
 
       const result = await getProgramPreferences(1);
 
-      expect(result.data).toEqual(mockProgramPreferences);
+      expect(result).toEqual(mockProgramPreferences);
       expect(mock.history.get[0].url).toBe('/program_preferences/1');
     });
 
@@ -48,7 +48,7 @@ describe('programPreferences API', () => {
 
       const result = await updateProgramPreferences(1, 90);
 
-      expect(result.data).toEqual(updatedPreferences);
+      expect(result).toEqual(updatedPreferences);
       expect(mock.history.patch[0].params).toEqual({
         program_id: 1,
         session_time_length_in_minutes: 90,

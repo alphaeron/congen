@@ -40,7 +40,7 @@ describe('userWeightUnitPreference API', () => {
         WeightUnit.LBS
       );
 
-      expect(result.data).toEqual(mockUserWeightUnitPreference);
+      expect(result).toEqual(mockUserWeightUnitPreference);
       expect(mock.history.put[0].params).toEqual({
         user_id: 'test-user-id',
         exercise_name: 'Bench Press',
@@ -64,7 +64,7 @@ describe('userWeightUnitPreference API', () => {
 
       const result = await getUserWeightUnitPreferences('test-user-id');
 
-      expect(result.data).toEqual(mockPreferences);
+      expect(result).toEqual(mockPreferences);
       expect(mock.history.get[0].url).toBe('/user_weight_unit_preference/test-user-id');
     });
 
@@ -83,7 +83,7 @@ describe('userWeightUnitPreference API', () => {
 
       const result = await getUserWeightUnitPreference('test-user-id', 'Bench Press');
 
-      expect(result.data).toEqual(mockUserWeightUnitPreference);
+      expect(result).toEqual(mockUserWeightUnitPreference);
       expect(mock.history.get[0].url).toBe(
         '/user_weight_unit_preference/test-user-id/Bench%20Press'
       );
@@ -106,7 +106,7 @@ describe('userWeightUnitPreference API', () => {
 
       const result = await deleteUserWeightUnitPreference('test-user-id', 'Bench Press');
 
-      expect(result.data).toEqual(mockUserWeightUnitPreference);
+      expect(result).toEqual(mockUserWeightUnitPreference);
       expect(mock.history.delete[0].url).toBe(
         '/user_weight_unit_preference/test-user-id/Bench%20Press'
       );

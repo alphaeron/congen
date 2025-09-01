@@ -37,8 +37,7 @@ describe('GDPR API', () => {
 
       const response = await recordConsent(true);
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(mockResponse);
+      expect(response).toEqual(mockResponse);
       expect(mock.history.post).toHaveLength(1);
       expect(mock.history.post[0].params).toEqual({ consent: true });
     });
@@ -57,8 +56,7 @@ describe('GDPR API', () => {
 
       const response = await recordConsent(false);
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(mockResponse);
+      expect(response).toEqual(mockResponse);
       expect(mock.history.post).toHaveLength(1);
       expect(mock.history.post[0].params).toEqual({ consent: false });
     });
@@ -76,8 +74,7 @@ describe('GDPR API', () => {
 
       const response = await getConsentStatus();
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(mockResponse);
+      expect(response).toEqual(mockResponse);
       expect(mock.history.get).toHaveLength(1);
     });
 
@@ -92,8 +89,7 @@ describe('GDPR API', () => {
 
       const response = await getConsentStatus();
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(mockResponse);
+      expect(response).toEqual(mockResponse);
     });
   });
 
@@ -120,8 +116,7 @@ describe('GDPR API', () => {
 
       const response = await exportUserData();
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(mockResponse);
+      expect(response).toEqual(mockResponse);
       expect(mock.history.get).toHaveLength(1);
     });
   });
@@ -135,8 +130,7 @@ describe('GDPR API', () => {
 
       const response = await deleteAllPersonalData('DELETE_ALL_MY_DATA');
 
-      expect(response.status).toBe(200);
-      expect(response.data).toBeUndefined();
+      expect(response).toBeUndefined();
       expect(mock.history.delete).toHaveLength(1);
       expect(mock.history.delete[0].params).toEqual({ confirmation: 'DELETE_ALL_MY_DATA' });
     });
@@ -189,8 +183,7 @@ describe('GDPR API', () => {
 
       const response = await getPrivacyPolicy();
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(mockResponse);
+      expect(response).toEqual(mockResponse);
       expect(mock.history.get).toHaveLength(1);
     });
 

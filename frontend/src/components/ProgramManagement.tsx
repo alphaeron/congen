@@ -84,7 +84,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
       for (const program of programsData) {
         try {
           const preferences = await getProgramPreferences(program.id);
-          preferencesMap.set(program.id, preferences.data);
+          preferencesMap.set(program.id, preferences);
         } catch {
           // Use default preferences if loading fails
           preferencesMap.set(program.id, {
@@ -224,7 +224,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         name: program.name,
         numDaysPerWeek: 4, // Not editable
         isActive: program.is_active,
-        sessionTimeLengthInMinutes: preferences.data.session_time_length_in_minutes,
+        sessionTimeLengthInMinutes: preferences.session_time_length_in_minutes,
       });
     } catch {
       // Fallback to default values if preferences can't be loaded

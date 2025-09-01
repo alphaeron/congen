@@ -45,7 +45,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
     const fetchPrivacyPolicy = async () => {
       try {
         const response = await getPrivacyPolicy();
-        setPrivacyPolicy(response.data);
+        setPrivacyPolicy(response);
       } catch (err: unknown) {
         const axiosError = err as AxiosError<{ message?: string }>;
         enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load privacy policy', {

@@ -11,6 +11,7 @@ import {
   Breadcrumbs,
   Slide,
 } from '@mui/material';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -18,10 +19,14 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { WorkoutDetail } from './WorkoutDetail';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadarChart } from './RadarChart';
+import { SunburstChart } from './SunburstChart';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkoutsByProgram } from '../api/programmedWorkout';
 import { getExercises } from '../api/exercise';
+import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getUserDataExport } from '../api/gdpr';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import { useAuth } from '../contexts/AuthContext';
 import type { ProgrammedWorkout, ProgramWithPreferences, Exercise } from '../api/types';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 
@@ -52,6 +57,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { enqueueSnackbar } = useSnackbar();
+  const { user } = useAuth();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
     Array<ProgramWithPreferences>
@@ -59,6 +65,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [userDataExport, setUserDataExport] = useState<any>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
     name: string;
@@ -81,14 +89,17 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     const loadWorkoutData = async () => {
       setIsLoading(true);
       try {
-        const [programsData, exercisesData, userData] = await Promise.all([
+        const [programsData, exercisesData, userData, exerciseMuscleData, weightUnitData] = await Promise.all([
           getProgramsWithPreferences(),
           getExercises(),
           getUserDataExport(),
+          getExerciseMuscle(),
+          getUserWeightUnitPreferences(user?.keycloak_id || ''),
         ]);
         
         setProgramsWithPreferences(programsData);
         setUserDataExport(userData);
+        setWeightUnitPreferences(weightUnitData || []);
         
         // Convert exercises array to Map for easy lookup
         const exerciseMap = new Map<string, Exercise>();
@@ -96,6 +107,19 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           exerciseMap.set(exercise.name, exercise);
         });
         setExerciseData(exerciseMap);
+        
+        // Convert exercise muscle data array to Map for easy lookup
+        const exerciseMuscleMap = new Map<string, string[]>();
+        exerciseMuscleData.forEach((muscleData: any) => {
+          const exerciseName = muscleData.exercise_name;
+          const muscleName = muscleData.muscle_name;
+          
+          if (!exerciseMuscleMap.has(exerciseName)) {
+            exerciseMuscleMap.set(exerciseName, []);
+          }
+          exerciseMuscleMap.get(exerciseName)!.push(muscleName);
+        });
+        setExerciseMuscleData(exerciseMuscleMap);
         
         const activeProgram = programsData.find(program => program.program.is_active);
         if (activeProgram) {
@@ -145,6 +169,27 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
       })
       .sort((a: any, b: any) => a.dayInWeek - b.dayInWeek);
   }, [userDataExport, activeProgram, weekNumber]);
+
+  // Aggregate all week's workout data for SunburstChart
+  const aggregatedWeekData = useMemo(() => {
+    if (!weekWorkouts.length) return null;
+    
+    // Create a single aggregated workout object that combines all week's data
+    const aggregatedWorkout = {
+      id: `week-${weekNumber}`,
+      name: `Week ${weekNumber} Aggregated`,
+      day_number: weekNumber,
+      stages: weekWorkouts.reduce((acc: any, weekWorkout: any) => {
+        const workout = weekWorkout.workout.workout;
+        if (workout.stages) {
+          return [...acc, ...workout.stages];
+        }
+        return acc;
+      }, [])
+    };
+    
+    return aggregatedWorkout;
+  }, [weekWorkouts, weekNumber]);
 
   const handleWorkoutClick = (workoutId: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -275,7 +320,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
           {/* Workout List - 2/3 width */}
           <Grid size={{ xs: 12, lg: 8 }}>
             <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
@@ -289,9 +334,10 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                   }
                 }}>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom>
-                      Workouts
-                    </Typography>
+                    <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+                      <FitnessCenterIcon color="primary" />
+                      <Typography variant="h6">Workouts</Typography>
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
                         {weekWorkouts.length} workouts • Week {weekNumber} of{' '}
                         {activeProgram.program.current_week_number}
@@ -343,7 +389,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             )}
           </Grid>
 
-          {/* Movement Type Distribution Chart - 1/3 width */}
+          {/* Charts - 1/3 width */}
           <Grid size={{ xs: 12, lg: 4 }}>
             <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
               <RadarChart
@@ -352,6 +398,26 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                 title="Movement Type Distribution"
                 height={300}
               />
+              {weekWorkouts.length > 0 && (
+                <SunburstChart
+                  workoutData={{
+                    id: `week-${weekNumber}`,
+                    name: `Week ${weekNumber} Aggregated`,
+                    day_number: weekNumber,
+                    stages: weekWorkouts.reduce((acc: any, weekWorkout: any) => {
+                      const workoutWithStages = weekWorkout.workout;
+                      if (workoutWithStages.stages) {
+                        return [...acc, ...workoutWithStages.stages];
+                      }
+                      return acc;
+                    }, [])
+                  }}
+                  exerciseData={exerciseData}
+                  exerciseMuscleData={exerciseMuscleData}
+                  weightUnitPreferences={weightUnitPreferences}
+                  selectedExercise="all"
+                />
+              )}
             </Box>
           </Grid>
         </Grid>

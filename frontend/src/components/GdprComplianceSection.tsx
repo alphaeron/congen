@@ -84,7 +84,7 @@ export function GdprComplianceSection(): React.ReactElement {
     try {
       setLoading(true);
       const response = await getConsentStatus();
-      setConsentStatus(response.data);
+      setConsentStatus(response);
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
       enqueueSnackbar(axiosError.response?.data?.message || 'Failed to load consent status', {
@@ -120,7 +120,7 @@ export function GdprComplianceSection(): React.ReactElement {
       const response = await exportUserData();
 
       // Create and download JSON file
-      const dataStr = JSON.stringify(response.data, null, 2);
+      const dataStr = JSON.stringify(response, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
       const url = URL.createObjectURL(dataBlob);
       const link = document.createElement('a');

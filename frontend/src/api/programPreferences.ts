@@ -1,4 +1,4 @@
-import { ENDPOINT } from './endpoint';
+import { REQUEST } from './endpoint';
 import type { ProgramPreferences } from './types';
 
 /**
@@ -9,9 +9,11 @@ import type { ProgramPreferences } from './types';
  */
 export const getProgramPreferences = async (
   programId: number
-): Promise<{ data: ProgramPreferences }> => {
-  const response = await ENDPOINT.get(`/program_preferences/${programId}`);
-  return response;
+): Promise<ProgramPreferences> => {
+  return REQUEST({
+    method: 'GET',
+    url: `/program_preferences/${programId}`,
+  });
 };
 
 /**
@@ -24,12 +26,13 @@ export const getProgramPreferences = async (
 export const updateProgramPreferences = async (
   programId: number,
   sessionTimeLengthInMinutes: number
-): Promise<{ data: ProgramPreferences }> => {
-  const response = await ENDPOINT.patch('/program_preferences/', null, {
+): Promise<ProgramPreferences> => {
+  return REQUEST({
+    method: 'PATCH',
+    url: '/program_preferences/',
     params: {
       program_id: programId,
       session_time_length_in_minutes: sessionTimeLengthInMinutes,
     },
   });
-  return response;
 };

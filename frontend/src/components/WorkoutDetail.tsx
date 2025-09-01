@@ -119,7 +119,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         });
         setExerciseMuscleData(muscleMap);
 
-        setWeightUnitPreferences(weightUnitPreferencesData.data || []);
+        setWeightUnitPreferences(weightUnitPreferencesData || []);
       } catch {
         enqueueSnackbar('Failed to load workout details. Please try again.', { variant: 'error' });
       } finally {
