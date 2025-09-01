@@ -19,6 +19,7 @@ import {
   IconButton,
   Tooltip,
   Backdrop,
+  Paper,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
@@ -139,7 +140,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           const updatedPreferences = {
             ...existingPreferences,
             session_time_length_in_minutes: formData.sessionTimeLengthInMinutes,
-            updated_at: new Date().toISOString(),
+            updated_at: new Date(),
           };
           newMap.set(selectedProgram.id, updatedPreferences);
         }
@@ -277,104 +278,92 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         </Button>
       </Box>
 
-      {/* Programs Grid */}
-      <Grid container spacing={3}>
+      {/* Programs Cards */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {programs.map(program => {
           const programWorkouts = getWorkoutsForProgram(program.id);
+          const preferences = programPreferences.get(program.id);
+          const sessionDuration = preferences?.session_time_length_in_minutes || 60;
+          
           return (
-            <Grid size={{ xs: 12, md: 6, lg: 4 }} key={program.id}>
-              <Card>
-                <CardContent>
-                  <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="flex-start"
-                    sx={{ mb: 2 }}
-                  >
-                    <Typography variant="h6" component="h3">
-                      {program.name}
-                    </Typography>
-                    <Box>
-                      {program.is_active ? (
-                        <React.Fragment>
-                          <Tooltip title="Change Session Duration">
-                            <IconButton size="small" onClick={() => openEditDialog(program)}>
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Stop Program">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => openStopDialog(program)}
-                            >
-                              <PauseIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </React.Fragment>
-                      ) : (
-                        <Tooltip title="Resume Program">
+            <Card key={program.id} elevation={2} sx={{ borderRadius: 2 }}>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                  <Typography variant="h6" component="h3">
+                    {program.name}
+                  </Typography>
+                  <Box display="flex" gap={1}>
+                    {program.is_active ? (
+                      <React.Fragment>
+                        <Tooltip title="Change Session Duration">
+                          <IconButton size="small" onClick={() => openEditDialog(program)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Stop Program">
                           <IconButton
                             size="small"
                             color="primary"
-                            onClick={() => openResumeDialog(program)}
+                            onClick={() => openStopDialog(program)}
                           >
-                            <PlayArrowIcon />
+                            <PauseIcon />
                           </IconButton>
                         </Tooltip>
-                      )}
-                      <Tooltip title="Delete Program">
+                      </React.Fragment>
+                    ) : (
+                      <Tooltip title="Resume Program">
                         <IconButton
                           size="small"
-                          color="error"
-                          onClick={() => openDeleteDialog(program)}
+                          color="primary"
+                          onClick={() => openResumeDialog(program)}
                         >
-                          <DeleteIcon />
+                          <PlayArrowIcon />
                         </IconButton>
                       </Tooltip>
-                    </Box>
-                  </Box>
-
-                  <Box display="flex" gap={1} sx={{ mb: 2 }}>
-                    <Chip
-                      label={program.is_active ? 'Active' : 'Inactive'}
-                      color={program.is_active ? 'success' : 'default'}
-                      size="small"
-                    />
-                    <Chip
-                      label={`Week ${Math.max(program.current_week_number, 1)}`}
-                      color="primary"
-                      size="small"
-                    />
-                    <Chip
-                      label={`${programWorkouts.length} workouts`}
-                      variant="outlined"
-                      size="small"
-                    />
-                  </Box>
-
-                  {(() => {
-                    const preferences = programPreferences.get(program.id);
-                    const sessionDuration = preferences?.session_time_length_in_minutes || 60;
-                    return (
-                      <Chip
-                        label={`Session Duration: ${sessionDuration} min`}
+                    )}
+                    <Tooltip title="Delete Program">
+                      <IconButton
                         size="small"
-                        variant="outlined"
-                        sx={{ mb: 2 }}
-                      />
-                    );
-                  })()}
-
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Created: {formatDate(program.created_at)}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
+                        color="error"
+                        onClick={() => openDeleteDialog(program)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                </Box>
+                
+                <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
+                  <Chip
+                    label={program.is_active ? 'Active' : 'Inactive'}
+                    color={program.is_active ? 'success' : 'default'}
+                    size="small"
+                  />
+                  <Chip
+                    label={`Week ${Math.max(program.current_week_number, 1)}`}
+                    color="primary"
+                    size="small"
+                  />
+                  <Chip
+                    label={`${programWorkouts.length} workouts`}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Chip
+                    label={`Session Duration: ${sessionDuration} min`}
+                    size="small"
+                    variant="outlined"
+                  />
+                </Box>
+                
+                <Typography variant="body2" color="text.secondary">
+                  Created: {formatDate(program.created_at)}
+                </Typography>
+              </CardContent>
+            </Card>
           );
         })}
-      </Grid>
+      </Box>
 
       {/* No Programs State */}
       {programs.length === 0 && (
