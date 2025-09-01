@@ -503,7 +503,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
         {/* Charts - 1/3 width */}
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ mt: 3,display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Exercise Correlations Chord Chart */}
             <ChordChart
               workoutData={workoutData}

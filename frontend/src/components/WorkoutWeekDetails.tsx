@@ -17,9 +17,12 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { WorkoutDetail } from './WorkoutDetail';
 import { LoadingSpinner } from './LoadingSpinner';
+import { RadarChart } from './RadarChart';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkoutsByProgram } from '../api/programmedWorkout';
-import type { ProgrammedWorkout, ProgramWithPreferences } from '../api/types';
+import { getExercises } from '../api/exercise';
+import { getUserDataExport } from '../api/gdpr';
+import type { ProgrammedWorkout, ProgramWithPreferences, Exercise } from '../api/types';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutWeekDetailsProps {
@@ -54,6 +57,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     Array<ProgramWithPreferences>
   >([]);
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
+  const [userDataExport, setUserDataExport] = useState<any>(null);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
   const [currentWorkoutDetails, setCurrentWorkoutDetails] = useState<{
     name: string;
@@ -76,8 +81,21 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     const loadWorkoutData = async () => {
       setIsLoading(true);
       try {
-        const programsData = await getProgramsWithPreferences();
+        const [programsData, exercisesData, userData] = await Promise.all([
+          getProgramsWithPreferences(),
+          getExercises(),
+          getUserDataExport(),
+        ]);
+        
         setProgramsWithPreferences(programsData);
+        setUserDataExport(userData);
+        
+        // Convert exercises array to Map for easy lookup
+        const exerciseMap = new Map<string, Exercise>();
+        exercisesData.forEach(exercise => {
+          exerciseMap.set(exercise.name, exercise);
+        });
+        setExerciseData(exerciseMap);
         
         const activeProgram = programsData.find(program => program.program.is_active);
         if (activeProgram) {
@@ -100,22 +118,33 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
 
   // Group workouts by week and filter for the current week
   const weekWorkouts = useMemo(() => {
-    if (!activeProgram) return [];
+    if (!activeProgram || !userDataExport?.training_programs?.length) return [];
     
-    const programWorkouts = workouts.filter(
-      workout => workout.program_id === activeProgram.program.id
+    // Find the active program in the user data export
+    const activeProgramData = userDataExport.training_programs.find(
+      (program: any) => program.program.id === activeProgram.program.id
     );
     
-    // Since we're now getting workouts filtered by week from the backend,
-    // we just need to sort them by day number within the week
-    return programWorkouts
-      .map(workout => {
-        const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
-        const dayInWeek = ((workout.day_number - 1) % workoutsPerWeek) + 1;
-        return { workout, weekNumber: weekNumber, dayInWeek };
+    if (!activeProgramData) return [];
+    
+    // Filter workouts for the current week
+    const workoutsPerWeek = activeProgram.program_preferences.program_days_per_week;
+    const weekStartDay = (weekNumber - 1) * workoutsPerWeek + 1;
+    const weekEndDay = weekNumber * workoutsPerWeek;
+    
+    const weekWorkouts = activeProgramData.workouts.filter((workoutWithStages: any) => {
+      const dayNumber = workoutWithStages.workout.day_number;
+      return dayNumber >= weekStartDay && dayNumber <= weekEndDay;
+    });
+    
+    // Sort by day number within the week
+    return weekWorkouts
+      .map((workoutWithStages: any) => {
+        const dayInWeek = ((workoutWithStages.workout.day_number - 1) % workoutsPerWeek) + 1;
+        return { workout: workoutWithStages, weekNumber: weekNumber, dayInWeek };
       })
-      .sort((a, b) => a.dayInWeek - b.dayInWeek);
-  }, [workouts, activeProgram, weekNumber]);
+      .sort((a: any, b: any) => a.dayInWeek - b.dayInWeek);
+  }, [userDataExport, activeProgram, weekNumber]);
 
   const handleWorkoutClick = (workoutId: number) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -246,70 +275,86 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <Box sx={{ display: 'flex', gap: 3 }}>
-          {/* Workout List - Slides right when workout is selected */}
-          <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Grid container spacing={3}>
-                {/* Week Workout List */}
-                <Grid size={{ xs: 12 }}>
-                  <Card>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        Workouts
+        <Grid container spacing={3}>
+          {/* Workout List - 2/3 width */}
+          <Grid size={{ xs: 12, lg: 8 }}>
+            <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
+              <Box sx={{ height: '100%' }}>
+                <Card sx={{
+                  mt: 3,
+                  height: '100%',
+                  '&:hover': {
+                    transform: 'none',
+                    boxShadow: 'none'
+                  }
+                }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Workouts
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {weekWorkouts.length} workouts • Week {weekNumber} of{' '}
+                        {activeProgram.program.current_week_number}
                       </Typography>
+                    {isLoading ? (
+                      <Box display="flex" justifyContent="center" p={3}>
+                        <LoadingSpinner message="Loading workouts..." size={40} />
+                      </Box>
+                    ) : weekWorkouts.length === 0 ? (
                       <Typography variant="body2" color="text.secondary">
-                          {weekWorkouts.length} workouts • Week {weekNumber} of{' '}
-                          {activeProgram.program.current_week_number}
-                        </Typography>
-                      {isLoading ? (
-                        <Box display="flex" justifyContent="center" p={3}>
-                          <LoadingSpinner message="Loading workouts..." size={40} />
-                        </Box>
-                      ) : weekWorkouts.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary">
-                          No workouts found for Week {weekNumber}.
-                        </Typography>
-                      ) : (
-                        <List>
-                          {weekWorkouts.map(weekWorkout => (
+                        No workouts found for Week {weekNumber}.
+                      </Typography>
+                    ) : (
+                                              <List>
+                          {weekWorkouts.map((weekWorkout: any) => (
                             <ListItem
-                              key={weekWorkout.workout.id}
+                              key={weekWorkout.workout.workout.id}
                               disablePadding
                               sx={{
                                 cursor: 'pointer',
                                 '&:hover': { backgroundColor: 'action.hover' },
                               }}
-                              onClick={() => handleWorkoutClick(weekWorkout.workout.id)}
+                              onClick={() => handleWorkoutClick(weekWorkout.workout.workout.id)}
                             >
                               <ListItemText
                                 primary={`Day ${weekWorkout.dayInWeek}`}
-                                secondary={`${replaceUnderscoresWithSpaces(weekWorkout.workout.name || `Workout ${weekWorkout.workout.day_number}`)}`}
+                                secondary={`${replaceUnderscoresWithSpaces(weekWorkout.workout.workout.name || `Workout ${weekWorkout.workout.workout.day_number}`)}`}
                               />
                             </ListItem>
                           ))}
                         </List>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-            </Box>
-          </Slide>
-
-          {/* Workout Details - Slides in from left when workout is selected */}
-          {selectedWorkoutId && (
-            <Slide direction="left" in={!!selectedWorkoutId} mountOnEnter unmountOnExit>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <WorkoutDetail
-                  workoutId={parseInt(selectedWorkoutId)}
-                  onBack={handleBackToWeekList}
-                  onWorkoutDetailsUpdate={handleWorkoutDetailsUpdate}
-                />
+                    )}
+                  </CardContent>
+                </Card>
               </Box>
             </Slide>
-          )}
-        </Box>
+
+            {/* Workout Details - Slides in from left when workout is selected */}
+            {selectedWorkoutId && (
+              <Slide direction="left" in={!!selectedWorkoutId} mountOnEnter unmountOnExit>
+                <Box sx={{ height: '100%' }}>
+                  <WorkoutDetail
+                    workoutId={parseInt(selectedWorkoutId)}
+                    onBack={handleBackToWeekList}
+                    onWorkoutDetailsUpdate={handleWorkoutDetailsUpdate}
+                  />
+                </Box>
+              </Slide>
+            )}
+          </Grid>
+
+          {/* Movement Type Distribution Chart - 1/3 width */}
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <RadarChart
+                weekWorkouts={weekWorkouts}
+                exerciseData={exerciseData}
+                title="Movement Type Distribution"
+                height={300}
+              />
+            </Box>
+          </Grid>
+        </Grid>
       )}
     </React.Fragment>
   );

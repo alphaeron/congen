@@ -1,0 +1,125 @@
+import { default as RadarIcon } from '@mui/icons-material/Radar';
+import { Box, Card, CardContent, Typography, useTheme, Tooltip } from '@mui/material';
+import { ResponsiveRadar } from '@nivo/radar';
+import React, { useMemo } from 'react';
+
+import { createCongenNivoTheme } from '../theme/nivoTheme';
+import type { Exercise } from '../api/types';
+
+interface RadarChartProps {
+  weekWorkouts: any[]; // Array of week workout data
+  exerciseData: Map<string, Exercise>;
+  title?: string;
+  description?: string;
+  height?: number;
+}
+
+/**
+ * Radar Chart component for displaying movement type distribution.
+ * 
+ * This component accepts week workout data and exercise data, then calculates
+ * the distribution of movement types across all exercises in the week.
+ *
+ * @param weekWorkouts Array of workout data for the week
+ * @param exerciseData Map of exercise names to exercise details
+ * @param title Optional title for the chart
+ * @param description Optional description for the chart
+ * @param height Optional height for the chart container
+ * @return Radar Chart component
+ */
+export const RadarChart: React.FC<RadarChartProps> = ({
+  weekWorkouts,
+  exerciseData,
+  title = 'Movement Type Distribution',
+  description = 'Distribution of movement types across the week',
+  height = 300,
+}) => {
+  const theme = useTheme();
+  const nivoTheme = createCongenNivoTheme(theme.palette.mode);
+
+  // Calculate movement type distribution
+  const movementTypeData = useMemo(() => {
+    const movementTypeCounts = new Map<string, number>();
+    
+    // Iterate through all workouts in the week
+    weekWorkouts.forEach(weekWorkout => {
+      // Access the workout data structure
+      const workout = weekWorkout.workout;
+      
+      // If the workout has stages with exercises, process them
+      if (workout.stages) {
+        workout.stages.forEach((stage: any) => {
+          if (stage.exercises) {
+            stage.exercises.forEach((exerciseWithSchemes: any) => {
+              const exerciseName = exerciseWithSchemes.exercise.exercise_name;
+              const exercise = exerciseData.get(exerciseName);
+              
+              if (exercise && exercise.movement_type) {
+                const movementType = exercise.movement_type;
+                movementTypeCounts.set(movementType, (movementTypeCounts.get(movementType) || 0) + 1);
+              }
+            });
+          }
+        });
+      }
+    });
+
+    // Convert to radar chart format
+    const data = Array.from(movementTypeCounts.entries()).map(([movementType, count]) => ({
+      movementType: movementType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      count,
+    }));
+
+    return data.sort((a, b) => b.count - a.count); // Sort by count descending
+  }, [weekWorkouts, exerciseData]);
+
+  // Don't render if no data
+  if (!movementTypeData.length) {
+    return null;
+  }
+
+  return (
+    <Card sx={{ 
+      '&:hover': {
+        transform: 'none',
+        boxShadow: 'none'
+      }
+    }}>
+      <CardContent>
+        <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+          <RadarIcon color="secondary" />
+          <Tooltip title="Distribution of movement types across the week" arrow>
+            <Typography variant="h6">{title}</Typography>
+          </Tooltip>
+        </Box>
+        <Box sx={{ height }}>
+          <ResponsiveRadar
+            data={movementTypeData}
+            keys={['count']}
+            indexBy="movementType"
+            valueFormat=".0f"
+            margin={{ top: 70, right: 80, bottom: 40, left: 80 }}
+            borderColor={{ from: 'color' }}
+            gridLabelOffset={36}
+            dotSize={10}
+            dotColor={{ theme: 'background' }}
+            dotBorderWidth={2}
+            colors={{ scheme: 'nivo' }}
+            blendMode="multiply"
+            motionConfig="wobbly"
+            theme={{
+              ...nivoTheme,
+              tooltip: {
+                container: {
+                  ...nivoTheme.tooltip.container,
+                  whiteSpace: 'nowrap',
+                },
+              },
+            }}
+
+          />
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
