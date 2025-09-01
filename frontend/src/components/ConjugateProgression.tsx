@@ -1,6 +1,14 @@
-import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography, TextField, InputAdornment } from '@mui/material';
+import { Search as SearchIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
+import {
+  createColumnHelper,
+  getCoreRowModel,
+  getFilteredRowModel,
+  useReactTable,
+  flexRender,
+} from '@tanstack/react-table';
 
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
@@ -10,7 +18,11 @@ import { getUserDataExport } from '../api/gdpr';
 import type {
   User,
   Exercise,
+  UserOneRepMax,
 } from '../api/types';
+import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 
 interface ConjugateProgressionProps {
   user: User;
@@ -33,6 +45,67 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+
+  // Table configuration
+  const columnHelper = createColumnHelper<{
+    exerciseName: string;
+    oneRepMax: number;
+    unit: string;
+  }>();
+
+  const columns = [
+    columnHelper.accessor('exerciseName', {
+      header: 'Exercise',
+      cell: info => info.getValue(),
+    }),
+    columnHelper.accessor('oneRepMax', {
+      header: '1RM',
+      cell: info => `${info.getValue()} ${info.row.original.unit}`,
+    }),
+  ];
+
+  // Process 1RM data for table
+  const tableData = useMemo(() => {
+    return oneRepMaxes.map(oneRepMax => {
+      // Find user's preferred unit for this exercise
+      const weightUnitPreference = weightUnitPreferences.find(
+        pref => pref.exercise_name === oneRepMax.exercise_name
+      );
+
+      // Convert weight to user's preferred unit if available
+      let displayWeight = oneRepMax.one_rep_max;
+      let displayUnit = oneRepMax.unit;
+
+      if (weightUnitPreference?.preferred_unit === 'KG' && oneRepMax.unit === 'LBS') {
+        displayWeight = Math.round(oneRepMax.one_rep_max / 2.20462);
+        displayUnit = 'KG';
+      } else if (weightUnitPreference?.preferred_unit === 'LBS' && oneRepMax.unit === 'KG') {
+        displayWeight = Math.round(oneRepMax.one_rep_max * 2.20462);
+        displayUnit = 'LBS';
+      }
+
+      return {
+        exerciseName: oneRepMax.exercise_name,
+        oneRepMax: displayWeight,
+        unit: displayUnit,
+      };
+    });
+  }, [oneRepMaxes, weightUnitPreferences]);
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: 'includesString',
+  });
 
   // Load all workout data using optimized single API call
   useEffect(() => {
@@ -40,9 +113,16 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
       try {
         setIsLoading(true);
 
-        // Load all data in a single optimized call
-        const dataExport = await getUserDataExport();
+        // Load all data in parallel
+        const [dataExport, oneRepMaxesData, weightUnitData] = await Promise.all([
+          getUserDataExport(),
+          getUserOneRepMaxes(user.keycloak_id),
+          getUserWeightUnitPreferences(user.keycloak_id),
+        ]);
+        
         setUserData(dataExport);
+        setOneRepMaxes(oneRepMaxesData);
+        setWeightUnitPreferences(weightUnitData || []);
 
         // Fetch exercise data for all unique exercises
         // Handle case where user has no training programs (empty array)
@@ -131,8 +211,74 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
           />
         </Grid>
 
-        {/* Progress Tracking */}
-        <Grid size={{ xs: 12 }}>
+        {/* 1RM Table and Progress Tracking */}
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Current 1RM Values
+              </Typography>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search exercises..."
+                value={globalFilter}
+                onChange={e => setGlobalFilter(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    {table.getHeaderGroups().map(headerGroup => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map(header => (
+                          <th
+                            key={header.id}
+                            style={{
+                              textAlign: 'left',
+                              padding: '8px',
+                              borderBottom: '1px solid #e0e0e0',
+                              fontWeight: 'bold',
+                            }}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody>
+                    {table.getRowModel().rows.map(row => (
+                      <tr key={row.id}>
+                        {row.getVisibleCells().map(cell => (
+                          <td
+                            key={cell.id}
+                            style={{
+                              padding: '8px',
+                              borderBottom: '1px solid #f0f0f0',
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Progress Tracking Chart */}
+        <Grid size={{ xs: 12, lg: 8 }}>
           <LineChart
             userDataExport={userData}
             exerciseData={exerciseData}

@@ -20,7 +20,6 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { DashboardOverview } from './DashboardOverview';
-import { ExerciseHistory } from './ExerciseHistory';
 import { ProgramManagement } from './ProgramManagement';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
@@ -73,12 +72,6 @@ export const Dashboard: React.FC<DashboardProps> = ({
       label: 'Workouts',
       icon: <FitnessCenterIcon />,
       component: <Workouts user={user} selectedWorkout={selectedWorkout} />,
-    },
-    {
-      id: 'exercise-history',
-      label: 'Exercise History',
-      icon: <HistoryIcon />,
-      component: <ExerciseHistory user={user} />,
     },
     {
       id: 'workout-preferences',
