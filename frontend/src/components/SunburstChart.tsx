@@ -1,5 +1,6 @@
 import { default as RefreshIcon } from '@mui/icons-material/Refresh';
-import { Box, useTheme, Typography, IconButton } from '@mui/material';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
+import { Box, useTheme, Typography, IconButton, Card, CardContent, Tooltip } from '@mui/material';
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
@@ -275,48 +276,59 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
   }
 
   return (
-    <Box>
-      {/* Navigation */}
-      <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <IconButton onClick={handleHomeClick} size="small" title="Reset chart">
-          <RefreshIcon />
-        </IconButton>
-        <Typography variant="body2" color="text.secondary">
-          {currentData.name === sunburstData.name ? 'Exercise Volume' : currentData.name}
-        </Typography>
-      </Box>
+    <Card sx={{ 
+      '&:hover': {
+        transform: 'none',
+        boxShadow: 'none'
+      }
+    }}>
+      <CardContent>
+        <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+          <ShowChartIcon color="primary" />
+          <Tooltip title="Volume distribution by muscle groups for this workout" arrow>
+            <Typography variant="h6">Exercise Volume Hierarchy</Typography>
+          </Tooltip>
+        </Box>
+        
+        {/* Navigation */}
+        <Box sx={{ display: 'flex', alignItems: 'center'}}>
+          <IconButton onClick={handleHomeClick} size="small" title="Reset chart">
+            <RefreshIcon />
+          </IconButton>
+        </Box>
 
-      {/* Sunburst Chart */}
-      <Box sx={{ height: 300 }}>
-        <ResponsiveSunburst
-          data={currentData}
-          margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-          id="name"
-          value="loc"
-          cornerRadius={2}
-          borderColor={{ theme: 'background' }}
-          colors={{ scheme: 'nivo' }}
-          childColor={{
-            from: 'color',
-            modifiers: [['brighter', 0.1]],
-          }}
-          enableArcLabels={true}
-          arcLabelsSkipAngle={10}
-          arcLabelsTextColor={{
-            from: 'color',
-            modifiers: [['darker', 1.4]],
-          }}
-          theme={nivoTheme}
-          onClick={handleArcClick}
-          layers={[
-            'arcs',
-            'arcLabels',
-            (props: { centerX: number; centerY: number }) => (
-              <CenterMetric {...props} data={currentData} />
-            ),
-          ]}
-        />
-      </Box>
-    </Box>
+        {/* Sunburst Chart */}
+        <Box sx={{ height: 300 }}>
+          <ResponsiveSunburst
+            data={currentData}
+            margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+            id="name"
+            value="loc"
+            cornerRadius={2}
+            borderColor={{ theme: 'background' }}
+            colors={{ scheme: 'nivo' }}
+            childColor={{
+              from: 'color',
+              modifiers: [['brighter', 0.1]],
+            }}
+            enableArcLabels={true}
+            arcLabelsSkipAngle={10}
+            arcLabelsTextColor={{
+              from: 'color',
+              modifiers: [['darker', 1.4]],
+            }}
+            theme={nivoTheme}
+            onClick={handleArcClick}
+            layers={[
+              'arcs',
+              'arcLabels',
+              (props: { centerX: number; centerY: number }) => (
+                <CenterMetric {...props} data={currentData} />
+              ),
+            ]}
+          />
+        </Box>
+      </CardContent>
+    </Card>
   );
 };

@@ -1,4 +1,4 @@
-import { Notes as NotesIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, ShowChart as ShowChartIcon } from '@mui/icons-material';
+import { Notes as NotesIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import {
   Box,
   Typography,
@@ -7,8 +7,6 @@ import {
   Tooltip,
   Paper,
   useTheme,
-  Card,
-  CardContent,
   Grid,
 } from '@mui/material';
 import {
@@ -504,30 +502,13 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
         {/* Exercise Volume Hierarchy Chart - 1/3 width */}
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Card sx={{ 
-            height: '100%',
-            '&:hover': {
-              transform: 'none',
-              boxShadow: 'none'
-            }
-          }}>
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-                <ShowChartIcon color="primary" />
-                <Typography variant="h6">Exercise Volume Hierarchy</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                Volume distribution by muscle groups for this workout
-              </Typography>
-              <SunburstChart
-                workoutData={workoutData}
-                exerciseData={exerciseData}
-                exerciseMuscleData={exerciseMuscleData}
-                weightUnitPreferences={weightUnitPreferences}
-                selectedExercise="all"
-              />
-            </CardContent>
-          </Card>
+          <SunburstChart
+            workoutData={workoutData}
+            exerciseData={exerciseData}
+            exerciseMuscleData={exerciseMuscleData}
+            weightUnitPreferences={weightUnitPreferences}
+            selectedExercise="all"
+          />
         </Grid>
       </Grid>
     </Box>
