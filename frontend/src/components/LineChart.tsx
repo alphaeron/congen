@@ -312,7 +312,7 @@ export const LineChart: React.FC<LineChartProps> = ({
                   style={{
                     width: '12px',
                     height: '12px',
-                    backgroundColor: point.color,
+                    backgroundColor: point.seriesColor,
                     borderRadius: '2px',
                     flexShrink: 0,
                   }}

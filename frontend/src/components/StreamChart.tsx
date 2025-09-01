@@ -136,7 +136,7 @@ export const StreamChart: React.FC<StreamChartProps> = ({
     }));
   }, [volumeData]);
 
-  const keys = ['Max Effort', 'Dynamic Effort', 'Accessory'];
+  const keys: ('Max Effort' | 'Dynamic Effort' | 'Accessory')[] = ['Max Effort', 'Dynamic Effort', 'Accessory'];
 
   // Don't render if no data
   if (!streamData.length) {
@@ -159,40 +159,15 @@ export const StreamChart: React.FC<StreamChartProps> = ({
             keys={keys}
             margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
             colors={{ scheme: 'nivo' }}
-            theme={nivoTheme}
-            tooltip={({ id, value, color }) => (
-              <div
-                style={{
-                  padding: '8px 12px',
-                  color: nivoTheme.tooltip.container.color,
-                  background: nivoTheme.tooltip.container.background,
-                  borderRadius: nivoTheme.tooltip.container.borderRadius,
-                  boxShadow: nivoTheme.tooltip.container.boxShadow,
-                  border: nivoTheme.tooltip.container.border,
+            theme={{
+              ...nivoTheme,
+              tooltip: {
+                container: {
+                  ...nivoTheme.tooltip.container,
                   whiteSpace: 'nowrap',
-                  fontSize: nivoTheme.tooltip.container.fontSize,
-                  fontFamily: nivoTheme.tooltip.container.fontFamily,
-                  lineHeight: nivoTheme.tooltip.container.lineHeight,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '12px',
-                    height: '12px',
-                    backgroundColor: color,
-                    borderRadius: '2px',
-                    flexShrink: 0,
-                  }}
-                />
-                <div>
-                  <span>{id}: </span>
-                  <span style={{ fontWeight: 'bold' }}>{value}</span>
-                </div>
-              </div>
-            )}
+                },
+              },
+            }}
           />
         </Box>
       </CardContent>
