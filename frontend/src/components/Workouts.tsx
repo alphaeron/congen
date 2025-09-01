@@ -23,13 +23,17 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router';
 
-import { WorkoutAnalytics } from './WorkoutAnalytics';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
+import { StreamChart } from './StreamChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import type { Program, ProgrammedWorkout, User, ProgramWithPreferences } from '../api/types';
+import { getUserDataExport } from '../api/gdpr';
+import { getIndividualExercise } from '../api/exercise';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
+import type { Program, ProgrammedWorkout, User, ProgramWithPreferences, Exercise, UserDataExport } from '../api/types';
+import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutsProps {
@@ -65,6 +69,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
 
   // URL query parameters
   const selectedWeek = searchParams.get('week');
@@ -75,13 +82,44 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     const loadWorkoutData = async () => {
       setIsLoading(true);
       try {
-        const [programsData, workoutsData] = await Promise.all([
+        const [programsData, workoutsData, userData, weightUnitData] = await Promise.all([
           getProgramsWithPreferences(),
           getProgrammedWorkouts(),
+          getUserDataExport(),
+          getUserWeightUnitPreferences(user.keycloak_id),
         ]);
 
         setProgramsWithPreferences(programsData);
         setWorkouts(workoutsData);
+        setUserDataExport(userData);
+        setWeightUnitPreferences(weightUnitData || []);
+
+        // Extract unique exercises from the export data and fetch exercise details
+        const uniqueExercises = new Set<string>();
+        userData.training_programs?.forEach((program: any) => {
+          program.workouts.forEach((workoutWithStages: any) => {
+            workoutWithStages.stages.forEach((stageWithExercises: any) => {
+              stageWithExercises.exercises.forEach((exerciseWithSetSchemes: any) => {
+                uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
+              });
+            });
+          });
+        });
+
+        // Fetch exercise data for all unique exercises
+        const exerciseMap = new Map<string, Exercise>();
+        for (const exerciseName of Array.from(uniqueExercises)) {
+          try {
+            const exercise = await getIndividualExercise(exerciseName);
+            exerciseMap.set(exerciseName, exercise);
+          } catch {
+            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
+              variant: 'error',
+            });
+          }
+        }
+
+        setExerciseData(exerciseMap);
       } catch {
         enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
       } finally {
@@ -90,7 +128,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     };
 
     loadWorkoutData();
-  }, []); // Only load once on mount
+  }, [user.keycloak_id]); // Reload when user changes
 
   const activeProgram = programsWithPreferences.find(program => program.program.is_active);
 
@@ -249,7 +287,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
           </CardContent>
         </Card>
       ) : (
-        <Box sx={{ display: 'flex', gap: 3 }}>
+        <Box sx={{ mt: 3, display: 'flex', gap: 3 }}>
           {/* Week List - Slides right when week is selected */}
           <Slide direction="right" in={!selectedWeek} mountOnEnter unmountOnExit>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -281,7 +319,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
                 {/* Week List */}
                 <Grid size={{ xs: 12 }}>
-                  <Card sx={{ mb: 4 }}>
+                  <Card sx={{ mb: 3 }}>
                     <CardContent>
                       <Typography variant="h6" gutterBottom>
                         Training Weeks
@@ -324,8 +362,17 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         </Box>
       )}
 
-      {/* Workout Analytics Section */}
-      <WorkoutAnalytics user={user} />
+      {/* Stream Chart Section */}
+      {userDataExport?.training_programs?.length && (
+        <StreamChart
+          userDataExport={userDataExport}
+          exerciseData={exerciseData}
+          weightUnitPreferences={weightUnitPreferences}
+          title="Volume Flow Over Time"
+          description="Training volume distribution across workout types"
+          height={400}
+        />
+      )}
 
       {/* Generate Workouts Dialog */}
       <Dialog open={generateDialogOpen} onClose={() => setGenerateDialogOpen(false)}>

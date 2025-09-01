@@ -393,12 +393,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           {!selectedWorkoutId && (
             <Grid size={{ xs: 12, lg: 4 }}>
               <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <RadarChart
-                  weekWorkouts={weekWorkouts}
-                  exerciseData={exerciseData}
-                  title="Movement Type Distribution"
-                  height={300}
-                />
                 {weekWorkouts.length > 0 && (
                   <SunburstChart
                     workoutData={{
@@ -419,6 +413,12 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
                     selectedExercise="all"
                   />
                 )}
+                <RadarChart
+                  weekWorkouts={weekWorkouts}
+                  exerciseData={exerciseData}
+                  title="Exercise Movement Type"
+                  height={300}
+                />
               </Box>
             </Grid>
           )}

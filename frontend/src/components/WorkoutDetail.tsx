@@ -504,13 +504,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         {/* Charts - 1/3 width */}
         <Grid size={{ xs: 12, lg: 4 }}>
           <Box sx={{ mt: 3,display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Exercise Correlations Chord Chart */}
-            <ChordChart
-              workoutData={workoutData}
-              title="Exercise Correlations"
-              height={300}
-            />
-            
             {/* Exercise Volume Hierarchy Chart */}
             <SunburstChart
               workoutData={workoutData}
@@ -518,6 +511,12 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
               exerciseMuscleData={exerciseMuscleData}
               weightUnitPreferences={weightUnitPreferences}
               selectedExercise="all"
+            />
+            {/* Exercise Correlations Chord Chart */}
+            <ChordChart
+              workoutData={workoutData}
+              title="Exercise Support Correlation"
+              height={300}
             />
           </Box>
         </Grid>
