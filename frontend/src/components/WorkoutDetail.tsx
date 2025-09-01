@@ -9,6 +9,7 @@ import {
   useTheme,
   Card,
   CardContent,
+  Grid,
 } from '@mui/material';
 import {
   useReactTable,
@@ -236,7 +237,16 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           if (row.original.type === 'exercise') {
             return (
               <Box display="flex" alignItems="center" gap={1}>
-                <Typography variant="body2">{row.original.exerciseName}</Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    wordWrap: 'break-word',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.4
+                  }}
+                >
+                  {row.original.exerciseName}
+                </Typography>
                 {row.original.exerciseNotes && (
                   <Tooltip title={row.original.exerciseNotes} arrow>
                     <IconButton size="small">
@@ -249,7 +259,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           }
           return null;
         },
-        size: 200,
+        size: 300,
+        minSize: 200,
+        maxSize: 400,
       }),
       columnHelper.accessor('sets', {
         id: 'sets',
@@ -260,7 +272,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           }
           return null;
         },
-        size: 80,
+        size: 60,
+        minSize: 50,
+        maxSize: 80,
       }),
       columnHelper.accessor('reps', {
         id: 'reps',
@@ -271,7 +285,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           }
           return null;
         },
-        size: 80,
+        size: 60,
+        minSize: 50,
+        maxSize: 80,
       }),
       columnHelper.accessor('tempo', {
         id: 'tempo',
@@ -282,7 +298,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           }
           return null;
         },
-        size: 120,
+        size: 80,
+        minSize: 70,
+        maxSize: 100,
       }),
       columnHelper.accessor('weight', {
         id: 'weight',
@@ -293,7 +311,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           }
           return null;
         },
-        size: 120,
+        size: 80,
+        minSize: 70,
+        maxSize: 100,
       }),
       columnHelper.accessor('rest', {
         id: 'rest',
@@ -304,18 +324,33 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           }
           return null;
         },
-        size: 120,
+        size: 60,
+        minSize: 50,
+        maxSize: 80,
       }),
       columnHelper.accessor('notes', {
         id: 'notes',
         header: 'Notes',
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
-            return <Typography variant="body2">{row.original.notes}</Typography>;
+            return (
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  wordWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  lineHeight: 1.4
+                }}
+              >
+                {row.original.notes}
+              </Typography>
+            );
           }
           return null;
         },
-        size: 80,
+        size: 200,
+        minSize: 150,
+        maxSize: 300,
       }),
     ],
     []
@@ -326,6 +361,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    columnResizeMode: 'onChange',
+    enableColumnResizing: true,
   });
 
   if (isLoading) {
@@ -340,30 +377,16 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
-      {/* Exercise Volume Hierarchy Chart */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
-            <ShowChartIcon color="primary" />
-            <Typography variant="h6">Exercise Volume Hierarchy</Typography>
-          </Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Volume distribution by muscle groups for this workout
-          </Typography>
-          <SunburstChart
-            workoutData={workoutData}
-            exerciseData={exerciseData}
-            exerciseMuscleData={exerciseMuscleData}
-            weightUnitPreferences={weightUnitPreferences}
-            selectedExercise="all"
-          />
-        </CardContent>
-      </Card>
-
-      {/* Table Container */}
-      <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <Grid container spacing={3} sx={{ height: '100%' }}>
+        {/* Table Container - 2/3 width */}
+        <Grid size={{ xs: 12, lg: 8 }}>
+          <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
+            <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>
+              <table style={{ 
+                width: '100%', 
+                borderCollapse: 'collapse',
+                tableLayout: 'fixed'
+              }}>
             {/* Table Column Headers */}
             <thead
               style={{
@@ -386,8 +409,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                         borderBottom: `1px solid ${theme.palette.divider}`,
                         backgroundColor: theme.palette.background.paper,
                         color: theme.palette.text.primary,
-                        width: header.getSize(),
-                        minWidth: header.getSize(),
+                        width: `${(header.getSize() / 860) * 100}%`, // Total approximate width of all columns
+                        minWidth: `${(header.column.columnDef.minSize || 50) / 860 * 100}%`,
                       }}
                     >
                       {header.isPlaceholder
@@ -460,9 +483,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                         style={{
                           padding: '8px',
                           borderBottom: `1px solid ${theme.palette.divider}`,
-                          width: cell.column.getSize(),
-                          minWidth: cell.column.getSize(),
+                          width: `${(cell.column.getSize() / 860) * 100}%`, // Total approximate width of all columns
+                          minWidth: `${(cell.column.columnDef.minSize || 50) / 860 * 100}%`,
                           color: theme.palette.text.primary,
+                          wordWrap: 'break-word',
+                          overflow: 'hidden',
                         }}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -472,9 +497,39 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                 </tr>
               ))}
             </tbody>
-          </table>
-        </Box>
-      </Paper>
+              </table>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Exercise Volume Hierarchy Chart - 1/3 width */}
+        <Grid size={{ xs: 12, lg: 4 }}>
+          <Card sx={{ 
+            height: '100%',
+            '&:hover': {
+              transform: 'none',
+              boxShadow: 'none'
+            }
+          }}>
+            <CardContent>
+              <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+                <ShowChartIcon color="primary" />
+                <Typography variant="h6">Exercise Volume Hierarchy</Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Volume distribution by muscle groups for this workout
+              </Typography>
+              <SunburstChart
+                workoutData={workoutData}
+                exerciseData={exerciseData}
+                exerciseMuscleData={exerciseMuscleData}
+                weightUnitPreferences={weightUnitPreferences}
+                selectedExercise="all"
+              />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
     </Box>
   );
 };
