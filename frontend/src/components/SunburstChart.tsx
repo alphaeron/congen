@@ -33,9 +33,6 @@ const CenterMetric = (props: CenterMetricProps) => {
 
   const totalVolume = calculateTotalVolume(data);
 
-  console.log('CenterMetric - data:', data);
-  console.log('CenterMetric - totalVolume:', totalVolume);
-
   return (
     <g transform={`translate(${centerX},${centerY})`}>
       <circle
@@ -88,7 +85,7 @@ interface SunburstChartProps {
 
 /**
  * Sunburst Chart component for displaying exercise volume hierarchy with drill-down functionality.
- * 
+ *
  * This component accepts raw workout data and handles all data transformations
  * internally to calculate exercise volume hierarchy and display it in a sunburst chart.
  *
@@ -269,7 +266,6 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
 
   // Handle click on sunburst segments
   const handleArcClick = (node: { data?: SunburstData }) => {
-    console.log('Arc clicked:', node);
     if (node.data?.children && node.data.children.length > 0) {
       setCurrentData(node.data);
     }
