@@ -159,42 +159,38 @@ export const StreamChart: React.FC<StreamChartProps> = ({
             keys={keys}
             margin={{ top: 50, right: 110, bottom: 50, left: 60 }}
             colors={{ scheme: 'nivo' }}
-            theme={{
-              ...nivoTheme,
-              tooltip: {
-                container: {
-                  background: '#fff',
-                  color: '#333',
-                  fontSize: '12px',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  border: '1px solid #ccc',
-                  padding: '12px',
-                  whiteSpace: 'nowrap',
-                  fontFamily: 'Arial, sans-serif',
-                  lineHeight: '1.4',
-                },
-              },
-            }}
+            theme={nivoTheme}
             tooltip={({ id, value, color }) => (
               <div
                 style={{
-                  padding: '12px',
-                  color: '#333',
-                  background: '#fff',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  border: '1px solid #ccc',
+                  padding: '8px 12px',
+                  color: nivoTheme.tooltip.container.color,
+                  background: nivoTheme.tooltip.container.background,
+                  borderRadius: nivoTheme.tooltip.container.borderRadius,
+                  boxShadow: nivoTheme.tooltip.container.boxShadow,
+                  border: nivoTheme.tooltip.container.border,
                   whiteSpace: 'nowrap',
-                  fontSize: '12px',
-                  fontFamily: 'Arial, sans-serif',
-                  lineHeight: '1.4',
+                  fontSize: nivoTheme.tooltip.container.fontSize,
+                  fontFamily: nivoTheme.tooltip.container.fontFamily,
+                  lineHeight: nivoTheme.tooltip.container.lineHeight,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
                 }}
               >
-                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                  {id}
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: color,
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  <span>{id}: </span>
+                  <span style={{ fontWeight: 'bold' }}>{value}</span>
                 </div>
-                <div>Value: {value}</div>
               </div>
             )}
           />

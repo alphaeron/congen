@@ -223,8 +223,28 @@ export const LineChart: React.FC<LineChartProps> = ({
     }
   };
 
-  // Don't render if no data
+  // Don't render if no data, but show a message for progress charts
   if (!chartData.length || !chartData[0].data.length) {
+    if (chartType === 'progress') {
+      return (
+        <Card variant="outlined">
+          <CardContent>
+            <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
+              <BarChartIcon color="primary" />
+              <Typography variant="h6">{title}</Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {description}
+            </Typography>
+            <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                No progress data available. Complete workouts and record 1RM values to see progress tracking.
+              </Typography>
+            </Box>
+          </CardContent>
+        </Card>
+      );
+    }
     return null;
   }
 
@@ -270,6 +290,48 @@ export const LineChart: React.FC<LineChartProps> = ({
             useMesh={true}
             colors={colors || congenColorSchemes.strength}
             theme={nivoTheme}
+            tooltip={({ point }) => (
+              <div
+                style={{
+                  padding: '8px 12px',
+                  color: nivoTheme.tooltip.container.color,
+                  background: nivoTheme.tooltip.container.background,
+                  borderRadius: nivoTheme.tooltip.container.borderRadius,
+                  boxShadow: nivoTheme.tooltip.container.boxShadow,
+                  border: nivoTheme.tooltip.container.border,
+                  whiteSpace: 'nowrap',
+                  fontSize: nivoTheme.tooltip.container.fontSize,
+                  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                  lineHeight: '1.4',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: point.color,
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  {chartType === 'volume' ? (
+                    <>
+                      <div>Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span></div>
+                      <div>Volume: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span></div>
+                    </>
+                  ) : (
+                    <>
+                      <div>Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span></div>
+                      <div>Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span></div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
             legends={
               showLegend
                 ? [

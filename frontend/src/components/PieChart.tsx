@@ -168,6 +168,39 @@ export const PieChart: React.FC<PieChartProps> = ({
             arcLabelsSkipAngle={10}
             arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
             theme={nivoTheme}
+            tooltip={({ datum }) => (
+              <div
+                style={{
+                  padding: '8px 12px',
+                  color: nivoTheme.tooltip.container.color,
+                  background: nivoTheme.tooltip.container.background,
+                  borderRadius: nivoTheme.tooltip.container.borderRadius,
+                  boxShadow: nivoTheme.tooltip.container.boxShadow,
+                  border: nivoTheme.tooltip.container.border,
+                  whiteSpace: 'nowrap',
+                  fontSize: nivoTheme.tooltip.container.fontSize,
+                  fontFamily: nivoTheme.tooltip.container.fontFamily,
+                  lineHeight: nivoTheme.tooltip.container.lineHeight,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: datum.color,
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                />
+                <div>
+                  <span>{datum.label}: </span>
+                  <span style={{ fontWeight: 'bold' }}>{datum.value}</span>
+                </div>
+              </div>
+            )}
             legends={[
               {
                 anchor: 'bottom',

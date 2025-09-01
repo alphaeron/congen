@@ -169,40 +169,11 @@ export const ChordChart: React.FC<ChordChartProps> = ({
               ...nivoTheme,
               tooltip: {
                 container: {
-                  background: '#fff',
-                  color: '#333',
-                  fontSize: '12px',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  border: '1px solid #ccc',
-                  padding: '12px',
+                  ...nivoTheme.tooltip.container,
                   whiteSpace: 'nowrap',
-                  fontFamily: 'Arial, sans-serif',
-                  lineHeight: '1.4',
                 },
               },
             }}
-            tooltip={({ source, target, value }) => (
-              <div
-                style={{
-                  padding: '12px',
-                  color: '#333',
-                  background: '#fff',
-                  borderRadius: '4px',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-                  border: '1px solid #ccc',
-                  whiteSpace: 'nowrap',
-                  fontSize: '12px',
-                  fontFamily: 'Arial, sans-serif',
-                  lineHeight: '1.4',
-                }}
-              >
-                <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                  {source.id} → {target.id}
-                </div>
-                <div>Value: {value}</div>
-              </div>
-            )}
           />
         </Box>
       </CardContent>
