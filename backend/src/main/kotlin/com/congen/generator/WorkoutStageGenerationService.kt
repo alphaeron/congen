@@ -155,6 +155,7 @@ abstract class WorkoutStageGenerationService(
         workout: ProgrammedWorkout,
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>,
+        userId: String,
     ): Mono<Void> {
         return createWorkoutStage(
             workout.id,
@@ -167,11 +168,14 @@ abstract class WorkoutStageGenerationService(
             .flatMap { primaryStage ->
                 createProgrammedExercise(primaryStage.id, exercise.name)
                     .flatMap { primaryProgrammedExercise ->
-                        createSetSchemes(
-                            primaryProgrammedExercise.id,
-                            setSchemes,
-                            WeightUnit.KG
-                        )
+                        getWeightUnitForExercise(userId, exercise.name)
+                            .flatMap { weightUnit ->
+                                createSetSchemes(
+                                    primaryProgrammedExercise.id,
+                                    setSchemes,
+                                    weightUnit
+                                )
+                            }
                     }
             }
             .then()
@@ -189,6 +193,7 @@ abstract class WorkoutStageGenerationService(
         workout: ProgrammedWorkout,
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>,
+        userId: String,
     ): Mono<Void> {
         return createWorkoutStage(
             workout.id,
@@ -198,11 +203,14 @@ abstract class WorkoutStageGenerationService(
             .flatMap { secondaryStage ->
                 createProgrammedExercise(secondaryStage.id, exercise.name)
                     .flatMap { secondaryProgrammedExercise ->
-                        createSetSchemes(
-                            secondaryProgrammedExercise.id,
-                            setSchemes,
-                            WeightUnit.KG
-                        )
+                        getWeightUnitForExercise(userId, exercise.name)
+                            .flatMap { weightUnit ->
+                                createSetSchemes(
+                                    secondaryProgrammedExercise.id,
+                                    setSchemes,
+                                    weightUnit
+                                )
+                            }
                     }
             }
             .then()
@@ -224,6 +232,7 @@ abstract class WorkoutStageGenerationService(
         secondaryExercise: Exercise?,
         primarySetSchemes: List<SetSchemeParams>,
         secondarySetSchemes: List<SetSchemeParams>,
+        userId: String,
     ): Mono<Void> {
         if (primaryExercise == null && secondaryExercise == null) {
             return Mono.empty()
@@ -245,11 +254,14 @@ abstract class WorkoutStageGenerationService(
                         exerciseMono.then(
                             createProgrammedExercise(primaryStage.id, primaryExercise.name)
                                 .flatMap { primaryProgrammedExercise ->
-                                    createSetSchemes(
-                                        primaryProgrammedExercise.id,
-                                        primarySetSchemes,
-                                        WeightUnit.KG
-                                    )
+                                    getWeightUnitForExercise(userId, primaryExercise.name)
+                                        .flatMap { weightUnit ->
+                                            createSetSchemes(
+                                                primaryProgrammedExercise.id,
+                                                primarySetSchemes,
+                                                weightUnit
+                                            )
+                                        }
                                 }
                         )
                 }
@@ -259,11 +271,14 @@ abstract class WorkoutStageGenerationService(
                         exerciseMono.then(
                             createProgrammedExercise(primaryStage.id, secondaryExercise.name)
                                 .flatMap { secondaryProgrammedExercise ->
-                                    createSetSchemes(
-                                        secondaryProgrammedExercise.id,
-                                        secondarySetSchemes,
-                                        WeightUnit.KG
-                                    )
+                                    getWeightUnitForExercise(userId, secondaryExercise.name)
+                                        .flatMap { weightUnit ->
+                                            createSetSchemes(
+                                                secondaryProgrammedExercise.id,
+                                                secondarySetSchemes,
+                                                weightUnit
+                                            )
+                                        }
                                 }
                         )
                 }
@@ -340,11 +355,14 @@ abstract class WorkoutStageGenerationService(
                                         userId = userId,
                                         consistentRestSeconds = consistentRestSeconds
                                     ).flatMap { accessoryScheme ->
-                                        createSetSchemes(
-                                            accessoryProgrammedExercise.id,
-                                            accessoryScheme,
-                                            WeightUnit.KG
-                                        )
+                                        getWeightUnitForExercise(userId, accessoryExercise.name)
+                                            .flatMap { weightUnit ->
+                                                createSetSchemes(
+                                                    accessoryProgrammedExercise.id,
+                                                    accessoryScheme,
+                                                    weightUnit
+                                                )
+                                            }
                                     }
                                 }
                         }.onErrorResume { error ->
@@ -406,11 +424,14 @@ abstract class WorkoutStageGenerationService(
                                 oneRepMaxes = oneRepMaxes,
                                 userId = userId
                             ).flatMap { conditioningScheme ->
-                                createSetSchemes(
-                                    conditioningProgrammedExercise.id,
-                                    conditioningScheme,
-                                    WeightUnit.KG
-                                )
+                                getWeightUnitForExercise(userId, conditioningExercise.name)
+                                    .flatMap { weightUnit ->
+                                        createSetSchemes(
+                                            conditioningProgrammedExercise.id,
+                                            conditioningScheme,
+                                            weightUnit
+                                        )
+                                    }
                             }
                         }
                 }.onErrorResume { error ->
@@ -489,11 +510,14 @@ abstract class WorkoutStageGenerationService(
                                             userId = userId,
                                             currentWeekNumber = currentWeekNumber
                                         ).flatMap { warmupScheme ->
-                                            createSetSchemes(
-                                                warmupProgrammedExercise.id,
-                                                warmupScheme,
-                                                WeightUnit.KG
-                                            )
+                                            getWeightUnitForExercise(userId, warmupExercise.name)
+                                                .flatMap { weightUnit ->
+                                                    createSetSchemes(
+                                                        warmupProgrammedExercise.id,
+                                                        warmupScheme,
+                                                        weightUnit
+                                                    )
+                                                }
                                         }
                                     }
                             }
@@ -1112,5 +1136,24 @@ abstract class WorkoutStageGenerationService(
         workoutName: String
     ) {
         movementBalanceService.logBalanceState(state, workoutName)
+    }
+
+    /**
+     * Gets the weight unit for an exercise based on user preferences.
+     *
+     * @param userId The user ID
+     * @param exerciseName The name of the exercise
+     * @return Mono containing the weight unit preference, defaulting to KG if no preference exists
+     */
+    private fun getWeightUnitForExercise(
+        userId: String,
+        exerciseName: String
+    ): Mono<WeightUnit> {
+        return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
+            .map { it.preferredUnit }
+            .onErrorResume { error ->
+                logger.debug("No weight unit preference found for user {} and exercise {}, using KG", userId, exerciseName)
+                Mono.just(WeightUnit.KG)
+            }
     }
 }

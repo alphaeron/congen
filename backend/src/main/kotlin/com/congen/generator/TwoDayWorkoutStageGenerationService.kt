@@ -197,6 +197,7 @@ class TwoDayWorkoutStageGenerationService(
                                     secondaryExercise = secondaryExercise,
                                     primarySetSchemes = primarySetSchemes,
                                     secondarySetSchemes = secondarySetSchemes,
+                                    userId = userId
                                 )
                             },
                             // Accessory stage if needed

@@ -3,8 +3,25 @@ import { render, screen, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 
+// Mock react-oidc-context
+jest.mock('react-oidc-context', () => ({
+  useAuth: () => ({
+    user: {
+      keycloak_id: 'test-user-id',
+      email: 'test@example.com',
+      name: 'Test User'
+    },
+    isAuthenticated: true,
+    isLoading: false,
+    signinRedirect: jest.fn(),
+    signoutRedirect: jest.fn(),
+    removeUser: jest.fn()
+  })
+}));
+
 import { WorkoutDetail } from './WorkoutDetail';
 import { ENDPOINT } from '../api/endpoint';
+import { AuthProvider } from '../contexts/AuthContext';
 
 const mock = new MockAdapter(ENDPOINT);
 
@@ -20,7 +37,13 @@ const mockUserDataExport = {
   user_equipment: [],
   user_exercise_preferences: [],
   user_one_rep_max: [],
-  user_weight_unit_preferences: [],
+  user_weight_unit_preferences: [
+    {
+      user_id: 'test-user-id',
+      exercise_name: 'Bench Press',
+      preferred_unit: 'LBS',
+    },
+  ],
   training_programs: [
     {
       program: {
@@ -95,7 +118,11 @@ const mockUserDataExport = {
 };
 
 const renderWithTheme = (component: React.ReactElement) => {
-  return render(<ThemeProvider theme={theme}>{component}</ThemeProvider>);
+  return render(
+    <AuthProvider>
+      <ThemeProvider theme={theme}>{component}</ThemeProvider>
+    </AuthProvider>
+  );
 };
 
 describe('WorkoutDetail', () => {
@@ -109,6 +136,15 @@ describe('WorkoutDetail', () => {
   describe('Success State', () => {
     beforeEach(() => {
       mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+      mock.onGet('/exercise/').reply(200, []);
+      mock.onGet('/exercise_muscle/').reply(200, []);
+      mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, [
+        {
+          user_id: 'test-user-id',
+          exercise_name: 'Bench Press',
+          preferred_unit: 'LBS',
+        },
+      ]);
     });
 
     it('should display workout details when data loads successfully', async () => {
@@ -154,7 +190,7 @@ describe('WorkoutDetail', () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
 
-      expect(screen.getByText('135 lbs')).toBeInTheDocument();
+              expect(screen.getByText('135 LBS')).toBeInTheDocument();
       expect(screen.getByText('8')).toBeInTheDocument();
       expect(screen.getAllByText('-')).toHaveLength(2); // Rest and Notes show as "-" when null
       expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets

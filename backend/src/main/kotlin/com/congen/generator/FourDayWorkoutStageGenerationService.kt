@@ -222,7 +222,8 @@ class FourDayWorkoutStageGenerationService(
                         createPrimaryStage(
                             workout = workout,
                             exercise = primaryExercise,
-                            setSchemes = primarySetSchemes
+                            setSchemes = primarySetSchemes,
+                            userId = userId
                         )
                     }
 
@@ -232,7 +233,8 @@ class FourDayWorkoutStageGenerationService(
                             createSecondaryStage(
                                 workout = workout,
                                 exercise = secondaryExercise,
-                                setSchemes = secondarySetSchemes
+                                setSchemes = secondarySetSchemes,
+                                userId = userId
                             )
                         }
                     }

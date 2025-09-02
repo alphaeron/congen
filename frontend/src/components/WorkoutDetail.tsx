@@ -28,7 +28,7 @@ import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type { UserDataExport, Exercise, ExerciseMuscle } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { useAuth } from '../contexts/AuthContext';
-import { replaceUnderscoresWithSpaces } from '../common/utils';
+import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -197,6 +197,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           const weight = firstSetScheme.target_weight;
           const rest = firstSetScheme.rest_seconds;
 
+          // Get user's weight unit preference for this exercise
+          const weightUnitPreference = weightUnitPreferences.find(
+            pref => pref.exercise_name === exerciseData.exercise.exercise_name
+          );
+
           // Format tempo if available
           const tempo =
             firstSetScheme.use_tempo &&
@@ -213,7 +218,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             sets: totalSets,
             reps: reps || undefined,
             tempo: tempo !== '-' ? tempo : undefined,
-            weight: weight ? `${weight} lbs` : undefined,
+            weight: weight ? formatWeightWithUnit(weight, weightUnitPreference?.preferred_unit) : undefined,
             rest: rest ? `${rest}s` : undefined,
             notes: '-',
             exerciseNotes: exerciseData.exercise.notes,
@@ -224,7 +229,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     });
 
     return rows;
-  }, [workoutData, collapsedStages]);
+  }, [workoutData, collapsedStages, weightUnitPreferences]);
 
   // Define columns
   const columns = useMemo(

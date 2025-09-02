@@ -7,6 +7,7 @@ import { createCongenNivoTheme } from '../theme/nivoTheme';
 import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
 import { categorizeExerciseVolume } from '../common/utils';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
+import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 
 interface PieData {
   id: string;
@@ -17,6 +18,7 @@ interface PieData {
 interface PieChartProps {
   userDataExport: UserDataExport | null;
   exerciseData: Map<string, Exercise>;
+  weightUnitPreferences?: UserWeightUnitPreference[];
   title?: string;
   description?: string;
   height?: number;
@@ -38,6 +40,7 @@ interface PieChartProps {
 export const PieChart: React.FC<PieChartProps> = ({
   userDataExport,
   exerciseData,
+  weightUnitPreferences = [],
   title = 'Exercise Distribution',
   description = 'Volume by workout stage',
   height = 300,
@@ -78,7 +81,18 @@ export const PieChart: React.FC<PieChartProps> = ({
               ? (setScheme.band_weight_lbs as { weight_lbs: number })?.weight_lbs || 0
               : 0;
 
-            stageVolume += (weight + bandWeight) * reps;
+            // Get user's weight unit preference for this exercise
+            const weightUnitPreference = weightUnitPreferences.find(
+              pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
+            );
+
+            // Convert weight to pounds for consistent calculations
+            let convertedWeight = weight;
+            if (weightUnitPreference?.preferred_unit === 'KG') {
+              convertedWeight = weight * 2.20462; // Convert KG to LBS
+            }
+
+            stageVolume += (convertedWeight + bandWeight) * reps;
           });
 
           // Add to stage volume
@@ -96,7 +110,7 @@ export const PieChart: React.FC<PieChartProps> = ({
       frequency: 1, // Not used for pie chart
       maxWeight: 0, // Not used for pie chart
     }));
-  }, [workouts]);
+  }, [workouts, weightUnitPreferences]);
 
   // Prepare chart data
   const chartData = useMemo(() => {

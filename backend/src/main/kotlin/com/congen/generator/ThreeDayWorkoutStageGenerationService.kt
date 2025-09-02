@@ -240,6 +240,7 @@ class ThreeDayWorkoutStageGenerationService(
                                     secondaryExercise = secondaryExercise,
                                     primarySetSchemes = primarySetSchemes,
                                     secondarySetSchemes = secondarySetSchemes,
+                                    userId = userId
                                 )
                             },
                             // Accessory stage if needed
@@ -393,6 +394,7 @@ class ThreeDayWorkoutStageGenerationService(
                                     secondaryExercise = lowerDEExercise,
                                     primarySetSchemes = upperDESetSchemes,
                                     secondarySetSchemes = lowerDESetSchemes,
+                                    userId = userId
                                 )
                             },
                             // Accessory stage if needed

@@ -206,6 +206,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
           <PieChart
             userDataExport={userData}
             exerciseData={exerciseData}
+            weightUnitPreferences={weightUnitPreferences}
             title="Exercise Distribution"
             description="Volume by workout stage"
           />

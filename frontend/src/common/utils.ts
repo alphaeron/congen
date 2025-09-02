@@ -148,3 +148,57 @@ export function categorizeExerciseVolume(
 
   return result;
 }
+
+/**
+ * Formats weight with appropriate unit based on user preferences.
+ *
+ * @param weight The weight value to format
+ * @param preferredUnit The user's preferred unit for this exercise
+ * @param includeUnit Whether to include the unit in the output (default: true)
+ * @returns Formatted weight string with unit
+ */
+export function formatWeightWithUnit(
+  weight: number | null | undefined,
+  preferredUnit: 'KG' | 'LBS' | undefined,
+  includeUnit: boolean = true
+): string {
+  if (weight === null || weight === undefined || weight === 0) {
+    return '-';
+  }
+
+  // Convert weight to user's preferred unit if needed
+  let displayWeight = weight;
+  let displayUnit: string;
+
+  // If the weight is stored in KG but user prefers LBS, convert
+  if (preferredUnit === 'LBS' && weight > 0) {
+    // Assume weight is stored in KG if it's a reasonable value for KG
+    // This is a heuristic - in a real app, you'd know the storage unit
+    if (weight < 1000) { // Likely KG if under 1000
+      displayWeight = weight * 2.20462;
+      displayUnit = 'lbs';
+    } else {
+      displayUnit = 'lbs';
+    }
+  } else if (preferredUnit === 'KG' && weight > 0) {
+    // Assume weight is stored in LBS if it's a reasonable value for LBS
+    if (weight > 100) { // Likely LBS if over 100
+      displayWeight = weight * 0.453592;
+      displayUnit = 'kg';
+    } else {
+      displayUnit = 'kg';
+    }
+  } else {
+    // Default to lbs for consistency
+    displayUnit = 'lbs';
+  }
+
+  // Round to 2 decimal places for display
+  const roundedWeight = Math.round(displayWeight * 100) / 100;
+
+  if (includeUnit) {
+    return `${roundedWeight} ${displayUnit}`;
+  }
+  
+  return roundedWeight.toString();
+}
