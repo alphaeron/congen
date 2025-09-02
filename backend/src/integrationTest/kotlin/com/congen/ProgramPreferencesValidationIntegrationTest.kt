@@ -141,7 +141,7 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should allow changing session time when program has existing workouts`() {
         // Create all reference data (exercises, equipment, etc.) before generating workouts
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         // Create a program first
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = userToken)

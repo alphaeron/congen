@@ -39,7 +39,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         // Create reference data for 3-day program
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         val programResponse =
             webTestClient.post()
@@ -52,7 +52,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId3Day)
-        assert(programResponse.name.contains("Week 2"))
+        assert(programResponse.name.contains("Week 1"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .header("Authorization", "Bearer $userToken")
@@ -76,7 +76,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         // Create reference data for 2-day program
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         val programResponse =
             webTestClient.post()
@@ -89,7 +89,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId2Day)
-        assert(programResponse.name.contains("Week 2"))
+        assert(programResponse.name.contains("Week 1"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .header("Authorization", "Bearer $userToken")
@@ -113,7 +113,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         // Create reference data for 4-day program
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         val programResponse =
             webTestClient.post()
@@ -126,7 +126,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId4Day)
-        assert(programResponse.name.contains("Week 2"))
+        assert(programResponse.name.contains("Week 1"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .header("Authorization", "Bearer $userToken")
@@ -321,7 +321,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             oneRepMax = 350.0,
             token = userToken
         )
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         // Add equipment needed for banded exercises (power bar is already added by createAllReferenceDataForUser)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
@@ -464,7 +464,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 token = userToken
             )
 
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 2, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         val programResponse =
             webTestClient.post()
@@ -522,7 +522,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 token = userToken
             )
 
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 3, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         val programResponse =
             webTestClient.post()
@@ -580,7 +580,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 token = userToken
             )
 
-        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, 4, token = userToken)
+        IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
         val programResponse =
             webTestClient.post()

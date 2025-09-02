@@ -456,13 +456,30 @@ class ProgramDAL(
         entityName = "program"
     )
     private fun deactivateProgramsForUser(userId: String): Mono<Unit> {
-        return postgresClient.updateLiteral<Int>(
-            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
-            Int::class,
+        return postgresClient.updateLiteral<Unit>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
+            Unit::class,
             userId
         ).then(Mono.just(Unit))
             .onErrorResume(NoResultsFoundException::class.java) {
                 logger.warn("No programs found to deactivate for user {}", userId)
+                Mono.just(Unit)
+            }
+    }
+
+    @CacheEvict(
+        invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
+        entityName = "program"
+    )
+    private fun deactivateOtherProgramsForUser(userId: String, excludeProgramId: Long): Mono<Unit> {
+        return postgresClient.updateLiteral<Unit>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 AND id != $2",
+            Unit::class,
+            userId,
+            excludeProgramId
+        ).then(Mono.just(Unit))
+            .onErrorResume(NoResultsFoundException::class.java) {
+                logger.warn("No other programs found to deactivate for user {}", userId)
                 Mono.just(Unit)
             }
     }
@@ -550,7 +567,7 @@ class ProgramDAL(
         return if (isActive) {
             // If setting to active, first get the program to find the user ID, then deactivate others
             selectProgramById(id).flatMap { program ->
-                deactivateProgramsForUser(program.userId).then(
+                deactivateOtherProgramsForUser(program.userId, id).then(
                     postgresClient.update(
                         """
                         UPDATE program
