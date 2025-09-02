@@ -429,6 +429,7 @@ abstract class WorkoutStageGenerationService(
      * @param oneRepMaxes User's one rep max values
      * @param dayType The type of workout day
      * @param primaryExercise The primary exercise for the day (if available)
+     * @param secondaryExercise The secondary exercise for the day (if available, for 2 and 3 day templates)
      * @param isFourDayTemplate Whether this is a 4-day template
      * @param currentWeekNumber Current week number
      * @param userId User ID
@@ -440,6 +441,7 @@ abstract class WorkoutStageGenerationService(
         oneRepMaxes: List<UserOneRepMax>,
         dayType: String,
         primaryExercise: Exercise?,
+        secondaryExercise: Exercise? = null,
         isFourDayTemplate: Boolean,
         currentWeekNumber: Int,
         userId: String,
@@ -456,6 +458,7 @@ abstract class WorkoutStageGenerationService(
         return exerciseSelectionService.selectWarmupExercises(
             userExercisePool = userExercisePool,
             primaryExercise = primaryExercise,
+            secondaryExercise = secondaryExercise,
             isFourDayTemplate = isFourDayTemplate,
             dayType = dayType,
             workoutType = workoutType
@@ -590,6 +593,8 @@ abstract class WorkoutStageGenerationService(
     /**
      * Selects a primary exercise using the UserExercisePool.
      * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
+     * 
+     * Primary exercises are not currently filtered by weak muscles, but accessory exercises are.
      *
      * @param userExercisePool The user's exercise pool
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
@@ -607,7 +612,7 @@ abstract class WorkoutStageGenerationService(
     ): Mono<Exercise> {
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = emptyList(), // Primary exercises should not be filtered by weak muscles
+            targetMuscles = emptyList(),
             isAccessory = false,
             workoutType = workoutType,
             dayType = dayType,

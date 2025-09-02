@@ -14,9 +14,8 @@ import java.math.RoundingMode
 /**
  * Service for automatically matching exercises to reference lifts using multiple similarity metrics.
  *
- * This service combines keyword-based pattern matching, movement pattern classification,
- * equipment similarity, and muscle group relationships to determine the most similar
- * reference exercise for weight estimation.
+ * This service combines movement pattern classification, equipment similarity, and muscle group 
+ * relationships to determine the most similar reference exercise for weight estimation.
  *
  * ## Similarity Metrics
  *
@@ -27,12 +26,8 @@ import java.math.RoundingMode
  *
  * ## Reference Lifts
  *
- * The system uses these primary reference lifts:
- * - **Squat**: For squat pattern movements
- * - **Bench Press**: For push pattern movements
- * - **Deadlift**: For hinge and pull pattern movements
- * - **Overhead Press**: For overhead movements
- * - **Bodyweight**: For isolation and bodyweight exercises
+ * The system dynamically finds reference exercises using the ReferenceExerciseDetector
+ * based on exercise characteristics rather than hardcoded names.
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -43,20 +38,12 @@ class ExerciseMatchingService(
 ) {
     companion object {
         private const val WEIGHT_SCALE = 2
-
-        // Movement pattern keywords
-        private val SQUAT_KEYWORDS = setOf("squat", "lunge", "leg press", "step up", "split squat")
-        private val HINGE_KEYWORDS = setOf("deadlift", "hinge", "roman", "sumo", "trap bar", "good morning")
-        private val PUSH_KEYWORDS = setOf("bench", "press", "push", "dip", "incline", "decline")
-        private val PULL_KEYWORDS = setOf("row", "pull", "chin", "pull up", "lat pulldown")
-        private val OVERHEAD_KEYWORDS = setOf("overhead", "shoulder", "military", "strict press")
-        private val ISOLATION_KEYWORDS = setOf("curl", "extension", "raise", "fly", "kickback", "lateral")
-
-        // Equipment categories
-        private val BARBELL_EQUIPMENT = setOf("barbell", "football bar", "power bar", "safety squat bar", "trap bar")
-        private val DUMBBELL_EQUIPMENT = setOf("dumbbell", "dumbbells")
-        private val CABLE_EQUIPMENT = setOf("cable", "pulley", "lat pulldown", "seated row")
-        private val BODYWEIGHT_EQUIPMENT = setOf("bodyweight", "assisted", "resistance band")
+        
+        // Scoring weights for similarity calculation
+        private const val NAME_SIMILARITY_WEIGHT = 0.3
+        private const val MOVEMENT_PATTERN_WEIGHT = 0.3
+        private const val EQUIPMENT_SIMILARITY_WEIGHT = 0.2
+        private const val MUSCLE_GROUP_SIMILARITY_WEIGHT = 0.2
 
         /**
          * Result of exercise matching with similarity score and reference exercise.
@@ -106,7 +93,7 @@ class ExerciseMatchingService(
         exerciseMuscleMap: Map<String, List<ExerciseMuscle>>,
         userOneRepMaxes: List<UserOneRepMax> = emptyList()
     ): ExerciseMatch {
-        val movementPattern = classifyMovementPattern(targetExercise)
+        val movementPattern = targetExercise.movementType
 
         // Use the ReferenceExerciseDetector to find the best reference exercises
         val referenceExercises =
@@ -118,7 +105,7 @@ class ExerciseMatchingService(
         // Find the best reference exercise for this movement pattern
         val bestReferenceExercise =
             referenceExercises
-                .filter { exercise -> classifyMovementPattern(exercise) == movementPattern }
+                .filter { exercise -> exercise.movementType == movementPattern }
                 .maxByOrNull { exercise ->
                     calculateOverallSimilarity(
                         targetExercise,
@@ -141,35 +128,36 @@ class ExerciseMatchingService(
                 referenceExercise = bestReferenceExercise,
                 similarityScore = similarity,
                 movementPattern = movementPattern,
-                factors =
-                    calculateSimilarityFactors(
-                        targetExercise,
-                        bestReferenceExercise,
-                        exerciseEquipmentMap,
-                        exerciseMuscleMap
-                    )
+                factors = calculateSimilarityFactors(
+                    targetExercise,
+                    bestReferenceExercise,
+                    exerciseEquipmentMap,
+                    exerciseMuscleMap
+                )
             )
         }
 
-        // Fallback to movement pattern-based reference
-        val fallbackExercise = getFallbackReferenceExercise(movementPattern, allExercises)
+        // Fallback: find any exercise with the same movement pattern
+        val fallbackExercise = allExercises
+            .filter { it.movementType == movementPattern }
+            .firstOrNull()
+            ?: allExercises.first()
+
         return ExerciseMatch(
             referenceExercise = fallbackExercise,
-            // Moderate confidence for fallback
-            similarityScore = 0.5,
+            similarityScore = 0.5, // Default fallback score
             movementPattern = movementPattern,
-            factors = SimilarityFactors(0.0, 1.0, 0.0, 0.0)
+            factors = SimilarityFactors(
+                nameSimilarity = 0.0,
+                movementPatternSimilarity = 1.0,
+                equipmentSimilarity = 0.0,
+                muscleGroupSimilarity = 0.0
+            )
         )
     }
 
     /**
-     * Estimates weight for an exercise based on reference exercise and similarity.
-     *
-     * @param targetExercise The exercise to estimate weight for
-     * @param referenceExercise The reference exercise to use
-     * @param referenceOneRepMax The 1RM of the reference exercise
-     * @param similarityScore The similarity score (0.0 to 1.0)
-     * @return Estimated weight for the target exercise
+     * Estimates weight for an exercise based on a reference exercise and similarity score.
      */
     fun estimateWeightFromReference(
         targetExercise: Exercise,
@@ -177,11 +165,13 @@ class ExerciseMatchingService(
         referenceOneRepMax: BigDecimal,
         similarityScore: Double
     ): BigDecimal {
-        val basePercentage = getBasePercentageForExercise(targetExercise, referenceExercise)
+        // Base percentage depends on exercise characteristics rather than hardcoded names
+        val basePercentage = calculateBasePercentageFromCharacteristics(targetExercise, referenceExercise)
+        
+        // Adjust based on similarity score
         val adjustedPercentage = adjustPercentageBySimilarity(basePercentage, similarityScore)
-
-        return referenceOneRepMax
-            .multiply(BigDecimal(adjustedPercentage))
+        
+        return (referenceOneRepMax * BigDecimal(adjustedPercentage))
             .setScale(WEIGHT_SCALE, RoundingMode.HALF_UP)
     }
 
@@ -203,50 +193,26 @@ class ExerciseMatchingService(
     }
 
     /**
-     * Classifies the movement pattern of an exercise based on its MovementType and name.
-     */
-    private fun classifyMovementPattern(exercise: Exercise): MovementType {
-        // Use the exercise's MovementType directly, with fallback to name-based classification
-        val name = exercise.name.lowercase()
-
-        // If the MovementType is already specific, use it
-        if (exercise.movementType != MovementType.HORIZONTAL_PUSH &&
-            exercise.movementType != MovementType.VERTICAL_PUSH
-        ) {
-            return exercise.movementType
-        }
-
-        // Fallback to name-based classification for push movements or if MovementType is ambiguous
-        return when {
-            SQUAT_KEYWORDS.any { name.contains(it) } -> MovementType.SQUAT
-            HINGE_KEYWORDS.any { name.contains(it) } -> MovementType.HINGE
-            OVERHEAD_KEYWORDS.any { name.contains(it) } -> MovementType.VERTICAL_PUSH
-            PUSH_KEYWORDS.any { name.contains(it) } -> MovementType.HORIZONTAL_PUSH
-            PULL_KEYWORDS.any { name.contains(it) } -> MovementType.HORIZONTAL_PULL
-            ISOLATION_KEYWORDS.any { name.contains(it) } -> MovementType.ISOLATION
-            name.contains("carry") || name.contains("walk") -> MovementType.CARRY
-            // Default fallback
-            else -> MovementType.HORIZONTAL_PUSH
-        }
-    }
-
-    /**
      * Calculates overall similarity between two exercises.
      */
     private fun calculateOverallSimilarity(
-        exercise1: Exercise,
-        exercise2: Exercise,
+        targetExercise: Exercise,
+        referenceExercise: Exercise,
         exerciseEquipmentMap: Map<String, List<ExerciseEquipment>>,
         exerciseMuscleMap: Map<String, List<ExerciseMuscle>>
     ): Double {
-        val factors = calculateSimilarityFactors(exercise1, exercise2, exerciseEquipmentMap, exerciseMuscleMap)
+        val factors = calculateSimilarityFactors(
+            targetExercise,
+            referenceExercise,
+            exerciseEquipmentMap,
+            exerciseMuscleMap
+        )
 
-        // Weighted average of similarity factors
         return (
-            factors.nameSimilarity * 0.4 +
-                factors.movementPatternSimilarity * 0.3 +
-                factors.equipmentSimilarity * 0.2 +
-                factors.muscleGroupSimilarity * 0.1
+            factors.nameSimilarity * NAME_SIMILARITY_WEIGHT +
+            factors.movementPatternSimilarity * MOVEMENT_PATTERN_WEIGHT +
+            factors.equipmentSimilarity * EQUIPMENT_SIMILARITY_WEIGHT +
+            factors.muscleGroupSimilarity * MUSCLE_GROUP_SIMILARITY_WEIGHT
         )
     }
 
@@ -254,158 +220,171 @@ class ExerciseMatchingService(
      * Calculates detailed similarity factors between two exercises.
      */
     private fun calculateSimilarityFactors(
-        exercise1: Exercise,
-        exercise2: Exercise,
+        targetExercise: Exercise,
+        referenceExercise: Exercise,
         exerciseEquipmentMap: Map<String, List<ExerciseEquipment>>,
         exerciseMuscleMap: Map<String, List<ExerciseMuscle>>
     ): SimilarityFactors {
-        val nameSimilarity = calculateNameSimilarity(exercise1.name, exercise2.name)
-        val movementSimilarity = if (classifyMovementPattern(exercise1) == classifyMovementPattern(exercise2)) 1.0 else 0.0
-        val equipmentSimilarity =
-            calculateEquipmentSimilarity(
-                exerciseEquipmentMap[exercise1.name] ?: emptyList(),
-                exerciseEquipmentMap[exercise2.name] ?: emptyList()
-            )
-        val muscleSimilarity =
-            calculateMuscleGroupSimilarity(
-                exerciseMuscleMap[exercise1.name] ?: emptyList(),
-                exerciseMuscleMap[exercise2.name] ?: emptyList()
-            )
+        val nameSimilarity = calculateNameSimilarity(targetExercise.name, referenceExercise.name)
+        val movementPatternSimilarity = if (targetExercise.movementType == referenceExercise.movementType) 1.0 else 0.0
+        val equipmentSimilarity = calculateEquipmentSimilarity(
+            targetExercise.name,
+            referenceExercise.name,
+            exerciseEquipmentMap
+        )
+        val muscleGroupSimilarity = calculateMuscleGroupSimilarity(
+            targetExercise.name,
+            referenceExercise.name,
+            exerciseMuscleMap
+        )
 
-        return SimilarityFactors(nameSimilarity, movementSimilarity, equipmentSimilarity, muscleSimilarity)
+        return SimilarityFactors(
+            nameSimilarity = nameSimilarity,
+            movementPatternSimilarity = movementPatternSimilarity,
+            equipmentSimilarity = equipmentSimilarity,
+            muscleGroupSimilarity = muscleGroupSimilarity
+        )
     }
 
     /**
-     * Calculates name similarity using Levenshtein distance.
+     * Calculates name similarity using Jaro-Winkler distance.
      */
-    private fun calculateNameSimilarity(
-        name1: String,
-        name2: String
-    ): Double {
-        val maxLength = maxOf(name1.length, name2.length)
-        if (maxLength == 0) return 1.0
-
-        val distance = levenshteinDistance(name1.lowercase(), name2.lowercase())
-        return 1.0 - (distance.toDouble() / maxLength)
+    private fun calculateNameSimilarity(name1: String, name2: String): Double {
+        val normalized1 = name1.lowercase().replace(Regex("[^a-z0-9]"), "")
+        val normalized2 = name2.lowercase().replace(Regex("[^a-z0-9]"), "")
+        
+        if (normalized1 == normalized2) return 1.0
+        if (normalized1.isEmpty() || normalized2.isEmpty()) return 0.0
+        
+        return calculateJaroWinklerSimilarity(normalized1, normalized2)
     }
 
     /**
-     * Calculates equipment similarity using Jaccard index.
+     * Calculates Jaro-Winkler similarity between two strings.
+     */
+    private fun calculateJaroWinklerSimilarity(s1: String, s2: String): Double {
+        if (s1 == s2) return 1.0
+        
+        val matchWindow = (maxOf(s1.length, s2.length) / 2) - 1
+        if (matchWindow < 0) return 0.0
+        
+        val s1Matches = BooleanArray(s1.length)
+        val s2Matches = BooleanArray(s2.length)
+        
+        var matches = 0
+        var transpositions = 0
+        
+        // Find matches
+        for (i in s1.indices) {
+            val start = maxOf(0, i - matchWindow)
+            val end = minOf(i + matchWindow + 1, s2.length)
+            
+            for (j in start until end) {
+                if (!s2Matches[j] && s1[i] == s2[j]) {
+                    s1Matches[i] = true
+                    s2Matches[j] = true
+                    matches++
+                    break
+                }
+            }
+        }
+        
+        if (matches == 0) return 0.0
+        
+        // Count transpositions
+        var k = 0
+        for (i in s1.indices) {
+            if (s1Matches[i]) {
+                while (!s2Matches[k]) k++
+                if (s1[i] != s2[k]) transpositions++
+                k++
+            }
+        }
+        
+        val jaroDistance = (matches / s1.length.toDouble() + 
+                           matches / s2.length.toDouble() + 
+                           (matches - transpositions / 2) / matches.toDouble()) / 3.0
+        
+        // Calculate Winkler modification
+        var prefixLength = 0
+        for (i in 0 until minOf(4, minOf(s1.length, s2.length))) {
+            if (s1[i] == s2[i]) prefixLength++ else break
+        }
+        
+        return jaroDistance + (0.1 * prefixLength * (1 - jaroDistance))
+    }
+
+    /**
+     * Calculates equipment similarity based on equipment overlap.
      */
     private fun calculateEquipmentSimilarity(
-        equipment1: List<ExerciseEquipment>,
-        equipment2: List<ExerciseEquipment>
+        exercise1Name: String,
+        exercise2Name: String,
+        exerciseEquipmentMap: Map<String, List<ExerciseEquipment>>
     ): Double {
-        val names1 = equipment1.map { it.equipmentName.lowercase() }.toSet()
-        val names2 = equipment2.map { it.equipmentName.lowercase() }.toSet()
-
-        val intersection = names1.intersect(names2).size
-        val union = names1.union(names2).size
-
+        val equipment1 = exerciseEquipmentMap[exercise1Name]?.map { it.equipmentName }?.toSet() ?: emptySet()
+        val equipment2 = exerciseEquipmentMap[exercise2Name]?.map { it.equipmentName }?.toSet() ?: emptySet()
+        
+        if (equipment1.isEmpty() && equipment2.isEmpty()) return 1.0
+        if (equipment1.isEmpty() || equipment2.isEmpty()) return 0.0
+        
+        val intersection = equipment1.intersect(equipment2).size
+        val union = equipment1.size + equipment2.size - intersection
+        
         return if (union == 0) 0.0 else intersection.toDouble() / union
     }
 
     /**
-     * Calculates muscle group similarity using Jaccard index.
+     * Calculates muscle group similarity based on muscle overlap.
      */
     private fun calculateMuscleGroupSimilarity(
-        muscles1: List<ExerciseMuscle>,
-        muscles2: List<ExerciseMuscle>
+        exercise1Name: String,
+        exercise2Name: String,
+        exerciseMuscleMap: Map<String, List<ExerciseMuscle>>
     ): Double {
-        val names1 = muscles1.map { it.muscleName.lowercase() }.toSet()
-        val names2 = muscles2.map { it.muscleName.lowercase() }.toSet()
-
-        val intersection = names1.intersect(names2).size
-        val union = names1.union(names2).size
-
+        val muscles1 = exerciseMuscleMap[exercise1Name]?.map { it.muscleName }?.toSet() ?: emptySet()
+        val muscles2 = exerciseMuscleMap[exercise2Name]?.map { it.muscleName }?.toSet() ?: emptySet()
+        
+        if (muscles1.isEmpty() && muscles2.isEmpty()) return 1.0
+        if (muscles1.isEmpty() || muscles2.isEmpty()) return 0.0
+        
+        val intersection = muscles1.intersect(muscles2).size
+        val union = muscles1.size + muscles2.size - intersection
+        
         return if (union == 0) 0.0 else intersection.toDouble() / union
     }
 
     /**
-     * Gets fallback reference exercise based on movement pattern.
+     * Calculates base percentage based on exercise characteristics rather than hardcoded names.
      */
-    private fun getFallbackReferenceExercise(
-        pattern: MovementType,
-        allExercises: List<Exercise>
-    ): Exercise {
-        val fallbackName =
-            when (pattern) {
-                MovementType.SQUAT -> "Back Squat"
-                MovementType.HINGE -> "Deadlift"
-                MovementType.HORIZONTAL_PUSH, MovementType.VERTICAL_PUSH -> "Bench Press"
-                MovementType.HORIZONTAL_PULL, MovementType.VERTICAL_PULL -> "Deadlift"
-                MovementType.CORE, MovementType.ISOLATION -> "Bodyweight"
-                MovementType.PLYOMETRIC -> "Bench Press"
-                MovementType.CARRY -> "Bodyweight"
-                MovementType.LUNGE -> "Back Squat"
-            }
-
-        return allExercises.find { it.name == fallbackName }
-            ?: allExercises.firstOrNull { it.movementType == pattern }
-            // Last resort
-            ?: allExercises.first()
-    }
-
-    /**
-     * Gets base percentage for exercise relative to reference exercise.
-     */
-    private fun getBasePercentageForExercise(
+    private fun calculateBasePercentageFromCharacteristics(
         targetExercise: Exercise,
         referenceExercise: Exercise
     ): Double {
-        val targetName = targetExercise.name.lowercase()
-        val referenceName = referenceExercise.name.lowercase()
-
-        // Determine the movement pattern of the reference exercise
-        val referencePattern =
-            when {
-                referenceName.contains("squat") -> "squat"
-                referenceName.contains("bench") -> "bench"
-                referenceName.contains("deadlift") -> "deadlift"
-                referenceName.contains("press") && referenceName.contains("overhead") -> "overhead"
-                referenceName.contains("press") && referenceName.contains("strict") -> "overhead"
-                referenceName.contains("press") && referenceName.contains("military") -> "overhead"
-                else -> "bodyweight"
-            }
-
-        return when (referencePattern) {
-            "squat" -> {
-                when {
-                    targetName.contains("front squat") -> 0.85
-                    targetName.contains("split squat") -> 0.70
-                    targetName.contains("lunge") -> 0.65
-                    targetName.contains("step up") -> 0.50
-                    else -> 0.80
-                }
-            }
-            "bench" -> {
-                when {
-                    targetName.contains("incline") -> 0.80
-                    targetName.contains("decline") -> 0.85
-                    targetName.contains("dumbbell") -> 0.75
-                    targetName.contains("dip") -> 0.70
-                    else -> 0.75
-                }
-            }
-            "deadlift" -> {
-                when {
-                    targetName.contains("roman") -> 0.70
-                    targetName.contains("sumo") -> 0.85
-                    targetName.contains("trap bar") -> 0.90
-                    targetName.contains("row") -> 0.60
-                    else -> 0.70
-                }
-            }
-            "overhead" -> {
-                when {
-                    targetName.contains("dumbbell") -> 0.70
-                    targetName.contains("strict") -> 0.85
-                    else -> 0.75
-                }
-            }
-            // Conservative default for bodyweight exercises
-            else -> 0.20
+        // Base percentage from movement type characteristics
+        var basePercentage = when (targetExercise.movementType) {
+            MovementType.SQUAT -> 0.85
+            MovementType.HINGE -> 0.80
+            MovementType.HORIZONTAL_PUSH -> 0.80
+            MovementType.VERTICAL_PUSH -> 0.75
+            MovementType.HORIZONTAL_PULL -> 0.75
+            MovementType.VERTICAL_PULL -> 0.70
+            MovementType.CORE -> 0.60
+            MovementType.LUNGE -> 0.70
+            MovementType.PLYOMETRIC -> 0.50
+            MovementType.CARRY -> 0.60
+            MovementType.ISOLATION -> 0.50
         }
+        
+        // Adjust based on exercise characteristics
+        when {
+            targetExercise.isUnilateral -> basePercentage *= 0.8
+            targetExercise.isAccessory -> basePercentage *= 0.7
+            targetExercise.isUpper && referenceExercise.isUpper -> basePercentage *= 1.1
+            !targetExercise.isUpper && !referenceExercise.isUpper -> basePercentage *= 1.1
+        }
+        
+        return basePercentage.coerceIn(0.1, 1.0)
     }
 
     /**
@@ -417,8 +396,7 @@ class ExerciseMatchingService(
     ): Double {
         // Higher similarity = closer to base percentage
         // Lower similarity = more conservative estimate
-        // Range: 0.8 to 1.2
-        val adjustmentFactor = 0.8 + (similarityScore * 0.4)
+        val adjustmentFactor = 0.5 + (similarityScore * 0.5)
         return basePercentage * adjustmentFactor
     }
 
@@ -437,36 +415,6 @@ class ExerciseMatchingService(
             // Conservative default
             else -> 0.15
         }
-    }
-
-    /**
-     * Calculates Levenshtein distance between two strings.
-     */
-    private fun levenshteinDistance(
-        s1: String,
-        s2: String
-    ): Int {
-        val matrix = Array(s1.length + 1) { IntArray(s2.length + 1) }
-
-        for (i in 0..s1.length) matrix[i][0] = i
-        for (j in 0..s2.length) matrix[0][j] = j
-
-        for (i in 1..s1.length) {
-            for (j in 1..s2.length) {
-                val cost = if (s1[i - 1] == s2[j - 1]) 0 else 1
-                matrix[i][j] =
-                    minOf(
-                        // deletion
-                        matrix[i - 1][j] + 1,
-                        // insertion
-                        matrix[i][j - 1] + 1,
-                        // substitution
-                        matrix[i - 1][j - 1] + cost
-                    )
-            }
-        }
-
-        return matrix[s1.length][s2.length]
     }
 
     /**

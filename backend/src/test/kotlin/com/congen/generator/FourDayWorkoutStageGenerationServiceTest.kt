@@ -115,6 +115,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
@@ -182,6 +183,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
@@ -287,6 +289,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()

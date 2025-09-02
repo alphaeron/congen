@@ -183,6 +183,7 @@ class TwoDayWorkoutStageGenerationService(
                                     oneRepMaxes = oneRepMaxes,
                                     dayType = dayType,
                                     primaryExercise = primaryExercise,
+                                    secondaryExercise = secondaryExercise,
                                     isFourDayTemplate = false,
                                     currentWeekNumber = currentWeekNumber,
                                     userId = userId

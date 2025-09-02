@@ -111,7 +111,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 userExercisePool = eq(userExercisePool),
                 targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
+                workoutType = any(),
                 dayType = eq(dayType),
                 movementBalanceState = any()
             )
@@ -125,16 +125,16 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 dayType = eq(dayType),
                 movementBalanceState = isNull()
             )
-        ).thenReturn(Mono.just(emptyList()))
+        ).thenReturn(Mono.just(secondaryExercise))
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                userExercisePool = any(),
+                targetMuscles = any(),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
@@ -203,6 +203,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
@@ -366,6 +367,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
@@ -376,11 +378,11 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
+                targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
+                workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())

@@ -226,6 +226,7 @@ class ThreeDayWorkoutStageGenerationService(
                                     oneRepMaxes = oneRepMaxes,
                                     dayType = dayType,
                                     primaryExercise = primaryExercise,
+                                    secondaryExercise = secondaryExercise,
                                     isFourDayTemplate = false,
                                     currentWeekNumber = currentWeekNumber,
                                     userId = userId
@@ -378,6 +379,7 @@ class ThreeDayWorkoutStageGenerationService(
                                     oneRepMaxes = oneRepMaxes,
                                     dayType = "DE_Full_Body",
                                     primaryExercise = upperDEExercise,
+                                    secondaryExercise = lowerDEExercise,
                                     isFourDayTemplate = false,
                                     currentWeekNumber = currentWeekNumber,
                                     userId = userId

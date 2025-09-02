@@ -64,7 +64,7 @@ data class SetSchemeParams(
  */
 object ConjugateConstants {
     /** Default weak muscles for new users */
-    val DEFAULT_WEAK_MUSCLES = listOf("hamstrings", "glutes", "upper_back", "core")
+    val DEFAULT_WEAK_MUSCLES = listOf("hamstrings", "glutes", "upper back", "rectus abdominis")
 
     /** Time allocation for different workout components (in minutes) */
     object TimeAllocation {

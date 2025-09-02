@@ -108,17 +108,18 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
+                targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
+                workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
@@ -182,17 +183,18 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
+                targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
+                workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
@@ -309,17 +311,18 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
+                targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
+                workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
             exerciseSelectionService.selectWarmupExercises(
                 userExercisePool = any(),
                 primaryExercise = any(),
+                secondaryExercise = any(),
                 isFourDayTemplate = any(),
                 dayType = any(),
                 workoutType = any()
