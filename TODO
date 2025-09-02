@@ -1,5 +1,3 @@
-remove all hardcoded exercises, use muscles from primary exercise.
-
 plyometric exercises shouldn't be warmups
 
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
@@ -127,7 +125,10 @@ Port forward frontend, keycloak, and backend
 
 
 Run the integration tests one by one
-FIx each integration test individually.
+Fix each integration test individually.
 Once you have fixed one integration test, move onto the next.
 Iterate in this fashion, one by one, until all the integration tests pass.
 Do not run all the integration tests at once because it is too slow.
+Only touch the integration test files, do not modify the source code in any way
+DO NOT MODIFY THE SOURCE FILES!!!
+only fix the integration test files

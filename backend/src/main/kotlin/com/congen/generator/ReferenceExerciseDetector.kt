@@ -141,7 +141,6 @@ class ReferenceExerciseDetector {
      * Calculates pattern purity score based on exercise characteristics rather than hardcoded names.
      */
     private fun calculatePatternPurityScore(exercise: Exercise): Double {
-        val name = exercise.name.lowercase()
         val movementType = exercise.movementType
         
         // Base score from movement type characteristics
