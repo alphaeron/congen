@@ -16,8 +16,8 @@ describe('Program API', () => {
     user_id: 'test-user-id',
     name: 'Test Program',
     current_week_number: 1,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
     is_active: true,
   };
 
@@ -25,15 +25,16 @@ describe('Program API', () => {
     it('should create a program successfully', async () => {
       mock.onPost('/program/').reply(200, mockProgram);
 
-      const result = await createProgram('Test Program', true, 'test-user-id');
+      const result = await createProgram('Test Program', 4, 'test-user-id');
 
       expect(result).toEqual(mockProgram);
       expect(mock.history.post).toHaveLength(1);
       expect(mock.history.post[0].url).toBe('/program/');
       expect(mock.history.post[0].params).toEqual({
-        user_id: 'test-user-id',
         name: 'Test Program',
         is_active: true,
+        user_id: 'test-user-id',
+        num_days_per_week: 4,
       });
     });
 
@@ -41,7 +42,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPost('/program/').reply(400, errorResponse);
 
-      await expect(createProgram('Test Program', true, 'test-user-id')).rejects.toEqual(
+      await expect(createProgram('Test Program', 4, 'test-user-id')).rejects.toEqual(
         errorResponse
       );
     });

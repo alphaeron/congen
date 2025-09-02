@@ -17,8 +17,8 @@ describe('ProgrammedExercise API', () => {
     exercise_name: 'Bench Press',
     position: 1,
     notes: 'Focus on form',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
   describe('getProgrammedExercisesByStage', () => {

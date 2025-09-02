@@ -6,19 +6,18 @@ import {
   getUserWeightUnitPreferences,
   getUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
-  type UserWeightUnitPreference,
   WeightUnit,
 } from './userWeightUnitPreference';
 
 // Create axios mock adapter for the ENDPOINT instance
 const mock = new MockAdapter(ENDPOINT);
 
-const mockUserWeightUnitPreference: UserWeightUnitPreference = {
+const mockUserWeightUnitPreference = {
   user_id: 'test-user-id',
   exercise_name: 'Bench Press',
   preferred_unit: WeightUnit.LBS,
-  created_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  created_at: new Date('2024-01-01T00:00:00.000Z'),
+  updated_at: new Date('2024-01-01T00:00:00.000Z'),
 };
 
 describe('userWeightUnitPreference API', () => {
@@ -53,7 +52,7 @@ describe('userWeightUnitPreference API', () => {
 
       await expect(
         upsertUserWeightUnitPreference('test-user-id', 'Bench Press', WeightUnit.LBS)
-      ).rejects.toThrow();
+      ).rejects.toEqual({ message: 'Bad request' });
     });
   });
 
@@ -71,7 +70,7 @@ describe('userWeightUnitPreference API', () => {
     it('should handle API errors', async () => {
       mock.onGet('/user_weight_unit_preference/test-user-id').reply(404, { message: 'Not found' });
 
-      await expect(getUserWeightUnitPreferences('test-user-id')).rejects.toThrow();
+      await expect(getUserWeightUnitPreferences('test-user-id')).rejects.toEqual({ message: 'Not found' });
     });
   });
 
@@ -94,7 +93,7 @@ describe('userWeightUnitPreference API', () => {
         .onGet('/user_weight_unit_preference/test-user-id/Bench%20Press')
         .reply(404, { message: 'Not found' });
 
-      await expect(getUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toThrow();
+      await expect(getUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({ message: 'Not found' });
     });
   });
 
@@ -117,7 +116,7 @@ describe('userWeightUnitPreference API', () => {
         .onDelete('/user_weight_unit_preference/test-user-id/Bench%20Press')
         .reply(404, { message: 'Not found' });
 
-      await expect(deleteUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toThrow();
+      await expect(deleteUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({ message: 'Not found' });
     });
   });
 

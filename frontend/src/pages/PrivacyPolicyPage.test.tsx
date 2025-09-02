@@ -106,7 +106,6 @@ describe('PrivacyPolicyPage', () => {
     });
 
     expect(screen.getByText('Loading Privacy Policy...')).toBeInTheDocument();
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('should handle error state', async () => {

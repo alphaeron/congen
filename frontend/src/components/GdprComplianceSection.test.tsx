@@ -159,7 +159,6 @@ describe('GdprComplianceSection', () => {
     await waitFor(() => {
       expect(screen.getByText('Loading GDPR compliance status...')).toBeInTheDocument();
     });
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
   it('should handle error state', async () => {

@@ -21,8 +21,8 @@ describe('ProgrammedWorkout API', () => {
     program_id: 1,
     day_number: 1,
     name: 'Push Day',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
   describe('getProgrammedWorkouts', () => {
@@ -38,7 +38,7 @@ describe('ProgrammedWorkout API', () => {
     });
 
     it('should handle get workouts errors', async () => {
-      const errorResponse = { message: 'Internal server error' };
+      const errorResponse = { message: 'Failed to get workouts' };
       mock.onGet('/programmed_workout/').reply(500, errorResponse);
 
       await expect(getProgrammedWorkouts()).rejects.toEqual(errorResponse);
@@ -106,7 +106,7 @@ describe('ProgrammedWorkout API', () => {
 
   describe('updateProgrammedWorkout', () => {
     it('should update a programmed workout successfully', async () => {
-      const updatedWorkout = { ...mockProgrammedWorkout, name: 'Updated Push Day', day_number: 2 };
+      const updatedWorkout = { ...mockProgrammedWorkout, day_number: 2, name: 'Updated Push Day' };
       mock.onPatch('/programmed_workout/1').reply(200, updatedWorkout);
 
       const result = await updateProgrammedWorkout(1, 1, 2, 'Updated Push Day');
@@ -122,21 +122,17 @@ describe('ProgrammedWorkout API', () => {
     });
 
     it('should handle update workout errors', async () => {
-      const errorResponse = { message: 'Bad request' };
+      const errorResponse = { message: 'Failed to update workout' };
       mock.onPatch('/programmed_workout/1').reply(400, errorResponse);
 
-      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(
-        errorResponse
-      );
+      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(errorResponse);
     });
 
     it('should handle workout not found errors', async () => {
       const errorResponse = { message: 'Workout not found' };
-      mock.onPatch('/programmed_workout/999').reply(404, errorResponse);
+      mock.onPatch('/programmed_workout/1').reply(404, errorResponse);
 
-      await expect(updateProgrammedWorkout(999, 1, 2, 'Updated Push Day')).rejects.toEqual(
-        errorResponse
-      );
+      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(errorResponse);
     });
   });
 });

@@ -75,11 +75,11 @@ describe('ProgramManagement', () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
     });
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('Loading programs...')).toBeInTheDocument();
 
     // Wait for loading to complete to avoid act warnings
     await waitFor(() => {
-      expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+      expect(screen.queryByText('Loading programs...')).not.toBeInTheDocument();
     });
   });
 
@@ -105,6 +105,15 @@ describe('ProgramManagement', () => {
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
+
+    // Mock program preferences API calls
+    mock.onGet('/program_preferences/1').reply(200, {
+      program_id: 1,
+      program_days_per_week: 4,
+      session_time_length_in_minutes: 60,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+    });
 
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
@@ -197,7 +206,7 @@ describe('ProgramManagement', () => {
 
     expect(screen.getByText('Create New Program')).toBeInTheDocument();
     expect(screen.getByLabelText(/program name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/set as active program/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/days per week/i)).toBeInTheDocument();
   });
 
   it('creates a new program successfully', async () => {
@@ -280,6 +289,15 @@ describe('ProgramManagement', () => {
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
 
+    // Mock program preferences API calls
+    mock.onGet('/program_preferences/1').reply(200, {
+      program_id: 1,
+      program_days_per_week: 4,
+      session_time_length_in_minutes: 60,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+    });
+
     // Mock additional API calls that might be made by chart components or other dependencies
     mock.onGet('/gdpr/export').reply(200, {
       training_programs: [],
@@ -323,7 +341,7 @@ describe('ProgramManagement', () => {
       fireEvent.click(editButton);
     });
 
-    expect(screen.getByText('Edit Program')).toBeInTheDocument();
+    expect(screen.getByText('Change Session Duration')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test Program')).toBeInTheDocument();
   });
 
@@ -517,47 +535,18 @@ describe('ProgramManagement', () => {
   });
 
   it('displays program workouts correctly', async () => {
-    // Mock user-related API calls from AuthContext
-    mock.onGet('/user/me').reply(200, mockUser);
-    mock.onPost('/user/').reply(200, mockUser);
-
     // Mock program and workout API calls
     mock.onGet('/program/').reply(200, [mockProgram]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
 
-    // Mock additional API calls that might be made by chart components or other dependencies
-    mock.onGet('/gdpr/export').reply(200, {
-      training_programs: [],
-      programmed_workouts: [],
-      workout_stages: [],
-      programmed_exercises: [],
-      set_schemes: [],
-      user_one_rep_max: [],
-      user_weight_unit_preferences: [],
+    // Mock program preferences API calls
+    mock.onGet('/program_preferences/1').reply(200, {
+      program_id: 1,
+      program_days_per_week: 4,
+      session_time_length_in_minutes: 60,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
     });
-
-    // Fix: getUserWeightUnitPreferences needs user ID in URL
-    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-
-    mock.onGet('/exercise_muscle/').reply(200, []);
-
-    mock.onGet('/exercise_equipment/').reply(200, []);
-
-    // Fix: getIndividualExercise needs exercise name in URL
-    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
-      name: 'Test Exercise',
-      description: 'Test Description',
-      movement_type: 'push',
-      is_unilateral: false,
-      is_upper: true,
-      is_accessory: false,
-    });
-
-    // Fix: getExerciseMuscles needs exercise name in URL
-    mock.onGet(/\/exercise\/[^/]+\/muscle$/).reply(200, []);
-
-    // Fix: getExerciseEquipment needs exercise name in URL
-    mock.onGet(/\/exercise\/[^/]+\/equipment$/).reply(200, []);
 
     await act(async () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);

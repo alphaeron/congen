@@ -15,13 +15,16 @@ describe('SetScheme API', () => {
     id: 1,
     programmed_exercise_id: 1,
     set_number: 1,
-    reps: 8,
-    weight: 135,
+    is_amrap: false,
+    is_emom: false,
+    use_tempo: false,
+    target_weight: 135,
+    performed_weight: 135,
+    target_rep_count: 8,
+    performed_rep_count: 8,
     rest_seconds: 90,
-    rpe: 8,
-    notes: 'Focus on form',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
   describe('getSetSchemesByExercise', () => {
@@ -56,8 +59,8 @@ describe('SetScheme API', () => {
     it('should handle multiple set schemes for an exercise', async () => {
       const setSchemes = [
         mockSetScheme,
-        { ...mockSetScheme, id: 2, set_number: 2, reps: 6, weight: 145 },
-        { ...mockSetScheme, id: 3, set_number: 3, reps: 4, weight: 155 },
+        { ...mockSetScheme, id: 2, set_number: 2, target_rep_count: 6, target_weight: 145 },
+        { ...mockSetScheme, id: 3, set_number: 3, target_rep_count: 4, target_weight: 155 },
       ];
       mock.onGet('/set_scheme/exercise/1').reply(200, setSchemes);
 
@@ -89,41 +92,41 @@ describe('SetScheme API', () => {
       await expect(getSetScheme(1)).rejects.toEqual(errorResponse);
     });
 
-    it('should handle set scheme without notes', async () => {
-      const setSchemeWithoutNotes = { ...mockSetScheme, notes: undefined };
-      mock.onGet('/set_scheme/1').reply(200, setSchemeWithoutNotes);
+    it('should handle set scheme without target rep count', async () => {
+      const setSchemeWithoutReps = { ...mockSetScheme, target_rep_count: undefined };
+      mock.onGet('/set_scheme/1').reply(200, setSchemeWithoutReps);
 
       const result = await getSetScheme(1);
 
-      expect(result).toEqual(setSchemeWithoutNotes);
-      expect(result.notes).toBeUndefined();
+      expect(result).toEqual(setSchemeWithoutReps);
+      expect(result.target_rep_count).toBeUndefined();
     });
 
-    it('should handle set scheme without RPE', async () => {
-      const setSchemeWithoutRPE = { ...mockSetScheme, rpe: undefined };
-      mock.onGet('/set_scheme/1').reply(200, setSchemeWithoutRPE);
+    it('should handle set scheme without target weight', async () => {
+      const setSchemeWithoutWeight = { ...mockSetScheme, target_weight: undefined };
+      mock.onGet('/set_scheme/1').reply(200, setSchemeWithoutWeight);
 
       const result = await getSetScheme(1);
 
-      expect(result).toEqual(setSchemeWithoutRPE);
-      expect(result.rpe).toBeUndefined();
+      expect(result).toEqual(setSchemeWithoutWeight);
+      expect(result.target_weight).toBeUndefined();
     });
 
     it('should handle set scheme with zero values', async () => {
       const setSchemeWithZeros = {
         ...mockSetScheme,
-        weight: 0,
+        target_weight: 0,
         rest_seconds: 0,
-        rpe: 0,
+        target_rep_count: 0,
       };
       mock.onGet('/set_scheme/1').reply(200, setSchemeWithZeros);
 
       const result = await getSetScheme(1);
 
       expect(result).toEqual(setSchemeWithZeros);
-      expect(result.weight).toBe(0);
+      expect(result.target_weight).toBe(0);
       expect(result.rest_seconds).toBe(0);
-      expect(result.rpe).toBe(0);
+      expect(result.target_rep_count).toBe(0);
     });
   });
 });
