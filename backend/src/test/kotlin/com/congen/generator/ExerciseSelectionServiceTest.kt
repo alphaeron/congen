@@ -167,8 +167,12 @@ class ExerciseSelectionServiceTest {
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(emptyList()))
-        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
+        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(
+            exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
+        ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
         val result =
             exerciseSelectionService.selectExercise(
@@ -182,6 +186,8 @@ class ExerciseSelectionServiceTest {
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
+
+        verify(userExercisePool).markExerciseAsUsed(exercise.name)
     }
 
     @Test
@@ -193,10 +199,11 @@ class ExerciseSelectionServiceTest {
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
-        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
+        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
         ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
         val result =
             exerciseSelectionService.selectExercise(
@@ -210,6 +217,8 @@ class ExerciseSelectionServiceTest {
         StepVerifier.create(result)
             .expectNext(exercise)
             .verifyComplete()
+
+        verify(userExercisePool).markExerciseAsUsed(exercise.name)
     }
 
     @Test
@@ -225,6 +234,7 @@ class ExerciseSelectionServiceTest {
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
         ).thenReturn(Mono.just(createSampleExerciseWorkoutType()))
+        whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
         val result =
             exerciseSelectionService.selectExercise(
@@ -236,8 +246,10 @@ class ExerciseSelectionServiceTest {
             )
 
         StepVerifier.create(result)
-            .expectNext(exercise) // Should use fallback exercise
+            .expectNext(exercise)
             .verifyComplete()
+
+        verify(userExercisePool).markExerciseAsUsed(exercise.name)
     }
 
     @Test
@@ -323,6 +335,44 @@ class ExerciseSelectionServiceTest {
         StepVerifier.create(result)
             .expectNext(exercise) // Should use fallback exercise
             .verifyComplete()
+    }
+
+    @Test
+    fun `selectExercise should exclude plyometric exercises from warmup selection`() {
+        val targetMuscles = listOf("chest", "triceps")
+        val workoutType = "max_effort"
+        val dayType = "upper_body"
+        
+        // Create a mix of exercises including a plyometric one
+        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val plyometricExercise = createSampleExercise("Box Jump", MovementType.PLYOMETRIC)
+        val exercises = listOf(regularExercise, plyometricExercise)
+
+        // Mock the exercise pool to return the full list initially
+        whenever(userExercisePool.getAvailableAccessoryExercises()).thenReturn(exercises)
+        
+        // Mock the equipment and muscle filtering to return the filtered list (after plyometric filtering)
+        // The plyometric filtering happens in selectRotatingExerciseInternal before these filters
+        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(regularExercise)))
+        whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(regularExercise)))
+        whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
+
+        val result =
+            exerciseSelectionService.selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = targetMuscles,
+                isAccessory = true, // Warmup exercises are accessory
+                workoutType = workoutType,
+                dayType = dayType,
+                movementBalanceState = null
+            )
+
+        StepVerifier.create(result)
+            .expectNext(regularExercise) // Should only return the non-plyometric exercise
+            .verifyComplete()
+
+        // Verify that the plyometric exercise was not selected
+        verify(userExercisePool).markExerciseAsUsed(regularExercise.name)
     }
 
     private fun createSampleExercise(

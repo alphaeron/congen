@@ -131,14 +131,25 @@ class ExerciseSelectionService(
                 )
             }
 
+            // Filter out plyometric exercises for warmup selection
+            val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
+            if (nonPlyometricExercises.isEmpty()) {
+                logger.error("No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {}", dayType, isAccessory)
+                return@defer Mono.error(
+                    IllegalStateException(
+                        "No non-plyometric exercises available after filtering for dayType: $dayType and isAccessory: $isAccessory"
+                    )
+                )
+            }
+
             // Apply workout-type filtering only for non-accessory exercises
             val exercisesAfterWorkoutTypeFiltering =
                 if (isAccessory) {
                     // For accessory exercises, skip workout-type filtering
-                    Mono.just(dayTypeFilteredExercises)
+                    Mono.just(nonPlyometricExercises)
                 } else {
                     // For primary/secondary exercises, apply workout-type filtering
-                    filterExercisesByWorkoutType(dayTypeFilteredExercises, workoutType)
+                    filterExercisesByWorkoutType(nonPlyometricExercises, workoutType)
                 }
 
             exercisesAfterWorkoutTypeFiltering
