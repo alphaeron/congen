@@ -81,7 +81,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
     @Test
     fun `should generate workout stages for maximal effort day`() {
         val workout = createSampleWorkout()
-        val dayType = "ME_Upper_DE_Lower"
+        val dayType = "ME_Lower_DE_Upper"
         val userExercisePool = mock<UserExercisePool>()
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
@@ -92,10 +92,14 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
 
+        whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
+        whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
+        whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Lower")
+        whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Upper")
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -103,21 +107,23 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
-            exerciseSelectionService.selectSimilarSecondaryExercise(
-                primaryExercise = eq(primaryExercise),
+            exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(weakMuscles),
+                isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
-            exerciseSelectionService.selectWarmupExercises(
-                userExercisePool = any(),
-                primaryExercise = any(),
-                isFourDayTemplate = any(),
-                dayType = any(),
-                workoutType = any()
+            exerciseSelectionService.selectExercise(
+                userExercisePool = eq(userExercisePool),
+                targetMuscles = eq(emptyList()),
+                isAccessory = eq(true),
+                workoutType = eq("maximal_effort"),
+                dayType = eq(dayType),
+                movementBalanceState = isNull()
             )
         ).thenReturn(Mono.just(emptyList()))
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
@@ -129,7 +135,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
@@ -152,7 +158,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
 
         verify(exerciseSelectionService).selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
+            targetMuscles = emptyList(),
             isAccessory = false,
             workoutType = "maximal_effort",
             dayType = dayType,
@@ -177,7 +183,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("dynamic_effort"),
                 dayType = eq(dayType),
@@ -207,7 +213,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(true),
                 workoutType = eq("dynamic_effort"),
                 dayType = eq(dayType),
@@ -217,7 +223,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("dynamic_effort"),
                 dayType = eq("DE_Upper"),
@@ -227,7 +233,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("dynamic_effort"),
                 dayType = eq("DE_Lower"),
@@ -254,7 +260,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
 
         verify(exerciseSelectionService).selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
+            targetMuscles = emptyList(),
             isAccessory = false,
             workoutType = "dynamic_effort",
             dayType = "DE_Upper",
@@ -276,7 +282,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -288,7 +294,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -330,7 +336,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -340,7 +346,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq("ME_Lower"),
@@ -370,7 +376,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -397,7 +403,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
 
         verify(exerciseSelectionService).selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
+            targetMuscles = emptyList(),
             isAccessory = false,
             workoutType = "maximal_effort",
             dayType = dayType,

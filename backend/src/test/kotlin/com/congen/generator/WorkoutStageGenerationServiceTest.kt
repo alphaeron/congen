@@ -90,7 +90,7 @@ class WorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -137,7 +137,7 @@ class WorkoutStageGenerationServiceTest {
 
         verify(exerciseSelectionService).selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
+            targetMuscles = emptyList(),
             isAccessory = false,
             workoutType = "maximal_effort",
             dayType = dayType,
@@ -159,7 +159,7 @@ class WorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
@@ -200,7 +200,7 @@ class WorkoutStageGenerationServiceTest {
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                targetMuscles = eq(emptyList()),
                 isAccessory = eq(false),
                 workoutType = eq("dynamic_effort"),
                 dayType = eq(dayType),
@@ -247,7 +247,7 @@ class WorkoutStageGenerationServiceTest {
 
         verify(exerciseSelectionService).selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
+            targetMuscles = emptyList(),
             isAccessory = false,
             workoutType = "dynamic_effort",
             dayType = dayType,
@@ -296,7 +296,7 @@ class WorkoutStageGenerationServiceTest {
             // Simple test implementation that selects exercises and returns success
             return exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
-                targetMuscles = weakMuscles,
+                targetMuscles = emptyList(),
                 isAccessory = false,
                 workoutType = dayType,
                 dayType = dayType,

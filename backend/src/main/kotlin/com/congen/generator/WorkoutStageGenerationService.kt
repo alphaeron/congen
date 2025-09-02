@@ -593,7 +593,7 @@ abstract class WorkoutStageGenerationService(
      *
      * @param userExercisePool The user's exercise pool
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
-     * @param weakMuscles Target weak muscles
+     * @param weakMuscles Target weak muscles (used for accessory exercises to target weak points)
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
      * @return Mono containing the selected exercise or null if none available
@@ -607,7 +607,7 @@ abstract class WorkoutStageGenerationService(
     ): Mono<Exercise> {
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
-            targetMuscles = weakMuscles,
+            targetMuscles = emptyList(), // Primary exercises should not be filtered by weak muscles
             isAccessory = false,
             workoutType = workoutType,
             dayType = dayType,

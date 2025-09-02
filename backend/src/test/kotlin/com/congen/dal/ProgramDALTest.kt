@@ -71,12 +71,12 @@ class ProgramDALTest {
 
         // Mock the deactivation to complete successfully
         whenever(
-            postgresClient.updateLiteral<Any>(
-                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-                Any::class,
+            postgresClient.updateLiteral<Int>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+                Int::class,
                 program.userId
             )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(1))
 
         // Mock the insert to succeed
         whenever(
@@ -94,9 +94,9 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-        verify(postgresClient).updateLiteral<Any>(
-            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-            Any::class,
+        verify(postgresClient).updateLiteral<Int>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+            Int::class,
             program.userId
         )
         verify(postgresClient).update<Program>(
@@ -120,9 +120,9 @@ class ProgramDALTest {
 
         // Mock the deactivation to throw NoResultsFoundException (no programs to deactivate)
         whenever(
-            postgresClient.updateLiteral<Any>(
-                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-                Any::class,
+            postgresClient.updateLiteral<Int>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+                Int::class,
                 program.userId
             )
         ).thenReturn(Mono.error(NoResultsFoundException("No programs found to deactivate")))
@@ -143,9 +143,9 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-        verify(postgresClient).updateLiteral<Any>(
-            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-            Any::class,
+        verify(postgresClient).updateLiteral<Int>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+            Int::class,
             program.userId
         )
         verify(postgresClient).update<Program>(
@@ -205,12 +205,12 @@ class ProgramDALTest {
 
         // Mock the deactivation to complete successfully
         whenever(
-            postgresClient.updateLiteral<Any>(
-                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-                Any::class,
+            postgresClient.updateLiteral<Int>(
+                "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+                Int::class,
                 program.userId
             )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(1))
 
         // Mock the insert to succeed
         whenever(
@@ -228,9 +228,9 @@ class ProgramDALTest {
         StepVerifier.create(result)
             .expectNext(program)
             .verifyComplete()
-        verify(postgresClient).updateLiteral<Any>(
-            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1",
-            Any::class,
+        verify(postgresClient).updateLiteral<Int>(
+            "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1",
+            Int::class,
             program.userId
         )
         verify(postgresClient).update<Program>(
@@ -286,7 +286,7 @@ class ProgramDALTest {
             SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
             WHERE id=$1
             """.trimIndent()
-        val expectedDeactivateQuery = "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1"
+        val expectedDeactivateQuery = "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1"
 
         // Mock selectProgramById to return the program
         whenever(
@@ -298,12 +298,12 @@ class ProgramDALTest {
 
         // Mock deactivateProgramsForUser
         whenever(
-            postgresClient.updateLiteral<Any>(
+            postgresClient.updateLiteral<Int>(
                 expectedDeactivateQuery,
-                Any::class,
+                Int::class,
                 programToUpdate.userId
             )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(1))
 
         // Mock the final update
         whenever(
@@ -329,9 +329,9 @@ class ProgramDALTest {
         )
 
         // Verify that deactivateProgramsForUser was called
-        verify(postgresClient).updateLiteral<Any>(
+        verify(postgresClient).updateLiteral<Int>(
             expectedDeactivateQuery,
-            Any::class,
+            Int::class,
             programToUpdate.userId
         )
 
@@ -355,7 +355,7 @@ class ProgramDALTest {
             SET name=$2, current_week_number=$3, is_active=$4, updated_at=NOW()
             WHERE id=$1
             """.trimIndent()
-        val expectedDeactivateQuery = "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1"
+        val expectedDeactivateQuery = "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 RETURNING 1"
 
         // Mock selectProgramById to return the program
         whenever(
@@ -367,9 +367,9 @@ class ProgramDALTest {
 
         // Mock deactivateProgramsForUser to throw NoResultsFoundException
         whenever(
-            postgresClient.updateLiteral<Any>(
+            postgresClient.updateLiteral<Int>(
                 expectedDeactivateQuery,
-                Any::class,
+                Int::class,
                 programToUpdate.userId
             )
         ).thenReturn(Mono.error(NoResultsFoundException("No programs found to deactivate")))
@@ -398,9 +398,9 @@ class ProgramDALTest {
         )
 
         // Verify that deactivateProgramsForUser was called
-        verify(postgresClient).updateLiteral<Any>(
+        verify(postgresClient).updateLiteral<Int>(
             expectedDeactivateQuery,
-            Any::class,
+            Int::class,
             programToUpdate.userId
         )
 

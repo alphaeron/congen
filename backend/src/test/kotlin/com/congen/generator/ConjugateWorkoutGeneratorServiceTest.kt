@@ -70,11 +70,13 @@ class ConjugateWorkoutGeneratorServiceTest {
     @Test
     fun `generateNextWeek should generate workouts successfully`() {
         val program = createSampleProgram()
+        val updatedProgram = program.copy(currentWeekNumber = 2, name = "Week 2")
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
         val userWeakMuscles = createSampleUserWeakMuscles()
         val userExercisePool = mock<UserExercisePool>()
         val template = createSampleTemplate()
+        val sampleWorkout = createSampleProgrammedWorkout()
 
         whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(program))
         whenever(userOneRepMaxDAL.selectUserOneRepMaxByUser(USER_ID)).thenReturn(Mono.just(oneRepMaxes))
@@ -82,12 +84,7 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(userWeakMuscleDAL.selectUserWeakMusclesByUser(USER_ID)).thenReturn(Mono.just(userWeakMuscles))
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
-        whenever(
-            programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, 1, "Max Effort Day")
-        ).thenReturn(Mono.just(createSampleProgrammedWorkout()))
-        whenever(
-            programmedWorkoutDAL.insertProgrammedWorkout(PROGRAM_ID, 2, "Dynamic Effort Day")
-        ).thenReturn(Mono.just(createSampleProgrammedWorkout()))
+        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(sampleWorkout))
         whenever(
             workoutStageGenerationOrchestrator.generateWorkoutStages(
                 workout = any(),
@@ -99,13 +96,13 @@ class ConjugateWorkoutGeneratorServiceTest {
                 currentWeekNumber = any(),
                 userId = any()
             )
-        ).thenReturn(Mono.empty())
-        whenever(programService.updateProgram(PROGRAM_ID, "Week 2", 2, true)).thenReturn(Mono.just(program))
+        ).thenReturn(Mono.empty<Void>())
+        whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
-            .expectNext(program)
+            .expectNext(updatedProgram)
             .verifyComplete()
 
         verify(programService).selectProgramById(PROGRAM_ID)
@@ -119,6 +116,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     @Test
     fun `generateNextWeek should handle empty weak muscles`() {
         val program = createSampleProgram()
+        val updatedProgram = program.copy(currentWeekNumber = 2, name = "Week 2")
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences()
         val emptyUserWeakMuscles = emptyList<UserWeakMuscle>()
@@ -143,13 +141,13 @@ class ConjugateWorkoutGeneratorServiceTest {
                 currentWeekNumber = any(),
                 userId = any()
             )
-        ).thenReturn(Mono.empty())
-        whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
+        ).thenReturn(Mono.empty<Void>())
+        whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
-            .expectNext(program)
+            .expectNext(updatedProgram)
             .verifyComplete()
     }
 
@@ -310,6 +308,7 @@ class ConjugateWorkoutGeneratorServiceTest {
     @Test
     fun `generateNextWeek should handle different program days per week`() {
         val program = createSampleProgram()
+        val updatedProgram = program.copy(currentWeekNumber = 2, name = "Week 2")
         val oneRepMaxes = createSampleOneRepMaxes()
         val programPreferences = createSampleProgramPreferences().copy(programDaysPerWeek = 3)
         val userWeakMuscles = createSampleUserWeakMuscles()
@@ -334,13 +333,13 @@ class ConjugateWorkoutGeneratorServiceTest {
                 currentWeekNumber = any(),
                 userId = any()
             )
-        ).thenReturn(Mono.empty())
-        whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(program))
+        ).thenReturn(Mono.empty<Void>())
+        whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
 
         StepVerifier.create(result)
-            .expectNext(program)
+            .expectNext(updatedProgram)
             .verifyComplete()
 
         verify(conjugateTemplates).selectTemplate(3)

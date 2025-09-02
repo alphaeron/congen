@@ -1,30 +1,28 @@
+remove all hardcoded exercises, use muscles from primary exercise.
+
 plyometric exercises shouldn't be warmups
 
-add weak muscles UI to program preferences (name target muscles in the interface)
-
 WorkoutStageGenerationService needs to use user exercise preference if it exists, instead of WeightUnit.kt, for example createConditioningStage, right?
+
+add weak muscles UI to program preferences (name target muscles in the interface)
 
 remove keycloak username, just use email?
 
 integration test all user profile sidebar functionality to make sure it works
 
-com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1, should include parameters in exception for debug
+I saw an exception like the below
+com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1
+can we include the parameters in exceptions inside PostgresClient to make debugging easier?
 
 "how it works" on root spa with workout generation algorithm flowchart
 
 congen database for congen?  Or maybe aws terraform will handle that.
-
-workout type enum
 
 https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
 
 Interface to show users what exercises are available as they add preferences, equipment, …
 
 View current exercise weight preferences in dashboard, dive in from the count displayed
-
-remove all hardcoded exercises, use muscles from primary exercise.
-
-weak muscles taken into account
 
 After generation prompted for current 1rm, sets reps can do for accessories and other portions of workout not recorded.  After record all that, then edit the workout to reflect current abilities.  Over time you won’t be prompted anymore, or can decline to answer and the default will be used.  Wizard  interface, show generating while it waits to load, then some screen like to further customize/taylor the workout generation for you can you provide…
 

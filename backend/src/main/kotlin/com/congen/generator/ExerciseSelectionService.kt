@@ -41,6 +41,57 @@ class ExerciseSelectionService(
     }
 
     /**
+     * Gets related muscle groups for weak muscle targeting.
+     * This helps find exercises that work adjacent muscle groups when exact matches aren't available.
+     *
+     * @param targetMuscles List of target muscles
+     * @return List of related muscle groups
+     */
+    private fun getRelatedMuscles(targetMuscles: List<String>): List<String> {
+        val relatedMuscles = mutableSetOf<String>()
+        
+        targetMuscles.forEach { muscle ->
+            when (muscle.lowercase()) {
+                "hamstrings" -> {
+                    relatedMuscles.addAll(listOf("glutes", "calves", "quadriceps"))
+                }
+                "glutes" -> {
+                    relatedMuscles.addAll(listOf("hamstrings", "quadriceps", "lower_back"))
+                }
+                "upper_back" -> {
+                    relatedMuscles.addAll(listOf("shoulders", "biceps", "chest", "core"))
+                }
+                "core" -> {
+                    relatedMuscles.addAll(listOf("lower_back", "upper_back", "shoulders"))
+                }
+                "chest" -> {
+                    relatedMuscles.addAll(listOf("shoulders", "triceps", "upper_back"))
+                }
+                "shoulders" -> {
+                    relatedMuscles.addAll(listOf("chest", "triceps", "upper_back", "biceps"))
+                }
+                "triceps" -> {
+                    relatedMuscles.addAll(listOf("chest", "shoulders", "biceps"))
+                }
+                "biceps" -> {
+                    relatedMuscles.addAll(listOf("shoulders", "triceps", "upper_back"))
+                }
+                "quadriceps" -> {
+                    relatedMuscles.addAll(listOf("hamstrings", "glutes", "calves"))
+                }
+                "calves" -> {
+                    relatedMuscles.addAll(listOf("hamstrings", "quadriceps"))
+                }
+                "lower_back" -> {
+                    relatedMuscles.addAll(listOf("glutes", "core", "upper_back"))
+                }
+            }
+        }
+        
+        return relatedMuscles.toList()
+    }
+
+    /**
      * Main entry point for exercise selection. This method handles all exercise selection
      * and ensures that exercises are properly removed from the pool after selection.
      *
@@ -172,17 +223,64 @@ class ExerciseSelectionService(
                         .flatMap { filteredExercises ->
                             if (filteredExercises.isEmpty()) {
                                 logger.error("No exercises found for target muscles: {} for isAccessory: {}", targetMuscles, isAccessory)
-                                // Fallback to any available exercise
-                                val fallbackExercise = availableExercises.firstOrNull()
-                                if (fallbackExercise != null) {
-                                    logger.warn("Using fallback exercise: {} for isAccessory: {}", fallbackExercise.name, isAccessory)
-                                    Mono.just(fallbackExercise)
+                                
+                                // For accessory exercises with weak muscles, try to find related exercises
+                                if (isAccessory && targetMuscles.isNotEmpty()) {
+                                    logger.warn("Attempting to find related exercises for weak muscles: {}", targetMuscles)
+                                    // Try to find exercises that might be related to the weak muscles
+                                    // This could be exercises that work adjacent muscle groups
+                                    val relatedMuscles = getRelatedMuscles(targetMuscles)
+                                    if (relatedMuscles.isNotEmpty()) {
+                                        userExercisePool.filterExercisesByMuscles(
+                                            availableExercises,
+                                            relatedMuscles,
+                                            exerciseMuscleDAL
+                                        ).flatMap { relatedExercises ->
+                                            if (relatedExercises.isNotEmpty()) {
+                                                logger.info("Found {} related exercises for weak muscles: {}", relatedExercises.size, targetMuscles)
+                                                Mono.just(relatedExercises.random())
+                                            } else {
+                                                // Final fallback to any available exercise
+                                                val fallbackExercise = availableExercises.firstOrNull()
+                                                if (fallbackExercise != null) {
+                                                    logger.warn("Using final fallback exercise: {} for weak muscles: {}", fallbackExercise.name, targetMuscles)
+                                                    Mono.just(fallbackExercise)
+                                                } else {
+                                                    Mono.error(
+                                                        IllegalStateException(
+                                                            "No exercises found for target muscles: $targetMuscles for isAccessory: $isAccessory"
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        // No related muscles found, use final fallback
+                                        val fallbackExercise = availableExercises.firstOrNull()
+                                        if (fallbackExercise != null) {
+                                            logger.warn("Using final fallback exercise: {} for weak muscles: {}", fallbackExercise.name, targetMuscles)
+                                            Mono.just(fallbackExercise)
+                                        } else {
+                                            Mono.error(
+                                                IllegalStateException(
+                                                    "No exercises found for target muscles: $targetMuscles for isAccessory: $isAccessory"
+                                                )
+                                            )
+                                        }
+                                    }
                                 } else {
-                                    Mono.error(
-                                        IllegalStateException(
-                                            "No exercises found for target muscles: $targetMuscles for isAccessory: $isAccessory"
+                                    // For non-accessory exercises or when no target muscles, use standard fallback
+                                    val fallbackExercise = availableExercises.firstOrNull()
+                                    if (fallbackExercise != null) {
+                                        logger.warn("Using fallback exercise: {} for isAccessory: {}", fallbackExercise.name, isAccessory)
+                                        Mono.just(fallbackExercise)
+                                    } else {
+                                        Mono.error(
+                                            IllegalStateException(
+                                                "No exercises found for target muscles: $targetMuscles for isAccessory: $isAccessory"
+                                            )
                                         )
-                                    )
+                                    }
                                 }
                             } else {
                                 // No rotation logic - use all filtered exercises

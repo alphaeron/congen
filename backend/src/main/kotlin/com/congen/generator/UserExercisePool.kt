@@ -166,7 +166,12 @@ class UserExercisePool(
         targetMuscles: List<String>,
         exerciseMuscleDAL: ExerciseMuscleDAL
     ): Mono<List<Exercise>> {
-        if (exercises.isEmpty() || targetMuscles.isEmpty()) {
+        if (exercises.isEmpty()) {
+            return Mono.just(emptyList())
+        }
+        
+        // If no target muscles specified, return all exercises (for primary exercises)
+        if (targetMuscles.isEmpty()) {
             return Mono.just(exercises)
         }
 
@@ -184,9 +189,10 @@ class UserExercisePool(
             .collectList()
             .flatMap { muscleFilteredExercises ->
                 if (muscleFilteredExercises.isEmpty()) {
-                    // Fallback: return all exercises if no muscle matches
-                    logger.warn("No exercises available for target muscles: {}, falling back to all exercises", targetMuscles)
-                    Mono.just(exercises)
+                    // For accessory exercises with weak muscles, be more strict about targeting
+                    // Only fall back if there are truly no exercises available
+                    logger.warn("No exercises available for target muscles: {}, returning empty list to force fallback", targetMuscles)
+                    Mono.just(emptyList())
                 } else {
                     Mono.just(muscleFilteredExercises)
                 }
