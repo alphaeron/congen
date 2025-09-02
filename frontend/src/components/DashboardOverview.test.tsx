@@ -92,34 +92,34 @@ describe('DashboardOverview', () => {
         program: { id: 1, name: 'Test Program' },
         workouts: [
           {
-            workout: { 
-              id: 1, 
-              name: 'Test Workout', 
+            workout: {
+              id: 1,
+              name: 'Test Workout',
               created_at: new Date('2024-01-01T00:00:00Z'),
               updated_at: new Date('2024-01-01T00:00:00Z'),
               program_id: 1,
-              day_number: 1
+              day_number: 1,
             },
             stages: [
               {
-                stage: { 
+                stage: {
                   name: 'Test Stage',
                   id: 1,
                   programmed_workout_id: 1,
                   stage_type_id: 1,
                   position: 1,
                   created_at: new Date('2024-01-01T00:00:00Z'),
-                  updated_at: new Date('2024-01-01T00:00:00Z')
+                  updated_at: new Date('2024-01-01T00:00:00Z'),
                 },
                 exercises: [
                   {
-                    exercise: { 
+                    exercise: {
                       exercise_name: 'Bench Press',
                       id: 1,
                       workout_stage_id: 1,
                       position: 1,
                       created_at: new Date('2024-01-01T00:00:00Z'),
-                      updated_at: new Date('2024-01-01T00:00:00Z')
+                      updated_at: new Date('2024-01-01T00:00:00Z'),
                     },
                     set_schemes: [
                       {
@@ -133,7 +133,7 @@ describe('DashboardOverview', () => {
                         is_emom: false,
                         use_tempo: false,
                         created_at: new Date('2024-01-01T00:00:00Z'),
-                        updated_at: new Date('2024-01-01T00:00:00Z')
+                        updated_at: new Date('2024-01-01T00:00:00Z'),
                       },
                     ],
                   },
@@ -185,7 +185,9 @@ describe('DashboardOverview', () => {
       .reply(() => new Promise(resolve => setTimeout(() => resolve([200, []]), 100)));
     mock
       .onGet('/gdpr/export')
-      .reply(() => new Promise(resolve => setTimeout(() => resolve([200, mockUserDataExport]), 100)));
+      .reply(
+        () => new Promise(resolve => setTimeout(() => resolve([200, mockUserDataExport]), 100))
+      );
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -261,7 +263,9 @@ describe('DashboardOverview', () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], user_one_rep_max: [], data_retention_policies: [] });
+    mock
+      .onGet('/gdpr/export')
+      .reply(200, { training_programs: [], user_one_rep_max: [], data_retention_policies: [] });
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);
@@ -296,34 +300,34 @@ describe('DashboardOverview', () => {
           program: { id: 1, name: 'Test Program' },
           workouts: [
             {
-              workout: { 
-                id: 1, 
-                name: 'Test Workout 1', 
+              workout: {
+                id: 1,
+                name: 'Test Workout 1',
                 created_at: new Date('2024-01-01T00:00:00Z'),
                 updated_at: new Date('2024-01-01T00:00:00Z'),
                 program_id: 1,
-                day_number: 1
+                day_number: 1,
               },
               stages: [
                 {
-                  stage: { 
+                  stage: {
                     name: 'Test Stage',
                     id: 1,
                     programmed_workout_id: 1,
                     stage_type_id: 1,
                     position: 1,
                     created_at: new Date('2024-01-01T00:00:00Z'),
-                    updated_at: new Date('2024-01-01T00:00:00Z')
+                    updated_at: new Date('2024-01-01T00:00:00Z'),
                   },
                   exercises: [
                     {
-                      exercise: { 
+                      exercise: {
                         exercise_name: 'Bench Press',
                         id: 1,
                         workout_stage_id: 1,
                         position: 1,
                         created_at: new Date('2024-01-01T00:00:00Z'),
-                        updated_at: new Date('2024-01-01T00:00:00Z')
+                        updated_at: new Date('2024-01-01T00:00:00Z'),
                       },
                       set_schemes: [
                         {
@@ -337,7 +341,7 @@ describe('DashboardOverview', () => {
                           is_emom: false,
                           use_tempo: false,
                           created_at: new Date('2024-01-01T00:00:00Z'),
-                          updated_at: new Date('2024-01-01T00:00:00Z')
+                          updated_at: new Date('2024-01-01T00:00:00Z'),
                         },
                       ],
                     },
@@ -346,34 +350,34 @@ describe('DashboardOverview', () => {
               ],
             },
             {
-              workout: { 
-                id: 2, 
-                name: 'Test Workout 2', 
+              workout: {
+                id: 2,
+                name: 'Test Workout 2',
                 created_at: new Date('2024-01-02T00:00:00Z'),
                 updated_at: new Date('2024-01-02T00:00:00Z'),
                 program_id: 1,
-                day_number: 2
+                day_number: 2,
               },
               stages: [
                 {
-                  stage: { 
+                  stage: {
                     name: 'Test Stage',
                     id: 2,
                     programmed_workout_id: 2,
                     stage_type_id: 1,
                     position: 1,
                     created_at: new Date('2024-01-02T00:00:00Z'),
-                    updated_at: new Date('2024-01-02T00:00:00Z')
+                    updated_at: new Date('2024-01-02T00:00:00Z'),
                   },
                   exercises: [
                     {
-                      exercise: { 
+                      exercise: {
                         exercise_name: 'Squat',
                         id: 2,
                         workout_stage_id: 2,
                         position: 1,
                         created_at: new Date('2024-01-02T00:00:00Z'),
-                        updated_at: new Date('2024-01-02T00:00:00Z')
+                        updated_at: new Date('2024-01-02T00:00:00Z'),
                       },
                       set_schemes: [
                         {
@@ -387,7 +391,7 @@ describe('DashboardOverview', () => {
                           is_emom: false,
                           use_tempo: false,
                           created_at: new Date('2024-01-02T00:00:00Z'),
-                          updated_at: new Date('2024-01-02T00:00:00Z')
+                          updated_at: new Date('2024-01-02T00:00:00Z'),
                         },
                       ],
                     },

@@ -12,10 +12,10 @@ import {
 import { useSnackbar } from 'notistack';
 import * as React from 'react';
 
-import { LoadingSpinner } from '../components/LoadingSpinner';
 import { getPrivacyPolicy } from '../api/gdpr';
 import type { PrivacyPolicy } from '../api/types';
 import { formatDate } from '../common/utils';
+import { LoadingSpinner } from '../components/LoadingSpinner';
 
 import type { AxiosError } from 'axios';
 
@@ -82,8 +82,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
       </Typography>
 
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Last updated: {formatDate(privacyPolicy.last_updated)} (Version{' '}
-        {privacyPolicy.version})
+        Last updated: {formatDate(privacyPolicy.last_updated)} (Version {privacyPolicy.version})
       </Typography>
 
       {/* Contact Information */}

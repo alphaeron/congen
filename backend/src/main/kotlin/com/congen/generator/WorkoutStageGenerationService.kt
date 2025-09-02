@@ -617,7 +617,7 @@ abstract class WorkoutStageGenerationService(
     /**
      * Selects a primary exercise using the UserExercisePool.
      * This method delegates to ExerciseSelectionService to ensure proper exercise selection and pool management.
-     * 
+     *
      * Primary exercises are not currently filtered by weak muscles, but accessory exercises are.
      *
      * @param userExercisePool The user's exercise pool

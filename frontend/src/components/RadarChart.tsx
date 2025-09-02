@@ -3,20 +3,23 @@ import { Box, Card, CardContent, Typography, useTheme, Tooltip } from '@mui/mate
 import { ResponsiveRadar } from '@nivo/radar';
 import React, { useMemo } from 'react';
 
+import type {
+  Exercise,
+  ProgrammedWorkoutWithStages,
+  WorkoutStageWithExercises,
+} from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import type { Exercise } from '../api/types';
 
 interface RadarChartProps {
-  weekWorkouts: any[]; // Array of week workout data
+  weekWorkouts: ProgrammedWorkoutWithStages[]; // Array of week workout data
   exerciseData: Map<string, Exercise>;
   title?: string;
-  description?: string;
   height?: number;
 }
 
 /**
  * Radar Chart component for displaying movement type distribution.
- * 
+ *
  * This component accepts week workout data and exercise data, then calculates
  * the distribution of movement types across all exercises in the week.
  *
@@ -31,7 +34,6 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   weekWorkouts,
   exerciseData,
   title = 'Movement Type Distribution',
-  description = 'Distribution of movement types across the week',
   height = 300,
 }) => {
   const theme = useTheme();
@@ -40,23 +42,26 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   // Calculate movement type distribution
   const movementTypeData = useMemo(() => {
     const movementTypeCounts = new Map<string, number>();
-    
+
     // Iterate through all workouts in the week
     weekWorkouts.forEach(weekWorkout => {
       // Access the workout data structure
       const workout = weekWorkout.workout;
-      
+
       // If the workout has stages with exercises, process them
       if (workout.stages) {
-        workout.stages.forEach((stage: any) => {
+        (workout.stages as WorkoutStageWithExercises[]).forEach(stage => {
           if (stage.exercises) {
-            stage.exercises.forEach((exerciseWithSchemes: any) => {
+            stage.exercises.forEach(exerciseWithSchemes => {
               const exerciseName = exerciseWithSchemes.exercise.exercise_name;
               const exercise = exerciseData.get(exerciseName);
-              
+
               if (exercise && exercise.movement_type) {
                 const movementType = exercise.movement_type;
-                movementTypeCounts.set(movementType, (movementTypeCounts.get(movementType) || 0) + 1);
+                movementTypeCounts.set(
+                  movementType,
+                  (movementTypeCounts.get(movementType) || 0) + 1
+                );
               }
             });
           }
@@ -79,12 +84,14 @@ export const RadarChart: React.FC<RadarChartProps> = ({
   }
 
   return (
-    <Card sx={{ 
-      '&:hover': {
-        transform: 'none',
-        boxShadow: 'none'
-      }
-    }}>
+    <Card
+      sx={{
+        '&:hover': {
+          transform: 'none',
+          boxShadow: 'none',
+        },
+      }}
+    >
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <RadarIcon color="secondary" />
@@ -116,7 +123,6 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                 },
               },
             }}
-
           />
         </Box>
       </CardContent>

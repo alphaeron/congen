@@ -29,9 +29,10 @@ import {
   Snackbar,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router';
 
+import { LoadingSpinner } from './LoadingSpinner';
 import {
   recordConsent,
   getConsentStatus,
@@ -42,7 +43,6 @@ import type { UserConsent } from '../api/types';
 import { formatDate } from '../common/utils';
 
 import type { AxiosError } from 'axios';
-import { LoadingSpinner } from './LoadingSpinner';
 
 /**
  * GDPR Compliance Section component for user profile.
@@ -214,7 +214,8 @@ export function GdprComplianceSection(): React.ReactElement {
               )}
               {consentStatus?.consent_timestamp && (
                 <Typography variant="caption" color="text.secondary">
-                  Last updated: {formatDate(consentStatus.consent_timestamp, {
+                  Last updated:{' '}
+                  {formatDate(consentStatus.consent_timestamp, {
                     year: 'numeric',
                     month: 'short',
                     day: 'numeric',

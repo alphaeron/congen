@@ -21,18 +21,26 @@ import {
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 
-import { WorkoutWeekDetails } from './WorkoutWeekDetails';
-import { StreamChart } from './StreamChart';
 import { LoadingSpinner } from './LoadingSpinner';
+import { StreamChart } from './StreamChart';
+import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
+import { getIndividualExercise } from '../api/exercise';
+import { getUserDataExport } from '../api/gdpr';
 import { getProgramsWithPreferences } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
-import { getUserDataExport } from '../api/gdpr';
-import { getIndividualExercise } from '../api/exercise';
+import type {
+  Program,
+  ProgrammedWorkout,
+  User,
+  ProgramWithPreferences,
+  Exercise,
+  UserDataExport,
+  ProgramWithWorkouts,
+} from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
-import type { Program, ProgrammedWorkout, User, ProgramWithPreferences, Exercise, UserDataExport } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 
@@ -58,7 +66,6 @@ interface WorkoutsProps {
 export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
   const { enqueueSnackbar } = useSnackbar();
 
   const [programsWithPreferences, setProgramsWithPreferences] = useState<
@@ -70,7 +77,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
   const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
   const [userDataExport, setUserDataExport] = useState<UserDataExport | null>(null);
 
   // URL query parameters
@@ -96,10 +105,10 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
 
         // Extract unique exercises from the export data and fetch exercise details
         const uniqueExercises = new Set<string>();
-        userData.training_programs?.forEach((program: any) => {
-          program.workouts.forEach((workoutWithStages: any) => {
-            workoutWithStages.stages.forEach((stageWithExercises: any) => {
-              stageWithExercises.exercises.forEach((exerciseWithSetSchemes: any) => {
+        (userData.training_programs as ProgramWithWorkouts[])?.forEach(program => {
+          program.workouts.forEach(workoutWithStages => {
+            workoutWithStages.stages.forEach(stageWithExercises => {
+              stageWithExercises.exercises.forEach(exerciseWithSetSchemes => {
                 uniqueExercises.add(exerciseWithSetSchemes.exercise.exercise_name);
               });
             });
@@ -299,7 +308,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
                       <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box>
                           <Typography variant="h6" gutterBottom>
-                          {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
+                            {`Current Week: Week ${Math.max(activeProgram.program.current_week_number, 1)}`}
                           </Typography>
                         </Box>
                         <Box display="flex" gap={1}>

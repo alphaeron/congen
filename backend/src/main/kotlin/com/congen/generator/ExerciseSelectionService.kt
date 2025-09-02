@@ -134,7 +134,11 @@ class ExerciseSelectionService(
             // Filter out plyometric exercises for warmup selection
             val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
             if (nonPlyometricExercises.isEmpty()) {
-                logger.error("No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {}", dayType, isAccessory)
+                logger.error(
+                    "No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {}",
+                    dayType,
+                    isAccessory
+                )
                 return@defer Mono.error(
                     IllegalStateException(
                         "No non-plyometric exercises available after filtering for dayType: $dayType and isAccessory: $isAccessory"
@@ -186,7 +190,11 @@ class ExerciseSelectionService(
                                 // No related muscles found, use final fallback
                                 val fallbackExercise = availableExercises.firstOrNull()
                                 if (fallbackExercise != null) {
-                                    logger.warn("Using final fallback exercise: {} for weak muscles: {}", fallbackExercise.name, targetMuscles)
+                                    logger.warn(
+                                        "Using final fallback exercise: {} for weak muscles: {}",
+                                        fallbackExercise.name,
+                                        targetMuscles
+                                    )
                                     Mono.just(fallbackExercise)
                                 } else {
                                     Mono.error(
@@ -548,26 +556,28 @@ class ExerciseSelectionService(
         workoutType: String
     ): Mono<List<Exercise>> {
         // For 2 and 3 day templates, use muscles from the actual primary exercises selected
-        val primaryMusclesMono = if (primaryExercise != null) {
-            exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
-                .map { muscles -> muscles.map { it.muscleName.lowercase() } }
-        } else {
-            Mono.just(emptyList<String>())
-        }
-        
-        val secondaryMusclesMono = if (secondaryExercise != null) {
-            exerciseMuscleDAL.selectExerciseMuscleByExercise(secondaryExercise.name)
-                .map { muscles -> muscles.map { it.muscleName.lowercase() } }
-        } else {
-            Mono.just(emptyList<String>())
-        }
-        
+        val primaryMusclesMono =
+            if (primaryExercise != null) {
+                exerciseMuscleDAL.selectExerciseMuscleByExercise(primaryExercise.name)
+                    .map { muscles -> muscles.map { it.muscleName.lowercase() } }
+            } else {
+                Mono.just(emptyList<String>())
+            }
+
+        val secondaryMusclesMono =
+            if (secondaryExercise != null) {
+                exerciseMuscleDAL.selectExerciseMuscleByExercise(secondaryExercise.name)
+                    .map { muscles -> muscles.map { it.muscleName.lowercase() } }
+            } else {
+                Mono.just(emptyList<String>())
+            }
+
         return Mono.zip(primaryMusclesMono, secondaryMusclesMono)
             .map { tuple ->
                 val primaryMuscles = tuple.t1
                 val secondaryMuscles = tuple.t2
                 val allMuscles = (primaryMuscles + secondaryMuscles).toSet().toList()
-                
+
                 allMuscles
             }
             .flatMap { targetMuscles ->

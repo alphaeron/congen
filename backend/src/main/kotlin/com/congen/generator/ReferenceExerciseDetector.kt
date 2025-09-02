@@ -37,18 +37,19 @@ class ReferenceExerciseDetector {
         private const val ONE_RM_WEIGHT = 0.25
         private const val USAGE_WEIGHT = 0.1
         private const val NAME_CLARITY_WEIGHT = 0.1
-        
+
         // Equipment preference scores (can be moved to configuration)
-        private val EQUIPMENT_PREFERENCES = mapOf(
-            "barbell" to 1.0,
-            "dumbbell" to 0.7,
-            "machine" to 0.4,
-            "cable" to 0.4,
-            "bodyweight" to 0.6,
-            "kettlebell" to 0.8,
-            "trap bar" to 0.9,
-            "safety squat bar" to 0.9
-        )
+        private val EQUIPMENT_PREFERENCES =
+            mapOf(
+                "barbell" to 1.0,
+                "dumbbell" to 0.7,
+                "machine" to 0.4,
+                "cable" to 0.4,
+                "bodyweight" to 0.6,
+                "kettlebell" to 0.8,
+                "trap bar" to 0.9,
+                "safety squat bar" to 0.9
+            )
     }
 
     /**
@@ -64,18 +65,20 @@ class ReferenceExerciseDetector {
         userOneRepMaxes: List<UserOneRepMax> = emptyList(),
         exerciseUsageCounts: Map<String, Int> = emptyMap()
     ): List<Exercise> {
-        val candidates = allExercises.mapNotNull { exercise ->
-            val score = calculateReferenceScore(
-                exercise = exercise,
-                userOneRepMaxes = userOneRepMaxes,
-                exerciseUsageCounts = exerciseUsageCounts
-            )
-            if (score.score > 0.5) { // Only include exercises with decent reference potential
-                ReferenceCandidate(exercise, score.score, score.factors)
-            } else {
-                null
+        val candidates =
+            allExercises.mapNotNull { exercise ->
+                val score =
+                    calculateReferenceScore(
+                        exercise = exercise,
+                        userOneRepMaxes = userOneRepMaxes,
+                        exerciseUsageCounts = exerciseUsageCounts
+                    )
+                if (score.score > 0.5) { // Only include exercises with decent reference potential
+                    ReferenceCandidate(exercise, score.score, score.factors)
+                } else {
+                    null
+                }
             }
-        }
 
         return candidates
             .sortedByDescending { it.score }
@@ -116,10 +119,10 @@ class ReferenceExerciseDetector {
         // Weighted average of all factors
         val totalScore = (
             equipmentScore * EQUIPMENT_WEIGHT +
-            patternScore * PATTERN_PURITY_WEIGHT +
-            oneRepMaxScore * ONE_RM_WEIGHT +
-            usageScore * USAGE_WEIGHT +
-            nameScore * NAME_CLARITY_WEIGHT
+                patternScore * PATTERN_PURITY_WEIGHT +
+                oneRepMaxScore * ONE_RM_WEIGHT +
+                usageScore * USAGE_WEIGHT +
+                nameScore * NAME_CLARITY_WEIGHT
         )
 
         return ReferenceScore(totalScore, factors)
@@ -130,7 +133,7 @@ class ReferenceExerciseDetector {
      */
     private fun calculateEquipmentScore(exercise: Exercise): Double {
         val name = exercise.name.lowercase()
-        
+
         // Find the best matching equipment preference
         return EQUIPMENT_PREFERENCES.entries
             .firstOrNull { (equipment, _) -> name.contains(equipment) }
@@ -142,40 +145,43 @@ class ReferenceExerciseDetector {
      */
     private fun calculatePatternPurityScore(exercise: Exercise): Double {
         val movementType = exercise.movementType
-        
+
         // Base score from movement type characteristics
-        var baseScore = when (movementType) {
-            MovementType.SQUAT -> 0.9
-            MovementType.HINGE -> 0.9
-            MovementType.HORIZONTAL_PUSH -> 0.8
-            MovementType.HORIZONTAL_PULL -> 0.8
-            MovementType.VERTICAL_PUSH -> 0.8
-            MovementType.VERTICAL_PULL -> 0.8
-            MovementType.CORE -> 0.7
-            MovementType.CARRY -> 0.6
-            MovementType.LUNGE -> 0.7
-            MovementType.PLYOMETRIC -> 0.6
-            MovementType.ISOLATION -> 0.5
-        }
-        
+        var baseScore =
+            when (movementType) {
+                MovementType.SQUAT -> 0.9
+                MovementType.HINGE -> 0.9
+                MovementType.HORIZONTAL_PUSH -> 0.8
+                MovementType.HORIZONTAL_PULL -> 0.8
+                MovementType.VERTICAL_PUSH -> 0.8
+                MovementType.VERTICAL_PULL -> 0.8
+                MovementType.CORE -> 0.7
+                MovementType.CARRY -> 0.6
+                MovementType.LUNGE -> 0.7
+                MovementType.PLYOMETRIC -> 0.6
+                MovementType.ISOLATION -> 0.5
+            }
+
         // Adjust based on exercise characteristics
         when {
             // Prefer compound movements (not unilateral, not accessory)
             exercise.isUnilateral -> baseScore *= 0.8
             exercise.isAccessory -> baseScore *= 0.7
-            
+
             // Prefer upper body movements for upper body patterns
-            exercise.isUpper && (movementType == MovementType.HORIZONTAL_PUSH || 
-                                movementType == MovementType.VERTICAL_PUSH ||
-                                movementType == MovementType.HORIZONTAL_PULL || 
-                                movementType == MovementType.VERTICAL_PULL) -> 
+            exercise.isUpper && (
+                movementType == MovementType.HORIZONTAL_PUSH ||
+                    movementType == MovementType.VERTICAL_PUSH ||
+                    movementType == MovementType.HORIZONTAL_PULL ||
+                    movementType == MovementType.VERTICAL_PULL
+            ) ->
                 baseScore *= 1.1
-            
+
             // Prefer lower body movements for lower body patterns
-            !exercise.isUpper && (movementType == MovementType.SQUAT || movementType == MovementType.HINGE) -> 
+            !exercise.isUpper && (movementType == MovementType.SQUAT || movementType == MovementType.HINGE) ->
                 baseScore *= 1.1
         }
-        
+
         return baseScore.coerceIn(0.0, 1.0)
     }
 
@@ -187,7 +193,7 @@ class ReferenceExerciseDetector {
         exerciseUsageCounts: Map<String, Int>
     ): Double {
         val usageCount = exerciseUsageCounts[exerciseName] ?: 0
-        
+
         // Dynamic scoring based on usage distribution
         return when {
             usageCount > 100 -> 1.0
@@ -203,15 +209,16 @@ class ReferenceExerciseDetector {
      */
     private fun calculateNameClarityScore(exerciseName: String): Double {
         val name = exerciseName.lowercase()
-        
+
         // Prefer shorter, clearer names
-        var score = when {
-            name.length < 15 -> 1.0
-            name.length < 25 -> 0.8
-            name.length < 35 -> 0.6
-            else -> 0.4
-        }
-        
+        var score =
+            when {
+                name.length < 15 -> 1.0
+                name.length < 25 -> 0.8
+                name.length < 35 -> 0.6
+                else -> 0.4
+            }
+
         return score.coerceIn(0.0, 1.0)
     }
 

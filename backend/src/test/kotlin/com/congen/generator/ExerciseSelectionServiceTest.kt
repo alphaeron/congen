@@ -333,7 +333,8 @@ class ExerciseSelectionServiceTest {
             )
 
         StepVerifier.create(result)
-            .expectNext(exercise) // Should use fallback exercise
+            // Should use fallback exercise
+            .expectNext(exercise)
             .verifyComplete()
     }
 
@@ -342,7 +343,7 @@ class ExerciseSelectionServiceTest {
         val targetMuscles = listOf("chest", "triceps")
         val workoutType = "max_effort"
         val dayType = "upper_body"
-        
+
         // Create a mix of exercises including a plyometric one
         val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
         val plyometricExercise = createSampleExercise("Box Jump", MovementType.PLYOMETRIC)
@@ -350,7 +351,7 @@ class ExerciseSelectionServiceTest {
 
         // Mock the exercise pool to return the full list initially
         whenever(userExercisePool.getAvailableAccessoryExercises()).thenReturn(exercises)
-        
+
         // Mock the equipment and muscle filtering to return the filtered list (after plyometric filtering)
         // The plyometric filtering happens in selectRotatingExerciseInternal before these filters
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(regularExercise)))
@@ -361,7 +362,8 @@ class ExerciseSelectionServiceTest {
             exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
                 targetMuscles = targetMuscles,
-                isAccessory = true, // Warmup exercises are accessory
+                // Warmup exercises are accessory
+                isAccessory = true,
                 workoutType = workoutType,
                 dayType = dayType,
                 movementBalanceState = null

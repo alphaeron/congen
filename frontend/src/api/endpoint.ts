@@ -8,7 +8,7 @@ import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
  * Converts Unix timestamps (in seconds) to Date objects.
  * Recursively processes objects and arrays to find timestamp fields.
  */
-function convertTimestampsToDates(obj: any): any {
+function convertTimestampsToDates(obj: unknown): unknown {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -17,14 +17,24 @@ function convertTimestampsToDates(obj: any): any {
     return obj.map(convertTimestampsToDates);
   }
 
-  if (typeof obj === 'object') {
-    const converted: any = {};
+  if (typeof obj === 'object' && obj !== null) {
+    const converted: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (key === 'created_at' || key === 'updated_at' || key === 'consent_timestamp' || key === 'export_timestamp' || key === 'last_updated' || key === 'timestamp') {
+      if (
+        key === 'created_at' ||
+        key === 'updated_at' ||
+        key === 'consent_timestamp' ||
+        key === 'export_timestamp' ||
+        key === 'last_updated' ||
+        key === 'timestamp'
+      ) {
         // Convert Unix timestamp in seconds to Date object, or ISO date string to Date object
         if (typeof value === 'number') {
           converted[key] = new Date(value * 1000);
-        } else if (typeof value === 'string' && (value.includes('T') || value.includes('Z') || /^\d{4}-\d{2}-\d{2}/.test(value))) {
+        } else if (
+          typeof value === 'string' &&
+          (value.includes('T') || value.includes('Z') || /^\d{4}-\d{2}-\d{2}/.test(value))
+        ) {
           // Handle ISO date strings like "2025-08-25T00:00:00Z" or "2025-08-25"
           converted[key] = new Date(value);
         } else {
@@ -121,7 +131,7 @@ export const REQUEST = async <T>(options: AxiosRequestConfig): Promise<T> => {
     return response?.data;
   };
 
-  const onError = (error: AxiosError) => {
+  const onError = (error: AxiosError<unknown>) => {
     // Provide better error information
     if (error.response?.data) {
       return Promise.reject(error.response.data);

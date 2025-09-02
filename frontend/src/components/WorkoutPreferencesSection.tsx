@@ -1,3 +1,4 @@
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -21,7 +22,6 @@ import {
   Alert,
   Divider,
 } from '@mui/material';
-import { Refresh as RefreshIcon } from '@mui/icons-material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 
@@ -161,9 +161,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   };
 
   if (loading) {
-    return (
-      <LoadingSpinner message="Loading workout preferences..." fullHeight={false} />
-    );
+    return <LoadingSpinner message="Loading workout preferences..." fullHeight={false} />;
   }
 
   return (

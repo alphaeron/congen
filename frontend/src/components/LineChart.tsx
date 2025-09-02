@@ -3,18 +3,18 @@ import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveLine } from '@nivo/line';
 import React, { useState, useMemo } from 'react';
 
+import type {
+  UserDataExport,
+  Exercise,
+  ProgrammedWorkoutWithStages,
+  WorkoutStageWithExercises,
+} from '../api/types';
+import {
+  categorizeExerciseVolume,
+  replaceUnderscoresWithSpaces,
+  formatDate,
+} from '../common/utils';
 import { createCongenNivoTheme, congenColorSchemes } from '../theme/nivoTheme';
-import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
-import { categorizeExerciseVolume } from '../common/utils';
-import { replaceUnderscoresWithSpaces, formatDate } from '../common/utils';
-
-interface LineData {
-  id: string;
-  data: Array<{
-    x: string;
-    y: number;
-  }>;
-}
 
 interface LineChartProps {
   userDataExport: UserDataExport | null;
@@ -31,7 +31,7 @@ interface LineChartProps {
 
 /**
  * Line Chart component for displaying progression data.
- * 
+ *
  * This component accepts raw workout data and handles all data transformations
  * internally to calculate and display different types of line charts.
  *
@@ -67,7 +67,7 @@ export const LineChart: React.FC<LineChartProps> = ({
   const workouts = useMemo(() => {
     if (!userDataExport?.training_programs?.length) return [];
 
-    const allWorkouts: any[] = [];
+    const allWorkouts: ProgrammedWorkoutWithStages[] = [];
     userDataExport.training_programs.forEach(program => {
       allWorkouts.push(...program.workouts);
     });
@@ -86,9 +86,9 @@ export const LineChart: React.FC<LineChartProps> = ({
         let dynamicEffortVolume = 0;
         let accessoryVolume = 0;
 
-        workoutData.stages.forEach((stage: any) => {
-          stage.exercises.forEach((exerciseWithSchemes: any) => {
-            exerciseWithSchemes.set_schemes.forEach((setScheme: any) => {
+        (workoutData.stages as WorkoutStageWithExercises[]).forEach(stage => {
+          stage.exercises.forEach(exerciseWithSchemes => {
+            exerciseWithSchemes.set_schemes.forEach(setScheme => {
               const weight = setScheme.performed_weight || setScheme.target_weight || 0;
               const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
               const bandWeight = setScheme.band_weight_lbs
@@ -131,7 +131,12 @@ export const LineChart: React.FC<LineChartProps> = ({
   const progressData = useMemo(() => {
     if (chartType !== 'progress' || !userDataExport) return [];
 
-    const progress: Array<{ date: string; exercise: string; weight: number; type: '1RM' | 'Volume' }> = [];
+    const progress: Array<{
+      date: string;
+      exercise: string;
+      weight: number;
+      type: '1RM' | 'Volume';
+    }> = [];
 
     // Add 1RM data
     if (userDataExport.user_one_rep_max) {
@@ -210,19 +215,6 @@ export const LineChart: React.FC<LineChartProps> = ({
     return chartData.filter(item => selectedItems.includes(item.id));
   }, [chartData, selectedItems]);
 
-  const handleLegendClick = (data: { id?: string; label?: string }) => {
-    const itemId = data.id || data.label;
-    if (itemId) {
-      setSelectedItems(prev => {
-        if (prev.includes(itemId)) {
-          return prev.filter(id => id !== itemId);
-        } else {
-          return [...prev, itemId];
-        }
-      });
-    }
-  };
-
   // Don't render if no data, but show a message for progress charts
   if (!chartData.length || !chartData[0].data.length) {
     if (chartType === 'progress') {
@@ -236,9 +228,12 @@ export const LineChart: React.FC<LineChartProps> = ({
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {description}
             </Typography>
-            <Box sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box
+              sx={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
               <Typography variant="body2" color="text.secondary">
-                No progress data available. Complete workouts and record 1RM values to see progress tracking.
+                No progress data available. Complete workouts and record 1RM values to see progress
+                tracking.
               </Typography>
             </Box>
           </CardContent>
@@ -319,15 +314,23 @@ export const LineChart: React.FC<LineChartProps> = ({
                 />
                 <div>
                   {chartType === 'volume' ? (
-                    <>
-                      <div>Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span></div>
-                      <div>Volume: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span></div>
-                    </>
+                    <React.Fragment>
+                      <div>
+                        Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
+                      </div>
+                      <div>
+                        Volume: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
+                      </div>
+                    </React.Fragment>
                   ) : (
-                    <>
-                      <div>Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span></div>
-                      <div>Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span></div>
-                    </>
+                    <React.Fragment>
+                      <div>
+                        Date: <span style={{ fontWeight: 'bold' }}>{point.data.x}</span>
+                      </div>
+                      <div>
+                        Weight: <span style={{ fontWeight: 'bold' }}>{point.data.y} lbs</span>
+                      </div>
+                    </React.Fragment>
                   )}
                 </div>
               </div>
@@ -350,8 +353,9 @@ export const LineChart: React.FC<LineChartProps> = ({
                       symbolSize: 12,
                       symbolShape: 'circle',
                       symbolBorderColor: 'rgba(0, 0, 0, .5)',
-                      onClick: (datum: any) => {
-                        const itemId = typeof datum.id === 'string' ? datum.id : datum.label;
+                      onClick: (datum: { id?: string | number; label?: string | number }) => {
+                        const itemId =
+                          typeof datum.id === 'string' ? datum.id : String(datum.label || '');
                         if (itemId) {
                           setSelectedItems(prev => {
                             if (prev.includes(itemId)) {

@@ -3,17 +3,15 @@ import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveStream } from '@nivo/stream';
 import React, { useMemo } from 'react';
 
-import { createCongenNivoTheme } from '../theme/nivoTheme';
 import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { categorizeExerciseVolume, convertWeightToPounds } from '../common/utils';
-import { replaceUnderscoresWithSpaces, formatDate } from '../common/utils';
-
-interface StreamData {
-  date: string;
-  [key: string]: string | number;
-}
+import {
+  categorizeExerciseVolume,
+  convertWeightToPounds,
+  replaceUnderscoresWithSpaces,
+  formatDate,
+} from '../common/utils';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface StreamChartProps {
   userDataExport: UserDataExport | null;
@@ -26,7 +24,7 @@ interface StreamChartProps {
 
 /**
  * Stream Chart component for displaying volume flow over time.
- * 
+ *
  * This component accepts raw workout data and handles all data transformations
  * internally to calculate volume data and display it in a stream chart.
  *
@@ -136,7 +134,11 @@ export const StreamChart: React.FC<StreamChartProps> = ({
     }));
   }, [volumeData]);
 
-  const keys: ('Max Effort' | 'Dynamic Effort' | 'Accessory')[] = ['Max Effort', 'Dynamic Effort', 'Accessory'];
+  const keys: ('Max Effort' | 'Dynamic Effort' | 'Accessory')[] = [
+    'Max Effort',
+    'Dynamic Effort',
+    'Accessory',
+  ];
 
   // Don't render if no data
   if (!streamData.length) {

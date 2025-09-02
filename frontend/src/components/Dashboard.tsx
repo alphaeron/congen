@@ -2,7 +2,6 @@ import {
   Dashboard as DashboardIcon,
   FitnessCenter as FitnessCenterIcon,
   Settings as SettingsIcon,
-  History as HistoryIcon,
   Tune as TuneIcon,
 } from '@mui/icons-material';
 import {

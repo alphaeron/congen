@@ -26,7 +26,7 @@ export function capitalizeEachWord(str: string): string {
 
 /**
  * Replaces underscores with spaces in a string.
- * 
+ *
  * @param str The string to format
  * @returns The formatted string with underscores replaced by spaces
  */
@@ -174,7 +174,8 @@ export function formatWeightWithUnit(
   if (preferredUnit === 'LBS' && weight > 0) {
     // Assume weight is stored in KG if it's a reasonable value for KG
     // This is a heuristic - in a real app, you'd know the storage unit
-    if (weight < 1000) { // Likely KG if under 1000
+    if (weight < 1000) {
+      // Likely KG if under 1000
       displayWeight = weight * 2.20462;
       displayUnit = 'lbs';
     } else {
@@ -182,7 +183,8 @@ export function formatWeightWithUnit(
     }
   } else if (preferredUnit === 'KG' && weight > 0) {
     // Assume weight is stored in LBS if it's a reasonable value for LBS
-    if (weight > 100) { // Likely LBS if over 100
+    if (weight > 100) {
+      // Likely LBS if over 100
       displayWeight = weight * 0.453592;
       displayUnit = 'kg';
     } else {
@@ -199,6 +201,6 @@ export function formatWeightWithUnit(
   if (includeUnit) {
     return `${roundedWeight} ${displayUnit}`;
   }
-  
+
   return roundedWeight.toString();
 }

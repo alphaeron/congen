@@ -33,12 +33,15 @@ export const getProgrammedWorkout = (id: number): Promise<ProgrammedWorkout> => 
  * @param week Optional week number to filter workouts (1-based)
  * @returns Promise containing a list of programmed workouts for the program
  */
-export const getProgrammedWorkoutsByProgram = (programId: number, week?: number): Promise<ProgrammedWorkout[]> => {
+export const getProgrammedWorkoutsByProgram = (
+  programId: number,
+  week?: number
+): Promise<ProgrammedWorkout[]> => {
   const params: Record<string, string | number> = {};
   if (week !== undefined) {
     params.week = week;
   }
-  
+
   return REQUEST({
     method: 'GET',
     url: `/programmed_workout/program/${programId}`,

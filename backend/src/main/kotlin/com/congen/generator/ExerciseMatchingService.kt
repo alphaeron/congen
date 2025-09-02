@@ -14,7 +14,7 @@ import java.math.RoundingMode
 /**
  * Service for automatically matching exercises to reference lifts using multiple similarity metrics.
  *
- * This service combines movement pattern classification, equipment similarity, and muscle group 
+ * This service combines movement pattern classification, equipment similarity, and muscle group
  * relationships to determine the most similar reference exercise for weight estimation.
  *
  * ## Similarity Metrics
@@ -38,7 +38,7 @@ class ExerciseMatchingService(
 ) {
     companion object {
         private const val WEIGHT_SCALE = 2
-        
+
         // Scoring weights for similarity calculation
         private const val NAME_SIMILARITY_WEIGHT = 0.3
         private const val MOVEMENT_PATTERN_WEIGHT = 0.3
@@ -128,31 +128,35 @@ class ExerciseMatchingService(
                 referenceExercise = bestReferenceExercise,
                 similarityScore = similarity,
                 movementPattern = movementPattern,
-                factors = calculateSimilarityFactors(
-                    targetExercise,
-                    bestReferenceExercise,
-                    exerciseEquipmentMap,
-                    exerciseMuscleMap
-                )
+                factors =
+                    calculateSimilarityFactors(
+                        targetExercise,
+                        bestReferenceExercise,
+                        exerciseEquipmentMap,
+                        exerciseMuscleMap
+                    )
             )
         }
 
         // Fallback: find any exercise with the same movement pattern
-        val fallbackExercise = allExercises
-            .filter { it.movementType == movementPattern }
-            .firstOrNull()
-            ?: allExercises.first()
+        val fallbackExercise =
+            allExercises
+                .filter { it.movementType == movementPattern }
+                .firstOrNull()
+                ?: allExercises.first()
 
         return ExerciseMatch(
             referenceExercise = fallbackExercise,
-            similarityScore = 0.5, // Default fallback score
+            // Default fallback score
+            similarityScore = 0.5,
             movementPattern = movementPattern,
-            factors = SimilarityFactors(
-                nameSimilarity = 0.0,
-                movementPatternSimilarity = 1.0,
-                equipmentSimilarity = 0.0,
-                muscleGroupSimilarity = 0.0
-            )
+            factors =
+                SimilarityFactors(
+                    nameSimilarity = 0.0,
+                    movementPatternSimilarity = 1.0,
+                    equipmentSimilarity = 0.0,
+                    muscleGroupSimilarity = 0.0
+                )
         )
     }
 
@@ -167,10 +171,10 @@ class ExerciseMatchingService(
     ): BigDecimal {
         // Base percentage depends on exercise characteristics rather than hardcoded names
         val basePercentage = calculateBasePercentageFromCharacteristics(targetExercise, referenceExercise)
-        
+
         // Adjust based on similarity score
         val adjustedPercentage = adjustPercentageBySimilarity(basePercentage, similarityScore)
-        
+
         return (referenceOneRepMax * BigDecimal(adjustedPercentage))
             .setScale(WEIGHT_SCALE, RoundingMode.HALF_UP)
     }
@@ -201,18 +205,19 @@ class ExerciseMatchingService(
         exerciseEquipmentMap: Map<String, List<ExerciseEquipment>>,
         exerciseMuscleMap: Map<String, List<ExerciseMuscle>>
     ): Double {
-        val factors = calculateSimilarityFactors(
-            targetExercise,
-            referenceExercise,
-            exerciseEquipmentMap,
-            exerciseMuscleMap
-        )
+        val factors =
+            calculateSimilarityFactors(
+                targetExercise,
+                referenceExercise,
+                exerciseEquipmentMap,
+                exerciseMuscleMap
+            )
 
         return (
             factors.nameSimilarity * NAME_SIMILARITY_WEIGHT +
-            factors.movementPatternSimilarity * MOVEMENT_PATTERN_WEIGHT +
-            factors.equipmentSimilarity * EQUIPMENT_SIMILARITY_WEIGHT +
-            factors.muscleGroupSimilarity * MUSCLE_GROUP_SIMILARITY_WEIGHT
+                factors.movementPatternSimilarity * MOVEMENT_PATTERN_WEIGHT +
+                factors.equipmentSimilarity * EQUIPMENT_SIMILARITY_WEIGHT +
+                factors.muscleGroupSimilarity * MUSCLE_GROUP_SIMILARITY_WEIGHT
         )
     }
 
@@ -227,16 +232,18 @@ class ExerciseMatchingService(
     ): SimilarityFactors {
         val nameSimilarity = calculateNameSimilarity(targetExercise.name, referenceExercise.name)
         val movementPatternSimilarity = if (targetExercise.movementType == referenceExercise.movementType) 1.0 else 0.0
-        val equipmentSimilarity = calculateEquipmentSimilarity(
-            targetExercise.name,
-            referenceExercise.name,
-            exerciseEquipmentMap
-        )
-        val muscleGroupSimilarity = calculateMuscleGroupSimilarity(
-            targetExercise.name,
-            referenceExercise.name,
-            exerciseMuscleMap
-        )
+        val equipmentSimilarity =
+            calculateEquipmentSimilarity(
+                targetExercise.name,
+                referenceExercise.name,
+                exerciseEquipmentMap
+            )
+        val muscleGroupSimilarity =
+            calculateMuscleGroupSimilarity(
+                targetExercise.name,
+                referenceExercise.name,
+                exerciseMuscleMap
+            )
 
         return SimilarityFactors(
             nameSimilarity = nameSimilarity,
@@ -249,36 +256,42 @@ class ExerciseMatchingService(
     /**
      * Calculates name similarity using Jaro-Winkler distance.
      */
-    private fun calculateNameSimilarity(name1: String, name2: String): Double {
+    private fun calculateNameSimilarity(
+        name1: String,
+        name2: String
+    ): Double {
         val normalized1 = name1.lowercase().replace(Regex("[^a-z0-9]"), "")
         val normalized2 = name2.lowercase().replace(Regex("[^a-z0-9]"), "")
-        
+
         if (normalized1 == normalized2) return 1.0
         if (normalized1.isEmpty() || normalized2.isEmpty()) return 0.0
-        
+
         return calculateJaroWinklerSimilarity(normalized1, normalized2)
     }
 
     /**
      * Calculates Jaro-Winkler similarity between two strings.
      */
-    private fun calculateJaroWinklerSimilarity(s1: String, s2: String): Double {
+    private fun calculateJaroWinklerSimilarity(
+        s1: String,
+        s2: String
+    ): Double {
         if (s1 == s2) return 1.0
-        
+
         val matchWindow = (maxOf(s1.length, s2.length) / 2) - 1
         if (matchWindow < 0) return 0.0
-        
+
         val s1Matches = BooleanArray(s1.length)
         val s2Matches = BooleanArray(s2.length)
-        
+
         var matches = 0
         var transpositions = 0
-        
+
         // Find matches
         for (i in s1.indices) {
             val start = maxOf(0, i - matchWindow)
             val end = minOf(i + matchWindow + 1, s2.length)
-            
+
             for (j in start until end) {
                 if (!s2Matches[j] && s1[i] == s2[j]) {
                     s1Matches[i] = true
@@ -288,9 +301,9 @@ class ExerciseMatchingService(
                 }
             }
         }
-        
+
         if (matches == 0) return 0.0
-        
+
         // Count transpositions
         var k = 0
         for (i in s1.indices) {
@@ -300,17 +313,20 @@ class ExerciseMatchingService(
                 k++
             }
         }
-        
-        val jaroDistance = (matches / s1.length.toDouble() + 
-                           matches / s2.length.toDouble() + 
-                           (matches - transpositions / 2) / matches.toDouble()) / 3.0
-        
+
+        val jaroDistance =
+            (
+                matches / s1.length.toDouble() +
+                    matches / s2.length.toDouble() +
+                    (matches - transpositions / 2) / matches.toDouble()
+            ) / 3.0
+
         // Calculate Winkler modification
         var prefixLength = 0
         for (i in 0 until minOf(4, minOf(s1.length, s2.length))) {
             if (s1[i] == s2[i]) prefixLength++ else break
         }
-        
+
         return jaroDistance + (0.1 * prefixLength * (1 - jaroDistance))
     }
 
@@ -324,13 +340,13 @@ class ExerciseMatchingService(
     ): Double {
         val equipment1 = exerciseEquipmentMap[exercise1Name]?.map { it.equipmentName }?.toSet() ?: emptySet()
         val equipment2 = exerciseEquipmentMap[exercise2Name]?.map { it.equipmentName }?.toSet() ?: emptySet()
-        
+
         if (equipment1.isEmpty() && equipment2.isEmpty()) return 1.0
         if (equipment1.isEmpty() || equipment2.isEmpty()) return 0.0
-        
+
         val intersection = equipment1.intersect(equipment2).size
         val union = equipment1.size + equipment2.size - intersection
-        
+
         return if (union == 0) 0.0 else intersection.toDouble() / union
     }
 
@@ -344,13 +360,13 @@ class ExerciseMatchingService(
     ): Double {
         val muscles1 = exerciseMuscleMap[exercise1Name]?.map { it.muscleName }?.toSet() ?: emptySet()
         val muscles2 = exerciseMuscleMap[exercise2Name]?.map { it.muscleName }?.toSet() ?: emptySet()
-        
+
         if (muscles1.isEmpty() && muscles2.isEmpty()) return 1.0
         if (muscles1.isEmpty() || muscles2.isEmpty()) return 0.0
-        
+
         val intersection = muscles1.intersect(muscles2).size
         val union = muscles1.size + muscles2.size - intersection
-        
+
         return if (union == 0) 0.0 else intersection.toDouble() / union
     }
 
@@ -362,20 +378,21 @@ class ExerciseMatchingService(
         referenceExercise: Exercise
     ): Double {
         // Base percentage from movement type characteristics
-        var basePercentage = when (targetExercise.movementType) {
-            MovementType.SQUAT -> 0.85
-            MovementType.HINGE -> 0.80
-            MovementType.HORIZONTAL_PUSH -> 0.80
-            MovementType.VERTICAL_PUSH -> 0.75
-            MovementType.HORIZONTAL_PULL -> 0.75
-            MovementType.VERTICAL_PULL -> 0.70
-            MovementType.CORE -> 0.60
-            MovementType.LUNGE -> 0.70
-            MovementType.PLYOMETRIC -> 0.50
-            MovementType.CARRY -> 0.60
-            MovementType.ISOLATION -> 0.50
-        }
-        
+        var basePercentage =
+            when (targetExercise.movementType) {
+                MovementType.SQUAT -> 0.85
+                MovementType.HINGE -> 0.80
+                MovementType.HORIZONTAL_PUSH -> 0.80
+                MovementType.VERTICAL_PUSH -> 0.75
+                MovementType.HORIZONTAL_PULL -> 0.75
+                MovementType.VERTICAL_PULL -> 0.70
+                MovementType.CORE -> 0.60
+                MovementType.LUNGE -> 0.70
+                MovementType.PLYOMETRIC -> 0.50
+                MovementType.CARRY -> 0.60
+                MovementType.ISOLATION -> 0.50
+            }
+
         // Adjust based on exercise characteristics
         when {
             targetExercise.isUnilateral -> basePercentage *= 0.8
@@ -383,7 +400,7 @@ class ExerciseMatchingService(
             targetExercise.isUpper && referenceExercise.isUpper -> basePercentage *= 1.1
             !targetExercise.isUpper && !referenceExercise.isUpper -> basePercentage *= 1.1
         }
-        
+
         return basePercentage.coerceIn(0.1, 1.0)
     }
 

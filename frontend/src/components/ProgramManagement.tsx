@@ -14,12 +14,10 @@ import {
   DialogActions,
   TextField,
   Typography,
-  Grid,
   Chip,
   IconButton,
   Tooltip,
   Backdrop,
-  Paper,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
@@ -47,7 +45,9 @@ interface ProgramManagementProps {
 export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(new Map());
+  const [programPreferences, setProgramPreferences] = useState<Map<number, ProgramPreferences>>(
+    new Map()
+  );
   const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -112,11 +112,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     setIsCreating(true);
 
     try {
-      await createProgram(
-        formData.name,
-        formData.numDaysPerWeek,
-        user.keycloak_id
-      );
+      await createProgram(formData.name, formData.numDaysPerWeek, user.keycloak_id);
       // Reload programs to get the updated data with preferences
       loadPrograms();
     } catch {
@@ -131,7 +127,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
     try {
       await updateProgramPreferences(selectedProgram.id, formData.sessionTimeLengthInMinutes);
-      
+
       // Update the local program preferences state
       setProgramPreferences(prev => {
         const newMap = new Map(prev);
@@ -146,7 +142,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         }
         return newMap;
       });
-      
+
       setEditDialogOpen(false);
       setSelectedProgram(null);
       setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
@@ -260,9 +256,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   };
 
   if (isLoading) {
-    return (
-      <LoadingSpinner message="Loading programs..." fullHeight={false} />
-    );
+    return <LoadingSpinner message="Loading programs..." fullHeight={false} />;
   }
 
   return (
@@ -284,11 +278,16 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           const programWorkouts = getWorkoutsForProgram(program.id);
           const preferences = programPreferences.get(program.id);
           const sessionDuration = preferences?.session_time_length_in_minutes || 60;
-          
+
           return (
             <Card key={program.id} elevation={2} sx={{ borderRadius: 2 }}>
               <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                <Box
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                  sx={{ mb: 2 }}
+                >
                   <Typography variant="h6" component="h3">
                     {program.name}
                   </Typography>
@@ -332,7 +331,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                     </Tooltip>
                   </Box>
                 </Box>
-                
+
                 <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
                   <Chip
                     label={program.is_active ? 'Active' : 'Inactive'}
@@ -355,7 +354,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                     variant="outlined"
                   />
                 </Box>
-                
+
                 <Typography variant="body2" color="text.secondary">
                   Created: {formatDate(program.created_at)}
                 </Typography>

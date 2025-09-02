@@ -238,11 +238,11 @@ export function ExerciseDetails(
                   {exerciseMuscles?.map(em => {
                     const muscle = muscles.find(elem => elem.name === em.muscle_name);
                     return (
-                        <Grid size={{ xs: 12 }} key={em.muscle_name}>
-                          <Tooltip arrow={true} title={muscle?.description}>
-                            <Chip label={`${capitalizeEachWord(em.muscle_name)}`} />
-                          </Tooltip>
-                        </Grid>
+                      <Grid size={{ xs: 12 }} key={em.muscle_name}>
+                        <Tooltip arrow={true} title={muscle?.description}>
+                          <Chip label={`${capitalizeEachWord(em.muscle_name)}`} />
+                        </Tooltip>
+                      </Grid>
                     );
                   })}
                 </Grid>

@@ -59,7 +59,10 @@ class ProgrammedWorkoutDALTest {
         StepVerifier.create(result).expectNext(programmedWorkoutList).verifyComplete()
         verify(
             postgresClient
-        ).select<ProgrammedWorkout>("SELECT * FROM programmed_workout WHERE program_id = $1 ORDER BY day_number", programmedWorkout.programId)
+        ).select<ProgrammedWorkout>(
+            "SELECT * FROM programmed_workout WHERE program_id = $1 ORDER BY day_number",
+            programmedWorkout.programId
+        )
     }
 
     @Test

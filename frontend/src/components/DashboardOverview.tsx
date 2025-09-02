@@ -1,21 +1,32 @@
-import { default as CalendarTodayIcon } from '@mui/icons-material/CalendarToday';
-import { default as FitnessCenterIcon } from '@mui/icons-material/FitnessCenter';
-import { default as ShowChartIcon } from '@mui/icons-material/ShowChart';
-import { default as TrendingUpIcon } from '@mui/icons-material/TrendingUp';
 import { Box, Card, CardContent, Grid, Typography, Chip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ConjugateProgression } from './ConjugateProgression';
-import { getPrograms } from '../api/program';
-import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
-import type { User, Program, UserOneRepMax, ProgrammedWorkout, Exercise, ProgramWithWorkouts, ProgrammedWorkoutWithStages, WorkoutStageWithExercises, ProgrammedExerciseWithSetSchemes, SetScheme } from '../api/types';
+import { getPrograms } from '../api/program';
+import { getProgrammedWorkouts } from '../api/programmedWorkout';
+import type {
+  User,
+  Program,
+  UserOneRepMax,
+  Exercise,
+  ProgramWithWorkouts,
+  ProgrammedWorkoutWithStages,
+  WorkoutStageWithExercises,
+  ProgrammedExerciseWithSetSchemes,
+  SetScheme,
+  UserDataExport,
+} from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { formatDate, categorizeExerciseVolume, replaceUnderscoresWithSpaces } from '../common/utils';
-import { LoadingSpinner } from './LoadingSpinner';
+import {
+  formatDate,
+  categorizeExerciseVolume,
+  replaceUnderscoresWithSpaces,
+} from '../common/utils';
 
 interface DashboardOverviewProps {
   user: User;
@@ -34,9 +45,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [workouts, setWorkouts] = useState<ProgrammedWorkout[]>([]);
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,7 +62,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         setIsLoading(true);
 
         // Load all dashboard data in parallel
-        const [programsData, workoutsData, oneRepMaxesData, dataExport] = await Promise.all([
+        const [programsData, , oneRepMaxesData, dataExport] = await Promise.all([
           getPrograms(),
           getProgrammedWorkouts(),
           getUserOneRepMaxes(user.keycloak_id),
@@ -60,7 +70,6 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         ]);
 
         setPrograms(programsData);
-        setWorkouts(workoutsData);
         setOneRepMaxes(oneRepMaxesData);
         setUserData(dataExport);
 
@@ -110,7 +119,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
     return allWorkouts
       .map(workoutData => {
-        let totalVolume = 0;
+        const totalVolume = 0;
         let maxEffortVolume = 0;
         let dynamicEffortVolume = 0;
         let accessoryVolume = 0;
@@ -157,24 +166,20 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   }, [userData, exerciseData]);
 
   if (isLoading) {
-    return (
-      <LoadingSpinner message="Loading dashboard..." fullHeight={false} />
-    );
+    return <LoadingSpinner message="Loading dashboard..." fullHeight={false} />;
   }
 
   const activeProgram = programs.find(program => program.is_active);
-  const activeProgramWorkouts = activeProgram
-    ? workouts.filter(workout => workout.program_id === activeProgram.id)
-    : [];
 
   // Calculate actual total workouts across all programs
-  const totalWorkouts = userData?.training_programs?.reduce(
-    (total: number, program: ProgramWithWorkouts) => total + program.workouts.length,
-    0
-  ) || 0;
+  const totalWorkouts =
+    userData?.training_programs?.reduce(
+      (total: number, program: ProgramWithWorkouts) => total + program.workouts.length,
+      0
+    ) || 0;
 
   // Calculate current week based on actual workout count (assuming 3-4 workouts per week)
-  const currentWeek = activeProgram?.current_week_number ?? 0
+  const currentWeek = activeProgram?.current_week_number ?? 0;
 
   const recentOneRepMaxes = oneRepMaxes.slice(-5); // Last 5 1RMs
 

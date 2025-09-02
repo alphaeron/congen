@@ -91,7 +91,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
 
         val primaryExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -121,7 +121,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -357,7 +357,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -387,7 +387,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -399,7 +399,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(mock()))
-        
+
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
@@ -496,7 +496,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Lower")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Upper")
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -526,7 +526,7 @@ class ThreeDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(

@@ -1,7 +1,5 @@
-import { Box, Card, CardContent, Grid, Typography, TextField, InputAdornment } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
-import { useSnackbar } from 'notistack';
-import React, { useEffect, useState, useMemo } from 'react';
+import { Box, Card, CardContent, Grid, Typography, TextField, InputAdornment } from '@mui/material';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -9,16 +7,20 @@ import {
   useReactTable,
   flexRender,
 } from '@tanstack/react-table';
+import { useSnackbar } from 'notistack';
+import React, { useEffect, useState, useMemo } from 'react';
 
 import { LineChart } from './LineChart';
-import { PieChart } from './PieChart';
 import { LoadingSpinner } from './LoadingSpinner';
+import { PieChart } from './PieChart';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import type {
   User,
   Exercise,
   UserOneRepMax,
+  UserDataExport,
+  ProgramWithWorkouts,
 } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
@@ -42,11 +44,13 @@ interface ConjugateProgressionProps {
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
   const { enqueueSnackbar } = useSnackbar();
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
   const [globalFilter, setGlobalFilter] = useState('');
 
   // Table configuration
@@ -119,7 +123,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
           getUserOneRepMaxes(user.keycloak_id),
           getUserWeightUnitPreferences(user.keycloak_id),
         ]);
-        
+
         setUserData(dataExport);
         setOneRepMaxes(oneRepMaxesData);
         setWeightUnitPreferences(weightUnitData || []);
@@ -127,10 +131,10 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
         // Fetch exercise data for all unique exercises
         // Handle case where user has no training programs (empty array)
         const uniqueExercises = new Set<string>();
-        dataExport.training_programs?.forEach((program: any) => {
-          program.workouts.forEach((workout: any) => {
-            workout.stages.forEach((stage: any) => {
-              stage.exercises.forEach((exercise: any) => {
+        (dataExport.training_programs as ProgramWithWorkouts[])?.forEach(program => {
+          program.workouts.forEach(workout => {
+            workout.stages.forEach(stage => {
+              stage.exercises.forEach(exercise => {
                 uniqueExercises.add(exercise.exercise.exercise_name);
               });
             });
@@ -186,111 +190,109 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
   }
 
   return (
-    <React.Fragment>
-      <Grid container spacing={3}>
-        {/* Volume Tracking Chart */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <LineChart
-            userDataExport={userData}
-            exerciseData={exerciseData}
-            chartType="volume"
-            title="Volume Progression"
-            description="Total weight lifted over time (including band resistance)"
-            xAxisLabel="Workout Date"
-            yAxisLabel="Volume (lbs)"
-          />
-        </Grid>
-
-        {/* Exercise Category Distribution */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <PieChart
-            userDataExport={userData}
-            exerciseData={exerciseData}
-            weightUnitPreferences={weightUnitPreferences}
-            title="Exercise Distribution"
-            description="Volume by workout stage"
-          />
-        </Grid>
-
-        {/* 1RM Table and Progress Tracking */}
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Current 1RM Values
-              </Typography>
-              <TextField
-                fullWidth
-                size="small"
-                placeholder="Search exercises..."
-                value={globalFilter}
-                onChange={e => setGlobalFilter(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    {table.getHeaderGroups().map(headerGroup => (
-                      <tr key={headerGroup.id}>
-                        {headerGroup.headers.map(header => (
-                          <th
-                            key={header.id}
-                            style={{
-                              textAlign: 'left',
-                              padding: '8px',
-                              borderBottom: '1px solid #e0e0e0',
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
-                          </th>
-                        ))}
-                      </tr>
-                    ))}
-                  </thead>
-                  <tbody>
-                    {table.getRowModel().rows.map(row => (
-                      <tr key={row.id}>
-                        {row.getVisibleCells().map(cell => (
-                          <td
-                            key={cell.id}
-                            style={{
-                              padding: '8px',
-                              borderBottom: '1px solid #f0f0f0',
-                            }}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Progress Tracking Chart */}
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <LineChart
-            userDataExport={userData}
-            exerciseData={exerciseData}
-            chartType="progress"
-            title="Progress Tracking"
-            description="1RM improvements and volume progression over time"
-            xAxisLabel="Date"
-            yAxisLabel="Weight (lbs)"
-          />
-        </Grid>
+    <Grid container spacing={3}>
+      {/* Volume Tracking Chart */}
+      <Grid size={{ xs: 12, lg: 8 }}>
+        <LineChart
+          userDataExport={userData}
+          exerciseData={exerciseData}
+          chartType="volume"
+          title="Volume Progression"
+          description="Total weight lifted over time (including band resistance)"
+          xAxisLabel="Workout Date"
+          yAxisLabel="Volume (lbs)"
+        />
       </Grid>
-    </React.Fragment>
+
+      {/* Exercise Category Distribution */}
+      <Grid size={{ xs: 12, lg: 4 }}>
+        <PieChart
+          userDataExport={userData}
+          exerciseData={exerciseData}
+          weightUnitPreferences={weightUnitPreferences}
+          title="Exercise Distribution"
+          description="Volume by workout stage"
+        />
+      </Grid>
+
+      {/* 1RM Table and Progress Tracking */}
+      <Grid size={{ xs: 12, lg: 4 }}>
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Current 1RM Values
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Search exercises..."
+              value={globalFilter}
+              onChange={e => setGlobalFilter(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ mb: 2 }}
+            />
+            <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  {table.getHeaderGroups().map(headerGroup => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map(header => (
+                        <th
+                          key={header.id}
+                          style={{
+                            textAlign: 'left',
+                            padding: '8px',
+                            borderBottom: '1px solid #e0e0e0',
+                            fontWeight: 'bold',
+                          }}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map(row => (
+                    <tr key={row.id}>
+                      {row.getVisibleCells().map(cell => (
+                        <td
+                          key={cell.id}
+                          style={{
+                            padding: '8px',
+                            borderBottom: '1px solid #f0f0f0',
+                          }}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Box>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* Progress Tracking Chart */}
+      <Grid size={{ xs: 12, lg: 8 }}>
+        <LineChart
+          userDataExport={userData}
+          exerciseData={exerciseData}
+          chartType="progress"
+          title="Progress Tracking"
+          description="1RM improvements and volume progression over time"
+          xAxisLabel="Date"
+          yAxisLabel="Weight (lbs)"
+        />
+      </Grid>
+    </Grid>
   );
 };

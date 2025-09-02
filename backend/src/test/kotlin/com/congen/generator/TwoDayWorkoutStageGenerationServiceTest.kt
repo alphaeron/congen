@@ -95,7 +95,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -125,7 +125,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -137,7 +137,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(mock()))
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -167,7 +167,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -179,7 +179,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(mock()))
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -209,7 +209,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -318,7 +318,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Lower")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Upper")
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -348,7 +348,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -360,7 +360,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(mock()))
-        
+
         // Mock the selectConditioningExercise call
         whenever(
             exerciseSelectionService.selectExercise(
@@ -372,7 +372,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 movementBalanceState = isNull()
             )
         ).thenReturn(Mono.just(secondaryExercise))
-        
+
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),
@@ -524,7 +524,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
-        
+
         // Mock Prilepin guidelines service methods
         whenever(
             prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
@@ -554,7 +554,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 totalRepsRange = any()
             )
         ).thenReturn(90)
-        
+
         // Mock weight selection service
         whenever(
             weightSelectionService.getTargetWeight(
@@ -587,7 +587,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(mock()))
-        
+
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = eq(userExercisePool),

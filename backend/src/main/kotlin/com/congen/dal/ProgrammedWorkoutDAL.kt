@@ -93,23 +93,27 @@ class ProgrammedWorkoutDAL(
         keyStrategy = CacheKeyStrategy.STANDARD,
         entityName = "programmed_workout"
     )
-    fun selectProgrammedWorkoutsByProgramId(programId: Long, weekNumber: Int? = null): Mono<List<ProgrammedWorkout>> {
+    fun selectProgrammedWorkoutsByProgramId(
+        programId: Long,
+        weekNumber: Int? = null
+    ): Mono<List<ProgrammedWorkout>> {
         logger.debug("Selecting programmed workouts by program id: {} and week: {}", programId, weekNumber)
-        
-        val query = if (weekNumber != null) {
-            """
-            SELECT pw.*
-            FROM programmed_workout pw
-            JOIN program p ON pw.program_id = p.id
-            JOIN program_preferences pp ON p.id = pp.program_id
-            WHERE pw.program_id = $1 
-            AND CEIL(pw.day_number::float / pp.program_days_per_week) = $2
-            ORDER BY pw.day_number
-            """.trimIndent()
-        } else {
-            "SELECT * FROM programmed_workout WHERE program_id = $1 ORDER BY day_number"
-        }
-        
+
+        val query =
+            if (weekNumber != null) {
+                """
+                SELECT pw.*
+                FROM programmed_workout pw
+                JOIN program p ON pw.program_id = p.id
+                JOIN program_preferences pp ON p.id = pp.program_id
+                WHERE pw.program_id = $1
+                AND CEIL(pw.day_number::float / pp.program_days_per_week) = $2
+                ORDER BY pw.day_number
+                """.trimIndent()
+            } else {
+                "SELECT * FROM programmed_workout WHERE program_id = $1 ORDER BY day_number"
+            }
+
         return if (weekNumber != null) {
             postgresClient.select(query, programId, weekNumber)
         } else {

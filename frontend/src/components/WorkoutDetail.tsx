@@ -1,14 +1,9 @@
-import { Notes as NotesIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
 import {
-  Box,
-  Typography,
-  Alert,
-  IconButton,
-  Tooltip,
-  Paper,
-  useTheme,
-  Grid,
-} from '@mui/material';
+  Notes as NotesIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+} from '@mui/icons-material';
+import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid } from '@mui/material';
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,17 +13,16 @@ import {
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
+import { ChordChart } from './ChordChart';
 import { LoadingSpinner } from './LoadingSpinner';
 import { SunburstChart } from './SunburstChart';
-import { ChordChart } from './ChordChart';
-import { getUserDataExport } from '../api/gdpr';
-import { getExercises } from '../api/exercise';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
+import { getUserDataExport } from '../api/gdpr';
+import type { UserDataExport, ExerciseMuscle } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
-import type { UserDataExport, Exercise, ExerciseMuscle } from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { useAuth } from '../contexts/AuthContext';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
+import { useAuth } from '../contexts/AuthContext';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -79,9 +73,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
-  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
+
   const [exerciseMuscleData, setExerciseMuscleData] = useState<Map<string, string[]>>(new Map());
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
 
   useEffect(() => {
     const loadWorkoutDetails = async () => {
@@ -93,22 +89,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         setUserData(dataExport);
 
         // Load data needed for the chart
-        const [
-          exercisesData,
-          exerciseMuscleData,
-          weightUnitPreferencesData,
-        ] = await Promise.all([
-          getExercises(),
+        const [exerciseMuscleData, weightUnitPreferencesData] = await Promise.all([
           getExerciseMuscle(),
           getUserWeightUnitPreferences(user?.keycloak_id || ''),
         ]);
-
-        // Convert exercise data to Map
-        const exerciseMap = new Map<string, Exercise>();
-        exercisesData.forEach(exercise => {
-          exerciseMap.set(exercise.name, exercise);
-        });
-        setExerciseData(exerciseMap);
 
         // Convert exercise muscle data to Map
         const muscleMap = new Map<string, string[]>();
@@ -175,7 +159,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
     workoutData.stages.forEach(stageData => {
       const isCollapsed = collapsedStages.has(stageData.stage.id);
-      
+
       // Add stage header row
       rows.push({
         id: `stage-${stageData.stage.id}`,
@@ -218,7 +202,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             sets: totalSets,
             reps: reps || undefined,
             tempo: tempo !== '-' ? tempo : undefined,
-            weight: weight ? formatWeightWithUnit(weight, weightUnitPreference?.preferred_unit) : undefined,
+            weight: weight
+              ? formatWeightWithUnit(weight, weightUnitPreference?.preferred_unit)
+              : undefined,
             rest: rest ? `${rest}s` : undefined,
             notes: '-',
             exerciseNotes: exerciseData.exercise.notes,
@@ -241,12 +227,12 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           if (row.original.type === 'exercise') {
             return (
               <Box display="flex" alignItems="center" gap={1}>
-                <Typography 
-                  variant="body2" 
-                  sx={{ 
+                <Typography
+                  variant="body2"
+                  sx={{
                     wordWrap: 'break-word',
                     whiteSpace: 'normal',
-                    lineHeight: 1.4
+                    lineHeight: 1.4,
                   }}
                 >
                   {row.original.exerciseName}
@@ -338,12 +324,12 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         cell: ({ row }) => {
           if (row.original.type === 'exercise') {
             return (
-              <Typography 
-                variant="body2" 
-                sx={{ 
+              <Typography
+                variant="body2"
+                sx={{
                   wordWrap: 'break-word',
                   whiteSpace: 'normal',
-                  lineHeight: 1.4
+                  lineHeight: 1.4,
                 }}
               >
                 {row.original.notes}
@@ -370,9 +356,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   });
 
   if (isLoading) {
-    return (
-      <LoadingSpinner message="Loading workout details..." fullHeight={false} />
-    );
+    return <LoadingSpinner message="Loading workout details..." fullHeight={false} />;
   }
 
   if (!workoutData) {
@@ -386,68 +370,52 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
             <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>
-              <table style={{ 
-                width: '100%', 
-                borderCollapse: 'collapse',
-                tableLayout: 'fixed'
-              }}>
-            {/* Table Column Headers */}
-            <thead
-              style={{
-                position: 'sticky',
-                top: 0,
-                zIndex: 999,
-                backgroundColor: theme.palette.background.paper,
-                borderBottom: 'none',
-              }}
-            >
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <th
-                      key={header.id}
-                      style={{
-                        padding: '12px 8px',
-                        textAlign: 'left',
-                        fontWeight: 'bold',
-                        borderBottom: `1px solid ${theme.palette.divider}`,
-                        backgroundColor: theme.palette.background.paper,
-                        color: theme.palette.text.primary,
-                        width: `${(header.getSize() / 860) * 100}%`, // Total approximate width of all columns
-                        minWidth: `${(header.column.columnDef.minSize || 50) / 860 * 100}%`,
-                      }}
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(row => (
-                <tr
-                  key={row.id}
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  tableLayout: 'fixed',
+                }}
+              >
+                {/* Table Column Headers */}
+                <thead
                   style={{
-                    backgroundColor:
-                      row.original.type === 'stage'
-                        ? theme.palette.mode === 'dark'
-                          ? theme.palette.grey[800]
-                          : theme.palette.grey[100]
-                        : theme.palette.background.paper,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 999,
+                    backgroundColor: theme.palette.background.paper,
+                    borderBottom: 'none',
                   }}
                 >
-                  {row.original.type === 'stage' ? (
-                    // Stage header row - spans all columns with collapse functionality
-                    <td
-                      colSpan={columns.length}
+                  {table.getHeaderGroups().map(headerGroup => (
+                    <tr key={headerGroup.id}>
+                      {headerGroup.headers.map(header => (
+                        <th
+                          key={header.id}
+                          style={{
+                            padding: '12px 8px',
+                            textAlign: 'left',
+                            fontWeight: 'bold',
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            backgroundColor: theme.palette.background.paper,
+                            color: theme.palette.text.primary,
+                            width: `${(header.getSize() / 860) * 100}%`, // Total approximate width of all columns
+                            minWidth: `${((header.column.columnDef.minSize || 50) / 860) * 100}%`,
+                          }}
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </th>
+                      ))}
+                    </tr>
+                  ))}
+                </thead>
+                <tbody>
+                  {table.getRowModel().rows.map(row => (
+                    <tr
+                      key={row.id}
                       style={{
-                        padding: '12px 16px',
-                        textAlign: 'left',
-                        fontWeight: 'bold',
-                        color: theme.palette.primary.main,
                         backgroundColor:
                           row.original.type === 'stage'
                             ? theme.palette.mode === 'dark'
@@ -455,52 +423,72 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                               : theme.palette.grey[100]
                             : theme.palette.background.paper,
                         borderBottom: `1px solid ${theme.palette.divider}`,
-                        cursor: 'pointer',
                       }}
-                      onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
                     >
-                      <Box display="flex" alignItems="center" justifyContent="space-between">
-                        <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
-                          {row.original.stageName}
-                        </Typography>
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            row.original.stageId && toggleStage(row.original.stageId);
+                      {row.original.type === 'stage' ? (
+                        // Stage header row - spans all columns with collapse functionality
+                        <td
+                          colSpan={columns.length}
+                          style={{
+                            padding: '12px 16px',
+                            textAlign: 'left',
+                            fontWeight: 'bold',
+                            color: theme.palette.primary.main,
+                            backgroundColor:
+                              row.original.type === 'stage'
+                                ? theme.palette.mode === 'dark'
+                                  ? theme.palette.grey[800]
+                                  : theme.palette.grey[100]
+                                : theme.palette.background.paper,
+                            borderBottom: `1px solid ${theme.palette.divider}`,
+                            cursor: 'pointer',
                           }}
-                          sx={{ color: theme.palette.primary.main }}
+                          onClick={() => row.original.stageId && toggleStage(row.original.stageId)}
                         >
-                          {row.original.stageId && collapsedStages.has(row.original.stageId) ? (
-                            <ExpandMoreIcon />
-                          ) : (
-                            <ExpandLessIcon />
-                          )}
-                        </IconButton>
-                      </Box>
-                    </td>
-                  ) : (
-                    // Exercise row - normal columns
-                    row.getVisibleCells().map(cell => (
-                      <td
-                        key={cell.id}
-                        style={{
-                          padding: '8px',
-                          borderBottom: `1px solid ${theme.palette.divider}`,
-                          width: `${(cell.column.getSize() / 860) * 100}%`, // Total approximate width of all columns
-                          minWidth: `${(cell.column.columnDef.minSize || 50) / 860 * 100}%`,
-                          color: theme.palette.text.primary,
-                          wordWrap: 'break-word',
-                          overflow: 'hidden',
-                        }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))
-                  )}
-                </tr>
-              ))}
-            </tbody>
+                          <Box display="flex" alignItems="center" justifyContent="space-between">
+                            <Typography variant="h6" color="primary" sx={{ fontWeight: 'bold' }}>
+                              {row.original.stageName}
+                            </Typography>
+                            <IconButton
+                              size="small"
+                              onClick={e => {
+                                e.stopPropagation();
+                                if (row.original.stageId) {
+                                  toggleStage(row.original.stageId);
+                                }
+                              }}
+                              sx={{ color: theme.palette.primary.main }}
+                            >
+                              {row.original.stageId && collapsedStages.has(row.original.stageId) ? (
+                                <ExpandMoreIcon />
+                              ) : (
+                                <ExpandLessIcon />
+                              )}
+                            </IconButton>
+                          </Box>
+                        </td>
+                      ) : (
+                        // Exercise row - normal columns
+                        row.getVisibleCells().map(cell => (
+                          <td
+                            key={cell.id}
+                            style={{
+                              padding: '8px',
+                              borderBottom: `1px solid ${theme.palette.divider}`,
+                              width: `${(cell.column.getSize() / 860) * 100}%`, // Total approximate width of all columns
+                              minWidth: `${((cell.column.columnDef.minSize || 50) / 860) * 100}%`,
+                              color: theme.palette.text.primary,
+                              wordWrap: 'break-word',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </Box>
           </Paper>
@@ -508,18 +496,17 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
         {/* Charts - 1/3 width */}
         <Grid size={{ xs: 12, lg: 4 }}>
-          <Box sx={{ mt: 3,display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ mt: 3, display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Exercise Volume Hierarchy Chart */}
             <SunburstChart
               workoutData={workoutData}
-              exerciseData={exerciseData}
               exerciseMuscleData={exerciseMuscleData}
               weightUnitPreferences={weightUnitPreferences}
               selectedExercise="all"
             />
             {/* Exercise Correlations Chord Chart */}
             <ChordChart
-              workoutData={workoutData}
+              workoutData={workoutData as unknown as Record<string, unknown>}
               title="Exercise Support Correlation"
               height={300}
             />

@@ -3,17 +3,14 @@ import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsivePie } from '@nivo/pie';
 import React, { useState, useMemo } from 'react';
 
-import { createCongenNivoTheme } from '../theme/nivoTheme';
-import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
-import { categorizeExerciseVolume } from '../common/utils';
-import { replaceUnderscoresWithSpaces } from '../common/utils';
+import type {
+  UserDataExport,
+  Exercise,
+  ProgrammedWorkoutWithStages,
+  WorkoutStageWithExercises,
+} from '../api/types';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-
-interface PieData {
-  id: string;
-  label: string;
-  value: number;
-}
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface PieChartProps {
   userDataExport: UserDataExport | null;
@@ -26,7 +23,7 @@ interface PieChartProps {
 
 /**
  * Pie Chart component for displaying exercise distribution.
- * 
+ *
  * This component accepts raw workout data and handles all data transformations
  * internally to calculate exercise distribution and display it in a pie chart.
  *
@@ -39,7 +36,6 @@ interface PieChartProps {
  */
 export const PieChart: React.FC<PieChartProps> = ({
   userDataExport,
-  exerciseData,
   weightUnitPreferences = [],
   title = 'Exercise Distribution',
   description = 'Volume by workout stage',
@@ -53,7 +49,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   const workouts = useMemo(() => {
     if (!userDataExport?.training_programs?.length) return [];
 
-    const allWorkouts: any[] = [];
+    const allWorkouts: ProgrammedWorkoutWithStages[] = [];
     userDataExport.training_programs.forEach(program => {
       allWorkouts.push(...program.workouts);
     });
@@ -68,13 +64,14 @@ export const PieChart: React.FC<PieChartProps> = ({
     const stageVolumeMap = new Map<string, number>();
 
     workouts.forEach(workoutData => {
-      workoutData.stages.forEach((stage: any) => {
-        const stageName = stage.stage.name || 'Unknown Stage';
+      (workoutData.stages as WorkoutStageWithExercises[]).forEach(stage => {
+        const stageName =
+          ((stage.stage as Record<string, unknown>).name as string) || 'Unknown Stage';
 
-        stage.exercises.forEach((exerciseWithSchemes: any) => {
+        stage.exercises.forEach(exerciseWithSchemes => {
           // Calculate volume for this exercise in this stage
           let stageVolume = 0;
-          exerciseWithSchemes.set_schemes.forEach((setScheme: any) => {
+          exerciseWithSchemes.set_schemes.forEach(setScheme => {
             const weight = setScheme.performed_weight || setScheme.target_weight || 0;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count || 0;
             const bandWeight = setScheme.band_weight_lbs
@@ -137,19 +134,6 @@ export const PieChart: React.FC<PieChartProps> = ({
     return chartData.filter(item => selectedItems.includes(item.id));
   }, [chartData, selectedItems]);
 
-  const handleLegendClick = (data: { id?: string; label?: string }) => {
-    const itemId = data.id || data.label;
-    if (itemId) {
-      setSelectedItems(prev => {
-        if (prev.includes(itemId)) {
-          return prev.filter(id => id !== itemId);
-        } else {
-          return [...prev, itemId];
-        }
-      });
-    }
-  };
-
   // Don't render if no data
   if (!chartData.length) {
     return null;
@@ -193,8 +177,8 @@ export const PieChart: React.FC<PieChartProps> = ({
                   border: nivoTheme.tooltip.container.border,
                   whiteSpace: 'nowrap',
                   fontSize: nivoTheme.tooltip.container.fontSize,
-                  fontFamily: nivoTheme.tooltip.container.fontFamily,
-                  lineHeight: nivoTheme.tooltip.container.lineHeight,
+                  fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+                  lineHeight: '1.4',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
@@ -230,8 +214,9 @@ export const PieChart: React.FC<PieChartProps> = ({
                 itemOpacity: 1,
                 symbolSize: 18,
                 symbolShape: 'circle',
-                onClick: (datum: any) => {
-                  const itemId = typeof datum.id === 'string' ? datum.id : datum.label;
+                onClick: (datum: { id?: string | number; label?: string | number }) => {
+                  const itemId =
+                    typeof datum.id === 'string' ? datum.id : String(datum.label || '');
                   if (itemId) {
                     setSelectedItems(prev => {
                       if (prev.includes(itemId)) {

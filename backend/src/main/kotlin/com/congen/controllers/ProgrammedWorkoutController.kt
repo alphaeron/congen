@@ -239,25 +239,31 @@ class ProgrammedWorkoutController(
                         }
                     consentUserIdMono.flatMap { ownerId ->
                         gdprComplianceService.withUserConsent(ownerId) {
-                            val workoutMono = if (week != null) {
-                                // Validate week number
-                                if (week < 1) {
-                                    Mono.error(IllegalArgumentException("Week number must be at least 1, got: $week"))
+                            val workoutMono =
+                                if (week != null) {
+                                    // Validate week number
+                                    if (week < 1) {
+                                        Mono.error(IllegalArgumentException("Week number must be at least 1, got: $week"))
+                                    } else {
+                                        programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId, week)
+                                    }
                                 } else {
-                                    programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId, week)
+                                    programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
                                 }
-                            } else {
-                                programmedWorkoutService.selectProgrammedWorkoutsByProgramId(programId)
-                            }
-                            
+
                             workoutMono.map { programmedWorkouts ->
                                 val weekDescription = if (week != null) " for week $week" else ""
-                                logger.debug("Found {} programmed workouts for program: {}{}", programmedWorkouts.size, programId, weekDescription)
+                                logger.debug(
+                                    "Found {} programmed workouts for program: {}{}",
+                                    programmedWorkouts.size,
+                                    programId,
+                                    weekDescription
+                                )
                                 ResponseEntity.ok(programmedWorkouts)
                             }
-                            .doOnError { e ->
-                                logger.error("Error getting programmed workouts for program: {}", programId, e)
-                            }
+                                .doOnError { e ->
+                                    logger.error("Error getting programmed workouts for program: {}", programId, e)
+                                }
                         }
                     }
                 } else {

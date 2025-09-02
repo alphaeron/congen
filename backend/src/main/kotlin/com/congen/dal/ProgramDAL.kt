@@ -471,7 +471,10 @@ class ProgramDAL(
         invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
         entityName = "program"
     )
-    private fun deactivateOtherProgramsForUser(userId: String, excludeProgramId: Long): Mono<Unit> {
+    private fun deactivateOtherProgramsForUser(
+        userId: String,
+        excludeProgramId: Long
+    ): Mono<Unit> {
         return postgresClient.updateLiteral<Unit>(
             "UPDATE program SET is_active=false, updated_at=NOW() WHERE user_id=$1 AND id != $2",
             Unit::class,

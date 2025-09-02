@@ -9,14 +9,14 @@ jest.mock('react-oidc-context', () => ({
     user: {
       keycloak_id: 'test-user-id',
       email: 'test@example.com',
-      name: 'Test User'
+      name: 'Test User',
     },
     isAuthenticated: true,
     isLoading: false,
     signinRedirect: jest.fn(),
     signoutRedirect: jest.fn(),
-    removeUser: jest.fn()
-  })
+    removeUser: jest.fn(),
+  }),
 }));
 
 import { WorkoutDetail } from './WorkoutDetail';
@@ -190,7 +190,7 @@ describe('WorkoutDetail', () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
 
-              expect(screen.getByText('135 LBS')).toBeInTheDocument();
+      expect(screen.getByText('135 LBS')).toBeInTheDocument();
       expect(screen.getByText('8')).toBeInTheDocument();
       expect(screen.getAllByText('-')).toHaveLength(2); // Rest and Notes show as "-" when null
       expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets

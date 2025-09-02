@@ -169,7 +169,7 @@ class UserExercisePool(
         if (exercises.isEmpty()) {
             return Mono.just(emptyList())
         }
-        
+
         // If no target muscles specified, return all exercises (for primary exercises)
         if (targetMuscles.isEmpty()) {
             return Mono.just(exercises)

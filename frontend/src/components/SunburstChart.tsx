@@ -4,10 +4,10 @@ import { Box, useTheme, Typography, IconButton, Card, CardContent, Tooltip } fro
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
-import { createCongenNivoTheme } from '../theme/nivoTheme';
-import type { Exercise, ExerciseMuscle } from '../api/types';
-import { getUserWeightUnitPreferences, WeightUnit } from '../api/userWeightUnitPreference';
+import type { ProgrammedWorkoutWithStages, WorkoutStageWithExercises } from '../api/types';
+import { WeightUnit } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
+import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 // Custom layer to display total volume in the center
 interface CenterMetricProps {
@@ -77,8 +77,7 @@ interface SunburstData {
 }
 
 interface SunburstChartProps {
-  workoutData: any; // Single workout data
-  exerciseData: Map<string, Exercise>;
+  workoutData: ProgrammedWorkoutWithStages; // Single workout data
   exerciseMuscleData: Map<string, string[]>;
   weightUnitPreferences: UserWeightUnitPreference[];
   selectedExercise: string;
@@ -99,7 +98,6 @@ interface SunburstChartProps {
  */
 export const SunburstChart: React.FC<SunburstChartProps> = ({
   workoutData,
-  exerciseData,
   exerciseMuscleData,
   weightUnitPreferences,
   selectedExercise,
@@ -134,14 +132,15 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
     if (!workouts.length) return map;
 
     workouts.forEach(workout => {
-      workout.stages?.forEach((stage: any) => {
-        stage.exercises?.forEach((exercise: any) => {
-          const exerciseName = exercise.exercise.exercise_name;
+      (workout.stages as WorkoutStageWithExercises[])?.forEach(stage => {
+        stage.exercises?.forEach(exercise => {
+          const exerciseName = (exercise.exercise as Record<string, unknown>)
+            .exercise_name as string;
           const existing = map.get(exerciseName) || { totalVolume: 0 };
 
           // Calculate volume from set schemes with weight unit conversion
           let exerciseVolume = 0;
-          exercise.set_schemes?.forEach((setScheme: any) => {
+          exercise.set_schemes?.forEach(setScheme => {
             // Use performed values if available, otherwise use target values
             const weight = setScheme.performed_weight || setScheme.target_weight;
             const reps = setScheme.performed_rep_count || setScheme.target_rep_count;
@@ -276,12 +275,14 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
   }
 
   return (
-    <Card sx={{ 
-      '&:hover': {
-        transform: 'none',
-        boxShadow: 'none'
-      }
-    }}>
+    <Card
+      sx={{
+        '&:hover': {
+          transform: 'none',
+          boxShadow: 'none',
+        },
+      }}
+    >
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <ShowChartIcon color="primary" />
@@ -289,9 +290,9 @@ export const SunburstChart: React.FC<SunburstChartProps> = ({
             <Typography variant="h6">Exercise Volume Hierarchy</Typography>
           </Tooltip>
         </Box>
-        
+
         {/* Navigation */}
-        <Box sx={{ display: 'flex', alignItems: 'center'}}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton onClick={handleHomeClick} size="small" title="Reset chart">
             <RefreshIcon />
           </IconButton>

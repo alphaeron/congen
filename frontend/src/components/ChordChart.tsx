@@ -4,33 +4,26 @@ import { ResponsiveChord } from '@nivo/chord';
 import React, { useMemo } from 'react';
 
 import { createCongenNivoTheme } from '../theme/nivoTheme';
-import type { UserDataExport, ProgramWithWorkouts } from '../api/types';
-
-interface WorkoutData {
-  workout: any;
-  stages: WorkoutStageWithExercises[];
-}
 
 interface WorkoutStageWithExercises {
-  stage: any;
+  stage: Record<string, unknown>;
   exercises: ProgrammedExerciseWithSetSchemes[];
 }
 
 interface ProgrammedExerciseWithSetSchemes {
-  exercise: any;
-  set_schemes: any[];
+  exercise: Record<string, unknown>;
+  set_schemes: Record<string, unknown>[];
 }
 
 interface ChordChartProps {
-  workoutData: any; // Single workout data
+  workoutData: Record<string, unknown>; // Single workout data
   title?: string;
-  description?: string;
   height?: number;
 }
 
 /**
  * Chord Chart component for displaying exercise correlations.
- * 
+ *
  * This component accepts single workout data and handles all data transformations
  * internally to calculate exercise correlations and display them in a chord diagram.
  *
@@ -43,7 +36,6 @@ interface ChordChartProps {
 export const ChordChart: React.FC<ChordChartProps> = ({
   workoutData,
   title = 'Exercise Correlations',
-  description = 'Exercise pairing patterns in your workouts',
   height = 400,
 }) => {
   const theme = useTheme();
@@ -64,9 +56,13 @@ export const ChordChart: React.FC<ChordChartProps> = ({
     workouts.forEach(workoutData => {
       const workoutExercises = new Set<string>();
 
-      workoutData.stages.forEach((stage: any) => {
-        stage.exercises.forEach((exerciseWithSchemes: any) => {
-          workoutExercises.add(exerciseWithSchemes.exercise.exercise_name);
+      (workoutData.stages as WorkoutStageWithExercises[]).forEach(stage => {
+        stage.exercises.forEach(exerciseWithSchemes => {
+          const exerciseName = (exerciseWithSchemes.exercise as Record<string, unknown>)
+            .exercise_name;
+          if (typeof exerciseName === 'string') {
+            workoutExercises.add(exerciseName);
+          }
         });
       });
 
@@ -118,12 +114,14 @@ export const ChordChart: React.FC<ChordChartProps> = ({
   }
 
   return (
-    <Card sx={{ 
-      '&:hover': {
-        transform: 'none',
-        boxShadow: 'none'
-      }
-    }}>
+    <Card
+      sx={{
+        '&:hover': {
+          transform: 'none',
+          boxShadow: 'none',
+        },
+      }}
+    >
       <CardContent>
         <Box display="flex" alignItems="center" gap={1} sx={{ mb: 2 }}>
           <TrendingUpIcon color="info" />

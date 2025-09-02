@@ -7,9 +7,7 @@ import type { ProgramPreferences } from './types';
  * @param programId The ID of the program
  * @returns Promise containing the program preferences
  */
-export const getProgramPreferences = async (
-  programId: number
-): Promise<ProgramPreferences> => {
+export const getProgramPreferences = async (programId: number): Promise<ProgramPreferences> => {
   return REQUEST({
     method: 'GET',
     url: `/program_preferences/${programId}`,
