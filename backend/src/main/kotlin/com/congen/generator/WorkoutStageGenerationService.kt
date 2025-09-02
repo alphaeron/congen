@@ -149,6 +149,7 @@ abstract class WorkoutStageGenerationService(
      * @param workout The programmed workout
      * @param exercise The primary exercise
      * @param setSchemes The set schemes for the exercise
+     * @param userId The user ID for weight unit preferences
      * @return Mono<Void> indicating completion
      */
     protected fun createPrimaryStage(
@@ -187,6 +188,7 @@ abstract class WorkoutStageGenerationService(
      * @param workout The programmed workout
      * @param exercise The secondary exercise
      * @param setSchemes The set schemes for the exercise
+     * @param userId The user ID for weight unit preferences
      * @return Mono<Void> indicating completion
      */
     protected fun createSecondaryStage(
@@ -224,6 +226,7 @@ abstract class WorkoutStageGenerationService(
      * @param secondaryExercise The secondary exercise (can be null)
      * @param primarySetSchemes The set schemes for the primary exercise
      * @param secondarySetSchemes The set schemes for the secondary exercise
+     * @param userId The user ID for weight unit preferences
      * @return Mono<Void> indicating completion
      */
     protected fun createCombinedPrimaryStage(
@@ -235,7 +238,7 @@ abstract class WorkoutStageGenerationService(
         userId: String,
     ): Mono<Void> {
         if (primaryExercise == null && secondaryExercise == null) {
-            return Mono.empty()
+            return Mono.empty<Void>()
         }
 
         return createWorkoutStage(
@@ -315,7 +318,7 @@ abstract class WorkoutStageGenerationService(
     ): Mono<Void> {
         val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         if (numAccessoryExercises <= 0) {
-            return Mono.empty()
+            return Mono.empty<Void>()
         }
 
         return createWorkoutStage(
