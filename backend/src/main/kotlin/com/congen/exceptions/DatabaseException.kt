@@ -77,13 +77,21 @@ class DatabaseConnectionException(
  * where a specific record is expected to exist.
  *
  * @param query The SQL query that returned no results
+ * @param parameters The query parameters that were used
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 class NoResultsFoundException(
     query: String,
-) : DatabaseQueryException("No results returned from query $query")
+    parameters: Array<out Any?> = emptyArray(),
+) : DatabaseQueryException(
+    if (parameters.isNotEmpty()) {
+        "No results returned from query $query with parameters: ${parameters.contentToString()}"
+    } else {
+        "No results returned from query $query"
+    }
+)
 
 /**
  * Exception thrown when a database query returns an unexpected number of results.
@@ -93,10 +101,18 @@ class NoResultsFoundException(
  * multiple results, or when expecting multiple results but getting none.
  *
  * @param query The SQL query that returned unexpected results
+ * @param parameters The query parameters that were used
  *
  * @author Congen Development Team
  * @since 1.0.0
  */
 open class InvalidResultException(
     query: String,
-) : DatabaseQueryException("Unexpected number of results from query $query")
+    parameters: Array<out Any?> = emptyArray(),
+) : DatabaseQueryException(
+    if (parameters.isNotEmpty()) {
+        "Unexpected number of results from query $query with parameters: ${parameters.contentToString()}"
+    } else {
+        "Unexpected number of results from query $query"
+    }
+)

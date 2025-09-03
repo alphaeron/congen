@@ -262,7 +262,7 @@ class PostgresClientTest {
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is NoResultsFoundException)
-                assertEquals("No results returned from query $query", ex.message)
+                assertEquals("No results returned from query $query with parameters: [999]", ex.message)
             }
             .verify()
     }
@@ -301,7 +301,7 @@ class PostgresClientTest {
         StepVerifier.create(result)
             .expectErrorSatisfies { ex ->
                 assert(ex is InvalidResultException)
-                assertEquals("Unexpected number of results from query $query", ex.message)
+                assertEquals("Unexpected number of results from query $query with parameters: [25]", ex.message)
             }
             .verify()
     }

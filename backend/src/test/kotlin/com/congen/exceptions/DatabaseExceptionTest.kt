@@ -96,11 +96,31 @@ class DatabaseExceptionTest {
     }
 
     @Test
+    fun `should create NoResultsFoundException with query and parameters`() {
+        val query = "SELECT * FROM users WHERE id = \$1"
+        val parameters = arrayOf(999)
+
+        val exception = NoResultsFoundException(query, parameters)
+        assertEquals("No results returned from query $query with parameters: [999]", exception.message)
+        assertEquals(null, exception.cause)
+    }
+
+    @Test
     fun `should create InvalidResultException with query`() {
         val query = "SELECT * FROM users WHERE name = 'John'"
 
         val exception = InvalidResultException(query)
         assertEquals("Unexpected number of results from query $query", exception.message)
+        assertEquals(null, exception.cause)
+    }
+
+    @Test
+    fun `should create InvalidResultException with query and parameters`() {
+        val query = "SELECT * FROM users WHERE name = \$1"
+        val parameters = arrayOf("John")
+
+        val exception = InvalidResultException(query, parameters)
+        assertEquals("Unexpected number of results from query $query with parameters: [John]", exception.message)
         assertEquals(null, exception.cause)
     }
 

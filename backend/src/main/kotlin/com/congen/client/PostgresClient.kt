@@ -215,10 +215,10 @@ class PostgresClient(
             .map {
                 if (it.size > 1) {
                     logger.error("Query returned multiple results when expecting single: {}", query)
-                    throw InvalidResultException(query)
+                    throw InvalidResultException(query, queryArgs)
                 } else if (it.size == 0) {
                     logger.error("Query returned no results: {}", query)
-                    throw NoResultsFoundException(query)
+                    throw NoResultsFoundException(query, queryArgs)
                 } else {
                     logger.debug("Query returned single result: {}", query)
                     it.first()

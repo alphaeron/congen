@@ -2,17 +2,9 @@ weight unit preferences ui, equipment ui, weak muscles ui
 
 add weak muscles UI to program preferences (name target muscles in the interface)
 
-remove keycloak username, just use email?
-
 integration test all user profile sidebar functionality to make sure it works
 
-I saw an exception like the below
-com.congen.exceptions.NoResultsFoundException: No results returned from query SELECT * FROM muscle WHERE name=$1
-can we include the parameters in exceptions inside PostgresClient to make debugging easier?
-
 "how it works" on root spa with workout generation algorithm flowchart
-
-congen database for congen?  Or maybe aws terraform will handle that.
 
 https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
 
@@ -107,6 +99,8 @@ Liftalizer (video analysis) service
 Health metric visualization impact on performance page.
 
 hashicorp vault for staging/production
+
+congen database for congen?  Or maybe aws terraform will handle that.
 
 Write a gradle task to check for all component updates and apply them
 

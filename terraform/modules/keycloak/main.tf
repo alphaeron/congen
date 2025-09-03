@@ -15,7 +15,7 @@ resource "keycloak_realm" "congen" {
   display_name                   = var.realm_display_name
   display_name_html              = var.realm_display_name_html
   registration_allowed           = true
-  registration_email_as_username = false
+  registration_email_as_username = true
   edit_username_allowed          = false
   reset_password_allowed         = true
   remember_me                    = true

@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.client.KeycloakClient
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgramPreferencesDAL
@@ -69,7 +70,8 @@ class GdprComplianceService(
     private val userOneRepMaxDAL: UserOneRepMaxDAL,
     private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
     private val programDAL: ProgramDAL,
-    private val auditService: AuditService
+    private val auditService: AuditService,
+    private val keycloakClient: KeycloakClient
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GdprComplianceService::class.java)
@@ -233,6 +235,7 @@ class GdprComplianceService(
      * - Performance data and set schemes
      * - Consent records
      * - Audit logs
+     * - Keycloak user account
      *
      * @param keycloakId The user's Keycloak ID
      * @return Mono that completes when deletion is finished
@@ -247,6 +250,22 @@ class GdprComplianceService(
         ).then(
             // Delete the user which will cascade delete related data
             userDAL.deleteUserByKeycloakId(keycloakId)
+        ).then(
+            // Delete the user from Keycloak to complete the GDPR deletion
+            keycloakClient.deleteUser(keycloakId)
+                .doOnSuccess {
+                    logger.info("Successfully deleted Keycloak user: {}", keycloakId)
+                }
+                .doOnError { error ->
+                    logger.error("Failed to delete Keycloak user: {}", keycloakId, error)
+                    // Log the error but don't fail the entire operation
+                    auditService.logDataOperation(
+                        keycloakId = keycloakId,
+                        operation = "KEYCLOAK_DELETION_FAILED",
+                        dataType = "KEYCLOAK_USER",
+                        additionalInfo = "Error: ${error.message}"
+                    ).subscribe()
+                }
         ).doOnSuccess {
             logger.info("Successfully deleted all data for user: {}", keycloakId)
         }.doOnError { error ->

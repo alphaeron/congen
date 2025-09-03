@@ -1,5 +1,6 @@
 package com.congen
 
+import com.congen.client.KeycloakClient
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgramPreferencesDAL
@@ -510,6 +511,7 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
     val userWeightUnitPreferenceDAL = mock<UserWeightUnitPreferenceDAL>()
     val programDAL = mock<ProgramDAL>()
     val auditService = mock<AuditService>()
+    val keycloakClient = mock<KeycloakClient>()
 
     val gdprComplianceService =
         GdprComplianceService(
@@ -521,7 +523,8 @@ fun createGdprComplianceServiceSpy(): GdprComplianceService {
             userOneRepMaxDAL = userOneRepMaxDAL,
             userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
             programDAL = programDAL,
-            auditService = auditService
+            auditService = auditService,
+            keycloakClient = keycloakClient
         )
 
     return spy(gdprComplianceService)

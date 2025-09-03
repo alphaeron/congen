@@ -1,5 +1,6 @@
 package com.congen.service
 
+import com.congen.client.KeycloakClient
 import com.congen.dal.GdprComplianceDAL
 import com.congen.dal.ProgramDAL
 import com.congen.dal.ProgramPreferencesDAL
@@ -41,6 +42,7 @@ class GdprComplianceServiceTest {
     private lateinit var userOneRepMaxDAL: UserOneRepMaxDAL
     private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
     private lateinit var programDAL: ProgramDAL
+    private lateinit var keycloakClient: KeycloakClient
     private lateinit var gdprComplianceService: GdprComplianceService
 
     @BeforeEach
@@ -54,6 +56,7 @@ class GdprComplianceServiceTest {
         userOneRepMaxDAL = mock()
         userWeightUnitPreferenceDAL = mock()
         programDAL = mock()
+        keycloakClient = mock()
 
         gdprComplianceService =
             GdprComplianceService(
@@ -65,7 +68,8 @@ class GdprComplianceServiceTest {
                 userOneRepMaxDAL = userOneRepMaxDAL,
                 userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL,
                 programDAL = programDAL,
-                auditService = auditService
+                auditService = auditService,
+                keycloakClient = keycloakClient
             )
     }
 
@@ -211,6 +215,7 @@ class GdprComplianceServiceTest {
         val keycloakId = "test-user-id"
 
         whenever(userDAL.deleteUserByKeycloakId(keycloakId)).thenReturn(Mono.empty())
+        whenever(keycloakClient.deleteUser(keycloakId)).thenReturn(Mono.empty())
 
         StepVerifier.create(
             gdprComplianceService.deleteAllPersonalData(keycloakId)
@@ -224,6 +229,8 @@ class GdprComplianceServiceTest {
             anyOrNull(),
             anyOrNull()
         )
+        verify(userDAL).deleteUserByKeycloakId(keycloakId)
+        verify(keycloakClient).deleteUser(keycloakId)
     }
 
     @Test
@@ -253,6 +260,8 @@ class GdprComplianceServiceTest {
         val error = RuntimeException("Database error")
 
         whenever(userDAL.deleteUserByKeycloakId(keycloakId)).thenReturn(Mono.error(error))
+        // Mock KeycloakClient.deleteUser to return a successful Mono since the first operation fails
+        whenever(keycloakClient.deleteUser(keycloakId)).thenReturn(Mono.empty())
 
         StepVerifier.create(gdprComplianceService.deleteAllPersonalData(keycloakId))
             .verifyError(RuntimeException::class.java)

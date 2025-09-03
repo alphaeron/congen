@@ -96,7 +96,7 @@ abstract class BaseIntegrationTest {
             val tokenUrl = "${keycloak.authServerUrl}/realms/$realm/protocol/openid-connect/token"
 
             // Use password grant type for user operations by default
-            val username = "testuser"
+            val username = "testuser@example.com"
             val password = "testpassword"
             val requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password"
 
@@ -276,7 +276,7 @@ abstract class BaseIntegrationTest {
         val userRequest =
             """
             {
-                "username": "$username",
+                "username": "$username@test.com",
                 "email": "$username@test.com",
                 "firstName": "Test",
                 "lastName": "User",
@@ -353,10 +353,10 @@ abstract class BaseIntegrationTest {
                 val finalUsername =
                     try {
                         createTestUserInKeycloak(username, password)
-                        username
+                        "$username@test.com"
                     } catch (e: Exception) {
                         // If user creation fails, fall back to the pre-configured user
-                        "testuser"
+                        "testuser@example.com"
                     }
 
                 requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret" +
@@ -364,7 +364,7 @@ abstract class BaseIntegrationTest {
             }
             "admin" -> {
                 // Use password grant type for admin operations
-                val username = "admin"
+                val username = "admin@example.com"
                 val password = "admin"
                 requestBody = "grant_type=password&client_id=$clientId&client_secret=$clientSecret&username=$username&password=$password"
             }

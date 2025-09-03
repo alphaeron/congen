@@ -11,16 +11,16 @@ import type { Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPrefere
 
 // Mock chart components to prevent rendering issues
 jest.mock('./RadarChart', () => ({
-  RadarChart: ({ data, ...props }: any) => (
-    <div data-testid="radar-chart" {...props}>
+  RadarChart: ({ data }: { data: any }) => (
+    <div data-testid="radar-chart">
       Mock Radar Chart
     </div>
   ),
 }));
 
 jest.mock('./SunburstChart', () => ({
-  SunburstChart: ({ data, ...props }: any) => (
-    <div data-testid="sunburst-chart" {...props}>
+  SunburstChart: ({ data }: { data: any }) => (
+    <div data-testid="sunburst-chart">
       Mock Sunburst Chart
     </div>
   ),

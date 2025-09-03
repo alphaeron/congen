@@ -511,7 +511,7 @@
     },
     {
       "id": "test-user-id-1234",
-      "username": "testuser",
+      "username": "testuser@example.com",
       "email": "testuser@example.com",
       "emailVerified": true,
       "createdTimestamp": 1753495994255,
@@ -535,7 +535,7 @@
     },
     {
       "id": "admin-user-id-5678",
-      "username": "admin",
+      "username": "admin@example.com",
       "email": "admin@example.com",
       "emailVerified": true,
       "createdTimestamp": 1753495994255,
