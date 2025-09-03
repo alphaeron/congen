@@ -7,7 +7,7 @@ import { MemoryRouter } from 'react-router';
 
 import { Workouts } from './Workouts';
 import { ENDPOINT } from '../api/endpoint';
-import type { User, Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
+import type { User, Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
 
 describe('Workouts', () => {
   // Create a new mock adapter for each test to prevent interference
@@ -27,8 +27,8 @@ describe('Workouts', () => {
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'Test User',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
     roles: ['user'],
   };
 
@@ -36,18 +36,20 @@ describe('Workouts', () => {
     program_id: 1,
     program_days_per_week: 3,
     session_time_length_in_minutes: 60,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
-  const mockProgram: Program & { program_preferences?: ProgramPreferences } = {
-    id: 1,
-    user_id: 'test-user-id',
-    name: 'Test Program',
-    current_week_number: 2,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    is_active: true,
+  const mockProgramWithPreferences: ProgramWithPreferences = {
+    program: {
+      id: 1,
+      user_id: 'test-user-id',
+      name: 'Test Program',
+      current_week_number: 2,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      is_active: true,
+    },
     program_preferences: mockProgramPreferences,
   };
 
@@ -56,8 +58,8 @@ describe('Workouts', () => {
     program_id: 1,
     day_number: 1,
     name: 'Push Day',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
   beforeEach(() => {
@@ -87,7 +89,10 @@ describe('Workouts', () => {
     mock.onGet('/program/with-preferences').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [], 
+      data_retention_policies: [] 
+    });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       id: 1,
@@ -113,11 +118,14 @@ describe('Workouts', () => {
   });
 
   it('displays no active program message when no active program exists', async () => {
-    const inactiveProgram = { ...mockProgram, is_active: false };
+    const inactiveProgram = { ...mockProgramWithPreferences, program: { ...mockProgramWithPreferences.program, is_active: false } };
     mock.onGet('/program/with-preferences').reply(200, [inactiveProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [], 
+      data_retention_policies: [] 
+    });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       id: 1,
@@ -143,10 +151,20 @@ describe('Workouts', () => {
   });
 
   it('displays active program information', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [{
+        program: mockProgramWithPreferences.program,
+        program_preferences: mockProgramWithPreferences.program_preferences,
+        workouts: [{
+          workout: mockWorkout,
+          stages: []
+        }]
+      }], 
+      data_retention_policies: [] 
+    });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
       id: 1,
@@ -173,7 +191,7 @@ describe('Workouts', () => {
   });
 
   it('shows generate next week button', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -202,7 +220,7 @@ describe('Workouts', () => {
   });
 
   it('opens generate dialog when generate button is clicked', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -237,9 +255,9 @@ describe('Workouts', () => {
   });
 
   it('generates workouts successfully', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgram);
+    mock.onPost('/conjugate_workout_generator/1').reply(200, mockProgramWithPreferences.program);
     // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
@@ -294,7 +312,7 @@ describe('Workouts', () => {
   }, 15000);
 
   it('displays training weeks when workouts exist', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -332,7 +350,7 @@ describe('Workouts', () => {
     const workout5 = { ...mockWorkout, id: 5, day_number: 5, name: 'Lower Body' };
     const workout6 = { ...mockWorkout, id: 6, day_number: 6, name: 'Full Body' };
 
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock
       .onGet('/programmed_workout/')
       .reply(200, [workout1, workout2, workout3, workout4, workout5, workout6]);
@@ -401,7 +419,7 @@ describe('Workouts', () => {
   });
 
   it('navigates to week details when week is clicked', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -432,7 +450,7 @@ describe('Workouts', () => {
     // Should navigate to week details
     await waitFor(
       () => {
-        expect(screen.getByText('Week 1 Workouts')).toBeInTheDocument();
+        expect(screen.getByText('Workouts')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );

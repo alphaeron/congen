@@ -83,7 +83,7 @@ describe('GDPR API', () => {
         keycloak_id: 'test-user-123',
         data_processing_consent: false,
         consent_timestamp: undefined,
-        updated_at: '2023-08-09T10:15:30Z',
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
       };
       mock.onGet('/gdpr/consent').reply(200, mockResponse);
 
@@ -98,14 +98,13 @@ describe('GDPR API', () => {
       const mockResponse: UserDataExport = {
         keycloak_id: 'test-user-123',
         name: 'Test User',
-        created_at: '2023-08-09T10:15:30Z',
-        updated_at: '2023-08-09T10:15:30Z',
+        created_at: new Date('2023-08-09T10:15:30.000Z'),
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
         data_processing_consent: true,
-        consent_timestamp: '2023-08-09T10:15:30Z',
-        export_timestamp: '2023-08-09T10:15:30Z',
+        consent_timestamp: new Date('2023-08-09T10:15:30.000Z'),
+        export_timestamp: new Date('2023-08-09T10:15:30.000Z'),
         user_equipment: [],
         user_exercise_preferences: [],
-        user_program_preferences: {},
         user_one_rep_max: [],
         user_weight_unit_preferences: [],
         training_programs: [],
@@ -336,7 +335,7 @@ describe('GDPR API', () => {
         keycloak_id: '',
         data_processing_consent: false,
         consent_timestamp: undefined,
-        updated_at: '',
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
       };
       mock.onGet('/gdpr/consent').reply(200, emptyResponse);
 
@@ -349,14 +348,13 @@ describe('GDPR API', () => {
       const minimalExport: UserDataExport = {
         keycloak_id: 'test-user-123',
         name: 'Test User',
-        created_at: '2023-08-09T10:15:30Z',
-        updated_at: '2023-08-09T10:15:30Z',
+        created_at: new Date('2023-08-09T10:15:30.000Z'),
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
         data_processing_consent: false,
         consent_timestamp: undefined,
-        export_timestamp: '2023-08-09T10:15:30Z',
+        export_timestamp: new Date('2023-08-09T10:15:30.000Z'),
         user_equipment: [],
         user_exercise_preferences: [],
-        user_program_preferences: undefined,
         user_one_rep_max: [],
         user_weight_unit_preferences: [],
         training_programs: [],

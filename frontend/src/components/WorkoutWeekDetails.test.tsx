@@ -83,7 +83,7 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/exercise/').reply(200, []);
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
     mock.onGet('/exercise_muscle/').reply(200, []);
-    mock.onGet('/user_weight_unit_preference/').reply(200, []);
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet('/user/me').reply(200, {
       keycloak_id: 'test-user-id',
       name: 'Test User',
@@ -104,7 +104,10 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [], 
+      data_retention_policies: [] 
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
@@ -121,7 +124,10 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [inactiveProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [], 
+      data_retention_policies: [] 
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
@@ -139,7 +145,17 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [{
+        program: mockProgramWithPreferences.program,
+        program_preferences: mockProgramWithPreferences.program_preferences,
+        workouts: [{
+          workout: mockWorkout,
+          stages: []
+        }]
+      }], 
+      data_retention_policies: [] 
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
@@ -147,8 +163,8 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Test Program - Week 1')).toBeInTheDocument();
-        expect(screen.getByText(/Week 1 of 2/)).toBeInTheDocument();
+        expect(screen.getByText('Workouts')).toBeInTheDocument();
+        expect(screen.getByText(/1 workouts • Week 1 of 2/)).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
@@ -158,7 +174,17 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [{
+        program: mockProgramWithPreferences.program,
+        program_preferences: mockProgramWithPreferences.program_preferences,
+        workouts: [{
+          workout: mockWorkout,
+          stages: []
+        }]
+      }], 
+      data_retention_policies: [] 
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
@@ -166,7 +192,8 @@ describe('WorkoutWeekDetails', () => {
 
     await waitFor(
       () => {
-        expect(screen.getByText('Week 1 Workouts')).toBeInTheDocument();
+        expect(screen.getByText('Workouts')).toBeInTheDocument();
+        expect(screen.getByText(/1 workouts • Week 1 of 2/)).toBeInTheDocument();
         expect(screen.getByText('Day 1')).toBeInTheDocument();
         expect(screen.getByText('Push Day')).toBeInTheDocument();
       },
@@ -178,7 +205,14 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [{
+        program: mockProgramWithPreferences.program,
+        program_preferences: mockProgramWithPreferences.program_preferences,
+        workouts: []
+      }], 
+      data_retention_policies: [] 
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
@@ -219,7 +253,18 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [workout1, workout2, workout3]);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/gdpr/export').reply(200, { 
+      training_programs: [{
+        program: mockProgramWithPreferences.program,
+        program_preferences: mockProgramWithPreferences.program_preferences,
+        workouts: [
+          { workout: workout1, stages: [] },
+          { workout: workout2, stages: [] },
+          { workout: workout3, stages: [] }
+        ]
+      }], 
+      data_retention_policies: [] 
+    });
 
     await act(async () => {
       renderWithProviders(<WorkoutWeekDetails weekNumber={1} />);
