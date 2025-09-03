@@ -366,7 +366,8 @@ class ExerciseSelectionServiceTest {
                 isAccessory = true,
                 workoutType = workoutType,
                 dayType = dayType,
-                movementBalanceState = null
+                movementBalanceState = null,
+                isWarmup = true
             )
 
         StepVerifier.create(result)

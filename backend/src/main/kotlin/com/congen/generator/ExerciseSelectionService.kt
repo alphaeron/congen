@@ -58,7 +58,8 @@ class ExerciseSelectionService(
         isAccessory: Boolean,
         workoutType: String,
         dayType: String,
-        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
+        isWarmup: Boolean = false
     ): Mono<Exercise> {
         return selectRotatingExerciseInternal(
             userExercisePool = userExercisePool,
@@ -66,12 +67,13 @@ class ExerciseSelectionService(
             isAccessory = isAccessory,
             workoutType = workoutType,
             dayType = dayType,
-            movementBalanceState = movementBalanceState
+            movementBalanceState = movementBalanceState,
+            isWarmup = isWarmup
         ).flatMap { selectedExercise ->
             if (selectedExercise != null) {
                 // Mark the exercise as used and removed from the pool
                 userExercisePool.markExerciseAsUsed(selectedExercise.name)
-                logger.debug("Selected and marked exercise as used: {}", selectedExercise.name)
+
                 Mono.just(selectedExercise)
             } else {
                 logger.error(
@@ -104,7 +106,8 @@ class ExerciseSelectionService(
         isAccessory: Boolean,
         workoutType: String,
         dayType: String,
-        movementBalanceState: MovementBalanceService.MovementBalanceState? = null
+        movementBalanceState: MovementBalanceService.MovementBalanceState? = null,
+        isWarmup: Boolean = false
     ): Mono<Exercise?> {
         return Mono.defer {
             // Get fresh available exercises from the pool each time this method is called
@@ -131,29 +134,34 @@ class ExerciseSelectionService(
                 )
             }
 
-            // Filter out plyometric exercises for warmup selection
-            val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
-            if (nonPlyometricExercises.isEmpty()) {
-                logger.error(
-                    "No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {}",
-                    dayType,
-                    isAccessory
-                )
-                return@defer Mono.error(
-                    IllegalStateException(
-                        "No non-plyometric exercises available after filtering for dayType: $dayType and isAccessory: $isAccessory"
+            // Filter out plyometric exercises only for warmup selection
+            val exercisesAfterPlyometricFiltering = if (isWarmup) {
+                val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
+                if (nonPlyometricExercises.isEmpty()) {
+                    logger.error(
+                        "No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {} (warmup)",
+                        dayType,
+                        isAccessory
                     )
-                )
+                    return@defer Mono.error(
+                        IllegalStateException(
+                            "No non-plyometric exercises available after filtering for dayType: $dayType and isAccessory: $isAccessory (warmup)"
+                        )
+                    )
+                }
+                nonPlyometricExercises
+            } else {
+                dayTypeFilteredExercises
             }
 
             // Apply workout-type filtering only for non-accessory exercises
             val exercisesAfterWorkoutTypeFiltering =
                 if (isAccessory) {
                     // For accessory exercises, skip workout-type filtering
-                    Mono.just(nonPlyometricExercises)
+                    Mono.just(exercisesAfterPlyometricFiltering)
                 } else {
                     // For primary/secondary exercises, apply workout-type filtering
-                    filterExercisesByWorkoutType(nonPlyometricExercises, workoutType)
+                    filterExercisesByWorkoutType(exercisesAfterPlyometricFiltering, workoutType)
                 }
 
             exercisesAfterWorkoutTypeFiltering
@@ -242,7 +250,6 @@ class ExerciseSelectionService(
                                 } else {
                                     // Select a random exercise from the filtered list
                                     val selectedExercise = finalExercises.random()
-                                    logger.debug("Selected exercise: {} for isAccessory: {}", selectedExercise.name, isAccessory)
                                     Mono.just(selectedExercise)
                                 }
                             }
@@ -321,8 +328,6 @@ class ExerciseSelectionService(
         exercises: List<Exercise>,
         dayType: String
     ): List<Exercise> {
-        logger.debug("Filtering exercises by day type: {} for {} exercises", dayType, exercises.size)
-
         val filteredExercises =
             when {
                 dayType.contains("Upper") -> {
@@ -331,7 +336,6 @@ class ExerciseSelectionService(
                         exercises.filter { exercise ->
                             exercise.isUpper
                         }
-                    logger.debug("Upper day filtering: {} exercises -> {} upper exercises", exercises.size, upperExercises.size)
                     upperExercises
                 }
                 dayType.contains("Lower") -> {
@@ -340,17 +344,14 @@ class ExerciseSelectionService(
                         exercises.filter { exercise ->
                             !exercise.isUpper
                         }
-                    logger.debug("Lower day filtering: {} exercises -> {} lower exercises", exercises.size, lowerExercises.size)
                     lowerExercises
                 }
                 else -> {
                     // For full body or other day types, include all exercises
-                    logger.debug("Full body day: keeping all {} exercises", exercises.size)
                     exercises
                 }
             }
 
-        logger.debug("Day type filtering result: {} exercises for dayType: {}", filteredExercises.size, dayType)
         return filteredExercises
     }
 
@@ -623,7 +624,8 @@ class ExerciseSelectionService(
                     // Use correct workoutType derived from dayType
                     workoutType = workoutType,
                     dayType = dayType,
-                    movementBalanceState = null
+                    movementBalanceState = null,
+                    isWarmup = true
                 )
             }
             .collectList()
@@ -660,7 +662,8 @@ class ExerciseSelectionService(
             isAccessory = true,
             workoutType = workoutType,
             dayType = dayType,
-            movementBalanceState = null
+            movementBalanceState = null,
+            isWarmup = true
         ).filter { selectedExercise ->
             // Filter by movement type if exercise was selected
             selectedExercise.movementType == primaryExercise.movementType
@@ -702,7 +705,8 @@ class ExerciseSelectionService(
                     isAccessory = true,
                     workoutType = workoutType,
                     dayType = dayType,
-                    movementBalanceState = null
+                    movementBalanceState = null,
+                    isWarmup = true
                 )
             }
             .collectList()

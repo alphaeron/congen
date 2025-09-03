@@ -171,9 +171,6 @@ class FourDayWorkoutStageGenerationService(
 
         // Combine all operations and create stages
         return Mono.zip(primaryExerciseMono, primarySetSchemesMono)
-            .doOnNext { tuple ->
-                logger.info("Mono.zip executed for dayType: {}", dayType)
-            }
             .flatMap { tuple ->
                 val primaryExercise = tuple.t1
                 val primarySetSchemes = tuple.t2
@@ -182,7 +179,6 @@ class FourDayWorkoutStageGenerationService(
                 val secondaryExerciseAndSchemesMono =
                     secondaryExerciseMono
                         .flatMap { secondaryExercise ->
-                            logger.info("Secondary exercise found: {} for dayType: {}", secondaryExercise.name, dayType)
                             secondarySetSchemesMono.map { secondarySetSchemes ->
                                 Triple(secondaryExercise, secondarySetSchemes, true)
                             }
@@ -270,9 +266,8 @@ class FourDayWorkoutStageGenerationService(
                     createStagesSequentially(stageCreators)
                 }
             }
-            .onErrorResume { error ->
+            .doOnError { error ->
                 logger.error("Failed to generate stages for day type: {}. Error: {}", dayType, error.message)
-                Mono.empty()
             }
     }
 }
