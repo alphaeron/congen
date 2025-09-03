@@ -281,6 +281,17 @@ export interface UserOneRepMax {
 } // end interface UserOneRepMax
 
 /**
+ * User's weight unit preference for a specific exercise.
+ */
+export interface UserWeightUnitPreference {
+  user_id: string;
+  exercise_name: string;
+  preferred_unit: string;
+  created_at: Date;
+  updated_at: Date;
+} // end interface UserWeightUnitPreference
+
+/**
  * Dashboard statistics and progress data.
  */
 export interface DashboardStats {

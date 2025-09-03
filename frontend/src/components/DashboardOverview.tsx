@@ -20,8 +20,10 @@ import type {
   ProgrammedExerciseWithSetSchemes,
   SetScheme,
   UserDataExport,
+  UserWeightUnitPreference,
 } from '../api/types';
 import { getUserOneRepMaxes } from '../api/userOneRepMax';
+import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import {
   formatDate,
   categorizeExerciseVolume,
@@ -49,6 +51,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
 
   const handleActiveProgramClick = () => {
     if (activeProgram) {
@@ -62,16 +65,18 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
         setIsLoading(true);
 
         // Load all dashboard data in parallel
-        const [programsData, , oneRepMaxesData, dataExport] = await Promise.all([
+        const [programsData, , oneRepMaxesData, dataExport, weightUnitData] = await Promise.all([
           getPrograms(),
           getProgrammedWorkouts(),
           getUserOneRepMaxes(user.keycloak_id),
           getUserDataExport(),
+          getUserWeightUnitPreferences(user.keycloak_id),
         ]);
 
         setPrograms(programsData);
         setOneRepMaxes(oneRepMaxesData);
         setUserData(dataExport);
+        setWeightUnitPreferences(weightUnitData || []);
 
         // Fetch exercise data for all unique exercises
         const uniqueExercises = new Set<string>();
@@ -262,7 +267,13 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       )}
 
       {/* Conjugate Progression Section */}
-      <ConjugateProgression user={user} />
+      <ConjugateProgression
+        user={user}
+        userData={userData}
+        exerciseData={exerciseData}
+        oneRepMaxes={oneRepMaxes}
+        weightUnitPreferences={weightUnitPreferences}
+      />
 
       {/* Recent 1RM Section */}
       {recentOneRepMaxes.length > 0 && (

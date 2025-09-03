@@ -7,27 +7,24 @@ import {
   useReactTable,
   flexRender,
 } from '@tanstack/react-table';
-import { useSnackbar } from 'notistack';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { LineChart } from './LineChart';
-import { LoadingSpinner } from './LoadingSpinner';
 import { PieChart } from './PieChart';
-import { getIndividualExercise } from '../api/exercise';
-import { getUserDataExport } from '../api/gdpr';
 import type {
   User,
   Exercise,
   UserOneRepMax,
   UserDataExport,
-  ProgramWithWorkouts,
 } from '../api/types';
-import { getUserOneRepMaxes } from '../api/userOneRepMax';
-import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 
 interface ConjugateProgressionProps {
   user: User;
+  userData: UserDataExport | null;
+  exerciseData: Map<string, Exercise>;
+  oneRepMaxes: UserOneRepMax[];
+  weightUnitPreferences: UserWeightUnitPreference[];
 }
 
 /**
@@ -40,17 +37,19 @@ interface ConjugateProgressionProps {
  * - Training intensity distribution
  *
  * @param user The user data
+ * @param userData The user's workout and training data
+ * @param exerciseData Map of exercise names to exercise data
+ * @param oneRepMaxes User's one rep max records
+ * @param weightUnitPreferences User's weight unit preferences
  * @return Enhanced conjugate progression component
  */
-export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user }) => {
-  const { enqueueSnackbar } = useSnackbar();
-  const [userData, setUserData] = useState<UserDataExport | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
-  const [oneRepMaxes, setOneRepMaxes] = useState<UserOneRepMax[]>([]);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
-    []
-  );
+export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
+  user,
+  userData,
+  exerciseData,
+  oneRepMaxes,
+  weightUnitPreferences,
+}) => {
   const [globalFilter, setGlobalFilter] = useState('');
 
   // Table configuration
@@ -110,69 +109,6 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({ user
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: 'includesString',
   });
-
-  // Load all workout data using optimized single API call
-  useEffect(() => {
-    const loadWorkoutData = async () => {
-      try {
-        setIsLoading(true);
-
-        // Load all data in parallel
-        const [dataExport, oneRepMaxesData, weightUnitData] = await Promise.all([
-          getUserDataExport(),
-          getUserOneRepMaxes(user.keycloak_id),
-          getUserWeightUnitPreferences(user.keycloak_id),
-        ]);
-
-        setUserData(dataExport);
-        setOneRepMaxes(oneRepMaxesData);
-        setWeightUnitPreferences(weightUnitData || []);
-
-        // Fetch exercise data for all unique exercises
-        // Handle case where user has no training programs (empty array)
-        const uniqueExercises = new Set<string>();
-        (dataExport.training_programs as ProgramWithWorkouts[])?.forEach(program => {
-          program.workouts.forEach(workout => {
-            workout.stages.forEach(stage => {
-              stage.exercises.forEach(exercise => {
-                uniqueExercises.add(exercise.exercise.exercise_name);
-              });
-            });
-          });
-        });
-
-        const exerciseMap = new Map<string, Exercise>();
-        for (const exerciseName of Array.from(uniqueExercises)) {
-          try {
-            const exercise = await getIndividualExercise(exerciseName);
-            exerciseMap.set(exerciseName, exercise);
-          } catch {
-            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
-              variant: 'error',
-            });
-          }
-        }
-
-        setExerciseData(exerciseMap);
-      } catch {
-        enqueueSnackbar('Failed to load workout data. Please try again.', { variant: 'error' });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadWorkoutData();
-  }, [user.keycloak_id]);
-
-  if (isLoading) {
-    return (
-      <Card sx={{ mb: 4 }}>
-        <CardContent>
-          <LoadingSpinner message="Loading conjugate progression..." fullHeight={false} />
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (!userData?.training_programs || userData.training_programs.length === 0) {
     return (

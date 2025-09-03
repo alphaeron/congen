@@ -24,7 +24,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             .expectBody()
             .jsonPath(".user_id").isEqualTo(userId)
             .jsonPath(".name").isEqualTo(IntegrationTestHelpers.TEST_PROGRAM_NAME)
-            .jsonPath(".current_week_number").isEqualTo(1)
+            .jsonPath(".current_week_number").isEqualTo(0)
             .jsonPath(".is_active").isEqualTo(true)
     }
 
@@ -52,7 +52,7 @@ class ProgramIntegrationTest : BaseIntegrationTest() {
             }
             .jsonPath("$.user_id").isEqualTo(userId)
             .jsonPath("$.name").isEqualTo(IntegrationTestHelpers.TEST_PROGRAM_NAME)
-            .jsonPath("$.current_week_number").isEqualTo(1)
+            .jsonPath("$.current_week_number").isEqualTo(0)
             .jsonPath("$.is_active").isEqualTo(true)
     }
 

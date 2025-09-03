@@ -1,4 +1,5 @@
 import { REQUEST } from './endpoint';
+import type { UserWeightUnitPreference } from './types';
 
 /**
  * Weight unit enum.
@@ -6,17 +7,6 @@ import { REQUEST } from './endpoint';
 export enum WeightUnit {
   KG = 'KG',
   LBS = 'LBS',
-}
-
-/**
- * User weight unit preference interface.
- */
-export interface UserWeightUnitPreference {
-  user_id: string;
-  exercise_name: string;
-  preferred_unit: WeightUnit;
-  created_at: Date;
-  updated_at: Date;
 }
 
 /**
