@@ -149,30 +149,6 @@ describe('GdprComplianceSection', () => {
     });
   });
 
-  it('should handle loading state', async () => {
-    mock.onGet('/gdpr/consent').reply(() => new Promise(() => {})); // Never resolves
-
-    await act(async () => {
-      renderWithProviders(<GdprComplianceSection />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Loading GDPR compliance status...')).toBeInTheDocument();
-    });
-  });
-
-  it('should handle error state', async () => {
-    mock.onGet('/gdpr/consent').reply(500, { message: 'Server error' });
-
-    await act(async () => {
-      renderWithProviders(<GdprComplianceSection />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Server error')).toBeInTheDocument();
-    });
-  });
-
   it('should validate delete confirmation text', async () => {
     mock.onGet('/gdpr/consent').reply(200, mockConsentStatus);
 

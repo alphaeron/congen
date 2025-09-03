@@ -4,17 +4,40 @@ import MockAdapter from 'axios-mock-adapter';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
-import { useAuth as useOidcAuth } from 'react-oidc-context';
-
-import { AuthProvider } from '../contexts/AuthContext';
 
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { ENDPOINT } from '../api/endpoint';
 import type { Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
 
-// Mock react-oidc-context
-jest.mock('react-oidc-context');
-const mockUseOidcAuth = useOidcAuth as jest.MockedFunction<typeof useOidcAuth>;
+// Mock chart components to prevent rendering issues
+jest.mock('./RadarChart', () => ({
+  RadarChart: ({ data, ...props }: any) => (
+    <div data-testid="radar-chart" {...props}>
+      Mock Radar Chart
+    </div>
+  ),
+}));
+
+jest.mock('./SunburstChart', () => ({
+  SunburstChart: ({ data, ...props }: any) => (
+    <div data-testid="sunburst-chart" {...props}>
+      Mock Sunburst Chart
+    </div>
+  ),
+}));
+
+// Mock the useAuth hook to prevent auth context issues
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+      created_at: '2024-01-01T00:00:00.000Z',
+      updated_at: '2024-01-01T00:00:00.000Z',
+      roles: ['user'],
+    },
+  }),
+}));
 
 describe('WorkoutWeekDetails', () => {
   // Create a new mock adapter for each test to prevent interference
@@ -23,13 +46,11 @@ describe('WorkoutWeekDetails', () => {
 
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
-      <AuthProvider>
-        <SnackbarProvider>
-          <MemoryRouter>
-            <ThemeProvider theme={theme}>{component}</ThemeProvider>
-          </MemoryRouter>
-        </SnackbarProvider>
-      </AuthProvider>
+      <SnackbarProvider>
+        <MemoryRouter>
+          <ThemeProvider theme={theme}>{component}</ThemeProvider>
+        </MemoryRouter>
+      </SnackbarProvider>
     );
   };
 
@@ -69,15 +90,6 @@ describe('WorkoutWeekDetails', () => {
     jest.clearAllMocks();
     
     // Mock OIDC auth
-    mockUseOidcAuth.mockReturnValue({
-      isAuthenticated: true,
-      isLoading: false,
-      user: { sub: 'test-user-id' } as Record<string, unknown>,
-      error: null,
-      signinRedirect: jest.fn(),
-      signoutRedirect: jest.fn(),
-      removeUser: jest.fn(),
-    } as unknown as ReturnType<typeof useOidcAuth>);
     
     // Mock all the API calls that the component makes
     mock.onGet('/exercise/').reply(200, []);
@@ -300,7 +312,7 @@ describe('WorkoutWeekDetails', () => {
     );
 
     // Verify API calls were made
-    expect(mock.history.get).toHaveLength(6); // program/with-preferences, exercise, gdpr/export, exercise_muscle, user_weight_unit_preference, user/me
+    expect(mock.history.get).toHaveLength(5); // program/with-preferences, exercise, gdpr/export, exercise_muscle, user_weight_unit_preference
     expect(mock.history.get[0].url).toBe('/program/with-preferences');
     expect(mock.history.get[1].url).toBe('/exercise/');
   });

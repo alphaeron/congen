@@ -416,6 +416,13 @@ describe('DashboardOverview', () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, multipleOneRepMaxes);
     mock.onGet('/gdpr/export').reply(200, multipleWorkoutsDataExport);
     mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
+    
+    // Mock additional API calls that ConjugateProgression makes
+    mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
+    
+    // Mock specific exercise calls that ConjugateProgression makes
+    mock.onGet('/exercise/Bench%20Press').reply(200, mockExercise);
+    mock.onGet('/exercise/Squat').reply(200, mockExercise);
 
     await act(async () => {
       renderWithProviders(<DashboardOverview user={mockUser} />);

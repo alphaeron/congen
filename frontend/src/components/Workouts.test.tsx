@@ -9,6 +9,41 @@ import { Workouts } from './Workouts';
 import { ENDPOINT } from '../api/endpoint';
 import type { User, Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
 
+// Mock Nivo chart components to prevent rendering issues
+jest.mock('@nivo/stream', () => ({
+  ResponsiveStream: ({ data, ...props }: any) => (
+    <div data-testid="stream-chart" {...props}>
+      Mock Stream Chart
+    </div>
+  ),
+}));
+
+jest.mock('@nivo/radar', () => ({
+  ResponsiveRadar: ({ data, ...props }: any) => (
+    <div data-testid="radar-chart" {...props}>
+      Mock Radar Chart
+    </div>
+  ),
+}));
+
+jest.mock('@nivo/sunburst', () => ({
+  ResponsiveSunburst: ({ data, ...props }: any) => (
+    <div data-testid="sunburst-chart" {...props}>
+      Mock Sunburst Chart
+    </div>
+  ),
+}));
+
+// Mock WorkoutWeekDetails component to prevent auth context issues
+jest.mock('./WorkoutWeekDetails', () => ({
+  WorkoutWeekDetails: ({ selectedWorkout, weekNumber }: any) => (
+    <div data-testid="workout-week-details">
+      Mock WorkoutWeekDetails for Week {weekNumber}
+      {selectedWorkout && ` - Workout: ${selectedWorkout}`}
+    </div>
+  ),
+}));
+
 describe('Workouts', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
@@ -66,15 +101,6 @@ describe('Workouts', () => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
-    
-    // Mock program preferences API calls
-    mock.onGet('/program_preferences/1').reply(200, {
-      program_id: 1,
-      program_days_per_week: 4,
-      session_time_length_in_minutes: 60,
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-    });
   });
 
   afterEach(() => {
@@ -421,19 +447,8 @@ describe('Workouts', () => {
   it('navigates to week details when week is clicked', async () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
-    // Mock WorkoutAnalytics dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
-    mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
-      id: 1,
-      exercise_name: 'Test Exercise',
-      category: 'strength',
-      primary_muscle: 'chest',
-      secondary_muscles: ['triceps', 'shoulders'],
-      instructions: 'Test instructions',
-      equipment: 'barbell',
-      difficulty: 'intermediate',
-    });
 
     await act(async () => {
       renderWithProviders(<Workouts user={mockUser} />);
@@ -447,10 +462,10 @@ describe('Workouts', () => {
       { timeout: 10000 }
     );
 
-    // Should navigate to week details
+    // Should navigate to week details and show WorkoutWeekDetails component
     await waitFor(
       () => {
-        expect(screen.getByText('Workouts')).toBeInTheDocument();
+        expect(screen.getByTestId('workout-week-details')).toBeInTheDocument();
       },
       { timeout: 10000 }
     );
