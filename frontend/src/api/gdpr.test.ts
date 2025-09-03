@@ -27,8 +27,8 @@ describe('GDPR API', () => {
       const mockResponse: UserConsent = {
         keycloak_id: 'test-user-123',
         data_processing_consent: true,
-        consent_timestamp: '2023-08-09T10:15:30Z',
-        updated_at: '2023-08-09T10:15:30Z',
+        consent_timestamp: new Date('2023-08-09T10:15:30.000Z'),
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
       };
       mock.onPost('/gdpr/consent').reply(config => {
         expect(config.params).toEqual({ consent: true });
@@ -47,7 +47,7 @@ describe('GDPR API', () => {
         keycloak_id: 'test-user-123',
         data_processing_consent: false,
         consent_timestamp: undefined,
-        updated_at: '2023-08-09T10:15:30Z',
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
       };
       mock.onPost('/gdpr/consent').reply(config => {
         expect(config.params).toEqual({ consent: false });
@@ -67,8 +67,8 @@ describe('GDPR API', () => {
       const mockResponse: UserConsent = {
         keycloak_id: 'test-user-123',
         data_processing_consent: true,
-        consent_timestamp: '2023-08-09T10:15:30Z',
-        updated_at: '2023-08-09T10:15:30Z',
+        consent_timestamp: new Date('2023-08-09T10:15:30.000Z'),
+        updated_at: new Date('2023-08-09T10:15:30.000Z'),
       };
       mock.onGet('/gdpr/consent').reply(200, mockResponse);
 
@@ -176,7 +176,7 @@ describe('GDPR API', () => {
           objection: 'You can object to data processing',
           complaint: 'You can file a complaint with the data protection authority',
         },
-        last_updated: '2023-08-09T00:00:00Z',
+        last_updated: new Date('2023-08-09T00:00:00.000Z'),
         version: '1.0.0',
       };
       mock.onGet('/gdpr/privacy_policy').reply(200, mockResponse);
@@ -342,8 +342,7 @@ describe('GDPR API', () => {
 
       const response = await getConsentStatus();
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(emptyResponse);
+      expect(response).toEqual(emptyResponse);
     });
 
     it('should handle export with minimal data', async () => {
@@ -368,8 +367,7 @@ describe('GDPR API', () => {
 
       const response = await exportUserData();
 
-      expect(response.status).toBe(200);
-      expect(response.data).toEqual(minimalExport);
+      expect(response).toEqual(minimalExport);
     });
 
     it('should handle very long confirmation text', async () => {
@@ -381,7 +379,7 @@ describe('GDPR API', () => {
 
       const response = await deleteAllPersonalData(longConfirmation);
 
-      expect(response.status).toBe(200);
+      expect(response).toBeUndefined();
       expect(mock.history.delete[0].params).toEqual({ confirmation: longConfirmation });
     });
 

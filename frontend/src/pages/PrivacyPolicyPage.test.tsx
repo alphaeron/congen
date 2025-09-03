@@ -116,7 +116,7 @@ describe('PrivacyPolicyPage', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Server error')).toBeInTheDocument();
+      expect(screen.getByText('Failed to load privacy policy')).toBeInTheDocument();
     });
   });
 

@@ -63,6 +63,16 @@ describe('Workouts', () => {
   beforeEach(() => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
+    jest.clearAllMocks();
+    
+    // Mock program preferences API calls
+    mock.onGet('/program_preferences/1').reply(200, {
+      program_id: 1,
+      program_days_per_week: 4,
+      session_time_length_in_minutes: 60,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+    });
   });
 
   afterEach(() => {

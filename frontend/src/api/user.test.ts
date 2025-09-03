@@ -9,8 +9,8 @@ const mockAdapter = new AxiosMockAdapter(ENDPOINT);
 const mockUser: User = {
   keycloak_id: 'test-id',
   name: 'Test User',
-  created_at: '2023-01-01T00:00:00Z',
-  updated_at: '2023-01-01T00:00:00Z',
+  created_at: new Date('2023-01-01T00:00:00.000Z'),
+  updated_at: new Date('2023-01-01T00:00:00.000Z'),
 };
 
 describe('user API', () => {

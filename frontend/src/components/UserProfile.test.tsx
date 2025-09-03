@@ -38,8 +38,8 @@ describe('UserProfile', () => {
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'John Doe',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
     roles: ['user'],
   };
 
@@ -222,9 +222,8 @@ describe('UserProfile', () => {
     // Test that the deleteAllPersonalData function works with the axios mock
     mock.onDelete('/gdpr/delete_all_data').reply(200);
 
-    const result = await deleteAllPersonalData('DELETE_ALL_MY_DATA');
-    expect(result.status).toBe(200);
-    expect(result.data).toBeUndefined();
+    // The function returns void, so we just verify it doesn't throw
+    await expect(deleteAllPersonalData('DELETE_ALL_MY_DATA')).resolves.toBeUndefined();
   });
 
   // Note: The component's delete functionality now uses GDPR deleteAllPersonalData

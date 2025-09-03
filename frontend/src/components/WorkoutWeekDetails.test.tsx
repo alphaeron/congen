@@ -4,10 +4,17 @@ import MockAdapter from 'axios-mock-adapter';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
+
+import { AuthProvider } from '../contexts/AuthContext';
 
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { ENDPOINT } from '../api/endpoint';
-import type { Program, ProgrammedWorkout, ProgramPreferences } from '../api/types';
+import type { Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
+
+// Mock react-oidc-context
+jest.mock('react-oidc-context');
+const mockUseOidcAuth = useOidcAuth as jest.MockedFunction<typeof useOidcAuth>;
 
 describe('WorkoutWeekDetails', () => {
   // Create a new mock adapter for each test to prevent interference
@@ -16,11 +23,13 @@ describe('WorkoutWeekDetails', () => {
 
   const renderWithProviders = (component: React.ReactElement) => {
     return render(
-      <SnackbarProvider>
-        <MemoryRouter>
-          <ThemeProvider theme={theme}>{component}</ThemeProvider>
-        </MemoryRouter>
-      </SnackbarProvider>
+      <AuthProvider>
+        <SnackbarProvider>
+          <MemoryRouter>
+            <ThemeProvider theme={theme}>{component}</ThemeProvider>
+          </MemoryRouter>
+        </SnackbarProvider>
+      </AuthProvider>
     );
   };
 
@@ -28,18 +37,20 @@ describe('WorkoutWeekDetails', () => {
     program_id: 1,
     program_days_per_week: 3,
     session_time_length_in_minutes: 60,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
-  const mockProgram: Program & { program_preferences?: ProgramPreferences } = {
-    id: 1,
-    user_id: 'test-user-id',
-    name: 'Test Program',
-    current_week_number: 2,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    is_active: true,
+  const mockProgramWithPreferences: ProgramWithPreferences = {
+    program: {
+      id: 1,
+      user_id: 'test-user-id',
+      name: 'Test Program',
+      current_week_number: 2,
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      is_active: true,
+    },
     program_preferences: mockProgramPreferences,
   };
 
@@ -48,14 +59,38 @@ describe('WorkoutWeekDetails', () => {
     program_id: 1,
     day_number: 1,
     name: 'Push Day',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
   beforeEach(() => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
+    
+    // Mock OIDC auth
+    mockUseOidcAuth.mockReturnValue({
+      isAuthenticated: true,
+      isLoading: false,
+      user: { sub: 'test-user-id' } as Record<string, unknown>,
+      error: null,
+      signinRedirect: jest.fn(),
+      signoutRedirect: jest.fn(),
+      removeUser: jest.fn(),
+    } as unknown as ReturnType<typeof useOidcAuth>);
+    
+    // Mock all the API calls that the component makes
+    mock.onGet('/exercise/').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
+    mock.onGet('/exercise_muscle/').reply(200, []);
+    mock.onGet('/user_weight_unit_preference/').reply(200, []);
+    mock.onGet('/user/me').reply(200, {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      roles: ['user'],
+    });
   });
 
   afterEach(() => {
@@ -82,7 +117,7 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('displays no active program message when no active program exists', async () => {
-    const inactiveProgram = { ...mockProgram, is_active: false };
+    const inactiveProgram = { ...mockProgramWithPreferences, program: { ...mockProgramWithPreferences.program, is_active: false } };
     mock.onGet('/program/with-preferences').reply(200, [inactiveProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
@@ -101,7 +136,7 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('displays week information when active program exists', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -120,7 +155,7 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('displays week workouts when workouts exist for the week', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -140,7 +175,7 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('shows no workouts message when no workouts exist for the week', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -181,7 +216,7 @@ describe('WorkoutWeekDetails', () => {
     const workout3 = { ...mockWorkout, id: 3, day_number: 3, name: 'Leg Day' };
     // Note: With current_week_number: 2, workouts with day_number 1-2 go to week 1, day_number 3+ go to week 2
 
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [workout1, workout2, workout3]);
     // Mock WorkoutDetail dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -220,13 +255,13 @@ describe('WorkoutWeekDetails', () => {
     );
 
     // Verify API calls were made
-    expect(mock.history.get).toHaveLength(2); // program/with-preferences, programmed_workout
+    expect(mock.history.get).toHaveLength(6); // program/with-preferences, exercise, gdpr/export, exercise_muscle, user_weight_unit_preference, user/me
     expect(mock.history.get[0].url).toBe('/program/with-preferences');
-    expect(mock.history.get[1].url).toBe('/programmed_workout/');
+    expect(mock.history.get[1].url).toBe('/exercise/');
   });
 
   it('shows breadcrumb navigation with week number', async () => {
-    mock.onGet('/program/with-preferences').reply(200, [mockProgram]);
+    mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });

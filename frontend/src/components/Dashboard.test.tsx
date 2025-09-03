@@ -36,12 +36,6 @@ jest.mock('./Workouts', () => ({
   ),
 }));
 
-jest.mock('./ExerciseHistory', () => ({
-  ExerciseHistory: ({ user }: { user: User }) => (
-    <div data-testid="exercise-history">Exercise History for {user.name}</div>
-  ),
-}));
-
 jest.mock('./WorkoutPreferencesSection', () => ({
   WorkoutPreferencesSection: ({ user }: { user: User }) => (
     <div data-testid="workout-preferences">Workout Preferences for {user.name}</div>
@@ -87,7 +81,6 @@ describe('Dashboard', () => {
     expect(screen.getByText('Overview')).toBeInTheDocument();
     expect(screen.getByText('Programs')).toBeInTheDocument();
     expect(screen.getByText('Workouts')).toBeInTheDocument();
-    expect(screen.getByText('Exercise History')).toBeInTheDocument();
     expect(screen.getByText('Workout Preferences')).toBeInTheDocument();
   });
 
@@ -118,17 +111,6 @@ describe('Dashboard', () => {
 
     expect(workoutsButton).toHaveClass('Mui-selected');
     expect(screen.getByTestId('workouts')).toBeInTheDocument();
-    expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
-  });
-
-  it('switches to exercise history when clicked', () => {
-    renderWithTheme(<Dashboard user={mockUser} />);
-
-    const exerciseHistoryButton = screen.getByRole('button', { name: 'Exercise History' });
-    fireEvent.click(exerciseHistoryButton);
-
-    expect(exerciseHistoryButton).toHaveClass('Mui-selected');
-    expect(screen.getByTestId('exercise-history')).toBeInTheDocument();
     expect(screen.queryByTestId('dashboard-overview')).not.toBeInTheDocument();
   });
 
@@ -205,7 +187,6 @@ describe('Dashboard', () => {
       'Overview',
       'Programs',
       'Workouts',
-      'Exercise History',
       'Workout Preferences',
     ];
     menuItems.forEach(item => {

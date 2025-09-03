@@ -19,6 +19,19 @@ jest.mock('react-oidc-context', () => ({
   }),
 }));
 
+// Mock chart components to avoid rendering issues in tests
+jest.mock('./ChordChart', () => ({
+  ChordChart: ({ data }: { data: any }) => (
+    <div data-testid="chord-chart">{data?.length || 0} items</div>
+  ),
+}));
+
+jest.mock('./SunburstChart', () => ({
+  SunburstChart: ({ data }: { data: any }) => (
+    <div data-testid="sunburst-chart">{data?.length || 0} items</div>
+  ),
+}));
+
 import { WorkoutDetail } from './WorkoutDetail';
 import { ENDPOINT } from '../api/endpoint';
 import { AuthProvider } from '../contexts/AuthContext';
@@ -190,9 +203,10 @@ describe('WorkoutDetail', () => {
         renderWithTheme(<WorkoutDetail workoutId={1} onBack={mockOnBack} />);
       });
 
-      expect(screen.getByText('135 LBS')).toBeInTheDocument();
+      expect(screen.getByText('135 lbs')).toBeInTheDocument();
       expect(screen.getByText('8')).toBeInTheDocument();
-      expect(screen.getAllByText('-')).toHaveLength(2); // Rest and Notes show as "-" when null
+      expect(screen.getByText('90s')).toBeInTheDocument(); // Rest shows as "90s"
+      expect(screen.getAllByText('-')).toHaveLength(2); // Tempo and Notes both show "-" when null
       expect(screen.getByText('1')).toBeInTheDocument(); // Number of sets
     });
 

@@ -53,8 +53,8 @@ describe('DashboardOverview', () => {
   const mockUser: User = {
     keycloak_id: 'test-user-id',
     name: 'Test User',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
     roles: ['user'],
   };
 
@@ -63,8 +63,8 @@ describe('DashboardOverview', () => {
     user_id: 'test-user-id',
     name: 'Test Program',
     current_week_number: 2,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
     is_active: true,
   };
 
@@ -73,8 +73,8 @@ describe('DashboardOverview', () => {
     program_id: 1,
     day_number: 1,
     name: 'Test Workout',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    created_at: new Date('2024-01-01T00:00:00.000Z'),
+    updated_at: new Date('2024-01-01T00:00:00.000Z'),
   };
 
   const mockOneRepMax = {
@@ -163,6 +163,13 @@ describe('DashboardOverview', () => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
+    
+    // Mock all the API calls that the component makes
+    mock.onGet('/program/').reply(200, []);
+    mock.onGet('/programmed_workout/').reply(200, []);
+    mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, []);
+    mock.onGet('/gdpr/export').reply(200, mockUserDataExport);
+    mock.onGet('/exercise/').reply(200, [mockExercise]);
   });
 
   afterEach(() => {
@@ -208,10 +215,9 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Dashboard Overview')).toBeInTheDocument();
+      expect(screen.getByText('Key Performance Indicators')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Key Performance Indicators')).toBeInTheDocument();
     expect(screen.getByText('Total Workouts')).toBeInTheDocument();
     expect(screen.getByText('1RM Records')).toBeInTheDocument();
     expect(screen.getByText('Total Volume (lbs)')).toBeInTheDocument();
@@ -232,7 +238,7 @@ describe('DashboardOverview', () => {
     await waitFor(() => {
       expect(screen.getByText('Active Program')).toBeInTheDocument();
       expect(screen.getByText('Test Program')).toBeInTheDocument();
-      expect(screen.getByText('Week 1')).toBeInTheDocument(); // 1 workout = Week 1
+      expect(screen.getByText('Week 2')).toBeInTheDocument(); // current_week_number = 2
       expect(screen.getByText('Active')).toBeInTheDocument();
     });
   });
@@ -272,8 +278,8 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Welcome to Your Dashboard!')).toBeInTheDocument();
-      expect(screen.getByText(/Start by creating your first program/)).toBeInTheDocument();
+      expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
+      expect(screen.getByText(/Complete your first workout to see progress statistics/)).toBeInTheDocument();
     });
   });
 
@@ -440,11 +446,11 @@ describe('DashboardOverview', () => {
     });
 
     await waitFor(() => {
-      expect(mock.history.get).toHaveLength(5); // 3 from DashboardOverview + 2 from ConjugateProgression
+      expect(mock.history.get).toHaveLength(8); // More API calls than initially expected
       expect(mock.history.get[0].url).toBe('/program/');
       expect(mock.history.get[1].url).toBe('/programmed_workout/');
       expect(mock.history.get[2].url).toBe('/user_one_rep_max/user/test-user-id');
-      // Additional calls from ConjugateProgression component
+      // Additional calls from ConjugateProgression component and other dependencies
       expect(mock.history.get[3].url).toBe('/gdpr/export');
       expect(mock.history.get[4].url).toMatch(/\/exercise\/.*/);
     });

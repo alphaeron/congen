@@ -41,7 +41,9 @@ jest.mock('../components/Dashboard', () => ({
 
 // Mock the LoadingSpinner component
 jest.mock('../components/LoadingSpinner', () => ({
-  LoadingSpinner: () => <div data-testid="loading-spinner">Loading...</div>,
+  LoadingSpinner: ({ message }: { message?: string }) => (
+    <div data-testid="loading-spinner">{message || 'Loading...'}</div>
+  ),
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {

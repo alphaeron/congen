@@ -24,8 +24,8 @@ describe('GdprComplianceSection', () => {
   const mockConsentStatus: UserConsent = {
     keycloak_id: 'test-user-123',
     data_processing_consent: true,
-    consent_timestamp: '2023-08-09T10:15:30Z',
-    updated_at: '2023-08-09T10:15:30Z',
+    consent_timestamp: new Date('2023-08-09T10:15:30.000Z'),
+    updated_at: new Date('2023-08-09T10:15:30.000Z'),
   };
 
   beforeEach(() => {
@@ -134,7 +134,7 @@ describe('GdprComplianceSection', () => {
       keycloak_id: 'test-user-123',
       data_processing_consent: false,
       consent_timestamp: undefined,
-      updated_at: '2023-08-09T10:15:30Z',
+      updated_at: new Date('2023-08-09T10:15:30.000Z'),
     };
 
     mock.onGet('/gdpr/consent').reply(200, withdrawnConsentStatus);

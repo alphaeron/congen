@@ -152,7 +152,7 @@ describe('WorkoutPreferencesSection', () => {
     });
 
     // Check for loading state immediately after rendering
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByText('Loading workout preferences...')).toBeInTheDocument();
   });
 
   it('should verify axios mock is working', async () => {
