@@ -3,9 +3,13 @@ import React from 'react';
 import { MemoryRouter } from 'react-router';
 
 import { ConjugateProgression } from './ConjugateProgression';
-import type { User, UserDataExport, Exercise, UserOneRepMax } from '../api/types';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
-import { WeightUnit } from '../api/userWeightUnitPreference';
+import { WeightUnit,
+  type User,
+  type UserDataExport,
+  type Exercise,
+  type UserOneRepMax,
+  type UserWeightUnitPreference,
+ } from '../api/types';
 
 // Mock Nivo charts to avoid rendering issues in tests
 interface LineChartData {

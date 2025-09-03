@@ -39,9 +39,9 @@ import type {
   Exercise,
   UserDataExport,
   ProgramWithWorkouts,
+  UserWeightUnitPreference,
 } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 
 interface WorkoutsProps {

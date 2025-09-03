@@ -8,8 +8,8 @@ import type {
   Exercise,
   ProgrammedWorkoutWithStages,
   WorkoutStageWithExercises,
+  UserWeightUnitPreference,
 } from '../api/types';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 interface PieChartProps {

@@ -7,6 +7,14 @@ export interface Equipment {
 } // end interface Equipment
 
 /**
+ * Weight unit enum.
+ */
+export enum WeightUnit {
+  KG = 'KG',
+  LBS = 'LBS',
+}
+
+/**
  * An individual exercise.
  */
 export interface Exercise {

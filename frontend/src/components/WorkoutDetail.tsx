@@ -18,9 +18,8 @@ import { LoadingSpinner } from './LoadingSpinner';
 import { SunburstChart } from './SunburstChart';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getUserDataExport } from '../api/gdpr';
-import type { UserDataExport, ExerciseMuscle } from '../api/types';
+import type { UserDataExport, ExerciseMuscle, UserWeightUnitPreference } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
 

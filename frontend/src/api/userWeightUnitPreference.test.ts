@@ -1,12 +1,12 @@
 import MockAdapter from 'axios-mock-adapter';
 
 import { ENDPOINT } from './endpoint';
+import { WeightUnit } from './types';
 import {
   upsertUserWeightUnitPreference,
   getUserWeightUnitPreferences,
   getUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
-  WeightUnit,
 } from './userWeightUnitPreference';
 
 // Create axios mock adapter for the ENDPOINT instance

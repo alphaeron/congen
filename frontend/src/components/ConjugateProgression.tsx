@@ -16,8 +16,8 @@ import type {
   Exercise,
   UserOneRepMax,
   UserDataExport,
+  UserWeightUnitPreference,
 } from '../api/types';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
 
 interface ConjugateProgressionProps {
   user: User;

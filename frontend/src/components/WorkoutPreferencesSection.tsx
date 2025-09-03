@@ -27,13 +27,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
 import { getExercises } from '../api/exercise';
-import type { Exercise } from '../api/types';
+import { WeightUnit,
+  type Exercise,
+  type UserWeightUnitPreference,
+ } from '../api/types';
 import {
   getUserWeightUnitPreferences,
   upsertUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
-  type UserWeightUnitPreference,
-  WeightUnit,
 } from '../api/userWeightUnitPreference';
 import { useAuth } from '../contexts/AuthContext';
 

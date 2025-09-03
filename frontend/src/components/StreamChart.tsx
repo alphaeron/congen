@@ -3,8 +3,7 @@ import { Box, Card, CardContent, Typography, useTheme } from '@mui/material';
 import { ResponsiveStream } from '@nivo/stream';
 import React, { useMemo } from 'react';
 
-import type { UserDataExport, ProgramWithWorkouts, Exercise } from '../api/types';
-import type { UserWeightUnitPreference } from '../api/userWeightUnitPreference';
+import type { UserDataExport, UserWeightUnitPreference, ProgramWithWorkouts, Exercise } from '../api/types';
 import {
   categorizeExerciseVolume,
   convertWeightToPounds,

@@ -1,13 +1,5 @@
 import { REQUEST } from './endpoint';
-import type { UserWeightUnitPreference } from './types';
-
-/**
- * Weight unit enum.
- */
-export enum WeightUnit {
-  KG = 'KG',
-  LBS = 'LBS',
-}
+import type { UserWeightUnitPreference, WeightUnit } from './types';
 
 /**
  * Create or update a user weight unit preference (upsert).

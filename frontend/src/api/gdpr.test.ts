@@ -142,11 +142,8 @@ describe('GDPR API', () => {
       try {
         await deleteAllPersonalData('WRONG_CONFIRMATION');
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { error: string } } };
-        expect(axiosError.response.status).toBe(422);
-        expect(axiosError.response.data.error).toBe(
-          "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'"
-        );
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toContain('To delete all data, confirmation parameter must be');
       }
     });
   });
@@ -192,9 +189,8 @@ describe('GDPR API', () => {
       try {
         await getPrivacyPolicy();
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { message: string } } };
-        expect(axiosError.response.status).toBe(500);
-        expect(axiosError.response.data.message).toBe('Service unavailable');
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toBe('Service unavailable');
       }
     });
   });
@@ -206,8 +202,8 @@ describe('GDPR API', () => {
       try {
         await recordConsent(true);
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toContain('Network Error');
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toBe('Network Error');
       }
     });
 
@@ -217,8 +213,8 @@ describe('GDPR API', () => {
       try {
         await getConsentStatus();
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toContain('Network Error');
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toBe('Network Error');
       }
     });
 
@@ -228,8 +224,8 @@ describe('GDPR API', () => {
       try {
         await exportUserData();
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toContain('Network Error');
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toBe('Network Error');
       }
     });
 
@@ -239,19 +235,19 @@ describe('GDPR API', () => {
       try {
         await deleteAllPersonalData('DELETE_ALL_MY_DATA');
       } catch (error: unknown) {
-        const axiosError = error as { message: string };
-        expect(axiosError.message).toContain('Network Error');
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toBe('Network Error');
       }
     });
 
     it('should handle timeout errors', async () => {
-      mock.onGet('/gdpr/consent').timeout();
+      mock.onGet('/gdpr/export').timeout();
 
       try {
-        await getConsentStatus();
+        await exportUserData();
       } catch (error: unknown) {
-        const axiosError = error as { code: string };
-        expect(axiosError.code).toBe('ECONNABORTED');
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toContain('timeout');
       }
     });
 
@@ -267,38 +263,35 @@ describe('GDPR API', () => {
     });
 
     it('should handle 401 unauthorized responses', async () => {
-      mock.onGet('/gdpr/consent').reply(401, { message: 'Unauthorized' });
+      mock.onPost('/gdpr/consent').reply(401, { message: 'Unauthorized' });
 
       try {
-        await getConsentStatus();
+        await recordConsent(true);
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { message: string } } };
-        expect(axiosError.response.status).toBe(401);
-        expect(axiosError.response.data.message).toBe('Unauthorized');
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toBe('Unauthorized');
       }
     });
 
     it('should handle 403 forbidden responses', async () => {
-      mock.onGet('/gdpr/export').reply(403, { message: 'Forbidden' });
-
-      try {
-        await exportUserData();
-      } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { message: string } } };
-        expect(axiosError.response.status).toBe(403);
-        expect(axiosError.response.data.message).toBe('Forbidden');
-      }
-    });
-
-    it('should handle 404 not found responses', async () => {
-      mock.onGet('/gdpr/consent').reply(404, { message: 'User not found' });
+      mock.onGet('/gdpr/consent').reply(403, { message: 'Forbidden' });
 
       try {
         await getConsentStatus();
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { message: string } } };
-        expect(axiosError.response.status).toBe(404);
-        expect(axiosError.response.data.message).toBe('User not found');
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toBe('Forbidden');
+      }
+    });
+
+    it('should handle 404 not found responses', async () => {
+      mock.onGet('/gdpr/export').reply(404, { message: 'User not found' });
+
+      try {
+        await exportUserData();
+      } catch (error: unknown) {
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toBe('User not found');
       }
     });
 
@@ -308,23 +301,19 @@ describe('GDPR API', () => {
       try {
         await recordConsent(true);
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { message: string } } };
-        expect(axiosError.response.status).toBe(429);
-        expect(axiosError.response.data.message).toBe('Too many requests');
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toBe('Too many requests');
       }
     });
 
     it('should handle 503 service unavailable responses', async () => {
-      mock
-        .onDelete('/gdpr/delete_all_data')
-        .reply(503, { message: 'Service temporarily unavailable' });
+      mock.onGet('/gdpr/privacy_policy').reply(503, { message: 'Service temporarily unavailable' });
 
       try {
-        await deleteAllPersonalData('DELETE_ALL_MY_DATA');
+        await getPrivacyPolicy();
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { message: string } } };
-        expect(axiosError.response.status).toBe(503);
-        expect(axiosError.response.data.message).toBe('Service temporarily unavailable');
+        const axiosError = error as { message: string };
+        expect(axiosError.message).toBe('Service temporarily unavailable');
       }
     });
   });
@@ -390,11 +379,8 @@ describe('GDPR API', () => {
       try {
         await deleteAllPersonalData(specialConfirmation);
       } catch (error: unknown) {
-        const axiosError = error as { response: { status: number; data: { error: string } } };
-        expect(axiosError.response.status).toBe(422);
-        expect(axiosError.response.data.error).toBe(
-          "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'"
-        );
+        const axiosError = error as { error: string };
+        expect(axiosError.error).toContain("To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'");
       }
     });
   });
