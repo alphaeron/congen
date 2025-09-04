@@ -458,7 +458,7 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position Ban
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position Banded Tantrum', 'rotator cuff');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position Banded Tantrum', 'power rack');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position Banded Tantrum', 'bands');
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Pogo', 'Begin the drill in an athletic posture with the feet hip/shoulder-width apart. Raise heels up and stand on the balls of your feet. Quickly bounce up and down on the balls of your feet. Don't let your heels touch the ground.', 'plyometric', false, false, true);
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Pogo', 'Begin the drill in an athletic posture with the feet hip/shoulder-width apart. Raise heels up and stand on the balls of your feet. Quickly bounce up and down on the balls of your feet. Don’t let your heels touch the ground.', 'plyometric', false, false, true);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Pogo', 'calves');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Pogo', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Jump - Pogo', 'hamstrings');
@@ -539,10 +539,9 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentr
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'calves');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hop - Concentric (tuck)', 'hip flexors');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position Banded Tantrum', 'power rack');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position Banded Tantrum', 'bands');
 
--- Add Sled Drag exercise for lower body warmups
+--- Add Sled Drag exercise for lower body warmups
+INSERT INTO equipment (name, description) VALUES ('sled', 'A weighted sled that can be dragged or pushed for conditioning and strength training.');
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Sled Drag', 'Drag a weighted sled forward or backward to build lower body strength and conditioning.', 'hinge', false, false, true);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sled Drag', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sled Drag', 'hamstrings');
@@ -551,7 +550,7 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sled Drag', 'c
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Sled Drag', 'erector spinae');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Sled Drag', 'sled');
 
--- Add Dumbbell Bench Press exercise for upper body warmups
+--- Add Dumbbell Bench Press exercise for upper body warmups
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Dumbbell Bench Press', 'Bench press using dumbbells for increased range of motion and stability.', 'horizontal_push', false, true, false);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Dumbbell Bench Press', 'pec major');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Dumbbell Bench Press', 'anterior deltoid');
@@ -559,5 +558,3 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Dumbbell Bench
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Dumbbell Bench Press', 'serratus anterior');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Dumbbell Bench Press', 'dumbbells');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Dumbbell Bench Press', 'bench');
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Jump - Pogo', 'Begin the drill in an athletic posture with the feet hip/shoulder-width apart. Raise heels up and stand on the balls of your feet. Quickly bounce up and down on the balls of your feet. Don't let your heels touch the ground.', 'plyometric', false, false, true);
