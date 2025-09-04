@@ -83,17 +83,17 @@ describe('endpoint', () => {
       expect(mock.history.get[0].headers?.Authorization).toBeUndefined();
     });
 
-    it('should handle malformed JWT tokens gracefully', async () => {
+    it('should reject requests with malformed JWT tokens', async () => {
       const malformedToken = 'invalid-token';
       setTokenGetter(() => malformedToken);
 
       mock.onGet('/test').reply(200, { data: 'success' });
 
-      // Should not throw an error
-      await expect(ENDPOINT.get('/test')).resolves.toBeDefined();
+      // Should reject the request due to malformed token
+      await expect(ENDPOINT.get('/test')).rejects.toThrow('Invalid token');
     });
 
-    it('should handle expired tokens gracefully', async () => {
+    it('should reject requests with expired tokens', async () => {
       // Create a token that's already expired
       const expiredToken =
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjF9.test';
@@ -101,8 +101,8 @@ describe('endpoint', () => {
 
       mock.onGet('/test').reply(200, { data: 'success' });
 
-      // Should not throw an error
-      await expect(ENDPOINT.get('/test')).resolves.toBeDefined();
+      // Should reject the request due to expired token
+      await expect(ENDPOINT.get('/test')).rejects.toThrow('Token expired');
     });
   });
 

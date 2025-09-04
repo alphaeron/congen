@@ -154,7 +154,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
     @Test
     fun `should handle non-existent program`() {
         webTestClient.post()
-            .uri("/api/v1/conjugate_workout_generator/999999/generate")
+            .uri("/api/v1/conjugate_workout_generator/999999")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isNotFound()

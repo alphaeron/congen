@@ -45,11 +45,36 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     code_challenge_method: 'S256',
     // Security enhancements
     automaticSilentRenew: true, // Automatically renew tokens before they expire
-    silentRenewError: () => {
+    silentRenewError: (error: Error) => {
       // Force user to re-authenticate if silent renewal fails
+      // Clear any stored tokens and redirect to login
+      window.location.href = '/login';
     },
     // Token validation
     validateSubOnSilentRenew: true, // Validate subject on token renewal
+    // Session monitoring callbacks
+    onSigninSilent: () => {
+      // Silent signin completed
+    },
+    onSigninSilentError: (error: Error) => {
+      // Redirect to login on silent signin failure
+      window.location.href = '/login';
+    },
+    // User session callbacks
+    onUserLoaded: (user: any) => {
+      // User loaded
+    },
+    onUserUnloaded: () => {
+      // User unloaded
+    },
+    onUserSignedOut: () => {
+      // Clear any local state and redirect to login
+      window.location.href = '/login';
+    },
+    onSilentRenewError: (error: Error) => {
+      // Force re-authentication on silent renew failure
+      window.location.href = '/login';
+    },
 
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,

@@ -1,8 +1,7 @@
-import axios, { AxiosHeaders } from 'axios';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosHeaders } from 'axios';
 
 import { BACKEND_URL } from '../globals';
-
-import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { handleAuthenticationFailure, isTokenExpired, isTokenExpiringSoon, isTokenMalformed } from '../common/authUtils';
 
 /**
  * Converts Unix timestamps (in seconds) to Date objects.
@@ -83,18 +82,24 @@ ENDPOINT.interceptors.request.use(async config => {
   if (getToken) {
     const token = getToken();
     if (token) {
-      // Check if token is about to expire (within 5 minutes)
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const exp = payload.exp * 1000; // Convert to milliseconds
-        const now = Date.now();
-        const fiveMinutes = 5 * 60 * 1000;
-
-        if (exp - now < fiveMinutes) {
-          // The OIDC library should handle silent renewal automatically
-        }
-      } catch {
-        // Token decoding failed, continue with request
+      // Check if token is malformed first
+      if (isTokenMalformed(token)) {
+        // Token is malformed, clear authentication state and redirect to login
+        handleAuthenticationFailure('Invalid token');
+        
+        // Return a rejected promise to prevent the request
+        return Promise.reject(new Error('Invalid token'));
+      }
+      
+      // Check if token is expired
+      if (isTokenExpired(token)) {
+        // Token is expired, clear authentication state and redirect to login
+        handleAuthenticationFailure('Token expired');
+        
+        // Return a rejected promise to prevent the request
+        return Promise.reject(new Error('Token expired'));
+      } else if (isTokenExpiringSoon(token)) {
+        // The OIDC library should handle silent renewal automatically
       }
 
       headers.set('Authorization', `Bearer ${token}`);
@@ -116,8 +121,8 @@ ENDPOINT.interceptors.response.use(
   },
   async error => {
     if (error.response?.status === 401) {
-      // The OIDC library should handle token refresh automatically
-      // If this persists, the user will need to re-authenticate
+      // Authentication failed - clear any stored tokens and redirect to login
+      handleAuthenticationFailure('API request returned 401');
     }
     return Promise.reject(error);
   }

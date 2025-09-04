@@ -1,10 +1,11 @@
 import { useSnackbar } from 'notistack';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 import { setTokenGetter } from '../api/endpoint';
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
+import { clearAuthenticationState, isTokenExpired } from '../common/authUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  clearAuthState: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -34,6 +36,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Function to clear all authentication state
+  const clearAuthState = useCallback(() => {
+    setUser(null);
+    clearAuthenticationState();
+  }, []);
+
   const login = async (): Promise<void> => {
     try {
       await oidcAuth.signinRedirect();
@@ -46,9 +54,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Use signoutRedirect to properly logout and redirect to the post_logout_redirect_uri
       await oidcAuth.signoutRedirect();
-      setUser(null);
+      clearAuthState();
     } catch {
       enqueueSnackbar('Logout failed. Please try again.', { variant: 'error' });
+      // Even if logout fails, clear local state
+      clearAuthState();
     }
   };
 
@@ -56,11 +66,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     setTokenGetter(() => {
       if (oidcAuth.user?.access_token) {
+        // Check if token is expired
+        if (isTokenExpired(oidcAuth.user.access_token)) {
+          // Token is expired, clear state and return null
+          clearAuthState();
+          return null;
+        }
+        
         return oidcAuth.user.access_token;
       }
       return null;
     });
-  }, [oidcAuth.user]);
+  }, [oidcAuth.user, clearAuthState]);
 
   // Sync user profile when authentication state changes
   useEffect(() => {
@@ -111,9 +128,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     if (oidcAuth.error) {
       enqueueSnackbar(oidcAuth.error.message, { variant: 'error' });
-      setUser(null);
+      clearAuthState();
     }
-  }, [oidcAuth.error, enqueueSnackbar]);
+  }, [oidcAuth.error, enqueueSnackbar, clearAuthState]);
+
+  // Handle authentication state changes
+  useEffect(() => {
+    // If OIDC is no longer authenticated but we still have user state, clear it
+    if (!oidcAuth.isAuthenticated && user) {
+      clearAuthState();
+    }
+  }, [oidcAuth.isAuthenticated, user, clearAuthState]);
+
+  // Handle user object changes
+  useEffect(() => {
+    // If OIDC user is null but we still have user state, clear it
+    if (!oidcAuth.user && user) {
+      clearAuthState();
+    }
+  }, [oidcAuth.user, user, clearAuthState]);
 
   const value: AuthContextType = {
     user,
@@ -121,6 +154,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading: oidcAuth.isLoading || isLoading,
     login,
     logout,
+    clearAuthState,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -61,6 +61,12 @@ describe('OidcConfig', () => {
         code_challenge_method: 'S256',
         silentRenewError: expect.any(Function),
         validateSubOnSilentRenew: true,
+        onSigninSilent: expect.any(Function),
+        onSigninSilentError: expect.any(Function),
+        onUserLoaded: expect.any(Function),
+        onUserUnloaded: expect.any(Function),
+        onUserSignedOut: expect.any(Function),
+        onSilentRenewError: expect.any(Function),
         metadata: {
           authorization_endpoint:
             'http://localhost:8080/realms/congen/protocol/openid-connect/auth',
@@ -87,6 +93,14 @@ describe('OidcConfig', () => {
       expect(config).toHaveProperty('loadUserInfo');
       expect(config).toHaveProperty('monitorSession');
       expect(config).toHaveProperty('code_challenge_method');
+      expect(config).toHaveProperty('silentRenewError');
+      expect(config).toHaveProperty('validateSubOnSilentRenew');
+      expect(config).toHaveProperty('onSigninSilent');
+      expect(config).toHaveProperty('onSigninSilentError');
+      expect(config).toHaveProperty('onUserLoaded');
+      expect(config).toHaveProperty('onUserUnloaded');
+      expect(config).toHaveProperty('onUserSignedOut');
+      expect(config).toHaveProperty('onSilentRenewError');
       expect(config).toHaveProperty('metadata');
     });
   });
@@ -147,6 +161,12 @@ describe('OidcConfig - Staging Environment', () => {
       code_challenge_method: 'S256',
       silentRenewError: expect.any(Function),
       validateSubOnSilentRenew: true,
+      onSigninSilent: expect.any(Function),
+      onSigninSilentError: expect.any(Function),
+      onUserLoaded: expect.any(Function),
+      onUserUnloaded: expect.any(Function),
+      onUserSignedOut: expect.any(Function),
+      onSilentRenewError: expect.any(Function),
       metadata: {
         authorization_endpoint:
           'https://staging.congen.com/realms/congen/protocol/openid-connect/auth',

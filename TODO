@@ -1,7 +1,5 @@
 integration test password edit, user profile edit
 
-user keycloak state not cleared on frontend correctly when invalid, lingering state can cause issues when you try to log in and it uses your current credentials instead of redirecting you to login
-
 https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
 
 weight unit preferences ui, equipment ui, weak muscles ui

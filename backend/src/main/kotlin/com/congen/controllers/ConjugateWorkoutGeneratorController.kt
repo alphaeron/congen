@@ -108,33 +108,40 @@ class ConjugateWorkoutGeneratorController(
             Pair(userId, roles)
         }.flatMap { (userId, roles) ->
             val isAdminOrService = roles.contains("admin") || roles.contains("service")
-            programService.isOwner(programId, userId).flatMap { isOwner ->
-                if (isAdminOrService || isOwner) {
-                    val consentUserIdMono =
-                        if (isAdminOrService) {
-                            programService.getOwner(programId)
-                        } else {
-                            Mono.just(userId)
+            // First check if the program exists
+            programService.selectProgramById(programId)
+                .flatMap { program ->
+                    // Program exists, now check ownership
+                    val hasAccess = isAdminOrService || program.userId == userId
+                    if (hasAccess) {
+                        val consentUserIdMono =
+                            if (isAdminOrService) {
+                                Mono.just(program.userId)
+                            } else {
+                                Mono.just(userId)
+                            }
+                        consentUserIdMono.flatMap { ownerId ->
+                            gdprComplianceService.withUserConsent(ownerId) {
+                                conjugateWorkoutGeneratorService.generateNextWeek(programId)
+                                    .map { updatedProgram -> ResponseEntity.ok(updatedProgram) }
+                                    .doOnError(NoResultsFoundException::class.java) { error ->
+                                        logger.error("Error generating workout program for program: {}", programId, error)
+                                    }
+                                    .doOnError(ValidationException::class.java) { error ->
+                                        logger.error("Validation error generating workout program for program: {}", programId, error)
+                                    }
+                                    .doOnError { error ->
+                                        logger.error("Unexpected error generating workout program for program: {}", programId, error)
+                                    }
+                            }
                         }
-                    consentUserIdMono.flatMap { ownerId ->
-                        gdprComplianceService.withUserConsent(ownerId) {
-                            conjugateWorkoutGeneratorService.generateNextWeek(programId)
-                                .map { program -> ResponseEntity.ok(program) }
-                                .doOnError(NoResultsFoundException::class.java) { error ->
-                                    logger.error("Error generating workout program for program: {}", programId, error)
-                                }
-                                .doOnError(ValidationException::class.java) { error ->
-                                    logger.error("Validation error generating workout program for program: {}", programId, error)
-                                }
-                                .doOnError { error ->
-                                    logger.error("Unexpected error generating workout program for program: {}", programId, error)
-                                }
-                        }
+                    } else {
+                        Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
                     }
-                } else {
-                    Mono.error(AccessDeniedException("Access denied: User is not the owner of this program"))
                 }
-            }
+                .doOnError { e ->
+                    logger.error("Error generating workout program for program: {}", programId, e)
+                }
         }
     }
 }
