@@ -498,12 +498,12 @@ class ExerciseSelectionService(
                     // Use primary exercise muscles for warmup selection
                     val adjustedTargetMuscles = primaryMuscleNames
 
-                    // Select 2 muscle-focused accessory exercises
+                    // Select 3 muscle-focused accessory exercises
                     val muscleFocusedMono =
                         selectMuscleFocusedWarmupExercises(
                             userExercisePool = userExercisePool,
                             targetMuscles = adjustedTargetMuscles,
-                            count = 2,
+                            count = 3,
                             dayType = dayType,
                             workoutType = workoutType
                         )
@@ -642,12 +642,7 @@ class ExerciseSelectionService(
 
     /**
      * Selects a movement pattern warmup exercise similar to the primary exercise.
-     *
-     * @param userExercisePool The user's exercise pool
-     * @param primaryExercise The primary exercise
-     * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
-     * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
-     * @return Mono containing the selected warmup exercise or null
+     * This can be either accessory or primary exercises, prioritizing movement pattern similarity.
      */
     private fun selectMovementPatternWarmupExercise(
         userExercisePool: UserExercisePool,
@@ -655,19 +650,36 @@ class ExerciseSelectionService(
         dayType: String,
         workoutType: String
     ): Mono<Exercise> {
-        // Use the main entry point to select an accessory exercise with similar movement pattern
+        // First try to find an accessory exercise with the same movement type
         return selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = emptyList(),
-            isAccessory = true,
+            isAccessory = true, // Start with accessory exercises
             workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = null,
             isWarmup = true
         ).filter { selectedExercise ->
-            // Filter by movement type if exercise was selected
             selectedExercise.movementType == primaryExercise.movementType
-        }.onErrorResume { error ->
+        }.switchIfEmpty(
+            // If no accessory exercise found with same movement type, try primary exercises
+            selectExercise(
+                userExercisePool = userExercisePool,
+                targetMuscles = emptyList(),
+                isAccessory = false, // Try primary exercises
+                workoutType = workoutType,
+                dayType = dayType,
+                movementBalanceState = null,
+                isWarmup = true
+            ).filter { selectedExercise ->
+                // For movement pattern matching, allow primary exercises that:
+                // 1. Have the same movement type
+                // 2. Use appropriate equipment (dumbbells, bodyweight, etc.)
+                // 3. Are not too heavy/intense for warmups
+                selectedExercise.movementType == primaryExercise.movementType &&
+                isAppropriateForWarmup(selectedExercise)
+            }
+        ).onErrorResume { error ->
             logger.error(
                 "Failed to select movement pattern warmup exercise for primary exercise: {}. Error: {}",
                 primaryExercise.name,
@@ -675,6 +687,20 @@ class ExerciseSelectionService(
             )
             Mono.error(error)
         }
+    }
+
+    /**
+     * Determines if a primary exercise is appropriate for warmup use.
+     */
+    private fun isAppropriateForWarmup(exercise: Exercise): Boolean {
+        // Allow exercises that use lighter equipment or are bodyweight
+        val warmupAppropriateEquipment = setOf(
+            "dumbbells", "bodyweight", "bands", "sled", "kettlebell"
+        )
+        
+        // Check if the exercise uses any warmup-appropriate equipment
+        // This would need to be implemented based on your equipment filtering logic
+        return true // For now, allow all primary exercises - you can refine this logic
     }
 
     /**

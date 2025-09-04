@@ -1,0 +1,66 @@
+We need to add a data migration to expand the congen database data.
+
+use liquibase format, put it in the data migration directory, and the file should be named changelog-2025-09-04_01_add_more_exercise_data.sql.
+
+Use all our existing categories, workout types, relations, ...
+
+Make the data fit into our existing schema.
+
+The exercises source is https://invasiondigitalmedia.com/exercisedatabase-3-2/
+
+Base the descriptions off of the linked videos for those exercises in the url specified
+
+Also, output a structured directory for the exercises containing gifs that are gym looking line sketches that illustrate how to perform the exercise with minimal background and a focus on the equipment and how to perform the movement.
+
+Here are the exercises that we need to add.  do not add duplicate exericses we already have.  for example, we might already have box jump variants, or pull-ups.
+
+
+all Rotational Throw (Punch Emphasis)
+Weighted Box Jumps (non-countermovement)
+Medicine Ball Underhand Vertical Toss
+Broad Jump (weighted)
+Reactive Box Jumps
+Medicine Ball Slam
+Hurdle Hops
+Split Stance Jump
+Box Jumps
+Medicine Ball Underhand Toss Horizontal
+Dumbbell Explosive Lunge Jump
+Lateral Step Ups On Box
+Lateral Single Leg Hops
+Front High Knees
+Ice Skaters
+Medicine Ball Underhand Toss Overhead
+Tempo Runs
+
+      JOINT INTEGRITY
+      Band Pull Aparts
+      Hip Thrusts
+      Banded Tricep Extension
+      Valslide Hamstring Curls
+      Neck Flexion Extension With Harness
+      Plate Holds (fingertips)
+      4 Way Neck
+      Backwards Walking Neck Harness Sled Walks
+      Front Walking Neck Harness Sled Walks With Sandbag
+            AUXILIARY
+            Kettlebell Pull Through
+            Hanging Leg Raises
+            Banded Kettlebell Swing
+            Ab Roll Outs
+            Plank
+            Banded Hamstring Curls
+            Pull Ups
+            Suitcase Carry
+            Thumbs Up Battle Rope
+            Decline Sit Up
+            Sit Ups
+            Decline Single Arm Sit Ups
+            Medicine Ball Decline Russian Twist
+            Palloff Press
+            Prowler Marches
+            Thumbs Down Battle Rope
+            Rope
+            Swiss Ball Leg Curl Glute HAM
+            1/2 Turkish Get Up
+            Deadman Hangs~

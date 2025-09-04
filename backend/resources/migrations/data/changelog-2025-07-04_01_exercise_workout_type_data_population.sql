@@ -63,3 +63,16 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Sumo Deadlift', 'hinge', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Trap Bar Deadlift', 'hinge', 'maximal_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Romanian Deadlift', 'hinge', 'maximal_effort');
+
+-- Add workout type assignments for the new exercises
+-- Sled Drag - suitable for both workout types as it's a conditioning exercise
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Sled Drag', 'hinge', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Sled Drag', 'hinge', 'maximal_effort');
+
+-- Dumbbell Bench Press - suitable for both workout types
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Dumbbell Bench Press', 'horizontal_push', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Dumbbell Bench Press', 'horizontal_push', 'maximal_effort');
+
+-- Reverse Hyper - suitable for both workout types as it's an accessory
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Reverse Hyper', 'hinge', 'dynamic_effort');
+INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Reverse Hyper', 'hinge', 'maximal_effort');
