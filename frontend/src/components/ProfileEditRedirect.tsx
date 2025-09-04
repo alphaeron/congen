@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from 'react-oidc-context'
-import { Box, Typography, Alert, Button } from '@mui/material'
+import { useSnackbar } from 'notistack'
+import { Box, Typography } from '@mui/material'
 import { updateUserProfile } from '../api/user'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -15,14 +16,13 @@ import { LoadingSpinner } from './LoadingSpinner'
 export const ProfileEditRedirect: React.FC = () => {
   const navigate = useNavigate()
   const auth = useAuth()
+  const { enqueueSnackbar } = useSnackbar()
   const [isSyncing, setIsSyncing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const syncProfileChanges = async () => {
       try {
         setIsSyncing(true)
-        setError(null)
 
         // Check if we have a stored redirect path from a profile edit operation
         const redirectPath = sessionStorage.getItem('congen_redirect_after_profile_edit')
@@ -48,8 +48,7 @@ export const ProfileEditRedirect: React.FC = () => {
           navigate('/profile', { replace: true })
         }
       } catch (err) {
-        console.error('Error syncing profile changes:', err)
-        setError('Failed to sync profile changes. Please try again.')
+        enqueueSnackbar('Failed to sync profile changes. Please try again.', { variant: 'error' })
       } finally {
         setIsSyncing(false)
       }
@@ -59,19 +58,6 @@ export const ProfileEditRedirect: React.FC = () => {
     const timer = setTimeout(syncProfileChanges, 100)
     return () => clearTimeout(timer)
   }, [navigate, auth.user])
-
-  if (error) {
-    return (
-      <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-        <Button variant="contained" onClick={() => navigate('/profile')}>
-          Go to Profile
-        </Button>
-      </Box>
-    )
-  }
 
   if (isSyncing) {
     return (

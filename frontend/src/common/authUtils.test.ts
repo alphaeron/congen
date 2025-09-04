@@ -32,22 +32,6 @@ Object.defineProperty(window, 'sessionStorage', {
   writable: true,
 });
 
-// Mock console methods
-const mockConsole = {
-  warn: jest.fn(),
-  log: jest.fn(),
-};
-
-Object.defineProperty(console, 'warn', {
-  value: mockConsole.warn,
-  writable: true,
-});
-
-Object.defineProperty(console, 'log', {
-  value: mockConsole.log,
-  writable: true,
-});
-
 describe('authUtils', () => {
   beforeEach(() => {
     jest.clearAllMocks();
