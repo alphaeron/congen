@@ -146,14 +146,17 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
         // Create a program first
         val programId = IntegrationTestHelpers.createTestProgram(webTestClient, userId, "Test Program", token = userToken)
 
-        // Generate a workout to create existing workouts
-        webTestClient.post()
-            .uri("/api/v1/conjugate_workout_generator/$programId")
-            .header("Authorization", "Bearer $userToken")
-            .exchange()
-            .expectStatus().isOk()
+        // Instead of trying to generate a workout (which requires complex exercise data),
+        // we'll create a simple workout manually to test the session time change
+        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Test Workout", token = userToken)
+        
+        // Create a workout stage
+        val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, stageTypeId = 1, position = 1, name = "Test Stage", token = userToken)
+        
+        // Create a programmed exercise
+        IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, exerciseName = "Bench Press", position = 1, token = userToken)
 
-        // Should allow changing session time
+        // Should allow changing session time when workouts exist
         webTestClient.patch()
             .uri(
                 "/api/v1/program_preferences/?program_id=$programId" +
