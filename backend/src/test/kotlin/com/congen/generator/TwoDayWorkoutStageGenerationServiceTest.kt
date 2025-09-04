@@ -228,7 +228,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
@@ -238,7 +239,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = any()
+                movementBalanceState = any(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         // Mock the selectConditioningExercise call
@@ -249,7 +251,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         // Mock the selectConditioningExercise call - this needs to match the exact call from selectConditioningExercise
@@ -260,7 +263,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = any(),
-                movementBalanceState = any()
+                movementBalanceState = any(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
@@ -369,7 +373,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
 
@@ -380,7 +385,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
@@ -390,7 +396,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = any()
+                movementBalanceState = any(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         // Mock the selectConditioningExercise call - this needs to match the exact call from selectConditioningExercise
@@ -401,7 +408,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
@@ -463,7 +471,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(
@@ -473,7 +482,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         // Mock the selectConditioningExercise call
@@ -484,7 +494,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
@@ -595,7 +606,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
@@ -605,7 +617,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = eq(dayType),
-                movementBalanceState = any()
+                movementBalanceState = any(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         // Mock the selectConditioningExercise call - this needs to match the exact call from selectConditioningExercise
@@ -616,7 +629,8 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(

@@ -61,7 +61,11 @@ variable "frontend_redirect_uris" {
     "https://congen.com/auth/callback",
     "https://www.congen.com/auth/callback",
     "https://congen.com/silent-renew.html",
-    "https://www.congen.com/silent-renew.html"
+    "https://www.congen.com/silent-renew.html",
+    "https://congen.com/password-change-redirect",
+    "https://www.congen.com/password-change-redirect",
+    "https://congen.com/profile-edit-redirect",
+    "https://www.congen.com/profile-edit-redirect"
   ]
 }
 

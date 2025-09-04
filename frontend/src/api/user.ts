@@ -29,3 +29,19 @@ export const getCurrentUser = (): Promise<User> =>
     method: 'GET',
     url: '/user/me',
   });
+
+/**
+ * Update current user profile.
+ *
+ * Updates the current authenticated user's profile information.
+ * The user must be authenticated and can only update their own profile.
+ *
+ * @param profileData The profile data to update
+ * @return The updated user profile
+ */
+export const updateUserProfile = (profileData: { name: string }): Promise<User> =>
+  REQUEST({
+    method: 'PATCH',
+    url: '/user/me',
+    params: profileData,
+  });

@@ -94,7 +94,8 @@ class WorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))
@@ -163,7 +164,8 @@ class WorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("maximal_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
 
@@ -204,7 +206,8 @@ class WorkoutStageGenerationServiceTest {
                 isAccessory = eq(false),
                 workoutType = eq("dynamic_effort"),
                 dayType = eq(dayType),
-                movementBalanceState = isNull()
+                movementBalanceState = isNull(),
+                isWarmup = eq(false)
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(workoutStageDAL.insertWorkoutStage(any(), any(), any(), any()))

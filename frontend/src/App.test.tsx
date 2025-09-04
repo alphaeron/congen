@@ -129,6 +129,16 @@ jest.mock('./components/AuthCallback', () => ({
   AuthCallback: () => <div data-testid="auth-callback">Auth Callback</div>,
 }));
 
+// Mock the ProfileEditRedirect component
+jest.mock('./components/ProfileEditRedirect', () => ({
+  ProfileEditRedirect: () => <div data-testid="profile-edit-redirect">Profile Edit Redirect</div>,
+}));
+
+// Mock the PasswordChangeRedirect component
+jest.mock('./components/PasswordChangeRedirect', () => ({
+  PasswordChangeRedirect: () => <div data-testid="password-change-redirect">Password Change Redirect</div>,
+}));
+
 // Mock the SnackbarProvider
 jest.mock('notistack', () => ({
   SnackbarProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

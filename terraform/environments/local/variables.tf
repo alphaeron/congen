@@ -58,7 +58,9 @@ variable "frontend_redirect_uris" {
   default = [
     "http://localhost:3000",
     "http://localhost:3000/auth/callback",
-    "http://localhost:3000/silent-renew.html"
+    "http://localhost:3000/silent-renew.html",
+    "http://localhost:3000/password-change-redirect",
+    "http://localhost:3000/profile-edit-redirect"
   ]
 }
 

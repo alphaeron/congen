@@ -1,14 +1,13 @@
-import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
-import { default as EditIcon } from '@mui/icons-material/Edit';
-import { Box, Card, CardContent, Grid, Typography, Avatar, Button } from '@mui/material';
-import React from 'react';
-
-import type { User } from '../api/types';
-import { formatDate } from '../common/utils';
+import React from 'react'
+import { Box, Card, CardContent, Grid, Typography, Avatar, Button, Chip, Stack } from '@mui/material'
+import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle'
+import { default as EditIcon } from '@mui/icons-material/Edit'
+import type { User } from '../api/types'
+import { KEYCLOAK_URL } from '../globals'
+import { formatDate } from '../common/utils'
 
 interface ProfileOverviewProps {
-  user: User;
-  onEditProfile?: () => void;
+  user: User
 }
 
 /**
@@ -17,17 +16,20 @@ interface ProfileOverviewProps {
  * Shows user avatar, name, member since date, roles, and edit button.
  *
  * @param user The user data to display
- * @param onEditProfile Optional callback function when edit profile is clicked
  * @return Profile overview component
  */
-export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditProfile }) => {
+export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
   const handleEditProfile = () => {
-    if (onEditProfile) {
-      onEditProfile();
-    } else {
-      // Default implementation - could be expanded later
-    }
-  };
+    // Construct the Keycloak account management URL with redirect back to Congen
+    const redirectUri = `${window.location.origin}/profile-edit-redirect`
+    const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`
+
+    // Store the current location to redirect back after profile edit
+    sessionStorage.setItem('congen_redirect_after_profile_edit', window.location.pathname)
+
+    // Redirect to Keycloak account management
+    window.location.href = accountUrl
+  }
 
   return (
     <React.Fragment>
@@ -68,5 +70,5 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user, onEditPr
         </Grid>
       </Grid>
     </React.Fragment>
-  );
-};
+  )
+}

@@ -19,6 +19,8 @@ import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
+import org.mockito.kotlin.never
+import org.mockito.kotlin.any
 
 @ExtendWith(MockitoExtension::class)
 class UserServiceTest {
@@ -115,5 +117,63 @@ class UserServiceTest {
             .expectNext(testUser)
             .verifyComplete()
         verify(userDAL).selectUserByKeycloakId(keycloakId)
+    }
+
+    @Test
+    fun `updateUser should update user successfully`() {
+        val newName = "Updated User Name"
+        val updatedUser = User(
+            keycloakId = "test-keycloak-id",
+            name = newName,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
+        whenever(userDAL.updateUser("test-keycloak-id", newName)).thenReturn(Mono.just(updatedUser))
+
+        val result = userService.updateUser(newName)
+
+        StepVerifier.create(result)
+            .expectNext(updatedUser)
+            .verifyComplete()
+
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userDAL).updateUser("test-keycloak-id", newName)
+    }
+
+    @Test
+    fun `updateUser should propagate error from KeycloakUtil`() {
+        val newName = "Updated User Name"
+        val error = RuntimeException("Keycloak error")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.error(error))
+
+        val result = userService.updateUser(newName)
+
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
+
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userDAL, never()).updateUser(any(), any())
+    }
+
+    @Test
+    fun `updateUser should propagate error from UserDAL`() {
+        val newName = "Updated User Name"
+        val error = ValidationException("Invalid name")
+
+        whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
+        whenever(userDAL.updateUser("test-keycloak-id", newName)).thenReturn(Mono.error(error))
+
+        val result = userService.updateUser(newName)
+
+        StepVerifier.create(result)
+            .expectError(ValidationException::class.java)
+            .verify()
+
+        verify(keycloakUtil).getCurrentUserId()
+        verify(userDAL).updateUser("test-keycloak-id", newName)
     }
 }

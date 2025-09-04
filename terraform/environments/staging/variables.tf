@@ -58,7 +58,9 @@ variable "frontend_redirect_uris" {
   default = [
     "https://staging.congen.com",
     "https://staging.congen.com/auth/callback",
-    "https://staging.congen.com/silent-renew.html"
+    "https://staging.congen.com/silent-renew.html",
+    "https://staging.congen.com/password-change-redirect",
+    "https://staging.congen.com/profile-edit-redirect"
   ]
 }
 

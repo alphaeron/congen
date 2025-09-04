@@ -18,6 +18,7 @@ import React, { useState } from 'react';
 
 import { deleteAllPersonalData } from '../api/gdpr';
 import type { User } from '../api/types';
+import { KEYCLOAK_URL } from '../globals';
 
 interface AccountSecurityProps {
   user: User;
@@ -57,6 +58,22 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
     }
   };
 
+  /**
+   * Redirects the user to Keycloak's account management interface to change their password.
+   * After completing the password change, the user will be redirected back to Congen.
+   */
+  const handleChangePassword = () => {
+    // Construct the Keycloak account management URL with redirect back to Congen
+    const redirectUri = `${window.location.origin}/password-change-redirect`;
+    const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/security/credentials?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    
+    // Store the current location to redirect back after password change
+    sessionStorage.setItem('congen_redirect_after_password_change', window.location.pathname);
+    
+    // Redirect to Keycloak account management
+    window.location.href = accountUrl;
+  };
+
   return (
     <React.Fragment>
       <Typography variant="h5" gutterBottom>
@@ -79,9 +96,16 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
                 Configure your account security preferences and access controls.
               </Typography>
               <Box display="flex" flexDirection="column" gap={1}>
-                <Button variant="outlined" fullWidth>
+                <Button 
+                  variant="outlined" 
+                  fullWidth 
+                  onClick={handleChangePassword}
+                >
                   Change Password
                 </Button>
+                <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+                  You will be redirected to Keycloak to change your password securely
+                </Typography>
               </Box>
             </CardContent>
           </Card>

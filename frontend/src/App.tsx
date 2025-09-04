@@ -25,6 +25,7 @@ import { AuthCallback } from './components/AuthCallback';
 import { AuthorizedElement } from './components/AuthorizedElement';
 import { CookieConsentManager } from './components/CookieConsentManager';
 import { LoadingSpinner } from './components/LoadingSpinner';
+import { PasswordChangeRedirect } from './components/PasswordChangeRedirect';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CookieProvider } from './contexts/CookieContext';
@@ -37,6 +38,7 @@ import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import ConGenIcon from './resources/congen-icon.svg';
 import { getTheme } from './theme';
+import { ProfileEditRedirect } from './components/ProfileEditRedirect';
 
 import './App.css';
 import './styles/menuButton.css';
@@ -534,8 +536,10 @@ function AppContent(): React.ReactElement {
                 }
               />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/password-change-redirect" element={<PasswordChangeRedirect />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/privacy_policy" element={<PrivacyPolicyPage />} />
+              <Route path="/profile-edit-redirect" element={<ProfileEditRedirect />} />
             </Routes>
           </Container>
         </Box>

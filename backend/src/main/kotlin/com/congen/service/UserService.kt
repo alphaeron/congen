@@ -40,8 +40,6 @@ class UserService(
      * @throws ValidationException if validation fails or name is not available
      */
     fun insertUser(): Mono<User> {
-        logger.info("Creating user profile from Keycloak information")
-
         return keycloakUtil.getCurrentUserId()
             .flatMap { keycloakId ->
                 keycloakUtil.getCurrentUserName()
@@ -51,9 +49,6 @@ class UserService(
                             Mono.error(ValidationException("User name not available from Keycloak token"))
                         } else {
                             logger.info("Creating user profile after Keycloak registration: {}", name)
-
-                            // Validate user name
-                            ValidationUtil.validateUserName(name)
 
                             userDAL.insertUser(keycloakId, name)
                                 .flatMap { user ->
@@ -66,12 +61,24 @@ class UserService(
                         }
                     }
             }
-            .doOnSuccess { user ->
-                if (user != null) {
-                    logger.debug("Created user profile from Keycloak with ID: {}", user.keycloakId)
-                }
+    }
+
+    /**
+     * Updates the current user's profile information.
+     *
+     * This method updates the user's profile in the application database.
+     * The user must be authenticated and can only update their own profile.
+     *
+     * @param name The new name for the user
+     * @return The updated user
+     * @throws ValidationException if user data fails validation
+     * @throws NoResultsFoundException if user profile does not exist
+     */
+    fun updateUser(name: String): Mono<User> {
+        return keycloakUtil.getCurrentUserId()
+            .flatMap { keycloakUserId ->
+                userDAL.updateUser(keycloakUserId, name)
             }
-            .doOnError { e -> logger.error("Error creating user profile from Keycloak", e) }
     }
 
     /**

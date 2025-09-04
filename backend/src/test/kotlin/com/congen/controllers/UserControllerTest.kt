@@ -140,4 +140,55 @@ class UserControllerTest {
         verify(keycloakUtil).getCurrentUserId()
         verify(userService, never()).selectUserByKeycloakId(any())
     }
+
+    @Test
+    fun `updateCurrentUser should update user profile successfully`() {
+        val keycloakId = "test-keycloak-id"
+        val newName = "Updated User Name"
+        val updatedUser = User(
+            keycloakId = keycloakId,
+            name = newName,
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+
+        whenever(userService.updateUser(newName)).thenReturn(Mono.just(updatedUser))
+
+        val result = userController.updateCurrentUser(newName)
+
+        StepVerifier.create(result)
+            .expectNext(ResponseEntity.ok(updatedUser))
+            .verifyComplete()
+        verify(userService).updateUser(newName)
+    }
+
+    @Test
+    fun `updateCurrentUser should propagate validation error`() {
+        val newName = "Updated User Name"
+        val error = ValidationException("Invalid name")
+
+        whenever(userService.updateUser(newName)).thenReturn(Mono.error(error))
+
+        val result = userController.updateCurrentUser(newName)
+
+        StepVerifier.create(result)
+            .expectError(ValidationException::class.java)
+            .verify()
+        verify(userService).updateUser(newName)
+    }
+
+    @Test
+    fun `updateCurrentUser should propagate keycloak error`() {
+        val newName = "Updated User Name"
+        val error = RuntimeException("Keycloak error")
+
+        whenever(userService.updateUser(newName)).thenReturn(Mono.error(error))
+
+        val result = userController.updateCurrentUser(newName)
+
+        StepVerifier.create(result)
+            .expectError(RuntimeException::class.java)
+            .verify()
+        verify(userService).updateUser(newName)
+    }
 }

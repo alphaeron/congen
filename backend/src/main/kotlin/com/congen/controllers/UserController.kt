@@ -16,8 +16,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
@@ -139,6 +141,58 @@ class UserController(
             .flatMap { keycloakUserId ->
                 userService.selectUserByKeycloakId(keycloakUserId)
             }
+            .map { ResponseEntity.ok(it) }
+    }
+
+    /**
+     * Updates the current authenticated user's profile.
+     *
+     * This endpoint allows authenticated users to update their own profile information.
+     * The user must be authenticated and can only update their own profile.
+     *
+     * @param name The new name for the user
+     * @return The updated user profile
+     *
+     * @throws ValidationException if the provided name fails validation
+     * @throws NoResultsFoundException if user profile does not exist
+     */
+    @PatchMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Update current user profile",
+        description =
+            "Updates the current authenticated user's profile. " +
+                "The user must be authenticated and can only update their own profile."
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "User profile updated successfully",
+                content = [Content(schema = Schema(implementation = User::class))]
+            ),
+            ApiResponse(
+                responseCode = "400",
+                description = "Bad request - validation error"
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized - user not authenticated"
+            ),
+            ApiResponse(
+                responseCode = "404",
+                description = "Not found - user profile does not exist"
+            ),
+            ApiResponse(
+                responseCode = "500",
+                description = "Internal server error"
+            )
+        ]
+    )
+    fun updateCurrentUser(
+        @RequestParam("name") name: String
+    ): Mono<ResponseEntity<User>> {
+        return userService.updateUser(name)
             .map { ResponseEntity.ok(it) }
     }
 }

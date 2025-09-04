@@ -9,7 +9,6 @@ import com.congen.client.PostgresClient
 import com.congen.model.User
 import com.congen.service.AuditService
 import com.congen.util.EncryptionUtil
-import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import reactor.core.publisher.Mono
@@ -180,7 +179,7 @@ class UserDAL(
     }
 
     /**
-     * Deletes a user from the database.
+     * Deletes a user by Keycloak ID for GDPR right to erasure.
      *
      * This method removes the user record with the specified Keycloak ID from
      * the database. If no user exists with the given Keycloak ID, a
@@ -194,30 +193,84 @@ class UserDAL(
         invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
         entityName = "user"
     )
-    fun deleteUser(keycloakId: String): Mono<User> {
+    fun deleteUserByKeycloakId(keycloakId: String): Mono<User> {
         logger.debug("Deleting user with Keycloak ID: {}", keycloakId)
-        return postgresClient.update(
-            "DELETE FROM \"user\" WHERE keycloak_id=$1",
+
+        return postgresClient.selectIndividual<Map<String, Any>>(
+            "SELECT * FROM \"user\" WHERE keycloak_id=$1",
             keycloakId,
-        )
+        ).flatMap { row ->
+            // Log the data deletion for GDPR audit
+            auditService.logDataOperation(
+                keycloakId = keycloakId,
+                operation = "DATA_DELETION",
+                dataType = "USER_PROFILE"
+            ).then(
+                // Delete the user
+                postgresClient.update<Int>(
+                    "DELETE FROM \"user\" WHERE keycloak_id=$1",
+                    keycloakId,
+                ).then(
+                    // Return the deleted user with decrypted data
+                    Mono.fromCallable {
+                        decryptUserData(row)
+                    }
+                )
+            )
+        }
     }
 
     /**
-     * Deletes a user by Keycloak ID for GDPR right to erasure.
+     * Updates a user's profile information.
      *
-     * @param keycloakId The user's Keycloak ID
-     * @return Mono that completes when user is deleted
+     * This method updates the user record with the specified Keycloak ID.
+     * The name field is encrypted before storage and the updated_at timestamp
+     * is automatically updated.
+     *
+     * @param keycloakId The Keycloak identifier of the user to update
+     * @param name The new name for the user
+     * @return Mono containing the updated user
+     * @throws NoResultsFoundException if no user exists with the given Keycloak ID
      */
     @CacheEvict(
         invalidationStrategy = CacheInvalidationStrategy.USER_DATA,
         entityName = "user"
     )
-    fun deleteUserByKeycloakId(keycloakId: String): Mono<Void> {
-        logger.warn("Deleting all data for user: {}", keycloakId)
-        return postgresClient.update<Map<String, Any>>(
-            "DELETE FROM \"user\" WHERE keycloak_id = $1",
-            keycloakId
-        ).then()
+    fun updateUser(
+        keycloakId: String,
+        name: String
+    ): Mono<User> {
+        logger.debug("Updating user: {} with Keycloak ID: {}", name, keycloakId)
+
+        // Encrypt sensitive data
+        val encryptedName = encryptionUtil.encrypt(name)
+
+        return postgresClient.update<Int>(
+            """
+            UPDATE "user"
+            SET name=$2, updated_at=NOW()
+            WHERE keycloak_id=$1
+            """.trimIndent(),
+            keycloakId,
+            encryptedName
+        ).flatMap {
+            // Log the data update for GDPR audit
+            auditService.logDataOperation(
+                keycloakId = keycloakId,
+                operation = "DATA_UPDATE",
+                dataType = "USER_PROFILE"
+            ).then(
+                // Return the updated user with decrypted data
+                Mono.fromCallable {
+                    User(
+                        keycloakId = keycloakId,
+                        name = name,
+                        createdAt = Instant.now(),
+                        updatedAt = Instant.now()
+                    )
+                }
+            )
+        }
     }
 
     /**

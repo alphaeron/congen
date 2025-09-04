@@ -5,6 +5,7 @@ import com.congen.mockUser
 import com.congen.model.User
 import com.congen.service.AuditService
 import com.congen.util.EncryptionUtil
+import com.congen.exceptions.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -12,10 +13,12 @@ import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import org.mockito.kotlin.never
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.any
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
-import org.mockito.kotlin.any as anyKotlin
 
 class UserDALTest {
     private lateinit var postgresClient: PostgresClient
@@ -23,7 +26,7 @@ class UserDALTest {
     private lateinit var auditService: AuditService
     private lateinit var userDAL: UserDAL
 
-    private val user = mockUser()
+    private val user = mockUser(name = "Test User")
     private val users = listOf(user)
 
     @BeforeEach
@@ -59,7 +62,7 @@ class UserDALTest {
 
     @Test
     fun `insertUser should return inserted user`() {
-        val insertUser = mockUser(keycloakId = "0")
+        val insertUser = mockUser(keycloakId = "0", name = "Test User")
         val mockRow = mapOf("id" to 1)
         whenever(encryptionUtil.encrypt(insertUser.name)).thenReturn("encrypted_name")
         whenever(
@@ -76,9 +79,9 @@ class UserDALTest {
         ).thenReturn(Mono.just(mockRow))
         whenever(
             auditService.logDataOperation(
-                anyKotlin(),
-                anyKotlin(),
-                anyKotlin(),
+                any(),
+                any(),
+                any(),
                 anyOrNull(),
                 anyOrNull()
             )
@@ -95,15 +98,98 @@ class UserDALTest {
     }
 
     @Test
-    fun `deleteUser should return deleted user`() {
-        whenever(postgresClient.update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId))
-            .thenReturn(Mono.just(user))
+    fun `deleteUserByKeycloakId should delete user and return deleted user data`() {
+        val keycloakId = "test-keycloak-id"
+        val userData = mapOf(
+            "keycloak_id" to keycloakId,
+            "name" to "encrypted-name",
+            "created_at" to "2024-01-01T00:00:00Z",
+            "updated_at" to "2024-01-01T00:00:00Z"
+        )
 
-        val result = userDAL.deleteUser(user.keycloakId)
+        whenever(
+            postgresClient.selectIndividual<Map<String, Any>>(
+                "SELECT * FROM \"user\" WHERE keycloak_id=$1",
+                keycloakId
+            )
+        ).thenReturn(Mono.just(userData))
+        whenever(
+            postgresClient.update<Int>(
+                "DELETE FROM \"user\" WHERE keycloak_id=$1",
+                keycloakId
+            )
+        ).thenReturn(Mono.just(1))
+        whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
+            .thenReturn(Mono.just(Unit))
+
+        val result = userDAL.deleteUserByKeycloakId(keycloakId)
 
         StepVerifier.create(result)
-            .expectNext(user)
+            .expectNextMatches { user ->
+                user.keycloakId == keycloakId && user.name.isNotEmpty()
+            }
             .verifyComplete()
-        verify(postgresClient).update<User>("DELETE FROM \"user\" WHERE keycloak_id=$1", user.keycloakId)
+
+        verify(postgresClient).selectIndividual<Map<String, Any>>(
+            "SELECT * FROM \"user\" WHERE keycloak_id=$1",
+            keycloakId
+        )
+        verify(postgresClient).update<Int>(
+            "DELETE FROM \"user\" WHERE keycloak_id=$1",
+            keycloakId
+        )
+        verify(auditService).logDataOperation(
+            eq(keycloakId),
+            eq("DATA_DELETION"),
+            eq("USER_PROFILE"),
+            anyOrNull(),
+            anyOrNull()
+        )
+    }
+
+    @Test
+    fun `updateUser should update user successfully`() {
+        val keycloakId = "test-keycloak-id"
+        val newName = "Updated User"
+
+        whenever(encryptionUtil.encrypt(any())).thenReturn("encrypted-name")
+        whenever(
+            postgresClient.update<Int>(
+                """
+                UPDATE "user"
+                SET name=$2, updated_at=NOW()
+                WHERE keycloak_id=$1
+                """.trimIndent(),
+                keycloakId,
+                "encrypted-name"
+            )
+        ).thenReturn(Mono.just(1))
+        whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
+            .thenReturn(Mono.just(Unit))
+
+        val result = userDAL.updateUser(keycloakId, newName)
+
+        StepVerifier.create(result)
+            .expectNextMatches { user ->
+                user.keycloakId == keycloakId && user.name == newName
+            }
+            .verifyComplete()
+
+        verify(postgresClient).update<Int>(
+            """
+            UPDATE "user"
+            SET name=$2, updated_at=NOW()
+            WHERE keycloak_id=$1
+            """.trimIndent(),
+            keycloakId,
+            "encrypted-name"
+        )
+        verify(auditService).logDataOperation(
+            eq(keycloakId),
+            eq("DATA_UPDATE"),
+            eq("USER_PROFILE"),
+            anyOrNull(),
+            anyOrNull()
+        )
     }
 }
