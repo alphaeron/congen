@@ -205,18 +205,16 @@ class UserDAL(
                 keycloakId = keycloakId,
                 operation = "DATA_DELETION",
                 dataType = "USER_PROFILE"
-            ).then(
-                // Delete the user
-                postgresClient.update<Int>(
+            ).flatMap {
+                // Delete the user - use the generic update method which automatically appends RETURNING *
+                postgresClient.update<Map<String, Any>>(
                     "DELETE FROM \"user\" WHERE keycloak_id=$1",
                     keycloakId,
-                ).then(
+                ).map {
                     // Return the deleted user with decrypted data
-                    Mono.fromCallable {
-                        decryptUserData(row)
-                    }
-                )
-            )
+                    decryptUserData(row)
+                }
+            }
         }
     }
 
