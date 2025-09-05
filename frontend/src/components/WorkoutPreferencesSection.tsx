@@ -11,14 +11,6 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Alert,
   Divider,
 } from '@mui/material';
@@ -26,6 +18,8 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { FormDialog } from './FormDialog';
+import { FormField } from './FormField';
 import { getExercises } from '../api/exercise';
 import { WeightUnit,
   type Exercise,
@@ -233,60 +227,36 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       </Grid>
 
       {/* Add Weight Unit Preference Dialog */}
-      <Dialog
+      <FormDialog
         open={unitDialogOpen}
         onClose={() => setUnitDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        onSubmit={handleAddWeightUnitPreference}
+        title="Add Weight Unit Preference"
+        submitText="Add Preference"
+        loading={saving}
+        disabled={!selectedExercise}
       >
-        <DialogTitle>Add Weight Unit Preference</DialogTitle>
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel>Exercise</InputLabel>
-              <Select
-                value={selectedExercise}
-                label="Exercise"
-                onChange={e => setSelectedExercise(e.target.value)}
-              >
-                {exercises && exercises.length > 0 ? (
-                  exercises.map(exercise => (
-                    <MenuItem key={exercise.name} value={exercise.name}>
-                      {exercise.name}
-                    </MenuItem>
-                  ))
-                ) : (
-                  <MenuItem disabled>No exercises available</MenuItem>
-                )}
-              </Select>
-            </FormControl>
+        <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
+          <FormField
+            type="select"
+            label="Exercise"
+            value={selectedExercise}
+            onChange={setSelectedExercise}
+            options={exercises && exercises.length > 0 ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name })) : [{ value: '', label: 'No exercises available' }]}
+          />
 
-            <FormControl fullWidth>
-              <InputLabel>Preferred Unit</InputLabel>
-              <Select
-                value={selectedUnit}
-                label="Preferred Unit"
-                onChange={e => setSelectedUnit(e.target.value as WeightUnit)}
-              >
-                <MenuItem value={WeightUnit.KG}>Kilograms (KG)</MenuItem>
-                <MenuItem value={WeightUnit.LBS}>Pounds (LBS)</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setUnitDialogOpen(false)} disabled={saving}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAddWeightUnitPreference}
-            variant="contained"
-            disabled={saving || !selectedExercise}
-          >
-            {saving ? 'Adding...' : 'Add Preference'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+          <FormField
+            type="select"
+            label="Preferred Unit"
+            value={selectedUnit}
+            onChange={(value) => setSelectedUnit(value as WeightUnit)}
+            options={[
+              { value: WeightUnit.KG, label: 'Kilograms (KG)' },
+              { value: WeightUnit.LBS, label: 'Pounds (LBS)' }
+            ]}
+          />
+        </Box>
+      </FormDialog>
     </Box>
   );
 }

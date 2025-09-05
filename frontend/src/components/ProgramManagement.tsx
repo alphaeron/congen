@@ -6,23 +6,21 @@ import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Typography,
-  Chip,
   IconButton,
   Tooltip,
-  Backdrop,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { ActionCard } from './ActionCard';
+import { ConfirmationDialog } from './ConfirmationDialog';
+import { FormDialog } from './FormDialog';
+import { LoadingBackdrop } from './LoadingBackdrop';
+import { EmptyState } from './EmptyState';
+import { FormField } from './FormField';
+import { StatusChip } from './StatusChip';
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
 import { getProgramPreferences, updateProgramPreferences } from '../api/programPreferences';
@@ -280,263 +278,184 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           const sessionDuration = preferences?.session_time_length_in_minutes || 60;
 
           return (
-            <Card key={program.id} elevation={2} sx={{ borderRadius: 2 }}>
-              <CardContent>
-                <Box
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="flex-start"
-                  sx={{ mb: 2 }}
-                >
-                  <Typography variant="h6" component="h3">
-                    {program.name}
-                  </Typography>
-                  <Box display="flex" gap={1}>
-                    {program.is_active ? (
-                      <React.Fragment>
-                        <Tooltip title="Change Session Duration">
-                          <IconButton size="small" onClick={() => openEditDialog(program)}>
-                            <EditIcon />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Stop Program">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => openStopDialog(program)}
-                          >
-                            <PauseIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </React.Fragment>
-                    ) : (
-                      <Tooltip title="Resume Program">
+            <ActionCard
+              key={program.id}
+              title={program.name}
+              actions={
+                <>
+                  {program.is_active ? (
+                    <React.Fragment>
+                      <Tooltip title="Change Session Duration">
+                        <IconButton size="small" onClick={() => openEditDialog(program)}>
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Stop Program">
                         <IconButton
                           size="small"
                           color="primary"
-                          onClick={() => openResumeDialog(program)}
+                          onClick={() => openStopDialog(program)}
                         >
-                          <PlayArrowIcon />
+                          <PauseIcon />
                         </IconButton>
                       </Tooltip>
-                    )}
-                    <Tooltip title="Delete Program">
+                    </React.Fragment>
+                  ) : (
+                    <Tooltip title="Resume Program">
                       <IconButton
                         size="small"
-                        color="error"
-                        onClick={() => openDeleteDialog(program)}
+                        color="primary"
+                        onClick={() => openResumeDialog(program)}
                       >
-                        <DeleteIcon />
+                        <PlayArrowIcon />
                       </IconButton>
                     </Tooltip>
-                  </Box>
-                </Box>
+                  )}
+                  <Tooltip title="Delete Program">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => openDeleteDialog(program)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              }
+            >
+              <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
+                <StatusChip
+                  label={program.is_active ? 'Active' : 'Inactive'}
+                  status={program.is_active ? 'active' : 'inactive'}
+                />
+                <StatusChip
+                  label={`Week ${Math.max(program.current_week_number, 1)}`}
+                  status="info"
+                />
+                <StatusChip
+                  label={`${programWorkouts.length} workouts`}
+                  status="default"
+                  variant="outlined"
+                />
+                <StatusChip
+                  label={`Session Duration: ${sessionDuration} min`}
+                  status="default"
+                  variant="outlined"
+                />
+              </Box>
 
-                <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
-                  <Chip
-                    label={program.is_active ? 'Active' : 'Inactive'}
-                    color={program.is_active ? 'success' : 'default'}
-                    size="small"
-                  />
-                  <Chip
-                    label={`Week ${Math.max(program.current_week_number, 1)}`}
-                    color="primary"
-                    size="small"
-                  />
-                  <Chip
-                    label={`${programWorkouts.length} workouts`}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <Chip
-                    label={`Session Duration: ${sessionDuration} min`}
-                    size="small"
-                    variant="outlined"
-                  />
-                </Box>
-
-                <Typography variant="body2" color="text.secondary">
-                  Created: {formatDate(program.created_at)}
-                </Typography>
-              </CardContent>
-            </Card>
+              <Typography variant="body2" color="text.secondary">
+                Created: {formatDate(program.created_at)}
+              </Typography>
+            </ActionCard>
           );
         })}
       </Box>
 
       {/* No Programs State */}
       {programs.length === 0 && (
-        <Card>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <Typography variant="h6" gutterBottom>
-              No Programs Yet
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Create your first program to get started with structured workouts.
-            </Typography>
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="No Programs Yet"
+          message="Create your first program to get started with structured workouts."
+          action={
+            <Button variant="contained" onClick={() => setCreateDialogOpen(true)}>
+              Create Program
+            </Button>
+          }
+        />
       )}
 
       {/* Create Program Dialog */}
-      <Dialog
+      <FormDialog
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        onSubmit={handleCreateProgram}
+        title="Create New Program"
+        description="Your new program will be created and set as your active program. If you have any other active programs, they will be marked as inactive."
+        submitText="Create Program"
+        disabled={!formData.name.trim()}
       >
-        <DialogTitle>Create New Program</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Your new program will be created and set as your active program. If you have any other
-            active programs, they will be marked as inactive.
-          </Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Program Name"
-            fullWidth
-            variant="outlined"
-            value={formData.name}
-            onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-            sx={{ mb: 2 }}
-          />
-          <TextField
-            margin="dense"
-            label="Days per Week"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={formData.numDaysPerWeek}
-            onChange={e =>
-              setFormData(prev => ({ ...prev, numDaysPerWeek: parseInt(e.target.value) || 4 }))
-            }
-            helperText="Number of training days per week (2, 3, or 4)"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleCreateProgram}
-            variant="contained"
-            disabled={!formData.name.trim()}
-          >
-            Create Program
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <FormField
+          type="text"
+          label="Program Name"
+          value={formData.name}
+          onChange={(value) => setFormData(prev => ({ ...prev, name: value }))}
+          required
+          sx={{ mb: 2 }}
+        />
+        <FormField
+          type="number"
+          label="Days per Week"
+          value={formData.numDaysPerWeek}
+          onChange={(value) => setFormData(prev => ({ ...prev, numDaysPerWeek: parseInt(value) || 4 }))}
+          inputProps={{ min: 2, max: 4 }}
+          helperText="Number of training days per week (2, 3, or 4)"
+        />
+      </FormDialog>
 
       {/* Change Session Duration Dialog */}
-      <Dialog
+      <FormDialog
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        onSubmit={handleUpdateSessionDuration}
+        title="Change Session Duration"
+        description={`Program: ${formData.name}`}
+        submitText="Update Session Duration"
+        disabled={
+          !formData.sessionTimeLengthInMinutes ||
+          formData.sessionTimeLengthInMinutes < 15 ||
+          formData.sessionTimeLengthInMinutes > 300
+        }
       >
-        <DialogTitle>Change Session Duration</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Program: {formData.name}
-          </Typography>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Session Duration (minutes)"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={formData.sessionTimeLengthInMinutes}
-            onChange={e =>
-              setFormData(prev => ({
-                ...prev,
-                sessionTimeLengthInMinutes: parseInt(e.target.value) || 60,
-              }))
-            }
-            inputProps={{ min: 15, max: 300 }}
-            helperText="Session duration in minutes (15-300)"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button
-            onClick={handleUpdateSessionDuration}
-            variant="contained"
-            disabled={
-              !formData.sessionTimeLengthInMinutes ||
-              formData.sessionTimeLengthInMinutes < 15 ||
-              formData.sessionTimeLengthInMinutes > 300
-            }
-          >
-            Update Session Duration
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <FormField
+          type="number"
+          label="Session Duration (minutes)"
+          value={formData.sessionTimeLengthInMinutes}
+          onChange={(value) => setFormData(prev => ({ ...prev, sessionTimeLengthInMinutes: parseInt(value) || 60 }))}
+          inputProps={{ min: 15, max: 300 }}
+          helperText="Session duration in minutes (15-300)"
+        />
+      </FormDialog>
 
       {/* Delete Program Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Program</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this program? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleDeleteProgram} color="error" variant="contained">
-            Delete Program
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteProgram}
+        title="Delete Program"
+        message="Are you sure you want to delete this program? This action cannot be undone."
+        confirmText="Delete Program"
+        confirmColor="error"
+      />
 
       {/* Stop Program Dialog */}
-      <Dialog open={stopDialogOpen} onClose={() => setStopDialogOpen(false)}>
-        <DialogTitle>Stop Program</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to stop this program? You can resume it later if needed.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setStopDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleStopProgram} color="warning" variant="contained">
-            Stop Program
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmationDialog
+        open={stopDialogOpen}
+        onClose={() => setStopDialogOpen(false)}
+        onConfirm={handleStopProgram}
+        title="Stop Program"
+        message="Are you sure you want to stop this program? You can resume it later if needed."
+        confirmText="Stop Program"
+        confirmColor="warning"
+      />
 
       {/* Resume Program Dialog */}
-      <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)}>
-        <DialogTitle>Resume Program</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to resume this program? Any other active programs will be marked
-            as inactive.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setResumeDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleResumeProgram} color="primary" variant="contained">
-            Resume Program
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmationDialog
+        open={resumeDialogOpen}
+        onClose={() => setResumeDialogOpen(false)}
+        onConfirm={handleResumeProgram}
+        title="Resume Program"
+        message="Are you sure you want to resume this program? Any other active programs will be marked as inactive."
+        confirmText="Resume Program"
+        confirmColor="primary"
+      />
 
       {/* Full-screen loading overlay during program creation */}
-      <Backdrop
-        sx={{
-          color: '#fff',
-          zIndex: theme => theme.zIndex.drawer + 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}
+      <LoadingBackdrop
         open={isCreating}
-      >
-        <LoadingSpinner message="Creating program..." size={60} />
-        <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
-          This may take a few moments
-        </Typography>
-      </Backdrop>
+        message="Creating program..."
+        subMessage="This may take a few moments"
+      />
     </React.Fragment>
   );
 };

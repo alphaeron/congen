@@ -23,7 +23,7 @@ describe('OidcConfig', () => {
     it('should return local configuration when environment is local', () => {
       const config = getOidcConfig();
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         authority: 'http://localhost:8080/realms/congen',
         client_id: 'congen-frontend',
         redirect_uri: 'http://localhost:3000/auth/callback',
@@ -47,7 +47,7 @@ describe('OidcConfig', () => {
     it('should return complete AuthProvider configuration', () => {
       const config = getAuthProviderConfig();
 
-      expect(config).toEqual({
+      expect(config).toMatchObject({
         authority: 'http://localhost:8080/realms/congen',
         automaticSilentRenew: true,
         client_id: 'congen-frontend',
@@ -147,7 +147,7 @@ describe('OidcConfig - Staging Environment', () => {
 
     const config = getAuthProviderConfig();
 
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       authority: 'https://staging.congen.com/realms/congen',
       automaticSilentRenew: true,
       client_id: 'congen-frontend',

@@ -161,3 +161,64 @@ export const handleAuthenticationFailure = (reason: string = 'Unknown authentica
   // Redirect to login
   redirectToLogin();
 };
+
+/**
+ * Sanitizes and validates token data to prevent XSS attacks.
+ * This function ensures tokens are properly formatted and don't contain malicious content.
+ * 
+ * @param token The token to sanitize
+ * @returns The sanitized token or null if invalid
+ */
+export const sanitizeToken = (token: string | null | undefined): string | null => {
+  if (!token || typeof token !== 'string') {
+    return null;
+  }
+  
+  // Remove any potential XSS vectors
+  const sanitized = token
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+    .replace(/javascript:/gi, '') // Remove javascript: protocols
+    .replace(/on\w+\s*=/gi, '') // Remove event handlers
+    .trim();
+  
+  // Validate JWT format (3 parts separated by dots)
+  const parts = sanitized.split('.');
+  if (parts.length !== 3) {
+    return null;
+  }
+  
+  return sanitized;
+};
+
+/**
+ * Prevents tokens from being exposed in global JavaScript scope.
+ * This function should be called to ensure tokens are not accidentally exposed.
+ */
+export const preventTokenExposure = (): void => {
+  // Override console methods to prevent token logging
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+  
+  const sanitizeLogArgs = (args: any[]): any[] => {
+    return args.map(arg => {
+      if (typeof arg === 'string' && (arg.includes('Bearer ') || arg.includes('access_token'))) {
+        return '[REDACTED_TOKEN]';
+      }
+      if (typeof arg === 'object' && arg !== null) {
+        const sanitized = { ...arg };
+        Object.keys(sanitized).forEach(key => {
+          if (key.toLowerCase().includes('token') || key.toLowerCase().includes('auth')) {
+            sanitized[key] = '[REDACTED]';
+          }
+        });
+        return sanitized;
+      }
+      return arg;
+    });
+  };
+  
+  console.log = (...args: any[]) => originalLog(...sanitizeLogArgs(args));
+  console.error = (...args: any[]) => originalError(...sanitizeLogArgs(args));
+  console.warn = (...args: any[]) => originalWarn(...sanitizeLogArgs(args));
+};

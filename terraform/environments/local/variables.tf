@@ -72,6 +72,24 @@ variable "frontend_web_origins" {
   ]
 }
 
+variable "backend_redirect_uris" {
+  description = "Backend client redirect URIs"
+  type        = list(string)
+  default = [
+    "http://localhost:8080/",
+    "http://keycloak:8080/"
+  ]
+}
+
+variable "backend_web_origins" {
+  description = "Backend client web origins"
+  type        = list(string)
+  default = [
+    "http://localhost:8080",
+    "http://keycloak:8080"
+  ]
+}
+
 variable "admin_username" {
   description = "Admin username"
   type        = string

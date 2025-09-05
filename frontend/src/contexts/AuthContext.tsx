@@ -5,7 +5,7 @@ import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { setTokenGetter } from '../api/endpoint';
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
-import { clearAuthenticationState, isTokenExpired } from '../common/authUtils';
+import { clearAuthenticationState, isTokenExpired, sanitizeToken, preventTokenExposure } from '../common/authUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -66,18 +66,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     setTokenGetter(() => {
       if (oidcAuth.user?.access_token) {
+        // Sanitize token to prevent XSS
+        const sanitizedToken = sanitizeToken(oidcAuth.user.access_token);
+        if (!sanitizedToken) {
+          clearAuthState();
+          return null;
+        }
+        
         // Check if token is expired
-        if (isTokenExpired(oidcAuth.user.access_token)) {
+        if (isTokenExpired(sanitizedToken)) {
           // Token is expired, clear state and return null
           clearAuthState();
           return null;
         }
         
-        return oidcAuth.user.access_token;
+        return sanitizedToken;
       }
       return null;
     });
   }, [oidcAuth.user, clearAuthState]);
+
+  // Initialize token exposure prevention
+  useEffect(() => {
+    preventTokenExposure();
+  }, []);
 
   // Sync user profile when authentication state changes
   useEffect(() => {

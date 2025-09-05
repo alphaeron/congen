@@ -27,6 +27,8 @@ module "keycloak" {
   frontend_client_name    = var.frontend_client_name
   frontend_redirect_uris  = var.frontend_redirect_uris
   frontend_web_origins    = var.frontend_web_origins
+  backend_redirect_uris   = var.backend_redirect_uris
+  backend_web_origins     = var.backend_web_origins
   admin_username          = var.admin_username
   admin_email             = var.admin_email
   admin_first_name        = var.admin_first_name

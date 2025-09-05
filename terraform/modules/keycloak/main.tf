@@ -23,6 +23,14 @@ resource "keycloak_realm" "congen" {
   duplicate_emails_allowed       = false
   login_theme                    = "congen"
   account_theme                  = "congen"
+  
+  # Security: Configure low token lifetimes
+  access_token_lifespan          = "15m"    # 15 minutes
+  access_token_lifespan_for_implicit_flow = "15m"
+  sso_session_idle_timeout       = "30m"    # 30 minutes
+  sso_session_max_lifespan       = "10h"    # 10 hours
+  refresh_token_max_reuse        = 0        # Disable refresh token reuse
+  revoke_refresh_token           = true     # Revoke refresh token on usage
 }
 
 # Create roles
@@ -48,8 +56,8 @@ resource "keycloak_openid_client" "backend_client" {
   service_accounts_enabled     = true
   standard_flow_enabled        = true
   direct_access_grants_enabled = true
-  valid_redirect_uris          = ["http://localhost:8080/"]
-  web_origins                  = ["*"] # TODO This should not be *
+  valid_redirect_uris          = var.backend_redirect_uris
+  web_origins                  = var.backend_web_origins
 }
 
 # Assign backend service account roles for user account creation
@@ -93,6 +101,7 @@ resource "keycloak_openid_client" "frontend_client" {
   enabled                      = true
   access_type                  = "PUBLIC"
   standard_flow_enabled        = true
+  implicit_flow_enabled        = false
   direct_access_grants_enabled = false
   service_accounts_enabled     = false
   valid_redirect_uris          = var.frontend_redirect_uris

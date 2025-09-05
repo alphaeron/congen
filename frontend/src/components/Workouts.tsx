@@ -6,24 +6,20 @@ import {
   Typography,
   Button,
   Grid,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions,
   List,
   ListItem,
   ListItemText,
   Breadcrumbs,
   Link,
   Slide,
-  Backdrop,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { ConfirmationDialog } from './ConfirmationDialog';
+import { LoadingBackdrop } from './LoadingBackdrop';
 import { StreamChart } from './StreamChart';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
@@ -372,7 +368,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       )}
 
       {/* Stream Chart Section */}
-      {userDataExport?.training_programs?.length && (
+      {userDataExport?.training_programs && userDataExport.training_programs.length > 0 && 
+       userDataExport.training_programs.some(program => program.workouts.length > 0) && (
         <StreamChart
           userDataExport={userDataExport}
           exerciseData={exerciseData}
@@ -384,37 +381,22 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       )}
 
       {/* Generate Workouts Dialog */}
-      <Dialog open={generateDialogOpen} onClose={() => setGenerateDialogOpen(false)}>
-        <DialogTitle>Generate Workouts</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Generate next week&apos;s workouts for {selectedProgram?.name}?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setGenerateDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleGenerateWorkouts} variant="contained">
-            Generate
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmationDialog
+        open={generateDialogOpen}
+        onClose={() => setGenerateDialogOpen(false)}
+        onConfirm={handleGenerateWorkouts}
+        title="Generate Workouts"
+        message={`Generate next week's workouts for ${selectedProgram?.name}?`}
+        confirmText="Generate"
+        confirmColor="primary"
+      />
 
       {/* Full-screen loading overlay during workout generation */}
-      <Backdrop
-        sx={{
-          color: '#fff',
-          zIndex: theme => theme.zIndex.drawer + 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}
+      <LoadingBackdrop
         open={isGenerating}
-      >
-        <LoadingSpinner message="Generating workouts..." size={60} />
-        <Typography variant="body2" color="inherit" sx={{ opacity: 0.8 }}>
-          This may take a few moments
-        </Typography>
-      </Backdrop>
+        message="Generating workouts..."
+        subMessage="This may take a few moments"
+      />
     </React.Fragment>
   );
 };

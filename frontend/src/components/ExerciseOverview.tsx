@@ -1,13 +1,11 @@
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
-import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
-import TextField from '@mui/material/TextField';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
@@ -15,6 +13,8 @@ import * as React from 'react';
 
 import { ExerciseCard } from './ExerciseCard';
 import { LoadingSpinner } from './LoadingSpinner';
+import { FormField } from './FormField';
+import { EmptyState } from './EmptyState';
 import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getExerciseEquipment } from '../api/exerciseEquipment';
@@ -263,41 +263,29 @@ export function ExerciseOverview(): React.ReactElement {
             {/* Autocomplete Filters - Stacked Vertically */}
             <Grid size={{ xs: 12, md: 6 }}>
               <Stack spacing={3}>
-                <Autocomplete
-                  options={movementTypes}
+                <FormField
+                  type="autocomplete"
+                  label="Movement Type"
                   value={movementTypeFilter}
-                  onChange={(_, newValue) => setMovementTypeFilter(newValue)}
-                  getOptionLabel={option => capitalizeEachWord(option)}
-                  renderInput={params => (
-                    <TextField {...params} label="Movement Type" variant="outlined" fullWidth />
-                  )}
-                  clearOnBlur
-                  selectOnFocus
-                  handleHomeEndKeys
+                  onChange={setMovementTypeFilter}
+                  options={movementTypes}
+                  getOptionLabel={(option) => capitalizeEachWord(option)}
                 />
 
-                <Autocomplete
-                  options={equipment?.map(e => e.name) || []}
+                <FormField
+                  type="autocomplete"
+                  label="Equipment"
                   value={exerciseEquipmentFilter}
-                  onChange={(_, newValue) => setExerciseEquipmentFilter(newValue)}
-                  renderInput={params => (
-                    <TextField {...params} label="Equipment" variant="outlined" fullWidth />
-                  )}
-                  clearOnBlur
-                  selectOnFocus
-                  handleHomeEndKeys
+                  onChange={setExerciseEquipmentFilter}
+                  options={equipment?.map(e => e.name) || []}
                 />
 
-                <Autocomplete
-                  options={muscles?.map(m => m.name) || []}
+                <FormField
+                  type="autocomplete"
+                  label="Target Muscle"
                   value={exerciseMuscleFilter}
-                  onChange={(_, newValue) => setExerciseMuscleFilter(newValue)}
-                  renderInput={params => (
-                    <TextField {...params} label="Target Muscle" variant="outlined" fullWidth />
-                  )}
-                  clearOnBlur
-                  selectOnFocus
-                  handleHomeEndKeys
+                  onChange={setExerciseMuscleFilter}
+                  options={muscles?.map(m => m.name) || []}
                 />
               </Stack>
             </Grid>
@@ -454,23 +442,11 @@ export function ExerciseOverview(): React.ReactElement {
           </Typography>
 
           {exercisesToDisplay.length === 0 ? (
-            <Paper
-              sx={{
-                p: 6,
-                textAlign: 'center',
-                borderRadius: 3,
-                background: theme =>
-                  `linear-gradient(135deg, ${alpha(theme.palette.background.paper, 0.8)}, ${alpha(theme.palette.background.paper, 0.6)})`,
-                border: theme => `1px solid ${alpha(theme.palette.divider, 0.3)}`,
-              }}
-            >
-              <Typography variant="h6" color="text.secondary" sx={{ opacity: 0.7 }}>
-                No exercises found matching your filters.
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1, opacity: 0.6 }}>
-                Try adjusting your filter criteria to see more results.
-              </Typography>
-            </Paper>
+            <EmptyState
+              title="No exercises found matching your filters."
+              message="Try adjusting your filter criteria to see more results."
+              variant="paper"
+            />
           ) : (
             <Grid container spacing={3}>
               {exercisesToDisplay.map(exercise => (

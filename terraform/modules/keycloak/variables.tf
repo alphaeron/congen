@@ -88,4 +88,16 @@ variable "admin_password" {
   description = "Admin password"
   type        = string
   sensitive   = true
+}
+
+variable "backend_redirect_uris" {
+  description = "Backend client redirect URIs"
+  type        = list(string)
+  default     = ["http://localhost:8080/"]
+}
+
+variable "backend_web_origins" {
+  description = "Backend client web origins"
+  type        = list(string)
+  default     = ["http://localhost:8080"]
 } 

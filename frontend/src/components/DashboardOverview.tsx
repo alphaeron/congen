@@ -1,10 +1,12 @@
-import { Box, Card, CardContent, Grid, Typography, Chip } from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ConjugateProgression } from './ConjugateProgression';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ActionCard } from './ActionCard';
+import { StatusChip } from './StatusChip';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
 import { getPrograms } from '../api/program';
@@ -247,23 +249,22 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
       {/* Active Program Section */}
       {activeProgram && (
-        <Card sx={{ mb: 4, cursor: 'pointer' }} onClick={handleActiveProgramClick}>
-          <CardContent>
-            <Typography variant="h6" gutterBottom>
-              Active Program
+        <ActionCard
+          title="Active Program"
+          clickable
+          onClick={handleActiveProgramClick}
+        >
+          <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" sx={{ mb: 1 }}>
+            <Typography variant="body1" fontWeight="medium">
+              {activeProgram.name}
             </Typography>
-            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-              <Typography variant="body1" fontWeight="medium">
-                {activeProgram.name}
-              </Typography>
-              <Chip label={`Week ${currentWeek}`} color="primary" size="small" />
-              <Chip label="Active" color="success" size="small" />
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              Click to view workouts
-            </Typography>
-          </CardContent>
-        </Card>
+            <StatusChip label={`Week ${currentWeek}`} status="info" />
+            <StatusChip label="Active" status="active" />
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            Click to view workouts
+          </Typography>
+        </ActionCard>
       )}
 
       {/* Conjugate Progression Section */}

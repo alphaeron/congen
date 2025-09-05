@@ -50,6 +50,9 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
       // Clear any stored tokens and redirect to login
       window.location.href = '/login';
     },
+    // Additional security settings
+    includeIdTokenInSilentRenew: false, // Don't include ID token in silent renew
+    checkSessionInterval: 120000, // Check session every 120 seconds
     // Token validation
     validateSubOnSilentRenew: true, // Validate subject on token renewal
     // Session monitoring callbacks

@@ -7,18 +7,13 @@ import {
   Typography,
   Divider,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  DialogContentText,
-  Alert,
 } from '@mui/material';
 import React, { useState } from 'react';
 
 import { deleteAllPersonalData } from '../api/gdpr';
 import type { User } from '../api/types';
 import { KEYCLOAK_URL } from '../globals';
+import { ConfirmationDialog } from './ConfirmationDialog';
 
 interface AccountSecurityProps {
   user: User;
@@ -138,38 +133,17 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
       </Grid>
 
       {/* Delete Account Dialog */}
-      <Dialog
+      <ConfirmationDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Delete Account</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="delete-dialog-description">
-            Are you sure you want to delete your account? This action cannot be undone. All your
-            data will be permanently removed.
-          </DialogContentText>
-          {deleteError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {deleteError}
-            </Alert>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} disabled={isDeleting}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirmDelete}
-            color="error"
-            variant="contained"
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Deleting...' : 'Delete Account'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleConfirmDelete}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This action cannot be undone. All your data will be permanently removed."
+        confirmText="Delete Account"
+        confirmColor="error"
+        loading={isDeleting}
+        error={deleteError}
+      />
     </React.Fragment>
   );
 };

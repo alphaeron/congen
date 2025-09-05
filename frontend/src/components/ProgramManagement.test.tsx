@@ -93,7 +93,7 @@ describe('ProgramManagement', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Program Management')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /create program/i })).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /create program/i })).toHaveLength(2);
     });
   });
 
@@ -200,8 +200,9 @@ describe('ProgramManagement', () => {
     });
 
     await waitFor(() => {
-      const createButton = screen.getByRole('button', { name: /create program/i });
-      fireEvent.click(createButton);
+      const createButtons = screen.getAllByRole('button', { name: /create program/i });
+      // Click the first button (header button)
+      fireEvent.click(createButtons[0]);
     });
 
     expect(screen.getByText('Create New Program')).toBeInTheDocument();
@@ -222,8 +223,9 @@ describe('ProgramManagement', () => {
     });
 
     await waitFor(() => {
-      const createButton = screen.getByRole('button', { name: /create program/i });
-      fireEvent.click(createButton);
+      const createButtons = screen.getAllByRole('button', { name: /create program/i });
+      // Click the first button (header button)
+      fireEvent.click(createButtons[0]);
     });
 
     const nameInput = screen.getByLabelText(/program name/i);
@@ -578,8 +580,9 @@ describe('ProgramManagement', () => {
     });
 
     await waitFor(() => {
-      const createButton = screen.getByRole('button', { name: /create program/i });
-      fireEvent.click(createButton);
+      const createButtons = screen.getAllByRole('button', { name: /create program/i });
+      // Click the first button (header button)
+      fireEvent.click(createButtons[0]);
     });
 
     const createDialogButton = screen.getByRole('button', { name: /create program/i });

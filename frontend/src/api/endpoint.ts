@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosHeaders } from 'axios';
 
 import { BACKEND_URL } from '../globals';
-import { handleAuthenticationFailure, isTokenExpired, isTokenExpiringSoon, isTokenMalformed } from '../common/authUtils';
+import { handleAuthenticationFailure, isTokenExpired, isTokenExpiringSoon, isTokenMalformed, sanitizeToken } from '../common/authUtils';
 
 /**
  * Converts Unix timestamps (in seconds) to Date objects.
@@ -82,8 +82,15 @@ ENDPOINT.interceptors.request.use(async config => {
   if (getToken) {
     const token = getToken();
     if (token) {
+      // Sanitize token to prevent XSS
+      const sanitizedToken = sanitizeToken(token);
+      if (!sanitizedToken) {
+        handleAuthenticationFailure('Invalid token format');
+        return Promise.reject(new Error('Invalid token format'));
+      }
+      
       // Check if token is malformed first
-      if (isTokenMalformed(token)) {
+      if (isTokenMalformed(sanitizedToken)) {
         // Token is malformed, clear authentication state and redirect to login
         handleAuthenticationFailure('Invalid token');
         
@@ -92,17 +99,17 @@ ENDPOINT.interceptors.request.use(async config => {
       }
       
       // Check if token is expired
-      if (isTokenExpired(token)) {
+      if (isTokenExpired(sanitizedToken)) {
         // Token is expired, clear authentication state and redirect to login
         handleAuthenticationFailure('Token expired');
         
         // Return a rejected promise to prevent the request
         return Promise.reject(new Error('Token expired'));
-      } else if (isTokenExpiringSoon(token)) {
+      } else if (isTokenExpiringSoon(sanitizedToken)) {
         // The OIDC library should handle silent renewal automatically
       }
 
-      headers.set('Authorization', `Bearer ${token}`);
+      headers.set('Authorization', `Bearer ${sanitizedToken}`);
     }
   }
 

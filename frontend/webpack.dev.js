@@ -17,6 +17,14 @@ module.exports = merge(common, {
   // Better source maps for development
   devtool: 'source-map',
 
+  // React 19 DevTools compatibility
+  resolve: {
+    ...common.resolve,
+    alias: {
+      ...common.resolve.alias,
+    },
+  },
+
   output: {
     sourceMapFilename: '[name].map',
     // Development-specific output settings
@@ -64,13 +72,6 @@ module.exports = merge(common, {
     },
   },
 
-  plugins: [
-    new HtmlWebpackPlugin({
-      ...defaultHtmlPluginConfig,
-      // Development-specific HTML options
-      minify: false, // Don't minify HTML in development
-    }),
-  ],
 
   module: {
     rules: [
@@ -141,4 +142,25 @@ module.exports = merge(common, {
     // Enable top-level await for development
     topLevelAwait: true,
   },
+
+  plugins: [
+    ...(common.plugins || []),
+    new HtmlWebpackPlugin({
+      ...defaultHtmlPluginConfig,
+      // Development-specific HTML options
+      minify: false, // Don't minify HTML in development
+      // Add environment variables for React DevTools
+      templateParameters: {
+        ...defaultHtmlPluginConfig.templateParameters,
+        NODE_ENV: 'development',
+        REACT_APP_DEVTOOLS: 'true',
+      },
+    }),
+    // Add a plugin to help with React DevTools detection
+    new (require('webpack')).DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify('development'),
+      '__REACT_DEVTOOLS_GLOBAL_HOOK__': 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__',
+    }),
+  ],
+
 });
