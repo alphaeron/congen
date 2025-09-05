@@ -1,0 +1,50 @@
+Keycloakify Integration for Congen Account Theme
+
+I need to integrate Keycloakify to create a custom account theme that matches our Congen frontend look and feel, while keeping the login theme unchanged.
+
+Current State:
+- I have a cloned keycloakify reference repo in the congen root directory
+- The login theme is working and should NOT be modified
+- All previous CSS/JavaScript theming attempts have been reverted
+- The account theme needs to be removed from the current Keycloak ConfigMap
+
+Requirements:
+
+1. Tooling Consistency:
+   - Switch keycloakify from yarn to npm (match our frontend)
+   - Use the same build tools and configurations as our frontend
+   - do not use vite, use the same tooling that our frontend currently uses instead.  remove all vite usages and replace with the tooling equivelants our frontend uses
+   - Add Gradle integration identical to our frontend setup
+   - Ensure package.json uses our exact versions of MUI, React, TypeScript, and all key dependencies
+
+2. Theme Integration:
+   - Copy our Congen theme from frontend/src/theme.tsx into the keycloakify project
+   - Reference the Congen frontend for styling patterns and component usage
+   - Format the Keycloak account theme to match the Congen frontend look and feel
+   - Focus ONLY on the account theme (login theme must remain unchanged)
+
+3. Build Integration:
+   - Remove the account theme from k8s/base/stage-6/keycloak-theme-configmap.yaml
+   - Add packaging for the keycloakify theme to the build process in the Keycloak deployment stage
+   - Integrate the keycloakify build into our existing Gradle deployment pipeline
+
+4. Key Files to Reference:
+   - frontend/package.json - for dependency versions and scripts
+   - frontend/src/theme.tsx - for our theme configuration
+   - frontend/build.gradle - for Gradle integration patterns
+   - k8s/base/stage-6/keycloak-theme-configmap.yaml - to remove account theme
+   - gradle/deploy.gradle - for deployment integration
+
+5. Expected Outcome:
+   - A keycloakify-built account theme that perfectly matches our Congen frontend
+   - Seamless integration with our existing build and deployment process
+   - Login theme remains completely unchanged and functional
+   - Account management pages (Personal info, Account security) styled to match Congen
+
+Constraints:
+- Do NOT modify the login theme in any way
+- Maintain OAuth2/OIDC security principles
+- Use our existing tooling stack (npm, Gradle, etc.)
+- Keep the build process consistent with our frontend
+
+Please implement this step by step, ensuring each component integrates properly with our existing infrastructure.
