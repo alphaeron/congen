@@ -166,7 +166,7 @@ export function Hero() {
           </Typography>
 
           {/* Call to action buttons */}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 4 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mt: 3 }}>
             <Box
               component="a"
               href="#features"
@@ -208,22 +208,22 @@ export function Hero() {
           50% { background-position: 100% 50%; }
           100% { background-position: 0% 50%; }
         }
-        
+
         @keyframes float1 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-20px) rotate(180deg); }
         }
-        
+
         @keyframes float2 {
           0%, 100% { transform: translateY(0px) scale(1); }
           50% { transform: translateY(-15px) scale(1.1); }
         }
-        
+
         @keyframes float3 {
           0%, 100% { transform: translateY(0px) rotate(0deg); }
           50% { transform: translateY(-25px) rotate(-180deg); }
         }
-        
+
         @keyframes float4 {
           0%, 100% { transform: translateY(0px) scale(1); }
           50% { transform: translateY(-18px) scale(0.9); }

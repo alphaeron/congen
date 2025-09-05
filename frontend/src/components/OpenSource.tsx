@@ -66,7 +66,7 @@ export function OpenSource() {
           variant="body1"
           color="text.secondary"
           sx={{
-            mb: 4,
+            mb: 3,
             lineHeight: 1.6,
             opacity: 0.8,
           }}

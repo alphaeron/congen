@@ -81,7 +81,7 @@ export function PrivacyPolicyPage(): React.ReactElement {
         Privacy Policy
       </Typography>
 
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
         Last updated: {formatDate(privacyPolicy.last_updated)} (Version {privacyPolicy.version})
       </Typography>
 

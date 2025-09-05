@@ -27,7 +27,7 @@ export const DashboardPage: React.FC = () => {
   // If user doesn't have a profile yet, show a loading message
   if (!user) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
+      <Container component="main" maxWidth="sm" sx={{ mt: 3, textAlign: 'center' }}>
         <LoadingSpinner message="Loading Dashboard" />
         <Typography variant="body2" color="text.secondary">
           Please ensure you have a profile to access the dashboard...

@@ -124,7 +124,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
 
   if (!userData?.training_programs || userData.training_programs.length === 0) {
     return (
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Conjugate Progress Tracking
@@ -185,10 +185,10 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
               }}
               sx={{ mb: 2 }}
             />
-            <Box 
+            <Box
               ref={tableParentRef}
-              sx={{ 
-                maxHeight: 400, 
+              sx={{
+                maxHeight: 400,
                 overflow: 'auto',
                 height: '400px'
               }}

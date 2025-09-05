@@ -197,7 +197,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   return (
     <React.Fragment>
       {/* Key Performance Indicators */}
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Key Performance Indicators
@@ -280,7 +280,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
       {/* Recent 1RM Section */}
       {recentOneRepMaxes.length > 0 && (
-        <Card sx={{ mb: 4 }}>
+        <Card sx={{ mb: 3 }}>
           <CardContent>
             <Typography variant="h6" gutterBottom>
               Recent 1RM Records

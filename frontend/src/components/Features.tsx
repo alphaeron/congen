@@ -51,7 +51,7 @@ export function Features() {
         sx={{
           width: { sm: '100%', md: '70%' },
           textAlign: 'center',
-          mb: 4,
+          mb: 3,
         }}
       >
         <Typography

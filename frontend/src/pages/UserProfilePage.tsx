@@ -28,7 +28,7 @@ export const UserProfilePage: React.FC = () => {
   // If user doesn't have a profile yet, show a loading message
   if (!user) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ mt: 4, textAlign: 'center' }}>
+      <Container component="main" maxWidth="sm" sx={{ mt: 3, textAlign: 'center' }}>
         <LoadingSpinner message="Creating Your Profile" />
         <Typography variant="body2" color="text.secondary">
           Your profile is being created automatically using your Keycloak information...
