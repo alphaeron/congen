@@ -4,6 +4,7 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.generator.ConjugateConstants.MAX_MUSCLES_FOR_WARMUP
 import com.congen.model.Exercise
 import com.congen.model.MovementType
 import org.slf4j.LoggerFactory
@@ -124,14 +125,42 @@ class ExerciseSelectionService(
             }
 
             // Apply day-type filtering first
-            val dayTypeFilteredExercises = filterExercisesByDayType(availableExercises, dayType)
+            var dayTypeFilteredExercises = filterExercisesByDayType(availableExercises, dayType)
+            logger.info("Day-type filtering for dayType '{}': {} available exercises -> {} filtered exercises", 
+                dayType, availableExercises.size, dayTypeFilteredExercises.size)
             if (dayTypeFilteredExercises.isEmpty()) {
-                logger.error("No exercises available after day-type filtering for dayType: {} and isAccessory: {}", dayType, isAccessory)
-                return@defer Mono.error(
-                    IllegalStateException(
-                        "No exercises available after day-type filtering for dayType: $dayType and isAccessory: $isAccessory"
+                logger.warn("No exercises available after day-type filtering for dayType: {} and isAccessory: {}. Attempting to refresh pool...", dayType, isAccessory)
+                
+                // Try to refresh the pool and filter again
+                val poolRefreshed = userExercisePool.refreshPool()
+                if (poolRefreshed) {
+                    val refreshedAvailableExercises = if (isAccessory) {
+                        userExercisePool.getAvailableAccessoryExercises()
+                    } else {
+                        userExercisePool.getAvailablePrimaryExercises()
+                    }
+                    dayTypeFilteredExercises = filterExercisesByDayType(refreshedAvailableExercises, dayType)
+                    logger.info("After pool refresh - Day-type filtering for dayType '{}': {} refreshed exercises -> {} filtered exercises", 
+                        dayType, refreshedAvailableExercises.size, dayTypeFilteredExercises.size)
+                    
+                    if (dayTypeFilteredExercises.isEmpty()) {
+                        logger.error("Still no exercises available after pool refresh for dayType: {} and isAccessory: {}", dayType, isAccessory)
+                        return@defer Mono.error(
+                            IllegalStateException(
+                                "No exercises available after day-type filtering and pool refresh for dayType: $dayType and isAccessory: $isAccessory"
+                            )
+                        )
+                    } else {
+                        logger.info("Pool refresh successful: found {} exercises for dayType: {} and isAccessory: {}", dayTypeFilteredExercises.size, dayType, isAccessory)
+                    }
+                } else {
+                    logger.error("Pool refresh failed or no exercises available for dayType: {} and isAccessory: {}", dayType, isAccessory)
+                    return@defer Mono.error(
+                        IllegalStateException(
+                            "No exercises available after day-type filtering for dayType: $dayType and isAccessory: $isAccessory, and pool refresh failed"
+                        )
                     )
-                )
+                }
             }
 
             // Filter out plyometric exercises only for warmup selection
@@ -186,8 +215,16 @@ class ExerciseSelectionService(
                             workoutTypeFilteredExercises
                         )
                         .flatMap { equipmentFilteredExercises ->
+                            // Apply muscle count filtering for warmup exercises
+                            if (isWarmup) {
+                                filterExercisesByMuscleCountForWarmupReactive(equipmentFilteredExercises)
+                            } else {
+                                Mono.just(equipmentFilteredExercises)
+                            }
+                        }
+                        .flatMap { muscleCountFilteredExercises ->
                             userExercisePool.filterExercisesByMuscles(
-                                equipmentFilteredExercises,
+                                muscleCountFilteredExercises,
                                 targetMuscles,
                                 exerciseMuscleDAL
                             )
@@ -336,6 +373,9 @@ class ExerciseSelectionService(
                         exercises.filter { exercise ->
                             exercise.isUpper
                         }
+                    logger.info("Upper body filtering: {} exercises -> {} upper body exercises. Lower body exercises found: {}", 
+                        exercises.size, upperExercises.size, 
+                        exercises.filter { !it.isUpper }.map { it.name })
                     upperExercises
                 }
                 dayType.contains("Lower") -> {
@@ -344,10 +384,14 @@ class ExerciseSelectionService(
                         exercises.filter { exercise ->
                             !exercise.isUpper
                         }
+                    logger.info("Lower body filtering: {} exercises -> {} lower body exercises. Upper body exercises found: {}", 
+                        exercises.size, lowerExercises.size, 
+                        exercises.filter { it.isUpper }.map { it.name })
                     lowerExercises
                 }
                 else -> {
                     // For full body or other day types, include all exercises
+                    logger.info("Full body filtering: {} exercises -> {} exercises (no filtering)", exercises.size, exercises.size)
                     exercises
                 }
             }
@@ -498,12 +542,12 @@ class ExerciseSelectionService(
                     // Use primary exercise muscles for warmup selection
                     val adjustedTargetMuscles = primaryMuscleNames
 
-                    // Select 3 muscle-focused accessory exercises
+                    // Select muscle-focused accessory exercises
                     val muscleFocusedMono =
                         selectMuscleFocusedWarmupExercises(
                             userExercisePool = userExercisePool,
                             targetMuscles = adjustedTargetMuscles,
-                            count = 3,
+                            count = 2,
                             dayType = dayType,
                             workoutType = workoutType
                         )
@@ -631,12 +675,21 @@ class ExerciseSelectionService(
             .collectList()
             .onErrorResume { error ->
                 logger.error(
-                    "Failed to select muscle-focused warmup exercises. Parameters: targetMuscles={}, count={}. Error: {}",
+                    "Failed to select muscle-focused warmup exercises. Parameters: targetMuscles={}, count={}, dayType={}. Error: {}",
                     targetMuscles,
                     count,
+                    dayType,
                     error.message
                 )
-                Mono.just(emptyList())
+                // For warmup exercises, we should not fall back to empty list if day-type filtering fails
+                // This ensures that lower body exercises are not selected for upper body days
+                if (error.message?.contains("day-type filtering") == true) {
+                    logger.error("Day-type filtering failed for warmup selection. This should not happen - check exercise data and day-type logic.")
+                    Mono.error(error)
+                } else {
+                    // For other errors (like muscle count filtering), we can be more lenient
+                    Mono.just(emptyList())
+                }
             }
     }
 
@@ -671,13 +724,23 @@ class ExerciseSelectionService(
                 dayType = dayType,
                 movementBalanceState = null,
                 isWarmup = true
-            ).filter { selectedExercise ->
+            ).flatMap { selectedExercise ->
                 // For movement pattern matching, allow primary exercises that:
                 // 1. Have the same movement type
                 // 2. Use appropriate equipment (dumbbells, bodyweight, etc.)
                 // 3. Are not too heavy/intense for warmups
-                selectedExercise.movementType == primaryExercise.movementType &&
-                isAppropriateForWarmup(selectedExercise)
+                if (selectedExercise.movementType == primaryExercise.movementType) {
+                    isAppropriateForWarmup(selectedExercise)
+                        .flatMap { isAppropriate ->
+                            if (isAppropriate) {
+                                Mono.just(selectedExercise)
+                            } else {
+                                Mono.empty()
+                            }
+                        }
+                } else {
+                    Mono.empty()
+                }
             }
         ).onErrorResume { error ->
             logger.error(
@@ -690,17 +753,27 @@ class ExerciseSelectionService(
     }
 
     /**
-     * Determines if a primary exercise is appropriate for warmup use.
+     * Determines if a primary exercise is appropriate for warmup use based on equipment.
+     * This method queries the database to check the exercise's equipment.
+     *
+     * @param exercise The exercise to check
+     * @return Mono<Boolean> indicating if the exercise is appropriate for warmup
      */
-    private fun isAppropriateForWarmup(exercise: Exercise): Boolean {
+    private fun isAppropriateForWarmup(exercise: Exercise): Mono<Boolean> {
         // Allow exercises that use lighter equipment or are bodyweight
         val warmupAppropriateEquipment = setOf(
             "dumbbells", "bodyweight", "bands", "sled", "kettlebell"
         )
         
-        // Check if the exercise uses any warmup-appropriate equipment
-        // This would need to be implemented based on your equipment filtering logic
-        return true // For now, allow all primary exercises - you can refine this logic
+        // Query the database for the exercise's equipment
+        return exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+            .map { equipmentList ->
+                // Check if the exercise uses any warmup-appropriate equipment
+                equipmentList.any { equipment ->
+                    warmupAppropriateEquipment.contains(equipment.equipmentName.lowercase())
+                }
+            }
+            .onErrorReturn(false) // If we can't determine equipment, exclude from warmup
     }
 
     /**
@@ -737,8 +810,57 @@ class ExerciseSelectionService(
             }
             .collectList()
             .onErrorResume { error ->
-                logger.error("Failed to select general warmup exercises. Parameters: count={}. Error: {}", count, error.message)
-                Mono.just(emptyList())
+                logger.error("Failed to select general warmup exercises. Parameters: count={}, dayType={}. Error: {}", count, dayType, error.message)
+                // For warmup exercises, we should not fall back to empty list if day-type filtering fails
+                // This ensures that lower body exercises are not selected for upper body days
+                if (error.message?.contains("day-type filtering") == true) {
+                    logger.error("Day-type filtering failed for general warmup selection. This should not happen - check exercise data and day-type logic.")
+                    Mono.error(error)
+                } else {
+                    // For other errors (like muscle count filtering), we can be more lenient
+                    Mono.just(emptyList())
+                }
             }
+    }
+
+    /**
+     * Filters exercises to only include those with muscle count <= MAX_MUSCLES_FOR_WARMUP for warmup selection.
+     * This method queries the database reactively to check muscle counts for each exercise.
+     *
+     * @param exercises List of exercises to filter
+     * @return Mono containing filtered list of exercises with appropriate muscle count for warmup
+     */
+    private fun filterExercisesByMuscleCountForWarmupReactive(exercises: List<Exercise>): Mono<List<Exercise>> {
+        if (exercises.isEmpty()) {
+            return Mono.just(emptyList())
+        }
+
+        // Create a Flux of exercises and check muscle count for each
+        return Flux.fromIterable(exercises)
+            .flatMap { exercise ->
+                exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
+                    .map { muscleList ->
+                        val muscleCount = muscleList.size
+                        val isAppropriate = muscleCount <= MAX_MUSCLES_FOR_WARMUP
+                        
+                        if (!isAppropriate) {
+                            logger.debug(
+                                "Excluding exercise '{}' from warmup selection due to muscle count: {} (max allowed: {})",
+                                exercise.name,
+                                muscleCount,
+                                MAX_MUSCLES_FOR_WARMUP
+                            )
+                        }
+                        
+                        if (isAppropriate) exercise else null
+                    }
+                    .filter { it != null }
+                    .cast(Exercise::class.java)
+                    .onErrorResume { error ->
+                        logger.warn("Failed to check muscle count for exercise '{}', excluding from warmup: {}", exercise.name, error.message)
+                        Mono.empty() // Exclude exercises where we can't determine muscle count
+                    }
+            }
+            .collectList()
     }
 }

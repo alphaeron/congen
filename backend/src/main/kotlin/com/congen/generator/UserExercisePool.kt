@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @param preferences User's exercise preferences
  * @param userEquipment User's available equipment
  * @param exerciseEquipmentDAL Data access layer for exercise equipment relationships
+ * @param previouslyUsedExercises List of exercise names that have been used in previous weeks
  *
  * @author Congen Development Team
  * @since 1.0.0
@@ -29,7 +30,8 @@ class UserExercisePool(
     private val allExercises: List<Exercise>,
     private val preferences: List<UserExercisePreference>,
     private val userEquipment: List<UserEquipment>,
-    private val exerciseEquipmentDAL: ExerciseEquipmentDAL
+    private val exerciseEquipmentDAL: ExerciseEquipmentDAL,
+    private val previouslyUsedExercises: List<String> = emptyList()
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UserExercisePool::class.java)
@@ -47,7 +49,7 @@ class UserExercisePool(
         val preferenceFilteredExercises =
             allExercises.filter { exercise ->
                 val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
-                when {
+                val shouldIncludeByPreference = when {
                     // If user has a preference to avoid this exercise, exclude it
                     preference?.shouldAvoid == true -> false
                     // If user has a preference for this exercise (shouldAvoid = false), include it
@@ -55,13 +57,30 @@ class UserExercisePool(
                     // If no preference exists, include the exercise (default behavior)
                     else -> true
                 }
+                
+                // Also exclude exercises that were used in previous weeks
+                val notPreviouslyUsed = !previouslyUsedExercises.contains(exercise.name)
+                
+                shouldIncludeByPreference && notPreviouslyUsed
             }
 
         preferenceFilteredExercises.forEach { exercise ->
             availableExercises[exercise.name] = exercise
         }
 
-        logger.debug("Initialized UserExercisePool with {} exercises (filtered by preferences only)", availableExercises.size)
+        logger.info(
+            "Initialized UserExercisePool with {} exercises (filtered by preferences and {} previously used exercises excluded)", 
+            availableExercises.size, 
+            previouslyUsedExercises.size
+        )
+        
+        // Log available exercise names for debugging
+        val availableExerciseNames = availableExercises.keys.sorted()
+        logger.info("Available exercises: {}", availableExerciseNames)
+        
+        // Log excluded exercise names for debugging
+        val excludedExerciseNames = allExercises.filter { !availableExercises.containsKey(it.name) }.map { it.name }.sorted()
+        logger.info("Excluded exercises: {}", excludedExerciseNames)
     }
 
     /**
@@ -82,14 +101,14 @@ class UserExercisePool(
         val exercise = availableExercises.remove(exerciseName)
         return if (exercise != null) {
             usedExerciseNames.add(exerciseName)
-            logger.debug(
+            logger.info(
                 "Marked exercise as used and removed from pool: {}. Available exercises remaining: {}",
                 exerciseName,
                 availableExercises.size
             )
             true
         } else {
-            logger.debug("Exercise was already used or not available: {}", exerciseName)
+            logger.info("Exercise was already used or not available: {}", exerciseName)
             false
         }
     }
@@ -107,7 +126,9 @@ class UserExercisePool(
      * @return List of available primary exercises
      */
     fun getAvailablePrimaryExercises(): List<Exercise> {
-        return availableExercises.values.filter { !it.isAccessory }
+        val primaryExercises = availableExercises.values.filter { !it.isAccessory }
+        logger.info("Available primary exercises ({}): {}", primaryExercises.size, primaryExercises.map { it.name }.sorted())
+        return primaryExercises
     }
 
     /**
@@ -116,8 +137,64 @@ class UserExercisePool(
      * @return List of available accessory exercises
      */
     fun getAvailableAccessoryExercises(): List<Exercise> {
-        return availableExercises.values.filter { it.isAccessory }
+        val accessoryExercises = availableExercises.values.filter { it.isAccessory }
+        logger.info("Available accessory exercises ({}): {}", accessoryExercises.size, accessoryExercises.map { it.name }.sorted())
+        return accessoryExercises
     }
+
+    /**
+     * Refreshes the exercise pool by adding back all exercises except those used in the current week.
+     * This is called when the pool is depleted for a specific day type or category.
+     *
+     * @return true if the pool was refreshed, false if no exercises were available to refresh
+     */
+    fun refreshPool(): Boolean {
+        val currentUsedCount = usedExerciseNames.size
+        if (currentUsedCount == 0) {
+            logger.debug("No exercises have been used yet, no need to refresh pool")
+            return false
+        }
+
+        // Add back exercises that are not currently available, but respect the sliding window exclusions
+        // This allows exercise cycling across weeks while preventing duplicates within the same week
+        val exercisesToRefresh = allExercises.filter { exercise ->
+            val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
+            val shouldInclude = when {
+                preference?.shouldAvoid == true -> false
+                preference?.shouldAvoid == false -> true
+                else -> true
+            }
+            // Add back exercises that are not currently available AND not in the previously used list
+            // This ensures we don't add back exercises that were excluded by the sliding window logic
+            shouldInclude && 
+            !availableExercises.containsKey(exercise.name) && 
+            !previouslyUsedExercises.contains(exercise.name)
+        }
+
+        exercisesToRefresh.forEach { exercise ->
+            availableExercises[exercise.name] = exercise
+        }
+
+        logger.info(
+            "Refreshed exercise pool: added back {} exercises. Pool now has {} available exercises ({} used this week)",
+            exercisesToRefresh.size,
+            availableExercises.size,
+            currentUsedCount
+        )
+        
+        if (exercisesToRefresh.isNotEmpty()) {
+            logger.info("Exercises added back during refresh: {}", exercisesToRefresh.map { it.name }.sorted())
+        }
+
+        return exercisesToRefresh.isNotEmpty()
+    }
+
+    /**
+     * Gets the number of exercises that have been used in the current week.
+     *
+     * @return Number of used exercises
+     */
+    fun getUsedExerciseCount(): Int = usedExerciseNames.size
 
     /**
      * Filters exercises by equipment availability reactively.

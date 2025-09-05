@@ -7,6 +7,11 @@ metadata:
     app: backend
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: backend
@@ -38,18 +43,30 @@ spec:
           value: "postgres"
         - name: PGPORT
           value: "5432"
+        startupProbe:
+          httpGet:
+            path: /api/v1/health/
+            port: 8888
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 12
         livenessProbe:
           httpGet:
             path: /api/v1/health/
             port: 8888
           initialDelaySeconds: 60
           periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /api/v1/health/
             port: 8888
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
         resources:
           requests:
             memory: "512Mi"

@@ -1,5 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useSnackbar } from 'notistack';
+import { Box, Typography } from '@mui/material';
+import { LoadingSpinner } from './LoadingSpinner';
 
 /**
  * Component to handle redirects back from Keycloak after password changes.
@@ -9,20 +12,64 @@ import { useNavigate } from 'react-router';
  */
 export const PasswordChangeRedirect: React.FC = () => {
   const navigate = useNavigate();
+  const { enqueueSnackbar } = useSnackbar();
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    // Check if we have a stored redirect path from a password change operation
-    const redirectPath = sessionStorage.getItem('congen_redirect_after_password_change');
-    
-    if (redirectPath) {
-      // Clear the stored path
-      sessionStorage.removeItem('congen_redirect_after_password_change');
-      
-      // Redirect back to the original location
-      navigate(redirectPath, { replace: true });
-    }
-  }, [navigate]);
+    const handleRedirect = async () => {
+      try {
+        setIsRedirecting(true);
+        
+        // Check if we have a stored redirect path from a password change operation
+        const redirectPath = sessionStorage.getItem('congen_redirect_after_password_change');
+        
+        if (redirectPath) {
+          // Clear the stored path
+          sessionStorage.removeItem('congen_redirect_after_password_change');
+          
+          // Show success message
+          enqueueSnackbar('Password changed successfully!', { variant: 'success' });
+          
+          // Small delay to show the success message
+          setTimeout(() => {
+            // Redirect back to the original location
+            navigate(redirectPath, { replace: true });
+          }, 1500);
+        } else {
+          // No redirect path found, go to profile page
+          navigate('/profile', { replace: true });
+        }
+      } catch (err) {
+        enqueueSnackbar('Failed to redirect. Please try again.', { variant: 'error' });
+        navigate('/profile', { replace: true });
+      } finally {
+        setIsRedirecting(false);
+      }
+    };
 
-  // This component doesn't render anything visible
-  return null;
+    // Wait a moment for the component to mount
+    const timer = setTimeout(handleRedirect, 100);
+    return () => clearTimeout(timer);
+  }, [navigate, enqueueSnackbar]);
+
+  if (isRedirecting) {
+    return (
+      <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
+        <LoadingSpinner />
+        <Typography variant="h6">Password changed successfully!</Typography>
+        <Typography variant="body2" color="text.secondary" textAlign="center">
+          Redirecting you back to your account settings...
+        </Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
+      <Typography variant="h6">Redirecting...</Typography>
+      <Typography variant="body2" color="text.secondary" textAlign="center">
+        Please wait while we process your request.
+      </Typography>
+    </Box>
+  );
 };

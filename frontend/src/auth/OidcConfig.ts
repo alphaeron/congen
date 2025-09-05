@@ -46,15 +46,16 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     // Security enhancements
     automaticSilentRenew: true, // Automatically renew tokens before they expire
     silentRenewError: (error: Error) => {
-      // Force user to re-authenticate if silent renewal fails
-      // Clear any stored tokens and redirect to login
-      window.location.href = '/login';
+      // The error will be handled by the AuthContext error handler
     },
     // Additional security settings
     includeIdTokenInSilentRenew: false, // Don't include ID token in silent renew
     checkSessionInterval: 120000, // Check session every 120 seconds
     // Token validation
     validateSubOnSilentRenew: true, // Validate subject on token renewal
+    // Silent renew configuration
+    silentRequestTimeout: 10000, // 10 second timeout for silent requests
+    accessTokenExpiringNotificationTime: 60, // Start renewal 60 seconds before expiry
     // Session monitoring callbacks
     onSigninSilent: () => {
       // Silent signin completed

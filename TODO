@@ -1,9 +1,3 @@
-When we redirect to keycloak for edit profile and change password, it takes you to the same keycloak page.  I thought it would show a form like when you sign in that would be a simple UI.
-
-I want keycloak to handle the password change if possible because I don't want to have to handle sending the password request and handling the security of it, but I don't like the way the keycloak UI is completely different from our congen look and feel
-
-
-
 integration test password edit, user profile edit
 
 support print / export (pdf or xlsx) and add corresponding icon buttons on workout and program to expose this functionality

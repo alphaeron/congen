@@ -139,7 +139,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle OIDC errors
   useEffect(() => {
     if (oidcAuth.error) {
-      enqueueSnackbar(oidcAuth.error.message, { variant: 'error' });
+      // Provide more user-friendly error messages for common issues
+      let errorMessage = oidcAuth.error.message;
+      
+      if (oidcAuth.error.message.includes('refresh_token') || 
+          oidcAuth.error.message.includes('invalid_grant')) {
+        errorMessage = 'Your session has expired. Please log in again.';
+      } else if (oidcAuth.error.message.includes('network') || 
+                 oidcAuth.error.message.includes('timeout')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      enqueueSnackbar(errorMessage, { variant: 'error' });
       clearAuthState();
     }
   }, [oidcAuth.error, enqueueSnackbar, clearAuthState]);

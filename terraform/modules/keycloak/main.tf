@@ -29,8 +29,8 @@ resource "keycloak_realm" "congen" {
   access_token_lifespan_for_implicit_flow = "15m"
   sso_session_idle_timeout       = "30m"    # 30 minutes
   sso_session_max_lifespan       = "10h"    # 10 hours
-  refresh_token_max_reuse        = 0        # Disable refresh token reuse
-  revoke_refresh_token           = true     # Revoke refresh token on usage
+  refresh_token_max_reuse        = 3        # Allow refresh token reuse for silent refresh
+  revoke_refresh_token           = true    # Don't immediately revoke refresh tokens
 }
 
 # Create roles

@@ -31,6 +31,7 @@ interface AccountSecurityProps {
  */
 export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccountDeleted }) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -54,10 +55,17 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
   };
 
   /**
+   * Shows the password change confirmation dialog.
+   */
+  const handleChangePassword = () => {
+    setPasswordDialogOpen(true);
+  };
+
+  /**
    * Redirects the user to Keycloak's account management interface to change their password.
    * After completing the password change, the user will be redirected back to Congen.
    */
-  const handleChangePassword = () => {
+  const handleConfirmChangePassword = () => {
     // Construct the Keycloak account management URL with redirect back to Congen
     const redirectUri = `${window.location.origin}/password-change-redirect`;
     const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/security/credentials?redirect_uri=${encodeURIComponent(redirectUri)}`;
@@ -65,8 +73,17 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
     // Store the current location to redirect back after password change
     sessionStorage.setItem('congen_redirect_after_password_change', window.location.pathname);
     
-    // Redirect to Keycloak account management
+    // Close dialog and redirect to Keycloak account management
+    setPasswordDialogOpen(false);
     window.location.href = accountUrl;
+  };
+
+  /**
+   * Handles canceling the password change dialog.
+   */
+  const handleCancelChangePassword = () => {
+    // Just close the dialog, don't redirect
+    setPasswordDialogOpen(false);
   };
 
   return (
@@ -143,6 +160,18 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
         confirmColor="error"
         loading={isDeleting}
         error={deleteError}
+      />
+
+      {/* Change Password Confirmation Dialog */}
+      <ConfirmationDialog
+        open={passwordDialogOpen}
+        onClose={handleCancelChangePassword}
+        onConfirm={handleConfirmChangePassword}
+        title="Change Password"
+        message="You will be redirected to your account security settings. After changing your password, you will be brought back to this page."
+        confirmText="Continue"
+        cancelText="Cancel"
+        confirmColor="primary"
       />
     </React.Fragment>
   );

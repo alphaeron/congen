@@ -4,6 +4,7 @@ import com.congen.dal.ExerciseDAL
 import com.congen.dal.ExerciseEquipmentDAL
 import com.congen.dal.ExerciseMuscleDAL
 import com.congen.dal.ExerciseWorkoutTypeDAL
+import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.UserEquipmentDAL
 import com.congen.dal.UserExercisePreferenceDAL
 import com.congen.model.Exercise
@@ -34,6 +35,7 @@ class ExercisePoolFactoryTest {
     private lateinit var exerciseMatchingService: ExerciseMatchingService
     private lateinit var userEquipmentDAL: UserEquipmentDAL
     private lateinit var userExercisePreferenceDAL: UserExercisePreferenceDAL
+    private lateinit var programmedExerciseDAL: ProgrammedExerciseDAL
 
     companion object {
         private const val USER_ID = "test-user-123"
@@ -48,6 +50,7 @@ class ExercisePoolFactoryTest {
         exerciseMatchingService = mock()
         userEquipmentDAL = mock()
         userExercisePreferenceDAL = mock()
+        programmedExerciseDAL = mock()
 
         exercisePoolFactory =
             ExercisePoolFactory(
@@ -57,7 +60,8 @@ class ExercisePoolFactoryTest {
                 exerciseMatchingService = exerciseMatchingService,
                 exerciseDAL = exerciseDAL,
                 userEquipmentDAL = userEquipmentDAL,
-                userExercisePreferenceDAL = userExercisePreferenceDAL
+                userExercisePreferenceDAL = userExercisePreferenceDAL,
+                programmedExerciseDAL = programmedExerciseDAL
             )
     }
 
@@ -70,6 +74,8 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -93,6 +99,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(emptyExercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -112,6 +119,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(emptyUserEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -131,6 +139,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(emptyPreferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -158,6 +167,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -234,6 +244,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -258,6 +269,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 
@@ -293,6 +305,7 @@ class ExercisePoolFactoryTest {
         whenever(exerciseDAL.selectExercises()).thenReturn(Mono.just(exercises))
         whenever(userEquipmentDAL.selectUserEquipmentByUser(USER_ID)).thenReturn(Mono.just(userEquipment))
         whenever(userExercisePreferenceDAL.selectUserExercisePreferencesByUser(USER_ID)).thenReturn(Mono.just(preferences))
+        whenever(programmedExerciseDAL.selectProgrammedExercisesByUserId(USER_ID)).thenReturn(Mono.just(emptyList()))
 
         val result = exercisePoolFactory.createPoolForUser(USER_ID)
 

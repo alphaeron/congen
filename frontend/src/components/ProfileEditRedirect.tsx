@@ -41,8 +41,14 @@ export const ProfileEditRedirect: React.FC = () => {
             }
           }
 
-          // Redirect back to the original location
-          navigate(redirectPath, { replace: true })
+          // Show success message
+          enqueueSnackbar('Profile updated successfully!', { variant: 'success' })
+          
+          // Small delay to show the success message
+          setTimeout(() => {
+            // Redirect back to the original location
+            navigate(redirectPath, { replace: true })
+          }, 1500)
         } else {
           // No redirect path found, go to profile page
           navigate('/profile', { replace: true })
@@ -63,9 +69,9 @@ export const ProfileEditRedirect: React.FC = () => {
     return (
       <Box display="flex" flexDirection="column" alignItems="center" gap={2} p={4}>
         <LoadingSpinner />
-        <Typography variant="h6">Syncing profile changes...</Typography>
+        <Typography variant="h6">Profile updated successfully!</Typography>
         <Typography variant="body2" color="text.secondary" textAlign="center">
-          Please wait while we sync your profile changes with the application.
+          Redirecting you back to your profile...
         </Typography>
       </Box>
     )

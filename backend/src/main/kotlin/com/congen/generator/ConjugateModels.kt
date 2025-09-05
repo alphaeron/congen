@@ -86,4 +86,7 @@ object ConjugateConstants {
 
     /** Default session time length in minutes */
     const val DEFAULT_SESSION_TIME_MINUTES = 60
+
+    /** Maximum number of muscles allowed for warmup exercises */
+    const val MAX_MUSCLES_FOR_WARMUP = 3
 }

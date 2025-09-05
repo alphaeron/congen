@@ -136,15 +136,32 @@ ENDPOINT.interceptors.response.use(
 );
 
 /**
- * Congen backend request main helper.
+ * Congen backend request main helper with retry logic for network errors.
  */
-export const REQUEST = async <T>(options: AxiosRequestConfig): Promise<T> => {
+export const REQUEST = async <T>(options: AxiosRequestConfig, retryCount = 0): Promise<T> => {
+  const maxRetries = 3;
+  const retryDelay = 1000; // 1 second
+
   const onSuccess = (response: AxiosResponse<T>): T => {
     return response?.data;
   };
 
-  const onError = (error: AxiosError<unknown>) => {
-    // Provide better error information
+  const onError = async (error: AxiosError<unknown>): Promise<T> => {
+    // Check if this is a network error that should be retried
+    const isNetworkError = error.code === 'ERR_NETWORK' || 
+                          error.code === 'ECONNREFUSED' || 
+                          error.message?.includes('CORS') ||
+                          error.message?.includes('Network Error');
+
+    if (isNetworkError && retryCount < maxRetries) {
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
+      
+      // Retry the request
+      return REQUEST<T>(options, retryCount + 1);
+    }
+
+    // Provide better error information for non-retryable errors
     if (error.response?.data) {
       return Promise.reject(error.response.data);
     } else if (error.message) {

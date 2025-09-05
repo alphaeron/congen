@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Box, Card, CardContent, Grid, Typography, Avatar, Button, Chip, Stack } from '@mui/material'
 import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle'
 import { default as EditIcon } from '@mui/icons-material/Edit'
 import type { User } from '../api/types'
 import { KEYCLOAK_URL } from '../globals'
 import { formatDate } from '../common/utils'
+import { ConfirmationDialog } from './ConfirmationDialog'
 
 interface ProfileOverviewProps {
   user: User
@@ -19,7 +20,13 @@ interface ProfileOverviewProps {
  * @return Profile overview component
  */
 export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+
   const handleEditProfile = () => {
+    setEditDialogOpen(true)
+  }
+
+  const handleConfirmEditProfile = () => {
     // Construct the Keycloak account management URL with redirect back to Congen
     const redirectUri = `${window.location.origin}/profile-edit-redirect`
     const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`
@@ -27,8 +34,14 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
     // Store the current location to redirect back after profile edit
     sessionStorage.setItem('congen_redirect_after_profile_edit', window.location.pathname)
 
-    // Redirect to Keycloak account management
+    // Close dialog and redirect to Keycloak account management
+    setEditDialogOpen(false)
     window.location.href = accountUrl
+  }
+
+  const handleCancelEditProfile = () => {
+    // Just close the dialog, don't redirect
+    setEditDialogOpen(false)
   }
 
   return (
@@ -69,6 +82,18 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Edit Profile Confirmation Dialog */}
+      <ConfirmationDialog
+        open={editDialogOpen}
+        onClose={handleCancelEditProfile}
+        onConfirm={handleConfirmEditProfile}
+        title="Edit Profile"
+        message="You will be redirected to your account settings. After making changes, you will be brought back to this page."
+        confirmText="Continue"
+        cancelText="Cancel"
+        confirmColor="primary"
+      />
     </React.Fragment>
   )
 }

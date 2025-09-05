@@ -345,7 +345,7 @@ class ExerciseSelectionServiceTest {
         val dayType = "upper_body"
 
         // Create a mix of exercises including a plyometric one
-        val regularExercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
+        val regularExercise = createSampleExercise("Dumbbell Flyes", MovementType.HORIZONTAL_PUSH)
         val plyometricExercise = createSampleExercise("Box Jump", MovementType.PLYOMETRIC)
         val exercises = listOf(regularExercise, plyometricExercise)
 
@@ -357,6 +357,15 @@ class ExerciseSelectionServiceTest {
         whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(regularExercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(regularExercise)))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
+        
+        // Mock the muscle count check for warmup filtering - Dumbbell Flyes should have <= 3 muscles
+        whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Dumbbell Flyes")).thenReturn(Mono.just(emptyList()))
+        
+        // Mock the equipment check for warmup filtering - Dumbbell Flyes should use appropriate equipment
+        val dumbbellEquipment = listOf(
+            com.congen.model.ExerciseEquipment("Dumbbell Flyes", "dumbbells")
+        )
+        whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Dumbbell Flyes")).thenReturn(Mono.just(dumbbellEquipment))
 
         val result =
             exerciseSelectionService.selectExercise(
