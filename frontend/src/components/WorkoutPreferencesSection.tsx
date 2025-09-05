@@ -11,7 +11,6 @@ import {
   ListItemText,
   ListItemSecondaryAction,
   IconButton,
-  Alert,
   Divider,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
@@ -48,16 +47,19 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Weight unit preferences state
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
     []
   );
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [selectedExercise, setSelectedExercise] = useState('');
-  const [selectedUnit, setSelectedUnit] = useState<WeightUnit>(WeightUnit.LBS);
   const [unitDialogOpen, setUnitDialogOpen] = useState(false);
+
+  // Form data type for TanStack Form
+  interface WeightUnitPreferenceFormData {
+    exerciseName: string;
+    preferredUnit: WeightUnit;
+  }
 
   // Load initial data
   useEffect(() => {
@@ -92,22 +94,20 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     setLoading(false);
   };
 
-  const handleAddWeightUnitPreference = async () => {
-    if (!user?.keycloak_id || !selectedExercise) return;
+  const handleAddWeightUnitPreference = async (data: WeightUnitPreferenceFormData) => {
+    if (!user?.keycloak_id) return;
 
     try {
       setSaving(true);
 
-      await upsertUserWeightUnitPreference(user.keycloak_id, selectedExercise, selectedUnit);
+      await upsertUserWeightUnitPreference(user.keycloak_id, data.exerciseName, data.preferredUnit);
 
       // Refresh weight unit preferences
       const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
       setWeightUnitPreferences(unitResponse);
 
       setUnitDialogOpen(false);
-      setSelectedExercise('');
-      setSelectedUnit(WeightUnit.LBS);
-      setSuccessMessage('Weight unit preference added successfully');
+      enqueueSnackbar('Weight unit preference added successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
       enqueueSnackbar(
@@ -131,7 +131,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       const unitResponse = await getUserWeightUnitPreferences(user.keycloak_id);
       setWeightUnitPreferences(unitResponse);
 
-      setSuccessMessage('Weight unit preference deleted successfully');
+      enqueueSnackbar('Weight unit preference deleted successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
       enqueueSnackbar(
@@ -161,19 +161,6 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
   return (
     <Box>
-      <Typography variant="h5" gutterBottom>
-        Weight Unit Preferences
-      </Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Manage your weight unit preferences for exercises.
-      </Typography>
-
-      {successMessage && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage(null)}>
-          {successMessage}
-        </Alert>
-      )}
-
       <Grid container spacing={3}>
         {/* Weight Unit Preferences */}
         <Grid size={{ xs: 12 }}>
@@ -227,35 +214,51 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       </Grid>
 
       {/* Add Weight Unit Preference Dialog */}
-      <FormDialog
+      <FormDialog<WeightUnitPreferenceFormData>
         open={unitDialogOpen}
         onClose={() => setUnitDialogOpen(false)}
         onSubmit={handleAddWeightUnitPreference}
         title="Add Weight Unit Preference"
         submitText="Add Preference"
         loading={saving}
-        disabled={!selectedExercise}
+        useTanStackForm={true}
+        defaultValues={{
+          exerciseName: '',
+          preferredUnit: WeightUnit.LBS,
+        }}
+        validate={(values) => {
+          const errors: Record<string, string> = {};
+          if (!values.exerciseName) {
+            errors.exerciseName = 'Please select an exercise';
+          }
+          if (!values.preferredUnit) {
+            errors.preferredUnit = 'Please select a preferred unit';
+          }
+          return Object.keys(errors).length > 0 ? errors : undefined;
+        }}
       >
-        <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
-          <FormField
-            type="select"
-            label="Exercise"
-            value={selectedExercise}
-            onChange={setSelectedExercise}
-            options={exercises && exercises.length > 0 ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name })) : [{ value: '', label: 'No exercises available' }]}
-          />
+        {(form) => (
+          <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
+            <FormField
+              type="select"
+              label="Exercise"
+              name="exerciseName"
+              form={form}
+              options={exercises && exercises.length > 0 ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name })) : [{ value: '', label: 'No exercises available' }]}
+            />
 
-          <FormField
-            type="select"
-            label="Preferred Unit"
-            value={selectedUnit}
-            onChange={(value) => setSelectedUnit(value as WeightUnit)}
-            options={[
-              { value: WeightUnit.KG, label: 'Kilograms (KG)' },
-              { value: WeightUnit.LBS, label: 'Pounds (LBS)' }
-            ]}
-          />
-        </Box>
+            <FormField
+              type="select"
+              label="Preferred Unit"
+              name="preferredUnit"
+              form={form}
+              options={[
+                { value: WeightUnit.KG, label: 'Kilograms (KG)' },
+                { value: WeightUnit.LBS, label: 'Pounds (LBS)' }
+              ]}
+            />
+          </Box>
+        )}
       </FormDialog>
     </Box>
   );

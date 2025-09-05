@@ -1,15 +1,20 @@
-import { TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete } from '@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Typography } from '@mui/material';
+import { useField } from '@tanstack/react-form';
 import React, { useMemo } from 'react';
 
 interface BaseFormFieldProps {
   label: string;
-  value: any;
-  onChange: (value: any) => void;
+  value?: any;
+  onChange?: (value: any) => void;
   error?: boolean;
   helperText?: string;
   disabled?: boolean;
   required?: boolean;
   fullWidth?: boolean;
+  sx?: any;
+  // TanStack Form integration
+  name?: string;
+  form?: any;
 }
 
 interface TextFormFieldProps extends BaseFormFieldProps {
@@ -37,13 +42,14 @@ type FormFieldProps = TextFormFieldProps | SelectFormFieldProps | AutocompleteFo
  *
  * Provides a unified interface for different types of form fields including
  * text inputs, selects, and autocomplete fields with consistent styling.
+ * Supports both traditional controlled components and TanStack Form integration.
  *
  * @param type Type of form field ('text', 'number', 'email', 'password', 'select', 'autocomplete')
  * @param label Field label
- * @param value Current field value
- * @param onChange Function to call when value changes
- * @param error Whether the field has an error
- * @param helperText Helper text to display below the field
+ * @param value Current field value (for controlled mode)
+ * @param onChange Function to call when value changes (for controlled mode)
+ * @param error Whether the field has an error (for controlled mode)
+ * @param helperText Helper text to display below the field (for controlled mode)
  * @param disabled Whether the field is disabled
  * @param required Whether the field is required
  * @param fullWidth Whether the field should take full width
@@ -52,6 +58,8 @@ type FormFieldProps = TextFormFieldProps | SelectFormFieldProps | AutocompleteFo
  * @param inputProps Additional props for the input element
  * @param options Options for select/autocomplete fields
  * @param getOptionLabel Function to get display label for autocomplete options
+ * @param name Field name for TanStack Form integration
+ * @param form Form instance for TanStack Form integration
  * @return Form field component
  */
 export const FormField: React.FC<FormFieldProps> = (props) => {
@@ -65,17 +73,42 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
     disabled = false,
     required = false,
     fullWidth = true,
+    sx,
+    name,
+    form,
   } = props;
+
+  // TanStack Form integration
+  const tanstackField = name && form ? useField({
+    name,
+    form,
+    validators: {
+      onChange: required ? (value: any) => {
+        if (!value || (typeof value === 'string' && !value.trim())) {
+          return 'This field is required';
+        }
+        return undefined;
+      } : undefined,
+    },
+  }) : null;
+
+  // Use TanStack Form values if available, otherwise fall back to controlled props
+  const fieldValue = tanstackField ? tanstackField.state.value : value;
+  const fieldError = tanstackField ? tanstackField.state.meta.errors.length > 0 : error;
+  const fieldHelperText = tanstackField ? tanstackField.state.meta.errors[0] : helperText;
+  const handleChange = tanstackField ? tanstackField.handleChange : onChange;
+  const handleBlur = tanstackField ? tanstackField.handleBlur : undefined;
 
   if (type === 'select') {
     const { options } = props as SelectFormFieldProps;
     return (
-      <FormControl fullWidth={fullWidth} error={error} disabled={disabled} required={required}>
+      <FormControl fullWidth={fullWidth} error={fieldError} disabled={disabled} required={required}>
         <InputLabel>{label}</InputLabel>
         <Select
-          value={value}
+          value={fieldValue || ''}
           label={label}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => handleChange?.(e.target.value)}
+          onBlur={handleBlur}
         >
           {options.map((option) => (
             <MenuItem key={option.value} value={option.value}>
@@ -83,7 +116,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
             </MenuItem>
           ))}
         </Select>
-        {helperText && <Typography variant="caption" color={error ? 'error' : 'text.secondary'}>{helperText}</Typography>}
+        {fieldHelperText && <Typography variant="caption" color={fieldError ? 'error' : 'text.secondary'}>{fieldHelperText}</Typography>}
       </FormControl>
     );
   }
@@ -97,8 +130,9 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
     return (
       <Autocomplete
         options={options}
-        value={value}
-        onChange={(_, newValue) => onChange(newValue)}
+        value={fieldValue || null}
+        onChange={(_, newValue) => handleChange?.(newValue)}
+        onBlur={handleBlur}
         getOptionLabel={memoizedGetOptionLabel}
         renderInput={(params) => (
           <TextField
@@ -106,8 +140,8 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
             label={label}
             variant="outlined"
             fullWidth={fullWidth}
-            error={error}
-            helperText={helperText}
+            error={fieldError}
+            helperText={fieldHelperText}
             disabled={disabled}
             required={required}
           />
@@ -125,17 +159,19 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
     <TextField
       label={label}
       type={type}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+      value={fieldValue || ''}
+      onChange={(e) => handleChange?.(e.target.value)}
+      onBlur={handleBlur}
       variant="outlined"
       fullWidth={fullWidth}
-      error={error}
-      helperText={helperText}
+      error={fieldError}
+      helperText={fieldHelperText}
       disabled={disabled}
       required={required}
       multiline={multiline}
       rows={rows}
       inputProps={inputProps}
+      sx={sx}
     />
   );
 };

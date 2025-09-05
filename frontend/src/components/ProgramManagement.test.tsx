@@ -571,7 +571,7 @@ describe('ProgramManagement', () => {
     });
   }, 10000);
 
-  it('disables create button when program name is empty', async () => {
+  it('opens create program dialog with form fields', async () => {
     mock.onGet('/program/').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
 
@@ -585,8 +585,14 @@ describe('ProgramManagement', () => {
       fireEvent.click(createButtons[0]);
     });
 
-    const createDialogButton = screen.getByRole('button', { name: /create program/i });
-    expect(createDialogButton).toBeDisabled();
+    // Wait for the dialog to open
+    await waitFor(() => {
+      expect(screen.getByText('Create New Program')).toBeInTheDocument();
+    });
+
+    // Check that the form fields are rendered
+    expect(screen.getByText('Program Name')).toBeInTheDocument();
+    expect(screen.getAllByText('Days per Week')).toHaveLength(2); // Label and helper text
   });
 
   it('closes dialogs when cancel is clicked', async () => {

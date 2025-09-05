@@ -249,22 +249,24 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
 
       {/* Active Program Section */}
       {activeProgram && (
-        <ActionCard
-          title="Active Program"
-          clickable
-          onClick={handleActiveProgramClick}
-        >
-          <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" sx={{ mb: 1 }}>
-            <Typography variant="body1" fontWeight="medium">
-              {activeProgram.name}
+        <Box sx={{ mb: 3 }}>
+          <ActionCard
+            title="Active Program"
+            clickable
+            onClick={handleActiveProgramClick}
+          >
+            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" sx={{ mb: 1 }}>
+              <Typography variant="body1" fontWeight="medium">
+                {activeProgram.name}
+              </Typography>
+              <StatusChip label={`Week ${currentWeek}`} status="info" />
+              <StatusChip label="Active" status="active" />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Click to view workouts
             </Typography>
-            <StatusChip label={`Week ${currentWeek}`} status="info" />
-            <StatusChip label="Active" status="active" />
-          </Box>
-          <Typography variant="body2" color="text.secondary">
-            Click to view workouts
-          </Typography>
-        </ActionCard>
+          </ActionCard>
+        </Box>
       )}
 
       {/* Conjugate Progression Section */}

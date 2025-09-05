@@ -4,6 +4,17 @@ import AxiosMockAdapter from 'axios-mock-adapter';
 import * as React from 'react';
 import { MemoryRouter } from 'react-router';
 
+// Mock TanStack Virtual to render all items in tests
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: () => ({
+    getVirtualItems: () => [
+      { index: 0, key: '0', start: 0, size: 300 },
+      { index: 1, key: '1', start: 300, size: 300 },
+    ],
+    getTotalSize: () => 600,
+  }),
+}));
+
 import { ExerciseOverview } from './ExerciseOverview';
 import {
   EXERCISE,

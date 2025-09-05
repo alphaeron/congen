@@ -14,12 +14,14 @@ interface ConfirmationDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   title: string;
-  message: string;
+  message?: string;
   confirmText?: string;
   cancelText?: string;
   confirmColor?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   loading?: boolean;
   error?: string | null;
+  children?: React.ReactNode;
+  disabled?: boolean;
 }
 
 /**
@@ -32,12 +34,14 @@ interface ConfirmationDialogProps {
  * @param onClose Function to call when dialog should be closed
  * @param onConfirm Function to call when user confirms the action
  * @param title Dialog title
- * @param message Confirmation message to display
+ * @param message Optional confirmation message to display
  * @param confirmText Text for the confirm button (default: "Confirm")
  * @param cancelText Text for the cancel button (default: "Cancel")
  * @param confirmColor Color of the confirm button (default: "primary")
  * @param loading Whether the action is in progress
  * @param error Error message to display if any
+ * @param children Optional custom content to render in the dialog
+ * @param disabled Whether the confirm button should be disabled
  * @return Confirmation dialog component
  */
 export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
@@ -51,12 +55,15 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   confirmColor = 'primary',
   loading = false,
   error = null,
+  children = null,
+  disabled = false,
 }) => {
   return (
     <Dialog open={open} onClose={onClose} aria-labelledby="confirmation-dialog-title">
       <DialogTitle id="confirmation-dialog-title">{title}</DialogTitle>
       <DialogContent>
-        <DialogContentText>{message}</DialogContentText>
+        {message && <DialogContentText>{message}</DialogContentText>}
+        {children && children}
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
@@ -67,7 +74,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Button onClick={onClose} disabled={loading}>
           {cancelText}
         </Button>
-        <Button onClick={onConfirm} color={confirmColor} variant="contained" disabled={loading}>
+        <Button onClick={onConfirm} color={confirmColor} variant="contained" disabled={loading || disabled}>
           {loading ? 'Processing...' : confirmText}
         </Button>
       </DialogActions>

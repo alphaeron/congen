@@ -76,7 +76,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       id: 'workout-preferences',
       label: 'Workout Preferences',
       icon: <TuneIcon />,
-      component: <WorkoutPreferencesSection user={user} />,
+      component: <WorkoutPreferencesSection />,
     },
   ];
 

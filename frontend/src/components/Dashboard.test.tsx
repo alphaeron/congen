@@ -38,7 +38,7 @@ jest.mock('./Workouts', () => ({
 
 jest.mock('./WorkoutPreferencesSection', () => ({
   WorkoutPreferencesSection: ({ user }: { user: User }) => (
-    <div data-testid="workout-preferences">Workout Preferences for {user.name}</div>
+    <div data-testid="workout-preferences">Workout Preferences for {user?.name || 'Unknown User'}</div>
   ),
 }));
 

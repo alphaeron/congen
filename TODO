@@ -30,20 +30,6 @@ After generation prompted for current 1rm, sets reps can do for accessories and 
 
 
 
-We want to change the workflow for the workout generation.
-
-Currently, we generate a week of workouts, however what we would like the flow to be is this.
-
-1. go to workout portion of dashboard.
-2. If you would like to generate a workout today, click a "generate today's workout" button.
-3. If you already generated all the workouts for your program for the week though, return an error and tell the user they already completed their workouts for this week and need to wait until next week to generate their next workout.
-4. We want a calendar display under the current information to show the historical workouts.  use react-big-calendar npm package for that, using version 1.19.4.  but we would like to move relevant functionality into the workout, workout week details and workout details components as appropriate.
-5. the calendar should be populated with all the workouts for that program, using the creation date as the day to place the workout on the calendar.  this includes any newly-generated workouts
-6. you should be able to click on the workouts in the calendar and it'll take you to the workout details for that workout.
-
-
-
-
 Workout generation algorithm should put a description of the stage (for example, combined MElower/DEupper should have a description for the primary stage as such.  distinct days should also have a description saying what it is ME Upper, DE lower, ...)
 
 never have banded exercises for the secondary movement, they should always only be in the primary, and banded exercises should also only be used on DE day types.

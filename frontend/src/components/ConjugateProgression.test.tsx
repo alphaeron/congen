@@ -2,6 +2,17 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
 
+// Mock TanStack Virtual to render all items in tests
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: () => ({
+    getVirtualItems: () => [
+      { index: 0, key: '0', start: 0, size: 50 },
+      { index: 1, key: '1', start: 50, size: 50 },
+    ],
+    getTotalSize: () => 100,
+  }),
+}));
+
 import { ConjugateProgression } from './ConjugateProgression';
 import { WeightUnit,
   type User,

@@ -10,6 +10,7 @@ import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { ExerciseCard } from './ExerciseCard';
 import { LoadingSpinner } from './LoadingSpinner';
@@ -43,6 +44,11 @@ export function ExerciseOverview(): React.ReactElement {
   const [isUpperFilter, setIsUpperFilter] = React.useState<string>('Both');
 
   const [exercisesToDisplay, setExercisesToDisplay] = React.useState<Exercise[]>([]);
+
+  // Virtualization setup
+  const parentRef = React.useRef<HTMLDivElement>(null);
+  const itemsPerRow = 4; // Number of items per row in the grid
+  const rowHeight = 300; // Approximate height of each exercise card row
 
   const {
     data: exercises,
@@ -196,6 +202,17 @@ export function ExerciseOverview(): React.ReactElement {
     isMusclesError ||
     isExerciseEquipmentError ||
     isExerciseMuscleError;
+
+  // Calculate virtual rows for grid layout
+  const totalRows = Math.ceil(exercisesToDisplay.length / itemsPerRow);
+  
+  // Create virtualizer for the grid
+  const virtualizer = useVirtualizer({
+    count: totalRows,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => rowHeight,
+    overscan: 2, // Render 2 extra rows above and below viewport
+  });
 
   if (isLoading) {
     return <LoadingSpinner message="Loading exercises..." />;
@@ -448,13 +465,56 @@ export function ExerciseOverview(): React.ReactElement {
               variant="paper"
             />
           ) : (
-            <Grid container spacing={3}>
-              {exercisesToDisplay.map(exercise => (
-                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
-                  <ExerciseCard exercise={exercise} />
-                </Grid>
-              ))}
-            </Grid>
+            <Box
+              ref={parentRef}
+              sx={{
+                height: '600px', // Fixed height for virtualization
+                overflow: 'auto',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  height: `${virtualizer.getTotalSize()}px`,
+                  width: '100%',
+                  position: 'relative',
+                }}
+              >
+                {virtualizer.getVirtualItems().map(virtualRow => {
+                  const startIndex = virtualRow.index * itemsPerRow;
+                  const endIndex = Math.min(startIndex + itemsPerRow, exercisesToDisplay.length);
+                  const rowExercises = exercisesToDisplay.slice(startIndex, endIndex);
+                  
+                  return (
+                    <div
+                      key={virtualRow.key}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${virtualRow.size}px`,
+                        transform: `translateY(${virtualRow.start}px)`,
+                      }}
+                    >
+                      <Grid container spacing={3} sx={{ height: '100%' }}>
+                        {rowExercises.map((exercise, index) => (
+                          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
+                            <ExerciseCard exercise={exercise} />
+                          </Grid>
+                        ))}
+                        {/* Fill remaining grid slots with empty space */}
+                        {Array.from({ length: itemsPerRow - rowExercises.length }).map((_, index) => (
+                          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`empty-${index}`}>
+                            <div style={{ height: '100%' }} />
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </div>
+                  );
+                })}
+              </div>
+            </Box>
           )}
         </Box>
       </Stack>

@@ -465,6 +465,12 @@ class ProgramDAL(
                 logger.warn("No programs found to deactivate for user {}", userId)
                 Mono.just(Unit)
             }
+            .doOnSuccess {
+                logger.debug("Successfully deactivated all programs for user {}", userId)
+            }
+            .doOnError { error ->
+                logger.error("Failed to deactivate programs for user {}: {}", userId, error.message)
+            }
     }
 
     @CacheEvict(
@@ -524,9 +530,10 @@ class ProgramDAL(
             """.trimIndent()
         return if (isActive) {
             // If creating an active program, first deactivate all existing programs for this user
-            deactivateProgramsForUser(userId).then(
+            // Use flatMap to ensure deactivation completes before insertion
+            deactivateProgramsForUser(userId).flatMap {
                 postgresClient.update(insertQuery, userId, name, currentWeekNumber, isActive)
-            )
+            }
         } else {
             // If not active, just insert the program without deactivating others
             postgresClient.update(

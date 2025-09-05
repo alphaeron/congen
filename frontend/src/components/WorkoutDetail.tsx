@@ -78,6 +78,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     []
   );
 
+
   useEffect(() => {
     const loadWorkoutDetails = async () => {
       try {
@@ -202,7 +203,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             reps: reps || undefined,
             tempo: tempo !== '-' ? tempo : undefined,
             weight: weight
-              ? formatWeightWithUnit(weight, weightUnitPreference?.preferred_unit)
+              ? formatWeightWithUnit(weight, weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined)
               : undefined,
             rest: rest ? `${rest}s` : undefined,
             notes: '-',
@@ -354,6 +355,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     enableColumnResizing: true,
   });
 
+
   if (isLoading) {
     return <LoadingSpinner message="Loading workout details..." fullHeight={false} />;
   }
@@ -368,7 +370,13 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         {/* Table Container - 2/3 width */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
-            <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 48px)' }}>
+            <Box 
+              sx={{ 
+                overflow: 'auto', 
+                maxHeight: 'calc(100vh - 48px)',
+                height: '100%'
+              }}
+            >
               <table
                 style={{
                   width: '100%',
@@ -398,7 +406,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             borderBottom: `1px solid ${theme.palette.divider}`,
                             backgroundColor: theme.palette.background.paper,
                             color: theme.palette.text.primary,
-                            width: `${(header.getSize() / 860) * 100}%`, // Total approximate width of all columns
+                            width: `${(header.getSize() / 860) * 100}%`,
                             minWidth: `${((header.column.columnDef.minSize || 50) / 860) * 100}%`,
                           }}
                         >
@@ -434,11 +442,9 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             fontWeight: 'bold',
                             color: theme.palette.primary.main,
                             backgroundColor:
-                              row.original.type === 'stage'
-                                ? theme.palette.mode === 'dark'
-                                  ? theme.palette.grey[800]
-                                  : theme.palette.grey[100]
-                                : theme.palette.background.paper,
+                              theme.palette.mode === 'dark'
+                                ? theme.palette.grey[800]
+                                : theme.palette.grey[100],
                             borderBottom: `1px solid ${theme.palette.divider}`,
                             cursor: 'pointer',
                           }}
@@ -474,11 +480,12 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
                             style={{
                               padding: '8px',
                               borderBottom: `1px solid ${theme.palette.divider}`,
-                              width: `${(cell.column.getSize() / 860) * 100}%`, // Total approximate width of all columns
+                              width: `${(cell.column.getSize() / 860) * 100}%`,
                               minWidth: `${((cell.column.columnDef.minSize || 50) / 860) * 100}%`,
                               color: theme.palette.text.primary,
                               wordWrap: 'break-word',
                               overflow: 'hidden',
+                              verticalAlign: 'top',
                             }}
                           >
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}

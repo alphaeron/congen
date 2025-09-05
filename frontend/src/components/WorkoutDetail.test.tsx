@@ -32,6 +32,18 @@ jest.mock('./SunburstChart', () => ({
   ),
 }));
 
+// Mock TanStack Virtual to render all items in tests
+jest.mock('@tanstack/react-virtual', () => ({
+  useVirtualizer: () => ({
+    getVirtualItems: () => [
+      { index: 0, key: '0', start: 0, size: 60 },
+      { index: 1, key: '1', start: 60, size: 60 },
+      { index: 2, key: '2', start: 120, size: 60 },
+    ],
+    getTotalSize: () => 180,
+  }),
+}));
+
 import { WorkoutDetail } from './WorkoutDetail';
 import { ENDPOINT } from '../api/endpoint';
 import { AuthProvider } from '../contexts/AuthContext';

@@ -114,7 +114,7 @@ class ConjugateWorkoutGeneratorService(
                             ).then(
                                 programService.updateProgram(
                                     program.id,
-                                    "Week ${program.currentWeekNumber + 1}",
+                                    program.name,
                                     program.currentWeekNumber + 1,
                                     program.isActive
                                 )

@@ -38,7 +38,7 @@ class ConjugateWorkoutGeneratorControllerTest {
     private lateinit var testProgram: Program
 
     companion object {
-        private const val USER_ID = "b226d772-c063-4974-ae08-ab64134abbcf"
+        private const val USER_ID = "test-keycloak-user-id"
         private const val CURRENT_WEEK = 1
         private const val PROGRAM_ID = 1L
         private const val PROGRAM_NAME = "Conjugate Powerlifting - Week 1"
@@ -62,8 +62,6 @@ class ConjugateWorkoutGeneratorControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
 
-        // Mock GDPR compliance service for all tests - set up before any calls
-        doReturn(Mono.just(true)).`when`(gdprComplianceService).hasUserConsent(any<String>())
 
         testProgram =
             Program(
@@ -79,9 +77,10 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should generate workout program successfully`() {
-        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(testProgram))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.just(testProgram))
+        doReturn(Mono.just(true)).`when`(gdprComplianceService).hasUserConsent(any<String>())
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(testProgram))
@@ -91,21 +90,19 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should return 404 when program not found`() {
-        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
-        whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
-            .thenReturn(Mono.error(NoResultsFoundException("Program not found")))
+        whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.error(NoResultsFoundException("Program not found")))
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
             .expectError(NoResultsFoundException::class.java)
             .verify()
-        verify(conjugateWorkoutGeneratorService).generateNextWeek(PROGRAM_ID)
     }
 
     @Test
     fun `generateNextWeek should return 422 for validation error`() {
-        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(testProgram))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.error(ValidationException("Invalid program parameters")))
+        doReturn(Mono.just(true)).`when`(gdprComplianceService).hasUserConsent(any<String>())
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
             .expectError(ValidationException::class.java)
@@ -115,9 +112,10 @@ class ConjugateWorkoutGeneratorControllerTest {
 
     @Test
     fun `generateNextWeek should return 500 for unexpected error`() {
-        whenever(programService.isOwner(PROGRAM_ID, "test-keycloak-user-id")).thenReturn(Mono.just(true))
+        whenever(programService.selectProgramById(PROGRAM_ID)).thenReturn(Mono.just(testProgram))
         whenever(conjugateWorkoutGeneratorService.generateNextWeek(any()))
             .thenReturn(Mono.error(DatabaseException("Unexpected error")))
+        doReturn(Mono.just(true)).`when`(gdprComplianceService).hasUserConsent(any<String>())
         val result = conjugateWorkoutGeneratorController.generateNextWeek(PROGRAM_ID)
         StepVerifier.create(result)
             .expectError(DatabaseException::class.java)

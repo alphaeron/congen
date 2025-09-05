@@ -25,14 +25,15 @@ import {
   RadioGroup,
   TextField,
   Typography,
-  Alert,
-  Snackbar,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React from 'react';
 import { Link } from 'react-router';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { FormDialog } from './FormDialog';
+import { FormField } from './FormField';
+import { ConfirmationDialog } from './ConfirmationDialog';
 import {
   recordConsent,
   getConsentStatus,
@@ -67,13 +68,16 @@ export function GdprComplianceSection(): React.ReactElement {
   const [consentStatus, setConsentStatus] = React.useState<UserConsent | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [operationLoading, setOperationLoading] = React.useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
 
   // Dialog states
   const [consentDialogOpen, setConsentDialogOpen] = React.useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [newConsentValue, setNewConsentValue] = React.useState<boolean>(true);
   const [deleteConfirmation, setDeleteConfirmation] = React.useState('');
+
+  // Form data interface for consent
+  interface ConsentFormData {
+    consentValue: boolean;
+  }
 
   // Load initial consent status
   React.useEffect(() => {
@@ -95,14 +99,15 @@ export function GdprComplianceSection(): React.ReactElement {
     }
   };
 
-  const handleConsentChange = async () => {
+  const handleConsentChange = async (data: ConsentFormData) => {
     try {
       setOperationLoading('consent');
-      await recordConsent(newConsentValue);
+      await recordConsent(data.consentValue);
       await loadConsentStatus(); // Refresh status
       setConsentDialogOpen(false);
-      setSuccessMessage(
-        newConsentValue ? 'Consent given successfully' : 'Consent withdrawn successfully'
+      enqueueSnackbar(
+        data.consentValue ? 'Consent given successfully' : 'Consent withdrawn successfully',
+        { variant: 'success' }
       );
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
@@ -131,7 +136,7 @@ export function GdprComplianceSection(): React.ReactElement {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      setSuccessMessage('Personal data exported successfully');
+      enqueueSnackbar('Personal data exported successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
       enqueueSnackbar(axiosError.response?.data?.message || 'Failed to export data', {
@@ -152,7 +157,10 @@ export function GdprComplianceSection(): React.ReactElement {
       setOperationLoading('delete');
       await deleteAllPersonalData(deleteConfirmation);
       setDeleteDialogOpen(false);
-      setSuccessMessage('All personal data has been deleted. You will be logged out shortly.');
+      enqueueSnackbar('All personal data has been deleted. You will be logged out shortly.', { 
+        variant: 'success',
+        autoHideDuration: 5000 
+      });
       // In a real app, you'd redirect to logout here
       setTimeout(() => {
         window.location.href = '/login';
@@ -228,10 +236,7 @@ export function GdprComplianceSection(): React.ReactElement {
             <Button
               variant="outlined"
               size="small"
-              onClick={() => {
-                setNewConsentValue(!consentStatus?.data_processing_consent);
-                setConsentDialogOpen(true);
-              }}
+              onClick={() => setConsentDialogOpen(true)}
             >
               {consentStatus?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
             </Button>
@@ -313,25 +318,37 @@ export function GdprComplianceSection(): React.ReactElement {
       </Card>
 
       {/* Consent Dialog */}
-      <Dialog
+      <FormDialog<ConsentFormData>
         open={consentDialogOpen}
         onClose={() => setConsentDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        onSubmit={handleConsentChange}
+        title={consentStatus?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
+        description={
+          consentStatus?.data_processing_consent
+            ? 'By withdrawing consent, you revoke permission for us to process your personal data. Some features may become unavailable.'
+            : 'By giving consent, you allow us to process your personal data for the purposes outlined in our privacy policy.'
+        }
+        submitText="Confirm"
+        submitColor="primary"
+        loading={operationLoading === 'consent'}
+        useTanStackForm={true}
+        defaultValues={{
+          consentValue: !consentStatus?.data_processing_consent, // Opposite of current state
+        }}
+        validate={(values) => {
+          const errors: Record<string, string> = {};
+          if (typeof values.consentValue !== 'boolean') {
+            errors.consentValue = 'Please make a selection';
+          }
+          return Object.keys(errors).length > 0 ? errors : undefined;
+        }}
       >
-        <DialogTitle>{newConsentValue ? 'Give Consent' : 'Withdraw Consent'}</DialogTitle>
-        <DialogContent>
-          <DialogContentText paragraph>
-            {newConsentValue
-              ? 'By giving consent, you allow us to process your personal data for the purposes outlined in our privacy policy.'
-              : 'By withdrawing consent, you revoke permission for us to process your personal data. Some features may become unavailable.'}
-          </DialogContentText>
-
-          <FormControl component="fieldset">
+        {(form) => (
+          <FormControl component="fieldset" fullWidth>
             <FormLabel component="legend">Your choice:</FormLabel>
             <RadioGroup
-              value={newConsentValue}
-              onChange={e => setNewConsentValue(e.target.value === 'true')}
+              value={form.state.values.consentValue}
+              onChange={(e) => form.setFieldValue('consentValue', e.target.value === 'true')}
             >
               <FormControlLabel
                 value={true}
@@ -345,90 +362,49 @@ export function GdprComplianceSection(): React.ReactElement {
               />
             </RadioGroup>
           </FormControl>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setConsentDialogOpen(false)}
-            disabled={operationLoading === 'consent'}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConsentChange}
-            variant="contained"
-            disabled={operationLoading === 'consent'}
-          >
-            {operationLoading === 'consent' ? 'Updating...' : 'Confirm'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        )}
+      </FormDialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      <ConfirmationDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        onConfirm={handleDataDeletion}
+        title="Delete All Personal Data"
+        confirmText="Delete All Data"
+        confirmColor="error"
+        loading={operationLoading === 'delete'}
+        disabled={deleteConfirmation !== 'DELETE_ALL_MY_DATA'}
       >
-        <DialogTitle color="error">Delete All Personal Data</DialogTitle>
-        <DialogContent>
-          <DialogContentText paragraph>
-            <strong>This action cannot be undone!</strong>
-          </DialogContentText>
-          <DialogContentText paragraph>
-            This will permanently delete all your personal data including:
-          </DialogContentText>
-          <Typography component="ul" variant="body2" color="text.secondary">
-            <li>Profile information</li>
-            <li>Exercise preferences and history</li>
-            <li>Workout programs and progress</li>
-            <li>Account settings and preferences</li>
-          </Typography>
-          <DialogContentText paragraph sx={{ mt: 2 }}>
-            To confirm deletion, please type <strong>DELETE_ALL_MY_DATA</strong> below:
-          </DialogContentText>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="DELETE_ALL_MY_DATA"
-            value={deleteConfirmation}
-            onChange={e => setDeleteConfirmation(e.target.value)}
-            error={deleteConfirmation !== '' && deleteConfirmation !== 'DELETE_ALL_MY_DATA'}
-            helperText={
-              deleteConfirmation !== '' && deleteConfirmation !== 'DELETE_ALL_MY_DATA'
-                ? 'Please type exactly "DELETE_ALL_MY_DATA"'
-                : ''
-            }
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setDeleteDialogOpen(false)}
-            disabled={operationLoading === 'delete'}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleDataDeletion}
-            color="error"
-            variant="contained"
-            disabled={operationLoading === 'delete' || deleteConfirmation !== 'DELETE_ALL_MY_DATA'}
-          >
-            {operationLoading === 'delete' ? 'Deleting...' : 'Delete All Data'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Success/Error Snackbars */}
-      <Snackbar
-        open={!!successMessage}
-        autoHideDuration={6000}
-        onClose={() => setSuccessMessage(null)}
-      >
-        <Alert severity="success" onClose={() => setSuccessMessage(null)}>
-          {successMessage}
-        </Alert>
-      </Snackbar>
+        <DialogContentText paragraph>
+          <strong>This action cannot be undone!</strong>
+        </DialogContentText>
+        <DialogContentText paragraph>
+          This will permanently delete all your personal data including:
+        </DialogContentText>
+        <Typography component="ul" variant="body2" color="text.secondary">
+          <li>Profile information</li>
+          <li>Exercise preferences and history</li>
+          <li>Workout programs and progress</li>
+          <li>Account settings and preferences</li>
+        </Typography>
+        <DialogContentText paragraph sx={{ mt: 2 }}>
+          To confirm deletion, please type <strong>DELETE_ALL_MY_DATA</strong> below:
+        </DialogContentText>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="DELETE_ALL_MY_DATA"
+          value={deleteConfirmation}
+          onChange={e => setDeleteConfirmation(e.target.value)}
+          error={deleteConfirmation !== '' && deleteConfirmation !== 'DELETE_ALL_MY_DATA'}
+          helperText={
+            deleteConfirmation !== '' && deleteConfirmation !== 'DELETE_ALL_MY_DATA'
+              ? 'Please type exactly "DELETE_ALL_MY_DATA"'
+              : ''
+          }
+        />
+      </ConfirmationDialog>
     </React.Fragment>
   );
 }

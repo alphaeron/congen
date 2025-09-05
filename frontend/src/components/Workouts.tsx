@@ -280,9 +280,9 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     <React.Fragment>
       {renderBreadcrumbs()}
       {!activeProgram ? (
-        <Card sx={{ mb: 4 }}>
+        <Card sx={{ mb: 3, mt: 3 }}>
           <CardContent>
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" gutterBottom={true}>
               No Active Program
             </Typography>
             <Typography variant="body2" color="text.secondary" paragraph>

@@ -55,12 +55,15 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
   const [stopDialogOpen, setStopDialogOpen] = useState(false);
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    numDaysPerWeek: 4,
-    isActive: true,
-    sessionTimeLengthInMinutes: 60,
-  });
+  // Form data types for TanStack Form
+  interface CreateProgramFormData {
+    name: string;
+    numDaysPerWeek: number;
+  }
+
+  interface EditSessionDurationFormData {
+    sessionTimeLengthInMinutes: number;
+  }
 
   useEffect(() => {
     loadPrograms();
@@ -103,14 +106,13 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     }
   };
 
-  const handleCreateProgram = async () => {
+  const handleCreateProgram = async (data: CreateProgramFormData) => {
     // Close dialog immediately and show loading state
     setCreateDialogOpen(false);
-    setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
     setIsCreating(true);
 
     try {
-      await createProgram(formData.name, formData.numDaysPerWeek, user.keycloak_id);
+      await createProgram(data.name, data.numDaysPerWeek, user.keycloak_id);
       // Reload programs to get the updated data with preferences
       loadPrograms();
     } catch {
@@ -120,11 +122,11 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     }
   };
 
-  const handleUpdateSessionDuration = async () => {
+  const handleUpdateSessionDuration = async (data: EditSessionDurationFormData) => {
     if (!selectedProgram) return;
 
     try {
-      await updateProgramPreferences(selectedProgram.id, formData.sessionTimeLengthInMinutes);
+      await updateProgramPreferences(selectedProgram.id, data.sessionTimeLengthInMinutes);
 
       // Update the local program preferences state
       setProgramPreferences(prev => {
@@ -133,7 +135,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         if (existingPreferences) {
           const updatedPreferences = {
             ...existingPreferences,
-            session_time_length_in_minutes: formData.sessionTimeLengthInMinutes,
+            session_time_length_in_minutes: data.sessionTimeLengthInMinutes,
             updated_at: new Date(),
           };
           newMap.set(selectedProgram.id, updatedPreferences);
@@ -143,7 +145,6 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
 
       setEditDialogOpen(false);
       setSelectedProgram(null);
-      setFormData({ name: '', numDaysPerWeek: 4, isActive: true, sessionTimeLengthInMinutes: 60 });
       enqueueSnackbar('Session duration updated successfully.', { variant: 'success' });
     } catch {
       enqueueSnackbar('Failed to update session duration. Please try again.', { variant: 'error' });
@@ -209,24 +210,22 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
     }
   };
 
+  const [editFormData, setEditFormData] = useState<EditSessionDurationFormData>({
+    sessionTimeLengthInMinutes: 60,
+  });
+
   const openEditDialog = async (program: Program) => {
     setSelectedProgram(program);
 
     try {
       // Load program preferences to get session time
       const preferences = await getProgramPreferences(program.id);
-      setFormData({
-        name: program.name,
-        numDaysPerWeek: 4, // Not editable
-        isActive: program.is_active,
+      setEditFormData({
         sessionTimeLengthInMinutes: preferences.session_time_length_in_minutes,
       });
     } catch {
       // Fallback to default values if preferences can't be loaded
-      setFormData({
-        name: program.name,
-        numDaysPerWeek: 4,
-        isActive: program.is_active,
+      setEditFormData({
         sessionTimeLengthInMinutes: 60,
       });
     }
@@ -357,64 +356,83 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         <EmptyState
           title="No Programs Yet"
           message="Create your first program to get started with structured workouts."
-          action={
-            <Button variant="contained" onClick={() => setCreateDialogOpen(true)}>
-              Create Program
-            </Button>
-          }
         />
       )}
 
       {/* Create Program Dialog */}
-      <FormDialog
+      <FormDialog<CreateProgramFormData>
         open={createDialogOpen}
         onClose={() => setCreateDialogOpen(false)}
         onSubmit={handleCreateProgram}
         title="Create New Program"
         description="Your new program will be created and set as your active program. If you have any other active programs, they will be marked as inactive."
         submitText="Create Program"
-        disabled={!formData.name.trim()}
+        useTanStackForm={true}
+        defaultValues={{
+          name: '',
+          numDaysPerWeek: 4,
+        }}
+        validate={(values) => {
+          const errors: Record<string, string> = {};
+          if (!values.name?.trim()) {
+            errors.name = 'Program name is required';
+          }
+          if (values.numDaysPerWeek < 2 || values.numDaysPerWeek > 4) {
+            errors.numDaysPerWeek = 'Days per week must be between 2 and 4';
+          }
+          return Object.keys(errors).length > 0 ? errors : undefined;
+        }}
       >
-        <FormField
-          type="text"
-          label="Program Name"
-          value={formData.name}
-          onChange={(value) => setFormData(prev => ({ ...prev, name: value }))}
-          required
-          sx={{ mb: 2 }}
-        />
-        <FormField
-          type="number"
-          label="Days per Week"
-          value={formData.numDaysPerWeek}
-          onChange={(value) => setFormData(prev => ({ ...prev, numDaysPerWeek: parseInt(value) || 4 }))}
-          inputProps={{ min: 2, max: 4 }}
-          helperText="Number of training days per week (2, 3, or 4)"
-        />
+        {(form) => (
+          <React.Fragment>
+            <FormField
+              type="text"
+              label="Program Name"
+              name="name"
+              form={form}
+              required
+              sx={{ mb: 2 }}
+            />
+            <FormField
+              type="number"
+              label="Days per Week"
+              name="numDaysPerWeek"
+              form={form}
+              inputProps={{ min: 2, max: 4 }}
+              helperText="Number of training days per week (2, 3, or 4)"
+            />
+          </React.Fragment>
+        )}
       </FormDialog>
 
       {/* Change Session Duration Dialog */}
-      <FormDialog
+      <FormDialog<EditSessionDurationFormData>
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         onSubmit={handleUpdateSessionDuration}
         title="Change Session Duration"
-        description={`Program: ${formData.name}`}
+        description={`Program: ${selectedProgram?.name || ''}`}
         submitText="Update Session Duration"
-        disabled={
-          !formData.sessionTimeLengthInMinutes ||
-          formData.sessionTimeLengthInMinutes < 15 ||
-          formData.sessionTimeLengthInMinutes > 300
-        }
+        useTanStackForm={true}
+        defaultValues={editFormData}
+        validate={(values) => {
+          const errors: Record<string, string> = {};
+          if (!values.sessionTimeLengthInMinutes || values.sessionTimeLengthInMinutes < 15 || values.sessionTimeLengthInMinutes > 300) {
+            errors.sessionTimeLengthInMinutes = 'Session duration must be between 15 and 300 minutes';
+          }
+          return Object.keys(errors).length > 0 ? errors : undefined;
+        }}
       >
-        <FormField
-          type="number"
-          label="Session Duration (minutes)"
-          value={formData.sessionTimeLengthInMinutes}
-          onChange={(value) => setFormData(prev => ({ ...prev, sessionTimeLengthInMinutes: parseInt(value) || 60 }))}
-          inputProps={{ min: 15, max: 300 }}
-          helperText="Session duration in minutes (15-300)"
-        />
+        {(form) => (
+          <FormField
+            type="number"
+            label="Session Duration (minutes)"
+            name="sessionTimeLengthInMinutes"
+            form={form}
+            inputProps={{ min: 15, max: 300 }}
+            helperText="Session duration in minutes (15-300)"
+          />
+        )}
       </FormDialog>
 
       {/* Delete Program Dialog */}

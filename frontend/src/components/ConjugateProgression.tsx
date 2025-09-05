@@ -7,7 +7,8 @@ import {
   useReactTable,
   flexRender,
 } from '@tanstack/react-table';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
@@ -51,6 +52,9 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
   weightUnitPreferences,
 }) => {
   const [globalFilter, setGlobalFilter] = useState('');
+
+  // Virtualization setup
+  const tableParentRef = useRef<HTMLDivElement>(null);
 
   // Table configuration
   const columnHelper = createColumnHelper<{
@@ -108,6 +112,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
     },
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: 'includesString',
+  });
+
+  // Create virtualizer for table rows
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => tableParentRef.current,
+    estimateSize: () => 50, // Approximate row height
+    overscan: 5, // Render 5 extra rows above and below viewport
   });
 
   if (!userData?.training_programs || userData.training_programs.length === 0) {
@@ -173,7 +185,14 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
               }}
               sx={{ mb: 2 }}
             />
-            <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+            <Box 
+              ref={tableParentRef}
+              sx={{ 
+                maxHeight: 400, 
+                overflow: 'auto',
+                height: '400px'
+              }}
+            >
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   {table.getHeaderGroups().map(headerGroup => (
@@ -195,21 +214,44 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
                   ))}
                 </thead>
                 <tbody>
-                  {table.getRowModel().rows.map(row => (
-                    <tr key={row.id}>
-                      {row.getVisibleCells().map(cell => (
-                        <td
-                          key={cell.id}
-                          style={{
-                            padding: '8px',
-                            borderBottom: '1px solid #f0f0f0',
-                          }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                  <tr>
+                    <td
+                      colSpan={columns.length}
+                      style={{
+                        height: `${rowVirtualizer.getTotalSize()}px`,
+                        padding: 0,
+                      }}
+                    />
+                  </tr>
+                  {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                    const row = table.getRowModel().rows[virtualRow.index];
+                    if (!row) return null;
+                    return (
+                      <tr
+                        key={row.id}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          height: `${virtualRow.size}px`,
+                          transform: `translateY(${virtualRow.start}px)`,
+                        }}
+                      >
+                        {row.getVisibleCells().map(cell => (
+                          <td
+                            key={cell.id}
+                            style={{
+                              padding: '8px',
+                              borderBottom: '1px solid #f0f0f0',
+                            }}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </Box>

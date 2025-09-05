@@ -4,7 +4,12 @@ import { Box, useTheme, Typography, IconButton, Card, CardContent, Tooltip } fro
 import { ResponsiveSunburst } from '@nivo/sunburst';
 import React, { useState, useMemo } from 'react';
 
-import type { ProgrammedWorkoutWithStages, WorkoutStageWithExercises, UserWeightUnitPreference, WeightUnit } from '../api/types';
+import { 
+  WeightUnit,
+  type ProgrammedWorkoutWithStages,
+  type WorkoutStageWithExercises,
+  type UserWeightUnitPreference,
+ } from '../api/types';
 import { createCongenNivoTheme } from '../theme/nivoTheme';
 
 // Custom layer to display total volume in the center

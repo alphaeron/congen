@@ -114,13 +114,14 @@ class UserDALTest {
             )
         ).thenReturn(Mono.just(userData))
         whenever(
-            postgresClient.update<Int>(
+            postgresClient.update<Map<String, Any>>(
                 "DELETE FROM \"user\" WHERE keycloak_id=$1",
                 keycloakId
             )
-        ).thenReturn(Mono.just(1))
+        ).thenReturn(Mono.just(mapOf("deleted" to true)))
         whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
             .thenReturn(Mono.just(Unit))
+        whenever(encryptionUtil.decrypt(any())).thenReturn("decrypted-name")
 
         val result = userDAL.deleteUserByKeycloakId(keycloakId)
 
@@ -134,7 +135,7 @@ class UserDALTest {
             "SELECT * FROM \"user\" WHERE keycloak_id=$1",
             keycloakId
         )
-        verify(postgresClient).update<Int>(
+        verify(postgresClient).update<Map<String, Any>>(
             "DELETE FROM \"user\" WHERE keycloak_id=$1",
             keycloakId
         )
