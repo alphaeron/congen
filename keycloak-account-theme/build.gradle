@@ -55,12 +55,13 @@ task buildApp {
     outputs.dir('dist')
 }
 
-// Keycloak theme build task
-task buildKeycloakTheme(type: com.github.gradle.node.npm.task.NpmTask) {
+// Keycloak theme build task using custom build script
+task buildKeycloakTheme(type: Exec) {
     group = 'build'
-    description = 'Build the Keycloak theme using keycloakify'
+    description = 'Build the Keycloak theme using custom build script'
     dependsOn buildApp
-    npmCommand = ['run', 'build-keycloak-theme']
+    commandLine './scripts/build-theme.sh'
+    workingDir projectDir
 }
 
 // Disable the default assemble task since we use buildApp directly

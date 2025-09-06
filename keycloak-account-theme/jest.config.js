@@ -1,22 +1,33 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
-  moduleNameMapping: {
+  moduleNameMapper: {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '^keycloakify/account$': '<rootDir>/src/__mocks__/keycloakify.ts',
+    '^keycloakify/account/DefaultPage$':
+      '<rootDir>/src/__mocks__/keycloakify-account-DefaultPage.tsx',
+    '^keycloakify/account/Template$': '<rootDir>/src/__mocks__/keycloakify-account-Template.tsx',
   },
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
+    '^.+\\.(ts|tsx)$': 'babel-jest',
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testMatch: [
-    '<rootDir>/src/**/__tests__/**/*.(ts|tsx|js)',
-    '<rootDir>/src/**/*.(test|spec).(ts|tsx|js)',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(keycloakify|@mui|@emotion)/)'],
+  testMatch: ['<rootDir>/src/**/?(*.)(spec|test).(ts|tsx|js)'],
   collectCoverageFrom: [
-    'src/**/*.(ts|tsx)',
+    'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
-    '!src/index.tsx',
-    '!src/setupTests.ts',
+    '!src/**/*.test.{ts,tsx}',
+    '!src/**/*.spec.{ts,tsx}',
+    '!src/**/test-utils.tsx',
+    '!src/**/setupTests.ts',
   ],
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+  passWithNoTests: true,
 };

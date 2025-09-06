@@ -3,11 +3,20 @@ kind: ConfigMap
 metadata:
   name: keycloak-theme
   namespace: congen
+binaryData:
+  "congen-account-theme.jar": ""
 data:
   # Login theme properties file
   "login-theme.properties": |
     favIcon=img/favicon.ico
     parent=keycloak
+    import=common/keycloak
+    styles=css/congen.css
+  
+  # Account theme properties file (fallback)
+  "account-theme.properties": |
+    favIcon=img/favicon.ico
+    parent=keycloak.v3
     import=common/keycloak
     styles=css/congen.css
   

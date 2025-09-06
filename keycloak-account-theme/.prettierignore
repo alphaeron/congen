@@ -1,6 +1,28 @@
+# Build outputs
+dist/
+dist_keycloak/
+theme_build/
+build/
+coverage/
+
+# Dependencies
 node_modules/
-/dist/
-/dist_keycloak/
-/public/keycloakify-dev-resources/
-/.vscode/
-/.yarn_home/
+
+# Generated files
+*.min.js
+*.min.css
+*.map
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Performance monitoring
+performance-metrics.json
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store

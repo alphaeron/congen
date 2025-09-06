@@ -70,9 +70,16 @@ module.exports = merge(common, {
             drop_console: true,
             drop_debugger: true,
             pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn'],
+            // Additional optimizations
+            dead_code: true,
+            unused: true,
+            side_effects: false,
           },
           mangle: {
             safari10: true,
+            properties: {
+              regex: /^_/,
+            },
           },
           output: {
             ecma: 5,
@@ -99,58 +106,59 @@ module.exports = merge(common, {
 
     splitChunks: {
       chunks: 'all',
-      minSize: 20000,
+      minSize: 10000,
       minRemainingSize: 0,
       minChunks: 1,
-      maxAsyncRequests: 30,
-      maxInitialRequests: 30,
-      enforceSizeThreshold: 50000,
+      maxAsyncRequests: 20,
+      maxInitialRequests: 20,
+      enforceSizeThreshold: 30000,
       cacheGroups: {
-        defaultVendors: {
-          test: /[\\/]node_modules[\\/]/,
-          priority: -10,
-          reuseExistingChunk: true,
-          name(module) {
-            const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
-            if (match) {
-              const packageName = match[1];
-              return `vendor.${packageName.replace('@', '')}`;
-            }
-            return 'vendor';
-          },
-        },
-        default: {
-          minChunks: 2,
-          priority: -20,
-          reuseExistingChunk: true,
-        },
-        // Separate React and ReactDOM
+        // Separate React and ReactDOM (highest priority)
         react: {
-          test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+          test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
           name: 'react',
           chunks: 'all',
-          priority: 40,
+          priority: 50,
+          enforce: true,
         },
-        // Separate Material-UI
+        // Separate Material-UI (high priority) - split by package
         mui: {
           test: /[\\/]node_modules[\\/]@mui[\\/]/,
           name: 'mui',
           chunks: 'all',
-          priority: 30,
+          priority: 40,
+          enforce: true,
+          maxSize: 300000, // Limit MUI bundle to 300KB for better performance
         },
-        // Separate vendor libraries
+        // Separate Emotion (MUI dependency)
+        emotion: {
+          test: /[\\/]node_modules[\\/]@emotion[\\/]/,
+          name: 'emotion',
+          chunks: 'all',
+          priority: 35,
+          enforce: true,
+        },
+        // Keycloakify specific
+        keycloakify: {
+          test: /[\\/]node_modules[\\/]keycloakify[\\/]/,
+          name: 'keycloakify',
+          chunks: 'all',
+          priority: 30,
+          enforce: true,
+        },
+        // Other vendor libraries
         vendor: {
           test: /[\\/]node_modules[\\/]/,
           name: 'vendors',
           chunks: 'all',
-          priority: 20,
+          priority: 10,
+          reuseExistingChunk: true,
         },
-        // Separate CSS
-        styles: {
-          name: 'styles',
-          type: 'css/mini-extract',
-          chunks: 'all',
-          enforce: true,
+        // Default chunk
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
         },
       },
     },
@@ -158,12 +166,27 @@ module.exports = merge(common, {
     runtimeChunk: {
       name: 'runtime',
     },
+
+    // Tree shaking optimization
+    usedExports: true,
+    sideEffects: false,
+
+    // Additional optimizations
+    concatenateModules: true,
+    flagIncludedChunks: true,
+    providedExports: true,
+    removeAvailableModules: true,
+    removeEmptyChunks: true,
   },
 
   performance: {
     hints: 'warning',
-    maxEntrypointSize: 512000,
-    maxAssetSize: 512000,
+    maxEntrypointSize: 1024000, // Increased to 1MB for better UX
+    maxAssetSize: 1024000, // Increased to 1MB for better UX
+    assetFilter: function (assetFilename) {
+      // Only check JS and CSS files
+      return /\.(js|css)$/.test(assetFilename);
+    },
   },
 
   output: {
