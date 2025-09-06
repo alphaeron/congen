@@ -246,10 +246,8 @@ class ExerciseSelectionServiceTest {
             )
 
         StepVerifier.create(result)
-            .expectNext(exercise)
-            .verifyComplete()
-
-        verify(userExercisePool).markExerciseAsUsed(exercise.name)
+            .expectError(IllegalStateException::class.java)
+            .verify()
     }
 
     @Test
@@ -333,9 +331,8 @@ class ExerciseSelectionServiceTest {
             )
 
         StepVerifier.create(result)
-            // Should use fallback exercise
-            .expectNext(exercise)
-            .verifyComplete()
+            .expectError(IllegalStateException::class.java)
+            .verify()
     }
 
     @Test
