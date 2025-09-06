@@ -127,6 +127,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 4-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
+        // Add additional equipment.
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId4Day")
@@ -339,6 +345,11 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "bands", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "safety squat bar", token = userToken)
 
+        // Add additional equipment.
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
         // Generate conjugate program
         val programResponse =
             webTestClient.post()
@@ -478,6 +489,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
 
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
+        // Add additional equipment.
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId2DayTemplate")
@@ -535,6 +552,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
             )
 
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
+
+        // Add additional equipment.
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
 
         val programResponse =
             webTestClient.post()
