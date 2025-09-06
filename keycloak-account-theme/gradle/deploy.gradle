@@ -1,0 +1,79 @@
+// Keycloak theme deployment tasks
+
+import groovy.json.JsonSlurper
+
+// Get environment from project property, default to 'local'
+ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+
+// Task to prepare the Keycloak theme for deployment
+task prepareKeycloakTheme {
+    group = 'deployment'
+    description = 'Build the Keycloak account theme and prepare it for deployment'
+    dependsOn buildApp
+    
+    doLast {
+        // Use webpack output instead of keycloakify output for now
+        if (!file('dist').exists()) {
+            throw new GradleException('Webpack build failed: dist directory not found')
+        }
+        
+        // Create a temporary keycloak theme structure
+        def keycloakDist = file('dist_keycloak')
+        keycloakDist.mkdirs()
+        
+        // Copy webpack output to keycloak dist
+        copy {
+            from 'dist'
+            into 'dist_keycloak'
+        }
+        
+        println "✅ Keycloak account theme prepared for deployment (using webpack output)"
+        println "📁 Theme files available in: dist_keycloak/"
+    }
+}
+
+// Task to copy theme files to the appropriate location for Keycloak deployment
+task deployKeycloakTheme {
+    group = 'deployment'
+    description = 'Deploy the Keycloak account theme to the Keycloak deployment'
+    dependsOn prepareKeycloakTheme
+    
+    doLast {
+        def keycloakThemeDir = "../k8s/base/stage-6/keycloak-theme"
+        
+        // Create the theme directory if it doesn't exist
+        file(keycloakThemeDir).mkdirs()
+        
+        // Copy theme files
+        copy {
+            from 'dist_keycloak'
+            into keycloakThemeDir
+        }
+        
+        println "✅ Keycloak account theme deployed to: ${keycloakThemeDir}"
+    }
+}
+
+// Task to clean up theme deployment files
+task cleanKeycloakTheme {
+    group = 'build'
+    description = 'Clean the Keycloak theme deployment files'
+    
+    doLast {
+        delete 'dist_keycloak'
+        delete '../k8s/base/stage-6/keycloak-theme'
+        println "✅ Keycloak theme files cleaned"
+    }
+}
+
+// Prepare deployment task that builds the keycloak theme
+task prepareDeployment {
+    group = 'deployment'
+    description = 'Build the Keycloak account theme and prepare it for deployment'
+    dependsOn deployKeycloakTheme
+}
+
+// Update the clean task to include keycloak theme cleanup
+tasks.named('clean').configure {
+    dependsOn cleanKeycloakTheme
+}

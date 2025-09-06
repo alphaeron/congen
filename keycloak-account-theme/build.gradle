@@ -1,0 +1,93 @@
+plugins {
+    id 'base'
+    id 'com.github.node-gradle.node' version '4.0.0'
+}
+
+description = 'Congen Keycloak Account Theme'
+
+// Get environment from project property, default to 'local'
+ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+
+// Custom npm tasks with environment variables
+task npmBuildWithEnv(type: com.github.gradle.node.npm.task.NpmTask) {
+    group = 'build'
+    description = 'Build for production with environment variables'
+    dependsOn npm_install
+    npmCommand = ['run', 'build']
+    environment = ['NODE_ENV': 'production']
+}
+
+task npmDevBuildWithEnv(type: com.github.gradle.node.npm.task.NpmTask) {
+    group = 'build'
+    description = 'Build for development with environment variables'
+    dependsOn npm_install
+    npmCommand = ['run', 'devbuild']
+    environment = ['NODE_ENV': 'development']
+}
+
+// Environment-aware build task using custom npm tasks with environment variables
+task buildApp {
+    group = 'build'
+    description = 'Build the application (uses environment to determine build type)'
+    dependsOn npm_install
+
+    def buildType = (project.environment == 'production') ? 'production' : 'debug'
+
+    doFirst {
+        println "🌍 Building keycloak account theme for environment: ${project.environment}"
+    }
+
+    if (buildType == 'production') {
+        dependsOn npmBuildWithEnv
+    } else {
+        dependsOn npmDevBuildWithEnv
+    }
+
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('webpack.common.js')
+    if (buildType == 'production') {
+        inputs.file('webpack.prod.js')
+    } else {
+        inputs.file('webpack.dev.js')
+    }
+    inputs.file('tsconfig.json')
+    outputs.dir('dist')
+}
+
+// Keycloak theme build task
+task buildKeycloakTheme(type: com.github.gradle.node.npm.task.NpmTask) {
+    group = 'build'
+    description = 'Build the Keycloak theme using keycloakify'
+    dependsOn buildApp
+    npmCommand = ['run', 'build-keycloak-theme']
+}
+
+// Disable the default assemble task since we use buildApp directly
+tasks.named('assemble').configure {
+    enabled = false
+}
+
+tasks.named('build').configure {
+    dependsOn buildKeycloakTheme, check
+}
+
+// Clean-related tasks
+
+task cleanDist(type: Delete) {
+    group = 'build'
+    description = 'Clean the dist directory'
+    delete 'dist'
+    delete 'coverage'
+    delete 'build'
+}
+
+tasks.named('clean').configure {
+    dependsOn cleanDist
+}
+
+// Apply modular gradle configurations
+apply from: "${projectDir}/gradle/node.gradle"
+apply from: "${projectDir}/gradle/test.gradle"
+apply from: "${projectDir}/gradle/style.gradle"
+apply from: "${projectDir}/gradle/deploy.gradle"

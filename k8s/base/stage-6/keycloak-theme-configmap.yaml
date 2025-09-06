@@ -10,13 +10,6 @@ data:
     parent=keycloak
     import=common/keycloak
     styles=css/congen.css
-
-  # Account theme properties file
-  "account-theme.properties": |
-    favIcon=img/favicon.ico
-    parent=keycloak.v3
-    import=common/keycloak
-    styles=css/congen.css
   
   # Favicon - Congen icon
   "favicon.ico": |

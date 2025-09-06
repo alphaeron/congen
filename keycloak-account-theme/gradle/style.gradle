@@ -1,0 +1,53 @@
+// Code quality and formatting tasks
+
+// Code quality tasks using built-in npm_run tasks
+task lintCheck {
+    group = 'verification'
+    description = 'Check code quality with ESLint'
+    dependsOn npm_run_lint
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('eslint.config.js')
+}
+
+task prettierFix {
+    group = 'formatting'
+    description = 'Format code using Prettier'
+    dependsOn npm_run_format
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('.prettierrc')
+}
+
+task prettierCheck(type: NpmTask) {
+    group = 'verification'
+    description = 'Check code formatting with Prettier'
+    dependsOn npm_install
+    args = ['run', 'format:check']
+    inputs.dir('src')
+    inputs.file('package.json')
+    inputs.file('.prettierrc')
+}
+
+task lintFix(type: NpmTask) {
+    group = 'formatting'
+    description = 'Run ESLint with auto-fix'
+    dependsOn npm_install
+    args = ['run', 'lint:fix']
+}
+
+tasks.named('check').configure {
+    dependsOn lintCheck, test, typeCheck
+}
+
+task allLint {
+    group = 'verification'
+    description = 'Check both code quality and formatting'
+    dependsOn prettierCheck, lintCheck
+}
+
+task allFormat {
+    group = 'formatting'
+    description = 'Format code with Prettier and fix linting issues'
+    dependsOn prettierFix, lintFix
+}

@@ -1,3 +1,4 @@
 rootProject.name = 'congen'
 include 'backend'
 include 'frontend'
+include 'keycloak-account-theme'
