@@ -56,6 +56,7 @@ INSERT INTO equipment (name, description) VALUES ('safety squat bar', 'A steel-c
 INSERT INTO equipment (name, description) VALUES ('sliders', 'A pair of disks or carpet sliders that provide an unstable training surface, allowing you to simulate many different slideboard exercises');
 INSERT INTO equipment (name, description) VALUES ('trap bar', 'A hexagonally-shaped bar with handles inside the hexagon.');
 INSERT INTO equipment (name, description) VALUES ('trx', 'The TRX System, also known as Total Resistance Exercises, refers to a specialized form of suspension training.');
+INSERT INTO equipment (name, description) VALUES ('battle rope', 'A thick, heavyrope used for performing battle rope exercises.');
 
 -- Exercises and join tables.
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Chin-Up', 'Standard chin-up.', 'vertical_pull', false, true, true);
@@ -208,7 +209,7 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat'
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'upper back');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Zercher Squat', 'biceps');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Zercher Squat', 'power bar');
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Landmine Row', 'Start with the landmine between your legs, and hinge your hips and lean forward.  Grab the landmine in front of you, and row it up to your chest. Lower it back to the ground in a controlled fashion.', 'horizontal_pull', true, true, false);
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Landmine Row', 'Start with the landmine between your legs, and hinge your hips and lean forward.  Grab the landmine in front of you, and row it up to your chest. Lower it back to the ground in a controlled fashion.', 'horizontal_pull', true, true, true);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'rear deltoid');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'biceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Landmine Row', 'traps');
@@ -381,17 +382,17 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'erector spinae');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('MB Shot Put', 'quadriceps');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('MB Shot Put', 'med ball');
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('I Position MB Slam', 'Start with a med ball in both hands.  Raise the ball overhead as you extend your legs and raise up on your toes. Slam the med ball to the ground from the overhead position.  Gather the med ball and then repeat.', 'plyometric', false, true, true);
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'anterior deltoid');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'lateral deltoid');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'rectus abdominis');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'biceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'triceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'calves');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'hamstrings');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('I Position MB Slam', 'quadriceps');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('I Position MB Slam', 'med ball');
+INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Medicine Ball Slam', 'Start with a med ball in both hands.  Raise the ball overhead as you extend your legs and raise up on your toes. Slam the med ball to the ground from the overhead position.  Gather the med ball and then repeat.', 'plyometric', false, true, true);
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'anterior deltoid');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'lateral deltoid');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'rectus abdominis');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'biceps');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'triceps');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'calves');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'glutes');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'hamstrings');
+INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'quadriceps');
+INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Medicine Ball Slam', 'med ball');
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES ('Plyo Push-Up', 'Perform a push-up, except at the top of the motion throw yourself off the ground and clap your hands.', 'plyometric', false, true, true);
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plyo Push-Up', 'pec major');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plyo Push-Up', 'anterior deltoid');
