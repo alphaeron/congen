@@ -51,6 +51,7 @@ class ExerciseSelectionService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
+     * @param isWarmup Whether this is for a warmup exercise (optional, defaults to false)
      * @return Mono containing selected exercise or null if none available
      */
     fun selectExercise(
@@ -102,6 +103,7 @@ class ExerciseSelectionService(
      * @param workoutType The workout type (e.g., "maximal_effort", "dynamic_effort")
      * @param dayType The day type (e.g., "ME_Upper", "DE_Lower")
      * @param movementBalanceState Current movement balance state (optional)
+     * @param isWarmup Whether this is for a warmup exercise (optional, defaults to false)
      * @return Mono containing selected exercise or null if none available
      */
     private fun selectRotatingExerciseInternal(

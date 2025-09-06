@@ -56,6 +56,7 @@ import java.time.Instant
  * @param userWeightUnitPreferenceDAL Data access layer for weight unit preferences
  * @param programDAL Data access layer for training programs
  * @param auditService Service for audit logging
+ * @param keycloakClient Client for Keycloak operations
  *
  * @author Congen Development Team
  * @since 1.0.0

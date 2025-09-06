@@ -27,25 +27,10 @@ INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper,
 ('Weighted Box Jumps (non-countermovement)', 'Perform box jumps while holding weights, starting from a static position without the pre-stretch countermovement for maximum power output.', 'plyometric', false, false, true);
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Medicine Ball Underhand Vertical Toss', 'Hold a medicine ball at waist level and explosively toss it straight up using your legs and core, catching it on the way down.', 'plyometric', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Broad Jump (weighted)', 'Perform a standing broad jump while holding weights, focusing on explosive power and proper landing mechanics.', 'plyometric', false, false, true);
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Reactive Box Jumps', 'Perform box jumps with quick, reactive movements, focusing on minimal ground contact time and explosive power.', 'plyometric', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Medicine Ball Slam', 'Hold a medicine ball overhead and explosively slam it to the ground, using your entire body to generate power.', 'plyometric', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Hurdle Hops', 'Jump over hurdles in sequence, focusing on quick, explosive movements and proper landing mechanics.', 'plyometric', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Split Stance Jump', 'Start in a split stance position and explosively jump, switching leg positions in mid-air and landing in the opposite split stance.', 'plyometric', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Medicine Ball Underhand Toss Horizontal', 'Hold a medicine ball at waist level and explosively toss it horizontally, using your legs and core for power.', 'plyometric', false, false, true);
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Dumbbell Explosive Lunge Jump', 'Perform a lunge with dumbbells, then explosively jump up, switching leg positions in mid-air.', 'plyometric', false, false, true);
@@ -61,9 +46,6 @@ INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper,
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Ice Skaters', 'Jump laterally from side to side, landing on one foot and then the other, mimicking ice skating movements.', 'plyometric', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Medicine Ball Underhand Toss Overhead', 'Hold a medicine ball at waist level and explosively toss it overhead, using your legs and core for power.', 'plyometric', false, false, true);
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Tempo Runs', 'Perform running drills at various tempos, focusing on speed, power, and proper running mechanics.', 'plyometric', false, false, true);
@@ -90,12 +72,6 @@ INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper,
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('4 Way Neck', 'Perform neck exercises in four directions (flexion, extension, lateral flexion left and right) using resistance.', 'isolation', false, true, true);
 
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Backwards Walking Neck Harness Sled Walks', 'Walk backwards while wearing a neck harness attached to a sled, focusing on neck strength and stability.', 'carry', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Front Walking Neck Harness Sled Walks With Sandbag', 'Walk forward while wearing a neck harness attached to a sled with a sandbag, focusing on neck strength and stability.', 'carry', false, false, true);
-
 -- AUXILIARY EXERCISES
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Kettlebell Pull Through', 'Stand with your feet shoulder-width apart and a kettlebell between your legs. Hinge at the hips and pull the kettlebell through your legs, focusing on hip hinge mechanics.', 'hinge', false, false, true);
@@ -105,9 +81,6 @@ INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper,
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Banded Kettlebell Swing', 'Perform kettlebell swings while wearing a resistance band around your waist, focusing on explosive power and proper form.', 'hinge', false, false, true);
-
-INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
-('Ab Roll Outs', 'Kneel on the ground and roll an ab wheel forward, then pull it back to the starting position, focusing on core strength and control.', 'core', false, true, true);
 
 INSERT INTO exercise (name, description, movement_type, is_unilateral, is_upper, is_accessory) VALUES 
 ('Plank', 'Hold a plank position with your body in a straight line from head to heels, focusing on core stability and endurance.', 'core', false, false, true);
@@ -164,41 +137,15 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box J
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'hamstrings');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'calves');
 
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Vertical Toss', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Vertical Toss', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Vertical Toss', 'rectus abdominis');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Vertical Toss', 'obliques');
-
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Broad Jump (weighted)', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Broad Jump (weighted)', 'glutes');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Broad Jump (weighted)', 'hamstrings');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Broad Jump (weighted)', 'calves');
 
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reactive Box Jumps', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reactive Box Jumps', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reactive Box Jumps', 'hamstrings');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Reactive Box Jumps', 'calves');
-
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'rectus abdominis');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'obliques');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'pec major');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'anterior deltoid');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Slam', 'triceps');
-
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hurdle Hops', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hurdle Hops', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hurdle Hops', 'hamstrings');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hurdle Hops', 'calves');
-
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Stance Jump', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Stance Jump', 'glutes');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Stance Jump', 'hamstrings');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Split Stance Jump', 'calves');
-
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Horizontal', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Horizontal', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Horizontal', 'rectus abdominis');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Horizontal', 'obliques');
 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Dumbbell Explosive Lunge Jump', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Dumbbell Explosive Lunge Jump', 'glutes');
@@ -221,11 +168,6 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ice Skaters', 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ice Skaters', 'glutes');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ice Skaters', 'adductors');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ice Skaters', 'calves');
-
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Overhead', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Overhead', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Overhead', 'rectus abdominis');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Medicine Ball Underhand Toss Overhead', 'obliques');
 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Tempo Runs', 'quadriceps');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Tempo Runs', 'glutes');
@@ -253,16 +195,6 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plate Holds (f
 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('4 Way Neck', 'neck');
 
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Backwards Walking Neck Harness Sled Walks', 'neck');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Backwards Walking Neck Harness Sled Walks', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Backwards Walking Neck Harness Sled Walks', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Backwards Walking Neck Harness Sled Walks', 'calves');
-
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'neck');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'quadriceps');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'glutes');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'calves');
-
 -- AUXILIARY EXERCISES
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Kettlebell Pull Through', 'glutes');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Kettlebell Pull Through', 'hamstrings');
@@ -275,11 +207,6 @@ INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Hanging Leg Ra
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Kettlebell Swing', 'glutes');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Kettlebell Swing', 'hamstrings');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Banded Kettlebell Swing', 'rectus abdominis');
-
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Roll Outs', 'rectus abdominis');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Roll Outs', 'obliques');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Roll Outs', 'pec major');
-INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Ab Roll Outs', 'serratus anterior');
 
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plank', 'rectus abdominis');
 INSERT INTO exercise_muscle (exercise_name, muscle_name) VALUES ('Plank', 'obliques');
@@ -339,25 +266,15 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Rotation
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'box');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted Box Jumps (non-countermovement)', 'dumbbells');
 
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Medicine Ball Underhand Vertical Toss', 'med ball');
-
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Broad Jump (weighted)', 'dumbbells');
-
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Reactive Box Jumps', 'box');
-
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Medicine Ball Slam', 'med ball');
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Hurdle Hops', 'hurdle');
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Split Stance Jump', 'dumbbells');
 
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Medicine Ball Underhand Toss Horizontal', 'med ball');
-
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Dumbbell Explosive Lunge Jump', 'dumbbells');
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Lateral Step Ups On Box', 'box');
-
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Medicine Ball Underhand Toss Overhead', 'med ball');
 
 -- JOINT INTEGRITY EXERCISES
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Band Pull Aparts', 'bands');
@@ -372,13 +289,6 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Plate Ho
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('4 Way Neck', 'iron neck');
 
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Backwards Walking Neck Harness Sled Walks', 'iron neck');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Backwards Walking Neck Harness Sled Walks', 'sled');
-
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'iron neck');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'sled');
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'sandbag');
-
 -- AUXILIARY EXERCISES
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Kettlebell Pull Through', 'kettlebell');
 
@@ -386,8 +296,6 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Hanging 
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Kettlebell Swing', 'kettlebell');
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Kettlebell Swing', 'bands');
-
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Ab Roll Outs', 'ab wheel');
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Banded Hamstring Curls', 'bands');
 
@@ -415,26 +323,11 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Weighted Box Jumps (non-countermovement)', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Weighted Box Jumps (non-countermovement)', 'plyometric', 'maximal_effort');
 
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Underhand Vertical Toss', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Underhand Vertical Toss', 'plyometric', 'maximal_effort');
-
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Broad Jump (weighted)', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Broad Jump (weighted)', 'plyometric', 'maximal_effort');
 
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Reactive Box Jumps', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Reactive Box Jumps', 'plyometric', 'maximal_effort');
-
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Slam', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Slam', 'plyometric', 'maximal_effort');
-
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Hurdle Hops', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Hurdle Hops', 'plyometric', 'maximal_effort');
-
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Split Stance Jump', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Split Stance Jump', 'plyometric', 'maximal_effort');
-
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Underhand Toss Horizontal', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Underhand Toss Horizontal', 'plyometric', 'maximal_effort');
 
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Dumbbell Explosive Lunge Jump', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Dumbbell Explosive Lunge Jump', 'plyometric', 'maximal_effort');
@@ -450,9 +343,6 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Ice Skaters', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Ice Skaters', 'plyometric', 'maximal_effort');
-
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Underhand Toss Overhead', 'plyometric', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Medicine Ball Underhand Toss Overhead', 'plyometric', 'maximal_effort');
 
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Tempo Runs', 'plyometric', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Tempo Runs', 'plyometric', 'maximal_effort');
@@ -479,12 +369,6 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('4 Way Neck', 'isolation', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('4 Way Neck', 'isolation', 'maximal_effort');
 
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Backwards Walking Neck Harness Sled Walks', 'carry', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Backwards Walking Neck Harness Sled Walks', 'carry', 'maximal_effort');
-
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'carry', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Front Walking Neck Harness Sled Walks With Sandbag', 'carry', 'maximal_effort');
-
 -- AUXILIARY EXERCISES
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Kettlebell Pull Through', 'hinge', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Kettlebell Pull Through', 'hinge', 'maximal_effort');
@@ -494,9 +378,6 @@ INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) V
 
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Kettlebell Swing', 'hinge', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Banded Kettlebell Swing', 'hinge', 'maximal_effort');
-
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Ab Roll Outs', 'core', 'dynamic_effort');
-INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Ab Roll Outs', 'core', 'maximal_effort');
 
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Plank', 'core', 'dynamic_effort');
 INSERT INTO exercise_workout_type (exercise_name, movement_type, workout_type) VALUES ('Plank', 'core', 'maximal_effort');

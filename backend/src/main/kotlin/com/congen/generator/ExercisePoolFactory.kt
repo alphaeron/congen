@@ -70,7 +70,6 @@ class ExercisePoolFactory(
                 applySlidingWindowLogic(
                     allExercises = allExercises,
                     preferences = preferences,
-                    userEquipment = userEquipment,
                     previouslyUsedExercises = previouslyUsedExercises
                 )
 
@@ -94,14 +93,12 @@ class ExercisePoolFactory(
      *
      * @param allExercises All available exercises in the system
      * @param preferences User's exercise preferences
-     * @param userEquipment User's available equipment
      * @param previouslyUsedExercises List of previously used exercises
      * @return List of exercise names that should be excluded from the current pool
      */
     private fun applySlidingWindowLogic(
         allExercises: List<com.congen.model.Exercise>,
         preferences: List<com.congen.model.UserExercisePreference>,
-        userEquipment: List<com.congen.model.UserEquipment>,
         previouslyUsedExercises: List<com.congen.model.ProgrammedExercise>
     ): List<String> {
         // Filter exercises by user preferences first
