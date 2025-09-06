@@ -268,8 +268,6 @@ INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Weighted
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Broad Jump (weighted)', 'dumbbells');
 
-INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Hurdle Hops', 'hurdle');
-
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Split Stance Jump', 'dumbbells');
 
 INSERT INTO exercise_equipment (exercise_name, equipment_name) VALUES ('Dumbbell Explosive Lunge Jump', 'dumbbells');
