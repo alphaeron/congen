@@ -41,8 +41,9 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 3-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
         
-        // Add additional equipment needed for exercises that target lats
+        // Add additional equipment.
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
         IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
 
@@ -57,7 +58,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId3Day)
-        assert(programResponse.name.contains("Week 1"))
+        assert(programResponse.name == "Test Program 3-Day")
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .header("Authorization", "Bearer $userToken")
@@ -83,6 +84,12 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Create reference data for 2-day program
         IntegrationTestHelpers.createAllReferenceDataForUser(webTestClient, userId, token = userToken)
 
+        // Add additional equipment.
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "pull-up bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "power bar", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "dumbbells", token = userToken)
+        IntegrationTestHelpers.createTestUserEquipment(webTestClient, userId, "adjustable bench", token = userToken)
+
         val programResponse =
             webTestClient.post()
                 .uri("/api/v1/conjugate_workout_generator/$programId2Day")
@@ -94,7 +101,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId2Day)
-        assert(programResponse.name.contains("Week 1"))
+        assert(programResponse.name == "Test Program 2-Day")
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .header("Authorization", "Bearer $userToken")
@@ -131,7 +138,7 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
                 .responseBody!!
         assert(programResponse.userId == userId)
         assert(programResponse.id == programId4Day)
-        assert(programResponse.name.contains("Week 1"))
+        assert(programResponse.name.contains("Test Program 4-Day"))
         webTestClient.get()
             .uri("/api/v1/programmed_workout/program/${programResponse.id}")
             .header("Authorization", "Bearer $userToken")
