@@ -122,22 +122,44 @@ class UserExercisePool(
 
     /**
      * Gets primary exercises (non-accessory) that are currently available.
+     * Automatically refreshes the pool if it's running low on exercises.
      *
      * @return List of available primary exercises
      */
     fun getAvailablePrimaryExercises(): List<Exercise> {
         val primaryExercises = availableExercises.values.filter { !it.isAccessory }
+        
+        // Auto-refresh if we're running low on primary exercises
+        if (primaryExercises.size == 0 && usedExerciseNames.isNotEmpty()) {
+            logger.info("Auto-refreshing pool: only {} primary exercises available, attempting refresh...", primaryExercises.size)
+            refreshPool()
+            val refreshedPrimaryExercises = availableExercises.values.filter { !it.isAccessory }
+            logger.info("Available primary exercises after auto-refresh ({}): {}", refreshedPrimaryExercises.size, refreshedPrimaryExercises.map { it.name }.sorted())
+            return refreshedPrimaryExercises
+        }
+        
         logger.info("Available primary exercises ({}): {}", primaryExercises.size, primaryExercises.map { it.name }.sorted())
         return primaryExercises
     }
 
     /**
      * Gets accessory exercises that are currently available.
+     * Automatically refreshes the pool if it's running low on exercises.
      *
      * @return List of available accessory exercises
      */
     fun getAvailableAccessoryExercises(): List<Exercise> {
         val accessoryExercises = availableExercises.values.filter { it.isAccessory }
+        
+        // Auto-refresh if we're running low on accessory exercises
+        if (accessoryExercises.size <= 5 && usedExerciseNames.isNotEmpty()) {
+            logger.info("Auto-refreshing pool: only {} accessory exercises available, attempting refresh...", accessoryExercises.size)
+            refreshPool()
+            val refreshedAccessoryExercises = availableExercises.values.filter { it.isAccessory }
+            logger.info("Available accessory exercises after auto-refresh ({}): {}", refreshedAccessoryExercises.size, refreshedAccessoryExercises.map { it.name }.sorted())
+            return refreshedAccessoryExercises
+        }
+        
         logger.info("Available accessory exercises ({}): {}", accessoryExercises.size, accessoryExercises.map { it.name }.sorted())
         return accessoryExercises
     }
@@ -150,11 +172,7 @@ class UserExercisePool(
      */
     fun refreshPool(): Boolean {
         val currentUsedCount = usedExerciseNames.size
-        if (currentUsedCount == 0) {
-            logger.debug("No exercises have been used yet, no need to refresh pool")
-            return false
-        }
-
+        
         // Add back exercises that are not currently available, but respect the sliding window exclusions
         // This allows exercise cycling across weeks while preventing duplicates within the same week
         val exercisesToRefresh = allExercises.filter { exercise ->
@@ -164,11 +182,12 @@ class UserExercisePool(
                 preference?.shouldAvoid == false -> true
                 else -> true
             }
-            // Add back exercises that are not currently available AND not in the previously used list
-            // This ensures we don't add back exercises that were excluded by the sliding window logic
+            // Add back exercises that are not currently available AND not used in the current week
+            // We allow exercises from the previously used list to be added back (sliding window cycling)
+            // but we prevent duplicates within the same week
             shouldInclude && 
             !availableExercises.containsKey(exercise.name) && 
-            !previouslyUsedExercises.contains(exercise.name)
+            !usedExerciseNames.contains(exercise.name)
         }
 
         exercisesToRefresh.forEach { exercise ->
@@ -176,10 +195,11 @@ class UserExercisePool(
         }
 
         logger.info(
-            "Refreshed exercise pool: added back {} exercises. Pool now has {} available exercises ({} used this week)",
+            "Refreshed exercise pool: added back {} exercises. Pool now has {} available exercises ({} used this week, {} total exercises in database)",
             exercisesToRefresh.size,
             availableExercises.size,
-            currentUsedCount
+            currentUsedCount,
+            allExercises.size
         )
         
         if (exercisesToRefresh.isNotEmpty()) {
@@ -249,6 +269,7 @@ class UserExercisePool(
 
         // If no target muscles specified, return all exercises (for primary exercises)
         if (targetMuscles.isEmpty()) {
+            logger.info("No target muscles specified, returning all {} exercises", exercises.size)
             return Mono.just(exercises)
         }
 

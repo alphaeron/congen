@@ -527,6 +527,11 @@ abstract class WorkoutStageGenerationService(
                             .then()
                     }
             }
+            .onErrorResume { error ->
+                logger.error("Failed to create warmup stage for workout '{}', dayType '{}'. Error: {}", workout.id, dayType, error.message)
+                // Return empty Mono to continue with other stages instead of failing the entire workout generation
+                Mono.empty()
+            }
             .then()
     }
 
