@@ -326,13 +326,13 @@ class UserExercisePool(
         return Flux.fromIterable(exercises)
             .flatMap { exercise ->
                 exerciseMuscleDAL.selectExerciseMuscleByExercise(exercise.name)
-                    .filter { exerciseMuscles ->
+                    .map { exerciseMuscles ->
                         val exerciseMuscleNames = exerciseMuscles.map { it.muscleName.lowercase() }.toSet()
                         val targetMuscleNames = targetMuscles.map { it.lowercase() }.toSet()
-                        exerciseMuscleNames.any { muscle -> targetMuscleNames.contains(muscle) }
+                        val hasTargetMuscle = exerciseMuscleNames.any { muscle -> targetMuscleNames.contains(muscle) }
+                        if (hasTargetMuscle) Mono.just(exercise) else Mono.empty<Exercise>()
                     }
-                    .map { exercise }
-                    .onErrorReturn(exercise) // Fallback: include exercise if muscle check fails
+                    .flatMap { it }
             }
             .collectList()
             .flatMap { muscleFilteredExercises ->

@@ -32,13 +32,14 @@ class ExerciseSelectionService(
     /**
      * Determines weak muscles based on user's 1RM data and exercise history.
      *
-     * @return List of weak muscle groups to target
+     * @param dayType The type of day to determine appropriate weak muscles for
+     * @return List of weak muscle groups to target for the given day type
      */
-    fun determineWeakMuscles(): List<String> {
-        // For now, return default weak muscles
+    fun determineWeakMuscles(dayType: String): List<String> {
+        // For now, return day-type aware default weak muscles
         // In a real implementation, this would analyze 1RM data and exercise history
-        // to identify areas that need more attention
-        return ConjugateConstants.DEFAULT_WEAK_MUSCLES
+        // to identify areas that need more attention, then filter by day type
+        return ConjugateConstants.getWeakMusclesForDayType(dayType)
     }
 
     /**

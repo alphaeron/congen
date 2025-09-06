@@ -63,8 +63,28 @@ data class SetSchemeParams(
  * Constants for conjugate workout generation.
  */
 object ConjugateConstants {
-    /** Default weak muscles for new users */
-    val DEFAULT_WEAK_MUSCLES = listOf("hamstrings", "glutes", "upper back", "rectus abdominis")
+    /** Default weak muscles for new users - upper body muscles */
+    val DEFAULT_UPPER_BODY_WEAK_MUSCLES = listOf("rear deltoid", "lats", "triceps")
+    
+    /** Default weak muscles for new users - lower body muscles */
+    val DEFAULT_LOWER_BODY_WEAK_MUSCLES = listOf("hamstrings", "glutes")
+    
+    /** Default weak muscles for new users - all muscles (for full body days) */
+    val DEFAULT_WEAK_MUSCLES = listOf("hamstrings", "glutes", "upper back", "lats")
+    
+    /**
+     * Determines the appropriate weak muscles based on day type.
+     * 
+     * @param dayType The type of day (e.g., "DE_Upper", "ME_Lower", "Full_Body")
+     * @return List of weak muscles appropriate for the day type
+     */
+    fun getWeakMusclesForDayType(dayType: String): List<String> {
+        return when {
+            dayType.contains("Upper") -> DEFAULT_UPPER_BODY_WEAK_MUSCLES
+            dayType.contains("Lower") -> DEFAULT_LOWER_BODY_WEAK_MUSCLES
+            else -> DEFAULT_WEAK_MUSCLES // Full body or other day types
+        }
+    }
 
     /** Time allocation for different workout components (in minutes) */
     object TimeAllocation {
