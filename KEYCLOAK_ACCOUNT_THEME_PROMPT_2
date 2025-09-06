@@ -13,6 +13,7 @@ Create proper Keycloak theme JAR packaging
 Generate required FreeMarker templates (.ftl files) for account pages
 Create proper theme.properties configuration
 Ensure theme structure matches Keycloak's expected format
+Ensure the auto-generated k8s/base/stage-6/keycloak-theme/ is included in the top-level .gitignore for congen, and the autogeneration integrated in the build process
 3. Account Theme Customization
 The current implementation uses default keycloakify account components. The theme needs to be customized to match Congen's design.
 Tasks:
