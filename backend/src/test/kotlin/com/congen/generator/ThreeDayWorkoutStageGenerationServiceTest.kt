@@ -110,7 +110,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
                 guidelines = any(),
-                intensity = any()
+                intensity = any(),
+                movementRole = any()
             )
         ).thenReturn(Pair(5, 3))
         whenever(
@@ -386,7 +387,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
                 guidelines = any(),
-                intensity = any()
+                intensity = any(),
+                movementRole = any()
             )
         ).thenReturn(Pair(5, 3))
         whenever(
@@ -529,7 +531,8 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         whenever(
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
                 guidelines = any(),
-                intensity = any()
+                intensity = any(),
+                movementRole = any()
             )
         ).thenReturn(Pair(5, 3))
         whenever(

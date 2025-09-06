@@ -259,10 +259,31 @@ class ExerciseSelectionService(
                             }
                         }
                         .flatMap { muscleCountFilteredExercises ->
-                            // For warmup exercises with empty target muscles, skip muscle filtering
-                            if (isWarmup && targetMuscles.isEmpty()) {
-                                Mono.just(muscleCountFilteredExercises)
+                            // For warmup exercises, be more flexible with muscle targeting
+                            if (isWarmup) {
+                                if (targetMuscles.isEmpty()) {
+                                    // No target muscles specified, use all available exercises
+                                    Mono.just(muscleCountFilteredExercises)
+                                } else {
+                                    // Try to find exercises with target muscles first
+                                    userExercisePool.filterExercisesByMuscles(
+                                        muscleCountFilteredExercises,
+                                        targetMuscles,
+                                        exerciseMuscleDAL
+                                    ).flatMap { muscleFilteredExercises ->
+                                        if (muscleFilteredExercises.isEmpty()) {
+                                            // If no exercises match target muscles, fall back to all exercises
+                                            // This ensures warmup exercises are always available
+                                            logger.info("No exercises found for target muscles: {} in warmup, falling back to all {} available exercises", 
+                                                targetMuscles, muscleCountFilteredExercises.size)
+                                            Mono.just(muscleCountFilteredExercises)
+                                        } else {
+                                            Mono.just(muscleFilteredExercises)
+                                        }
+                                    }
+                                }
                             } else {
+                                // For non-warmup exercises, use strict muscle filtering
                                 userExercisePool.filterExercisesByMuscles(
                                     muscleCountFilteredExercises,
                                     targetMuscles,
@@ -273,6 +294,10 @@ class ExerciseSelectionService(
                         .flatMap { filteredExercises ->
                             logger.debug("Muscle filtering result: {} exercises found for target muscles: {} (isAccessory: {})", filteredExercises.size, targetMuscles, isAccessory)
                             if (filteredExercises.isEmpty()) {
+                                // This should not happen for warmup exercises due to fallback logic above
+                                if (isWarmup) {
+                                    logger.error("Unexpected: No exercises available for warmup after fallback logic. This indicates a deeper issue with exercise filtering.")
+                                }
                                 logger.error("No exercises found for target muscles: {} for isAccessory: {} (isWarmup: {})", targetMuscles, isAccessory, isWarmup)
                                 // No exercises found for target muscles - this should not happen with proper filtering
                                 Mono.error(IllegalStateException("No exercises found for target muscles: $targetMuscles for isAccessory: $isAccessory (isWarmup: $isWarmup)"))
@@ -671,6 +696,50 @@ class ExerciseSelectionService(
             return Mono.just(emptyList())
         }
 
+        return selectMuscleFocusedWarmupExercisesImpl(
+            userExercisePool = userExercisePool,
+            targetMuscles = targetMuscles,
+            count = count,
+            dayType = dayType,
+            workoutType = workoutType
+        ).onErrorResume { error ->
+            if (error.message?.contains("No exercises available after workout-type filtering") == true) {
+                logger.info("Pool refresh needed for warmup exercises, refreshing and retrying...")
+                val poolRefreshed = userExercisePool.refreshPool()
+                if (poolRefreshed) {
+                    logger.info("Pool refreshed successfully, retrying warmup exercise selection...")
+                    selectMuscleFocusedWarmupExercisesImpl(
+                        userExercisePool = userExercisePool,
+                        targetMuscles = targetMuscles,
+                        count = count,
+                        dayType = dayType,
+                        workoutType = workoutType
+                    )
+                } else {
+                    logger.error("Pool refresh failed for warmup exercises, returning empty list")
+                    Mono.just(emptyList())
+                }
+            } else {
+                logger.error(
+                    "Failed to select muscle-focused warmup exercises. Parameters: targetMuscles={}, count={}, dayType={}. Error: {}",
+                    targetMuscles,
+                    count,
+                    dayType,
+                    error.message
+                )
+                // For other errors, return empty list to allow workout generation to continue
+                Mono.just(emptyList())
+            }
+        }
+    }
+
+    private fun selectMuscleFocusedWarmupExercisesImpl(
+        userExercisePool: UserExercisePool,
+        targetMuscles: List<String>,
+        count: Int,
+        dayType: String,
+        workoutType: String
+    ): Mono<List<Exercise>> {
         // Use Flux.range to select multiple exercises sequentially
         return Flux.range(1, count)
             .concatMap {
@@ -687,18 +756,6 @@ class ExerciseSelectionService(
                 )
             }
             .collectList()
-            .onErrorResume { error ->
-                logger.error(
-                    "Failed to select muscle-focused warmup exercises. Parameters: targetMuscles={}, count={}, dayType={}. Error: {}",
-                    targetMuscles,
-                    count,
-                    dayType,
-                    error.message
-                )
-                // Return empty list to allow workout generation to continue without warmup exercises
-                // This is better than failing the entire workout generation
-                Mono.just(emptyList())
-            }
     }
 
     /**
@@ -706,6 +763,45 @@ class ExerciseSelectionService(
      * This can be either accessory or primary exercises, prioritizing movement pattern similarity.
      */
     private fun selectMovementPatternWarmupExercise(
+        userExercisePool: UserExercisePool,
+        primaryExercise: Exercise,
+        dayType: String,
+        workoutType: String
+    ): Mono<Exercise> {
+        return selectMovementPatternWarmupExerciseImpl(
+            userExercisePool = userExercisePool,
+            primaryExercise = primaryExercise,
+            dayType = dayType,
+            workoutType = workoutType
+        ).onErrorResume { error ->
+            if (error.message?.contains("No exercises available after workout-type filtering") == true) {
+                logger.info("Pool refresh needed for movement pattern warmup exercise, refreshing and retrying...")
+                val poolRefreshed = userExercisePool.refreshPool()
+                if (poolRefreshed) {
+                    logger.info("Pool refreshed successfully, retrying movement pattern warmup exercise selection...")
+                    selectMovementPatternWarmupExerciseImpl(
+                        userExercisePool = userExercisePool,
+                        primaryExercise = primaryExercise,
+                        dayType = dayType,
+                        workoutType = workoutType
+                    )
+                } else {
+                    logger.error("Pool refresh failed for movement pattern warmup exercise, returning empty")
+                    Mono.empty()
+                }
+            } else {
+                logger.error(
+                    "Failed to select movement pattern warmup exercise for primary exercise: {}. Error: {}",
+                    primaryExercise.name,
+                    error.message
+                )
+                // For other errors, return empty to allow workout generation to continue
+                Mono.empty()
+            }
+        }
+    }
+
+    private fun selectMovementPatternWarmupExerciseImpl(
         userExercisePool: UserExercisePool,
         primaryExercise: Exercise,
         dayType: String,
@@ -765,15 +861,7 @@ class ExerciseSelectionService(
                     Mono.empty()
                 }
             }
-        ).onErrorResume { error ->
-            logger.error(
-                "Failed to select movement pattern warmup exercise for primary exercise: {}. Error: {}",
-                primaryExercise.name,
-                error.message
-            )
-            // Return empty Mono instead of re-throwing error to allow workout generation to continue
-            Mono.empty()
-        }
+        )
     }
 
     /**

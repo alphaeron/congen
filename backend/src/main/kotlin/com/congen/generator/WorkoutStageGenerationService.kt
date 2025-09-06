@@ -799,7 +799,8 @@ abstract class WorkoutStageGenerationService(
         val (repsPerSet, numSets) =
             prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
                 guidelines = guidelines,
-                intensity = intensity
+                intensity = intensity,
+                movementRole = movementRole
             )
         val actualTotalReps = numSets * repsPerSet
         val restSeconds =

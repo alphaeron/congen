@@ -136,14 +136,17 @@ class PrilepinGuidelinesService {
      * Sets calculation:
      * - Based on total reps divided by reps per set
      * - Higher intensity = fewer total reps within the range
+     * - Maximum set limits: 5 sets for primary, 4 sets for secondary
      *
      * @param guidelines The Prilepin guidelines containing ranges and total reps
      * @param intensity The actual intensity being used
+     * @param movementRole The role of the movement ("primary", "secondary", "accessory")
      * @return Pair of (reps per set, number of sets)
      */
     fun getRepsAndSetsBasedOnIntensity(
         guidelines: PrilepinGuidelines,
-        intensity: Double
+        intensity: Double,
+        movementRole: String = "primary"
     ): Pair<Int, Int> {
         // Calculate reps based on intensity: higher intensity = lower reps
         val rangeSize = guidelines.intensityRange.endInclusive - guidelines.intensityRange.start
@@ -158,7 +161,23 @@ class PrilepinGuidelinesService {
         val adjustedTotalReps = guidelines.totalRepsRange.endInclusive - (intensityPosition * totalRepsRangeSize).toInt()
 
         // Calculate sets based on adjusted total reps
-        val numSets = (adjustedTotalReps / repsPerSet).toInt()
+        var numSets = (adjustedTotalReps / repsPerSet).toInt()
+
+        // Apply maximum set limits based on movement role
+        val maxSets = when (movementRole) {
+            "primary" -> 5
+            "secondary" -> 4
+            "accessory" -> 6 // Accessories can have more sets
+            else -> 5
+        }
+
+        // If calculated sets exceed maximum, adjust reps per set to fit within max sets
+        if (numSets > maxSets) {
+            numSets = maxSets
+            // Recalculate reps per set to maintain total volume as much as possible
+            val adjustedRepsPerSet = (adjustedTotalReps / numSets).toInt()
+            return Pair(adjustedRepsPerSet.coerceIn(minReps, maxReps), numSets)
+        }
 
         return Pair(repsPerSet, numSets)
     }
