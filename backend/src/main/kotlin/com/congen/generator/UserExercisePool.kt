@@ -220,9 +220,15 @@ class UserExercisePool(
      * Filters exercises by equipment availability reactively.
      *
      * @param exercises List of exercises to filter
+     * @param isPrimaryExercise Whether this is for a primary exercise (affects dumbbell restrictions)
+     * @param isUpperBody Whether this is for an upper body exercise (affects dumbbell restrictions)
      * @return Mono containing list of exercises that can be performed with available equipment
      */
-    fun filterExercisesByEquipment(exercises: List<Exercise>): Mono<List<Exercise>> {
+    fun filterExercisesByEquipment(
+        exercises: List<Exercise>,
+        isPrimaryExercise: Boolean = false,
+        isUpperBody: Boolean = false
+    ): Mono<List<Exercise>> {
         if (exercises.isEmpty()) {
             return Mono.just(emptyList())
         }
@@ -233,7 +239,18 @@ class UserExercisePool(
                     .filter { exerciseEquipment ->
                         val userEquipmentNames = userEquipment.map { it.equipmentName.lowercase() }.toSet()
                         val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
-                        userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                        
+                        // Check if user has required equipment
+                        val hasRequiredEquipment = userEquipmentNames.any { userEq -> exerciseEquipmentNames.contains(userEq) }
+                        
+                        // Apply dumbbell restriction for primary upper body exercises
+                        val isDumbbellRestricted = isPrimaryExercise && isUpperBody && exerciseEquipmentNames.contains("dumbbells")
+                        
+                        if (isDumbbellRestricted) {
+                            logger.info("Excluding dumbbell exercise '{}' from primary upper body selection", exercise.name)
+                        }
+                        
+                        hasRequiredEquipment && !isDumbbellRestricted
                     }
                     .map { exercise }
                     .onErrorReturn(exercise) // Fallback: include exercise if equipment check fails
@@ -241,9 +258,30 @@ class UserExercisePool(
             .collectList()
             .flatMap { equipmentFilteredExercises ->
                 if (equipmentFilteredExercises.isEmpty()) {
-                    // Fallback: return all exercises if no equipment matches
+                    // Fallback: return all exercises if no equipment matches, but still respect dumbbell restrictions
                     logger.warn("No exercises available with user's equipment, falling back to all exercises")
-                    Mono.just(exercises)
+                    if (isPrimaryExercise && isUpperBody) {
+                        // For primary upper body exercises, we need to check equipment for each exercise
+                        // to properly filter out dumbbell exercises even in fallback
+                        Flux.fromIterable(exercises)
+                            .flatMap { exercise ->
+                                exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
+                                    .map { exerciseEquipment ->
+                                        val exerciseEquipmentNames = exerciseEquipment.map { it.equipmentName.lowercase() }.toSet()
+                                        val isDumbbellRestricted = exerciseEquipmentNames.contains("dumbbells")
+                                        if (isDumbbellRestricted) {
+                                            Mono.empty<Exercise>() // Filter out dumbbell exercises
+                                        } else {
+                                            Mono.just(exercise)
+                                        }
+                                    }
+                                    .flatMap { it }
+                                    .onErrorResume { Mono.empty<Exercise>() } // Exclude exercise if equipment check fails
+                            }
+                            .collectList()
+                    } else {
+                        Mono.just(exercises)
+                    }
                 } else {
                     Mono.just(equipmentFilteredExercises)
                 }

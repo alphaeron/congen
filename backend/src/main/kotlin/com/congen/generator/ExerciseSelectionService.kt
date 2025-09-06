@@ -248,7 +248,9 @@ class ExerciseSelectionService(
                     // Filter exercises by equipment and muscles reactively
                     userExercisePool
                         .filterExercisesByEquipment(
-                            workoutTypeFilteredExercises
+                            workoutTypeFilteredExercises,
+                            isPrimaryExercise = !isAccessory,
+                            isUpperBody = dayType.contains("Upper")
                         )
                         .flatMap { equipmentFilteredExercises ->
                             // Apply muscle count filtering for warmup exercises

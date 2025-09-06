@@ -86,7 +86,7 @@ class ExerciseSelectionServiceTest {
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
@@ -117,7 +117,7 @@ class ExerciseSelectionServiceTest {
         val exercise = createSampleExercise("Dumbbell Flyes", MovementType.HORIZONTAL_PUSH)
 
         whenever(userExercisePool.getAvailableAccessoryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
 
@@ -167,7 +167,7 @@ class ExerciseSelectionServiceTest {
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
@@ -198,7 +198,7 @@ class ExerciseSelectionServiceTest {
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
@@ -229,7 +229,7 @@ class ExerciseSelectionServiceTest {
         val exercise = createSampleExercise("Bench Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(emptyList()))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
@@ -269,7 +269,7 @@ class ExerciseSelectionServiceTest {
             )
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
@@ -313,7 +313,7 @@ class ExerciseSelectionServiceTest {
             )
 
         whenever(userExercisePool.getAvailablePrimaryExercises()).thenReturn(listOf(exercise))
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(exercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(exercise)))
         whenever(
             exerciseWorkoutTypeDAL.selectExerciseWorkoutType(any(), any(), any())
@@ -351,7 +351,7 @@ class ExerciseSelectionServiceTest {
 
         // Mock the equipment and muscle filtering to return the filtered list (after plyometric filtering)
         // The plyometric filtering happens in selectRotatingExerciseInternal before these filters
-        whenever(userExercisePool.filterExercisesByEquipment(any())).thenReturn(Mono.just(listOf(regularExercise)))
+        whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(regularExercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(regularExercise)))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
         
