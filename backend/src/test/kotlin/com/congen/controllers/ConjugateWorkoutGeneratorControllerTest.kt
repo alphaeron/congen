@@ -62,7 +62,6 @@ class ConjugateWorkoutGeneratorControllerTest {
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-user-id"))
         whenever(keycloakUtil.getCurrentUserRoles()).thenReturn(Mono.just(setOf("user")))
 
-
         testProgram =
             Program(
                 id = PROGRAM_ID,

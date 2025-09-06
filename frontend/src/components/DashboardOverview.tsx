@@ -3,9 +3,9 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 
+import { ActionCard } from './ActionCard';
 import { ConjugateProgression } from './ConjugateProgression';
 import { LoadingSpinner } from './LoadingSpinner';
-import { ActionCard } from './ActionCard';
 import { StatusChip } from './StatusChip';
 import { getIndividualExercise } from '../api/exercise';
 import { getUserDataExport } from '../api/gdpr';
@@ -53,7 +53,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [exerciseData, setExerciseData] = useState<Map<string, Exercise>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
-  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>([]);
+  const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
+    []
+  );
 
   const handleActiveProgramClick = () => {
     if (activeProgram) {
@@ -250,11 +252,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
       {/* Active Program Section */}
       {activeProgram && (
         <Box sx={{ mb: 3 }}>
-          <ActionCard
-            title="Active Program"
-            clickable
-            onClick={handleActiveProgramClick}
-          >
+          <ActionCard title="Active Program" clickable onClick={handleActiveProgramClick}>
             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap" sx={{ mb: 1 }}>
               <Typography variant="body1" fontWeight="medium">
                 {activeProgram.name}

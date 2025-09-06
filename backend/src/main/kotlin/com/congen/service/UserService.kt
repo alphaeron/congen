@@ -6,7 +6,6 @@ import com.congen.exceptions.ValidationException
 import com.congen.model.User
 import com.congen.util.KeycloakUtil
 import com.congen.util.UnitConverter
-import com.congen.util.ValidationUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono

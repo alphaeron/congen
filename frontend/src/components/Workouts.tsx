@@ -17,9 +17,9 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { ConfirmationDialog } from './ConfirmationDialog';
 import { LoadingBackdrop } from './LoadingBackdrop';
+import { LoadingSpinner } from './LoadingSpinner';
 import { StreamChart } from './StreamChart';
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { generateNextWeek } from '../api/conjugateWorkoutGenerator';
@@ -368,17 +368,18 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
       )}
 
       {/* Stream Chart Section */}
-      {userDataExport?.training_programs && userDataExport.training_programs.length > 0 && 
-       userDataExport.training_programs.some(program => program.workouts.length > 0) && (
-        <StreamChart
-          userDataExport={userDataExport}
-          exerciseData={exerciseData}
-          weightUnitPreferences={weightUnitPreferences}
-          title="Volume Flow Over Time"
-          description="Training volume distribution across workout types"
-          height={400}
-        />
-      )}
+      {userDataExport?.training_programs &&
+        userDataExport.training_programs.length > 0 &&
+        userDataExport.training_programs.some(program => program.workouts.length > 0) && (
+          <StreamChart
+            userDataExport={userDataExport}
+            exerciseData={exerciseData}
+            weightUnitPreferences={weightUnitPreferences}
+            title="Volume Flow Over Time"
+            description="Training volume distribution across workout types"
+            height={400}
+          />
+        )}
 
       {/* Generate Workouts Dialog */}
       <ConfirmationDialog

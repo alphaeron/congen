@@ -24,7 +24,12 @@ import { getExercises } from '../api/exercise';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
 import { getUserDataExport } from '../api/gdpr';
 import { getProgramsWithPreferences } from '../api/program';
-import type { ProgramWithPreferences, Exercise, ProgramWithWorkouts, UserWeightUnitPreference } from '../api/types';
+import type {
+  ProgramWithPreferences,
+  Exercise,
+  ProgramWithWorkouts,
+  UserWeightUnitPreference,
+} from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';

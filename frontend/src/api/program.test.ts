@@ -42,9 +42,7 @@ describe('Program API', () => {
       const errorResponse = { message: 'Bad request' };
       mock.onPost('/program/').reply(400, errorResponse);
 
-      await expect(createProgram('Test Program', 4, 'test-user-id')).rejects.toEqual(
-        errorResponse
-      );
+      await expect(createProgram('Test Program', 4, 'test-user-id')).rejects.toEqual(errorResponse);
     });
   });
 

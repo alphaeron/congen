@@ -70,7 +70,9 @@ describe('userWeightUnitPreference API', () => {
     it('should handle API errors', async () => {
       mock.onGet('/user_weight_unit_preference/test-user-id').reply(404, { message: 'Not found' });
 
-      await expect(getUserWeightUnitPreferences('test-user-id')).rejects.toEqual({ message: 'Not found' });
+      await expect(getUserWeightUnitPreferences('test-user-id')).rejects.toEqual({
+        message: 'Not found',
+      });
     });
   });
 
@@ -93,7 +95,9 @@ describe('userWeightUnitPreference API', () => {
         .onGet('/user_weight_unit_preference/test-user-id/Bench%20Press')
         .reply(404, { message: 'Not found' });
 
-      await expect(getUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({ message: 'Not found' });
+      await expect(getUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({
+        message: 'Not found',
+      });
     });
   });
 
@@ -116,7 +120,9 @@ describe('userWeightUnitPreference API', () => {
         .onDelete('/user_weight_unit_preference/test-user-id/Bench%20Press')
         .reply(404, { message: 'Not found' });
 
-      await expect(deleteUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({ message: 'Not found' });
+      await expect(deleteUserWeightUnitPreference('test-user-id', 'Bench Press')).rejects.toEqual({
+        message: 'Not found',
+      });
     });
   });
 

@@ -1,8 +1,8 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
-import { SnackbarProvider } from 'notistack';
 
 import { DashboardOverview } from './DashboardOverview';
 import { ENDPOINT } from '../api/endpoint';
@@ -293,7 +293,9 @@ describe('DashboardOverview', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Conjugate Progress Tracking')).toBeInTheDocument();
-      expect(screen.getByText(/Complete your first workout to see progress statistics/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Complete your first workout to see progress statistics/)
+      ).toBeInTheDocument();
     });
   });
 
@@ -430,7 +432,7 @@ describe('DashboardOverview', () => {
     mock.onGet('/user_one_rep_max/user/test-user-id').reply(200, multipleOneRepMaxes);
     mock.onGet('/gdpr/export').reply(200, multipleWorkoutsDataExport);
     mock.onGet(/\/exercise\/.*/).reply(200, mockExercise);
-    
+
     // Mock individual exercise calls that the component makes for each unique exercise
     mock.onGet('/exercise/Bench%20Press').reply(200, mockExercise);
     mock.onGet('/exercise/Squat').reply(200, mockExercise);
@@ -442,19 +444,19 @@ describe('DashboardOverview', () => {
     await waitFor(() => {
       // Check Key Performance Indicators
       expect(screen.getByText('Key Performance Indicators')).toBeInTheDocument();
-      
+
       // Check that the dashboard is rendering with the expected data
       expect(screen.getByText('Total Workouts')).toBeInTheDocument();
       expect(screen.getByText('Total Volume (lbs)')).toBeInTheDocument();
       expect(screen.getByText('1RM Records')).toBeInTheDocument();
-      
+
       // Check that the values are displayed (using more specific assertions)
       const totalWorkoutsElement = screen.getByText('Total Workouts').closest('.MuiGrid-root');
       expect(totalWorkoutsElement).toHaveTextContent('2');
-      
+
       const totalVolumeElement = screen.getByText('Total Volume (lbs)').closest('.MuiGrid-root');
       expect(totalVolumeElement).toHaveTextContent('2k');
-      
+
       const oneRmRecordsElement = screen.getByText('1RM Records').closest('.MuiGrid-root');
       expect(oneRmRecordsElement).toHaveTextContent('2');
     });
@@ -474,15 +476,17 @@ describe('DashboardOverview', () => {
     await waitFor(() => {
       // Check that we have at least the minimum expected API calls
       expect(mock.history.get.length).toBeGreaterThanOrEqual(5);
-      
+
       // Verify the core API calls are made in the expected order
       expect(mock.history.get[0].url).toBe('/program/');
       expect(mock.history.get[1].url).toBe('/programmed_workout/');
       expect(mock.history.get[2].url).toBe('/user_one_rep_max/user/test-user-id');
       expect(mock.history.get[3].url).toBe('/gdpr/export');
-      
+
       // Check that at least one exercise call is made
-      const exerciseCalls = mock.history.get.filter(call => call.url && call.url.match(/\/exercise\/.*/));
+      const exerciseCalls = mock.history.get.filter(
+        call => call.url && call.url.match(/\/exercise\/.*/)
+      );
       expect(exerciseCalls.length).toBeGreaterThanOrEqual(1);
     });
   });

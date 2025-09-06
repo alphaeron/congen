@@ -5,7 +5,12 @@ import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { setTokenGetter } from '../api/endpoint';
 import type { User } from '../api/types';
 import { createUserProfile, getCurrentUser } from '../api/user';
-import { clearAuthenticationState, isTokenExpired, sanitizeToken, preventTokenExposure } from '../common/authUtils';
+import {
+  clearAuthenticationState,
+  isTokenExpired,
+  sanitizeToken,
+  preventTokenExposure,
+} from '../common/authUtils';
 
 interface AuthContextType {
   user: User | null;
@@ -72,14 +77,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           clearAuthState();
           return null;
         }
-        
+
         // Check if token is expired
         if (isTokenExpired(sanitizedToken)) {
           // Token is expired, clear state and return null
           clearAuthState();
           return null;
         }
-        
+
         return sanitizedToken;
       }
       return null;
@@ -141,15 +146,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (oidcAuth.error) {
       // Provide more user-friendly error messages for common issues
       let errorMessage = oidcAuth.error.message;
-      
-      if (oidcAuth.error.message.includes('refresh_token') || 
-          oidcAuth.error.message.includes('invalid_grant')) {
+
+      if (
+        oidcAuth.error.message.includes('refresh_token') ||
+        oidcAuth.error.message.includes('invalid_grant')
+      ) {
         errorMessage = 'Your session has expired. Please log in again.';
-      } else if (oidcAuth.error.message.includes('network') || 
-                 oidcAuth.error.message.includes('timeout')) {
+      } else if (
+        oidcAuth.error.message.includes('network') ||
+        oidcAuth.error.message.includes('timeout')
+      ) {
         errorMessage = 'Network error. Please check your connection and try again.';
       }
-      
+
       enqueueSnackbar(errorMessage, { variant: 'error' });
       clearAuthState();
     }

@@ -1,7 +1,15 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosHeaders } from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 
+import {
+  handleAuthenticationFailure,
+  isTokenExpired,
+  isTokenExpiringSoon,
+  isTokenMalformed,
+  sanitizeToken,
+} from '../common/authUtils';
 import { BACKEND_URL } from '../globals';
-import { handleAuthenticationFailure, isTokenExpired, isTokenExpiringSoon, isTokenMalformed, sanitizeToken } from '../common/authUtils';
+
+import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 /**
  * Converts Unix timestamps (in seconds) to Date objects.
@@ -88,21 +96,21 @@ ENDPOINT.interceptors.request.use(async config => {
         handleAuthenticationFailure('Invalid token format');
         return Promise.reject(new Error('Invalid token format'));
       }
-      
+
       // Check if token is malformed first
       if (isTokenMalformed(sanitizedToken)) {
         // Token is malformed, clear authentication state and redirect to login
         handleAuthenticationFailure('Invalid token');
-        
+
         // Return a rejected promise to prevent the request
         return Promise.reject(new Error('Invalid token'));
       }
-      
+
       // Check if token is expired
       if (isTokenExpired(sanitizedToken)) {
         // Token is expired, clear authentication state and redirect to login
         handleAuthenticationFailure('Token expired');
-        
+
         // Return a rejected promise to prevent the request
         return Promise.reject(new Error('Token expired'));
       } else if (isTokenExpiringSoon(sanitizedToken)) {
@@ -148,15 +156,16 @@ export const REQUEST = async <T>(options: AxiosRequestConfig, retryCount = 0): P
 
   const onError = async (error: AxiosError<unknown>): Promise<T> => {
     // Check if this is a network error that should be retried
-    const isNetworkError = error.code === 'ERR_NETWORK' || 
-                          error.code === 'ECONNREFUSED' || 
-                          error.message?.includes('CORS') ||
-                          error.message?.includes('Network Error');
+    const isNetworkError =
+      error.code === 'ERR_NETWORK' ||
+      error.code === 'ECONNREFUSED' ||
+      error.message?.includes('CORS') ||
+      error.message?.includes('Network Error');
 
     if (isNetworkError && retryCount < maxRetries) {
       // Wait before retrying
       await new Promise(resolve => setTimeout(resolve, retryDelay * (retryCount + 1)));
-      
+
       // Retry the request
       return REQUEST<T>(options, retryCount + 1);
     }

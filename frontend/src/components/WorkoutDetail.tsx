@@ -78,7 +78,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     []
   );
 
-
   useEffect(() => {
     const loadWorkoutDetails = async () => {
       try {
@@ -203,7 +202,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             reps: reps || undefined,
             tempo: tempo !== '-' ? tempo : undefined,
             weight: weight
-              ? formatWeightWithUnit(weight, weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined)
+              ? formatWeightWithUnit(
+                  weight,
+                  weightUnitPreference?.preferred_unit as 'KG' | 'LBS' | undefined
+                )
               : undefined,
             rest: rest ? `${rest}s` : undefined,
             notes: '-',
@@ -355,7 +357,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     enableColumnResizing: true,
   });
 
-
   if (isLoading) {
     return <LoadingSpinner message="Loading workout details..." fullHeight={false} />;
   }
@@ -370,11 +371,11 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         {/* Table Container - 2/3 width */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
-            <Box 
-              sx={{ 
-                overflow: 'auto', 
+            <Box
+              sx={{
+                overflow: 'auto',
                 maxHeight: 'calc(100vh - 48px)',
-                height: '100%'
+                height: '100%',
               }}
             >
               <table

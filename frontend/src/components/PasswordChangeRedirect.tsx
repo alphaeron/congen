@@ -1,12 +1,13 @@
+import { Box, Typography } from '@mui/material';
+import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useSnackbar } from 'notistack';
-import { Box, Typography } from '@mui/material';
+
 import { LoadingSpinner } from './LoadingSpinner';
 
 /**
  * Component to handle redirects back from Keycloak after password changes.
- * 
+ *
  * This component checks if the user has returned from a password change operation
  * and redirects them back to their original location in the application.
  */
@@ -19,17 +20,17 @@ export const PasswordChangeRedirect: React.FC = () => {
     const handleRedirect = async () => {
       try {
         setIsRedirecting(true);
-        
+
         // Check if we have a stored redirect path from a password change operation
         const redirectPath = sessionStorage.getItem('congen_redirect_after_password_change');
-        
+
         if (redirectPath) {
           // Clear the stored path
           sessionStorage.removeItem('congen_redirect_after_password_change');
-          
+
           // Show success message
           enqueueSnackbar('Password changed successfully!', { variant: 'success' });
-          
+
           // Small delay to show the success message
           setTimeout(() => {
             // Redirect back to the original location
@@ -39,7 +40,7 @@ export const PasswordChangeRedirect: React.FC = () => {
           // No redirect path found, go to profile page
           navigate('/profile', { replace: true });
         }
-      } catch (err) {
+      } catch {
         enqueueSnackbar('Failed to redirect. Please try again.', { variant: 'error' });
         navigate('/profile', { replace: true });
       } finally {

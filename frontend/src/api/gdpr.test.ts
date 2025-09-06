@@ -380,7 +380,9 @@ describe('GDPR API', () => {
         await deleteAllPersonalData(specialConfirmation);
       } catch (error: unknown) {
         const axiosError = error as { error: string };
-        expect(axiosError.error).toContain("To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'");
+        expect(axiosError.error).toContain(
+          "To delete all data, confirmation parameter must be 'DELETE_ALL_MY_DATA'"
+        );
       }
     });
   });

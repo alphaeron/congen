@@ -125,14 +125,18 @@ describe('ProgrammedWorkout API', () => {
       const errorResponse = { message: 'Failed to update workout' };
       mock.onPatch('/programmed_workout/1').reply(400, errorResponse);
 
-      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(errorResponse);
+      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(
+        errorResponse
+      );
     });
 
     it('should handle workout not found errors', async () => {
       const errorResponse = { message: 'Workout not found' };
       mock.onPatch('/programmed_workout/1').reply(404, errorResponse);
 
-      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(errorResponse);
+      await expect(updateProgrammedWorkout(1, 1, 2, 'Updated Push Day')).rejects.toEqual(
+        errorResponse
+      );
     });
   });
 });

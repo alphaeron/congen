@@ -171,11 +171,20 @@ class ExerciseSelectionService(
 
             // Apply day-type filtering first
             var dayTypeFilteredExercises = filterExercisesByDayType(availableExercises, dayType)
-            logger.info("Day-type filtering for dayType '{}': {} available exercises -> {} filtered exercises", 
-                dayType, availableExercises.size, dayTypeFilteredExercises.size)
+            logger.info(
+                "Day-type filtering for dayType '{}': {} available exercises -> {} filtered exercises",
+                dayType,
+                availableExercises.size,
+                dayTypeFilteredExercises.size
+            )
             if (dayTypeFilteredExercises.isEmpty()) {
-                logger.warn("No exercises available after day-type filtering for dayType: {} and isAccessory: {}. Attempting to refresh pool...", dayType, isAccessory)
-                
+                logger.warn(
+                    "No exercises available after day-type filtering for dayType: {} and isAccessory: {}. " +
+                        "Attempting to refresh pool...",
+                    dayType,
+                    isAccessory
+                )
+
                 // Let the pool handle the refresh logic
                 val poolRefreshed = userExercisePool.refreshPool()
                 if (poolRefreshed) {
@@ -200,24 +209,26 @@ class ExerciseSelectionService(
             }
 
             // Filter out plyometric exercises only for warmup selection
-            val exercisesAfterPlyometricFiltering = if (isWarmup) {
-                val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
-                if (nonPlyometricExercises.isEmpty()) {
-                    logger.error(
-                        "No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {} (warmup)",
-                        dayType,
-                        isAccessory
-                    )
-                    return@defer Mono.error(
-                        IllegalStateException(
-                            "No non-plyometric exercises available after filtering for dayType: $dayType and isAccessory: $isAccessory (warmup)"
+            val exercisesAfterPlyometricFiltering =
+                if (isWarmup) {
+                    val nonPlyometricExercises = dayTypeFilteredExercises.filter { it.movementType != MovementType.PLYOMETRIC }
+                    if (nonPlyometricExercises.isEmpty()) {
+                        logger.error(
+                            "No non-plyometric exercises available after filtering for dayType: {} and isAccessory: {} (warmup)",
+                            dayType,
+                            isAccessory
                         )
-                    )
+                        return@defer Mono.error(
+                            IllegalStateException(
+                                "No non-plyometric exercises available after filtering for " +
+                                    "dayType: $dayType and isAccessory: $isAccessory (warmup)"
+                            )
+                        )
+                    }
+                    nonPlyometricExercises
+                } else {
+                    dayTypeFilteredExercises
                 }
-                nonPlyometricExercises
-            } else {
-                dayTypeFilteredExercises
-            }
 
             // Apply workout-type filtering only for non-accessory exercises
             val exercisesAfterWorkoutTypeFiltering =
@@ -232,7 +243,11 @@ class ExerciseSelectionService(
             exercisesAfterWorkoutTypeFiltering
                 .flatMap { workoutTypeFilteredExercises ->
                     if (workoutTypeFilteredExercises.isEmpty()) {
-                        logger.warn("No exercises available after workout-type filtering for workoutType: {} and isAccessory: {}", workoutType, isAccessory)
+                        logger.warn(
+                            "No exercises available after workout-type filtering for workoutType: {} and isAccessory: {}",
+                            workoutType,
+                            isAccessory
+                        )
                         Mono.error(
                             IllegalStateException(
                                 "No exercises available after workout-type filtering for " +
@@ -276,8 +291,12 @@ class ExerciseSelectionService(
                                         if (muscleFilteredExercises.isEmpty()) {
                                             // If no exercises match target muscles, fall back to all exercises
                                             // This ensures warmup exercises are always available
-                                            logger.info("No exercises found for target muscles: {} in warmup, falling back to all {} available exercises", 
-                                                targetMuscles, muscleCountFilteredExercises.size)
+                                            logger.info(
+                                                "No exercises found for target muscles: {} in warmup, " +
+                                                    "falling back to all {} available exercises",
+                                                targetMuscles,
+                                                muscleCountFilteredExercises.size
+                                            )
                                             Mono.just(muscleCountFilteredExercises)
                                         } else {
                                             Mono.just(muscleFilteredExercises)
@@ -294,15 +313,33 @@ class ExerciseSelectionService(
                             }
                         }
                         .flatMap { filteredExercises ->
-                            logger.debug("Muscle filtering result: {} exercises found for target muscles: {} (isAccessory: {})", filteredExercises.size, targetMuscles, isAccessory)
+                            logger.debug(
+                                "Muscle filtering result: {} exercises found for target muscles: {} (isAccessory: {})",
+                                filteredExercises.size,
+                                targetMuscles,
+                                isAccessory
+                            )
                             if (filteredExercises.isEmpty()) {
                                 // This should not happen for warmup exercises due to fallback logic above
                                 if (isWarmup) {
-                                    logger.error("Unexpected: No exercises available for warmup after fallback logic. This indicates a deeper issue with exercise filtering.")
+                                    logger.error(
+                                        "Unexpected: No exercises available for warmup after fallback logic. " +
+                                            "This indicates a deeper issue with exercise filtering."
+                                    )
                                 }
-                                logger.error("No exercises found for target muscles: {} for isAccessory: {} (isWarmup: {})", targetMuscles, isAccessory, isWarmup)
+                                logger.error(
+                                    "No exercises found for target muscles: {} for isAccessory: {} (isWarmup: {})",
+                                    targetMuscles,
+                                    isAccessory,
+                                    isWarmup
+                                )
                                 // No exercises found for target muscles - this should not happen with proper filtering
-                                Mono.error(IllegalStateException("No exercises found for target muscles: $targetMuscles for isAccessory: $isAccessory (isWarmup: $isWarmup)"))
+                                Mono.error(
+                                    IllegalStateException(
+                                        "No exercises found for target muscles: $targetMuscles " +
+                                            "for isAccessory: $isAccessory (isWarmup: $isWarmup)"
+                                    )
+                                )
                             } else {
                                 // No rotation logic - use all filtered exercises
                                 val exercisesToChooseFrom = filteredExercises
@@ -324,7 +361,11 @@ class ExerciseSelectionService(
                                         isAccessory
                                     )
                                     // No exercises available after movement balance constraints
-                                    Mono.error(IllegalStateException("No exercises available after movement balance constraints for isAccessory: $isAccessory"))
+                                    Mono.error(
+                                        IllegalStateException(
+                                            "No exercises available after movement balance constraints for isAccessory: $isAccessory"
+                                        )
+                                    )
                                 } else {
                                     // Select a random exercise from the filtered list
                                     val selectedExercise = finalExercises.random()
@@ -414,9 +455,12 @@ class ExerciseSelectionService(
                         exercises.filter { exercise ->
                             exercise.isUpper
                         }
-                    logger.info("Upper body filtering: {} exercises -> {} upper body exercises. Lower body exercises found: {}", 
-                        exercises.size, upperExercises.size, 
-                        exercises.filter { !it.isUpper }.map { it.name })
+                    logger.info(
+                        "Upper body filtering: {} exercises -> {} upper body exercises. Lower body exercises found: {}",
+                        exercises.size,
+                        upperExercises.size,
+                        exercises.filter { !it.isUpper }.map { it.name }
+                    )
                     upperExercises
                 }
                 dayType.contains("Lower") -> {
@@ -425,9 +469,12 @@ class ExerciseSelectionService(
                         exercises.filter { exercise ->
                             !exercise.isUpper
                         }
-                    logger.info("Lower body filtering: {} exercises -> {} lower body exercises. Upper body exercises found: {}", 
-                        exercises.size, lowerExercises.size, 
-                        exercises.filter { it.isUpper }.map { it.name })
+                    logger.info(
+                        "Lower body filtering: {} exercises -> {} lower body exercises. Upper body exercises found: {}",
+                        exercises.size,
+                        lowerExercises.size,
+                        exercises.filter { it.isUpper }.map { it.name }
+                    )
                     lowerExercises
                 }
                 else -> {
@@ -813,7 +860,8 @@ class ExerciseSelectionService(
         return selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = emptyList(),
-            isAccessory = true, // Start with accessory exercises
+            // Start with accessory exercises
+            isAccessory = true,
             workoutType = workoutType,
             dayType = dayType,
             movementBalanceState = null,
@@ -825,7 +873,8 @@ class ExerciseSelectionService(
             selectExercise(
                 userExercisePool = userExercisePool,
                 targetMuscles = emptyList(),
-                isAccessory = false, // Try primary exercises
+                // Try primary exercises
+                isAccessory = false,
                 workoutType = workoutType,
                 dayType = dayType,
                 movementBalanceState = null,
@@ -842,17 +891,22 @@ class ExerciseSelectionService(
                             if (isAppropriate) {
                                 // Additional safety check: ensure the exercise is appropriate for the day type
                                 // This prevents lower body exercises from being selected for upper body days
-                                val isDayTypeAppropriate = when {
-                                    dayType.contains("Upper") -> selectedExercise.isUpper
-                                    dayType.contains("Lower") -> !selectedExercise.isUpper
-                                    else -> true // For other day types, allow any exercise
-                                }
-                                
+                                val isDayTypeAppropriate =
+                                    when {
+                                        dayType.contains("Upper") -> selectedExercise.isUpper
+                                        dayType.contains("Lower") -> !selectedExercise.isUpper
+                                        else -> true // For other day types, allow any exercise
+                                    }
+
                                 if (isDayTypeAppropriate) {
                                     Mono.just(selectedExercise)
                                 } else {
-                                    logger.info("Exercise {} is not appropriate for day type {} (isUpper: {})", 
-                                        selectedExercise.name, dayType, selectedExercise.isUpper)
+                                    logger.info(
+                                        "Exercise {} is not appropriate for day type {} (isUpper: {})",
+                                        selectedExercise.name,
+                                        dayType,
+                                        selectedExercise.isUpper
+                                    )
                                     Mono.empty()
                                 }
                             } else {
@@ -879,12 +933,17 @@ class ExerciseSelectionService(
             logger.info("Exercise {} is plyometric and not appropriate for warmup", exercise.name)
             return Mono.just(false)
         }
-        
+
         // Allow exercises that use lighter equipment or are bodyweight
-        val warmupAppropriateEquipment = setOf(
-            "dumbbells", "bodyweight", "bands", "sled", "kettlebell"
-        )
-        
+        val warmupAppropriateEquipment =
+            setOf(
+                "dumbbells",
+                "bodyweight",
+                "bands",
+                "sled",
+                "kettlebell"
+            )
+
         // Query the database for the exercise's equipment
         return exerciseEquipmentDAL.selectExerciseEquipmentByExercise(exercise.name)
             .map { equipmentList ->
@@ -930,11 +989,19 @@ class ExerciseSelectionService(
             }
             .collectList()
             .onErrorResume { error ->
-                logger.error("Failed to select general warmup exercises. Parameters: count={}, dayType={}. Error: {}", count, dayType, error.message)
+                logger.error(
+                    "Failed to select general warmup exercises. Parameters: count={}, dayType={}. Error: {}",
+                    count,
+                    dayType,
+                    error.message
+                )
                 // For warmup exercises, we should not fall back to empty list if day-type filtering fails
                 // This ensures that lower body exercises are not selected for upper body days
                 if (error.message?.contains("day-type filtering") == true) {
-                    logger.error("Day-type filtering failed for general warmup selection. This should not happen - check exercise data and day-type logic.")
+                    logger.error(
+                        "Day-type filtering failed for general warmup selection. " +
+                            "This should not happen - check exercise data and day-type logic."
+                    )
                     Mono.error(error)
                 } else {
                     // For other errors (like muscle count filtering), we can be more lenient
@@ -962,7 +1029,7 @@ class ExerciseSelectionService(
                     .flatMap { muscleList ->
                         val muscleCount = muscleList.size
                         val isAppropriate = muscleCount <= MAX_MUSCLES_FOR_WARMUP
-                        
+
                         if (isAppropriate) {
                             Mono.just(exercise)
                         } else {
@@ -976,7 +1043,11 @@ class ExerciseSelectionService(
                         }
                     }
                     .onErrorResume { error ->
-                        logger.warn("Failed to check muscle count for exercise '{}', excluding from warmup: {}", exercise.name, error.message)
+                        logger.warn(
+                            "Failed to check muscle count for exercise '{}', excluding from warmup: {}",
+                            exercise.name,
+                            error.message
+                        )
                         Mono.empty() // Exclude exercises where we can't determine muscle count
                     }
             }

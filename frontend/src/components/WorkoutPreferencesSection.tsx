@@ -16,14 +16,11 @@ import {
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getExercises } from '../api/exercise';
-import { WeightUnit,
-  type Exercise,
-  type UserWeightUnitPreference,
- } from '../api/types';
+import { WeightUnit, type Exercise, type UserWeightUnitPreference } from '../api/types';
 import {
   getUserWeightUnitPreferences,
   upsertUserWeightUnitPreference,
@@ -226,7 +223,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
           exerciseName: '',
           preferredUnit: WeightUnit.LBS,
         }}
-        validate={(values) => {
+        validate={values => {
           const errors: Record<string, string> = {};
           if (!values.exerciseName) {
             errors.exerciseName = 'Please select an exercise';
@@ -237,14 +234,18 @@ export function WorkoutPreferencesSection(): React.ReactElement {
           return Object.keys(errors).length > 0 ? errors : undefined;
         }}
       >
-        {(form) => (
+        {form => (
           <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
             <FormField
               type="select"
               label="Exercise"
               name="exerciseName"
               form={form}
-              options={exercises && exercises.length > 0 ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name })) : [{ value: '', label: 'No exercises available' }]}
+              options={
+                exercises && exercises.length > 0
+                  ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name }))
+                  : [{ value: '', label: 'No exercises available' }]
+              }
             />
 
             <FormField
@@ -254,7 +255,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
               form={form}
               options={[
                 { value: WeightUnit.KG, label: 'Kilograms (KG)' },
-                { value: WeightUnit.LBS, label: 'Pounds (LBS)' }
+                { value: WeightUnit.LBS, label: 'Pounds (LBS)' },
               ]}
             />
           </Box>

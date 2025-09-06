@@ -27,18 +27,19 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   action,
 }) => {
   const Container = variant === 'paper' ? Paper : Card;
-  const containerProps = variant === 'paper' 
-    ? {
-        sx: {
-          p: 6,
-          textAlign: 'center',
-          borderRadius: 3,
-          background: theme =>
-            `linear-gradient(135deg, ${theme.palette.background.paper}, ${theme.palette.background.paper})`,
-          border: theme => `1px solid ${theme.palette.divider}`,
+  const containerProps =
+    variant === 'paper'
+      ? {
+          sx: {
+            p: 6,
+            textAlign: 'center',
+            borderRadius: 3,
+            background: theme =>
+              `linear-gradient(135deg, ${theme.palette.background.paper}, ${theme.palette.background.paper})`,
+            border: theme => `1px solid ${theme.palette.divider}`,
+          },
         }
-      }
-    : {};
+      : {};
 
   return (
     <Container {...containerProps}>

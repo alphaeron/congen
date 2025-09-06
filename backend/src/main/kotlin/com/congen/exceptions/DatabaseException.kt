@@ -86,12 +86,12 @@ class NoResultsFoundException(
     query: String,
     parameters: Array<out Any?> = emptyArray(),
 ) : DatabaseQueryException(
-    if (parameters.isNotEmpty()) {
-        "No results returned from query $query with parameters: ${parameters.contentToString()}"
-    } else {
-        "No results returned from query $query"
-    }
-)
+        if (parameters.isNotEmpty()) {
+            "No results returned from query $query with parameters: ${parameters.contentToString()}"
+        } else {
+            "No results returned from query $query"
+        }
+    )
 
 /**
  * Exception thrown when a database query returns an unexpected number of results.
@@ -110,9 +110,9 @@ open class InvalidResultException(
     query: String,
     parameters: Array<out Any?> = emptyArray(),
 ) : DatabaseQueryException(
-    if (parameters.isNotEmpty()) {
-        "Unexpected number of results from query $query with parameters: ${parameters.contentToString()}"
-    } else {
-        "Unexpected number of results from query $query"
-    }
-)
+        if (parameters.isNotEmpty()) {
+            "Unexpected number of results from query $query with parameters: ${parameters.contentToString()}"
+        } else {
+            "Unexpected number of results from query $query"
+        }
+    )

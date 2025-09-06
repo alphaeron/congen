@@ -164,12 +164,13 @@ class PrilepinGuidelinesService {
         var numSets = (adjustedTotalReps / repsPerSet).toInt()
 
         // Apply maximum set limits based on movement role
-        val maxSets = when (movementRole) {
-            "primary" -> 5
-            "secondary" -> 4
-            "accessory" -> 6 // Accessories can have more sets
-            else -> 5
-        }
+        val maxSets =
+            when (movementRole) {
+                "primary" -> 5
+                "secondary" -> 4
+                "accessory" -> 6 // Accessories can have more sets
+                else -> 5
+            }
 
         // If calculated sets exceed maximum, adjust reps per set to fit within max sets
         if (numSets > maxSets) {

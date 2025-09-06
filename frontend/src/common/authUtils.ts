@@ -59,14 +59,14 @@ export const clearAuthenticationState = (): void => {
   // Clear OIDC user data from storage
   localStorage.removeItem('oidc.user:congen:congen-frontend');
   sessionStorage.removeItem('oidc.user:congen:congen-frontend');
-  
+
   // Clear any other auth-related storage
   sessionStorage.removeItem('congen_redirect_after_password_change');
   sessionStorage.removeItem('congen_redirect_after_profile_edit');
-  
+
   // Clear any other potential auth-related items
   const keysToRemove: string[] = [];
-  
+
   // Find and remove any other OIDC-related keys
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
@@ -74,14 +74,14 @@ export const clearAuthenticationState = (): void => {
       keysToRemove.push(key);
     }
   }
-  
+
   // Remove found keys
   keysToRemove.forEach(key => localStorage.removeItem(key));
 };
 
 /**
  * Checks if a JWT token is malformed (invalid format).
- * 
+ *
  * @param token The JWT token to check
  * @returns true if the token is malformed, false otherwise
  */
@@ -92,7 +92,7 @@ export const isTokenMalformed = (token: string): boolean => {
     if (parts.length !== 3) {
       return true;
     }
-    
+
     // Try to decode the payload
     JSON.parse(atob(parts[1]));
     return false;
@@ -104,7 +104,7 @@ export const isTokenMalformed = (token: string): boolean => {
 
 /**
  * Checks if a JWT token is expired.
- * 
+ *
  * @param token The JWT token to check
  * @returns true if the token is expired, false otherwise
  */
@@ -113,7 +113,7 @@ export const isTokenExpired = (token: string): boolean => {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const exp = payload.exp * 1000; // Convert to milliseconds
     const now = Date.now();
-    
+
     return exp <= now;
   } catch {
     // If token decoding fails, consider it expired
@@ -123,7 +123,7 @@ export const isTokenExpired = (token: string): boolean => {
 
 /**
  * Checks if a JWT token will expire within a specified time window.
- * 
+ *
  * @param token The JWT token to check
  * @param windowMs The time window in milliseconds (default: 5 minutes)
  * @returns true if the token expires within the window, false otherwise
@@ -133,8 +133,8 @@ export const isTokenExpiringSoon = (token: string, windowMs: number = 5 * 60 * 1
     const payload = JSON.parse(atob(token.split('.')[1]));
     const exp = payload.exp * 1000; // Convert to milliseconds
     const now = Date.now();
-    
-    return (exp - now) < windowMs;
+
+    return exp - now < windowMs;
   } catch {
     // If token decoding fails, consider it expired
     return true;
@@ -154,10 +154,10 @@ export const redirectToLogin = (): void => {
  * Handles authentication failure by clearing state and redirecting to login.
  * This is a comprehensive cleanup function for when authentication fails.
  */
-export const handleAuthenticationFailure = (reason: string = 'Unknown authentication failure'): void => {
+export const handleAuthenticationFailure = (): void => {
   // Clear all authentication state
   clearAuthenticationState();
-  
+
   // Redirect to login
   redirectToLogin();
 };
@@ -165,7 +165,7 @@ export const handleAuthenticationFailure = (reason: string = 'Unknown authentica
 /**
  * Sanitizes and validates token data to prevent XSS attacks.
  * This function ensures tokens are properly formatted and don't contain malicious content.
- * 
+ *
  * @param token The token to sanitize
  * @returns The sanitized token or null if invalid
  */
@@ -173,20 +173,20 @@ export const sanitizeToken = (token: string | null | undefined): string | null =
   if (!token || typeof token !== 'string') {
     return null;
   }
-  
+
   // Remove any potential XSS vectors
   const sanitized = token
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
     .replace(/javascript:/gi, '') // Remove javascript: protocols
     .replace(/on\w+\s*=/gi, '') // Remove event handlers
     .trim();
-  
+
   // Validate JWT format (3 parts separated by dots)
   const parts = sanitized.split('.');
   if (parts.length !== 3) {
     return null;
   }
-  
+
   return sanitized;
 };
 
@@ -199,8 +199,8 @@ export const preventTokenExposure = (): void => {
   const originalLog = console.log;
   const originalError = console.error;
   const originalWarn = console.warn;
-  
-  const sanitizeLogArgs = (args: any[]): any[] => {
+
+  const sanitizeLogArgs = (args: unknown[]): unknown[] => {
     return args.map(arg => {
       if (typeof arg === 'string' && (arg.includes('Bearer ') || arg.includes('access_token'))) {
         return '[REDACTED_TOKEN]';
@@ -217,8 +217,8 @@ export const preventTokenExposure = (): void => {
       return arg;
     });
   };
-  
-  console.log = (...args: any[]) => originalLog(...sanitizeLogArgs(args));
-  console.error = (...args: any[]) => originalError(...sanitizeLogArgs(args));
-  console.warn = (...args: any[]) => originalWarn(...sanitizeLogArgs(args));
+
+  console.log = (...args: unknown[]) => originalLog(...sanitizeLogArgs(args));
+  console.error = (...args: unknown[]) => originalError(...sanitizeLogArgs(args));
+  console.warn = (...args: unknown[]) => originalWarn(...sanitizeLogArgs(args));
 };

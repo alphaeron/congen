@@ -7,11 +7,16 @@ import { MemoryRouter } from 'react-router';
 
 import { Workouts } from './Workouts';
 import { ENDPOINT } from '../api/endpoint';
-import type { User, Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
+import type {
+  User,
+  ProgrammedWorkout,
+  ProgramPreferences,
+  ProgramWithPreferences,
+} from '../api/types';
 
 // Mock Nivo chart components to prevent rendering issues
 jest.mock('@nivo/stream', () => ({
-  ResponsiveStream: ({ data, ...props }: any) => (
+  ResponsiveStream: (): React.ReactElement => (
     <div data-testid="stream-chart" {...props}>
       Mock Stream Chart
     </div>
@@ -19,7 +24,7 @@ jest.mock('@nivo/stream', () => ({
 }));
 
 jest.mock('@nivo/radar', () => ({
-  ResponsiveRadar: ({ data, ...props }: any) => (
+  ResponsiveRadar: (): React.ReactElement => (
     <div data-testid="radar-chart" {...props}>
       Mock Radar Chart
     </div>
@@ -27,7 +32,7 @@ jest.mock('@nivo/radar', () => ({
 }));
 
 jest.mock('@nivo/sunburst', () => ({
-  ResponsiveSunburst: ({ data, ...props }: any) => (
+  ResponsiveSunburst: (): React.ReactElement => (
     <div data-testid="sunburst-chart" {...props}>
       Mock Sunburst Chart
     </div>
@@ -36,7 +41,7 @@ jest.mock('@nivo/sunburst', () => ({
 
 // Mock WorkoutWeekDetails component to prevent auth context issues
 jest.mock('./WorkoutWeekDetails', () => ({
-  WorkoutWeekDetails: ({ selectedWorkout, weekNumber }: any) => (
+  WorkoutWeekDetails: ({ selectedWorkout, weekNumber }: unknown) => (
     <div data-testid="workout-week-details">
       Mock WorkoutWeekDetails for Week {weekNumber}
       {selectedWorkout && ` - Workout: ${selectedWorkout}`}
@@ -115,9 +120,9 @@ describe('Workouts', () => {
     mock.onGet('/program/with-preferences').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [],
+      data_retention_policies: [],
     });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
@@ -144,13 +149,16 @@ describe('Workouts', () => {
   });
 
   it('displays no active program message when no active program exists', async () => {
-    const inactiveProgram = { ...mockProgramWithPreferences, program: { ...mockProgramWithPreferences.program, is_active: false } };
+    const inactiveProgram = {
+      ...mockProgramWithPreferences,
+      program: { ...mockProgramWithPreferences.program, is_active: false },
+    };
     mock.onGet('/program/with-preferences').reply(200, [inactiveProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [],
+      data_retention_policies: [],
     });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet(/\/exercise\/[^/]+$/).reply(200, {
@@ -180,16 +188,20 @@ describe('Workouts', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutAnalytics dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [{
-        program: mockProgramWithPreferences.program,
-        program_preferences: mockProgramWithPreferences.program_preferences,
-        workouts: [{
-          workout: mockWorkout,
-          stages: []
-        }]
-      }], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [
+        {
+          program: mockProgramWithPreferences.program,
+          program_preferences: mockProgramWithPreferences.program_preferences,
+          workouts: [
+            {
+              workout: mockWorkout,
+              stages: [],
+            },
+          ],
+        },
+      ],
+      data_retention_policies: [],
     });
     mock.onGet('/user_weight_unit_preference/test-user-id').reply(200, []);
     mock.onGet(/\/exercise\/[^/]+$/).reply(200, {

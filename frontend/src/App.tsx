@@ -26,6 +26,7 @@ import { AuthorizedElement } from './components/AuthorizedElement';
 import { CookieConsentManager } from './components/CookieConsentManager';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { PasswordChangeRedirect } from './components/PasswordChangeRedirect';
+import { ProfileEditRedirect } from './components/ProfileEditRedirect';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CookieProvider } from './contexts/CookieContext';
@@ -38,7 +39,6 @@ import { RootPage } from './pages/RootPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import ConGenIcon from './resources/congen-icon.svg';
 import { getTheme } from './theme';
-import { ProfileEditRedirect } from './components/ProfileEditRedirect';
 
 import './App.css';
 import './styles/menuButton.css';

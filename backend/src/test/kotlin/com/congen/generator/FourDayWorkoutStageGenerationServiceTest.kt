@@ -5,20 +5,17 @@ import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.dal.WorkoutStageDAL
 import com.congen.dal.WorkoutStageTypeDAL
-import com.congen.generator.UserExercisePool
 import com.congen.model.Exercise
 import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
 import com.congen.service.SetSchemeService
-import com.congen.generator.MovementBalanceService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
-import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -81,7 +78,7 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
     }
 
-        @Test
+    @Test
     fun `should generate stages for ME Upper day type`() {
         val workout = createSampleWorkout()
         val dayType = "ME_Upper"
@@ -125,11 +122,11 @@ class FourDayWorkoutStageGenerationServiceTest {
                 workoutType = any()
             )
         ).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock WorkoutStageDAL methods
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any()))
             .thenReturn(Mono.empty())
-        
+
         // Mock MovementBalanceService methods
         whenever(movementBalanceService.createInitialState())
             .thenReturn(MovementBalanceService.MovementBalanceState())
@@ -205,11 +202,11 @@ class FourDayWorkoutStageGenerationServiceTest {
                 workoutType = any()
             )
         ).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock WorkoutStageDAL methods
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any()))
             .thenReturn(Mono.empty())
-        
+
         // Mock MovementBalanceService methods
         whenever(movementBalanceService.createInitialState())
             .thenReturn(MovementBalanceService.MovementBalanceState())

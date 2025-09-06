@@ -145,12 +145,13 @@ class UserControllerTest {
     fun `updateCurrentUser should update user profile successfully`() {
         val keycloakId = "test-keycloak-id"
         val newName = "Updated User Name"
-        val updatedUser = User(
-            keycloakId = keycloakId,
-            name = newName,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val updatedUser =
+            User(
+                keycloakId = keycloakId,
+                name = newName,
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
 
         whenever(userService.updateUser(newName)).thenReturn(Mono.just(updatedUser))
 

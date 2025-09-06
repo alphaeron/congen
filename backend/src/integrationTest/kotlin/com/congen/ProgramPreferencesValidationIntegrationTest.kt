@@ -148,13 +148,34 @@ class ProgramPreferencesValidationIntegrationTest : BaseIntegrationTest() {
 
         // Instead of trying to generate a workout (which requires complex exercise data),
         // we'll create a simple workout manually to test the session time change
-        val workoutId = IntegrationTestHelpers.createTestProgrammedWorkout(webTestClient, programId, dayNumber = 1, name = "Test Workout", token = userToken)
-        
+        val workoutId =
+            IntegrationTestHelpers.createTestProgrammedWorkout(
+                webTestClient,
+                programId,
+                dayNumber = 1,
+                name = "Test Workout",
+                token = userToken
+            )
+
         // Create a workout stage
-        val stageId = IntegrationTestHelpers.createTestWorkoutStage(webTestClient, workoutId, stageTypeId = 1, position = 1, name = "Test Stage", token = userToken)
-        
+        val stageId =
+            IntegrationTestHelpers.createTestWorkoutStage(
+                webTestClient,
+                workoutId,
+                stageTypeId = 1,
+                position = 1,
+                name = "Test Stage",
+                token = userToken
+            )
+
         // Create a programmed exercise
-        IntegrationTestHelpers.createTestProgrammedExercise(webTestClient, stageId, exerciseName = "Bench Press", position = 1, token = userToken)
+        IntegrationTestHelpers.createTestProgrammedExercise(
+            webTestClient,
+            stageId,
+            exerciseName = "Bench Press",
+            position = 1,
+            token = userToken
+        )
 
         // Should allow changing session time when workouts exist
         webTestClient.patch()

@@ -12,11 +12,7 @@ import {
   Card,
   CardContent,
   Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
   DialogContentText,
-  DialogTitle,
   Divider,
   FormControl,
   FormControlLabel,
@@ -30,10 +26,9 @@ import { useSnackbar } from 'notistack';
 import React from 'react';
 import { Link } from 'react-router';
 
-import { LoadingSpinner } from './LoadingSpinner';
-import { FormDialog } from './FormDialog';
-import { FormField } from './FormField';
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { FormDialog } from './FormDialog';
+import { LoadingSpinner } from './LoadingSpinner';
 import {
   recordConsent,
   getConsentStatus,
@@ -157,9 +152,9 @@ export function GdprComplianceSection(): React.ReactElement {
       setOperationLoading('delete');
       await deleteAllPersonalData(deleteConfirmation);
       setDeleteDialogOpen(false);
-      enqueueSnackbar('All personal data has been deleted. You will be logged out shortly.', { 
+      enqueueSnackbar('All personal data has been deleted. You will be logged out shortly.', {
         variant: 'success',
-        autoHideDuration: 5000 
+        autoHideDuration: 5000,
       });
       // In a real app, you'd redirect to logout here
       setTimeout(() => {
@@ -233,11 +228,7 @@ export function GdprComplianceSection(): React.ReactElement {
                 </Typography>
               )}
             </Box>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => setConsentDialogOpen(true)}
-            >
+            <Button variant="outlined" size="small" onClick={() => setConsentDialogOpen(true)}>
               {consentStatus?.data_processing_consent ? 'Withdraw Consent' : 'Give Consent'}
             </Button>
           </Box>
@@ -335,7 +326,7 @@ export function GdprComplianceSection(): React.ReactElement {
         defaultValues={{
           consentValue: !consentStatus?.data_processing_consent, // Opposite of current state
         }}
-        validate={(values) => {
+        validate={values => {
           const errors: Record<string, string> = {};
           if (typeof values.consentValue !== 'boolean') {
             errors.consentValue = 'Please make a selection';
@@ -343,12 +334,12 @@ export function GdprComplianceSection(): React.ReactElement {
           return Object.keys(errors).length > 0 ? errors : undefined;
         }}
       >
-        {(form) => (
+        {form => (
           <FormControl component="fieldset" fullWidth>
             <FormLabel component="legend">Your choice:</FormLabel>
             <RadioGroup
               value={form.state.values.consentValue}
-              onChange={(e) => form.setFieldValue('consentValue', e.target.value === 'true')}
+              onChange={e => form.setFieldValue('consentValue', e.target.value === 'true')}
             >
               <FormControlLabel
                 value={true}

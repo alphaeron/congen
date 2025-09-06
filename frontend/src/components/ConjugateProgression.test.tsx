@@ -14,13 +14,14 @@ jest.mock('@tanstack/react-virtual', () => ({
 }));
 
 import { ConjugateProgression } from './ConjugateProgression';
-import { WeightUnit,
+import {
+  WeightUnit,
   type User,
   type UserDataExport,
   type Exercise,
   type UserOneRepMax,
   type UserWeightUnitPreference,
- } from '../api/types';
+} from '../api/types';
 
 // Mock Nivo charts to avoid rendering issues in tests
 interface LineChartData {
@@ -236,8 +237,10 @@ describe('ConjugateProgression', () => {
     );
 
     // Check that the component renders without the empty state message
-    expect(screen.queryByText(/Complete your first workout to see progress statistics and correlations/)).not.toBeInTheDocument();
-    
+    expect(
+      screen.queryByText(/Complete your first workout to see progress statistics and correlations/)
+    ).not.toBeInTheDocument();
+
     // Check that the component renders the actual content
     expect(screen.getByText('Volume Progression')).toBeInTheDocument();
     expect(screen.getByText('Exercise Distribution')).toBeInTheDocument();

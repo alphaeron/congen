@@ -38,7 +38,9 @@ jest.mock('./Workouts', () => ({
 
 jest.mock('./WorkoutPreferencesSection', () => ({
   WorkoutPreferencesSection: ({ user }: { user: User }) => (
-    <div data-testid="workout-preferences">Workout Preferences for {user?.name || 'Unknown User'}</div>
+    <div data-testid="workout-preferences">
+      Workout Preferences for {user?.name || 'Unknown User'}
+    </div>
   ),
 }));
 
@@ -183,12 +185,7 @@ describe('Dashboard', () => {
     renderWithTheme(<Dashboard user={mockUser} />);
 
     // Check that all menu items are present
-    const menuItems = [
-      'Overview',
-      'Programs',
-      'Workouts',
-      'Workout Preferences',
-    ];
+    const menuItems = ['Overview', 'Programs', 'Workouts', 'Workout Preferences'];
     menuItems.forEach(item => {
       expect(screen.getByText(item)).toBeInTheDocument();
     });

@@ -9,13 +9,13 @@ import { alpha } from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
-import * as React from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import * as React from 'react';
 
-import { ExerciseCard } from './ExerciseCard';
-import { LoadingSpinner } from './LoadingSpinner';
-import { FormField } from './FormField';
 import { EmptyState } from './EmptyState';
+import { ExerciseCard } from './ExerciseCard';
+import { FormField } from './FormField';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getExerciseEquipment } from '../api/exerciseEquipment';
@@ -205,7 +205,7 @@ export function ExerciseOverview(): React.ReactElement {
 
   // Calculate virtual rows for grid layout
   const totalRows = Math.ceil(exercisesToDisplay.length / itemsPerRow);
-  
+
   // Create virtualizer for the grid
   const virtualizer = useVirtualizer({
     count: totalRows,
@@ -286,7 +286,7 @@ export function ExerciseOverview(): React.ReactElement {
                   value={movementTypeFilter}
                   onChange={setMovementTypeFilter}
                   options={movementTypes}
-                  getOptionLabel={(option) => capitalizeEachWord(option)}
+                  getOptionLabel={option => capitalizeEachWord(option)}
                 />
 
                 <FormField
@@ -484,7 +484,7 @@ export function ExerciseOverview(): React.ReactElement {
                   const startIndex = virtualRow.index * itemsPerRow;
                   const endIndex = Math.min(startIndex + itemsPerRow, exercisesToDisplay.length);
                   const rowExercises = exercisesToDisplay.slice(startIndex, endIndex);
-                  
+
                   return (
                     <div
                       key={virtualRow.key}
@@ -498,17 +498,19 @@ export function ExerciseOverview(): React.ReactElement {
                       }}
                     >
                       <Grid container spacing={3} sx={{ height: '100%' }}>
-                        {rowExercises.map((exercise, index) => (
+                        {rowExercises.map(exercise => (
                           <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
                             <ExerciseCard exercise={exercise} />
                           </Grid>
                         ))}
                         {/* Fill remaining grid slots with empty space */}
-                        {Array.from({ length: itemsPerRow - rowExercises.length }).map((_, index) => (
-                          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`empty-${index}`}>
-                            <div style={{ height: '100%' }} />
-                          </Grid>
-                        ))}
+                        {Array.from({ length: itemsPerRow - rowExercises.length }).map(
+                          (_, index) => (
+                            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={`empty-${index}`}>
+                              <div style={{ height: '100%' }} />
+                            </Grid>
+                          )
+                        )}
                       </Grid>
                     </div>
                   );

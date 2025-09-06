@@ -12,31 +12,17 @@ describe('FormField', () => {
 
   describe('Text Field', () => {
     it('renders text field with label', () => {
-      render(
-        <FormField
-          type="text"
-          label="Test Field"
-          value=""
-          onChange={mockOnChange}
-        />
-      );
-      
+      render(<FormField type="text" label="Test Field" value="" onChange={mockOnChange} />);
+
       expect(screen.getByLabelText('Test Field')).toBeInTheDocument();
     });
 
     it('calls onChange when value changes', () => {
-      render(
-        <FormField
-          type="text"
-          label="Test Field"
-          value=""
-          onChange={mockOnChange}
-        />
-      );
-      
+      render(<FormField type="text" label="Test Field" value="" onChange={mockOnChange} />);
+
       const input = screen.getByLabelText('Test Field');
       fireEvent.change(input, { target: { value: 'new value' } });
-      
+
       expect(mockOnChange).toHaveBeenCalledWith('new value');
     });
 
@@ -50,7 +36,7 @@ describe('FormField', () => {
           inputProps={{ min: 0, max: 100 }}
         />
       );
-      
+
       const input = screen.getByLabelText('Number Field');
       expect(input).toHaveAttribute('type', 'number');
       expect(input).toHaveAttribute('min', '0');
@@ -68,7 +54,7 @@ describe('FormField', () => {
           rows={4}
         />
       );
-      
+
       const input = screen.getByLabelText('Multiline Field');
       expect(input).toHaveAttribute('rows', '4');
     });
@@ -90,7 +76,7 @@ describe('FormField', () => {
           options={options}
         />
       );
-      
+
       const select = container.querySelector('.MuiSelect-root');
       expect(select).toBeInTheDocument();
     });
@@ -105,13 +91,13 @@ describe('FormField', () => {
           options={options}
         />
       );
-      
+
       const select = container.querySelector('.MuiSelect-select');
       fireEvent.mouseDown(select!);
-      
+
       const option = screen.getByText('Option 1');
       fireEvent.click(option);
-      
+
       expect(mockOnChange).toHaveBeenCalledWith('option1');
     });
   });
@@ -129,7 +115,7 @@ describe('FormField', () => {
           options={options}
         />
       );
-      
+
       expect(screen.getByLabelText('Autocomplete Field')).toBeInTheDocument();
     });
 
@@ -143,10 +129,10 @@ describe('FormField', () => {
           options={options}
         />
       );
-      
+
       const autocomplete = container.querySelector('.MuiAutocomplete-root');
       expect(autocomplete).toBeInTheDocument();
-      
+
       // Test that the component renders correctly
       const input = container.querySelector('input');
       expect(input).toBeInTheDocument();
@@ -165,36 +151,24 @@ describe('FormField', () => {
           helperText="This field has an error"
         />
       );
-      
+
       expect(screen.getByText('This field has an error')).toBeInTheDocument();
     });
 
     it('renders as disabled', () => {
       render(
-        <FormField
-          type="text"
-          label="Test Field"
-          value=""
-          onChange={mockOnChange}
-          disabled
-        />
+        <FormField type="text" label="Test Field" value="" onChange={mockOnChange} disabled />
       );
-      
+
       const input = screen.getByLabelText('Test Field');
       expect(input).toBeDisabled();
     });
 
     it('renders as required', () => {
       const { container } = render(
-        <FormField
-          type="text"
-          label="Test Field"
-          value=""
-          onChange={mockOnChange}
-          required
-        />
+        <FormField type="text" label="Test Field" value="" onChange={mockOnChange} required />
       );
-      
+
       const input = container.querySelector('input');
       expect(input).toBeRequired();
     });

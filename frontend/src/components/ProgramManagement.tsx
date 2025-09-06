@@ -3,23 +3,17 @@ import { default as DeleteIcon } from '@mui/icons-material/Delete';
 import { default as EditIcon } from '@mui/icons-material/Edit';
 import { default as PauseIcon } from '@mui/icons-material/Pause';
 import { default as PlayArrowIcon } from '@mui/icons-material/PlayArrow';
-import {
-  Box,
-  Button,
-  Typography,
-  IconButton,
-  Tooltip,
-} from '@mui/material';
+import { Box, Button, Typography, IconButton, Tooltip } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState } from 'react';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { ActionCard } from './ActionCard';
 import { ConfirmationDialog } from './ConfirmationDialog';
-import { FormDialog } from './FormDialog';
-import { LoadingBackdrop } from './LoadingBackdrop';
 import { EmptyState } from './EmptyState';
+import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
+import { LoadingBackdrop } from './LoadingBackdrop';
+import { LoadingSpinner } from './LoadingSpinner';
 import { StatusChip } from './StatusChip';
 import { getPrograms, createProgram, updateProgram, deleteProgram } from '../api/program';
 import { getProgrammedWorkouts } from '../api/programmedWorkout';
@@ -281,7 +275,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
               key={program.id}
               title={program.name}
               actions={
-                <>
+                <React.Fragment>
                   {program.is_active ? (
                     <React.Fragment>
                       <Tooltip title="Change Session Duration">
@@ -319,7 +313,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
-                </>
+                </React.Fragment>
               }
             >
               <Box display="flex" gap={1} flexWrap="wrap" sx={{ mb: 2 }}>
@@ -372,7 +366,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           name: '',
           numDaysPerWeek: 4,
         }}
-        validate={(values) => {
+        validate={values => {
           const errors: Record<string, string> = {};
           if (!values.name?.trim()) {
             errors.name = 'Program name is required';
@@ -383,7 +377,7 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
           return Object.keys(errors).length > 0 ? errors : undefined;
         }}
       >
-        {(form) => (
+        {form => (
           <React.Fragment>
             <FormField
               type="text"
@@ -415,15 +409,20 @@ export const ProgramManagement: React.FC<ProgramManagementProps> = ({ user }) =>
         submitText="Update Session Duration"
         useTanStackForm={true}
         defaultValues={editFormData}
-        validate={(values) => {
+        validate={values => {
           const errors: Record<string, string> = {};
-          if (!values.sessionTimeLengthInMinutes || values.sessionTimeLengthInMinutes < 15 || values.sessionTimeLengthInMinutes > 300) {
-            errors.sessionTimeLengthInMinutes = 'Session duration must be between 15 and 300 minutes';
+          if (
+            !values.sessionTimeLengthInMinutes ||
+            values.sessionTimeLengthInMinutes < 15 ||
+            values.sessionTimeLengthInMinutes > 300
+          ) {
+            errors.sessionTimeLengthInMinutes =
+              'Session duration must be between 15 and 300 minutes';
           }
           return Object.keys(errors).length > 0 ? errors : undefined;
         }}
       >
-        {(form) => (
+        {form => (
           <FormField
             type="number"
             label="Session Duration (minutes)"

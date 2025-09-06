@@ -2,20 +2,17 @@ package com.congen.dal
 
 import com.congen.client.PostgresClient
 import com.congen.mockUser
-import com.congen.model.User
 import com.congen.service.AuditService
 import com.congen.util.EncryptionUtil
-import com.congen.exceptions.ValidationException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.mockito.kotlin.never
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.any
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
@@ -100,12 +97,13 @@ class UserDALTest {
     @Test
     fun `deleteUserByKeycloakId should delete user and return deleted user data`() {
         val keycloakId = "test-keycloak-id"
-        val userData = mapOf(
-            "keycloak_id" to keycloakId,
-            "name" to "encrypted-name",
-            "created_at" to "2024-01-01T00:00:00Z",
-            "updated_at" to "2024-01-01T00:00:00Z"
-        )
+        val userData =
+            mapOf(
+                "keycloak_id" to keycloakId,
+                "name" to "encrypted-name",
+                "created_at" to "2024-01-01T00:00:00Z",
+                "updated_at" to "2024-01-01T00:00:00Z"
+            )
 
         whenever(
             postgresClient.selectIndividual<Map<String, Any>>(

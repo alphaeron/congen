@@ -66,12 +66,13 @@ class ExercisePoolFactory(
             val previouslyUsedExercises = tuple.t4
 
             // Apply sliding window logic based on available exercise pool size
-            val previouslyUsedExerciseNames = applySlidingWindowLogic(
-                allExercises = allExercises,
-                preferences = preferences,
-                userEquipment = userEquipment,
-                previouslyUsedExercises = previouslyUsedExercises
-            )
+            val previouslyUsedExerciseNames =
+                applySlidingWindowLogic(
+                    allExercises = allExercises,
+                    preferences = preferences,
+                    userEquipment = userEquipment,
+                    previouslyUsedExercises = previouslyUsedExercises
+                )
 
             UserExercisePool(
                 allExercises = allExercises,
@@ -104,14 +105,15 @@ class ExercisePoolFactory(
         previouslyUsedExercises: List<com.congen.model.ProgrammedExercise>
     ): List<String> {
         // Filter exercises by user preferences first
-        val preferenceFilteredExercises = allExercises.filter { exercise ->
-            val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
-            when {
-                preference?.shouldAvoid == true -> false
-                preference?.shouldAvoid == false -> true
-                else -> true
+        val preferenceFilteredExercises =
+            allExercises.filter { exercise ->
+                val preference = preferences.find { pref -> pref.exerciseName == exercise.name }
+                when {
+                    preference?.shouldAvoid == true -> false
+                    preference?.shouldAvoid == false -> true
+                    else -> true
+                }
             }
-        }
 
         // Calculate available exercises per category (is_upper + is_accessory combinations)
         val availablePrimaryUpperExercises = preferenceFilteredExercises.filter { !it.isAccessory && it.isUpper }
@@ -120,81 +122,100 @@ class ExercisePoolFactory(
         val availableAccessoryLowerExercises = preferenceFilteredExercises.filter { it.isAccessory && !it.isUpper }
 
         // Group previously used exercises by category
-        val allUsedPrimaryUpperExercises = previouslyUsedExercises
-            .filter { exercise -> 
-                val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
-                exerciseModel?.isAccessory == false && exerciseModel?.isUpper == true
-            }
-            .map { it.exerciseName }
-            .distinct()
+        val allUsedPrimaryUpperExercises =
+            previouslyUsedExercises
+                .filter { exercise ->
+                    val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
+                    exerciseModel?.isAccessory == false && exerciseModel?.isUpper == true
+                }
+                .map { it.exerciseName }
+                .distinct()
 
-        val allUsedPrimaryLowerExercises = previouslyUsedExercises
-            .filter { exercise -> 
-                val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
-                exerciseModel?.isAccessory == false && exerciseModel?.isUpper == false
-            }
-            .map { it.exerciseName }
-            .distinct()
+        val allUsedPrimaryLowerExercises =
+            previouslyUsedExercises
+                .filter { exercise ->
+                    val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
+                    exerciseModel?.isAccessory == false && exerciseModel?.isUpper == false
+                }
+                .map { it.exerciseName }
+                .distinct()
 
-        val allUsedAccessoryUpperExercises = previouslyUsedExercises
-            .filter { exercise -> 
-                val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
-                exerciseModel?.isAccessory == true && exerciseModel?.isUpper == true
-            }
-            .map { it.exerciseName }
-            .distinct()
+        val allUsedAccessoryUpperExercises =
+            previouslyUsedExercises
+                .filter { exercise ->
+                    val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
+                    exerciseModel?.isAccessory == true && exerciseModel?.isUpper == true
+                }
+                .map { it.exerciseName }
+                .distinct()
 
-        val allUsedAccessoryLowerExercises = previouslyUsedExercises
-            .filter { exercise -> 
-                val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
-                exerciseModel?.isAccessory == true && exerciseModel?.isUpper == false
-            }
-            .map { it.exerciseName }
-            .distinct()
+        val allUsedAccessoryLowerExercises =
+            previouslyUsedExercises
+                .filter { exercise ->
+                    val exerciseModel = allExercises.find { it.name == exercise.exerciseName }
+                    exerciseModel?.isAccessory == true && exerciseModel?.isUpper == false
+                }
+                .map { it.exerciseName }
+                .distinct()
 
         // Sliding window logic: Apply sliding window per category to ensure sufficient exercises remain
         // This ensures we always have variety while allowing older exercises to cycle back
-        
+
         // Define sliding window sizes per category
         val primaryUpperWindowSize = availablePrimaryUpperExercises.size
         val primaryLowerWindowSize = availablePrimaryLowerExercises.size
         val accessoryUpperWindowSize = availableAccessoryUpperExercises.size
         val accessoryLowerWindowSize = availableAccessoryLowerExercises.size
-        
+
         // Get the most recent n exercises from user's history for each category
-        val usedPrimaryUpperExercises = if (allUsedPrimaryUpperExercises.size <= primaryUpperWindowSize) {
-            allUsedPrimaryUpperExercises
-        } else {
-            allUsedPrimaryUpperExercises.takeLast(primaryUpperWindowSize)
-        }
+        val usedPrimaryUpperExercises =
+            if (allUsedPrimaryUpperExercises.size <= primaryUpperWindowSize) {
+                allUsedPrimaryUpperExercises
+            } else {
+                allUsedPrimaryUpperExercises.takeLast(primaryUpperWindowSize)
+            }
 
-        val usedPrimaryLowerExercises = if (allUsedPrimaryLowerExercises.size <= primaryLowerWindowSize) {
-            allUsedPrimaryLowerExercises
-        } else {
-            allUsedPrimaryLowerExercises.takeLast(primaryLowerWindowSize)
-        }
+        val usedPrimaryLowerExercises =
+            if (allUsedPrimaryLowerExercises.size <= primaryLowerWindowSize) {
+                allUsedPrimaryLowerExercises
+            } else {
+                allUsedPrimaryLowerExercises.takeLast(primaryLowerWindowSize)
+            }
 
-        val usedAccessoryUpperExercises = if (allUsedAccessoryUpperExercises.size <= accessoryUpperWindowSize) {
-            allUsedAccessoryUpperExercises
-        } else {
-            allUsedAccessoryUpperExercises.takeLast(accessoryUpperWindowSize)
-        }
+        val usedAccessoryUpperExercises =
+            if (allUsedAccessoryUpperExercises.size <= accessoryUpperWindowSize) {
+                allUsedAccessoryUpperExercises
+            } else {
+                allUsedAccessoryUpperExercises.takeLast(accessoryUpperWindowSize)
+            }
 
-        val usedAccessoryLowerExercises = if (allUsedAccessoryLowerExercises.size <= accessoryLowerWindowSize) {
-            allUsedAccessoryLowerExercises
-        } else {
-            allUsedAccessoryLowerExercises.takeLast(accessoryLowerWindowSize)
-        }
+        val usedAccessoryLowerExercises =
+            if (allUsedAccessoryLowerExercises.size <= accessoryLowerWindowSize) {
+                allUsedAccessoryLowerExercises
+            } else {
+                allUsedAccessoryLowerExercises.takeLast(accessoryLowerWindowSize)
+            }
 
-        val excludedExercises = usedPrimaryUpperExercises + usedPrimaryLowerExercises + 
-                               usedAccessoryUpperExercises + usedAccessoryLowerExercises
+        val excludedExercises =
+            usedPrimaryUpperExercises + usedPrimaryLowerExercises +
+                usedAccessoryUpperExercises + usedAccessoryLowerExercises
 
         logger.info(
-            "Applied sliding window logic per category: Primary Upper: {}/{} (window: {}), Primary Lower: {}/{} (window: {}), Accessory Upper: {}/{} (window: {}), Accessory Lower: {}/{} (window: {}), total excluded: {}",
-            usedPrimaryUpperExercises.size, allUsedPrimaryUpperExercises.size, primaryUpperWindowSize,
-            usedPrimaryLowerExercises.size, allUsedPrimaryLowerExercises.size, primaryLowerWindowSize,
-            usedAccessoryUpperExercises.size, allUsedAccessoryUpperExercises.size, accessoryUpperWindowSize,
-            usedAccessoryLowerExercises.size, allUsedAccessoryLowerExercises.size, accessoryLowerWindowSize,
+            "Applied sliding window logic per category: Primary Upper: {}/{} (window: {}), " +
+                "Primary Lower: {}/{} (window: {}), Accessory Upper: {}/{} (window: {}), " +
+                "Accessory Lower: {}/{} (window: {}), total excluded: {}",
+            usedPrimaryUpperExercises.size,
+            allUsedPrimaryUpperExercises.size,
+            primaryUpperWindowSize,
+            usedPrimaryLowerExercises.size,
+            allUsedPrimaryLowerExercises.size,
+            primaryLowerWindowSize,
+            usedAccessoryUpperExercises.size,
+            allUsedAccessoryUpperExercises.size,
+            accessoryUpperWindowSize,
+            usedAccessoryLowerExercises.size,
+            allUsedAccessoryLowerExercises.size,
+            accessoryLowerWindowSize,
             excludedExercises.size
         )
 

@@ -1,4 +1,27 @@
-import { clearAuthenticationState, isTokenExpired, isTokenExpiringSoon, isTokenMalformed, redirectToLogin, handleAuthenticationFailure, decodeToken, hasAnyPermission } from './authUtils';
+import {
+  clearAuthenticationState,
+  isTokenExpired,
+  isTokenExpiringSoon,
+  isTokenMalformed,
+  redirectToLogin,
+  handleAuthenticationFailure,
+  decodeToken,
+  hasAnyPermission,
+} from './authUtils';
+
+// Type for OIDC user object
+interface OidcUser {
+  profile?: {
+    sub?: string;
+    preferred_username?: string;
+    email?: string;
+    name?: string;
+    roles?: string[];
+    realm_access?: {
+      roles?: string[];
+    };
+  };
+}
 
 // Mock window.location
 const mockLocation = {
@@ -43,9 +66,9 @@ describe('authUtils', () => {
     it('should decode valid JWT token', () => {
       const payload = { sub: '123', exp: Date.now() / 1000, name: 'Test User' };
       const token = `header.${btoa(JSON.stringify(payload))}.signature`;
-      
+
       const result = decodeToken(token);
-      
+
       expect(result).toEqual(payload);
     });
 
@@ -83,50 +106,50 @@ describe('authUtils', () => {
     it('should return false for empty permissions array', () => {
       const user = {
         profile: {
-          roles: ['admin', 'user']
-        }
+          roles: ['admin', 'user'],
+        },
       };
-      expect(hasAnyPermission(user as any, [])).toBe(false);
+      expect(hasAnyPermission(user as OidcUser, [])).toBe(false);
     });
 
     it('should return false for user with no roles', () => {
       const user = {
-        profile: {}
+        profile: {},
       };
       const permissions = ['admin', 'user'];
-      expect(hasAnyPermission(user as any, permissions)).toBe(false);
+      expect(hasAnyPermission(user as OidcUser, permissions)).toBe(false);
     });
 
     it('should return true when user has matching role in profile.roles', () => {
       const user = {
         profile: {
-          roles: ['admin', 'moderator']
-        }
+          roles: ['admin', 'moderator'],
+        },
       };
       const permissions = ['admin', 'user'];
-      expect(hasAnyPermission(user as any, permissions)).toBe(true);
+      expect(hasAnyPermission(user as OidcUser, permissions)).toBe(true);
     });
 
     it('should return true when user has matching role in realm_access.roles', () => {
       const user = {
         profile: {
           realm_access: {
-            roles: ['user', 'editor']
-          }
-        }
+            roles: ['user', 'editor'],
+          },
+        },
       };
       const permissions = ['admin', 'user'];
-      expect(hasAnyPermission(user as any, permissions)).toBe(true);
+      expect(hasAnyPermission(user as OidcUser, permissions)).toBe(true);
     });
 
     it('should return false when user has no matching roles', () => {
       const user = {
         profile: {
-          roles: ['moderator', 'editor']
-        }
+          roles: ['moderator', 'editor'],
+        },
       };
       const permissions = ['admin', 'user'];
-      expect(hasAnyPermission(user as any, permissions)).toBe(false);
+      expect(hasAnyPermission(user as OidcUser, permissions)).toBe(false);
     });
 
     it('should fall back to profile.roles when realm_access.roles is empty', () => {
@@ -134,13 +157,13 @@ describe('authUtils', () => {
         profile: {
           roles: [],
           realm_access: {
-            roles: ['user']
-          }
-        }
+            roles: ['user'],
+          },
+        },
       };
       const permissions = ['user'];
       // Should return true because it falls back to realm_access.roles
-      expect(hasAnyPermission(user as any, permissions)).toBe(true);
+      expect(hasAnyPermission(user as OidcUser, permissions)).toBe(true);
     });
   });
 
@@ -149,14 +172,20 @@ describe('authUtils', () => {
       clearAuthenticationState();
 
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('oidc.user:congen:congen-frontend');
-      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('oidc.user:congen:congen-frontend');
+      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
+        'oidc.user:congen:congen-frontend'
+      );
     });
 
     it('should clear other auth-related storage items', () => {
       clearAuthenticationState();
 
-      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('congen_redirect_after_password_change');
-      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('congen_redirect_after_profile_edit');
+      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
+        'congen_redirect_after_password_change'
+      );
+      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
+        'congen_redirect_after_profile_edit'
+      );
     });
 
     it('should clear other OIDC-related keys from localStorage', () => {
@@ -261,17 +290,17 @@ describe('authUtils', () => {
   describe('redirectToLogin', () => {
     it('should redirect to login when not on login page', () => {
       mockLocation.pathname = '/dashboard';
-      
+
       redirectToLogin();
-      
+
       expect(mockLocation.href).toBe('/login');
     });
 
     it('should not redirect when already on login page', () => {
       mockLocation.pathname = '/login';
-      
+
       redirectToLogin();
-      
+
       expect(mockLocation.href).toBe('');
     });
   });
@@ -279,20 +308,22 @@ describe('authUtils', () => {
   describe('handleAuthenticationFailure', () => {
     it('should clear authentication state', () => {
       handleAuthenticationFailure('Test failure');
-      
+
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('oidc.user:congen:congen-frontend');
-      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith('oidc.user:congen:congen-frontend');
+      expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
+        'oidc.user:congen:congen-frontend'
+      );
     });
 
     it('should redirect to login', () => {
       handleAuthenticationFailure('Test failure');
-      
+
       expect(mockLocation.href).toBe('/login');
     });
 
     it('should use default reason when none provided', () => {
       handleAuthenticationFailure();
-      
+
       // Should work without throwing errors
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('oidc.user:congen:congen-frontend');
     });

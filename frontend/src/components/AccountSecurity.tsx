@@ -1,13 +1,5 @@
 import { default as DeleteIcon } from '@mui/icons-material/Delete';
-import {
-  Box,
-  Card,
-  CardContent,
-  Grid,
-  Typography,
-  Divider,
-  Button,
-} from '@mui/material';
+import { Box, Card, CardContent, Grid, Typography, Divider, Button } from '@mui/material';
 import React, { useState } from 'react';
 
 import { deleteAllPersonalData } from '../api/gdpr';
@@ -69,10 +61,10 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
     // Construct the Keycloak account management URL with redirect back to Congen
     const redirectUri = `${window.location.origin}/password-change-redirect`;
     const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/security/credentials?redirect_uri=${encodeURIComponent(redirectUri)}`;
-    
+
     // Store the current location to redirect back after password change
     sessionStorage.setItem('congen_redirect_after_password_change', window.location.pathname);
-    
+
     // Close dialog and redirect to Keycloak account management
     setPasswordDialogOpen(false);
     window.location.href = accountUrl;
@@ -108,11 +100,7 @@ export const AccountSecurity: React.FC<AccountSecurityProps> = ({ user, onAccoun
                 Configure your account security preferences and access controls.
               </Typography>
               <Box display="flex" flexDirection="column" gap={1}>
-                <Button 
-                  variant="outlined" 
-                  fullWidth 
-                  onClick={handleChangePassword}
-                >
+                <Button variant="outlined" fullWidth onClick={handleChangePassword}>
                   Change Password
                 </Button>
                 <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>

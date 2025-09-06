@@ -354,14 +354,15 @@ class ExerciseSelectionServiceTest {
         whenever(userExercisePool.filterExercisesByEquipment(any(), any(), any())).thenReturn(Mono.just(listOf(regularExercise)))
         whenever(userExercisePool.filterExercisesByMuscles(any(), any(), any())).thenReturn(Mono.just(listOf(regularExercise)))
         whenever(userExercisePool.markExerciseAsUsed(any())).thenReturn(true)
-        
+
         // Mock the muscle count check for warmup filtering - Dumbbell Flyes should have <= 3 muscles
         whenever(exerciseMuscleDAL.selectExerciseMuscleByExercise("Dumbbell Flyes")).thenReturn(Mono.just(emptyList()))
-        
+
         // Mock the equipment check for warmup filtering - Dumbbell Flyes should use appropriate equipment
-        val dumbbellEquipment = listOf(
-            com.congen.model.ExerciseEquipment("Dumbbell Flyes", "dumbbells")
-        )
+        val dumbbellEquipment =
+            listOf(
+                com.congen.model.ExerciseEquipment("Dumbbell Flyes", "dumbbells")
+            )
         whenever(exerciseEquipmentDAL.selectExerciseEquipmentByExercise("Dumbbell Flyes")).thenReturn(Mono.just(dumbbellEquipment))
 
         val result =

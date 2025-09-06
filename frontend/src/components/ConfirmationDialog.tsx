@@ -74,7 +74,12 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         <Button onClick={onClose} disabled={loading}>
           {cancelText}
         </Button>
-        <Button onClick={onConfirm} color={confirmColor} variant="contained" disabled={loading || disabled}>
+        <Button
+          onClick={onConfirm}
+          color={confirmColor}
+          variant="contained"
+          disabled={loading || disabled}
+        >
           {loading ? 'Processing...' : confirmText}
         </Button>
       </DialogActions>

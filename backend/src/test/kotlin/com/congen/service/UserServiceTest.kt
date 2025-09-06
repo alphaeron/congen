@@ -12,15 +12,15 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import java.time.Instant
-import org.mockito.kotlin.never
-import org.mockito.kotlin.any
 
 @ExtendWith(MockitoExtension::class)
 class UserServiceTest {
@@ -122,12 +122,13 @@ class UserServiceTest {
     @Test
     fun `updateUser should update user successfully`() {
         val newName = "Updated User Name"
-        val updatedUser = User(
-            keycloakId = "test-keycloak-id",
-            name = newName,
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val updatedUser =
+            User(
+                keycloakId = "test-keycloak-id",
+                name = newName,
+                createdAt = Instant.now(),
+                updatedAt = Instant.now()
+            )
 
         whenever(keycloakUtil.getCurrentUserId()).thenReturn(Mono.just("test-keycloak-id"))
         whenever(userDAL.updateUser("test-keycloak-id", newName)).thenReturn(Mono.just(updatedUser))

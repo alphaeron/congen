@@ -191,17 +191,17 @@ describe('UserProfile', () => {
 
   it('should redirect to Keycloak when edit button is clicked', async () => {
     await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />)
-    })
+      renderWithProviders(<UserProfile user={mockUser} />);
+    });
 
-    const editButton = screen.getByText('Edit Profile')
-    fireEvent.click(editButton)
+    const editButton = screen.getByText('Edit Profile');
+    fireEvent.click(editButton);
 
     // The component should redirect to Keycloak, not navigate to a local route
     // We can't easily test the window.location.href change in tests, but we can verify
     // that the ProfileOverview component handles the click correctly
-    expect(editButton).toBeInTheDocument()
-  })
+    expect(editButton).toBeInTheDocument();
+  });
 
   it('should show quick action buttons in overview', async () => {
     await act(async () => {

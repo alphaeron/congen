@@ -552,18 +552,19 @@ class UserExercisePoolTest {
     fun `filterExercisesByEquipment should exclude dumbbell exercises for primary upper body exercises`() {
         val exercises = createSampleExercises()
         // Create user equipment that includes dumbbells so the exercise passes equipment check
-        val userEquipment = listOf(
-            UserEquipment(
-                userId = USER_ID,
-                equipmentName = "dumbbells",
-                createdAt = Instant.now()
-            ),
-            UserEquipment(
-                userId = USER_ID,
-                equipmentName = "bench",
-                createdAt = Instant.now()
+        val userEquipment =
+            listOf(
+                UserEquipment(
+                    userId = USER_ID,
+                    equipmentName = "dumbbells",
+                    createdAt = Instant.now()
+                ),
+                UserEquipment(
+                    userId = USER_ID,
+                    equipmentName = "bench",
+                    createdAt = Instant.now()
+                )
             )
-        )
         val preferences = emptyList<UserExercisePreference>()
 
         userExercisePool =
@@ -575,14 +576,15 @@ class UserExercisePoolTest {
             )
 
         // Create a dumbbell exercise for upper body
-        val dumbbellExercise = Exercise(
-            name = "Dumbbell Bench Press",
-            description = "Bench press with dumbbells",
-            movementType = MovementType.HORIZONTAL_PUSH,
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
-        )
+        val dumbbellExercise =
+            Exercise(
+                name = "Dumbbell Bench Press",
+                description = "Bench press with dumbbells",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
 
         val exerciseEquipment =
             listOf(
@@ -594,11 +596,12 @@ class UserExercisePoolTest {
             .thenReturn(Mono.just(exerciseEquipment))
 
         // Test primary upper body exercise - should exclude dumbbell exercises
-        val result = userExercisePool.filterExercisesByEquipment(
-            listOf(dumbbellExercise),
-            isPrimaryExercise = true,
-            isUpperBody = true
-        )
+        val result =
+            userExercisePool.filterExercisesByEquipment(
+                listOf(dumbbellExercise),
+                isPrimaryExercise = true,
+                isUpperBody = true
+            )
 
         StepVerifier.create(result)
             .expectNext(emptyList<Exercise>())
@@ -620,14 +623,15 @@ class UserExercisePoolTest {
             )
 
         // Create a dumbbell accessory exercise for upper body
-        val dumbbellAccessoryExercise = Exercise(
-            name = "Dumbbell Flyes",
-            description = "Dumbbell flyes for chest",
-            movementType = MovementType.HORIZONTAL_PUSH,
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = true
-        )
+        val dumbbellAccessoryExercise =
+            Exercise(
+                name = "Dumbbell Flyes",
+                description = "Dumbbell flyes for chest",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = true
+            )
 
         val exerciseEquipment =
             listOf(
@@ -639,11 +643,12 @@ class UserExercisePoolTest {
             .thenReturn(Mono.just(exerciseEquipment))
 
         // Test accessory upper body exercise - should allow dumbbell exercises
-        val result = userExercisePool.filterExercisesByEquipment(
-            listOf(dumbbellAccessoryExercise),
-            isPrimaryExercise = false,
-            isUpperBody = true
-        )
+        val result =
+            userExercisePool.filterExercisesByEquipment(
+                listOf(dumbbellAccessoryExercise),
+                isPrimaryExercise = false,
+                isUpperBody = true
+            )
 
         StepVerifier.create(result)
             .expectNext(listOf(dumbbellAccessoryExercise))
@@ -665,14 +670,15 @@ class UserExercisePoolTest {
             )
 
         // Create a dumbbell exercise for lower body
-        val dumbbellLowerExercise = Exercise(
-            name = "Dumbbell Goblet Squat",
-            description = "Goblet squat with dumbbell",
-            movementType = MovementType.SQUAT,
-            isUnilateral = false,
-            isUpper = false,
-            isAccessory = false
-        )
+        val dumbbellLowerExercise =
+            Exercise(
+                name = "Dumbbell Goblet Squat",
+                description = "Goblet squat with dumbbell",
+                movementType = MovementType.SQUAT,
+                isUnilateral = false,
+                isUpper = false,
+                isAccessory = false
+            )
 
         val exerciseEquipment =
             listOf(
@@ -683,11 +689,12 @@ class UserExercisePoolTest {
             .thenReturn(Mono.just(exerciseEquipment))
 
         // Test primary lower body exercise - should allow dumbbell exercises
-        val result = userExercisePool.filterExercisesByEquipment(
-            listOf(dumbbellLowerExercise),
-            isPrimaryExercise = true,
-            isUpperBody = false
-        )
+        val result =
+            userExercisePool.filterExercisesByEquipment(
+                listOf(dumbbellLowerExercise),
+                isPrimaryExercise = true,
+                isUpperBody = false
+            )
 
         StepVerifier.create(result)
             .expectNext(listOf(dumbbellLowerExercise))
@@ -709,14 +716,15 @@ class UserExercisePoolTest {
             )
 
         // Create a barbell exercise for upper body
-        val barbellExercise = Exercise(
-            name = "Barbell Bench Press",
-            description = "Bench press with barbell",
-            movementType = MovementType.HORIZONTAL_PUSH,
-            isUnilateral = false,
-            isUpper = true,
-            isAccessory = false
-        )
+        val barbellExercise =
+            Exercise(
+                name = "Barbell Bench Press",
+                description = "Bench press with barbell",
+                movementType = MovementType.HORIZONTAL_PUSH,
+                isUnilateral = false,
+                isUpper = true,
+                isAccessory = false
+            )
 
         val exerciseEquipment =
             listOf(
@@ -728,11 +736,12 @@ class UserExercisePoolTest {
             .thenReturn(Mono.just(exerciseEquipment))
 
         // Test primary upper body exercise - should allow non-dumbbell exercises
-        val result = userExercisePool.filterExercisesByEquipment(
-            listOf(barbellExercise),
-            isPrimaryExercise = true,
-            isUpperBody = true
-        )
+        val result =
+            userExercisePool.filterExercisesByEquipment(
+                listOf(barbellExercise),
+                isPrimaryExercise = true,
+                isUpperBody = true
+            )
 
         StepVerifier.create(result)
             .expectNext(listOf(barbellExercise))

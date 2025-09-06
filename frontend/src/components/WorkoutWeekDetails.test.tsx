@@ -7,22 +7,16 @@ import { MemoryRouter } from 'react-router';
 
 import { WorkoutWeekDetails } from './WorkoutWeekDetails';
 import { ENDPOINT } from '../api/endpoint';
-import type { Program, ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
+import type { ProgrammedWorkout, ProgramPreferences, ProgramWithPreferences } from '../api/types';
 
 // Mock chart components to prevent rendering issues
 jest.mock('./RadarChart', () => ({
-  RadarChart: ({ data }: { data: any }) => (
-    <div data-testid="radar-chart">
-      Mock Radar Chart
-    </div>
-  ),
+  RadarChart: (): React.ReactElement => <div data-testid="radar-chart">Mock Radar Chart</div>,
 }));
 
 jest.mock('./SunburstChart', () => ({
-  SunburstChart: ({ data }: { data: any }) => (
-    <div data-testid="sunburst-chart">
-      Mock Sunburst Chart
-    </div>
+  SunburstChart: (): React.ReactElement => (
+    <div data-testid="sunburst-chart">Mock Sunburst Chart</div>
   ),
 }));
 
@@ -88,9 +82,9 @@ describe('WorkoutWeekDetails', () => {
     // Create a fresh mock adapter for each test
     mock = new MockAdapter(ENDPOINT);
     jest.clearAllMocks();
-    
+
     // Mock OIDC auth
-    
+
     // Mock all the API calls that the component makes
     mock.onGet('/exercise/').reply(200, []);
     mock.onGet('/gdpr/export').reply(200, { training_programs: [], data_retention_policies: [] });
@@ -116,9 +110,9 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, []);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [],
+      data_retention_policies: [],
     });
 
     await act(async () => {
@@ -132,13 +126,16 @@ describe('WorkoutWeekDetails', () => {
   });
 
   it('displays no active program message when no active program exists', async () => {
-    const inactiveProgram = { ...mockProgramWithPreferences, program: { ...mockProgramWithPreferences.program, is_active: false } };
+    const inactiveProgram = {
+      ...mockProgramWithPreferences,
+      program: { ...mockProgramWithPreferences.program, is_active: false },
+    };
     mock.onGet('/program/with-preferences').reply(200, [inactiveProgram]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [],
+      data_retention_policies: [],
     });
 
     await act(async () => {
@@ -157,16 +154,20 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [{
-        program: mockProgramWithPreferences.program,
-        program_preferences: mockProgramWithPreferences.program_preferences,
-        workouts: [{
-          workout: mockWorkout,
-          stages: []
-        }]
-      }], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [
+        {
+          program: mockProgramWithPreferences.program,
+          program_preferences: mockProgramWithPreferences.program_preferences,
+          workouts: [
+            {
+              workout: mockWorkout,
+              stages: [],
+            },
+          ],
+        },
+      ],
+      data_retention_policies: [],
     });
 
     await act(async () => {
@@ -186,16 +187,20 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [mockWorkout]);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [{
-        program: mockProgramWithPreferences.program,
-        program_preferences: mockProgramWithPreferences.program_preferences,
-        workouts: [{
-          workout: mockWorkout,
-          stages: []
-        }]
-      }], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [
+        {
+          program: mockProgramWithPreferences.program,
+          program_preferences: mockProgramWithPreferences.program_preferences,
+          workouts: [
+            {
+              workout: mockWorkout,
+              stages: [],
+            },
+          ],
+        },
+      ],
+      data_retention_policies: [],
     });
 
     await act(async () => {
@@ -217,13 +222,15 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, []);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [{
-        program: mockProgramWithPreferences.program,
-        program_preferences: mockProgramWithPreferences.program_preferences,
-        workouts: []
-      }], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [
+        {
+          program: mockProgramWithPreferences.program,
+          program_preferences: mockProgramWithPreferences.program_preferences,
+          workouts: [],
+        },
+      ],
+      data_retention_policies: [],
     });
 
     await act(async () => {
@@ -265,17 +272,19 @@ describe('WorkoutWeekDetails', () => {
     mock.onGet('/program/with-preferences').reply(200, [mockProgramWithPreferences]);
     mock.onGet('/programmed_workout/').reply(200, [workout1, workout2, workout3]);
     // Mock WorkoutDetail dependencies
-    mock.onGet('/gdpr/export').reply(200, { 
-      training_programs: [{
-        program: mockProgramWithPreferences.program,
-        program_preferences: mockProgramWithPreferences.program_preferences,
-        workouts: [
-          { workout: workout1, stages: [] },
-          { workout: workout2, stages: [] },
-          { workout: workout3, stages: [] }
-        ]
-      }], 
-      data_retention_policies: [] 
+    mock.onGet('/gdpr/export').reply(200, {
+      training_programs: [
+        {
+          program: mockProgramWithPreferences.program,
+          program_preferences: mockProgramWithPreferences.program_preferences,
+          workouts: [
+            { workout: workout1, stages: [] },
+            { workout: workout2, stages: [] },
+            { workout: workout3, stages: [] },
+          ],
+        },
+      ],
+      data_retention_policies: [],
     });
 
     await act(async () => {

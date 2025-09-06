@@ -9,7 +9,7 @@ import {
 import { useForm } from '@tanstack/react-form';
 import React from 'react';
 
-interface FormDialogProps<TFormData = any> {
+interface FormDialogProps<TFormData = unknown> {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: TFormData) => void | Promise<void>;
@@ -20,7 +20,7 @@ interface FormDialogProps<TFormData = any> {
   submitColor?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success';
   loading?: boolean;
   disabled?: boolean;
-  children: React.ReactNode | ((form: any) => React.ReactNode);
+  children: React.ReactNode | ((form: unknown) => React.ReactNode);
   // TanStack Form integration
   defaultValues?: Partial<TFormData>;
   validate?: (values: TFormData) => Record<string, string> | undefined;
@@ -50,7 +50,7 @@ interface FormDialogProps<TFormData = any> {
  * @param useTanStackForm Whether to use TanStack Form integration
  * @return Form dialog component
  */
-export const FormDialog = <TFormData extends Record<string, any>>({
+export const FormDialog = <TFormData extends Record<string, unknown>>({
   open,
   onClose,
   onSubmit,
@@ -66,15 +66,17 @@ export const FormDialog = <TFormData extends Record<string, any>>({
   validate,
   useTanStackForm = false,
 }: FormDialogProps<TFormData>): React.ReactElement => {
-  const form = useTanStackForm ? useForm({
-    defaultValues: defaultValues as TFormData,
-    validators: {
-      onChange: validate ? ({ value }: { value: TFormData }) => validate(value) : undefined,
-    },
-    onSubmit: async ({ value }: { value: TFormData }) => {
-      await onSubmit(value);
-    },
-  }) : null;
+  const form = useTanStackForm
+    ? useForm({
+        defaultValues: defaultValues as TFormData,
+        validators: {
+          onChange: validate ? ({ value }: { value: TFormData }) => validate(value) : undefined,
+        },
+        onSubmit: async ({ value }: { value: TFormData }) => {
+          await onSubmit(value);
+        },
+      })
+    : null;
 
   const handleSubmit = (e: React.FormEvent) => {
     if (useTanStackForm && form) {
@@ -98,7 +100,9 @@ export const FormDialog = <TFormData extends Record<string, any>>({
                 {description}
               </Typography>
             )}
-            {typeof children === 'function' ? (children as (form: any) => React.ReactNode)(form!) : children}
+            {typeof children === 'function'
+              ? (children as (form: unknown) => React.ReactNode)(form!)
+              : children}
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} disabled={loading || isSubmitting}>
@@ -123,7 +127,9 @@ export const FormDialog = <TFormData extends Record<string, any>>({
                 {description}
               </Typography>
             )}
-            {typeof children === 'function' ? (children as (form: any) => React.ReactNode)(form!) : children}
+            {typeof children === 'function'
+              ? (children as (form: unknown) => React.ReactNode)(form!)
+              : children}
           </DialogContent>
           <DialogActions>
             <Button onClick={onClose} disabled={loading}>

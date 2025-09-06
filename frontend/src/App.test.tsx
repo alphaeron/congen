@@ -136,7 +136,9 @@ jest.mock('./components/ProfileEditRedirect', () => ({
 
 // Mock the PasswordChangeRedirect component
 jest.mock('./components/PasswordChangeRedirect', () => ({
-  PasswordChangeRedirect: () => <div data-testid="password-change-redirect">Password Change Redirect</div>,
+  PasswordChangeRedirect: () => (
+    <div data-testid="password-change-redirect">Password Change Redirect</div>
+  ),
 }));
 
 // Mock the SnackbarProvider

@@ -45,7 +45,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     code_challenge_method: 'S256',
     // Security enhancements
     automaticSilentRenew: true, // Automatically renew tokens before they expire
-    silentRenewError: (error: Error) => {
+    silentRenewError: () => {
       // The error will be handled by the AuthContext error handler
     },
     // Additional security settings
@@ -60,12 +60,12 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     onSigninSilent: () => {
       // Silent signin completed
     },
-    onSigninSilentError: (error: Error) => {
+    onSigninSilentError: () => {
       // Redirect to login on silent signin failure
       window.location.href = '/login';
     },
     // User session callbacks
-    onUserLoaded: (user: any) => {
+    onUserLoaded: () => {
       // User loaded
     },
     onUserUnloaded: () => {
@@ -75,7 +75,7 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
       // Clear any local state and redirect to login
       window.location.href = '/login';
     },
-    onSilentRenewError: (error: Error) => {
+    onSilentRenewError: () => {
       // Force re-authentication on silent renew failure
       window.location.href = '/login';
     },

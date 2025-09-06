@@ -72,7 +72,6 @@ module.exports = merge(common, {
     },
   },
 
-
   module: {
     rules: [
       {
@@ -157,10 +156,9 @@ module.exports = merge(common, {
       },
     }),
     // Add a plugin to help with React DevTools detection
-    new (require('webpack')).DefinePlugin({
+    new (require('webpack').DefinePlugin)({
       'process.env.NODE_ENV': JSON.stringify('development'),
-      '__REACT_DEVTOOLS_GLOBAL_HOOK__': 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__',
+      __REACT_DEVTOOLS_GLOBAL_HOOK__: 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__',
     }),
   ],
-
 });

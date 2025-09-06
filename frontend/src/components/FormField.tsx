@@ -1,32 +1,40 @@
-import { TextField, FormControl, InputLabel, Select, MenuItem, Autocomplete, Typography } from '@mui/material';
+import {
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Autocomplete,
+  Typography,
+} from '@mui/material';
 import { useField } from '@tanstack/react-form';
 import React, { useMemo } from 'react';
 
 interface BaseFormFieldProps {
   label: string;
-  value?: any;
-  onChange?: (value: any) => void;
+  value?: unknown;
+  onChange?: (value: unknown) => void;
   error?: boolean;
   helperText?: string;
   disabled?: boolean;
   required?: boolean;
   fullWidth?: boolean;
-  sx?: any;
+  sx?: unknown;
   // TanStack Form integration
   name?: string;
-  form?: any;
+  form?: unknown;
 }
 
 interface TextFormFieldProps extends BaseFormFieldProps {
   type: 'text' | 'number' | 'email' | 'password';
   multiline?: boolean;
   rows?: number;
-  inputProps?: Record<string, any>;
+  inputProps?: Record<string, unknown>;
 }
 
 interface SelectFormFieldProps extends BaseFormFieldProps {
   type: 'select';
-  options: Array<{ value: any; label: string }>;
+  options: Array<{ value: unknown; label: string }>;
 }
 
 interface AutocompleteFormFieldProps extends BaseFormFieldProps {
@@ -62,7 +70,7 @@ type FormFieldProps = TextFormFieldProps | SelectFormFieldProps | AutocompleteFo
  * @param form Form instance for TanStack Form integration
  * @return Form field component
  */
-export const FormField: React.FC<FormFieldProps> = (props) => {
+export const FormField: React.FC<FormFieldProps> = props => {
   const {
     type,
     label,
@@ -79,18 +87,23 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
   } = props;
 
   // TanStack Form integration
-  const tanstackField = name && form ? useField({
-    name,
-    form,
-    validators: {
-      onChange: required ? (value: any) => {
-        if (!value || (typeof value === 'string' && !value.trim())) {
-          return 'This field is required';
-        }
-        return undefined;
-      } : undefined,
-    },
-  }) : null;
+  const tanstackField =
+    name && form
+      ? useField({
+          name,
+          form,
+          validators: {
+            onChange: required
+              ? (value: unknown) => {
+                  if (!value || (typeof value === 'string' && !value.trim())) {
+                    return 'This field is required';
+                  }
+                  return undefined;
+                }
+              : undefined,
+          },
+        })
+      : null;
 
   // Use TanStack Form values if available, otherwise fall back to controlled props
   const fieldValue = tanstackField ? tanstackField.state.value : value;
@@ -107,24 +120,28 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         <Select
           value={fieldValue || ''}
           label={label}
-          onChange={(e) => handleChange?.(e.target.value)}
+          onChange={e => handleChange?.(e.target.value)}
           onBlur={handleBlur}
         >
-          {options.map((option) => (
+          {options.map(option => (
             <MenuItem key={option.value} value={option.value}>
               {option.label}
             </MenuItem>
           ))}
         </Select>
-        {fieldHelperText && <Typography variant="caption" color={fieldError ? 'error' : 'text.secondary'}>{fieldHelperText}</Typography>}
+        {fieldHelperText && (
+          <Typography variant="caption" color={fieldError ? 'error' : 'text.secondary'}>
+            {fieldHelperText}
+          </Typography>
+        )}
       </FormControl>
     );
   }
 
   if (type === 'autocomplete') {
     const { options, getOptionLabel } = props as AutocompleteFormFieldProps;
-    const memoizedGetOptionLabel = useMemo(() => 
-      getOptionLabel || ((option: string) => option), 
+    const memoizedGetOptionLabel = useMemo(
+      () => getOptionLabel || ((option: string) => option),
       [getOptionLabel]
     );
     return (
@@ -134,7 +151,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
         onChange={(_, newValue) => handleChange?.(newValue)}
         onBlur={handleBlur}
         getOptionLabel={memoizedGetOptionLabel}
-        renderInput={(params) => (
+        renderInput={params => (
           <TextField
             {...params}
             label={label}
@@ -160,7 +177,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
       label={label}
       type={type}
       value={fieldValue || ''}
-      onChange={(e) => handleChange?.(e.target.value)}
+      onChange={e => handleChange?.(e.target.value)}
       onBlur={handleBlur}
       variant="outlined"
       fullWidth={fullWidth}

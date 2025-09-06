@@ -21,13 +21,13 @@ jest.mock('react-oidc-context', () => ({
 
 // Mock chart components to avoid rendering issues in tests
 jest.mock('./ChordChart', () => ({
-  ChordChart: ({ data }: { data: any }) => (
+  ChordChart: ({ data }: { data: unknown }) => (
     <div data-testid="chord-chart">{data?.length || 0} items</div>
   ),
 }));
 
 jest.mock('./SunburstChart', () => ({
-  SunburstChart: ({ data }: { data: any }) => (
+  SunburstChart: ({ data }: { data: unknown }) => (
     <div data-testid="sunburst-chart">{data?.length || 0} items</div>
   ),
 }));

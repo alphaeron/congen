@@ -44,12 +44,5 @@ export const StatusChip: React.FC<StatusChipProps> = ({
     }
   };
 
-  return (
-    <Chip
-      label={label}
-      color={getColor()}
-      size={size}
-      variant={variant}
-    />
-  );
+  return <Chip label={label} color={getColor()} size={size} variant={variant} />;
 };

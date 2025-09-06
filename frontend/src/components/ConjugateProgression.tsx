@@ -7,8 +7,8 @@ import {
   useReactTable,
   flexRender,
 } from '@tanstack/react-table';
-import React, { useMemo, useState, useRef } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import React, { useMemo, useState, useRef } from 'react';
 
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
@@ -45,7 +45,6 @@ interface ConjugateProgressionProps {
  * @return Enhanced conjugate progression component
  */
 export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
-  user,
   userData,
   exerciseData,
   oneRepMaxes,
@@ -190,7 +189,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
               sx={{
                 maxHeight: 400,
                 overflow: 'auto',
-                height: '400px'
+                height: '400px',
               }}
             >
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>

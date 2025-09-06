@@ -1,14 +1,15 @@
-import React, { useState } from 'react'
-import { Box, Card, CardContent, Grid, Typography, Avatar, Button, Chip, Stack } from '@mui/material'
-import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle'
-import { default as EditIcon } from '@mui/icons-material/Edit'
-import type { User } from '../api/types'
-import { KEYCLOAK_URL } from '../globals'
-import { formatDate } from '../common/utils'
-import { ConfirmationDialog } from './ConfirmationDialog'
+import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
+import { default as EditIcon } from '@mui/icons-material/Edit';
+import { Box, Card, CardContent, Grid, Typography, Avatar, Button } from '@mui/material';
+import React, { useState } from 'react';
+
+import { ConfirmationDialog } from './ConfirmationDialog';
+import type { User } from '../api/types';
+import { formatDate } from '../common/utils';
+import { KEYCLOAK_URL } from '../globals';
 
 interface ProfileOverviewProps {
-  user: User
+  user: User;
 }
 
 /**
@@ -20,29 +21,29 @@ interface ProfileOverviewProps {
  * @return Profile overview component
  */
 export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleEditProfile = () => {
-    setEditDialogOpen(true)
-  }
+    setEditDialogOpen(true);
+  };
 
   const handleConfirmEditProfile = () => {
     // Construct the Keycloak account management URL with redirect back to Congen
-    const redirectUri = `${window.location.origin}/profile-edit-redirect`
-    const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`
+    const redirectUri = `${window.location.origin}/profile-edit-redirect`;
+    const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     // Store the current location to redirect back after profile edit
-    sessionStorage.setItem('congen_redirect_after_profile_edit', window.location.pathname)
+    sessionStorage.setItem('congen_redirect_after_profile_edit', window.location.pathname);
 
     // Close dialog and redirect to Keycloak account management
-    setEditDialogOpen(false)
-    window.location.href = accountUrl
-  }
+    setEditDialogOpen(false);
+    window.location.href = accountUrl;
+  };
 
   const handleCancelEditProfile = () => {
     // Just close the dialog, don't redirect
-    setEditDialogOpen(false)
-  }
+    setEditDialogOpen(false);
+  };
 
   return (
     <React.Fragment>
@@ -95,5 +96,5 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
         confirmColor="primary"
       />
     </React.Fragment>
-  )
-}
+  );
+};
