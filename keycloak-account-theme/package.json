@@ -100,9 +100,15 @@
     ]
   },
   "keycloakify": {
+    "themeName": "congen-account-theme",
     "accountThemeImplementation": "Single-Page",
     "projectBuildDirPath": "dist",
     "staticDirPathInProjectBuildDirPath": "static",
-    "publicDirPath": "public"
+    "publicDirPath": "public",
+    "ftl": {
+      "account": [
+        "index.ftl"
+      ]
+    }
   }
 }
