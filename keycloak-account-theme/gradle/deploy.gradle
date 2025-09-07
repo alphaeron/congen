@@ -1,28 +1,149 @@
-// Deployment configuration for keycloak-account-theme
+// Docker-related tasks
 
-// Prepare deployment by building Docker image for theme JAR
-task prepareDeployment {
-    group = 'deployment'
-    description = 'Prepare deployment by building Docker image containing theme JAR'
+import groovy.json.JsonSlurper
+
+// Get environment from project property, default to 'local'
+ext.environment = project.hasProperty('environment') ? project.environment : 'local'
+
+task dockerBuild {
+    group = 'build'
+    description = 'Build Docker image for the keycloak theme (uses environment to determine build type)'
     dependsOn buildKeycloakTheme
     
     doLast {
-        // Build the Docker image
+        // Force rebuild by clearing any cached dist_keycloak directory
+        if (file('dist_keycloak').exists()) {
+            println "📦 Ensuring fresh build for Docker image..."
+        }
+        def buildType = (project.environment == 'production') ? 'production' : 'debug'
+        
+        def packageJson = file('package.json')
+        def version = new JsonSlurper().parse(packageJson).version
+        def hash = 'git rev-parse --short HEAD'.execute(null, projectDir).text.trim()
+        def timestamp = System.currentTimeMillis()
+        def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${timestamp}-debug"
+        def image = "keycloak-theme:${tag}"
+        
+        if (!file('dist_keycloak/congen-account-theme.jar').exists()) {
+            throw new GradleException('Build failed: congen-account-theme.jar not found in dist_keycloak/')
+        }
+        
+        println "Building ${buildType} Docker image: ${image}"
         exec {
-            commandLine 'docker', 'build', '-t', 'keycloak-theme:latest', '.'
             workingDir projectDir
+            commandLine 'docker', 'build', '--no-cache', '-t', image, '.'
         }
-        println "✅ Docker image built: keycloak-theme:latest"
-        
-        // If environment is local, load image into minikube
-        if (project.environment == 'local') {
-            println "🔄 Loading image into minikube for local environment..."
-            exec {
-                commandLine 'minikube', 'image', 'load', 'keycloak-theme:latest'
-            }
-            println "✅ Image loaded into minikube"
+        project.ext.themeImageTag = image
+        println "${buildType.capitalize()} Docker image built: ${image}"
+    }
+}
+
+task printImageTag {
+    group = 'deployment'
+    description = 'Print the Docker image tag for the keycloak theme.'
+    doLast {
+        if (!project.ext.has('themeImageTag')) {
+            throw new GradleException('No theme image tag found. Run dockerBuild first.')
         }
-        
-        println "🚀 Ready for deployment with: './gradlew deployment'"
+        println "Keycloak theme Docker image tag: ${project.ext.themeImageTag}"
+    }
+}
+
+// Helper function to generate theme image tag patch
+def generateThemeImageTagPatchForEnvironment(env, imageName) {
+    def overlayDir = "../k8s/overlays/${env}"
+    def patchFile = file("${overlayDir}/stage-6/patches/keycloak-theme-image-tag-patch.yaml")
+
+    // Create the patch directory if it doesn't exist
+    patchFile.parentFile.mkdirs()
+
+    def patchContent = """apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keycloak
+spec:
+  template:
+    spec:
+      initContainers:
+      - name: theme-setup
+        image: ${imageName}
+"""
+
+    patchFile.text = patchContent
+    println "✅ Generated keycloak theme image tag patch for ${env}: ${imageName}"
+}
+
+// Task to build and prepare image for local environment
+task prepareLocalImage {
+    dependsOn dockerBuild
+    description = 'Build and prepare Docker image for local minikube deployment'
+    group = 'kubernetes'
+
+    doLast {
+        println "🚀 Preparing keycloak theme image for local minikube deployment..."
+
+        // Load image into minikube's Docker daemon
+        println "📦 Loading image into minikube's Docker daemon..."
+        exec {
+            commandLine 'minikube', 'image', 'load', project.ext.themeImageTag
+        }
+        println "✅ Image loaded into minikube: ${project.ext.themeImageTag}"
+
+        // Generate image tag patch for local with the current tag
+        generateThemeImageTagPatchForEnvironment('local', project.ext.themeImageTag)
+        println "✅ Generated keycloak theme image tag patch for local: ${project.ext.themeImageTag}"
+    }
+}
+
+// Task to build and push image for remote environments (staging/production)
+task prepareRemoteImage {
+    dependsOn dockerBuild
+    description = 'Build and push Docker image for remote registry deployment'
+    group = 'kubernetes'
+
+    doFirst {
+        if (!project.hasProperty('remoteRegistry')) {
+            throw new GradleException("remoteRegistry parameter is required for staging/production. Use: -PremoteRegistry=your-registry.example.com")
+        }
+
+        println "🚀 Preparing keycloak theme image for remote registry deployment..."
+        println "Remote registry: ${remoteRegistry}"
+        println "Image tag: ${project.ext.themeImageTag}"
+    }
+
+    doLast {
+        def remoteImageName = "${remoteRegistry}/${remoteRegistryNamespace}/keycloak-theme:${project.ext.themeImageTag.split(':')[1]}"
+
+        // Tag and push to remote registry
+        println "Tagging image for remote registry..."
+        exec {
+            commandLine 'docker', 'tag', project.ext.themeImageTag, remoteImageName
+        }
+
+        println "Pushing image to remote registry..."
+        exec {
+            commandLine 'docker', 'push', remoteImageName
+        }
+
+        println "✅ Image pushed to remote registry: ${remoteImageName}"
+
+        // Generate image tag patch for remote environment
+        generateThemeImageTagPatchForEnvironment(project.environment, remoteImageName)
+    }
+}
+
+// Prepare deployment task that builds the image and generates manifest patches
+task prepareDeployment {
+    group = 'deployment'
+    description = 'Build the keycloak theme image and prepare deployment patches for the specified environment.'
+    dependsOn dockerBuild
+}
+
+// Configure prepareDeployment dependencies based on environment
+prepareDeployment.configure {
+    if (project.environment == 'local') {
+        dependsOn prepareLocalImage
+    } else if (project.environment == 'staging' || project.environment == 'production') {
+        dependsOn prepareRemoteImage
     }
 }

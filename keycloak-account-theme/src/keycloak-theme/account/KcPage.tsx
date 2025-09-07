@@ -7,7 +7,7 @@ import Template from 'keycloakify/account/Template';
 import CircularProgress from '@mui/material/CircularProgress';
 
 // Lazy load the heavy account overview component
-const CongenAccountOverview = lazy(() => import('./CongenAccountOverview'));
+const Account = lazy(() => import('./Account'));
 
 export default function KcPage(props: { kcContext: KcContext }) {
   const { kcContext } = props;
@@ -32,7 +32,7 @@ export default function KcPage(props: { kcContext: KcContext }) {
       {(() => {
         switch (kcContext.pageId) {
           case 'account.ftl':
-            return <CongenAccountOverview kcContext={kcContext} i18n={i18n} />;
+            return <Account kcContext={kcContext} i18n={i18n} />;
           default:
             return (
               <DefaultPage

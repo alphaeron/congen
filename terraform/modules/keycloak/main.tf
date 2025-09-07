@@ -22,7 +22,7 @@ resource "keycloak_realm" "congen" {
   login_with_email_allowed       = true
   duplicate_emails_allowed       = false
   login_theme                    = "congen"
-  account_theme                  = "congen"
+  account_theme                  = "congen-account-theme"
 
   # Security: Configure low token lifetimes
   access_token_lifespan                   = "15m" # 15 minutes

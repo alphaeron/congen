@@ -56,18 +56,16 @@ task buildApp {
 }
 
 // Keycloak theme build task using keycloakify
-task buildKeycloakTheme(type: Exec) {
+task buildKeycloakTheme(type: com.github.gradle.node.npm.task.NpmTask) {
     group = 'build'
     description = 'Build the Keycloak theme using keycloakify'
     dependsOn buildApp
     
-    commandLine 'npm', 'run', 'build-keycloak-theme'
-    workingDir projectDir
+    npmCommand = ['run', 'build-keycloak-theme']
     
     doLast {
         println "✅ Keycloak theme built using keycloakify"
         println "📁 Theme files available in: dist_keycloak/"
-        println "🚀 Ready for Keycloak deployment!"
     }
 }
 

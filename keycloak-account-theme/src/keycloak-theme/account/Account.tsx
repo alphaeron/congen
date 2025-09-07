@@ -27,15 +27,15 @@ type KcContextWithUser = KcContext & {
   };
 };
 
-interface CongenAccountOverviewProps {
+interface AccountProps {
   kcContext: KcContextWithUser;
   i18n: unknown;
 }
 
-export default function CongenAccountOverview({
+export default function Account({
   kcContext,
   i18n: _i18n,
-}: CongenAccountOverviewProps) {
+}: AccountProps) {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography

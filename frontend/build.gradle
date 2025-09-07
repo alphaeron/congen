@@ -81,4 +81,4 @@ tasks.named('clean').configure {
 apply from: "${projectDir}/gradle/node.gradle"
 apply from: "${projectDir}/gradle/test.gradle"
 apply from: "${projectDir}/gradle/style.gradle"
-apply from: "${projectDir}/gradle/deploy.gradle" 
+apply from: "${projectDir}/gradle/deploy.gradle"

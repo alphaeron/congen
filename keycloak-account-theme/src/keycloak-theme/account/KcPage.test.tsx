@@ -1,11 +1,11 @@
 import React from 'react';
 import { screen, waitFor } from '@testing-library/react';
-import { render, createMockKcContext } from '../test-utils';
-import type { KcContextWithUser } from '../test-utils';
+import { render, createMockKcContext } from '../../test-utils';
+import type { KcContextWithUser } from '../../test-utils';
 import KcPage from './KcPage';
 
 describe('KcPage', () => {
-  it('renders CongenAccountOverview for account page', async () => {
+  it('renders Account component for account page', async () => {
     const kcContext = createMockKcContext({
       url: {
         accountUrl: '/auth/realms/congen/account',

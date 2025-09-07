@@ -5,10 +5,13 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
+    "prestart": "keycloakify update-kc-gen && keycloakify copy-keycloak-resources-to-public",
     "start": "webpack serve --open --config webpack.dev.js",
+    "prebuild": "keycloakify update-kc-gen",
     "build": "webpack --config webpack.prod.js",
+    "postbuild": "rimraf dist/keycloakify-dev-resources",
     "devbuild": "webpack --config webpack.dev.js",
-    "build-keycloak-theme": "keycloakify",
+    "build-keycloak-theme": "npm run build && keycloakify build",
     "analyze": "npm run build && npx webpack-bundle-analyzer dist/",
     "analyze:dev": "npm run devbuild && npx webpack-bundle-analyzer dist/",
     "lint": "eslint src/",
@@ -21,13 +24,17 @@
     "format:check": "prettier . --check",
     "type_check": "tsc --noEmit"
   },
+  "overrides": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "dependencies": {
     "@fontsource/roboto": "^5.1.1",
     "@mui/icons-material": "^7.3.1",
     "@mui/material": "^7.3.1",
     "@mui/material-pigment-css": "^7.3.1",
     "@pigment-css/react": "^0.0.30",
-    "keycloakify": "^11.0.0",
+    "keycloakify": "^11.9.4",
     "process": "^0.11.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -64,6 +71,7 @@
     "jest-environment-jsdom": "^29.7.0",
     "mini-css-extract-plugin": "2.9.2",
     "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.14",
     "typescript": "^5.7.2",
@@ -87,5 +95,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "keycloakify": {
+    "accountThemeImplementation": "Single-Page",
+    "projectBuildDirPath": "dist",
+    "staticDirPathInProjectBuildDirPath": "static",
+    "publicDirPath": "public"
   }
 }

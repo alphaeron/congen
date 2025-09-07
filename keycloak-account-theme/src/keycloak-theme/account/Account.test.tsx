@@ -1,13 +1,13 @@
 import React from 'react';
 import { screen } from '@testing-library/react';
-import { render, createMockKcContext, createMockUser } from '../test-utils';
-import CongenAccountOverview from './CongenAccountOverview';
+import { render, createMockKcContext, createMockUser } from '../../test-utils';
+import Account from './Account';
 
-describe('CongenAccountOverview', () => {
+describe('Account', () => {
   const defaultKcContext = createMockKcContext();
 
   it('renders user profile information correctly', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     expect(screen.getByText('Personal Information')).toBeInTheDocument();
     expect(screen.getByText('Test User')).toBeInTheDocument();
@@ -16,7 +16,7 @@ describe('CongenAccountOverview', () => {
   });
 
   it('renders security settings card', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     expect(screen.getByText('Security Settings')).toBeInTheDocument();
     expect(screen.getByText('Password')).toBeInTheDocument();
@@ -24,7 +24,7 @@ describe('CongenAccountOverview', () => {
   });
 
   it('renders quick actions grid', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     expect(screen.getByText('Quick Actions')).toBeInTheDocument();
     expect(screen.getAllByText('Edit Profile')).toHaveLength(2); // One in personal info, one in quick actions
@@ -36,7 +36,7 @@ describe('CongenAccountOverview', () => {
 
   it('handles missing user information gracefully', () => {
     const kcContextWithoutUser = createMockKcContext({ user: undefined });
-    render(<CongenAccountOverview kcContext={kcContextWithoutUser} i18n={{}} />);
+    render(<Account kcContext={kcContextWithoutUser} i18n={{}} />);
 
     expect(screen.getByText('Personal Information')).toBeInTheDocument();
     expect(screen.getByText('Security Settings')).toBeInTheDocument();
@@ -51,14 +51,14 @@ describe('CongenAccountOverview', () => {
         email: undefined,
       }),
     });
-    render(<CongenAccountOverview kcContext={kcContextWithPartialUser} i18n={{}} />);
+    render(<Account kcContext={kcContextWithPartialUser} i18n={{}} />);
 
     expect(screen.getByText('John')).toBeInTheDocument();
     expect(screen.getByText('testuser')).toBeInTheDocument();
   });
 
   it('applies correct Material-UI styling', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     // Check for Material-UI components
     const cards = document.querySelectorAll('.MuiCard-root');
@@ -70,7 +70,7 @@ describe('CongenAccountOverview', () => {
   });
 
   it('renders with dark theme', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />, {
+    render(<Account kcContext={defaultKcContext} i18n={{}} />, {
       theme: 'dark',
     });
 
@@ -80,7 +80,7 @@ describe('CongenAccountOverview', () => {
   });
 
   it('displays correct user avatar with icon', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     // Check for avatar with AccountCircle icon
     const avatar = document.querySelector('.MuiAvatar-root');
@@ -98,7 +98,7 @@ describe('CongenAccountOverview', () => {
         lastName: 'VeryLongLastName',
       }),
     });
-    render(<CongenAccountOverview kcContext={kcContextWithLongName} i18n={{}} />);
+    render(<Account kcContext={kcContextWithLongName} i18n={{}} />);
 
     expect(screen.getByText('VeryLongFirstName VeryLongLastName')).toBeInTheDocument();
 
@@ -108,14 +108,14 @@ describe('CongenAccountOverview', () => {
   });
 
   it('renders all quick action buttons', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(6); // Edit Profile (2), Security Settings, Edit Profile, Change Password, Notifications, Support
   });
 
   it('maintains responsive design structure', () => {
-    render(<CongenAccountOverview kcContext={defaultKcContext} i18n={{}} />);
+    render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     // Check that Grid components have proper size props
     const gridContainers = document.querySelectorAll('.MuiGrid-container');

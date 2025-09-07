@@ -11,3 +11,7 @@ patches:
   target:
     kind: StatefulSet
     name: keycloak
+- path: patches/keycloak-theme-image-tag-patch.yaml
+  target:
+    kind: StatefulSet
+    name: keycloak
