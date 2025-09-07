@@ -137,6 +137,10 @@ task prepareDeployment {
     group = 'deployment'
     description = 'Build the frontend image and prepare deployment patches for the specified environment.'
     dependsOn dockerBuild
+    
+    doFirst {
+        println "🚀 Preparing frontend deployment..."
+    }
 }
 
 // Configure prepareDeployment dependencies based on environment

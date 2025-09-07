@@ -137,6 +137,10 @@ task prepareDeployment {
     group = 'deployment'
     description = 'Build the keycloak theme image and prepare deployment patches for the specified environment.'
     dependsOn dockerBuild
+    
+    doFirst {
+        println "🚀 Preparing keycloak theme deployment..."
+    }
 }
 
 // Configure prepareDeployment dependencies based on environment

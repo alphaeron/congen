@@ -133,13 +133,29 @@ task deployStage {
 task deployAll {
     group = 'deployment'
     description = 'Prepare and deploy all subprojects to Kubernetes using staged deployment'
+    
+    inputs.property("environment", project.environment)
+    inputs.property("timestamp", { System.currentTimeMillis() })
+    outputs.file("${buildDir}/deployAll.timestamp")
+    
+    // Force task to always run
+    outputs.upToDateWhen { false }
+    
+    // Force task to always run
     if (project.environment == 'local') {
         dependsOn setupLocalKubernetes
     }
-    dependsOn subprojects.findAll { it.tasks.findByName('prepareDeployment') }.collect { it.path + ':prepareDeployment' }
     dependsOn ':confirmDeployment'
-    doLast {
+    
+    doFirst {
         println "🚀 Starting staged deployment for environment: ${project.environment}"
+    }
+    
+    doLast {
+        // Create timestamp file to mark task completion
+        file("${buildDir}/deployAll.timestamp").text = System.currentTimeMillis().toString()
+        
+        println "🎉 All stages deployed successfully!"
         
         // Deploy all stages in sequence
         def stages = [1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -173,4 +189,9 @@ task confirmDeployment {
             println "✅ Production deployment confirmed"
         }
     }
+}
+
+// Configure deployAll task dependencies after all tasks are available
+deployAll.configure {
+    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
 }

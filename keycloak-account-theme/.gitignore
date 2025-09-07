@@ -50,3 +50,6 @@ performance-metrics.json
 # Temporary files
 *.tmp
 *.temp
+
+# Generated as part of keycloakify build
+kc.gen.tsx
