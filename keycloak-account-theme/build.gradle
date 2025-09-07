@@ -55,13 +55,20 @@ task buildApp {
     outputs.dir('dist')
 }
 
-// Keycloak theme build task using custom build script
+// Keycloak theme build task using keycloakify
 task buildKeycloakTheme(type: Exec) {
     group = 'build'
-    description = 'Build the Keycloak theme using custom build script'
+    description = 'Build the Keycloak theme using keycloakify'
     dependsOn buildApp
-    commandLine './scripts/build-theme.sh'
+    
+    commandLine 'npm', 'run', 'build-keycloak-theme'
     workingDir projectDir
+    
+    doLast {
+        println "✅ Keycloak theme built using keycloakify"
+        println "📁 Theme files available in: dist_keycloak/"
+        println "🚀 Ready for Keycloak deployment!"
+    }
 }
 
 // Disable the default assemble task since we use buildApp directly

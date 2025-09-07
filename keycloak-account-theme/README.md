@@ -24,9 +24,6 @@ keycloak-account-theme/
 │   │   └── i18n.ts            # Internationalization
 │   ├── main.tsx               # Application entry point
 │   └── theme.tsx              # Material-UI theme definition
-├── scripts/
-│   ├── build-theme.sh         # Custom theme build script
-│   └── update-k8s-configmap.sh # Kubernetes ConfigMap updater
 ├── dist_keycloak/             # Generated theme files
 │   ├── congen-account-theme.jar
 │   └── themes/                # Theme directory structure
@@ -35,12 +32,12 @@ keycloak-account-theme/
 
 ### Build Process
 
-The project uses a **custom build process** instead of the standard keycloakify build due to compatibility issues:
+The project uses the **standard keycloakify build process**:
 
 1. **Webpack Build**: Compiles React components and generates optimized bundles
-2. **Theme Assembly**: Creates proper Keycloak theme structure with FreeMarker templates
-3. **JAR Packaging**: Packages the theme as a JAR file for Keycloak deployment
-4. **Kubernetes Integration**: Updates ConfigMaps for deployment
+2. **Keycloakify Build**: Automatically generates Keycloak theme structure and FreeMarker templates
+3. **JAR Packaging**: Creates the theme JAR file for Keycloak deployment
+4. **Docker Integration**: Packages the JAR into a Docker image for Kubernetes deployment
 
 ## Development
 
@@ -60,14 +57,14 @@ npm install
 npm run build-keycloak-theme
 
 # Or use the custom build script directly
-./scripts/build-theme.sh
+npm run build-keycloak-theme
 ```
 
 ### Development Workflow
 
 1. **Make Changes**: Edit React components in `src/`
-2. **Build Theme**: Run `./scripts/build-theme.sh`
-3. **Update ConfigMap**: Run `./scripts/update-k8s-configmap.sh`
+2. **Build Theme**: Run `npm run build-keycloak-theme`
+3. **Build Docker Image**: The Gradle build automatically creates a Docker image
 4. **Deploy**: Use Gradle deployment tasks
 
 ### Key Components
@@ -105,7 +102,7 @@ The Material-UI theme (`src/theme.tsx`) matches the main Congen application:
 
 ```bash
 # 1. Build the theme
-./scripts/build-theme.sh
+npm run build-keycloak-theme
 
 # 2. Update Kubernetes ConfigMap
 ./scripts/update-k8s-configmap.sh

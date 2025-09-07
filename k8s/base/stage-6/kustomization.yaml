@@ -8,4 +8,3 @@ resources:
   - keycloak-service.yaml
   - keycloak-discovery-service.yaml
   - keycloak-theme-configmap.yaml
-  - keycloak-theme/

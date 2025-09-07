@@ -21,7 +21,7 @@ spec:
     spec:
       initContainers:
       - name: theme-setup
-        image: mirror.gcr.io/busybox:1.35
+        image: keycloak-theme:latest
         command: ['sh', '-c']
         args:
         - |
@@ -37,24 +37,14 @@ spec:
           mkdir -p /opt/keycloak/themes/congen/login/resources/img
           # Base64 decode the favicon to override the common theme favicon
           base64 -d /tmp/theme/favicon.ico > /opt/keycloak/themes/congen/login/resources/img/favicon.ico
-          # Extract account theme JAR to proper location
-          if [ -f /tmp/theme/congen-account-theme.jar ]; then
-            echo "=== Extracting Congen Account Theme JAR ==="
-            cd /opt/keycloak/themes
-            unzip -o /tmp/theme/congen-account-theme.jar
-            # Set proper permissions
-            chmod -R 755 /opt/keycloak/themes/congen-account-theme
-            echo "=== Account Theme JAR extracted successfully ==="
-            ls -la /opt/keycloak/themes/congen-account-theme/
-          else
-            echo "=== Account Theme JAR not found, using fallback ==="
-            # Fallback to CSS-based account theme
-            mkdir -p /opt/keycloak/themes/congen/account/resources/css
-            mkdir -p /opt/keycloak/themes/congen/account/resources/img
-            cp /tmp/theme/account-theme.properties /opt/keycloak/themes/congen/account/theme.properties
-            cp /tmp/theme/css-congen.css /opt/keycloak/themes/congen/account/resources/css/congen.css
-            base64 -d /tmp/theme/favicon.ico > /opt/keycloak/themes/congen/account/resources/img/favicon.ico
-          fi
+          # Extract account theme JAR from the Docker image
+          echo "=== Extracting Congen Account Theme JAR ==="
+          cd /opt/keycloak/themes
+          unzip -o /theme/congen-account-theme.jar
+          # Set proper permissions
+          chmod -R 755 /opt/keycloak/themes/congen-account-theme
+          echo "=== Account Theme JAR extracted successfully ==="
+          ls -la /opt/keycloak/themes/congen-account-theme/
           # Set proper permissions
           chmod -R 755 /opt/keycloak/themes/
           # Debug: List the created files
@@ -65,9 +55,6 @@ spec:
         volumeMounts:
         - name: keycloak-theme
           mountPath: /tmp/theme
-        - name: keycloak-account-theme-jar
-          mountPath: /tmp/theme/congen-account-theme.jar
-          subPath: congen-account-theme.jar
         - name: keycloak-theme-volume
           mountPath: /opt/keycloak/themes
       containers:
@@ -169,8 +156,5 @@ spec:
       - name: keycloak-theme
         configMap:
           name: keycloak-theme
-      - name: keycloak-account-theme-jar
-        configMap:
-          name: keycloak-account-theme-jar
       - name: keycloak-theme-volume
         emptyDir: {}

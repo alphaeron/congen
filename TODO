@@ -4,10 +4,6 @@ Exercise Pool visualization page. In addition to visualizing the user's current 
 
 support print / export (pdf or xlsx) and add corresponding icon buttons on workout and program to expose this functionality
 
-remove timeout duration from workout generation exceeded error message.  the user facing error messages should not contain implementation details
-
-https://www.reddit.com/r/KeyCloak/comments/1j3626z/keycloak_integration_best_practices/
-
 weight unit preferences ui, equipment ui, weak muscles ui
 
 add weak muscles UI to program preferences (name target muscles in the interface)
@@ -54,6 +50,8 @@ Liftalizer (video analysis) service
 Health metric visualization impact on performance page.
 
 hashicorp vault for staging/production
+
+remove timeout duration from workout generation exceeded error message.  the user facing error messages should not contain implementation details
 
 congen database for congen?  Or maybe aws terraform will handle that.
 

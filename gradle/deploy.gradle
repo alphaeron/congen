@@ -102,7 +102,7 @@ task deployStage {
         }
     }
    
-    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
+    dependsOn subprojects.findAll { it.tasks.findByName('prepareDeployment') }.collect { it.path + ':prepareDeployment' }
 
     doLast {
         def stageNum = project.getProperty('stage') as Integer
@@ -136,7 +136,7 @@ task deployAll {
     if (project.environment == 'local') {
         dependsOn setupLocalKubernetes
     }
-    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
+    dependsOn subprojects.findAll { it.tasks.findByName('prepareDeployment') }.collect { it.path + ':prepareDeployment' }
     dependsOn ':confirmDeployment'
     doLast {
         println "🚀 Starting staged deployment for environment: ${project.environment}"

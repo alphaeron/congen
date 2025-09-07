@@ -1,40 +1,28 @@
 // Deployment configuration for keycloak-account-theme
 
-// Update Kubernetes ConfigMap with theme JAR
-task updateK8sConfigMap(type: Exec) {
+// Prepare deployment by building Docker image for theme JAR
+task prepareDeployment {
     group = 'deployment'
-    description = 'Update Kubernetes ConfigMap with theme JAR'
+    description = 'Prepare deployment by building Docker image containing theme JAR'
     dependsOn buildKeycloakTheme
     
-    commandLine './scripts/update-k8s-configmap.sh'
-    workingDir projectDir
-    
     doLast {
-        println "✅ Kubernetes ConfigMap updated with theme JAR"
+        // Build the Docker image
+        exec {
+            commandLine 'docker', 'build', '-t', 'keycloak-theme:latest', '.'
+            workingDir projectDir
+        }
+        println "✅ Docker image built: keycloak-theme:latest"
+        
+        // If environment is local, load image into minikube
+        if (project.environment == 'local') {
+            println "🔄 Loading image into minikube for local environment..."
+            exec {
+                commandLine 'minikube', 'image', 'load', 'keycloak-theme:latest'
+            }
+            println "✅ Image loaded into minikube"
+        }
+        
         println "🚀 Ready for deployment with: './gradlew deployment'"
     }
-}
-
-// Copy theme files to Kubernetes configmap directory
-task copyThemeToK8s(type: Copy) {
-    group = 'deployment'
-    description = 'Copy theme JAR to Kubernetes ConfigMap directory'
-    dependsOn updateK8sConfigMap
-
-    from 'dist_keycloak/congen-account-theme.jar'
-    into "${rootProject.projectDir}/k8s/base/stage-6/keycloak-theme/"
-    
-    doFirst {
-        // Create the directory if it doesn't exist
-        file("${rootProject.projectDir}/k8s/base/stage-6/keycloak-theme/").mkdirs()
-    }
-    
-    doLast {
-        println "✅ Copied theme JAR to k8s/base/stage-6/keycloak-theme/"
-    }
-}
-
-// Ensure the theme is updated when building
-tasks.named('build').configure {
-    finalizedBy copyThemeToK8s
 }

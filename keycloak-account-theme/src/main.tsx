@@ -5,6 +5,7 @@ import { CssBaseline } from '@mui/material';
 import KcPage from './account/KcPage';
 import { getTheme } from './theme';
 import type { KcContext } from './account/KcContext';
+import './account.css';
 
 // Declare global window interface for Keycloak context
 declare global {
