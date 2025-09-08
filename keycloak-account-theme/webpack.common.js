@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const TerserPlugin = require('terser-webpack-plugin');
 
@@ -11,10 +12,19 @@ module.exports = {
   plugins: [
     new webpack.ProvidePlugin({
       process: 'process/browser.js',
+      React: 'react',
     }),
     new webpack.ProgressPlugin(),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'public/favicon.ico',
+          to: 'img/favicon.ico',
+        },
+      ],
     }),
   ],
 
@@ -88,7 +98,7 @@ module.exports = {
     filename: '[name].js',
     chunkFilename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/',
+    publicPath: './',
     clean: true,
   },
 };

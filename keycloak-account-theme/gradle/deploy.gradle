@@ -24,8 +24,8 @@ task dockerBuild {
         def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${timestamp}-debug"
         def image = "keycloak-theme:${tag}"
         
-        if (!file('dist_keycloak/congen-account-theme.jar').exists()) {
-            throw new GradleException('Build failed: congen-account-theme.jar not found in dist_keycloak/')
+        if (!file('build_keycloak/keycloak-theme-for-kc-all-other-versions.jar').exists()) {
+            throw new GradleException('Build failed: keycloak-theme-for-kc-all-other-versions.jar not found in build_keycloak/')
         }
         
         println "Building ${buildType} Docker image: ${image}"

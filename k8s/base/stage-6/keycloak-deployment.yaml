@@ -41,6 +41,11 @@ spec:
           echo "=== Extracting Congen Account Theme JAR ==="
           cd /opt/keycloak/themes
           unzip -o /theme/congen-account-theme.jar
+          # Move the theme to the correct location for Keycloak
+          if [ -d "theme/congen-account-theme" ]; then
+            mv theme/congen-account-theme congen-account-theme
+            rmdir theme
+          fi
           # Set proper permissions
           chmod -R 755 /opt/keycloak/themes/congen-account-theme
           echo "=== Account Theme JAR extracted successfully ==="

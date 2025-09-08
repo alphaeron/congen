@@ -1,10 +1,13 @@
-import type { ExtendKcContext } from 'keycloakify/account';
+import type { KcContextLike } from "@keycloakify/keycloak-account-ui";
 
-export type KcContextExtension = {
-  themeName: 'congen-account-theme';
-  properties: Record<string, string>;
+export type KcContext = KcContextLike & {
+    themeType: "account";
+    themeName: string;
+    properties: Record<string, string>;
+    user?: {
+        username?: string;
+        email?: string;
+        firstName?: string;
+        lastName?: string;
+    };
 };
-
-export type KcContextExtensionPerPage = {};
-
-export type KcContext = ExtendKcContext<KcContextExtension, KcContextExtensionPerPage>;

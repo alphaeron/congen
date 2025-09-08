@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 
@@ -12,6 +13,9 @@ module.exports = merge(common, {
   devtool: 'source-map',
 
   plugins: [
+    new webpack.DefinePlugin({
+      'process.env.PUBLIC_URL': JSON.stringify(''),
+    }),
     new MiniCssExtractPlugin({
       filename: 'css/[name].[contenthash:8].css',
       chunkFilename: 'css/[name].[contenthash:8].chunk.css',
@@ -128,7 +132,6 @@ module.exports = merge(common, {
           chunks: 'all',
           priority: 40,
           enforce: true,
-          maxSize: 300000, // Limit MUI bundle to 300KB for better performance
         },
         // Separate Emotion (MUI dependency)
         emotion: {
@@ -193,7 +196,7 @@ module.exports = merge(common, {
     filename: 'js/[name].[contenthash:8].js',
     chunkFilename: 'js/[name].[contenthash:8].chunk.js',
     assetModuleFilename: 'assets/[name].[contenthash:8][ext]',
-    publicPath: '/',
+    publicPath: './',
     clean: true,
   },
 

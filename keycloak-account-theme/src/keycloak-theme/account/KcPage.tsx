@@ -1,52 +1,13 @@
-import { Suspense, lazy } from 'react';
-import type { ClassKey } from 'keycloakify/account';
-import type { KcContext } from './KcContext';
-import { useI18n } from './i18n';
-import DefaultPage from 'keycloakify/account/DefaultPage';
-import Template from 'keycloakify/account/Template';
-import CircularProgress from '@mui/material/CircularProgress';
+import { lazy } from "react";
+import type { KcContext } from "./KcContext";
 
-// Lazy load the heavy account overview component
-const Account = lazy(() => import('./Account'));
+const KcAccountUi = lazy(() => import("./KcAccountUi"));
 
 export default function KcPage(props: { kcContext: KcContext }) {
-  const { kcContext } = props;
+    const { kcContext } = props;
+    
+    // Debug logging
+    console.log('KcPage - kcContext:', kcContext);
 
-  const { i18n } = useI18n({ kcContext });
-
-  return (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '100vh',
-          }}
-        >
-          <CircularProgress size={60} />
-        </div>
-      }
-    >
-      {(() => {
-        switch (kcContext.pageId) {
-          case 'account.ftl':
-            return <Account kcContext={kcContext} i18n={i18n} />;
-          default:
-            return (
-              <DefaultPage
-                kcContext={kcContext}
-                i18n={i18n}
-                classes={classes}
-                Template={Template}
-                doUseDefaultCss={false}
-              />
-            );
-        }
-      })()}
-    </Suspense>
-  );
+    return <KcAccountUi kcContext={kcContext} />;
 }
-
-const classes = {} satisfies { [key in ClassKey]?: string };

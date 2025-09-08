@@ -3,7 +3,7 @@ import { render, RenderOptions } from '@testing-library/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { getTheme } from './theme';
-import type { KcContext } from './account/KcContext';
+import type { KcContext } from './keycloak-theme/account/KcContext';
 
 // Extended KcContext with user information for testing
 export type KcContextWithUser = KcContext & {
