@@ -101,8 +101,6 @@ task deployStage {
             throw new GradleException("Stage ${stageNum} is not applicable for local environment")
         }
     }
-   
-    dependsOn subprojects.findAll { it.tasks.findByName('prepareDeployment') }.collect { it.path + ':prepareDeployment' }
 
     doLast {
         def stageNum = project.getProperty('stage') as Integer
@@ -193,5 +191,10 @@ task confirmDeployment {
 
 // Configure deployAll task dependencies after all tasks are available
 deployAll.configure {
+    dependsOn subprojects.collect { it.path + ':prepareDeployment' }
+}
+
+// Configure deployStage task dependencies after all tasks are available
+deployStage.configure {
     dependsOn subprojects.collect { it.path + ':prepareDeployment' }
 }

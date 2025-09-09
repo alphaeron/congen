@@ -3,8 +3,6 @@ kind: ConfigMap
 metadata:
   name: keycloak-theme
   namespace: congen
-binaryData:
-  "congen-account-theme.jar": ""
 data:
   # Login theme properties file
   "login-theme.properties": |

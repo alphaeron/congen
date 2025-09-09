@@ -10,11 +10,17 @@ task dockerBuild {
     description = 'Build Docker image for the keycloak theme (uses environment to determine build type)'
     dependsOn buildKeycloakTheme
     
-    doLast {
-        // Force rebuild by clearing any cached dist_keycloak directory
-        if (file('dist_keycloak').exists()) {
-            println "📦 Ensuring fresh build for Docker image..."
+    doFirst {
+        // Verify we have a fresh build
+        println "📦 Verifying fresh theme build for Docker image..."
+        def jarFile = file('build_keycloak/keycloak-theme-for-kc-all-other-versions.jar')
+        if (!jarFile.exists()) {
+            throw new GradleException('Build failed: keycloak-theme-for-kc-all-other-versions.jar not found in build_keycloak/. Run buildKeycloakTheme first.')
         }
+        println "✅ Theme JAR verified: ${jarFile.length()} bytes"
+    }
+    
+    doLast {
         def buildType = (project.environment == 'production') ? 'production' : 'debug'
         
         def packageJson = file('package.json')
@@ -24,17 +30,13 @@ task dockerBuild {
         def tag = buildType == 'production' ? "${version}.${hash}" : "${version}.${hash}-${timestamp}-debug"
         def image = "keycloak-theme:${tag}"
         
-        if (!file('build_keycloak/keycloak-theme-for-kc-all-other-versions.jar').exists()) {
-            throw new GradleException('Build failed: keycloak-theme-for-kc-all-other-versions.jar not found in build_keycloak/')
-        }
-        
-        println "Building ${buildType} Docker image: ${image}"
+        println "🐳 Building ${buildType} Docker image: ${image}"
         exec {
             workingDir projectDir
             commandLine 'docker', 'build', '--no-cache', '-t', image, '.'
         }
         project.ext.themeImageTag = image
-        println "${buildType.capitalize()} Docker image built: ${image}"
+        println "✅ ${buildType.capitalize()} Docker image built: ${image}"
     }
 }
 
@@ -136,7 +138,6 @@ task prepareRemoteImage {
 task prepareDeployment {
     group = 'deployment'
     description = 'Build the keycloak theme image and prepare deployment patches for the specified environment.'
-    dependsOn dockerBuild
     
     doFirst {
         println "🚀 Preparing keycloak theme deployment..."

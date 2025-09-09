@@ -55,17 +55,37 @@ task buildApp {
     outputs.dir('dist')
 }
 
+// Clean task that runs before building
+task cleanThemeBuild(type: Delete) {
+    group = 'build'
+    description = 'Clean previous theme builds'
+    delete 'dist'
+    delete 'build_keycloak'
+    delete 'dist_keycloak'
+}
+
 // Keycloak theme build task using keycloakify
 task buildKeycloakTheme(type: com.github.gradle.node.npm.task.NpmTask) {
     group = 'build'
     description = 'Build the Keycloak theme using keycloakify'
-    dependsOn buildApp
+    dependsOn cleanThemeBuild, buildApp
     
     npmCommand = ['run', 'build-keycloak-theme']
     
+    doFirst {
+        println "🧹 Building fresh Keycloak theme..."
+    }
+    
     doLast {
         println "✅ Keycloak theme built using keycloakify"
-        println "📁 Theme files available in: dist_keycloak/"
+        println "📁 Theme files available in: build_keycloak/"
+        
+        // Verify the JAR file was created
+        def jarFile = file('build_keycloak/keycloak-theme-for-kc-all-other-versions.jar')
+        if (!jarFile.exists()) {
+            throw new GradleException('Build failed: keycloak-theme-for-kc-all-other-versions.jar not found in build_keycloak/')
+        }
+        println "📦 Theme JAR created: ${jarFile.length()} bytes"
     }
 }
 
@@ -86,6 +106,8 @@ task cleanDist(type: Delete) {
     delete 'dist'
     delete 'coverage'
     delete 'build'
+    delete 'build_keycloak'
+    delete 'dist_keycloak'
 }
 
 tasks.named('clean').configure {
