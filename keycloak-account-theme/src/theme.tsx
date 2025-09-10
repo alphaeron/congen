@@ -3,7 +3,13 @@ import { red } from '@mui/material/colors';
 import { alpha } from '@mui/material/styles';
 
 import type { PaletteMode } from '@mui/material';
-import type { ThemeOptions } from '@mui/material/styles';
+import type { Theme, ThemeOptions } from '@mui/material/styles';
+
+declare module '@mui/material-pigment-css' {
+  interface ThemeArgs {
+    theme: Theme;
+  }
+}
 
 declare module '@mui/material/styles/createPalette' {
   interface ColorRange {
@@ -237,7 +243,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
     button: {
       fontSize: '0.875rem',
       fontWeight: 600,
-      textTransform: 'none' as const,
+      textTransform: 'none',
       letterSpacing: '0.025em',
     },
   },
@@ -270,32 +276,7 @@ const getDesignTokens = (mode: PaletteMode) => ({
     '0px 25px 50px rgba(0, 0, 0, 0.15)',
     '0px 25px 50px rgba(0, 0, 0, 0.15)',
     '0px 25px 50px rgba(0, 0, 0, 0.15)',
-  ] as [
-    'none',
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
-    string,
+    '0px 25px 50px rgba(0, 0, 0, 0.15)',
   ],
 });
 

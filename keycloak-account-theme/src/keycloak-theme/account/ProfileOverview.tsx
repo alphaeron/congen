@@ -4,23 +4,24 @@ import { Box, Card, CardContent, Grid, Typography, Avatar, Button } from '@mui/m
 import React, { useState } from 'react';
 
 import { ConfirmationDialog } from './ConfirmationDialog';
-import type { User } from '../api/types';
-import { formatDate } from '../common/utils';
-import { KEYCLOAK_URL } from '../globals';
+import type { KcContext } from './KcContext';
 
 interface ProfileOverviewProps {
-  user: User;
+  kcContext: KcContext;
+  user?: any;
 }
 
 /**
  * Profile overview component displaying user information.
  *
  * Shows user avatar, name, member since date, roles, and edit button.
+ * This component is now part of the Keycloak theme.
  *
+ * @param kcContext The Keycloak context
  * @param user The user data to display
  * @return Profile overview component
  */
-export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
+export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ kcContext, user }) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleEditProfile = () => {
@@ -30,7 +31,7 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
   const handleConfirmEditProfile = () => {
     // Construct the Keycloak account management URL with redirect back to Congen
     const redirectUri = `${window.location.origin}/profile-edit-redirect`;
-    const accountUrl = `${KEYCLOAK_URL}/realms/congen/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const accountUrl = `${kcContext.authUrl?.realm}/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`;
 
     // Store the current location to redirect back after profile edit
     sessionStorage.setItem('congen_redirect_after_profile_edit', window.location.pathname);
@@ -44,6 +45,25 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
     // Just close the dialog, don't redirect
     setEditDialogOpen(false);
   };
+
+  // Format date helper function
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return 'Unknown';
+    }
+  };
+
+  // Get user data from Keycloak context
+  const displayUser = user || kcContext.user;
+  const userName = displayUser?.firstName && displayUser?.lastName 
+    ? `${displayUser.firstName} ${displayUser.lastName}`
+    : displayUser?.username || 'User';
 
   return (
     <React.Fragment>
@@ -62,15 +82,15 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ user }) => {
                 </Avatar>
                 <Box flex={1}>
                   <Typography variant="h5" component="h2" gutterBottom>
-                    {user.name}
+                    {userName}
                   </Typography>
                   <Typography variant="body1" color="text.secondary">
-                    Member since {formatDate(user.created_at)}
+                    Member since {displayUser?.createdTimestamp ? formatDate(new Date(displayUser.createdTimestamp).toISOString()) : 'Unknown'}
                   </Typography>
-                  {user.roles && user.roles.length > 0 && (
+                  {displayUser?.email && (
                     <Box sx={{ mt: 1 }}>
                       <Typography variant="body2" color="text.secondary">
-                        Roles: {user.roles.join(', ')}
+                        Email: {displayUser.email}
                       </Typography>
                     </Box>
                   )}

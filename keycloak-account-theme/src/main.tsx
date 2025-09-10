@@ -1,13 +1,9 @@
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { CssBaseline } from '@mui/material';
+import { CssBaseline, useMediaQuery } from '@mui/material';
 import { KcPage, type KcContext } from "./keycloak-theme/kc.gen";
 import { getTheme } from './theme';
-import './account.css';
-
-// Create the Congen theme
-const theme = createTheme(getTheme('light'));
 
 // Get the root element - Keycloakify generates a "root" div
 const rootElement = document.getElementById("root") as HTMLElement;
@@ -15,8 +11,14 @@ const rootElement = document.getElementById("root") as HTMLElement;
 if (rootElement) {
     const root = ReactDOM.createRoot(rootElement);
     
-    root.render(
-        <React.StrictMode>
+    // Create a component that can use hooks
+    const App = () => {
+        // Detect user's preferred color scheme
+        const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+        const mode = prefersDarkMode ? 'dark' : 'light';
+        const theme = createTheme(getTheme(mode));
+        
+        return (
             <ThemeProvider theme={theme}>
                 <CssBaseline />
                 {window.kcContext ? (
@@ -28,6 +30,12 @@ if (rootElement) {
                     </div>
                 )}
             </ThemeProvider>
+        );
+    };
+    
+    root.render(
+        <React.StrictMode>
+            <App />
         </React.StrictMode>
     );
 } else {

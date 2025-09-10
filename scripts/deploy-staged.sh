@@ -425,6 +425,42 @@ deploy_hpa() {
 setup_port_forwarding() {
     print_status "Setting up port forwarding for Keycloak..."
     
+    # First, ensure Keycloak is fully ready before attempting port forwarding
+    print_status "Ensuring Keycloak is fully ready before port forwarding..."
+    local max_keycloak_attempts=60  # 2 minutes total
+    local keycloak_attempt=0
+    while [[ ${keycloak_attempt} -lt ${max_keycloak_attempts} ]]; do
+        # Check if Keycloak pod is ready and running
+        if kubectl get pod keycloak-0 -n congen -o jsonpath='{.status.phase}' 2>/dev/null | grep -q "Running"; then
+            # Use a temporary port-forward to test if Keycloak is responding
+            local temp_port=$((8080 + keycloak_attempt % 100 + 1000))  # Use different port each attempt
+            kubectl port-forward -n congen service/keycloak ${temp_port}:8080 > /dev/null 2>&1 &
+            local temp_pid=$!
+            sleep 2
+            
+            # Test if Keycloak is responding
+            if curl -s --connect-timeout 3 "http://localhost:${temp_port}/realms/master/" > /dev/null 2>&1; then
+                kill ${temp_pid} 2>/dev/null || true
+                print_success "Keycloak is fully ready"
+                break
+            fi
+            
+            kill ${temp_pid} 2>/dev/null || true
+        fi
+        keycloak_attempt=$((keycloak_attempt + 1))
+        if [[ $((keycloak_attempt % 10)) -eq 0 ]]; then
+            print_status "Waiting for Keycloak to be fully ready (attempt ${keycloak_attempt}/${max_keycloak_attempts})..."
+        fi
+        sleep 2
+    done
+    
+    if [[ ${keycloak_attempt} -eq ${max_keycloak_attempts} ]]; then
+        print_error "Keycloak failed to become fully ready after ${max_keycloak_attempts} attempts"
+        kubectl get pods -n congen -l app=keycloak
+        kubectl logs -n congen keycloak-0 --tail=20
+        exit 1
+    fi
+    
     # Kill any existing port-forward processes
     pkill -f "kubectl port-forward.*keycloak.*8080" 2>/dev/null || true
     sleep 2
@@ -437,7 +473,7 @@ setup_port_forwarding() {
     sleep 3
     
     # Wait for port forwarding to establish and verify it's working
-    local max_attempts=60
+    local max_attempts=30  # Reduced since Keycloak is already ready
     local attempt=0
     while [[ ${attempt} -lt ${max_attempts} ]]; do
         if curl -s --connect-timeout 5 "http://localhost:8080/realms/master/" > /dev/null 2>&1; then
@@ -445,7 +481,7 @@ setup_port_forwarding() {
             break
         fi
         attempt=$((attempt + 1))
-        if [[ $((attempt % 10)) -eq 0 ]]; then
+        if [[ $((attempt % 5)) -eq 0 ]]; then
             print_status "Waiting for port forwarding to establish (attempt ${attempt}/${max_attempts})..."
         fi
         sleep 2
@@ -453,6 +489,10 @@ setup_port_forwarding() {
     
     if [[ ${attempt} -eq ${max_attempts} ]]; then
         print_error "Failed to establish port forwarding after ${max_attempts} attempts"
+        print_status "Keycloak pod status:"
+        kubectl get pods -n congen -l app=keycloak
+        print_status "Keycloak logs:"
+        kubectl logs -n congen keycloak-0 --tail=10
         kill "${PORT_FORWARD_PID}" 2>/dev/null || true
         exit 1
     fi

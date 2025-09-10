@@ -12,12 +12,14 @@ import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import CircularProgress from '@mui/material/CircularProgress';
 import Snackbar from '@mui/material/Snackbar';
-import Security from '@mui/icons-material/Security';
 import Person from '@mui/icons-material/Person';
 import Email from '@mui/icons-material/Email';
 import type { KcContext } from './KcContext';
 import Navigation from './Navigation';
 import PasswordChangeDialog from './PasswordChangeDialog';
+import { UserProfileDrawer } from './UserProfileDrawer';
+import { CongenAppBar } from './CongenAppBar';
+import { ProfileOverview } from './ProfileOverview';
 import { useKeycloakUser } from './api/useKeycloakUser';
 import { useAuth } from './AuthContext';
 
@@ -57,7 +59,7 @@ export default function Account({
   // Use OIDC user data if available, otherwise fall back to other sources
   const displayUser = authUser || apiUser || finalUser;
   
-  const [currentPage, setCurrentPage] = React.useState('personal-info');
+  const [currentPage, setCurrentPage] = React.useState('overview');
   const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
   const [successMessage, setSuccessMessage] = React.useState('');
   const [showPasswordDialog, setShowPasswordDialog] = React.useState(false);
@@ -111,14 +113,14 @@ export default function Account({
   if (!displayUser && !isAuthenticated) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography variant="h6" color="error">
-          User not authenticated
+        <Typography variant="h6" color="primary">
+          Secure Profile Access
         </Typography>
         <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
-          Please log in to access your account.
+          Please log in to verify your identity so we can safely update your profile details.
         </Typography>
         <Button variant="contained" onClick={login}>
-          Log In
+          Verify Identity
         </Button>
       </Box>
     );
@@ -160,201 +162,155 @@ export default function Account({
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <Navigation kcContext={kcContext} currentPage={currentPage} onPageChange={handlePageChange} />
+      {/* Congen App Bar */}
+      <CongenAppBar kcContext={kcContext} user={displayUser} />
       
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Success Message Snackbar */}
-        <Snackbar
-          open={showSuccessMessage}
-          autoHideDuration={6000}
-          onClose={() => setShowSuccessMessage(false)}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      <Box sx={{ display: 'flex', height: 'calc(100vh - 80px)' }}>
+        {/* User Profile Drawer */}
+        <UserProfileDrawer 
+          kcContext={kcContext} 
+          currentSection={currentPage} 
+          onSectionChange={handlePageChange} 
+        />
+        
+        {/* Main Content */}
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
+            height: '100%',
+            overflow: 'auto',
+            maxWidth: 'calc(100% - 240px)',
+          }}
         >
-          <Alert onClose={() => setShowSuccessMessage(false)} severity="success" sx={{ width: '100%' }}>
-            {successMessage}
-          </Alert>
-        </Snackbar>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          {/* Success Message Snackbar */}
+          <Snackbar
+            open={showSuccessMessage}
+            autoHideDuration={6000}
+            onClose={() => setShowSuccessMessage(false)}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <Alert onClose={() => setShowSuccessMessage(false)} severity="success" sx={{ width: '100%' }}>
+              {successMessage}
+            </Alert>
+          </Snackbar>
 
-        {/* Error Messages */}
-        {userError && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {userError}
-          </Alert>
-        )}
+          {/* Error Messages */}
+          {userError && (
+            <Alert severity="error" sx={{ mb: 3 }}>
+              {userError}
+            </Alert>
+          )}
 
-        {currentPage === 'personal-info' && (
-          <>
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              sx={{ mb: 4, fontWeight: 700, color: 'text.primary' }}
-            >
-              Personal info
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ mb: 4 }}
-            >
-              Manage your basic information
-            </Typography>
+          {currentPage === 'personal-info' && (
+            <>
+              <Typography
+                variant="h4"
+                component="h1"
+                gutterBottom
+                sx={{ mb: 4, fontWeight: 700, color: 'text.primary' }}
+              >
+                Personal info
+              </Typography>
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ mb: 4 }}
+              >
+                Manage your basic information
+              </Typography>
 
-            <Card sx={{ maxWidth: 600 }}>
-              <CardContent sx={{ p: 4 }}>
-                <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-                  General
-                </Typography>
-                
-                {(userLoading || authLoading) ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                    <CircularProgress />
-                  </Box>
-                ) : (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <TextField
-                      label="Username"
-                      value={displayUser?.username || 'Not available'}
-                      fullWidth
-                      InputProps={{
-                        readOnly: true,
-                      }}
-                      variant="outlined"
-                    />
-                    
-                    <TextField
-                      label="Email"
-                      value={formData.email}
-                      onChange={handleInputChange('email')}
-                      fullWidth
-                      required
-                      InputProps={{
-                        startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />,
-                      }}
-                      variant="outlined"
-                    />
-                    
-                    <TextField
-                      label="First name"
-                      value={formData.firstName}
-                      onChange={handleInputChange('firstName')}
-                      fullWidth
-                      required
-                      InputProps={{
-                        startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
-                      }}
-                      variant="outlined"
-                    />
-                    
-                    <TextField
-                      label="Last name"
-                      value={formData.lastName}
-                      onChange={handleInputChange('lastName')}
-                      fullWidth
-                      required
-                      InputProps={{
-                        startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
-                      }}
-                      variant="outlined"
-                    />
-                  </Box>
-                )}
-
-                <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
-                  <Button 
-                    variant="contained" 
-                    sx={{ borderRadius: '12px', px: 3 }}
-                    onClick={handleSaveProfile}
-                    disabled={userLoading || authLoading}
-                  >
-                    {userLoading ? <CircularProgress size={20} /> : 'Save'}
-                  </Button>
-                  <Button 
-                    variant="outlined" 
-                    sx={{ borderRadius: '12px', px: 3 }}
-                    onClick={handleCancelProfile}
-                    disabled={userLoading || authLoading}
-                  >
-                    Cancel
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {currentPage === 'account-security' && (
-          <>
-            <Typography
-              variant="h4"
-              component="h1"
-              gutterBottom
-              sx={{ mb: 4, fontWeight: 700, color: 'text.primary' }}
-            >
-              Account security
-            </Typography>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{ mb: 4 }}
-            >
-              Manage your account security settings
-            </Typography>
-
-            <Grid container spacing={3}>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <Avatar sx={{ bgcolor: 'primary.main', mr: 2, width: 56, height: 56 }}>
-                        <Security fontSize="large" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" component="h2" gutterBottom>
-                          Password
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Change your password
-                        </Typography>
-                      </Box>
+              <Card sx={{ maxWidth: 600 }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                    General
+                  </Typography>
+                  
+                  {(userLoading || authLoading) ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                      <CircularProgress />
                     </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <TextField
+                        label="Username"
+                        value={displayUser?.username || 'Not available'}
+                        fullWidth
+                        InputProps={{
+                          readOnly: true,
+                        }}
+                        variant="outlined"
+                      />
+                      
+                      <TextField
+                        label="Email"
+                        value={formData.email}
+                        onChange={handleInputChange('email')}
+                        fullWidth
+                        required
+                        InputProps={{
+                          startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />,
+                        }}
+                        variant="outlined"
+                      />
+                      
+                      <TextField
+                        label="First name"
+                        value={formData.firstName}
+                        onChange={handleInputChange('firstName')}
+                        fullWidth
+                        required
+                        InputProps={{
+                          startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
+                        }}
+                        variant="outlined"
+                      />
+                      
+                      <TextField
+                        label="Last name"
+                        value={formData.lastName}
+                        onChange={handleInputChange('lastName')}
+                        fullWidth
+                        required
+                        InputProps={{
+                          startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
+                        }}
+                        variant="outlined"
+                      />
+                    </Box>
+                  )}
+
+                  <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+                    <Button 
+                      variant="contained" 
+                      sx={{ borderRadius: '12px', px: 3 }}
+                      onClick={handleSaveProfile}
+                      disabled={userLoading || authLoading}
+                    >
+                      {userLoading ? <CircularProgress size={20} /> : 'Save'}
+                    </Button>
                     <Button 
                       variant="outlined" 
-                      sx={{ mt: 2, borderRadius: '12px' }}
-                      onClick={() => setShowPasswordDialog(true)}
+                      sx={{ borderRadius: '12px', px: 3 }}
+                      onClick={handleCancelProfile}
+                      disabled={userLoading || authLoading}
                     >
-                      Change Password
+                      Cancel
                     </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
+                  </Box>
+                </CardContent>
+              </Card>
+            </>
+          )}
 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <Card sx={{ height: '100%' }}>
-                  <CardContent>
-                    <Box display="flex" alignItems="center" mb={2}>
-                      <Avatar sx={{ bgcolor: 'secondary.main', mr: 2, width: 56, height: 56 }}>
-                        <Security fontSize="large" />
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" component="h2" gutterBottom>
-                          Two-Factor Authentication
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Add extra security to your account
-                        </Typography>
-                      </Box>
-                    </Box>
-                    <Button variant="outlined" sx={{ mt: 2, borderRadius: '12px' }}>
-                      Setup 2FA
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Grid>
-            </Grid>
-          </>
-        )}
-      </Container>
+
+          {currentPage === 'overview' && (
+            <ProfileOverview kcContext={kcContext} user={displayUser} />
+          )}
+        </Container>
+        </Box>
+      </Box>
 
       {/* Password Change Dialog */}
       <PasswordChangeDialog

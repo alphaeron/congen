@@ -152,7 +152,7 @@ export function GdprComplianceSection(): React.ReactElement {
       setOperationLoading('delete');
       await deleteAllPersonalData(deleteConfirmation);
       setDeleteDialogOpen(false);
-      enqueueSnackbar('All personal data has been deleted. You will be logged out shortly.', {
+      enqueueSnackbar('Your account and all data has been deleted. You will be logged out shortly.', {
         variant: 'success',
         autoHideDuration: 5000,
       });
@@ -283,27 +283,43 @@ export function GdprComplianceSection(): React.ReactElement {
               </Button>
             </Box>
 
-            {/* Data Deletion */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Box>
-                <Typography variant="body2" fontWeight="medium" color="error">
-                  Delete All Data
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Permanently delete all your personal data
-                </Typography>
-              </Box>
-              <Button
-                variant="outlined"
-                size="small"
-                color="error"
-                startIcon={<DeleteForeverIcon />}
-                onClick={() => setDeleteDialogOpen(true)}
-                disabled={operationLoading === 'delete'}
-              >
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card sx={{ mt: 3, border: '2px solid', borderColor: 'error.main' }}>
+        <CardContent>
+          <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <DeleteForeverIcon color="error" />
+            <Typography variant="h6" color="error">
+              Danger Zone
+            </Typography>
+          </Box>
+
+          <Typography variant="body2" color="text.secondary" paragraph>
+            These actions are irreversible. Please proceed with caution.
+          </Typography>
+
+          <Box display="flex" justifyContent="space-between" alignItems="center">
+            <Box>
+              <Typography variant="body2" fontWeight="medium" color="error">
                 Delete All Data
-              </Button>
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Permanently delete all your personal data and account
+              </Typography>
             </Box>
+            <Button
+              variant="contained"
+              size="small"
+              color="error"
+              startIcon={<DeleteForeverIcon />}
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={operationLoading === 'delete'}
+            >
+              Delete All Data
+            </Button>
           </Box>
         </CardContent>
       </Card>
@@ -361,8 +377,8 @@ export function GdprComplianceSection(): React.ReactElement {
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}
         onConfirm={handleDataDeletion}
-        title="Delete All Personal Data"
-        confirmText="Delete All Data"
+        title="Delete Account and All Data"
+        confirmText="Delete Account"
         confirmColor="error"
         loading={operationLoading === 'delete'}
         disabled={deleteConfirmation !== 'DELETE_ALL_MY_DATA'}
@@ -371,16 +387,17 @@ export function GdprComplianceSection(): React.ReactElement {
           <strong>This action cannot be undone!</strong>
         </DialogContentText>
         <DialogContentText paragraph>
-          This will permanently delete all your personal data including:
+          This will permanently delete your account and all associated data including:
         </DialogContentText>
         <Typography component="ul" variant="body2" color="text.secondary">
+          <li>Your entire account</li>
           <li>Profile information</li>
           <li>Exercise preferences and history</li>
           <li>Workout programs and progress</li>
           <li>Account settings and preferences</li>
         </Typography>
         <DialogContentText paragraph sx={{ mt: 2 }}>
-          To confirm deletion, please type <strong>DELETE_ALL_MY_DATA</strong> below:
+          To confirm account deletion, please type <strong>DELETE_ALL_MY_DATA</strong> below:
         </DialogContentText>
         <TextField
           fullWidth

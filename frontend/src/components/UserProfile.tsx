@@ -1,6 +1,5 @@
 import {
   Person as PersonIcon,
-  Security as SecurityIcon,
   PrivacyTip as PrivacyIcon,
 } from '@mui/icons-material';
 import {
@@ -17,9 +16,7 @@ import {
 import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { AccountSecurity } from './AccountSecurity';
 import { GdprComplianceSection } from './GdprComplianceSection';
-import { ProfileOverview } from './ProfileOverview';
 import type { User } from '../api/types';
 
 interface UserProfileProps {
@@ -40,18 +37,12 @@ interface UserProfileProps {
  * @param initialSection The initial section to display (from URL)
  * @returns UserProfile component
  */
-export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection = 'overview' }) => {
+export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection = 'privacy' }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const activeSection = searchParams.get('section') || initialSection;
 
   const menuItems = [
-    {
-      id: 'overview',
-      label: 'Profile Overview',
-      icon: <PersonIcon />,
-      component: <ProfileOverview user={user} />,
-    },
     {
       id: 'privacy',
       label: 'Privacy & Data',
@@ -59,20 +50,28 @@ export const UserProfile: React.FC<UserProfileProps> = ({ user, initialSection =
       component: <GdprComplianceSection />,
     },
     {
-      id: 'security',
-      label: 'Account Security',
-      icon: <SecurityIcon />,
-      component: <AccountSecurity user={user} />,
+      id: 'overview',
+      label: 'Manage Profile',
+      icon: <PersonIcon />,
+      isExternal: true,
+      url: `${process.env.REACT_APP_KEYCLOAK_URL || 'http://localhost:8080'}/realms/congen/account/#/personal-info`,
     },
   ];
 
   const handleSectionChange = (sectionId: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
-    newSearchParams.set('section', sectionId);
-    navigate(`?${newSearchParams.toString()}`);
+    const item = menuItems.find(item => item.id === sectionId);
+    if (item?.isExternal && item?.url) {
+      // Open external link
+      window.location.href = item.url;
+    } else {
+      // Handle internal navigation
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.set('section', sectionId);
+      navigate(`?${newSearchParams.toString()}`);
+    }
   };
 
-  const currentSection = menuItems.find(item => item.id === activeSection) || menuItems[0];
+  const currentSection = menuItems.find(item => item.id === activeSection && !item.isExternal) || menuItems[0];
 
   return (
     <Box
