@@ -158,31 +158,27 @@ function AppContent(): React.ReactElement {
             backgroundImage: 'none',
           }}
         >
-          <Container maxWidth="xl">
-            <Toolbar
-              variant="regular"
-              sx={theme => ({
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexShrink: 0,
-                borderRadius: '16px',
-                bgcolor: alpha(theme.palette.background.paper, 0.8),
-                backdropFilter: 'blur(20px)',
-                border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                boxShadow: theme.shadows[2],
-                maxHeight: 64,
-                px: 3,
-                py: 1,
-                mt: 2,
-                mb: 2,
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  boxShadow: theme.shadows[4],
-                  bgcolor: alpha(theme.palette.background.paper, 0.9),
-                },
-              })}
-            >
+          <Toolbar
+            variant="regular"
+            sx={theme => ({
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexShrink: 0,
+              bgcolor: alpha(theme.palette.background.paper, 0.8),
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+              boxShadow: theme.shadows[2],
+              maxHeight: 64,
+              px: 3,
+              py: 1,
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                boxShadow: theme.shadows[4],
+                bgcolor: alpha(theme.palette.background.paper, 0.9),
+              },
+            })}
+          >
               <Box
                 sx={{
                   flexGrow: 1,
@@ -488,7 +484,6 @@ function AppContent(): React.ReactElement {
                 </Drawer>
               </Box>
             </Toolbar>
-          </Container>
         </AppBar>
 
         {/* Main content area */}
@@ -496,52 +491,54 @@ function AppContent(): React.ReactElement {
           component="main"
           sx={{
             flexGrow: 1,
-            minHeight: 'calc(100vh - 64px)', // Ensure proper height constraint
-            overflow: 'hidden', // Prevent overflow
+            minHeight: 'calc(100vh - 64px)',
+            overflow: 'hidden',
           }}
         >
-          <Container maxWidth="xl" sx={{ height: '100%' }}>
-            <Routes>
-              <Route path="/" element={<RootRedirect />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <DashboardPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/exercises"
-                element={
-                  <ProtectedRoute>
+          <Routes>
+            <Route path="/" element={<RootRedirect />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exercises"
+              element={
+                <ProtectedRoute>
+                  <Container maxWidth="xl" sx={{ py: 2 }}>
                     <ExerciseOverviewPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/exercises/:exerciseName"
-                element={
-                  <ProtectedRoute>
+                  </Container>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/exercises/:exerciseName"
+              element={
+                <ProtectedRoute>
+                  <Container maxWidth="xl" sx={{ py: 2 }}>
                     <ExerciseDetailsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <UserProfilePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/password-change-redirect" element={<PasswordChangeRedirect />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/privacy_policy" element={<PrivacyPolicyPage />} />
-              <Route path="/profile-edit-redirect" element={<ProfileEditRedirect />} />
-            </Routes>
-          </Container>
+                  </Container>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <UserProfilePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/password-change-redirect" element={<PasswordChangeRedirect />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/privacy_policy" element={<PrivacyPolicyPage />} />
+            <Route path="/profile-edit-redirect" element={<ProfileEditRedirect />} />
+          </Routes>
         </Box>
 
         {/* Cookie Consent Banner */}

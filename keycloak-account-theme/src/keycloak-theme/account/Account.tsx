@@ -99,11 +99,16 @@ export default function Account({
   // Handle authentication state
   if (authLoading) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Box 
+        sx={{ 
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.default'
+        }}
+      >
         <LoadingSpinner size={60} />
-        <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading...
-        </Typography>
       </Box>
     );
   }
@@ -112,16 +117,26 @@ export default function Account({
   // Don't require OIDC authentication if we have user data from Keycloak session
   if (!displayUser && !isAuthenticated) {
     return (
-      <Box sx={{ p: 3, textAlign: 'center' }}>
-        <Typography variant="h6" color="primary">
-          Secure Profile Access
-        </Typography>
-        <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
-          Please log in to verify your identity so we can safely update your profile details.
-        </Typography>
-        <Button variant="contained" onClick={login}>
-          Verify Identity
-        </Button>
+      <Box 
+        sx={{ 
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.default'
+        }}
+      >
+        <Box sx={{ textAlign: 'center', p: 3 }}>
+          <Typography variant="h6" color="primary">
+            Secure Profile Access
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
+            Please log in to verify your identity so we can safely update your profile details.
+          </Typography>
+          <Button variant="contained" onClick={login}>
+            Verify Identity
+          </Button>
+        </Box>
       </Box>
     );
   }
@@ -165,7 +180,7 @@ export default function Account({
       {/* Congen App Bar */}
       <CongenAppBar kcContext={kcContext} user={displayUser} />
       
-      <Box sx={{ display: 'flex', height: 'calc(100vh - 80px)' }}>
+      <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
         {/* User Profile Drawer */}
         <UserProfileDrawer 
           kcContext={kcContext} 
@@ -183,7 +198,7 @@ export default function Account({
             maxWidth: 'calc(100% - 240px)',
           }}
         >
-        <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: 2 }}>
           {/* Success Message Snackbar */}
           <Snackbar
             open={showSuccessMessage}

@@ -62,31 +62,27 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
         backgroundImage: 'none',
       }}
     >
-      <Container maxWidth="xl">
-        <Toolbar
-          variant="regular"
-          sx={theme => ({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexShrink: 0,
-            borderRadius: '16px',
-            bgcolor: alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: 'blur(20px)',
-            border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-            boxShadow: theme.shadows[2],
-            maxHeight: 64,
-            px: 3,
-            py: 1,
-            mt: 2,
-            mb: 2,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover': {
-              boxShadow: theme.shadows[4],
-              bgcolor: alpha(theme.palette.background.paper, 0.9),
-            },
-          })}
-        >
+      <Toolbar
+        variant="regular"
+        sx={theme => ({
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexShrink: 0,
+          bgcolor: alpha(theme.palette.background.paper, 0.8),
+          backdropFilter: 'blur(20px)',
+          border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+          boxShadow: theme.shadows[2],
+          maxHeight: 64,
+          px: 3,
+          py: 1,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            boxShadow: theme.shadows[4],
+            bgcolor: alpha(theme.palette.background.paper, 0.9),
+          },
+        })}
+      >
           <Box
             sx={{
               flexGrow: 1,
@@ -261,7 +257,6 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
             </Menu>
           </Box>
         </Toolbar>
-      </Container>
     </AppBar>
   );
 };

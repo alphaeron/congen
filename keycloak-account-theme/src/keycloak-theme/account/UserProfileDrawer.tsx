@@ -69,9 +69,13 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
           boxSizing: 'border-box',
           position: 'relative',
           height: '100%',
+          zIndex: 1,
+          backgroundColor: 'background.paper',
           borderRight: 1,
           borderColor: 'divider',
-          // Remove rounded corners
+          overflow: 'hidden', // Prevent drawer content overflow
+          borderRadius: 0, // Remove rounded corners
+          top: 0, // Position at the top of the container
         },
       }}
     >
