@@ -10,7 +10,7 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
-import CircularProgress from '@mui/material/CircularProgress';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import Snackbar from '@mui/material/Snackbar';
 import Person from '@mui/icons-material/Person';
 import Email from '@mui/icons-material/Email';
@@ -100,7 +100,7 @@ export default function Account({
   if (authLoading) {
     return (
       <Box sx={{ p: 3, textAlign: 'center' }}>
-        <CircularProgress size={60} />
+        <LoadingSpinner size={60} />
         <Typography variant="h6" sx={{ mt: 2 }}>
           Loading...
         </Typography>
@@ -229,7 +229,7 @@ export default function Account({
                   
                   {(userLoading || authLoading) ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                      <CircularProgress />
+                      <LoadingSpinner size={20} />
                     </Box>
                   ) : (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -288,7 +288,7 @@ export default function Account({
                       onClick={handleSaveProfile}
                       disabled={userLoading || authLoading}
                     >
-                      {userLoading ? <CircularProgress size={20} /> : 'Save'}
+                      {userLoading ? <LoadingSpinner size={20} /> : 'Save'}
                     </Button>
                     <Button 
                       variant="outlined" 

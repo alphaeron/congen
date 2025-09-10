@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
-import { CircularProgress, Box } from "@mui/material";
+import { Box } from "@mui/material";
+import { LoadingSpinner } from "../../components/LoadingSpinner";
 import type { KcContext } from "./KcContext";
 import { AuthProvider } from "./AuthProvider";
 
@@ -24,7 +25,7 @@ export default function KcAccountUi(props: { kcContext: KcContext }) {
                             minHeight: '100vh',
                         }}
                     >
-                        <CircularProgress size={60} />
+                        <LoadingSpinner size={60} />
                     </Box>
                 }
             >

@@ -8,9 +8,9 @@ import {
   Button,
   Box,
   Alert,
-  CircularProgress,
 } from '@mui/material';
 import { useKeycloakUser } from './api/useKeycloakUser';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
 import type { KcContext } from './KcContext';
 
 interface PasswordChangeDialogProps {
@@ -148,7 +148,7 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
           onClick={handleSubmit} 
           variant="contained" 
           disabled={loading}
-          startIcon={loading ? <CircularProgress size={20} /> : undefined}
+          startIcon={loading ? <LoadingSpinner size={20} /> : undefined}
         >
           {loading ? 'Changing...' : 'Change Password'}
         </Button>

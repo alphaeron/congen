@@ -5,6 +5,15 @@ import { CssBaseline, useMediaQuery } from '@mui/material';
 import { KcPage, type KcContext } from "./keycloak-theme/kc.gen";
 import { getTheme } from './theme';
 
+// Import Roboto font to match frontend
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+
+// Import custom styles for consistent sizing and typography
+import './main.css';
+
 // Get the root element - Keycloakify generates a "root" div
 const rootElement = document.getElementById("root") as HTMLElement;
 

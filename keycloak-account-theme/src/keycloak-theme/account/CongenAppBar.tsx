@@ -16,6 +16,8 @@ import { AccountCircle } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 import type { KcContext } from './KcContext';
 
+import ConGenIcon from '../../resources/congen-icon.svg';
+
 interface CongenAppBarProps {
   kcContext: KcContext;
   user?: any;
@@ -44,17 +46,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
     window.location.href = kcContext.authUrl + '/realms/' + kcContext.realm?.name + '/protocol/openid-connect/logout';
   };
 
-  const handleProfileClick = () => {
-    window.location.href = `${frontendUrl}/user_profile?section=privacy`;
-  };
 
-  const handleExercisesClick = () => {
-    window.location.href = `${frontendUrl}/exercises`;
-  };
-
-  const handlePrivacyClick = () => {
-    window.location.href = `${frontendUrl}/privacy_policy`;
-  };
 
   const handleHomeClick = () => {
     window.location.href = `${frontendUrl}/`;
@@ -104,8 +96,19 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <img 
+                src={ConGenIcon} 
+                alt="ConGen" 
+                style={{
+                  width: '72px',
+                  height: 'auto',
+                  cursor: 'pointer',
+                }}
+                onClick={handleHomeClick}
+              />
               <Typography
                 variant="h6"
+                className="menuLogo menuLogoText"
                 noWrap={true}
                 component="a"
                 href="#"
@@ -130,57 +133,69 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
               </Typography>
             </Box>
 
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, ml: 4 }}>
-              <Button
-                variant="text"
-                onClick={handleExercisesClick}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+              <MenuItem
                 sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  px: 2,
                   py: 1,
-                  color: 'text.primary',
+                  px: 2,
+                  borderRadius: 2,
+                  fontWeight: 500,
+                  cursor: 'pointer',
                   '&:hover': {
                     bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                   },
+                }}
+                component="a"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `${frontendUrl}/exercises`;
                 }}
               >
                 Exercises
-              </Button>
-              <Button
-                variant="text"
-                onClick={handlePrivacyClick}
+              </MenuItem>
+              <MenuItem
                 sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  px: 2,
                   py: 1,
-                  color: 'text.primary',
+                  px: 2,
+                  borderRadius: 2,
+                  fontWeight: 500,
+                  cursor: 'pointer',
                   '&:hover': {
                     bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                   },
                 }}
+                component="a"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.location.href = `${frontendUrl}/privacy_policy`;
+                }}
               >
                 Privacy
-              </Button>
+              </MenuItem>
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              display: { xs: 'none', md: 'flex' },
+              gap: 1,
+              alignItems: 'center',
+            }}
+          >
             <IconButton
               onClick={handleClick}
-              size="small"
-              sx={{ ml: 2 }}
-              aria-controls={open ? 'account-menu' : undefined}
-              aria-haspopup="true"
-              aria-expanded={open ? 'true' : undefined}
+              sx={{
+                p: 1,
+                borderRadius: '50%',
+                '&:hover': {
+                  bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                },
+              }}
             >
-              <Avatar 
-                sx={{ 
-                  width: 32, 
-                  height: 32, 
+              <Avatar
+                sx={{
+                  width: 32,
+                  height: 32,
                   bgcolor: theme => alpha(theme.palette.primary.main, 0.1),
                   color: 'primary.main',
                   fontSize: '0.875rem',
@@ -192,10 +207,8 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
             </IconButton>
             <Menu
               anchorEl={anchorEl}
-              id="account-menu"
-              open={open}
+              open={Boolean(anchorEl)}
               onClose={handleClose}
-              onClick={handleClose}
               sx={{ zIndex: theme => theme.zIndex.drawer + 10 }}
               PaperProps={{
                 sx: {
@@ -213,8 +226,13 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
               transformOrigin={{ horizontal: 'right', vertical: 'top' }}
               anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <MenuItem 
-                onClick={handleProfileClick}
+              <MenuItem
+                component="a"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleClose();
+                  window.location.href = `${frontendUrl}/user_profile?section=privacy`;
+                }}
                 sx={{
                   fontWeight: 500,
                   '&:hover': {
@@ -225,8 +243,11 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
                 Profile
               </MenuItem>
               <Divider sx={{ my: 1 }} />
-              <MenuItem 
-                onClick={handleLogout}
+              <MenuItem
+                onClick={() => {
+                  handleClose();
+                  handleLogout();
+                }}
                 sx={{
                   fontWeight: 500,
                   color: 'error.main',

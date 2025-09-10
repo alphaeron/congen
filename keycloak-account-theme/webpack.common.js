@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const TerserPlugin = require('terser-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -15,6 +16,7 @@ module.exports = {
       React: 'react',
     }),
     new webpack.ProgressPlugin(),
+    new FaviconsWebpackPlugin(path.resolve(__dirname, 'public/logo.png')),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     }),
@@ -37,11 +39,7 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             targets: 'defaults',
-            presets: [
-              '@babel/preset-env', 
-              '@babel/preset-react', 
-              ['@babel/preset-typescript', { allowDeclareFields: true }]
-            ],
+            presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
           },
         },
         exclude: [/node_modules/],

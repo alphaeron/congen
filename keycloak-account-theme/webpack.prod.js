@@ -50,6 +50,7 @@ module.exports = merge(common, {
             options: {
               importLoaders: 1,
               sourceMap: false,
+              url: true, // Enable URL processing for font files
             },
           },
         ],

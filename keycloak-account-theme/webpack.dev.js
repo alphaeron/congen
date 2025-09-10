@@ -75,6 +75,7 @@ module.exports = merge(common, {
             options: {
               sourceMap: true, // Enable source maps for CSS
               importLoaders: 1,
+              url: true, // Enable URL processing for font files
             },
           },
         ],
