@@ -3,6 +3,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline, CircularProgress, Box } from "@mui/material";
 import type { KcContext } from "./KcContext";
 import { getTheme } from "../../theme";
+import { AuthProvider } from "./AuthProvider";
 
 // Lazy load the account components
 const Account = lazy(() => import("./Account"));
@@ -18,22 +19,24 @@ export default function KcAccountUi(props: { kcContext: KcContext }) {
     return (
         <ThemeProvider theme={theme}>
             <CssBaseline />
-            <Suspense
-                fallback={
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            minHeight: '100vh',
-                        }}
-                    >
-                        <CircularProgress size={60} />
-                    </Box>
-                }
-            >
-                <Account kcContext={kcContext} />
-            </Suspense>
+            <AuthProvider>
+                <Suspense
+                    fallback={
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                minHeight: '100vh',
+                            }}
+                        >
+                            <CircularProgress size={60} />
+                        </Box>
+                    }
+                >
+                    <Account kcContext={kcContext} />
+                </Suspense>
+            </AuthProvider>
         </ThemeProvider>
     );
 }

@@ -19,6 +19,7 @@ import type { KcContext } from './KcContext';
 import Navigation from './Navigation';
 import PasswordChangeDialog from './PasswordChangeDialog';
 import { useKeycloakUser } from './api/useKeycloakUser';
+import { useAuth } from './AuthContext';
 
 interface AccountProps {
   kcContext?: KcContext;
@@ -29,6 +30,9 @@ export default function Account({
   kcContext,
   i18n: _i18n,
 }: AccountProps) {
+  // Use the OIDC authentication context
+  const { user: authUser, isAuthenticated, isLoading: authLoading, login } = useAuth();
+  
   // Use the Keycloak user hook to fetch user data from the API
   const { 
     user: apiUser, 
@@ -44,13 +48,14 @@ export default function Account({
   // Also check global window.kcContext for user data
   const globalUser = (window as any).kcContext?.user;
   
-  // Use API user if available, otherwise fall back to context user
-  const finalUser = apiUser || user || globalUser;
+  // Use OIDC user if available, otherwise fall back to API user or context user
+  const finalUser = authUser || apiUser || user || globalUser;
   
   console.log('Account - Final user data:', finalUser);
+  console.log('Account - Auth state:', { isAuthenticated, authLoading, authUser });
   
-  // Use API user data if available, otherwise fall back to context user data
-  const displayUser = apiUser || finalUser;
+  // Use OIDC user data if available, otherwise fall back to other sources
+  const displayUser = authUser || apiUser || finalUser;
   
   const [currentPage, setCurrentPage] = React.useState('personal-info');
   const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
@@ -85,6 +90,36 @@ export default function Account({
         <Typography variant="body2" sx={{ mt: 1 }}>
           Please refresh the page or contact support if the issue persists.
         </Typography>
+      </Box>
+    );
+  }
+
+  // Handle authentication state
+  if (authLoading) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <CircularProgress size={60} />
+        <Typography variant="h6" sx={{ mt: 2 }}>
+          Loading...
+        </Typography>
+      </Box>
+    );
+  }
+
+  // If we have user data from any source, show the account interface
+  // Don't require OIDC authentication if we have user data from Keycloak session
+  if (!displayUser && !isAuthenticated) {
+    return (
+      <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          User not authenticated
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
+          Please log in to access your account.
+        </Typography>
+        <Button variant="contained" onClick={login}>
+          Log In
+        </Button>
       </Box>
     );
   }
@@ -171,7 +206,7 @@ export default function Account({
                   General
                 </Typography>
                 
-                {userLoading ? (
+                {(userLoading || authLoading) ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                     <CircularProgress />
                   </Box>
@@ -230,7 +265,7 @@ export default function Account({
                     variant="contained" 
                     sx={{ borderRadius: '12px', px: 3 }}
                     onClick={handleSaveProfile}
-                    disabled={userLoading}
+                    disabled={userLoading || authLoading}
                   >
                     {userLoading ? <CircularProgress size={20} /> : 'Save'}
                   </Button>
@@ -238,7 +273,7 @@ export default function Account({
                     variant="outlined" 
                     sx={{ borderRadius: '12px', px: 3 }}
                     onClick={handleCancelProfile}
-                    disabled={userLoading}
+                    disabled={userLoading || authLoading}
                   >
                     Cancel
                   </Button>

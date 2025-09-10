@@ -37,7 +37,11 @@ module.exports = {
           loader: 'babel-loader',
           options: {
             targets: 'defaults',
-            presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],
+            presets: [
+              '@babel/preset-env', 
+              '@babel/preset-react', 
+              ['@babel/preset-typescript', { allowDeclareFields: true }]
+            ],
           },
         },
         exclude: [/node_modules/],

@@ -60,7 +60,8 @@ variable "frontend_redirect_uris" {
     "http://localhost:3000/auth/callback",
     "http://localhost:3000/silent-renew.html",
     "http://localhost:3000/password-change-redirect",
-    "http://localhost:3000/profile-edit-redirect"
+    "http://localhost:3000/profile-edit-redirect",
+    "http://localhost:8080/realms/congen/account/"
   ]
 }
 
@@ -68,7 +69,8 @@ variable "frontend_web_origins" {
   description = "Frontend client web origins"
   type        = list(string)
   default = [
-    "http://localhost:3000"
+    "http://localhost:3000",
+    "http://localhost:8080"
   ]
 }
 

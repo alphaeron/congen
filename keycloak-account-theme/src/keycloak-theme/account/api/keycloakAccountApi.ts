@@ -4,7 +4,6 @@
  */
 
 import { type UserProfile } from './types';
-import { getOidc } from '../oidc';
 
 /**
  * Parse Keycloak issuer URI to extract realm and HTTP relative path
@@ -29,30 +28,22 @@ function parseKeycloakIssuerUri(issuerUri: string): { kcHttpRelativePath?: strin
   }
 }
 
+
 /**
- * Get user profile using OIDC authentication
+ * Transform Keycloak account API response to UserProfile format
  */
-export async function getUserProfile(): Promise<UserProfile> {
-  // For now, always use OIDC authentication
-  // TODO: Add proper development mode detection if needed
-
-  const oidc = await getOidc();
-
-  const { accessToken } = await oidc.getTokens();
-
-  const { kcHttpRelativePath, realm } = parseKeycloakIssuerUri(
-    oidc.params.issuerUri
-  )!;
-
-  return fetch(
-    `${kcHttpRelativePath ?? ""}/realms/${realm}/account/?userProfileMetadata=true`,
-    {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`
-      }
-    }
-  ).then(r => r.json());
+function transformUserProfile(userProfile: any): UserProfile {
+  return {
+    id: userProfile.id,
+    username: userProfile.username,
+    email: userProfile.email,
+    firstName: userProfile.firstName,
+    lastName: userProfile.lastName,
+    emailVerified: userProfile.emailVerified || false,
+    enabled: userProfile.enabled !== false,
+    createdTimestamp: userProfile.createdTimestamp || Date.now(),
+    // Add any other fields that might be needed
+  } as UserProfile;
 }
 
 /**
@@ -127,3 +118,4 @@ export async function changeUserPassword(
     return false;
   }
 }
+

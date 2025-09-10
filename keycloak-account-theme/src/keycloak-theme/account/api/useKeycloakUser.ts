@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { getUserProfile, updateUserProfile, changeUserPassword } from './keycloakAccountApi';
+import { updateUserProfile, changeUserPassword } from './keycloakAccountApi';
 import { type UserProfile } from './types';
 
 export interface UseKeycloakUserResult {
@@ -15,6 +15,7 @@ export interface UseKeycloakUserResult {
   updateUser: (data: Partial<UserProfile>) => Promise<boolean>;
   changePassword: (data: { currentPassword: string; newPassword: string }) => Promise<boolean>;
 }
+
 
 export function useKeycloakUser(kcContext: any): UseKeycloakUserResult {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -122,17 +123,11 @@ export function useKeycloakUser(kcContext: any): UseKeycloakUserResult {
         console.log('useKeycloakUser - UserProfile data found in KcContext:', kcContext.userProfile);
         setUser(kcContext.userProfile);
       } else {
-        console.log('useKeycloakUser - No user data found in KcContext, trying API call');
-        // Fallback to API call if no user data in context
-        const userData = await getUserProfile();
-        
-        if (userData) {
-          console.log('useKeycloakUser - User data loaded successfully from API');
-          setUser(userData);
-        } else {
-          console.log('useKeycloakUser - No user data received from API');
-          setError('Failed to fetch user data');
-        }
+        console.log('useKeycloakUser - No user data found in KcContext');
+        // In a Keycloak account theme, if no user data is in context,
+        // the user is likely not authenticated. Don't set an error here -
+        // let the OIDC authentication handle the authentication state.
+        console.log('useKeycloakUser - No user data in KcContext, relying on OIDC authentication');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
