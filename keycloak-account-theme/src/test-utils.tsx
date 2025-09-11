@@ -4,6 +4,26 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import { getTheme } from './theme';
 import type { KcContext } from './keycloak-theme/account/KcContext';
+import { AuthProvider } from './keycloak-theme/account/AuthContext';
+
+// Mock react-oidc-context
+jest.mock('react-oidc-context', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    user: {
+      access_token: 'mock-token',
+      profile: {
+        sub: 'test-user-id',
+        email: 'test@example.com',
+        given_name: 'Test',
+        family_name: 'User',
+      },
+    },
+    signinRedirect: jest.fn(),
+    signoutRedirect: jest.fn(),
+  }),
+}));
 
 // Extended KcContext with user information for testing
 export type KcContextWithUser = KcContext & {
@@ -66,7 +86,9 @@ const TestWrapper: React.FC<{
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-      {children}
+      <AuthProvider>
+        {children}
+      </AuthProvider>
     </ThemeProvider>
   );
 };

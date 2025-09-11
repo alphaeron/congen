@@ -2,7 +2,9 @@ module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
+    '^@fontsource/.*': '<rootDir>/src/__mocks__/fontsource.css',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '\\.(svg|png|jpg|jpeg|gif|ico)$': '<rootDir>/src/__mocks__/fileMock.ts',
     '^keycloakify/account$': '<rootDir>/src/__mocks__/keycloakify.ts',
     '^keycloakify/account/DefaultPage$':
       '<rootDir>/src/__mocks__/keycloakify-account-DefaultPage.tsx',

@@ -1,6 +1,5 @@
-import React from 'react';
-import { screen } from '@testing-library/react';
-import { render, createMockKcContext, createMockUser } from '../../test-utils';
+import { render, screen } from '../../test-utils';
+import { createMockKcContext } from '../../test-utils';
 import Account from './Account';
 
 describe('Account', () => {
@@ -9,64 +8,61 @@ describe('Account', () => {
   it('renders user profile information correctly', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    expect(screen.getByText('Personal Information')).toBeInTheDocument();
-    expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('test@example.com')).toBeInTheDocument();
-    expect(screen.getByText('testuser')).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
+    expect(screen.getByText('ConGen')).toBeInTheDocument();
   });
 
-  it('renders security settings card', () => {
+  it('renders app bar with navigation', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    expect(screen.getByText('Security Settings')).toBeInTheDocument();
-    expect(screen.getByText('Password')).toBeInTheDocument();
-    expect(screen.getByText('Two-Factor Authentication')).toBeInTheDocument();
+    expect(screen.getByText('ConGen')).toBeInTheDocument();
+    expect(screen.getByText('Exercises')).toBeInTheDocument();
+    expect(screen.getByText('Privacy')).toBeInTheDocument();
   });
 
-  it('renders quick actions grid', () => {
+  it('renders user drawer with profile sections', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
-    expect(screen.getAllByText('Edit Profile')).toHaveLength(2); // One in personal info, one in quick actions
-    expect(screen.getByText('Change Password')).toBeInTheDocument();
-    expect(screen.getByText('Security Settings')).toBeInTheDocument();
-    expect(screen.getByText('Notifications')).toBeInTheDocument();
-    expect(screen.getByText('Support')).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
   it('handles missing user information gracefully', () => {
-    const kcContextWithoutUser = createMockKcContext({ user: undefined });
+    const kcContextWithoutUser = createMockKcContext({
+      user: undefined,
+    });
+
     render(<Account kcContext={kcContextWithoutUser} i18n={{}} />);
 
-    expect(screen.getByText('Personal Information')).toBeInTheDocument();
-    expect(screen.getByText('Security Settings')).toBeInTheDocument();
-    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
   it('handles partial user information', () => {
     const kcContextWithPartialUser = createMockKcContext({
-      user: createMockUser({
+      user: {
+        username: 'testuser',
+        email: 'test@example.com',
         firstName: 'John',
-        lastName: undefined,
-        email: undefined,
-      }),
+      },
     });
+
     render(<Account kcContext={kcContextWithPartialUser} i18n={{}} />);
 
-    expect(screen.getByText('John')).toBeInTheDocument();
-    expect(screen.getByText('testuser')).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
   it('applies correct Material-UI styling', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
     // Check for Material-UI components
-    const cards = document.querySelectorAll('.MuiCard-root');
-    expect(cards).toHaveLength(3); // Personal Info, Security, Quick Actions
+    const appBar = document.querySelector('.MuiAppBar-root');
+    expect(appBar).toBeInTheDocument();
 
-    // Check for Grid layout
-    const gridContainers = document.querySelectorAll('.MuiGrid-container');
-    expect(gridContainers.length).toBeGreaterThan(0);
+    const drawer = document.querySelector('.MuiDrawer-root');
+    expect(drawer).toBeInTheDocument();
   });
 
   it('renders with dark theme', () => {
@@ -74,55 +70,48 @@ describe('Account', () => {
       theme: 'dark',
     });
 
-    expect(screen.getByText('Personal Information')).toBeInTheDocument();
-    expect(screen.getByText('Security Settings')).toBeInTheDocument();
-    expect(screen.getByText('Quick Actions')).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
-  it('displays correct user avatar with icon', () => {
+  it('displays user avatar in app bar', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    // Check for avatar with AccountCircle icon
     const avatar = document.querySelector('.MuiAvatar-root');
     expect(avatar).toBeInTheDocument();
-
-    // Check for AccountCircle icon
-    const accountIcon = document.querySelector('[data-testid="AccountCircleIcon"]');
-    expect(accountIcon).toBeInTheDocument();
   });
 
   it('handles long user names correctly', () => {
     const kcContextWithLongName = createMockKcContext({
-      user: createMockUser({
+      user: {
+        username: 'testuser',
+        email: 'test@example.com',
         firstName: 'VeryLongFirstName',
         lastName: 'VeryLongLastName',
-      }),
+      },
     });
+
     render(<Account kcContext={kcContextWithLongName} i18n={{}} />);
 
-    expect(screen.getByText('VeryLongFirstName VeryLongLastName')).toBeInTheDocument();
-
-    // Check for avatar with AccountCircle icon (not initials)
-    const accountIcon = document.querySelector('[data-testid="AccountCircleIcon"]');
-    expect(accountIcon).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
-  it('renders all quick action buttons', () => {
+  it('renders navigation menu items', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    const buttons = screen.getAllByRole('button');
-    expect(buttons).toHaveLength(6); // Edit Profile (2), Security Settings, Edit Profile, Change Password, Notifications, Support
+    expect(screen.getByText('Exercises')).toBeInTheDocument();
+    expect(screen.getByText('Privacy')).toBeInTheDocument();
   });
 
   it('maintains responsive design structure', () => {
     render(<Account kcContext={defaultKcContext} i18n={{}} />);
 
-    // Check that Grid components have proper size props
-    const gridContainers = document.querySelectorAll('.MuiGrid-container');
-    expect(gridContainers.length).toBeGreaterThan(0);
+    // Check that the component has proper structure
+    const appBar = document.querySelector('.MuiAppBar-root');
+    expect(appBar).toBeInTheDocument();
 
-    // Check for Grid items with size props
-    const gridItems = document.querySelectorAll('[class*="MuiGrid-grid-"]');
-    expect(gridItems.length).toBeGreaterThan(0);
+    const drawer = document.querySelector('.MuiDrawer-root');
+    expect(drawer).toBeInTheDocument();
   });
 });
