@@ -3,11 +3,12 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, useMediaQuery } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
-import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
+import { AuthProvider as OidcAuthProvider, useAuth as useOidcAuth } from 'react-oidc-context';
 import { KcPage, type KcContext } from "./keycloak-theme/kc.gen";
 import { getTheme } from './theme';
 import { AuthProvider } from './keycloak-theme/account/AuthContext';
 import { getAuthProviderConfig } from './keycloak-theme/account/oidcConfig';
+import { LoadingSpinner } from './components/LoadingSpinner';
 
 // Import Roboto font to match frontend
 import '@fontsource/roboto/300.css';
@@ -36,19 +37,40 @@ if (rootElement) {
                 <CssBaseline />
                 <SnackbarProvider>
                     <OidcAuthProvider {...getAuthProviderConfig()}>
-                        <AuthProvider>
-                            {window.kcContext ? (
-                                <KcPage kcContext={window.kcContext} />
-                            ) : (
-                                <div style={{ padding: '20px', textAlign: 'center' }}>
-                                    <h1>Loading Keycloak Account...</h1>
-                                    <p>Please wait while we initialize your account session.</p>
-                                </div>
-                            )}
-                        </AuthProvider>
+                        <AuthWrapper />
                     </OidcAuthProvider>
                 </SnackbarProvider>
             </ThemeProvider>
+        );
+    };
+
+    // Wrapper component to ensure OIDC context is ready
+    const AuthWrapper = () => {
+        const oidcAuth = useOidcAuth();
+        
+        // Wait for OIDC to be ready before rendering AuthProvider
+        if (oidcAuth.isLoading) {
+            return (
+                <LoadingSpinner 
+                    message="Loading Authentication..." 
+                    fullHeight={true}
+                    size={60}
+                />
+            );
+        }
+        
+        return (
+            <AuthProvider>
+                {window.kcContext ? (
+                    <KcPage kcContext={window.kcContext} />
+                ) : (
+                    <LoadingSpinner 
+                        message="Loading Keycloak Account..." 
+                        fullHeight={true}
+                        size={60}
+                    />
+                )}
+            </AuthProvider>
         );
     };
     

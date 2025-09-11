@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
-import { useSnackbar } from 'notistack';
 
 import { setTokenGetter } from './api/client';
 
@@ -27,7 +26,6 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const oidcAuth = useOidcAuth();
-  const { enqueueSnackbar } = useSnackbar();
 
   // Function to clear all authentication state
   const clearAuthState = useCallback(() => {
@@ -36,18 +34,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Set up token getter for API requests - exactly like the frontend
   useEffect(() => {
-    setTokenGetter(() => {
-      if (oidcAuth.user?.access_token) {
-        return oidcAuth.user.access_token;
-      }
-      return null;
-    });
-  }, [oidcAuth.user]);
+    if (oidcAuth) {
+      setTokenGetter(() => {
+        if (oidcAuth.user?.access_token) {
+          return oidcAuth.user.access_token;
+        }
+        return null;
+      });
+    }
+  }, [oidcAuth]);
 
 
   const login = async (): Promise<void> => {
     try {
-      await oidcAuth.signinRedirect();
+      if (oidcAuth) {
+        await oidcAuth.signinRedirect();
+      }
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -55,7 +57,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await oidcAuth.signoutRedirect();
+      if (oidcAuth) {
+        await oidcAuth.signoutRedirect();
+      }
       clearAuthState();
     } catch (error) {
       console.error('Logout failed:', error);
@@ -64,8 +68,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const value: AuthContextType = {
-    isAuthenticated: oidcAuth.isAuthenticated,
-    isLoading: oidcAuth.isLoading,
+    isAuthenticated: oidcAuth?.isAuthenticated || false,
+    isLoading: oidcAuth?.isLoading || false,
     login,
     logout,
   };
