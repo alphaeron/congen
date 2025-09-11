@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 // Import only the specific components we need to reduce bundle size
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -6,22 +6,19 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
-import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
 import Snackbar from '@mui/material/Snackbar';
-import Person from '@mui/icons-material/Person';
-import Email from '@mui/icons-material/Email';
+import { useForm } from '@tanstack/react-form';
 import type { KcContext } from './KcContext';
-import Navigation from './Navigation';
 import PasswordChangeDialog from './PasswordChangeDialog';
 import { UserProfileDrawer } from './UserProfileDrawer';
 import { CongenAppBar } from './CongenAppBar';
 import { ProfileOverview } from './ProfileOverview';
 import { useKeycloakUser } from './api/useKeycloakUser';
 import { useAuth } from './AuthContext';
+import { FormField } from '../../components/FormField';
 
 interface AccountProps {
   kcContext?: KcContext;
@@ -59,28 +56,11 @@ export default function Account({
   // Use OIDC user data if available, otherwise fall back to other sources
   const displayUser = authUser || apiUser || finalUser;
   
-  const [currentPage, setCurrentPage] = React.useState('overview');
-  const [showSuccessMessage, setShowSuccessMessage] = React.useState(false);
-  const [successMessage, setSuccessMessage] = React.useState('');
-  const [showPasswordDialog, setShowPasswordDialog] = React.useState(false);
+  const [currentPage, setCurrentPage] = useState('personal-info');
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   
-  // Form state for personal info
-  const [formData, setFormData] = React.useState({
-    email: '',
-    firstName: '',
-    lastName: '',
-  });
-
-  // Update form data when user data loads
-  React.useEffect(() => {
-    if (displayUser) {
-      setFormData({
-        email: displayUser.email || '',
-        firstName: displayUser.firstName || '',
-        lastName: displayUser.lastName || '',
-      });
-    }
-  }, [displayUser]);
 
   // Guard clause to handle undefined kcContext
   if (!kcContext) {
@@ -141,35 +121,32 @@ export default function Account({
     );
   }
 
-  const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value,
-    }));
-  };
-
-  const handleSaveProfile = async () => {
-    const success = await updateUser({
-      email: formData.email,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-    });
-
-    if (success) {
-      setSuccessMessage('Profile updated successfully!');
-      setShowSuccessMessage(true);
-    }
-  };
-
-  const handleCancelProfile = () => {
-    if (displayUser) {
-      setFormData({
-        email: displayUser.email || '',
-        firstName: displayUser.firstName || '',
-        lastName: displayUser.lastName || '',
+  // TanStack Form for profile editing
+  const form = useForm({
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+    },
+    onSubmit: async ({ value }) => {
+      const success = await updateUser({
+        firstName: value.firstName,
+        lastName: value.lastName,
       });
+
+      if (success) {
+        setSuccessMessage('Profile updated successfully!');
+        setShowSuccessMessage(true);
+      }
+    },
+  });
+
+  // Update form data when user data loads
+  useEffect(() => {
+    if (displayUser) {
+      form.setFieldValue('firstName', displayUser.firstName || '');
+      form.setFieldValue('lastName', displayUser.lastName || '');
     }
-  };
+  }, [displayUser, form]);
 
   const handlePageChange = (page: string) => {
     setCurrentPage(page);
@@ -219,7 +196,13 @@ export default function Account({
           )}
 
           {currentPage === 'personal-info' && (
-            <>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                form.handleSubmit();
+              }}
+            >
               <Typography
                 variant="h4"
                 component="h1"
@@ -236,10 +219,11 @@ export default function Account({
                 Manage your basic information
               </Typography>
 
-              <Card sx={{ maxWidth: 600 }}>
+              {/* Member Summary Section */}
+              <Card sx={{ maxWidth: 600, mb: 3 }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-                    General
+                    Member Summary
                   </Typography>
                   
                   {(userLoading || authLoading) ? (
@@ -248,81 +232,112 @@ export default function Account({
                     </Box>
                   ) : (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <TextField
-                        label="Username"
-                        value={displayUser?.username || 'Not available'}
-                        fullWidth
-                        InputProps={{
-                          readOnly: true,
-                        }}
-                        variant="outlined"
-                      />
-                      
-                      <TextField
-                        label="Email"
-                        value={formData.email}
-                        onChange={handleInputChange('email')}
-                        fullWidth
-                        required
-                        InputProps={{
-                          startAdornment: <Email sx={{ mr: 1, color: 'text.secondary' }} />,
-                        }}
-                        variant="outlined"
-                      />
-                      
-                      <TextField
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.main' }}>
+                          {displayUser?.firstName?.[0] || displayUser?.username?.[0] || 'U'}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6">
+                            {displayUser?.firstName && displayUser?.lastName 
+                              ? `${displayUser.firstName} ${displayUser.lastName}`
+                              : displayUser?.username || 'User'
+                            }
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {displayUser?.email || 'No email available'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Profile Editing Form */}
+              <Card sx={{ maxWidth: 600, mb: 3 }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                    Edit Profile
+                  </Typography>
+                  
+                  {(userLoading || authLoading) ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+                      <LoadingSpinner size={20} />
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <FormField
+                        name="firstName"
+                        form={form}
+                        type="text"
                         label="First name"
-                        value={formData.firstName}
-                        onChange={handleInputChange('firstName')}
-                        fullWidth
                         required
-                        InputProps={{
-                          startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
-                        }}
-                        variant="outlined"
+                        fullWidth
                       />
                       
-                      <TextField
+                      <FormField
+                        name="lastName"
+                        form={form}
+                        type="text"
                         label="Last name"
-                        value={formData.lastName}
-                        onChange={handleInputChange('lastName')}
-                        fullWidth
                         required
-                        InputProps={{
-                          startAdornment: <Person sx={{ mr: 1, color: 'text.secondary' }} />,
-                        }}
-                        variant="outlined"
+                        fullWidth
                       />
                     </Box>
                   )}
 
                   <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
                     <Button 
+                      type="submit"
                       variant="contained" 
                       sx={{ borderRadius: '12px', px: 3 }}
-                      onClick={handleSaveProfile}
-                      disabled={userLoading || authLoading}
+                      disabled={userLoading || authLoading || !form.state.isValid || form.state.isSubmitting}
                     >
-                      {userLoading ? <LoadingSpinner size={20} /> : 'Save'}
+                      {form.state.isSubmitting ? <LoadingSpinner size={20} /> : 'Save Changes'}
                     </Button>
                     <Button 
+                      type="button"
                       variant="outlined" 
                       sx={{ borderRadius: '12px', px: 3 }}
-                      onClick={handleCancelProfile}
+                      onClick={() => {
+                        if (displayUser) {
+                          form.setFieldValue('firstName', displayUser.firstName || '');
+                          form.setFieldValue('lastName', displayUser.lastName || '');
+                        }
+                      }}
                       disabled={userLoading || authLoading}
                     >
-                      Cancel
+                      Reset
                     </Button>
                   </Box>
                 </CardContent>
               </Card>
-            </>
+
+              {/* Password Change Section */}
+              <Card sx={{ maxWidth: 600 }}>
+                <CardContent sx={{ p: 4 }}>
+                  <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+                    Security
+                  </Typography>
+                  
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    Change your password to keep your account secure
+                  </Typography>
+                  
+                  <Button 
+                    variant="outlined" 
+                    sx={{ borderRadius: '12px', px: 3 }}
+                    onClick={() => setShowPasswordDialog(true)}
+                    disabled={userLoading || authLoading}
+                  >
+                    Change Password
+                  </Button>
+                </CardContent>
+              </Card>
+            </form>
           )}
 
 
-          {currentPage === 'overview' && (
-            <ProfileOverview kcContext={kcContext} user={displayUser} />
-          )}
         </Container>
         </Box>
       </Box>

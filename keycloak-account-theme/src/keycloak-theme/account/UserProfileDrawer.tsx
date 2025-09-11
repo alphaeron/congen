@@ -42,7 +42,7 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
       url: `${frontendUrl}/user_profile?section=privacy`,
     },
     {
-      id: 'overview',
+      id: 'personal-info',
       label: 'Manage Profile',
       icon: <PersonIcon />,
       isExternal: false,

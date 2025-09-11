@@ -1,14 +1,14 @@
 import { default as AccountCircleIcon } from '@mui/icons-material/AccountCircle';
 import { default as EditIcon } from '@mui/icons-material/Edit';
 import { Box, Card, CardContent, Grid, Typography, Avatar, Button } from '@mui/material';
-import React, { useState } from 'react';
+import React from 'react';
 
-import { ConfirmationDialog } from './ConfirmationDialog';
 import type { KcContext } from './KcContext';
 
 interface ProfileOverviewProps {
   kcContext: KcContext;
   user?: any;
+  onEditProfile?: () => void;
 }
 
 /**
@@ -19,31 +19,14 @@ interface ProfileOverviewProps {
  *
  * @param kcContext The Keycloak context
  * @param user The user data to display
+ * @param onEditProfile Callback when edit profile is clicked
  * @return Profile overview component
  */
-export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ kcContext, user }) => {
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-
+export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ kcContext, user, onEditProfile }) => {
   const handleEditProfile = () => {
-    setEditDialogOpen(true);
-  };
-
-  const handleConfirmEditProfile = () => {
-    // Construct the Keycloak account management URL with redirect back to Congen
-    const redirectUri = `${window.location.origin}/profile-edit-redirect`;
-    const accountUrl = `${kcContext.authUrl?.realm}/account/#/personal-info?redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-    // Store the current location to redirect back after profile edit
-    sessionStorage.setItem('congen_redirect_after_profile_edit', window.location.pathname);
-
-    // Close dialog and redirect to Keycloak account management
-    setEditDialogOpen(false);
-    window.location.href = accountUrl;
-  };
-
-  const handleCancelEditProfile = () => {
-    // Just close the dialog, don't redirect
-    setEditDialogOpen(false);
+    if (onEditProfile) {
+      onEditProfile();
+    }
   };
 
   // Format date helper function
@@ -103,18 +86,6 @@ export const ProfileOverview: React.FC<ProfileOverviewProps> = ({ kcContext, use
           </Card>
         </Grid>
       </Grid>
-
-      {/* Edit Profile Confirmation Dialog */}
-      <ConfirmationDialog
-        open={editDialogOpen}
-        onClose={handleCancelEditProfile}
-        onConfirm={handleConfirmEditProfile}
-        title="Edit Profile"
-        message="You will be redirected to your account settings. After making changes, you will be brought back to this page."
-        confirmText="Continue"
-        cancelText="Cancel"
-        confirmColor="primary"
-      />
     </React.Fragment>
   );
 };

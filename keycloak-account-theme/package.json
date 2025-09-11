@@ -37,6 +37,7 @@
     "@mui/material": "^7.3.1",
     "@mui/material-pigment-css": "^7.3.1",
     "@pigment-css/react": "^0.0.30",
+    "@tanstack/react-form": "^1.19.5",
     "keycloakify": "^11.9.4",
     "process": "^0.11.10",
     "react": "^19.0.0",
