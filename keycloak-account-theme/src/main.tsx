@@ -44,15 +44,8 @@ if (rootElement) {
     );
   };
 
-  // Wrapper component to ensure OIDC context is ready
+  // Wrapper component for Keycloak account theme
   const AuthWrapper = () => {
-    const oidcAuth = useOidcAuth();
-
-    // Wait for OIDC to be ready before rendering AuthProvider
-    if (oidcAuth.isLoading) {
-      return <LoadingSpinner message="Loading Authentication..." fullHeight={true} size={60} />;
-    }
-
     return (
       <AuthProvider>
         {window.kcContext ? (

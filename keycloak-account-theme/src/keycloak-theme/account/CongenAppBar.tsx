@@ -186,7 +186,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
                 fontWeight: 600,
               }}
             >
-              {user?.firstName?.charAt(0).toUpperCase() ||
+              {user?.email?.charAt(0).toUpperCase() ||
                 user?.username?.charAt(0).toUpperCase() ||
                 'U'}
             </Avatar>

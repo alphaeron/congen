@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Use the actual OIDC authentication state
   const value: AuthContextType = {
     isAuthenticated: oidcAuth?.isAuthenticated || false,
     isLoading: oidcAuth?.isLoading || false,

@@ -14,6 +14,7 @@ import type { KcContext } from './KcContext';
 import { UserProfileDrawer } from './UserProfileDrawer';
 import { CongenAppBar } from './CongenAppBar';
 import { useAuth } from './AuthContext';
+import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { FormField } from '../../components/FormField';
 import PasswordChangeDialog from './PasswordChangeDialog';
 import { createApiClient } from './api/client';
@@ -43,6 +44,9 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
 
   // Use the authentication context
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
+  
+  // Get OIDC auth for access token
+  const oidcAuth = useOidcAuth();
 
   const [currentPage, setCurrentPage] = useState('personal-info');
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
@@ -123,7 +127,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
     },
   });
 
-  // Fetch user data when authenticated
+  // Fetch user data using OIDC token and Keycloak API
   useEffect(() => {
     if (!kcContext) return;
 
@@ -131,21 +135,37 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
       if (isAuthenticated && !userFetchAttempted && !userLoading) {
         setUserLoading(true);
         setUserFetchAttempted(true);
+        
         try {
-          // Create API client from Keycloak context
-          const apiClient = createApiClient(kcContext);
-          if (apiClient) {
-            // Try to get user profile from Keycloak
-            const result = await apiClient.getUserProfile();
-            if (result.success && result.data) {
-              setUser(result.data);
-            } else {
-              enqueueSnackbar('Failed to load user information', { variant: 'error' });
-            }
-          } else {
-            enqueueSnackbar('Failed to create API client', { variant: 'error' });
+          // Check if we have an OIDC access token
+          if (!oidcAuth.user?.access_token) {
+            console.log('No OIDC access token available, oidcAuth.user:', oidcAuth.user);
+            throw new Error('No OIDC access token available');
           }
-        } catch {
+
+          console.log('Making API call to userinfo endpoint with token:', oidcAuth.user.access_token.substring(0, 20) + '...');
+
+          // Make API call to Keycloak userinfo endpoint
+          const response = await fetch(`${kcContext.serverBaseUrl}/realms/congen/protocol/openid-connect/userinfo`, {
+            headers: {
+              'Authorization': `Bearer ${oidcAuth.user.access_token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          console.log('Userinfo API response status:', response.status);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Userinfo API error response:', errorText);
+            throw new Error(`Failed to fetch user info: ${response.status} ${response.statusText}`);
+          }
+
+          const userData = await response.json();
+          console.log('User data received:', userData);
+          setUser(userData);
+        } catch (error) {
+          console.error('Error fetching user data:', error);
           enqueueSnackbar('Failed to load user information', { variant: 'error' });
         } finally {
           setUserLoading(false);
@@ -154,7 +174,15 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
     };
 
     fetchUserData();
-  }, [isAuthenticated, userFetchAttempted, userLoading, kcContext, enqueueSnackbar]);
+  }, [isAuthenticated, userFetchAttempted, userLoading, kcContext, enqueueSnackbar, oidcAuth.user?.access_token]);
+
+  // Automatically trigger login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !oidcAuth.isLoading && !oidcAuth.error) {
+      // Automatically trigger login without showing the button
+      login();
+    }
+  }, [isAuthenticated, oidcAuth.isLoading, oidcAuth.error, login]);
 
   // Reset user fetch state when authentication changes
   useEffect(() => {
@@ -168,8 +196,9 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
   // Update form data when user data loads
   useEffect(() => {
     if (user) {
-      form.setFieldValue('firstName', user.given_name || user.firstName || '');
-      form.setFieldValue('lastName', user.family_name || user.lastName || '');
+      // Use the field names from Keycloak user object
+      form.setFieldValue('firstName', (user.firstName as string) || (user.given_name as string) || '');
+      form.setFieldValue('lastName', (user.lastName as string) || (user.family_name as string) || '');
     }
   }, [user, form]);
 
@@ -187,8 +216,8 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
     );
   }
 
-  // Handle authentication state
-  if (authLoading) {
+  // Handle authentication state - show loading while OIDC is initializing or authenticating
+  if (authLoading || oidcAuth.isLoading || (!isAuthenticated && !oidcAuth.error)) {
     return (
       <Box
         sx={{
@@ -199,34 +228,10 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
           bgcolor: 'background.default',
         }}
       >
-        <LoadingSpinner size={60} />
-      </Box>
-    );
-  }
-
-  // Handle unauthenticated state
-  if (!isAuthenticated) {
-    return (
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'background.default',
-        }}
-      >
-        <Box sx={{ textAlign: 'center', p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            Authentication Required
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3 }}>
-            Please log in to access your account.
-          </Typography>
-          <Button variant="contained" onClick={login} size="large">
-            Log In
-          </Button>
-        </Box>
+        <LoadingSpinner 
+          size={60} 
+          message={oidcAuth.isLoading ? 'Initializing Authentication...' : 'Authenticating...'} 
+        />
       </Box>
     );
   }
@@ -238,7 +243,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Congen App Bar */}
-      <CongenAppBar kcContext={kcContext} user={user} />
+      <CongenAppBar kcContext={kcContext} user={user || undefined} />
 
       <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
         {/* User Profile Drawer */}
@@ -282,14 +287,14 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Avatar sx={{ bgcolor: 'primary.main' }}>
-                            {user?.email?.[0] ||
-                              user?.preferred_username?.[0] ||
-                              user?.username?.[0] ||
+                            {(user?.email as string)?.[0] ||
+                              (user?.preferred_username as string)?.[0] ||
+                              (user?.username as string)?.[0] ||
                               'U'}
                           </Avatar>
                           <Box>
                             <Typography variant="body2" color="text.secondary">
-                              {user?.email || 'No email available'}
+                              {(user?.email as string) || 'No email available'}
                             </Typography>
                           </Box>
                         </Box>
@@ -348,9 +353,9 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                           if (user) {
                             form.setFieldValue(
                               'firstName',
-                              user.given_name || user.firstName || ''
+                              (user.given_name as string) || (user.firstName as string) || ''
                             );
-                            form.setFieldValue('lastName', user.family_name || user.lastName || '');
+                            form.setFieldValue('lastName', (user.family_name as string) || (user.lastName as string) || '');
                           }
                         }}
                         disabled={authLoading}
