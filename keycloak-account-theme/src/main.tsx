@@ -4,7 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, useMediaQuery } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
 import { AuthProvider as OidcAuthProvider, useAuth as useOidcAuth } from 'react-oidc-context';
-import { KcPage, type KcContext } from "./keycloak-theme/kc.gen";
+import { KcPage, type KcContext } from './keycloak-theme/kc.gen';
 import { getTheme } from './theme';
 import { AuthProvider } from './keycloak-theme/account/AuthContext';
 import { getAuthProviderConfig } from './keycloak-theme/account/oidcConfig';
@@ -20,69 +20,59 @@ import '@fontsource/roboto/700.css';
 import './main.css';
 
 // Get the root element - Keycloakify generates a "root" div
-const rootElement = document.getElementById("root") as HTMLElement;
+const rootElement = document.getElementById('root') as HTMLElement;
 
 if (rootElement) {
-    const root = ReactDOM.createRoot(rootElement);
-    
-    // Create a component that can use hooks
-    const App = () => {
-        // Detect user's preferred color scheme - always call hooks at the top level
-        const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-        const mode = prefersDarkMode ? 'dark' : 'light';
-        const theme = createTheme(getTheme(mode));
-        
-        return (
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <SnackbarProvider>
-                    <OidcAuthProvider {...getAuthProviderConfig()}>
-                        <AuthWrapper />
-                    </OidcAuthProvider>
-                </SnackbarProvider>
-            </ThemeProvider>
-        );
-    };
+  const root = ReactDOM.createRoot(rootElement);
 
-    // Wrapper component to ensure OIDC context is ready
-    const AuthWrapper = () => {
-        const oidcAuth = useOidcAuth();
-        
-        // Wait for OIDC to be ready before rendering AuthProvider
-        if (oidcAuth.isLoading) {
-            return (
-                <LoadingSpinner 
-                    message="Loading Authentication..." 
-                    fullHeight={true}
-                    size={60}
-                />
-            );
-        }
-        
-        return (
-            <AuthProvider>
-                {window.kcContext ? (
-                    <KcPage kcContext={window.kcContext} />
-                ) : (
-                    <LoadingSpinner 
-                        message="Loading Keycloak Account..." 
-                        fullHeight={true}
-                        size={60}
-                    />
-                )}
-            </AuthProvider>
-        );
-    };
-    
-    root.render(
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>
+  // Create a component that can use hooks
+  const App = () => {
+    // Detect user's preferred color scheme - always call hooks at the top level
+    const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+    const mode = prefersDarkMode ? 'dark' : 'light';
+    const theme = createTheme(getTheme(mode));
+
+    return (
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <SnackbarProvider>
+          <OidcAuthProvider {...getAuthProviderConfig()}>
+            <AuthWrapper />
+          </OidcAuthProvider>
+        </SnackbarProvider>
+      </ThemeProvider>
     );
+  };
+
+  // Wrapper component to ensure OIDC context is ready
+  const AuthWrapper = () => {
+    const oidcAuth = useOidcAuth();
+
+    // Wait for OIDC to be ready before rendering AuthProvider
+    if (oidcAuth.isLoading) {
+      return <LoadingSpinner message="Loading Authentication..." fullHeight={true} size={60} />;
+    }
+
+    return (
+      <AuthProvider>
+        {window.kcContext ? (
+          <KcPage kcContext={window.kcContext} />
+        ) : (
+          <LoadingSpinner message="Loading Keycloak Account..." fullHeight={true} size={60} />
+        )}
+      </AuthProvider>
+    );
+  };
+
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 }
 
 declare global {
-    interface Window {
-        kcContext?: KcContext;
-    }
+  interface Window {
+    kcContext?: KcContext;
+  }
 }

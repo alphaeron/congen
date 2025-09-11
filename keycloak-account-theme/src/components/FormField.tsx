@@ -1,24 +1,17 @@
 import React from 'react';
-import {
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import { useField } from '@tanstack/react-form';
 
 interface FormFieldProps {
   name: string;
-  form: any;
+  form: unknown;
   type?: 'text' | 'email' | 'password' | 'select';
   label: string;
   required?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
   options?: Array<{ value: string; label: string }>;
-  sx?: any;
+  sx?: Record<string, unknown>;
 }
 
 /**
@@ -57,7 +50,13 @@ export const FormField: React.FC<FormFieldProps> = ({
 
   if (type === 'select') {
     return (
-      <FormControl fullWidth={fullWidth} error={fieldError} disabled={disabled} required={required} sx={sx}>
+      <FormControl
+        fullWidth={fullWidth}
+        error={fieldError}
+        disabled={disabled}
+        required={required}
+        sx={sx}
+      >
         <InputLabel>{label}</InputLabel>
         <Select
           value={fieldValue || ''}

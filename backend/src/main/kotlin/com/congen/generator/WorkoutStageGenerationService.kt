@@ -374,7 +374,9 @@ abstract class WorkoutStageGenerationService(
                         }.switchIfEmpty(
                             // Handle case where no accessory exercise was found (graceful degradation)
                             Mono.fromRunnable {
-                                logger.info("No accessory exercise available for this iteration, skipping and continuing workout generation")
+                                logger.info(
+                                    "No accessory exercise available for this iteration, skipping and continuing workout generation"
+                                )
                             }
                         )
                     }
@@ -709,9 +711,10 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         // Filter weak muscles based on day type to ensure we only target appropriate muscles
-        val dayTypeAwareWeakMuscles = ConjugateConstants.getWeakMusclesForDayType(dayType)
-            .filter { muscle -> weakMuscles.contains(muscle) }
-        
+        val dayTypeAwareWeakMuscles =
+            ConjugateConstants.getWeakMusclesForDayType(dayType)
+                .filter { muscle -> weakMuscles.contains(muscle) }
+
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = dayTypeAwareWeakMuscles,
@@ -721,7 +724,8 @@ abstract class WorkoutStageGenerationService(
             movementBalanceState = movementBalanceState
         ).onErrorResume { error ->
             if (error.message?.contains("No exercises found for target muscles") == true ||
-                error.message?.contains("No suitable exercise found") == true) {
+                error.message?.contains("No suitable exercise found") == true
+            ) {
                 logger.warn(
                     "No exercises found for target muscles: {} in dayType: {} for accessory exercise. " +
                         "Skipping this accessory exercise and continuing workout generation.",
@@ -756,9 +760,10 @@ abstract class WorkoutStageGenerationService(
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
     ): Mono<Exercise> {
         // Filter weak muscles based on day type to ensure we only target appropriate muscles
-        val dayTypeAwareWeakMuscles = ConjugateConstants.getWeakMusclesForDayType(dayType)
-            .filter { muscle -> weakMuscles.contains(muscle) }
-        
+        val dayTypeAwareWeakMuscles =
+            ConjugateConstants.getWeakMusclesForDayType(dayType)
+                .filter { muscle -> weakMuscles.contains(muscle) }
+
         return exerciseSelectionService.selectExercise(
             userExercisePool = userExercisePool,
             targetMuscles = dayTypeAwareWeakMuscles,

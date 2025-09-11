@@ -1,5 +1,5 @@
 import type { AuthProviderProps } from 'react-oidc-context';
-import { DEPLOYMENT_ENVIRONMENT, KEYCLOAK_URL, BASE_URL } from '../../globals';
+import { KEYCLOAK_URL } from '../../globals';
 
 /**
  * Constructs the OIDC configuration for Keycloak account theme.

@@ -23,7 +23,7 @@ describe('API hooks', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCreateApiClient.mockReturnValue(mockApiClient as any);
+    mockCreateApiClient.mockReturnValue(mockApiClient as unknown as KeycloakAccountApiClient);
   });
 
   describe('useApiClient', () => {
@@ -106,9 +106,9 @@ describe('API hooks', () => {
 
     it('should handle profile update error', async () => {
       const errorMessage = 'Update failed';
-      mockApiClient.updateUserProfile.mockResolvedValue({ 
-        success: false, 
-        error: errorMessage 
+      mockApiClient.updateUserProfile.mockResolvedValue({
+        success: false,
+        error: errorMessage,
       });
 
       const { result } = renderHook(() => useUserProfile(mockKcContext));
@@ -127,7 +127,7 @@ describe('API hooks', () => {
     });
 
     it('should handle API client not available', async () => {
-      mockCreateApiClient.mockReturnValue(null as any);
+      mockCreateApiClient.mockReturnValue(null);
 
       const { result } = renderHook(() => useUserProfile(mockKcContext));
 
@@ -196,9 +196,9 @@ describe('API hooks', () => {
 
     it('should handle password change error', async () => {
       const errorMessage = 'Password change failed';
-      mockApiClient.changePassword.mockResolvedValue({ 
-        success: false, 
-        error: errorMessage 
+      mockApiClient.changePassword.mockResolvedValue({
+        success: false,
+        error: errorMessage,
       });
 
       const { result } = renderHook(() => usePasswordChange(mockKcContext));
@@ -219,7 +219,7 @@ describe('API hooks', () => {
     });
 
     it('should handle API client not available', async () => {
-      mockCreateApiClient.mockReturnValue(null as any);
+      mockCreateApiClient.mockReturnValue(null);
 
       const { result } = renderHook(() => usePasswordChange(mockKcContext));
 

@@ -19,7 +19,11 @@ interface PasswordChangeDialogProps {
   kcContext: KcContext;
 }
 
-export default function PasswordChangeDialog({ open, onClose, kcContext }: PasswordChangeDialogProps) {
+export default function PasswordChangeDialog({
+  open,
+  onClose,
+  kcContext,
+}: PasswordChangeDialogProps) {
   const { enqueueSnackbar } = useSnackbar();
   const [formData, setFormData] = useState({
     currentPassword: '',
@@ -82,7 +86,7 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
 
       if (result.success) {
         enqueueSnackbar('Password changed successfully!', { variant: 'success' });
-        
+
         // Reset form and close dialog
         setFormData({
           currentPassword: '',
@@ -93,7 +97,7 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
       } else {
         enqueueSnackbar('Failed to change password', { variant: 'error' });
       }
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to change password', { variant: 'error' });
     } finally {
       setLoading(false);
@@ -152,9 +156,9 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
         <Button onClick={handleClose} disabled={loading}>
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
           disabled={loading}
           startIcon={loading ? <LoadingSpinner size={20} /> : undefined}
         >

@@ -3,14 +3,19 @@
  * Provides easy-to-use hooks for common user operations
  */
 
-import { useCallback, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createApiClient, KeycloakAccountApiClient } from './client';
-import { type UpdateUserProfileRequest, type ChangePasswordRequest, type UseUserProfileResult, type UsePasswordChangeResult } from './types';
+import {
+  type UpdateUserProfileRequest,
+  type ChangePasswordRequest,
+  type UseUserProfileResult,
+  type UsePasswordChangeResult,
+} from './types';
 
 /**
  * Hook that provides an initialized API client
  */
-export function useApiClient(kcContext: any): {
+export function useApiClient(kcContext: Record<string, unknown>): {
   apiClient: KeycloakAccountApiClient | null;
   loading: boolean;
   error: string | null;
@@ -39,11 +44,14 @@ export function useApiClient(kcContext: any): {
  */
 function createApiOperationHandler<T>(
   apiClient: KeycloakAccountApiClient | null,
-  operation: (client: KeycloakAccountApiClient, data: T) => Promise<{ success: boolean; error?: string }>,
+  operation: (
+    client: KeycloakAccountApiClient,
+    data: T
+  ) => Promise<{ success: boolean; error?: string }>,
   setLoading: (loading: boolean) => void,
   setError: (error: string | null) => void
 ) {
-  return useCallback(async (data: T): Promise<boolean> => {
+  return async (data: T): Promise<boolean> => {
     if (!apiClient) {
       setError('API client not available');
       return false;
@@ -54,7 +62,7 @@ function createApiOperationHandler<T>(
 
     try {
       const response = await operation(apiClient, data);
-      
+
       if (response.success) {
         return true;
       } else {
@@ -68,52 +76,16 @@ function createApiOperationHandler<T>(
     } finally {
       setLoading(false);
     }
-  }, [apiClient, operation, setLoading, setError]);
+  };
 }
-
-/**
- * Helper function for operations that don't take data parameters
- */
-function createApiOperationHandlerNoData(
-  apiClient: KeycloakAccountApiClient | null,
-  operation: (client: KeycloakAccountApiClient) => Promise<{ success: boolean; error?: string }>,
-  setLoading: (loading: boolean) => void,
-  setError: (error: string | null) => void
-) {
-  return useCallback(async (): Promise<boolean> => {
-    if (!apiClient) {
-      setError('API client not available');
-      return false;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await operation(apiClient);
-      
-      if (response.success) {
-        return true;
-      } else {
-        setError(response.error || 'Operation failed');
-        return false;
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [apiClient, operation, setLoading, setError]);
-}
-
 
 /**
  * Hook for managing user profile data
  * In Keycloak account themes, user data comes from the context, not API calls
  */
-export function useUserProfile(kcContext: any): Omit<UseUserProfileResult, 'user' | 'refetch'> {
+export function useUserProfile(
+  kcContext: Record<string, unknown>
+): Omit<UseUserProfileResult, 'user' | 'refetch'> {
   const { apiClient } = useApiClient(kcContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,7 +107,7 @@ export function useUserProfile(kcContext: any): Omit<UseUserProfileResult, 'user
 /**
  * Hook for password change operations
  */
-export function usePasswordChange(kcContext: any): UsePasswordChangeResult {
+export function usePasswordChange(kcContext: Record<string, unknown>): UsePasswordChangeResult {
   const { apiClient } = useApiClient(kcContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

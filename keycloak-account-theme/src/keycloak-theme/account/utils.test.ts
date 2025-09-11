@@ -47,7 +47,9 @@ describe('utils', () => {
 
     it('should generate correct logout URL', () => {
       const result = getLogoutUrl(mockKcContext);
-      expect(result).toBe('https://auth.example.com/realms/test-realm/protocol/openid-connect/logout');
+      expect(result).toBe(
+        'https://auth.example.com/realms/test-realm/protocol/openid-connect/logout'
+      );
     });
 
     it('should handle missing realm name', () => {
@@ -55,9 +57,11 @@ describe('utils', () => {
         ...mockKcContext,
         realm: undefined,
       } as KcContext;
-      
+
       const result = getLogoutUrl(contextWithoutRealm);
-      expect(result).toBe('https://auth.example.com/realms/undefined/protocol/openid-connect/logout');
+      expect(result).toBe(
+        'https://auth.example.com/realms/undefined/protocol/openid-connect/logout'
+      );
     });
   });
 
@@ -71,7 +75,9 @@ describe('utils', () => {
 
     it('should redirect to logout URL', () => {
       handleLogout(mockKcContext);
-      expect(mockLocation.href).toBe('https://auth.example.com/realms/test-realm/protocol/openid-connect/logout');
+      expect(mockLocation.href).toBe(
+        'https://auth.example.com/realms/test-realm/protocol/openid-connect/logout'
+      );
     });
   });
 

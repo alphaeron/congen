@@ -129,17 +129,13 @@ describe('API types', () => {
       const apiError: ApiError = {
         success: false,
         error: 'API Error',
-        validationErrors: [
-          { field: 'email', message: 'Email is required' },
-        ],
+        validationErrors: [{ field: 'email', message: 'Email is required' }],
         statusCode: 400,
       };
 
       expect(apiError.success).toBe(false);
       expect(apiError.error).toBe('API Error');
-      expect(apiError.validationErrors).toEqual([
-        { field: 'email', message: 'Email is required' },
-      ]);
+      expect(apiError.validationErrors).toEqual([{ field: 'email', message: 'Email is required' }]);
       expect(apiError.statusCode).toBe(400);
     });
 

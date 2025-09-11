@@ -46,7 +46,7 @@ describe('KeycloakAccountApiClient', () => {
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockAccessToken}`,
+            Authorization: `Bearer ${mockAccessToken}`,
             'Content-Type': 'application/json',
           }),
         })

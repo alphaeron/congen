@@ -75,7 +75,7 @@ describe('CongenAppBar', () => {
 
     expect(screen.getByText('Profile')).toBeInTheDocument();
     expect(screen.getByText('Sign Out')).toBeInTheDocument();
-    
+
     // Test that menu items are clickable
     const profileItem = screen.getByText('Profile');
     expect(profileItem).toBeInTheDocument();

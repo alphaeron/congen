@@ -7,15 +7,15 @@ export default defineConfig({
   loginTheme: false,
   accountTheme: true,
   extraThemeProperties: [
-    "parent=keycloak.v3",
-    "darkMode=true",
-    "deprecatedMode=false",
-    "favIcon=img/favicon.ico"
+    'parent=keycloak.v3',
+    'darkMode=true',
+    'deprecatedMode=false',
+    'favIcon=img/favicon.ico',
   ],
   extraAssets: [
     {
-      from: "public/favicon.ico",
-      to: "img/favicon.ico"
-    }
-  ]
+      from: 'public/favicon.ico',
+      to: 'img/favicon.ico',
+    },
+  ],
 });

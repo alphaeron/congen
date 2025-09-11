@@ -1,5 +1,4 @@
 import React from 'react';
-import { render } from '@testing-library/react';
 import ReactDOM from 'react-dom/client';
 
 // Mock ReactDOM
@@ -14,7 +13,9 @@ jest.mock('./theme', () => ({
 
 // Mock the AuthContext
 jest.mock('./keycloak-theme/account/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="auth-provider">{children}</div>
+  ),
 }));
 
 // Mock the oidcConfig
@@ -24,17 +25,23 @@ jest.mock('./keycloak-theme/account/oidcConfig', () => ({
 
 // Mock the LoadingSpinner
 jest.mock('./components/LoadingSpinner', () => ({
-  LoadingSpinner: ({ message }: { message: string }) => <div data-testid="loading-spinner">{message}</div>,
+  LoadingSpinner: ({ message }: { message: string }) => (
+    <div data-testid="loading-spinner">{message}</div>
+  ),
 }));
 
 // Mock the KcPage
 jest.mock('./keycloak-theme/kc.gen', () => ({
-  KcPage: ({ kcContext }: { kcContext: any }) => <div data-testid="kc-page">{JSON.stringify(kcContext)}</div>,
+  KcPage: ({ kcContext }: { kcContext: Record<string, unknown> }) => (
+    <div data-testid="kc-page">{JSON.stringify(kcContext)}</div>
+  ),
 }));
 
 // Mock Material-UI components
 jest.mock('@mui/material/styles', () => ({
-  ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="theme-provider">{children}</div>
+  ),
   createTheme: jest.fn(() => ({})),
 }));
 
@@ -45,12 +52,16 @@ jest.mock('@mui/material', () => ({
 
 // Mock notistack
 jest.mock('notistack', () => ({
-  SnackbarProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="snackbar-provider">{children}</div>,
+  SnackbarProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="snackbar-provider">{children}</div>
+  ),
 }));
 
 // Mock react-oidc-context
 jest.mock('react-oidc-context', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="oidc-auth-provider">{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="oidc-auth-provider">{children}</div>
+  ),
   useAuth: jest.fn(() => ({ isLoading: false })),
 }));
 
@@ -80,23 +91,23 @@ describe('main.tsx', () => {
     mockCreateRoot.mockReturnValue({
       render: mockRender,
       unmount: jest.fn(),
-    } as any);
+    } as Record<string, unknown>);
   });
 
-  it('should render the app when root element exists', () => {
+  it('should render the app when root element exists', async () => {
     // Import and execute the main module
-    require('./main');
+    await import('./main');
 
     expect(mockCreateRoot).toHaveBeenCalledWith(mockRootElement);
     expect(mockRender).toHaveBeenCalled();
   });
 
-  it('should not render when root element does not exist', () => {
+  it('should not render when root element does not exist', async () => {
     document.getElementById = jest.fn(() => null);
 
     // Clear the module cache and re-import
     jest.resetModules();
-    require('./main');
+    await import('./main');
 
     expect(mockCreateRoot).not.toHaveBeenCalled();
     expect(mockRender).not.toHaveBeenCalled();
@@ -109,11 +120,11 @@ describe('main.tsx', () => {
     expect(window.kcContext?.themeName).toBe('congen-account-theme');
   });
 
-  it('should handle missing kcContext gracefully', () => {
+  it('should handle missing kcContext gracefully', async () => {
     // This test verifies that the main module can be imported
     // The actual behavior is tested in the component tests
-    expect(() => {
-      require('./main');
+    await expect(async () => {
+      await import('./main');
     }).not.toThrow();
   });
 });

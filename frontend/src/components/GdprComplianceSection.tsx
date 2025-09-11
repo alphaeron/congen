@@ -152,10 +152,13 @@ export function GdprComplianceSection(): React.ReactElement {
       setOperationLoading('delete');
       await deleteAllPersonalData(deleteConfirmation);
       setDeleteDialogOpen(false);
-      enqueueSnackbar('Your account and all data has been deleted. You will be logged out shortly.', {
-        variant: 'success',
-        autoHideDuration: 5000,
-      });
+      enqueueSnackbar(
+        'Your account and all data has been deleted. You will be logged out shortly.',
+        {
+          variant: 'success',
+          autoHideDuration: 5000,
+        }
+      );
       // In a real app, you'd redirect to logout here
       setTimeout(() => {
         window.location.href = '/login';
@@ -282,7 +285,6 @@ export function GdprComplianceSection(): React.ReactElement {
                 View Policy
               </Button>
             </Box>
-
           </Box>
         </CardContent>
       </Card>

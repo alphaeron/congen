@@ -1,8 +1,5 @@
 import React from 'react';
-import {
-  Person as PersonIcon,
-  PrivacyTip as PrivacyIcon,
-} from '@mui/icons-material';
+import { Person as PersonIcon, PrivacyTip as PrivacyIcon } from '@mui/icons-material';
 import {
   Box,
   Drawer,
@@ -27,7 +24,6 @@ interface UserProfileDrawerProps {
  * All items except "Profile Overview" link back to the frontend.
  */
 export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
-  kcContext,
   currentSection,
   onSectionChange,
 }) => {
@@ -47,7 +43,7 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
     },
   ];
 
-  const handleItemClick = (item: typeof menuItems[0]) => {
+  const handleItemClick = (item: (typeof menuItems)[0]) => {
     if (item.isExternal) {
       // Open in the same window to maintain the user experience
       navigateToFrontend(item.path);

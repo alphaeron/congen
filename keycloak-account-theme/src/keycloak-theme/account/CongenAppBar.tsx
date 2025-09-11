@@ -18,7 +18,7 @@ import ConGenIcon from '../../resources/congen-icon.svg';
 
 interface CongenAppBarProps {
   kcContext: KcContext;
-  user?: any;
+  user?: Record<string, unknown>;
 }
 
 /**
@@ -71,180 +71,182 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
           },
         })}
       >
-          <Box
-            sx={{
-              flexGrow: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <img 
-                src={ConGenIcon} 
-                alt="ConGen" 
-                style={{
-                  width: '72px',
-                  height: 'auto',
-                  cursor: 'pointer',
-                }}
-                onClick={handleHomeClick}
-              />
-              <Typography
-                variant="h6"
-                className="menuLogo menuLogoText"
-                noWrap={true}
-                component="a"
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleHomeClick();
-                }}
-                sx={{
-                  fontWeight: 700,
-                  background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <img
+              src={ConGenIcon}
+              alt="ConGen"
+              style={{
+                width: '72px',
+                height: 'auto',
+                cursor: 'pointer',
+              }}
+              onClick={handleHomeClick}
+            />
+            <Typography
+              variant="h6"
+              className="menuLogo menuLogoText"
+              noWrap={true}
+              component="a"
+              href="#"
+              onClick={e => {
+                e.preventDefault();
+                handleHomeClick();
+              }}
+              sx={{
+                fontWeight: 700,
+                background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                textDecoration: 'none',
+                cursor: 'pointer',
+                '&:hover': {
                   textDecoration: 'none',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    textDecoration: 'none',
-                  },
-                }}
-              >
-                ConGen
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-              <MenuItem
-                sx={{
-                  py: 1,
-                  px: 2,
-                  borderRadius: 2,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                  },
-                }}
-                component="a"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigateToFrontend('/exercises');
-                }}
-              >
-                Exercises
-              </MenuItem>
-              <MenuItem
-                sx={{
-                  py: 1,
-                  px: 2,
-                  borderRadius: 2,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                  },
-                }}
-                component="a"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigateToFrontend('/privacy_policy');
-                }}
-              >
-                Privacy
-              </MenuItem>
-            </Box>
+                },
+              }}
+            >
+              ConGen
+            </Typography>
           </Box>
 
-          <Box
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+            <MenuItem
+              sx={{
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                fontWeight: 500,
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                },
+              }}
+              component="a"
+              onClick={e => {
+                e.preventDefault();
+                navigateToFrontend('/exercises');
+              }}
+            >
+              Exercises
+            </MenuItem>
+            <MenuItem
+              sx={{
+                py: 1,
+                px: 2,
+                borderRadius: 2,
+                fontWeight: 500,
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                },
+              }}
+              component="a"
+              onClick={e => {
+                e.preventDefault();
+                navigateToFrontend('/privacy_policy');
+              }}
+            >
+              Privacy
+            </MenuItem>
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            gap: 1,
+            alignItems: 'center',
+          }}
+        >
+          <IconButton
+            onClick={handleClick}
             sx={{
-              display: { xs: 'none', md: 'flex' },
-              gap: 1,
-              alignItems: 'center',
+              p: 1,
+              borderRadius: '50%',
+              '&:hover': {
+                bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+              },
             }}
           >
-            <IconButton
-              onClick={handleClick}
+            <Avatar
               sx={{
-                p: 1,
-                borderRadius: '50%',
+                width: 32,
+                height: 32,
+                bgcolor: theme => alpha(theme.palette.primary.main, 0.1),
+                color: 'primary.main',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+              }}
+            >
+              {user?.firstName?.charAt(0).toUpperCase() ||
+                user?.username?.charAt(0).toUpperCase() ||
+                'U'}
+            </Avatar>
+          </IconButton>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+            sx={{ zIndex: theme => theme.zIndex.drawer + 10 }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                minWidth: 180,
+                borderRadius: 2,
+                boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
+                '& .MuiMenuItem-root': {
+                  borderRadius: 1,
+                  mx: 0.5,
+                  my: 0.25,
+                },
+              },
+            }}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <MenuItem
+              component="a"
+              onClick={e => {
+                e.preventDefault();
+                handleClose();
+                navigateToFrontend('/user_profile?section=privacy');
+              }}
+              sx={{
+                fontWeight: 500,
                 '&:hover': {
                   bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                 },
               }}
             >
-              <Avatar
-                sx={{
-                  width: 32,
-                  height: 32,
-                  bgcolor: theme => alpha(theme.palette.primary.main, 0.1),
-                  color: 'primary.main',
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                }}
-              >
-                {user?.firstName?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
-              </Avatar>
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleClose}
-              sx={{ zIndex: theme => theme.zIndex.drawer + 10 }}
-              PaperProps={{
-                sx: {
-                  mt: 1,
-                  minWidth: 180,
-                  borderRadius: 2,
-                  boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
-                  '& .MuiMenuItem-root': {
-                    borderRadius: 1,
-                    mx: 0.5,
-                    my: 0.25,
-                  },
+              Profile
+            </MenuItem>
+            <Divider sx={{ my: 1 }} />
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                handleLogout(kcContext);
+              }}
+              sx={{
+                fontWeight: 500,
+                color: 'error.main',
+                '&:hover': {
+                  bgcolor: theme => alpha(theme.palette.error.main, 0.08),
                 },
               }}
-              transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-              anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
             >
-              <MenuItem
-                component="a"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleClose();
-                  navigateToFrontend('/user_profile?section=privacy');
-                }}
-                sx={{
-                  fontWeight: 500,
-                  '&:hover': {
-                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                  },
-                }}
-              >
-                Profile
-              </MenuItem>
-              <Divider sx={{ my: 1 }} />
-              <MenuItem
-                onClick={() => {
-                  handleClose();
-                  handleLogout(kcContext);
-                }}
-                sx={{
-                  fontWeight: 500,
-                  color: 'error.main',
-                  '&:hover': {
-                    bgcolor: theme => alpha(theme.palette.error.main, 0.08),
-                  },
-                }}
-              >
-                Sign Out
-              </MenuItem>
-            </Menu>
-          </Box>
-        </Toolbar>
+              Sign Out
+            </MenuItem>
+          </Menu>
+        </Box>
+      </Toolbar>
     </AppBar>
   );
 };

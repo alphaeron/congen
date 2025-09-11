@@ -27,7 +27,7 @@ describe('KcAccountUi', () => {
     // Check for either the Account component or LoadingSpinner
     const conGenElement = screen.queryByText('ConGen');
     const loadingElement = screen.queryByText('Loading...');
-    
+
     expect(conGenElement || loadingElement).toBeTruthy();
   });
 

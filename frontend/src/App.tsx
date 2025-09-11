@@ -179,169 +179,137 @@ function AppContent(): React.ReactElement {
               },
             })}
           >
-              <Box
-                sx={{
-                  flexGrow: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 2,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <img src={ConGenIcon} style={logoStyle} alt="ConGen" />
-                  <Typography
-                    variant="h6"
-                    className="menuLogo menuLogoText"
-                    noWrap={true}
-                    component="a"
-                    href="/"
-                    sx={{
-                      fontWeight: 700,
-                      background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
+            <Box
+              sx={{
+                flexGrow: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <img src={ConGenIcon} style={logoStyle} alt="ConGen" />
+                <Typography
+                  variant="h6"
+                  className="menuLogo menuLogoText"
+                  noWrap={true}
+                  component="a"
+                  href="/"
+                  sx={{
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #0ea5e9, #f97316)',
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textDecoration: 'none',
+                    '&:hover': {
                       textDecoration: 'none',
-                      '&:hover': {
-                        textDecoration: 'none',
-                      },
-                    }}
-                  >
-                    ConGen
-                  </Typography>
-                </Box>
-
-                <AuthorizedElement requireAuth={false}>
-                  <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
-                    <MenuItem
-                      sx={{
-                        py: 1,
-                        px: 2,
-                        borderRadius: 2,
-                        fontWeight: 500,
-                        '&:hover': {
-                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                        },
-                      }}
-                      component={ExercisesLink}
-                    >
-                      Exercises
-                    </MenuItem>
-                    <MenuItem
-                      sx={{
-                        py: 1,
-                        px: 2,
-                        borderRadius: 2,
-                        fontWeight: 500,
-                        '&:hover': {
-                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                        },
-                      }}
-                      component={PrivacyPolicyLink}
-                    >
-                      Privacy
-                    </MenuItem>
-                  </Box>
-                </AuthorizedElement>
+                    },
+                  }}
+                >
+                  ConGen
+                </Typography>
               </Box>
 
-              <Box
+              <AuthorizedElement requireAuth={false}>
+                <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1 }}>
+                  <MenuItem
+                    sx={{
+                      py: 1,
+                      px: 2,
+                      borderRadius: 2,
+                      fontWeight: 500,
+                      '&:hover': {
+                        bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                      },
+                    }}
+                    component={ExercisesLink}
+                  >
+                    Exercises
+                  </MenuItem>
+                  <MenuItem
+                    sx={{
+                      py: 1,
+                      px: 2,
+                      borderRadius: 2,
+                      fontWeight: 500,
+                      '&:hover': {
+                        bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                      },
+                    }}
+                    component={PrivacyPolicyLink}
+                  >
+                    Privacy
+                  </MenuItem>
+                </Box>
+              </AuthorizedElement>
+            </Box>
+
+            <Box
+              sx={{
+                display: { xs: 'none', md: 'flex' },
+                gap: 1,
+                alignItems: 'center',
+              }}
+            >
+              <IconButton
+                onClick={handleUserMenuOpen}
                 sx={{
-                  display: { xs: 'none', md: 'flex' },
-                  gap: 1,
-                  alignItems: 'center',
+                  p: 1,
+                  borderRadius: '50%',
+                  '&:hover': {
+                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                  },
                 }}
               >
-                <IconButton
-                  onClick={handleUserMenuOpen}
-                  sx={{
-                    p: 1,
-                    borderRadius: '50%',
-                    '&:hover': {
-                      bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                {isAuthenticated && user ? (
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      bgcolor: theme => alpha(theme.palette.primary.main, 0.1),
+                      color: 'primary.main',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {user.name?.charAt(0).toUpperCase() || 'U'}
+                  </Avatar>
+                ) : (
+                  <AccountCircleIcon
+                    sx={{
+                      fontSize: 32,
+                      color: 'text.primary',
+                    }}
+                  />
+                )}
+              </IconButton>
+              <Menu
+                anchorEl={userMenuAnchor}
+                open={Boolean(userMenuAnchor)}
+                onClose={handleUserMenuClose}
+                sx={{ zIndex: theme.zIndex.drawer + 10 }}
+                PaperProps={{
+                  sx: {
+                    mt: 1,
+                    minWidth: 180,
+                    borderRadius: 2,
+                    boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
+                    '& .MuiMenuItem-root': {
+                      borderRadius: 1,
+                      mx: 0.5,
+                      my: 0.25,
                     },
-                  }}
-                >
-                  {isAuthenticated && user ? (
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        bgcolor: theme => alpha(theme.palette.primary.main, 0.1),
-                        color: 'primary.main',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {user.name?.charAt(0).toUpperCase() || 'U'}
-                    </Avatar>
-                  ) : (
-                    <AccountCircleIcon
-                      sx={{
-                        fontSize: 32,
-                        color: 'text.primary',
-                      }}
-                    />
-                  )}
-                </IconButton>
-                <Menu
-                  anchorEl={userMenuAnchor}
-                  open={Boolean(userMenuAnchor)}
-                  onClose={handleUserMenuClose}
-                  sx={{ zIndex: theme.zIndex.drawer + 10 }}
-                  PaperProps={{
-                    sx: {
-                      mt: 1,
-                      minWidth: 180,
-                      borderRadius: 2,
-                      boxShadow: theme => `0 8px 32px ${alpha(theme.palette.common.black, 0.12)}`,
-                      '& .MuiMenuItem-root': {
-                        borderRadius: 1,
-                        mx: 0.5,
-                        my: 0.25,
-                      },
-                    },
-                  }}
-                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-                >
-                  {isAuthenticated ? (
-                    [
-                      <MenuItem
-                        key="profile"
-                        component={ProfileLink}
-                        onClick={handleUserMenuClose}
-                        sx={{
-                          fontWeight: 500,
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                          },
-                        }}
-                      >
-                        Profile
-                      </MenuItem>,
-                      <Divider key="divider" sx={{ my: 1 }} />,
-                      <MenuItem
-                        key="signout"
-                        onClick={() => {
-                          handleUserMenuClose();
-                          logout();
-                        }}
-                        sx={{
-                          fontWeight: 500,
-                          color: 'error.main',
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.error.main, 0.08),
-                          },
-                        }}
-                      >
-                        Sign Out
-                      </MenuItem>,
-                    ]
-                  ) : (
+                  },
+                }}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+              >
+                {isAuthenticated ? (
+                  [
                     <MenuItem
-                      component={Link}
-                      to="/login"
+                      key="profile"
+                      component={ProfileLink}
                       onClick={handleUserMenuClose}
                       sx={{
                         fontWeight: 500,
@@ -350,140 +318,172 @@ function AppContent(): React.ReactElement {
                         },
                       }}
                     >
-                      Sign in
-                    </MenuItem>
-                  )}
-                </Menu>
-              </Box>
-
-              <Box sx={{ display: { sm: '', md: 'none' } }}>
-                <Button
-                  variant="text"
-                  color="primary"
-                  aria-label="menu"
-                  onClick={toggleDrawer(true)}
-                  sx={{
-                    minWidth: '40px',
-                    p: 1,
-                    borderRadius: 2,
-                    '&:hover': {
-                      bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                    },
-                  }}
-                >
-                  <MenuIcon />
-                </Button>
-                <Drawer
-                  anchor="right"
-                  open={open}
-                  onClose={toggleDrawer(false)}
-                  PaperProps={{
-                    sx: {
-                      bgcolor: 'background.paper',
-                      backdropFilter: 'blur(20px)',
-                      borderLeft: theme => `1px solid ${theme.palette.divider}`,
-                      width: '280px',
-                    },
-                  }}
-                >
-                  <Box
+                      Profile
+                    </MenuItem>,
+                    <Divider key="divider" sx={{ my: 1 }} />,
+                    <MenuItem
+                      key="signout"
+                      onClick={() => {
+                        handleUserMenuClose();
+                        logout();
+                      }}
+                      sx={{
+                        fontWeight: 500,
+                        color: 'error.main',
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                        },
+                      }}
+                    >
+                      Sign Out
+                    </MenuItem>,
+                  ]
+                ) : (
+                  <MenuItem
+                    component={Link}
+                    to="/login"
+                    onClick={handleUserMenuClose}
                     sx={{
-                      p: 3,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 1,
+                      fontWeight: 500,
+                      '&:hover': {
+                        bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                      },
                     }}
                   >
-                    <AuthorizedElement requireAuth={false}>
+                    Sign in
+                  </MenuItem>
+                )}
+              </Menu>
+            </Box>
+
+            <Box sx={{ display: { sm: '', md: 'none' } }}>
+              <Button
+                variant="text"
+                color="primary"
+                aria-label="menu"
+                onClick={toggleDrawer(true)}
+                sx={{
+                  minWidth: '40px',
+                  p: 1,
+                  borderRadius: 2,
+                  '&:hover': {
+                    bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                  },
+                }}
+              >
+                <MenuIcon />
+              </Button>
+              <Drawer
+                anchor="right"
+                open={open}
+                onClose={toggleDrawer(false)}
+                PaperProps={{
+                  sx: {
+                    bgcolor: 'background.paper',
+                    backdropFilter: 'blur(20px)',
+                    borderLeft: theme => `1px solid ${theme.palette.divider}`,
+                    width: '280px',
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1,
+                  }}
+                >
+                  <AuthorizedElement requireAuth={false}>
+                    <MenuItem
+                      component={ExercisesLink}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Exercises
+                    </MenuItem>
+                    <MenuItem
+                      component={PrivacyPolicyLink}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
+                    >
+                      Privacy Policy
+                    </MenuItem>
+                  </AuthorizedElement>
+                  <Divider sx={{ my: 2 }} />
+                  <AuthorizedElement
+                    fallback={
                       <MenuItem
-                        component={ExercisesLink}
+                        component={Link}
+                        to="/login"
                         sx={{
                           borderRadius: 2,
                           py: 1.5,
-                          fontWeight: 500,
                           '&:hover': {
                             bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
                           },
                         }}
                       >
-                        Exercises
-                      </MenuItem>
-                      <MenuItem
-                        component={PrivacyPolicyLink}
-                        sx={{
-                          borderRadius: 2,
-                          py: 1.5,
-                          fontWeight: 500,
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                          },
-                        }}
-                      >
-                        Privacy Policy
-                      </MenuItem>
-                    </AuthorizedElement>
-                    <Divider sx={{ my: 2 }} />
-                    <AuthorizedElement
-                      fallback={
-                        <MenuItem
-                          component={Link}
-                          to="/login"
+                        <Button
+                          color="primary"
+                          variant="contained"
                           sx={{
+                            width: '100%',
                             borderRadius: 2,
-                            py: 1.5,
-                            '&:hover': {
-                              bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                            },
+                            py: 1,
+                            fontWeight: 600,
+                            textTransform: 'none',
                           }}
                         >
-                          <Button
-                            color="primary"
-                            variant="contained"
-                            sx={{
-                              width: '100%',
-                              borderRadius: 2,
-                              py: 1,
-                              fontWeight: 600,
-                              textTransform: 'none',
-                            }}
-                          >
-                            Sign in
-                          </Button>
-                        </MenuItem>
-                      }
+                          Sign in
+                        </Button>
+                      </MenuItem>
+                    }
+                  >
+                    <MenuItem
+                      component={ProfileLink}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
+                        },
+                      }}
                     >
-                      <MenuItem
-                        component={ProfileLink}
-                        sx={{
-                          borderRadius: 2,
-                          py: 1.5,
-                          fontWeight: 500,
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.primary.main, 0.08),
-                          },
-                        }}
-                      >
-                        Profile
-                      </MenuItem>
-                      <MenuItem
-                        onClick={logout}
-                        sx={{
-                          borderRadius: 2,
-                          py: 1.5,
-                          fontWeight: 500,
-                          color: 'error.main',
-                          '&:hover': {
-                            bgcolor: theme => alpha(theme.palette.error.main, 0.08),
-                          },
-                        }}
-                      >
-                        Sign Out
-                      </MenuItem>
-                    </AuthorizedElement>
-                  </Box>
-                </Drawer>
-              </Box>
-            </Toolbar>
+                      Profile
+                    </MenuItem>
+                    <MenuItem
+                      onClick={logout}
+                      sx={{
+                        borderRadius: 2,
+                        py: 1.5,
+                        fontWeight: 500,
+                        color: 'error.main',
+                        '&:hover': {
+                          bgcolor: theme => alpha(theme.palette.error.main, 0.08),
+                        },
+                      }}
+                    >
+                      Sign Out
+                    </MenuItem>
+                  </AuthorizedElement>
+                </Box>
+              </Drawer>
+            </Box>
+          </Toolbar>
         </AppBar>
 
         {/* Main content area */}

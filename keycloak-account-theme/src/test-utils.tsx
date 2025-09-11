@@ -86,9 +86,7 @@ const TestWrapper: React.FC<{
   return (
     <ThemeProvider theme={muiTheme}>
       <CssBaseline />
-      <AuthProvider>
-        {children}
-      </AuthProvider>
+      <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>
   );
 };

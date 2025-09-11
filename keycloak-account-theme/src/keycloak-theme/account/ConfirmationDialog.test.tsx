@@ -36,13 +36,7 @@ describe('ConfirmationDialog', () => {
   });
 
   it('renders with custom button texts', () => {
-    render(
-      <ConfirmationDialog
-        {...defaultProps}
-        confirmText="Delete"
-        cancelText="Keep"
-      />
-    );
+    render(<ConfirmationDialog {...defaultProps} confirmText="Delete" cancelText="Keep" />);
 
     expect(screen.getByText('Keep')).toBeInTheDocument();
     expect(screen.getByText('Delete')).toBeInTheDocument();

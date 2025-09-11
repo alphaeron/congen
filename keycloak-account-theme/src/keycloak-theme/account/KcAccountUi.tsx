@@ -1,29 +1,29 @@
-import { Suspense, lazy } from "react";
-import { Box } from "@mui/material";
-import { LoadingSpinner } from "../../components/LoadingSpinner";
-import type { KcContext } from "./KcContext";
+import { Suspense, lazy } from 'react';
+import { Box } from '@mui/material';
+import { LoadingSpinner } from '../../components/LoadingSpinner';
+import type { KcContext } from './KcContext';
 
 // Lazy load the account components
-const Account = lazy(() => import("./Account"));
+const Account = lazy(() => import('./Account'));
 
 export default function KcAccountUi(props: { kcContext: KcContext }) {
-    const { kcContext } = props;
-    return (
-        <Suspense
-            fallback={
-                <Box
-                    sx={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        minHeight: '100vh',
-                    }}
-                >
-                    <LoadingSpinner size={60} />
-                </Box>
-            }
+  const { kcContext } = props;
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '100vh',
+          }}
         >
-            <Account kcContext={kcContext} />
-        </Suspense>
-    );
+          <LoadingSpinner size={60} />
+        </Box>
+      }
+    >
+      <Account kcContext={kcContext} />
+    </Suspense>
+  );
 }

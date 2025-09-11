@@ -19,7 +19,9 @@ jest.mock('./api/client', () => ({
 
 // Mock LoadingSpinner
 jest.mock('../../components/LoadingSpinner', () => ({
-  LoadingSpinner: ({ message }: { message: string }) => <div data-testid="loading-spinner">{message}</div>,
+  LoadingSpinner: ({ message }: { message: string }) => (
+    <div data-testid="loading-spinner">{message}</div>
+  ),
 }));
 
 const mockKcContext = {
@@ -76,7 +78,9 @@ describe('PasswordChangeDialog', () => {
     fireEvent.click(changeButton);
 
     await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Current password is required', { variant: 'error' });
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Current password is required', {
+        variant: 'error',
+      });
     });
   });
 
@@ -96,7 +100,10 @@ describe('PasswordChangeDialog', () => {
     fireEvent.click(changeButton);
 
     await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('New password must be at least 8 characters long', { variant: 'error' });
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith(
+        'New password must be at least 8 characters long',
+        { variant: 'error' }
+      );
     });
   });
 
@@ -116,7 +123,9 @@ describe('PasswordChangeDialog', () => {
     fireEvent.click(changeButton);
 
     await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('New passwords do not match', { variant: 'error' });
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('New passwords do not match', {
+        variant: 'error',
+      });
     });
   });
 
@@ -146,7 +155,9 @@ describe('PasswordChangeDialog', () => {
     });
 
     await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Password changed successfully!', { variant: 'success' });
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Password changed successfully!', {
+        variant: 'success',
+      });
     });
 
     expect(defaultProps.onClose).toHaveBeenCalled();
@@ -170,7 +181,9 @@ describe('PasswordChangeDialog', () => {
     fireEvent.click(changeButton);
 
     await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Failed to change password', { variant: 'error' });
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Failed to change password', {
+        variant: 'error',
+      });
     });
   });
 
@@ -192,7 +205,9 @@ describe('PasswordChangeDialog', () => {
     fireEvent.click(changeButton);
 
     await waitFor(() => {
-      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Failed to change password', { variant: 'error' });
+      expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Failed to change password', {
+        variant: 'error',
+      });
     });
   });
 
@@ -206,7 +221,9 @@ describe('PasswordChangeDialog', () => {
   });
 
   it('shows loading state during password change', async () => {
-    mockChangePassword.mockImplementation(() => new Promise(resolve => setTimeout(() => resolve({ success: true }), 100)));
+    mockChangePassword.mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve({ success: true }), 100))
+    );
 
     render(<PasswordChangeDialog {...defaultProps} />);
 

@@ -39,9 +39,13 @@ describe('UserProfileDrawer', () => {
     render(<UserProfileDrawer {...defaultProps} />);
 
     // Check that icons are rendered (they should be present as SVG elements)
-    const privacyIcon = screen.getByTestId('PrivacyTipIcon') || screen.getByText('Privacy & Data').closest('[data-testid*="Icon"]');
-    const personIcon = screen.getByTestId('PersonIcon') || screen.getByText('Manage Profile').closest('[data-testid*="Icon"]');
-    
+    const privacyIcon =
+      screen.getByTestId('PrivacyTipIcon') ||
+      screen.getByText('Privacy & Data').closest('[data-testid*="Icon"]');
+    const personIcon =
+      screen.getByTestId('PersonIcon') ||
+      screen.getByText('Manage Profile').closest('[data-testid*="Icon"]');
+
     expect(privacyIcon || screen.getByText('Privacy & Data')).toBeInTheDocument();
     expect(personIcon || screen.getByText('Manage Profile')).toBeInTheDocument();
   });
@@ -87,12 +91,16 @@ describe('UserProfileDrawer', () => {
 
   it('renders with different current sections', () => {
     const { rerender } = render(<UserProfileDrawer {...defaultProps} currentSection="privacy" />);
-    
-    expect(screen.getByText('Privacy & Data').closest('[role="button"]')).toHaveClass('Mui-selected');
+
+    expect(screen.getByText('Privacy & Data').closest('[role="button"]')).toHaveClass(
+      'Mui-selected'
+    );
 
     rerender(<UserProfileDrawer {...defaultProps} currentSection="personal-info" />);
-    
-    expect(screen.getByText('Manage Profile').closest('[role="button"]')).toHaveClass('Mui-selected');
+
+    expect(screen.getByText('Manage Profile').closest('[role="button"]')).toHaveClass(
+      'Mui-selected'
+    );
   });
 
   it('calls onSectionChange with correct section id', () => {

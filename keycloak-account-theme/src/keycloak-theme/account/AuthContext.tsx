@@ -44,13 +44,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [oidcAuth]);
 
-
   const login = async (): Promise<void> => {
     try {
       if (oidcAuth) {
         await oidcAuth.signinRedirect();
       }
-    } catch (error) {
+    } catch {
       // Login failed - error will be handled by OIDC context
     }
   };
@@ -61,7 +60,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await oidcAuth.signoutRedirect();
       }
       clearAuthState();
-    } catch (error) {
+    } catch {
       // Logout failed - still clear auth state
       clearAuthState();
     }

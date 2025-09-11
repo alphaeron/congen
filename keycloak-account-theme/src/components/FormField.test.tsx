@@ -22,10 +22,8 @@ const MockFormProvider: React.FC<{ children: React.ReactNode }> = ({ children })
 
   return (
     <div data-testid="form-provider">
-      {React.Children.map(children, child => 
-        React.isValidElement(child) 
-          ? React.cloneElement(child, { form })
-          : child
+      {React.Children.map(children, child =>
+        React.isValidElement(child) ? React.cloneElement(child, { form }) : child
       )}
     </div>
   );
@@ -42,7 +40,7 @@ describe('FormField', () => {
         <FormField name="testField" label="Test Label" />
       </MockFormProvider>
     );
-    
+
     expect(screen.getByLabelText('Test Label')).toBeInTheDocument();
     expect(screen.getByDisplayValue('')).toBeInTheDocument();
   });
@@ -53,7 +51,7 @@ describe('FormField', () => {
         <FormField name="email" type="email" label="Email" />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Email');
     expect(input).toHaveAttribute('type', 'email');
   });
@@ -64,7 +62,7 @@ describe('FormField', () => {
         <FormField name="password" type="password" label="Password" />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Password');
     expect(input).toHaveAttribute('type', 'password');
   });
@@ -77,15 +75,10 @@ describe('FormField', () => {
 
     render(
       <MockFormProvider>
-        <FormField 
-          name="selectField" 
-          type="select" 
-          label="Select Option" 
-          options={options}
-        />
+        <FormField name="selectField" type="select" label="Select Option" options={options} />
       </MockFormProvider>
     );
-    
+
     expect(screen.getByRole('combobox')).toBeInTheDocument();
     // Check that the label is present
     expect(screen.getAllByText('Select Option')).toHaveLength(2); // Label and legend
@@ -97,7 +90,7 @@ describe('FormField', () => {
         <FormField name="requiredField" label="Required Field" required />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByDisplayValue('');
     expect(input).toBeRequired();
   });
@@ -108,7 +101,7 @@ describe('FormField', () => {
         <FormField name="disabledField" label="Disabled Field" disabled />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Disabled Field');
     expect(input).toBeDisabled();
   });
@@ -119,22 +112,22 @@ describe('FormField', () => {
         <FormField name="testField" label="Test Label" />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Test Label');
     fireEvent.change(input, { target: { value: 'test value' } });
-    
+
     expect(input).toHaveValue('test value');
   });
 
   it('applies custom sx styles', () => {
     const customSx = { marginTop: 2 };
-    
+
     render(
       <MockFormProvider>
         <FormField name="styledField" label="Styled Field" sx={customSx} />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Styled Field');
     expect(input).toBeInTheDocument();
   });
@@ -145,7 +138,7 @@ describe('FormField', () => {
         <FormField name="fullWidthField" label="Full Width Field" />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Full Width Field');
     expect(input).toBeInTheDocument();
   });
@@ -156,7 +149,7 @@ describe('FormField', () => {
         <FormField name="notFullWidthField" label="Not Full Width Field" fullWidth={false} />
       </MockFormProvider>
     );
-    
+
     const input = screen.getByLabelText('Not Full Width Field');
     expect(input).toBeInTheDocument();
   });
