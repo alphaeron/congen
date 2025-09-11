@@ -39,32 +39,11 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     monitorSession: false, // Don't monitor session since we're in Keycloak
     code_challenge_method: 'S256',
     automaticSilentRenew: false, // Disable automatic renewal
-    silentRenewError: () => {
-      // Handle silent renew errors - don't redirect
-    },
     includeIdTokenInSilentRenew: false,
     checkSessionInterval: 0, // Disable session checking
     validateSubOnSilentRenew: false,
     silentRequestTimeout: 10000,
     accessTokenExpiringNotificationTime: 60,
-    onSigninSilent: () => {
-      // Silent signin completed
-    },
-    onSigninSilentError: () => {
-      // Don't redirect on silent signin failure
-    },
-    onUserLoaded: () => {
-      // User loaded
-    },
-    onUserUnloaded: () => {
-      // User unloaded
-    },
-    onUserSignedOut: () => {
-      // Don't redirect on signout
-    },
-    onSilentRenewError: () => {
-      // Don't redirect on silent renew error
-    },
     onSigninCallback: () => {
       // Handle signin callback - do nothing since we're already in Keycloak
       // This prevents the "No matching state found in storage" error

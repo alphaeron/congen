@@ -1,20 +1,18 @@
 import React from 'react';
 import {
   AppBar,
-  Toolbar,
-  Container,
-  Box,
-  Typography,
-  Button,
   Avatar,
+  Box,
+  Divider,
+  IconButton,
   Menu,
   MenuItem,
-  IconButton,
-  Divider,
+  Toolbar,
+  Typography,
 } from '@mui/material';
-import { AccountCircle } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 import type { KcContext } from './KcContext';
+import { handleLogout, navigateToFrontend } from './utils';
 
 import ConGenIcon from '../../resources/congen-icon.svg';
 
@@ -29,10 +27,6 @@ interface CongenAppBarProps {
  */
 export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  // Get the frontend URL - use environment variable or default to localhost
-  const frontendUrl = process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000';
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -42,14 +36,8 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    window.location.href = kcContext.authUrl + '/realms/' + kcContext.realm?.name + '/protocol/openid-connect/logout';
-  };
-
-
-
   const handleHomeClick = () => {
-    window.location.href = `${frontendUrl}/`;
+    navigateToFrontend('/');
   };
 
   return (
@@ -144,7 +132,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
                 component="a"
                 onClick={(e) => {
                   e.preventDefault();
-                  window.location.href = `${frontendUrl}/exercises`;
+                  navigateToFrontend('/exercises');
                 }}
               >
                 Exercises
@@ -163,7 +151,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
                 component="a"
                 onClick={(e) => {
                   e.preventDefault();
-                  window.location.href = `${frontendUrl}/privacy_policy`;
+                  navigateToFrontend('/privacy_policy');
                 }}
               >
                 Privacy
@@ -227,7 +215,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
                 onClick={(e) => {
                   e.preventDefault();
                   handleClose();
-                  window.location.href = `${frontendUrl}/user_profile?section=privacy`;
+                  navigateToFrontend('/user_profile?section=privacy');
                 }}
                 sx={{
                   fontWeight: 500,
@@ -242,7 +230,7 @@ export const CongenAppBar: React.FC<CongenAppBarProps> = ({ kcContext, user }) =
               <MenuItem
                 onClick={() => {
                   handleClose();
-                  handleLogout();
+                  handleLogout(kcContext);
                 }}
                 sx={{
                   fontWeight: 500,

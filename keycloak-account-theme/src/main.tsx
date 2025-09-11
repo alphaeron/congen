@@ -79,8 +79,6 @@ if (rootElement) {
             <App />
         </React.StrictMode>
     );
-} else {
-    console.error('Could not find root element');
 }
 
 declare global {

@@ -8,10 +8,6 @@ const Account = lazy(() => import("./Account"));
 
 export default function KcAccountUi(props: { kcContext: KcContext }) {
     const { kcContext } = props;
-    
-    // Debug logging
-    console.log('KcAccountUi - kcContext:', kcContext);
-
     return (
         <Suspense
             fallback={

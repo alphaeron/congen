@@ -91,11 +91,9 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
         });
         onClose();
       } else {
-        console.error('Password change failed:', result.error);
         enqueueSnackbar('Failed to change password', { variant: 'error' });
       }
     } catch (error) {
-      console.error('Password change error:', error);
       enqueueSnackbar('Failed to change password', { variant: 'error' });
     } finally {
       setLoading(false);

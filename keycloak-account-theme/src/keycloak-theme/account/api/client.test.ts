@@ -3,7 +3,6 @@
  */
 
 import { KeycloakAccountApiClient, createApiClient } from './client';
-import { API_ENDPOINTS } from './types';
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -43,7 +42,7 @@ describe('KeycloakAccountApiClient', () => {
       const result = await client.getUserProfile();
 
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}${API_ENDPOINTS.USER_PROFILE.replace('{realm}', mockRealm)}`,
+        `${mockBaseUrl}/realms/${mockRealm}/account/?userProfileMetadata=true`,
         expect.objectContaining({
           method: 'GET',
           headers: expect.objectContaining({
@@ -91,7 +90,7 @@ describe('KeycloakAccountApiClient', () => {
       const result = await client.updateUserProfile(updateData);
 
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}${API_ENDPOINTS.UPDATE_PROFILE.replace('{realm}', mockRealm)}`,
+        `${mockBaseUrl}/realms/${mockRealm}/account/`,
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(updateData),
@@ -119,7 +118,7 @@ describe('KeycloakAccountApiClient', () => {
       const result = await client.changePassword(passwordData);
 
       expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}${API_ENDPOINTS.CHANGE_PASSWORD.replace('{realm}', mockRealm)}`,
+        `${mockBaseUrl}/realms/${mockRealm}/account/credentials/password/`,
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(passwordData),

@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await oidcAuth.signinRedirect();
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      // Login failed - error will be handled by OIDC context
     }
   };
 
@@ -62,7 +62,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       clearAuthState();
     } catch (error) {
-      console.error('Logout failed:', error);
+      // Logout failed - still clear auth state
       clearAuthState();
     }
   };

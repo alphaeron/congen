@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import type { KcContext } from './KcContext';
+import { navigateToFrontend } from './utils';
 
 interface UserProfileDrawerProps {
   kcContext: KcContext;
@@ -30,16 +31,13 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
   currentSection,
   onSectionChange,
 }) => {
-  // Get the frontend URL - use environment variable or default to localhost
-  const frontendUrl = process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000';
-
   const menuItems = [
     {
       id: 'privacy',
       label: 'Privacy & Data',
       icon: <PrivacyIcon />,
       isExternal: true,
-      url: `${frontendUrl}/user_profile?section=privacy`,
+      path: '/user_profile?section=privacy',
     },
     {
       id: 'personal-info',
@@ -52,7 +50,7 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
   const handleItemClick = (item: typeof menuItems[0]) => {
     if (item.isExternal) {
       // Open in the same window to maintain the user experience
-      window.location.href = item.url;
+      navigateToFrontend(item.path);
     } else {
       onSectionChange(item.id);
     }

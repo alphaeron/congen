@@ -100,15 +100,12 @@ export default function Account({
             if (result.success && result.data) {
               setUser(result.data);
             } else {
-              console.error('Failed to fetch user data:', result.error);
               enqueueSnackbar('Failed to load user information', { variant: 'error' });
             }
           } else {
-            console.error('Failed to create API client');
             enqueueSnackbar('Failed to create API client', { variant: 'error' });
           }
         } catch (error) {
-          console.error('Error fetching user data:', error);
           enqueueSnackbar('Failed to load user information', { variant: 'error' });
         } finally {
           setUserLoading(false);
@@ -182,7 +179,6 @@ export default function Account({
           // Try to get user info from the OIDC context first
           if (window.oidcUser) {
             userInfo = window.oidcUser.profile;
-            console.log('User info from OIDC context:', userInfo);
           } else {
             // Fallback: get user info from the userinfo endpoint
             const userInfoResponse = await fetch(`${kcContext.serverBaseUrl}/realms/${kcContext.realm.name}/protocol/openid-connect/userinfo`, {
@@ -194,13 +190,12 @@ export default function Account({
             
             if (userInfoResponse.ok) {
               userInfo = await userInfoResponse.json();
-              console.log('User info from userinfo endpoint:', userInfo);
             } else {
-              console.error('Failed to get user info:', userInfoResponse.status, userInfoResponse.statusText);
+              // Failed to get user info from userinfo endpoint
             }
           }
         } catch (error) {
-          console.error('Error getting user info:', error);
+          // Error getting user info - will use fallback data
         }
 
         if (!userInfo) {
@@ -227,11 +222,9 @@ export default function Account({
             });
           }
         } else {
-          console.error('Profile update failed:', result.error);
           enqueueSnackbar('Failed to update user profile', { variant: 'error' });
         }
       } catch (error) {
-        console.error('Profile update error:', error);
         enqueueSnackbar('Failed to update user profile', { variant: 'error' });
       }
     },

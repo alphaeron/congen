@@ -55,15 +55,16 @@ export interface ApiError {
   statusCode?: number;
 }
 
-// Keycloak API endpoints
-export const API_ENDPOINTS = {
-  USER_PROFILE: '/realms/{realm}/account/?userProfileMetadata=true',
-  UPDATE_PROFILE: '/realms/{realm}/account/',
-  CHANGE_PASSWORD: '/realms/{realm}/account/credentials/password',
-  DELETE_ACCOUNT: '/realms/{realm}/account/',
-  SESSIONS: '/realms/{realm}/account/sessions',
-  APPLICATIONS: '/realms/{realm}/account/applications',
-  CREDENTIALS: '/realms/{realm}/account/credentials',
-} as const;
+export interface UseUserProfileResult {
+  user: UserProfile | null;
+  loading: boolean;
+  error: string | null;
+  refetch: () => Promise<void>;
+  updateProfile: (data: UpdateUserProfileRequest) => Promise<boolean>;
+}
 
-export type ApiEndpoint = typeof API_ENDPOINTS[keyof typeof API_ENDPOINTS];
+export interface UsePasswordChangeResult {
+  changePassword: (data: ChangePasswordRequest) => Promise<boolean>;
+  loading: boolean;
+  error: string | null;
+}
