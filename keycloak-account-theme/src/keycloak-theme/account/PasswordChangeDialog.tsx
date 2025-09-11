@@ -7,10 +7,10 @@ import {
   TextField,
   Button,
   Box,
-  Alert,
 } from '@mui/material';
-import { useKeycloakUser } from './api/useKeycloakUser';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
+import { useSnackbar } from 'notistack';
+import { createApiClient } from './api/client';
 import type { KcContext } from './KcContext';
 
 interface PasswordChangeDialogProps {
@@ -20,44 +20,40 @@ interface PasswordChangeDialogProps {
 }
 
 export default function PasswordChangeDialog({ open, onClose, kcContext }: PasswordChangeDialogProps) {
-  const { changePassword, loading, error } = useKeycloakUser(kcContext);
+  const { enqueueSnackbar } = useSnackbar();
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: '',
   });
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
       ...prev,
       [field]: event.target.value,
     }));
-    // Clear validation error when user starts typing
-    if (validationError) {
-      setValidationError(null);
-    }
   };
 
   const validateForm = (): boolean => {
     if (!formData.currentPassword) {
-      setValidationError('Current password is required');
+      enqueueSnackbar('Current password is required', { variant: 'error' });
       return false;
     }
     if (!formData.newPassword) {
-      setValidationError('New password is required');
+      enqueueSnackbar('New password is required', { variant: 'error' });
       return false;
     }
     if (formData.newPassword.length < 8) {
-      setValidationError('New password must be at least 8 characters long');
+      enqueueSnackbar('New password must be at least 8 characters long', { variant: 'error' });
       return false;
     }
     if (formData.newPassword !== formData.confirmPassword) {
-      setValidationError('New passwords do not match');
+      enqueueSnackbar('New passwords do not match', { variant: 'error' });
       return false;
     }
     if (formData.currentPassword === formData.newPassword) {
-      setValidationError('New password must be different from current password');
+      enqueueSnackbar('New password must be different from current password', { variant: 'error' });
       return false;
     }
     return true;
@@ -68,20 +64,41 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
       return;
     }
 
-    const success = await changePassword({
-      currentPassword: formData.currentPassword,
-      newPassword: formData.newPassword,
-    });
-    
-    if (success) {
-      // Reset form and close dialog
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+    setLoading(true);
+    try {
+      // Create API client from Keycloak context
+      const apiClient = createApiClient(kcContext);
+      if (!apiClient) {
+        enqueueSnackbar('No authentication token available', { variant: 'error' });
+        return;
+      }
+
+      // Change password using the API client
+      const result = await apiClient.changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+        confirmPassword: formData.confirmPassword,
       });
-      setValidationError(null);
-      onClose();
+
+      if (result.success) {
+        enqueueSnackbar('Password changed successfully!', { variant: 'success' });
+        
+        // Reset form and close dialog
+        setFormData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+        onClose();
+      } else {
+        console.error('Password change failed:', result.error);
+        enqueueSnackbar('Failed to change password', { variant: 'error' });
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      enqueueSnackbar('Failed to change password', { variant: 'error' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +109,6 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
         newPassword: '',
         confirmPassword: '',
       });
-      setValidationError(null);
       onClose();
     }
   };
@@ -102,12 +118,6 @@ export default function PasswordChangeDialog({ open, onClose, kcContext }: Passw
       <DialogTitle>Change Password</DialogTitle>
       <DialogContent>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-          {(error || validationError) && (
-            <Alert severity="error">
-              {error || validationError}
-            </Alert>
-          )}
-
           <TextField
             label="Current Password"
             type="password"

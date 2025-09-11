@@ -7,18 +7,31 @@ import CardContent from '@mui/material/CardContent';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import Alert from '@mui/material/Alert';
 import { LoadingSpinner } from '../../components/LoadingSpinner';
-import Snackbar from '@mui/material/Snackbar';
 import { useForm } from '@tanstack/react-form';
+import { useSnackbar } from 'notistack';
 import type { KcContext } from './KcContext';
-import PasswordChangeDialog from './PasswordChangeDialog';
 import { UserProfileDrawer } from './UserProfileDrawer';
 import { CongenAppBar } from './CongenAppBar';
-import { ProfileOverview } from './ProfileOverview';
-import { useKeycloakUser } from './api/useKeycloakUser';
 import { useAuth } from './AuthContext';
 import { FormField } from '../../components/FormField';
+import PasswordChangeDialog from './PasswordChangeDialog';
+import { createApiClient } from './api/client';
+
+// Global type declaration for OIDC user
+declare global {
+  interface Window {
+    oidcUser?: {
+      profile?: {
+        sub?: string;
+        email?: string;
+        given_name?: string;
+        family_name?: string;
+        [key: string]: any;
+      };
+    };
+  }
+}
 
 interface AccountProps {
   kcContext?: KcContext;
@@ -29,38 +42,17 @@ export default function Account({
   kcContext,
   i18n: _i18n,
 }: AccountProps) {
-  // Use the OIDC authentication context
-  const { user: authUser, isAuthenticated, isLoading: authLoading, login } = useAuth();
   
-  // Use the Keycloak user hook to fetch user data from the API
-  const { 
-    user: apiUser, 
-    loading: userLoading, 
-    error: userError, 
-    updateUser
-  } = useKeycloakUser(kcContext);
+  const { enqueueSnackbar } = useSnackbar();
   
-  // Extract user data from Keycloak context
-  // Keycloak provides user data in different possible locations
-  const user = kcContext?.user || kcContext?.profile || kcContext?.account?.user || kcContext?.userProfile;
-  
-  // Also check global window.kcContext for user data
-  const globalUser = (window as any).kcContext?.user;
-  
-  // Use OIDC user if available, otherwise fall back to API user or context user
-  const finalUser = authUser || apiUser || user || globalUser;
-  
-  console.log('Account - Final user data:', finalUser);
-  console.log('Account - Auth state:', { isAuthenticated, authLoading, authUser });
-  
-  // Use OIDC user data if available, otherwise fall back to other sources
-  const displayUser = authUser || apiUser || finalUser;
+  // Use the authentication context
+  const { isAuthenticated, isLoading: authLoading, login } = useAuth();
   
   const [currentPage, setCurrentPage] = useState('personal-info');
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
-  
+  const [user, setUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(false);
+  const [userFetchAttempted, setUserFetchAttempted] = useState(false);
 
   // Guard clause to handle undefined kcContext
   if (!kcContext) {
@@ -93,9 +85,51 @@ export default function Account({
     );
   }
 
-  // If we have user data from any source, show the account interface
-  // Don't require OIDC authentication if we have user data from Keycloak session
-  if (!displayUser && !isAuthenticated) {
+  // Fetch user data when authenticated
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (isAuthenticated && !userFetchAttempted && !userLoading) {
+        setUserLoading(true);
+        setUserFetchAttempted(true);
+        try {
+          // Create API client from Keycloak context
+          const apiClient = createApiClient(kcContext);
+          if (apiClient) {
+            // Try to get user profile from Keycloak
+            const result = await apiClient.getUserProfile();
+            if (result.success && result.data) {
+              setUser(result.data);
+            } else {
+              console.error('Failed to fetch user data:', result.error);
+              enqueueSnackbar('Failed to load user information', { variant: 'error' });
+            }
+          } else {
+            console.error('Failed to create API client');
+            enqueueSnackbar('Failed to create API client', { variant: 'error' });
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+          enqueueSnackbar('Failed to load user information', { variant: 'error' });
+        } finally {
+          setUserLoading(false);
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [isAuthenticated, userFetchAttempted, userLoading, kcContext, enqueueSnackbar]);
+
+  // Reset user fetch state when authentication changes
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUser(null);
+      setUserFetchAttempted(false);
+      setUserLoading(false);
+    }
+  }, [isAuthenticated]);
+
+  // Handle unauthenticated state
+  if (!isAuthenticated) {
     return (
       <Box 
         sx={{ 
@@ -107,19 +141,25 @@ export default function Account({
         }}
       >
         <Box sx={{ textAlign: 'center', p: 3 }}>
-          <Typography variant="h6" color="primary">
-            Secure Profile Access
+          <Typography variant="h5" gutterBottom>
+            Authentication Required
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1, mb: 2 }}>
-            Please log in to verify your identity so we can safely update your profile details.
+          <Typography variant="body1" sx={{ mb: 3 }}>
+            Please log in to access your account.
           </Typography>
-          <Button variant="contained" onClick={login}>
-            Verify Identity
+          <Button 
+            variant="contained" 
+            onClick={login}
+            size="large"
+          >
+            Log In
           </Button>
         </Box>
       </Box>
     );
   }
+
+  // We're authenticated, show the account page
 
   // TanStack Form for profile editing
   const form = useForm({
@@ -128,25 +168,82 @@ export default function Account({
       lastName: '',
     },
     onSubmit: async ({ value }) => {
-      const success = await updateUser({
-        firstName: value.firstName,
-        lastName: value.lastName,
-      });
+      try {
+        // Create API client from Keycloak context
+        const apiClient = createApiClient(kcContext);
+        if (!apiClient) {
+          enqueueSnackbar('No authentication token available', { variant: 'error' });
+          return;
+        }
 
-      if (success) {
-        setSuccessMessage('Profile updated successfully!');
-        setShowSuccessMessage(true);
+        // Get user information from the OIDC context or userinfo endpoint
+        let userInfo = null;
+        try {
+          // Try to get user info from the OIDC context first
+          if (window.oidcUser) {
+            userInfo = window.oidcUser.profile;
+            console.log('User info from OIDC context:', userInfo);
+          } else {
+            // Fallback: get user info from the userinfo endpoint
+            const userInfoResponse = await fetch(`${kcContext.serverBaseUrl}/realms/${kcContext.realm.name}/protocol/openid-connect/userinfo`, {
+              headers: {
+                'Authorization': `Bearer ${apiClient.getAccessToken()}`,
+                'Accept': 'application/json',
+              },
+            });
+            
+            if (userInfoResponse.ok) {
+              userInfo = await userInfoResponse.json();
+              console.log('User info from userinfo endpoint:', userInfo);
+            } else {
+              console.error('Failed to get user info:', userInfoResponse.status, userInfoResponse.statusText);
+            }
+          }
+        } catch (error) {
+          console.error('Error getting user info:', error);
+        }
+
+        if (!userInfo) {
+          enqueueSnackbar('Unable to get user information', { variant: 'error' });
+          return;
+        }
+
+        // Update user profile using the API client
+        const result = await apiClient.updateUserProfile({
+          firstName: value.firstName,
+          lastName: value.lastName,
+        });
+
+        if (result.success) {
+          enqueueSnackbar('Profile updated successfully!', { variant: 'success' });
+          
+          // Profile updated successfully
+          
+          // Update the Keycloak context user data
+          if (kcContext?.user) {
+            Object.assign(kcContext.user, {
+              firstName: value.firstName,
+              lastName: value.lastName,
+            });
+          }
+        } else {
+          console.error('Profile update failed:', result.error);
+          enqueueSnackbar('Failed to update user profile', { variant: 'error' });
+        }
+      } catch (error) {
+        console.error('Profile update error:', error);
+        enqueueSnackbar('Failed to update user profile', { variant: 'error' });
       }
     },
   });
 
   // Update form data when user data loads
   useEffect(() => {
-    if (displayUser) {
-      form.setFieldValue('firstName', displayUser.firstName || '');
-      form.setFieldValue('lastName', displayUser.lastName || '');
+    if (user) {
+      form.setFieldValue('firstName', user.given_name || user.firstName || '');
+      form.setFieldValue('lastName', user.family_name || user.lastName || '');
     }
-  }, [displayUser, form]);
+  }, [user, form]);
 
   const handlePageChange = (page: string) => {
     setCurrentPage(page);
@@ -154,8 +251,8 @@ export default function Account({
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Congen App Bar */}
-      <CongenAppBar kcContext={kcContext} user={displayUser} />
+        {/* Congen App Bar */}
+        <CongenAppBar kcContext={kcContext} user={user} />
       
       <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
         {/* User Profile Drawer */}
@@ -176,25 +273,6 @@ export default function Account({
           }}
         >
         <Container maxWidth="xl" sx={{ py: 2 }}>
-          {/* Success Message Snackbar */}
-          <Snackbar
-            open={showSuccessMessage}
-            autoHideDuration={6000}
-            onClose={() => setShowSuccessMessage(false)}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-          >
-            <Alert onClose={() => setShowSuccessMessage(false)} severity="success" sx={{ width: '100%' }}>
-              {successMessage}
-            </Alert>
-          </Snackbar>
-
-          {/* Error Messages */}
-          {userError && (
-            <Alert severity="error" sx={{ mb: 3 }}>
-              {userError}
-            </Alert>
-          )}
-
           {currentPage === 'personal-info' && (
             <form
               onSubmit={(e) => {
@@ -203,30 +281,14 @@ export default function Account({
                 form.handleSubmit();
               }}
             >
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{ mb: 4, fontWeight: 700, color: 'text.primary' }}
-              >
-                Personal info
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ mb: 4 }}
-              >
-                Manage your basic information
-              </Typography>
-
               {/* Member Summary Section */}
               <Card sx={{ maxWidth: 600, mb: 3 }}>
                 <CardContent sx={{ p: 4 }}>
                   <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-                    Member Summary
+                    Manage Profile
                   </Typography>
                   
-                  {(userLoading || authLoading) ? (
+                  {authLoading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                       <LoadingSpinner size={20} />
                     </Box>
@@ -234,17 +296,11 @@ export default function Account({
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar sx={{ bgcolor: 'primary.main' }}>
-                          {displayUser?.firstName?.[0] || displayUser?.username?.[0] || 'U'}
+                          {user?.email?.[0] || user?.preferred_username?.[0] || user?.username?.[0] || 'U'}
                         </Avatar>
                         <Box>
-                          <Typography variant="h6">
-                            {displayUser?.firstName && displayUser?.lastName 
-                              ? `${displayUser.firstName} ${displayUser.lastName}`
-                              : displayUser?.username || 'User'
-                            }
-                          </Typography>
                           <Typography variant="body2" color="text.secondary">
-                            {displayUser?.email || 'No email available'}
+                            {user?.email || 'No email available'}
                           </Typography>
                         </Box>
                       </Box>
@@ -260,7 +316,7 @@ export default function Account({
                     Edit Profile
                   </Typography>
                   
-                  {(userLoading || authLoading) ? (
+                  {authLoading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                       <LoadingSpinner size={20} />
                     </Box>
@@ -291,7 +347,7 @@ export default function Account({
                       type="submit"
                       variant="contained" 
                       sx={{ borderRadius: '12px', px: 3 }}
-                      disabled={userLoading || authLoading || !form.state.isValid || form.state.isSubmitting}
+                      disabled={authLoading || !form.state.isValid || form.state.isSubmitting}
                     >
                       {form.state.isSubmitting ? <LoadingSpinner size={20} /> : 'Save Changes'}
                     </Button>
@@ -300,12 +356,12 @@ export default function Account({
                       variant="outlined" 
                       sx={{ borderRadius: '12px', px: 3 }}
                       onClick={() => {
-                        if (displayUser) {
-                          form.setFieldValue('firstName', displayUser.firstName || '');
-                          form.setFieldValue('lastName', displayUser.lastName || '');
+                        if (user) {
+                          form.setFieldValue('firstName', user.given_name || user.firstName || '');
+                          form.setFieldValue('lastName', user.family_name || user.lastName || '');
                         }
                       }}
-                      disabled={userLoading || authLoading}
+                      disabled={authLoading}
                     >
                       Reset
                     </Button>
@@ -328,7 +384,7 @@ export default function Account({
                     variant="outlined" 
                     sx={{ borderRadius: '12px', px: 3 }}
                     onClick={() => setShowPasswordDialog(true)}
-                    disabled={userLoading || authLoading}
+                    disabled={authLoading}
                   >
                     Change Password
                   </Button>
@@ -336,8 +392,6 @@ export default function Account({
               </Card>
             </form>
           )}
-
-
         </Container>
         </Box>
       </Box>
@@ -348,6 +402,6 @@ export default function Account({
         onClose={() => setShowPasswordDialog(false)}
         kcContext={kcContext}
       />
-    </Box>
+      </Box>
   );
 }

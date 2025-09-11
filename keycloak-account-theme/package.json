@@ -39,6 +39,7 @@
     "@pigment-css/react": "^0.0.30",
     "@tanstack/react-form": "^1.19.5",
     "keycloakify": "^11.9.4",
+    "notistack": "^3.0.2",
     "process": "^0.11.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

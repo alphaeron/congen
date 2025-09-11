@@ -60,7 +60,8 @@ variable "frontend_redirect_uris" {
     "https://staging.congen.com/auth/callback",
     "https://staging.congen.com/silent-renew.html",
     "https://staging.congen.com/password-change-redirect",
-    "https://staging.congen.com/profile-edit-redirect"
+    "https://staging.congen.com/profile-edit-redirect",
+    "https://staging.congen.com/realms/congen/account/"
   ]
 }
 

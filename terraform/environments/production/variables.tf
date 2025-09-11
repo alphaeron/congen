@@ -65,7 +65,9 @@ variable "frontend_redirect_uris" {
     "https://congen.com/password-change-redirect",
     "https://www.congen.com/password-change-redirect",
     "https://congen.com/profile-edit-redirect",
-    "https://www.congen.com/profile-edit-redirect"
+    "https://www.congen.com/profile-edit-redirect",
+    "https://congen.com/realms/congen/account/",
+    "https://www.congen.com/realms/congen/account/"
   ]
 }
 

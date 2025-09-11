@@ -1,26 +1,20 @@
 import type { AuthProviderProps } from 'react-oidc-context';
+import { DEPLOYMENT_ENVIRONMENT, KEYCLOAK_URL, BASE_URL } from '../../globals';
 
 /**
- * Environment configuration for the account theme.
- */
-const DEPLOYMENT_ENVIRONMENT = 'local'; // Account theme runs in local environment
-const BASE_URL = 'http://localhost';
-const KEYCLOAK_URL = `${BASE_URL}:8080`;
-
-/**
- * Constructs the OIDC configuration dynamically based on the environment.
- * Uses the same client as the frontend to share authentication sessions.
+ * Constructs the OIDC configuration for Keycloak account theme.
+ * Uses environment-based configuration like the frontend.
  */
 export const getOidcConfig = () => {
   const authority = `${KEYCLOAK_URL}/realms/congen`;
-  const accountUrl = `${window.location.origin}/realms/congen/account/`;
+  const keycloakHost = KEYCLOAK_URL;
 
   const config = {
     authority: authority,
-    client_id: 'congen-frontend', // Same client as frontend
-    redirect_uri: accountUrl,
-    post_logout_redirect_uri: accountUrl,
-    silent_redirect_uri: accountUrl,
+    client_id: 'account-console',
+    redirect_uri: `${keycloakHost}/realms/congen/account/`,
+    post_logout_redirect_uri: keycloakHost,
+    silent_redirect_uri: `${keycloakHost}/realms/congen/account/`,
   };
 
   return config;
@@ -41,32 +35,24 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     silent_redirect_uri: config.silent_redirect_uri,
     scope: 'openid profile email',
     response_type: 'code',
-    loadUserInfo: true,
-    monitorSession: true, // Enable session monitoring for better security
-    // Enable PKCE for enhanced security
+    loadUserInfo: false, // Don't load user info since we have it from Keycloak context
+    monitorSession: false, // Don't monitor session since we're in Keycloak
     code_challenge_method: 'S256',
-    // Security enhancements
-    automaticSilentRenew: true, // Automatically renew tokens before they expire
+    automaticSilentRenew: false, // Disable automatic renewal
     silentRenewError: () => {
-      // The error will be handled by the AuthContext error handler
+      // Handle silent renew errors - don't redirect
     },
-    // Additional security settings
-    includeIdTokenInSilentRenew: false, // Don't include ID token in silent renew
-    checkSessionInterval: 120000, // Check session every 120 seconds
-    // Token validation
-    validateSubOnSilentRenew: true, // Validate subject on token renewal
-    // Silent renew configuration
-    silentRequestTimeout: 10000, // 10 second timeout for silent requests
-    accessTokenExpiringNotificationTime: 60, // Start renewal 60 seconds before expiry
-    // Session monitoring callbacks
+    includeIdTokenInSilentRenew: false,
+    checkSessionInterval: 0, // Disable session checking
+    validateSubOnSilentRenew: false,
+    silentRequestTimeout: 10000,
+    accessTokenExpiringNotificationTime: 60,
     onSigninSilent: () => {
       // Silent signin completed
     },
     onSigninSilentError: () => {
-      // Redirect to login on silent signin failure
-      window.location.href = '/login';
+      // Don't redirect on silent signin failure
     },
-    // User session callbacks
     onUserLoaded: () => {
       // User loaded
     },
@@ -74,14 +60,15 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
       // User unloaded
     },
     onUserSignedOut: () => {
-      // Clear any local state and redirect to login
-      window.location.href = '/login';
+      // Don't redirect on signout
     },
     onSilentRenewError: () => {
-      // Force re-authentication on silent renew failure
-      window.location.href = '/login';
+      // Don't redirect on silent renew error
     },
-
+    onSigninCallback: () => {
+      // Handle signin callback - do nothing since we're already in Keycloak
+      // This prevents the "No matching state found in storage" error
+    },
     metadata: {
       authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
       token_endpoint: `${authority}/protocol/openid-connect/token`,

@@ -4,15 +4,23 @@
  */
 
 export interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  emailVerified: boolean;
-  enabled: boolean;
-  createdTimestamp: number;
+  // Keycloak account API response fields
+  id?: string;
+  username?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  emailVerified?: boolean;
+  enabled?: boolean;
+  createdTimestamp?: number;
   attributes?: Record<string, string[]>;
+  // OpenID Connect fields (for compatibility)
+  sub?: string;
+  preferred_username?: string;
+  email_verified?: boolean;
+  given_name?: string;
+  family_name?: string;
+  name?: string;
 }
 
 export interface UpdateUserProfileRequest {
@@ -49,10 +57,10 @@ export interface ApiError {
 
 // Keycloak API endpoints
 export const API_ENDPOINTS = {
-  USER_PROFILE: '/realms/{realm}/account',
-  UPDATE_PROFILE: '/realms/{realm}/account',
+  USER_PROFILE: '/realms/{realm}/account/?userProfileMetadata=true',
+  UPDATE_PROFILE: '/realms/{realm}/account/',
   CHANGE_PASSWORD: '/realms/{realm}/account/credentials/password',
-  DELETE_ACCOUNT: '/realms/{realm}/account',
+  DELETE_ACCOUNT: '/realms/{realm}/account/',
   SESSIONS: '/realms/{realm}/account/sessions',
   APPLICATIONS: '/realms/{realm}/account/applications',
   CREDENTIALS: '/realms/{realm}/account/credentials',
