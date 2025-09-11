@@ -28,7 +28,7 @@
     </#if>
 </head>
 
-<body class="admin-console user">
+<body class="account-console user">
     <div id="kc-account-root"></div>
 
     <script>

@@ -44,7 +44,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
 
   // Use the authentication context
   const { isAuthenticated, isLoading: authLoading, login } = useAuth();
-  
+
   // Get OIDC auth for access token
   const oidcAuth = useOidcAuth();
 
@@ -135,15 +135,12 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
       if (isAuthenticated && !userFetchAttempted && !userLoading) {
         setUserLoading(true);
         setUserFetchAttempted(true);
-        
+
         try {
           // Check if we have an OIDC access token
           if (!oidcAuth.user?.access_token) {
-            console.log('No OIDC access token available, oidcAuth.user:', oidcAuth.user);
             throw new Error('No OIDC access token available');
           }
-
-          console.log('Making API call to userinfo endpoint with token:', oidcAuth.user.access_token.substring(0, 20) + '...');
 
           // Make API call to Keycloak userinfo endpoint
           const response = await fetch(`${kcContext.serverBaseUrl}/realms/congen/protocol/openid-connect/userinfo`, {
@@ -153,19 +150,13 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
             },
           });
 
-          console.log('Userinfo API response status:', response.status);
-
           if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Userinfo API error response:', errorText);
             throw new Error(`Failed to fetch user info: ${response.status} ${response.statusText}`);
           }
 
           const userData = await response.json();
-          console.log('User data received:', userData);
           setUser(userData);
         } catch (error) {
-          console.error('Error fetching user data:', error);
           enqueueSnackbar('Failed to load user information', { variant: 'error' });
         } finally {
           setUserLoading(false);
@@ -228,9 +219,9 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
           bgcolor: 'background.default',
         }}
       >
-        <LoadingSpinner 
-          size={60} 
-          message={oidcAuth.isLoading ? 'Initializing Authentication...' : 'Authenticating...'} 
+        <LoadingSpinner
+          size={60}
+          message={oidcAuth.isLoading ? 'Initializing Authentication...' : 'Authenticating...'}
         />
       </Box>
     );

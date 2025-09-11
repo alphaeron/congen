@@ -135,13 +135,9 @@ describe('AuthContext', () => {
 
   describe('useAuth', () => {
     it('should throw error when used outside AuthProvider', () => {
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
-
       expect(() => {
         render(<TestComponent />);
       }).toThrow('useAuth must be used within an AuthProvider');
-
-      consoleError.mockRestore();
     });
 
     it('should return auth context when used within AuthProvider', () => {
