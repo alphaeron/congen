@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import React from 'react';
 import { useForm } from '@tanstack/react-form';
 
@@ -67,7 +67,7 @@ describe('FormField', () => {
     expect(input).toHaveAttribute('type', 'password');
   });
 
-  it('renders select field with options', () => {
+  it('renders select field with options', async () => {
     const options = [
       { value: 'option1', label: 'Option 1' },
       { value: 'option2', label: 'Option 2' },
@@ -79,7 +79,10 @@ describe('FormField', () => {
       </MockFormProvider>
     );
 
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toBeInTheDocument();
+    });
+    
     // Check that the label is present
     expect(screen.getAllByText('Select Option')).toHaveLength(2); // Label and legend
   });
@@ -106,7 +109,7 @@ describe('FormField', () => {
     expect(input).toBeDisabled();
   });
 
-  it('handles input change', () => {
+  it('handles input change', async () => {
     render(
       <MockFormProvider>
         <FormField name="testField" label="Test Label" />
@@ -114,9 +117,14 @@ describe('FormField', () => {
     );
 
     const input = screen.getByLabelText('Test Label');
-    fireEvent.change(input, { target: { value: 'test value' } });
+    
+    await act(async () => {
+      fireEvent.change(input, { target: { value: 'test value' } });
+    });
 
-    expect(input).toHaveValue('test value');
+    await waitFor(() => {
+      expect(input).toHaveValue('test value');
+    });
   });
 
   it('applies custom sx styles', () => {

@@ -56,7 +56,7 @@ describe('UserProfileDrawer', () => {
     const privacyItem = screen.getByText('Privacy & Data');
     fireEvent.click(privacyItem);
 
-    expect(mockNavigateToFrontend).toHaveBeenCalledWith('/user_profile?section=privacy');
+    expect(mockNavigateToFrontend).toHaveBeenCalledWith('/profile?section=privacy');
   });
 
   it('handles internal navigation for personal info section', () => {

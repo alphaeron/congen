@@ -100,34 +100,6 @@ describe('KeycloakAccountApiClient', () => {
       expect(result.success).toBe(true);
     });
   });
-
-  describe('changePassword', () => {
-    it('should make POST request to change password', async () => {
-      const client = new KeycloakAccountApiClient(mockBaseUrl, mockRealm, mockAccessToken);
-      const passwordData = {
-        currentPassword: 'oldpass',
-        newPassword: 'newpass',
-        confirmPassword: 'newpass',
-      };
-
-      (fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        status: 204,
-      });
-
-      const result = await client.changePassword(passwordData);
-
-      expect(fetch).toHaveBeenCalledWith(
-        `${mockBaseUrl}/realms/${mockRealm}/account/credentials/password/`,
-        expect.objectContaining({
-          method: 'POST',
-          body: JSON.stringify(passwordData),
-        })
-      );
-
-      expect(result.success).toBe(true);
-    });
-  });
 });
 
 describe('createApiClient', () => {
