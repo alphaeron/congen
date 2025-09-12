@@ -21,7 +21,10 @@ export const getUserWeakMuscles = async (userId: string): Promise<UserWeakMuscle
  * @param muscleName The name of the muscle to add as weak
  * @returns Promise containing the created user weak muscle
  */
-export const addUserWeakMuscle = async (userId: string, muscleName: string): Promise<UserWeakMuscle> => {
+export const addUserWeakMuscle = async (
+  userId: string,
+  muscleName: string
+): Promise<UserWeakMuscle> => {
   return REQUEST({
     method: 'POST',
     url: '/user_weak_muscle/',

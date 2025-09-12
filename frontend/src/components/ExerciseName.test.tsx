@@ -1,10 +1,11 @@
-import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
+import { render, screen } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { ExerciseName } from './ExerciseName';
 import { ENDPOINT } from '../api/endpoint';
+import { useApiGet } from '../api/hooks';
 import type { Exercise, ExerciseMuscle, Muscle } from '../api/types';
 
 // Mock the useApiGet hook
@@ -12,7 +13,7 @@ jest.mock('../api/hooks', () => ({
   useApiGet: jest.fn(),
 }));
 
-const mockUseApiGet = require('../api/hooks').useApiGet;
+const mockUseApiGet = useApiGet as jest.MockedFunction<typeof useApiGet>;
 
 describe('ExerciseName', () => {
   let mockAdapter: AxiosMockAdapter;
@@ -82,11 +83,11 @@ describe('ExerciseName', () => {
     );
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    
+
     // Check that the element has cursor pointer style and is a link
     const exerciseNameElement = screen.getByText('Bench Press');
     expect(exerciseNameElement).toHaveStyle('cursor: pointer');
-    
+
     // Check that it's wrapped in a link
     const linkElement = exerciseNameElement.closest('a');
     expect(linkElement).toHaveAttribute('href', '/exercises/Bench%20Press');
@@ -117,7 +118,7 @@ describe('ExerciseName', () => {
     );
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    
+
     // Check that it's wrapped in a link even when loading
     const exerciseNameElement = screen.getByText('Bench Press');
     const linkElement = exerciseNameElement.closest('a');
@@ -149,7 +150,7 @@ describe('ExerciseName', () => {
     );
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    
+
     // Check that it's wrapped in a link even when there's an error
     const exerciseNameElement = screen.getByText('Bench Press');
     const linkElement = exerciseNameElement.closest('a');
@@ -176,11 +177,7 @@ describe('ExerciseName', () => {
 
     render(
       <MemoryRouter>
-        <ExerciseName 
-          exerciseName="Bench Press" 
-          variant="h6"
-          sx={{ fontWeight: 'bold' }}
-        />
+        <ExerciseName exerciseName="Bench Press" variant="h6" sx={{ fontWeight: 'bold' }} />
       </MemoryRouter>
     );
 
@@ -208,9 +205,7 @@ describe('ExerciseName', () => {
 
     render(
       <MemoryRouter>
-        <ExerciseName exerciseName="Bench Press">
-          Custom Exercise Name
-        </ExerciseName>
+        <ExerciseName exerciseName="Bench Press">Custom Exercise Name</ExerciseName>
       </MemoryRouter>
     );
 

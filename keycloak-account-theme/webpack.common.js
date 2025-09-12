@@ -19,7 +19,9 @@ module.exports = {
     new FaviconsWebpackPlugin(path.resolve(__dirname, 'public/logo.png')),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
-      'process.env.REACT_APP_FRONTEND_URL': JSON.stringify(process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000'),
+      'process.env.REACT_APP_FRONTEND_URL': JSON.stringify(
+        process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000'
+      ),
     }),
     new CopyWebpackPlugin({
       patterns: [

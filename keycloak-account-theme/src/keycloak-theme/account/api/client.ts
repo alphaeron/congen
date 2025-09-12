@@ -3,11 +3,7 @@
  * Handles authentication and API calls to Keycloak endpoints
  */
 
-import {
-  type ApiResponse,
-  type UserProfile,
-  type UpdateUserProfileRequest,
-} from './types';
+import { type ApiResponse, type UserProfile, type UpdateUserProfileRequest } from './types';
 import { KEYCLOAK_URL } from '../../../globals';
 
 // Token getter registration
@@ -151,7 +147,8 @@ export function createApiClient(
 ): KeycloakAccountApiClient | null {
   try {
     // Use environment-based configuration like the frontend
-    const baseUrl = (kcContext?.authUrl as string) || (kcContext?.serverBaseUrl as string) || KEYCLOAK_URL;
+    const baseUrl =
+      (kcContext?.authUrl as string) || (kcContext?.serverBaseUrl as string) || KEYCLOAK_URL;
 
     // Extract realm name from kcContext.realm.name
     const realm = ((kcContext?.realm as Record<string, unknown>)?.name as string) || 'congen';

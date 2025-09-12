@@ -26,11 +26,14 @@ describe('KcAccountUi', () => {
     });
 
     // Wait for the lazy-loaded component to finish loading
-    await waitFor(() => {
-      const conGenElement = screen.queryByText('ConGen');
-      const loadingElement = screen.queryByText('Loading...');
-      expect(conGenElement || loadingElement).toBeTruthy();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        const conGenElement = screen.queryByText('ConGen');
+        const loadingElement = screen.queryByText('Loading...');
+        expect(conGenElement || loadingElement).toBeTruthy();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('renders with Suspense wrapper', async () => {
@@ -39,9 +42,12 @@ describe('KcAccountUi', () => {
     });
 
     // Wait for the Account component to load
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('has correct fallback configuration', async () => {
@@ -50,9 +56,12 @@ describe('KcAccountUi', () => {
     });
 
     // Wait for the Account component to render
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('renders with correct structure', async () => {
@@ -61,9 +70,12 @@ describe('KcAccountUi', () => {
     });
 
     // Wait for the Account component to render with proper structure
-    await waitFor(() => {
-      expect(screen.getByText('ConGen')).toBeInTheDocument();
-      expect(screen.getByText('User Profile')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('ConGen')).toBeInTheDocument();
+        expect(screen.getByText('User Profile')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 });

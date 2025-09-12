@@ -1,13 +1,12 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { SnackbarProvider } from 'notistack';
-import MockAdapter from 'axios-mock-adapter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
 import { ENDPOINT } from '../api/endpoint';
-import { useAuth } from '../contexts/AuthContext';
 import type { Program, UserExercisePoolResponse } from '../api/types';
 
 // Mock auth context
@@ -29,22 +28,17 @@ jest.mock('react-router', () => ({
   useSearchParams: () => [mockSearchParams],
 }));
 
-
-const mockUser = {
-  keycloak_id: 'test-user-id',
-  name: 'Test User',
-};
-  const mockPrograms: Program[] = [
-    {
-      id: 1,
-      user_id: 'test-user-id',
-      name: 'Test Program',
-      current_week_number: 1,
-      created_at: new Date('2023-01-01'),
-      updated_at: new Date('2023-01-01'),
-      is_active: true,
-    },
-  ];
+const mockPrograms: Program[] = [
+  {
+    id: 1,
+    user_id: 'test-user-id',
+    name: 'Test Program',
+    current_week_number: 1,
+    created_at: new Date('2023-01-01'),
+    updated_at: new Date('2023-01-01'),
+    is_active: true,
+  },
+];
 
 const mockExercisePoolData: UserExercisePoolResponse = {
   user_id: 'test-user-id',
@@ -86,13 +80,11 @@ describe('ExerciseRotationVisualization', () => {
         },
       },
     });
-    
+
     return render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <SnackbarProvider>
-            {component}
-          </SnackbarProvider>
+          <SnackbarProvider>{component}</SnackbarProvider>
         </MemoryRouter>
       </QueryClientProvider>
     );
@@ -101,7 +93,7 @@ describe('ExerciseRotationVisualization', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mock = new MockAdapter(ENDPOINT);
-    
+
     // Mock the exercise API calls that ExerciseName component makes
     mock.onGet('/exercise/').reply(200, [
       { id: 1, name: 'Bench Press' },
@@ -133,7 +125,7 @@ describe('ExerciseRotationVisualization', () => {
 
   it('should show category details when category is selected', async () => {
     mockSearchParams.set('category', 'primary');
-    
+
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
@@ -143,7 +135,6 @@ describe('ExerciseRotationVisualization', () => {
       expect(screen.getByText('Primary Exercises')).toBeInTheDocument();
     });
   });
-
 
   it('should display exercise pool statistics', async () => {
     mock.onGet('/program/').reply(200, mockPrograms);
@@ -192,18 +183,20 @@ describe('ExerciseRotationVisualization', () => {
     });
   }, 10000);
 
-
   it('should show breadcrumb navigation when in category view', async () => {
     mockSearchParams.set('category', 'primary');
-    
+
     mock.onGet('/program/').reply(200, mockPrograms);
     mock.onGet('/conjugate_workout_generator/exercise_pool').reply(200, mockExercisePoolData);
 
     renderWithProviders(<ExerciseRotationVisualization />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Exercise Rotation')).toBeInTheDocument();
-      expect(screen.getByText('Primary Exercises')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Exercise Rotation')).toBeInTheDocument();
+        expect(screen.getByText('Primary Exercises')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 });

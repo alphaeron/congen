@@ -217,7 +217,9 @@ describe('GDPR API', () => {
     it('should handle network errors for deleteAllPersonalData', async () => {
       mock.onDelete('/gdpr/delete_all_data').networkError();
 
-      await expect(deleteAllPersonalData('DELETE_ALL_MY_DATA')).rejects.toEqual({ error: 'Network Error' });
+      await expect(deleteAllPersonalData('DELETE_ALL_MY_DATA')).rejects.toEqual({
+        error: 'Network Error',
+      });
     }, 10000);
 
     it('should handle timeout errors', async () => {

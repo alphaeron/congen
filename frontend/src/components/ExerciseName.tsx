@@ -1,11 +1,14 @@
+import { Tooltip, Typography } from '@mui/material';
 import React from 'react';
-import { Tooltip, Typography, TypographyProps } from '@mui/material';
 import { Link } from 'react-router';
-import { useApiGet } from '../api/hooks';
+
 import { getIndividualExercise, getExerciseMuscles } from '../api/exercise';
+import { useApiGet } from '../api/hooks';
 import { getIndividualMuscle } from '../api/muscle';
 import type { Exercise, ExerciseMuscle, Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+
+import type { TypographyProps } from '@mui/material';
 
 interface ExerciseNameProps {
   exerciseName: string;
@@ -44,10 +47,7 @@ export function ExerciseName({
     [exerciseName]
   );
 
-  const {
-    data: exerciseMuscles,
-    isLoading: isExerciseMuscleLoading,
-  } = useApiGet<ExerciseMuscle[]>(
+  const { data: exerciseMuscles, isLoading: isExerciseMuscleLoading } = useApiGet<ExerciseMuscle[]>(
     [`exerciseMuscle${exerciseName}`],
     getExerciseMuscles,
     {
@@ -58,10 +58,7 @@ export function ExerciseName({
     [exerciseName]
   );
 
-  const {
-    data: muscles,
-    isLoading: isMusclesLoading,
-  } = useApiGet<Muscle[]>(
+  const { data: muscles, isLoading: isMusclesLoading } = useApiGet<Muscle[]>(
     [`muscles${exerciseName}`, exerciseMuscles],
     async (): Promise<Muscle[]> =>
       Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name))),
@@ -85,12 +82,10 @@ export function ExerciseName({
     }
 
     const muscleNames = muscles?.map(m => capitalizeEachWord(m.name)).join(', ') || 'Unknown';
-    
+
     return (
       <div>
-        <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-          {exercise.name}
-        </div>
+        <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>{exercise.name}</div>
         <div style={{ marginBottom: '4px' }}>
           <strong>Type:</strong> {capitalizeEachWord(exercise.movement_type)}
         </div>
@@ -107,9 +102,7 @@ export function ExerciseName({
           <strong>Muscles:</strong> {muscleNames}
         </div>
         {exercise.description && (
-          <div style={{ marginTop: '8px', fontStyle: 'italic' }}>
-            {exercise.description}
-          </div>
+          <div style={{ marginTop: '8px', fontStyle: 'italic' }}>{exercise.description}</div>
         )}
       </div>
     );

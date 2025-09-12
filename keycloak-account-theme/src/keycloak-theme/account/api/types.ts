@@ -56,4 +56,3 @@ export interface UseUserProfileResult {
   refetch: () => Promise<void>;
   updateProfile: (data: UpdateUserProfileRequest) => Promise<boolean>;
 }
-

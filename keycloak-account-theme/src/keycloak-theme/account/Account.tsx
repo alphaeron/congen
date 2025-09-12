@@ -141,12 +141,15 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
           }
 
           // Make API call to Keycloak userinfo endpoint
-          const response = await fetch(`${kcContext.serverBaseUrl}/realms/congen/protocol/openid-connect/userinfo`, {
-            headers: {
-              'Authorization': `Bearer ${oidcAuth.user.access_token}`,
-              'Content-Type': 'application/json',
-            },
-          });
+          const response = await fetch(
+            `${kcContext.serverBaseUrl}/realms/congen/protocol/openid-connect/userinfo`,
+            {
+              headers: {
+                Authorization: `Bearer ${oidcAuth.user.access_token}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
 
           if (!response.ok) {
             throw new Error(`Failed to fetch user info: ${response.status} ${response.statusText}`);
@@ -154,7 +157,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
 
           const userData = await response.json();
           setUser(userData);
-        } catch (error) {
+        } catch {
           enqueueSnackbar('Failed to load user information', { variant: 'error' });
         } finally {
           setUserLoading(false);
@@ -163,7 +166,14 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
     };
 
     fetchUserData();
-  }, [isAuthenticated, userFetchAttempted, userLoading, kcContext, enqueueSnackbar, oidcAuth.user?.access_token]);
+  }, [
+    isAuthenticated,
+    userFetchAttempted,
+    userLoading,
+    kcContext,
+    enqueueSnackbar,
+    oidcAuth.user?.access_token,
+  ]);
 
   // Automatically trigger login if not authenticated
   useEffect(() => {
@@ -186,8 +196,14 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
   useEffect(() => {
     if (user) {
       // Use the field names from Keycloak user object
-      form.setFieldValue('firstName', (user.firstName as string) || (user.given_name as string) || '');
-      form.setFieldValue('lastName', (user.lastName as string) || (user.family_name as string) || '');
+      form.setFieldValue(
+        'firstName',
+        (user.firstName as string) || (user.given_name as string) || ''
+      );
+      form.setFieldValue(
+        'lastName',
+        (user.lastName as string) || (user.family_name as string) || ''
+      );
     }
   }, [user, form]);
 
@@ -231,49 +247,55 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
 
   const handlePasswordChange = () => {
     if (!kcContext) return;
-    
+
     // Use Application Initiated Actions (AIA) to redirect to password update flow
     // Based on: https://github.com/keycloak/keycloak-community/blob/main/design/application-initiated-actions.md
     const baseUrl = kcContext.serverBaseUrl || kcContext.authUrl;
     const realm = kcContext.realm?.name || 'congen';
-    
+
     // Generate a proper S256 code challenge for PKCE
-    const codeVerifier = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    
+    const codeVerifier =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
+
     // Create SHA256 hash of the code verifier and base64url encode it
     const encoder = new TextEncoder();
     const data = encoder.encode(codeVerifier);
-    crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashBase64 = btoa(String.fromCharCode.apply(null, hashArray));
-      const codeChallenge = hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-      
-      // Construct the AIA URL for password update
-      const aiaUrl = new URL(`${baseUrl}/realms/${realm}/protocol/openid-connect/auth`);
-      aiaUrl.searchParams.set('client_id', 'account-console');
-      aiaUrl.searchParams.set('redirect_uri', window.location.origin + window.location.pathname);
-      aiaUrl.searchParams.set('response_type', 'code');
-      aiaUrl.searchParams.set('scope', 'openid');
-      aiaUrl.searchParams.set('kc_action', 'UPDATE_PASSWORD');
-      aiaUrl.searchParams.set('code_challenge', codeChallenge);
-      aiaUrl.searchParams.set('code_challenge_method', 'S256');
-      
-      // Redirect to the password update flow
-      window.location.href = aiaUrl.toString();
-    }).catch(() => {
-      // Fallback to plain method if crypto.subtle is not available
-      const codeChallenge = codeVerifier;
-      const aiaUrl = new URL(`${baseUrl}/realms/${realm}/protocol/openid-connect/auth`);
-      aiaUrl.searchParams.set('client_id', 'account-console');
-      aiaUrl.searchParams.set('redirect_uri', window.location.origin + window.location.pathname);
-      aiaUrl.searchParams.set('response_type', 'code');
-      aiaUrl.searchParams.set('scope', 'openid');
-      aiaUrl.searchParams.set('kc_action', 'UPDATE_PASSWORD');
-      aiaUrl.searchParams.set('code_challenge', codeChallenge);
-      aiaUrl.searchParams.set('code_challenge_method', 'plain');
-      
-      window.location.href = aiaUrl.toString();
-    });
+    crypto.subtle
+      .digest('SHA-256', data)
+      .then(hashBuffer => {
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashBase64 = btoa(String.fromCharCode.apply(null, hashArray));
+        const codeChallenge = hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+        // Construct the AIA URL for password update
+        const aiaUrl = new URL(`${baseUrl}/realms/${realm}/protocol/openid-connect/auth`);
+        aiaUrl.searchParams.set('client_id', 'account-console');
+        aiaUrl.searchParams.set('redirect_uri', window.location.origin + window.location.pathname);
+        aiaUrl.searchParams.set('response_type', 'code');
+        aiaUrl.searchParams.set('scope', 'openid');
+        aiaUrl.searchParams.set('kc_action', 'UPDATE_PASSWORD');
+        aiaUrl.searchParams.set('code_challenge', codeChallenge);
+        aiaUrl.searchParams.set('code_challenge_method', 'S256');
+
+        // Redirect to the password update flow
+        window.location.href = aiaUrl.toString();
+      })
+      .catch(() => {
+        // Fallback to plain method if crypto.subtle is not available
+        const codeChallenge = codeVerifier;
+        const aiaUrl = new URL(`${baseUrl}/realms/${realm}/protocol/openid-connect/auth`);
+        aiaUrl.searchParams.set('client_id', 'account-console');
+        aiaUrl.searchParams.set('redirect_uri', window.location.origin + window.location.pathname);
+        aiaUrl.searchParams.set('response_type', 'code');
+        aiaUrl.searchParams.set('scope', 'openid');
+        aiaUrl.searchParams.set('kc_action', 'UPDATE_PASSWORD');
+        aiaUrl.searchParams.set('code_challenge', codeChallenge);
+        aiaUrl.searchParams.set('code_challenge_method', 'plain');
+
+        window.location.href = aiaUrl.toString();
+      });
   };
 
   return (
@@ -391,7 +413,10 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                               'firstName',
                               (user.given_name as string) || (user.firstName as string) || ''
                             );
-                            form.setFieldValue('lastName', (user.family_name as string) || (user.lastName as string) || '');
+                            form.setFieldValue(
+                              'lastName',
+                              (user.family_name as string) || (user.lastName as string) || ''
+                            );
                           }
                         }}
                         disabled={authLoading}

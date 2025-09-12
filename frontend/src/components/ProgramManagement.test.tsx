@@ -96,10 +96,13 @@ describe('ProgramManagement', () => {
       expect(screen.queryByText('Loading programs...')).not.toBeInTheDocument();
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Program Management')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /create program/i })).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('Program Management')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /create program/i })).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('displays programs when data loads successfully', async () => {

@@ -15,15 +15,11 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
-import { getPrograms } from '../api/program';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
-import type {
-  Program,
-  UserExercisePoolResponse,
-} from '../api/types';
+import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -42,7 +38,6 @@ export const ExerciseRotationVisualization: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
-  const [programs, setPrograms] = useState<Program[]>([]);
   const [exercisePoolData, setExercisePoolData] = useState<UserExercisePoolResponse | null>(null);
   const [showCategoryDetails, setShowCategoryDetails] = useState(false);
 
@@ -64,25 +59,9 @@ export const ExerciseRotationVisualization: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const [programsData, exercisePoolData] = await Promise.allSettled([
-        getPrograms(),
-        getUserExercisePool(),
-      ]);
-
-      // Handle successful data loads
-      if (programsData.status === 'fulfilled') {
-        setPrograms(programsData.value);
-      }
-      if (exercisePoolData.status === 'fulfilled') {
-        setExercisePoolData(exercisePoolData.value);
-      }
-
-      // Handle any errors
-      const errors = [programsData, exercisePoolData].filter(result => result.status === 'rejected');
-      if (errors.length > 0) {
-        enqueueSnackbar('Some data failed to load. Please refresh the page.', { variant: 'warning' });
-      }
-    } catch (error) {
+      const poolData = await getUserExercisePool();
+      setExercisePoolData(poolData);
+    } catch {
       enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
     } finally {
       setIsLoading(false);
@@ -142,22 +121,30 @@ export const ExerciseRotationVisualization: React.FC = () => {
             Exercise Rotation
           </Button>
         ) : (
-          <Typography variant="body1" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Typography
+            variant="body1"
+            color="text.primary"
+            sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
+          >
             Exercise Rotation
           </Typography>
         )}
         {selectedCategory && (
           <Typography variant="body1" color="text.primary">
-            {selectedCategory === 'primary' ? 'Primary Exercises' :
-             selectedCategory === 'accessory' ? 'Accessory Exercises' :
-             selectedCategory === 'recent' ? 'Recent Exercises' :
-             selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) + ' Exercises'}
+            {selectedCategory === 'primary'
+              ? 'Primary Exercises'
+              : selectedCategory === 'accessory'
+                ? 'Accessory Exercises'
+                : selectedCategory === 'recent'
+                  ? 'Recent Exercises'
+                  : selectedCategory.charAt(0).toUpperCase() +
+                    selectedCategory.slice(1) +
+                    ' Exercises'}
           </Typography>
         )}
       </Breadcrumbs>
     </Box>
   );
-
 
   // Exercise pool analysis
   const exercisePoolAnalysis = useMemo(() => {
@@ -193,334 +180,412 @@ export const ExerciseRotationVisualization: React.FC = () => {
   return (
     <React.Fragment>
       {renderBreadcrumbs()}
-      
+
       {/* Main Exercise Rotation - Slides right when category is selected */}
       <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
         <Box sx={{ p: 3 }}>
+          <Grid container spacing={3}>
+            {/* Comprehensive Exercise Rotation */}
+            {exercisePoolAnalysis && (
+              <Grid size={{ xs: 12 }}>
+                <Card>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      Exercise Rotation
+                    </Typography>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      Your exercise pool is filtered based on your available equipment (
+                      {exercisePoolAnalysis.userEquipment.length} items) and exercise preferences (
+                      {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length}{' '}
+                      avoided).
+                    </Alert>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h4" color="primary">
+                            {exercisePoolAnalysis.totalExercises}
+                          </Typography>
+                          <Typography variant="body2">Total Exercises</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h4" color="success.main">
+                            {exercisePoolAnalysis.availableExercises}
+                          </Typography>
+                          <Typography variant="body2">Available to You</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h4" color="info.main">
+                            {exercisePoolAnalysis.categorizedExercises.primary.length}
+                          </Typography>
+                          <Typography variant="body2">Primary Exercises</Typography>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper sx={{ p: 2, textAlign: 'center' }}>
+                          <Typography variant="h4" color="warning.main">
+                            {exercisePoolAnalysis.categorizedExercises.accessory.length}
+                          </Typography>
+                          <Typography variant="body2">Accessory Exercises</Typography>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
 
-      <Grid container spacing={3}>
-        {/* Comprehensive Exercise Rotation */}
-        {exercisePoolAnalysis && (
-          <Grid size={{ xs: 12 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Exercise Rotation
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  Your exercise pool is filtered based on your available equipment ({exercisePoolAnalysis.userEquipment.length} items) 
-                  and exercise preferences ({exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length} avoided).
-                </Alert>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="primary">
-                        {exercisePoolAnalysis.totalExercises}
-                      </Typography>
-                      <Typography variant="body2">Total Exercises</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="success.main">
-                        {exercisePoolAnalysis.availableExercises}
-                      </Typography>
-                      <Typography variant="body2">Available to You</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="info.main">
-                        {exercisePoolAnalysis.categorizedExercises.primary.length}
-                      </Typography>
-                      <Typography variant="body2">Primary Exercises</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="warning.main">
-                        {exercisePoolAnalysis.categorizedExercises.accessory.length}
-                      </Typography>
-                      <Typography variant="body2">Accessory Exercises</Typography>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Previously Used Exercises */}
-        {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
-          <Grid size={{ xs: 12 }}>
-            <Card
-              sx={{
-                cursor: 'pointer',
-                transition: 'all 0.2s ease-in-out',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 3,
-                }
-              }}
-              onClick={() => handleCategoryClick('recent')}
-            >
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Recent Exercises
-                </Typography>
-                <Alert severity="info" sx={{ mb: 2 }}>
-                  These exercises have been used in recent weeks and are temporarily excluded from selection to promote variety.
-                </Alert>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {exercisePoolAnalysis.previouslyUsedExercises.slice(0, 10).map((exerciseName) => (
-                    <Chip
-                      key={exerciseName}
-                      label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
-                      variant="outlined"
-                      color="warning"
-                      size="small"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ))}
-                  {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
-                    <Chip
-                      label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
-                      size="small"
-                      variant="outlined"
-                    />
-                  )}
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
-
-        {/* Available Exercise */}
-        {exercisePoolAnalysis && (
-          <Grid size={{ xs: 12 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Available Exercises
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper 
-                      sx={{ 
-                        p: 2, 
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: 3,
-                        }
-                      }}
-                      onClick={() => handleCategoryClick('primary')}
+            {/* Previously Used Exercises */}
+            {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
+              <Grid size={{ xs: 12 }}>
+                <Card
+                  sx={{
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: 3,
+                    },
+                  }}
+                  onClick={() => handleCategoryClick('recent')}
+                >
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                     >
-                      <Typography variant="h4" color="error.main">
-                        {exercisePoolAnalysis.categorizedExercises.primary.length}
-                      </Typography>
-                      <Typography variant="body2">Primary Exercises</Typography>
-                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
-                        {exercisePoolAnalysis.categorizedExercises.primary.slice(0, 3).map((exercise) => (
+                      Recent Exercises
+                    </Typography>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      These exercises have been used in recent weeks and are temporarily excluded
+                      from selection to promote variety.
+                    </Alert>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                      {exercisePoolAnalysis.previouslyUsedExercises
+                        .slice(0, 10)
+                        .map(exerciseName => (
                           <Chip
-                            key={exercise.name}
-                            label={<ExerciseName exerciseName={exercise.name} variant="caption" />}
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                          />
-                        ))}
-                        {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
-                          <Chip
-                            label={`+${exercisePoolAnalysis.categorizedExercises.primary.length - 3}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper 
-                      sx={{ 
-                        p: 2, 
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: 3,
-                        }
-                      }}
-                      onClick={() => handleCategoryClick('accessory')}
-                    >
-                      <Typography variant="h4" color="info.main">
-                        {exercisePoolAnalysis.categorizedExercises.accessory.length}
-                      </Typography>
-                      <Typography variant="body2">Accessory Exercises</Typography>
-                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
-                        {exercisePoolAnalysis.categorizedExercises.accessory.slice(0, 3).map((exercise) => (
-                          <Chip
-                            key={exercise.name}
-                            label={<ExerciseName exerciseName={exercise.name} variant="caption" />}
-                            size="small"
-                            variant="outlined"
-                            color="info"
-                          />
-                        ))}
-                        {exercisePoolAnalysis.categorizedExercises.accessory.length > 3 && (
-                          <Chip
-                            label={`+${exercisePoolAnalysis.categorizedExercises.accessory.length - 3}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper 
-                      sx={{ 
-                        p: 2, 
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: 3,
-                        }
-                      }}
-                      onClick={handlePreferencesClick}
-                    >
-                      <Typography variant="h4" color="success.main">
-                        {exercisePoolAnalysis.userEquipment.length}
-                      </Typography>
-                      <Typography variant="body2">Available Equipment</Typography>
-                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
-                        {exercisePoolAnalysis.userEquipment.slice(0, 3).map((equipment) => (
-                          <Chip
-                            key={equipment.equipment_name}
-                            label={equipment.equipment_name}
-                            size="small"
-                            variant="outlined"
-                            color="success"
-                          />
-                        ))}
-                        {exercisePoolAnalysis.userEquipment.length > 3 && (
-                          <Chip
-                            label={`+${exercisePoolAnalysis.userEquipment.length - 3}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper 
-                      sx={{ 
-                        p: 2, 
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-2px)',
-                          boxShadow: 3,
-                        }
-                      }}
-                      onClick={handlePreferencesClick}
-                    >
-                      <Typography variant="h4" color="warning.main">
-                        {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length}
-                      </Typography>
-                      <Typography variant="body2">Avoided Exercises</Typography>
-                      <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, justifyContent: 'center' }}>
-                        {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).slice(0, 3).map((pref) => (
-                          <Chip
-                            key={pref.exercise_name}
-                            label={pref.exercise_name}
-                            size="small"
+                            key={exerciseName}
+                            label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
                             variant="outlined"
                             color="warning"
+                            size="small"
+                            onClick={e => e.stopPropagation()}
                           />
                         ))}
-                        {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length > 3 && (
-                          <Chip
-                            label={`+${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length - 3}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
-                    </Paper>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        )}
+                      {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
+                        <Chip
+                          label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
+                          size="small"
+                          variant="outlined"
+                        />
+                      )}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
 
-        {/* Exercise Insights */}
-        {exercisePoolAnalysis && (
-          <Grid size={{ xs: 12 }}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  Exercise Insights
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Alert severity="info">
-                      <Typography variant="subtitle2" gutterBottom>
-                        Pool Availability
-                      </Typography>
-                      <Typography variant="body2">
-                        You have access to {exercisePoolAnalysis.availableExercises} out of {exercisePoolAnalysis.totalExercises} total exercises 
-                        ({((exercisePoolAnalysis.availableExercises / exercisePoolAnalysis.totalExercises) * 100).toFixed(1)}% availability).
-                      </Typography>
-                    </Alert>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Alert severity="success">
-                      <Typography variant="subtitle2" gutterBottom>
-                        Exercise Variety
-                      </Typography>
-                      <Typography variant="body2">
-                        Your pool includes {exercisePoolAnalysis.categorizedExercises.primary.length} primary exercises and {exercisePoolAnalysis.categorizedExercises.accessory.length} accessory exercises, 
-                        providing good variety for conjugate training.
-                      </Typography>
-                    </Alert>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Alert severity="warning">
-                      <Typography variant="subtitle2" gutterBottom>
-                        Rotation Management
-                      </Typography>
-                      <Typography variant="body2">
-                        {exercisePoolAnalysis.previouslyUsedExercises.length} exercises are currently in the sliding window exclusion period, 
-                        ensuring proper exercise rotation and preventing accommodation.
-                      </Typography>
-                    </Alert>
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <Alert severity="info">
-                      <Typography variant="subtitle2" gutterBottom>
-                        Exercise Selection
-                      </Typography>
-                      <Typography variant="body2">
-                        Your exercise pool provides a comprehensive selection of exercises for your training programs, 
-                        ensuring variety and proper rotation in your workouts.
-                      </Typography>
-                    </Alert>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
+            {/* Available Exercise */}
+            {exercisePoolAnalysis && (
+              <Grid size={{ xs: 12 }}>
+                <Card>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      Available Exercises
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper
+                          sx={{
+                            p: 2,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3,
+                            },
+                          }}
+                          onClick={() => handleCategoryClick('primary')}
+                        >
+                          <Typography variant="h4" color="error.main">
+                            {exercisePoolAnalysis.categorizedExercises.primary.length}
+                          </Typography>
+                          <Typography variant="body2">Primary Exercises</Typography>
+                          <Box
+                            sx={{
+                              mt: 1,
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 0.5,
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {exercisePoolAnalysis.categorizedExercises.primary
+                              .slice(0, 3)
+                              .map(exercise => (
+                                <Chip
+                                  key={exercise.name}
+                                  label={
+                                    <ExerciseName exerciseName={exercise.name} variant="caption" />
+                                  }
+                                  size="small"
+                                  variant="outlined"
+                                  color="error"
+                                />
+                              ))}
+                            {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
+                              <Chip
+                                label={`+${exercisePoolAnalysis.categorizedExercises.primary.length - 3}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper
+                          sx={{
+                            p: 2,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3,
+                            },
+                          }}
+                          onClick={() => handleCategoryClick('accessory')}
+                        >
+                          <Typography variant="h4" color="info.main">
+                            {exercisePoolAnalysis.categorizedExercises.accessory.length}
+                          </Typography>
+                          <Typography variant="body2">Accessory Exercises</Typography>
+                          <Box
+                            sx={{
+                              mt: 1,
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 0.5,
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {exercisePoolAnalysis.categorizedExercises.accessory
+                              .slice(0, 3)
+                              .map(exercise => (
+                                <Chip
+                                  key={exercise.name}
+                                  label={
+                                    <ExerciseName exerciseName={exercise.name} variant="caption" />
+                                  }
+                                  size="small"
+                                  variant="outlined"
+                                  color="info"
+                                />
+                              ))}
+                            {exercisePoolAnalysis.categorizedExercises.accessory.length > 3 && (
+                              <Chip
+                                label={`+${exercisePoolAnalysis.categorizedExercises.accessory.length - 3}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper
+                          sx={{
+                            p: 2,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3,
+                            },
+                          }}
+                          onClick={handlePreferencesClick}
+                        >
+                          <Typography variant="h4" color="success.main">
+                            {exercisePoolAnalysis.userEquipment.length}
+                          </Typography>
+                          <Typography variant="body2">Available Equipment</Typography>
+                          <Box
+                            sx={{
+                              mt: 1,
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 0.5,
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {exercisePoolAnalysis.userEquipment.slice(0, 3).map(equipment => (
+                              <Chip
+                                key={equipment.equipment_name}
+                                label={equipment.equipment_name}
+                                size="small"
+                                variant="outlined"
+                                color="success"
+                              />
+                            ))}
+                            {exercisePoolAnalysis.userEquipment.length > 3 && (
+                              <Chip
+                                label={`+${exercisePoolAnalysis.userEquipment.length - 3}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                        <Paper
+                          sx={{
+                            p: 2,
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease-in-out',
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              boxShadow: 3,
+                            },
+                          }}
+                          onClick={handlePreferencesClick}
+                        >
+                          <Typography variant="h4" color="warning.main">
+                            {
+                              exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
+                                .length
+                            }
+                          </Typography>
+                          <Typography variant="body2">Avoided Exercises</Typography>
+                          <Box
+                            sx={{
+                              mt: 1,
+                              display: 'flex',
+                              flexWrap: 'wrap',
+                              gap: 0.5,
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {exercisePoolAnalysis.userPreferences
+                              .filter(p => p.should_avoid)
+                              .slice(0, 3)
+                              .map(pref => (
+                                <Chip
+                                  key={pref.exercise_name}
+                                  label={pref.exercise_name}
+                                  size="small"
+                                  variant="outlined"
+                                  color="warning"
+                                />
+                              ))}
+                            {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
+                              .length > 3 && (
+                              <Chip
+                                label={`+${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length - 3}`}
+                                size="small"
+                                variant="outlined"
+                              />
+                            )}
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
+
+            {/* Exercise Insights */}
+            {exercisePoolAnalysis && (
+              <Grid size={{ xs: 12 }}>
+                <Card>
+                  <CardContent>
+                    <Typography
+                      variant="h6"
+                      gutterBottom
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      Exercise Insights
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Alert severity="info">
+                          <Typography variant="subtitle2" gutterBottom>
+                            Pool Availability
+                          </Typography>
+                          <Typography variant="body2">
+                            You have access to {exercisePoolAnalysis.availableExercises} out of{' '}
+                            {exercisePoolAnalysis.totalExercises} total exercises (
+                            {(
+                              (exercisePoolAnalysis.availableExercises /
+                                exercisePoolAnalysis.totalExercises) *
+                              100
+                            ).toFixed(1)}
+                            % availability).
+                          </Typography>
+                        </Alert>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Alert severity="success">
+                          <Typography variant="subtitle2" gutterBottom>
+                            Exercise Variety
+                          </Typography>
+                          <Typography variant="body2">
+                            Your pool includes{' '}
+                            {exercisePoolAnalysis.categorizedExercises.primary.length} primary
+                            exercises and{' '}
+                            {exercisePoolAnalysis.categorizedExercises.accessory.length} accessory
+                            exercises, providing good variety for conjugate training.
+                          </Typography>
+                        </Alert>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Alert severity="warning">
+                          <Typography variant="subtitle2" gutterBottom>
+                            Rotation Management
+                          </Typography>
+                          <Typography variant="body2">
+                            {exercisePoolAnalysis.previouslyUsedExercises.length} exercises are
+                            currently in the sliding window exclusion period, ensuring proper
+                            exercise rotation and preventing accommodation.
+                          </Typography>
+                        </Alert>
+                      </Grid>
+                      <Grid size={{ xs: 12, md: 6 }}>
+                        <Alert severity="info">
+                          <Typography variant="subtitle2" gutterBottom>
+                            Exercise Selection
+                          </Typography>
+                          <Typography variant="body2">
+                            Your exercise pool provides a comprehensive selection of exercises for
+                            your training programs, ensuring variety and proper rotation in your
+                            workouts.
+                          </Typography>
+                        </Alert>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
           </Grid>
-        )}
-        </Grid>
         </Box>
       </Slide>
 

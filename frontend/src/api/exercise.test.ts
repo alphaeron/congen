@@ -110,7 +110,9 @@ describe('exercise API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press').networkError();
 
-      await expect(getIndividualExercise('Bench Press')).rejects.toEqual({ error: 'Network Error' });
+      await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
+        error: 'Network Error',
+      });
       expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
     }, 10000);
 

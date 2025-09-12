@@ -1,9 +1,12 @@
+import { Tooltip, Typography } from '@mui/material';
 import React from 'react';
-import { Tooltip, Typography, TypographyProps } from '@mui/material';
+
 import { useApiGet } from '../api/hooks';
 import { getIndividualMuscle } from '../api/muscle';
 import type { Muscle } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+
+import type { TypographyProps } from '@mui/material';
 
 interface MuscleNameProps {
   muscleName: string;
@@ -56,14 +59,8 @@ export function MuscleName({
 
     return (
       <div>
-        <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-          {muscle.name}
-        </div>
-        {muscle.description && (
-          <div style={{ fontStyle: 'italic' }}>
-            {muscle.description}
-          </div>
-        )}
+        <div style={{ fontWeight: 'bold', marginBottom: '8px' }}>{muscle.name}</div>
+        {muscle.description && <div style={{ fontStyle: 'italic' }}>{muscle.description}</div>}
       </div>
     );
   }, [muscle, muscleName, isLoading, hasError]);

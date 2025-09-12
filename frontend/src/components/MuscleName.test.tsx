@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { MuscleName } from './MuscleName';
 import { ENDPOINT } from '../api/endpoint';
+import { useApiGet } from '../api/hooks';
 import type { Muscle } from '../api/types';
 
 // Mock the useApiGet hook
@@ -12,7 +13,7 @@ jest.mock('../api/hooks', () => ({
   useApiGet: jest.fn(),
 }));
 
-const mockUseApiGet = require('../api/hooks').useApiGet;
+const mockUseApiGet = useApiGet as jest.MockedFunction<typeof useApiGet>;
 
 describe('MuscleName', () => {
   let mockAdapter: AxiosMockAdapter;
@@ -28,7 +29,8 @@ describe('MuscleName', () => {
 
   const mockMuscle: Muscle = {
     name: 'Pectoralis Major',
-    description: 'The pectoralis major is a thick, fan-shaped muscle, situated at the chest of the human body.',
+    description:
+      'The pectoralis major is a thick, fan-shaped muscle, situated at the chest of the human body.',
   };
 
   it('should render muscle name with tooltip when data is loaded', async () => {
@@ -45,7 +47,7 @@ describe('MuscleName', () => {
     );
 
     expect(screen.getByText('Pectoralis Major')).toBeInTheDocument();
-    
+
     // Check that the element has cursor help style
     const muscleNameElement = screen.getByText('Pectoralis Major');
     expect(muscleNameElement).toHaveStyle('cursor: help');
@@ -92,11 +94,7 @@ describe('MuscleName', () => {
 
     render(
       <MemoryRouter>
-        <MuscleName 
-          muscleName="Pectoralis Major" 
-          variant="h6"
-          sx={{ fontWeight: 'bold' }}
-        />
+        <MuscleName muscleName="Pectoralis Major" variant="h6" sx={{ fontWeight: 'bold' }} />
       </MemoryRouter>
     );
 
@@ -113,9 +111,7 @@ describe('MuscleName', () => {
 
     render(
       <MemoryRouter>
-        <MuscleName muscleName="Pectoralis Major">
-          Custom Muscle Name
-        </MuscleName>
+        <MuscleName muscleName="Pectoralis Major">Custom Muscle Name</MuscleName>
       </MemoryRouter>
     );
 

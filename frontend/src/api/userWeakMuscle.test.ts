@@ -67,7 +67,9 @@ describe('userWeakMuscle API', () => {
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user_weak_muscle/test-user-id').timeout();
 
-      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(getUserWeakMuscles('test-user-id')).rejects.toEqual({
+        error: 'timeout of 2500ms exceeded',
+      });
     });
 
     it('should encode user ID in URL', async () => {
@@ -124,13 +126,17 @@ describe('userWeakMuscle API', () => {
     it('should handle network error', async () => {
       mockAdapter.onPost('/user_weak_muscle/').networkError();
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({ error: 'Network Error' });
+      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
+        error: 'Network Error',
+      });
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user_weak_muscle/').timeout();
 
-      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(addUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
+        error: 'timeout of 2500ms exceeded',
+      });
     });
   });
 
@@ -171,13 +177,17 @@ describe('userWeakMuscle API', () => {
     it('should handle network error', async () => {
       mockAdapter.onDelete('/user_weak_muscle/').networkError();
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({ error: 'Network Error' });
+      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
+        error: 'Network Error',
+      });
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onDelete('/user_weak_muscle/').timeout();
 
-      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(removeUserWeakMuscle('test-user-id', 'Deltoids')).rejects.toEqual({
+        error: 'timeout of 2500ms exceeded',
+      });
     });
   });
 });

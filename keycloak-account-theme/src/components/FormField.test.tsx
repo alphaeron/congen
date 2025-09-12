@@ -82,7 +82,7 @@ describe('FormField', () => {
     await waitFor(() => {
       expect(screen.getByRole('combobox')).toBeInTheDocument();
     });
-    
+
     // Check that the label is present
     expect(screen.getAllByText('Select Option')).toHaveLength(2); // Label and legend
   });
@@ -117,7 +117,7 @@ describe('FormField', () => {
     );
 
     const input = screen.getByLabelText('Test Label');
-    
+
     await act(async () => {
       fireEvent.change(input, { target: { value: 'test value' } });
     });

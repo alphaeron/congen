@@ -1,9 +1,9 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 // Mock react-oidc-context
 jest.mock('react-oidc-context', () => ({
@@ -152,7 +152,7 @@ const renderWithTheme = (component: React.ReactElement) => {
       },
     },
   });
-  
+
   return render(
     <MemoryRouter>
       <QueryClientProvider client={queryClient}>
@@ -170,7 +170,7 @@ describe('WorkoutDetail', () => {
   beforeEach(() => {
     mock.reset();
     jest.clearAllMocks();
-    
+
     // Mock the exercise API calls that ExerciseName component makes
     mock.onGet('/exercise/').reply(200, [
       { id: 1, name: 'Bench Press' },

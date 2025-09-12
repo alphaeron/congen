@@ -1,21 +1,11 @@
-import {
-  FitnessCenter as FitnessCenterIcon,
-  Speed as SpeedIcon,
-  Timeline as TimelineIcon,
-} from '@mui/icons-material';
-import {
-  Box,
-  Typography,
-  Grid,
-  Alert,
-} from '@mui/material';
+import { Box, Grid, Alert } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo } from 'react';
 
-import { LoadingSpinner } from './LoadingSpinner';
 import { ExerciseCard } from './ExerciseCard';
+import { LoadingSpinner } from './LoadingSpinner';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
-import type { UserExercisePoolResponse, Exercise } from '../api/types';
+import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ExerciseCategoryDetailsProps {
@@ -54,13 +44,12 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
       setIsLoading(true);
       const exercisePoolData = await getUserExercisePool();
       setExercisePoolData(exercisePoolData);
-    } catch (error) {
+    } catch {
       enqueueSnackbar('Failed to load exercise pool data. Please try again.', { variant: 'error' });
     } finally {
       setIsLoading(false);
     }
   };
-
 
   // Get category data based on the selected category
   const categoryData = useMemo(() => {
@@ -104,34 +93,30 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
   if (!categoryData) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">
-          Invalid exercise category. Please select a valid category.
-        </Alert>
+        <Alert severity="error">Invalid exercise category. Please select a valid category.</Alert>
       </Box>
     );
   }
 
   return (
     <Box sx={{ p: 3 }}>
+      {/* Category Header */}
+      <Box sx={{ mb: 3 }}>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {categoryData.exercises.length === 0
+            ? `No ${categoryData.title.toLowerCase()}s in your rotation.`
+            : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()}${categoryData.exercises.length === 1 ? '' : 's'} in your rotation.`}
+        </Alert>
+      </Box>
 
-        {/* Category Header */}
-        <Box sx={{ mb: 3 }}>
-          <Alert severity="info" sx={{ mb: 2 }}>
-            {categoryData.exercises.length === 0 
-              ? `No ${categoryData.title.toLowerCase()}s in your rotation.`
-              : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()}${categoryData.exercises.length === 1 ? '' : 's'} in your rotation.`
-            }
-          </Alert>
-        </Box>
-
-        {/* Exercise Grid */}
-        <Grid container spacing={3}>
-          {categoryData.exercises.map((exercise) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
-              <ExerciseCard exercise={exercise} />
-            </Grid>
-          ))}
-        </Grid>
+      {/* Exercise Grid */}
+      <Grid container spacing={3}>
+        {categoryData.exercises.map(exercise => (
+          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={exercise.name}>
+            <ExerciseCard exercise={exercise} />
+          </Grid>
+        ))}
+      </Grid>
     </Box>
   );
 };

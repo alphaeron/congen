@@ -15,7 +15,9 @@ module.exports = merge(common, {
   plugins: [
     new webpack.DefinePlugin({
       'process.env.PUBLIC_URL': JSON.stringify(''),
-      'process.env.REACT_APP_FRONTEND_URL': JSON.stringify(process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000'),
+      'process.env.REACT_APP_FRONTEND_URL': JSON.stringify(
+        process.env.REACT_APP_FRONTEND_URL || 'http://localhost:3000'
+      ),
     }),
     new MiniCssExtractPlugin({
       filename: 'css/[name].[contenthash:8].css',

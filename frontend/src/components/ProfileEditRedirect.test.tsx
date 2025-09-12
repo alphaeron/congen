@@ -1,8 +1,8 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { ProfileEditRedirect } from './ProfileEditRedirect';
 import { ENDPOINT } from '../api/endpoint';
@@ -31,10 +31,10 @@ describe('ProfileEditRedirect', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mock = new MockAdapter(ENDPOINT);
-    
+
     // Clear sessionStorage
     sessionStorage.clear();
-    
+
     // Mock setTimeout and clearTimeout
     jest.useFakeTimers();
   });
@@ -144,8 +144,6 @@ describe('ProfileEditRedirect', () => {
     });
   });
 
-
-
   it('should handle API errors gracefully', async () => {
     const redirectPath = '/dashboard';
     sessionStorage.setItem('congen_redirect_after_profile_edit', redirectPath);
@@ -173,7 +171,9 @@ describe('ProfileEditRedirect', () => {
 
     // Check that error message appears in snackbar
     await waitFor(() => {
-      expect(screen.getByText('Failed to sync profile changes. Please try again.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Failed to sync profile changes. Please try again.')
+      ).toBeInTheDocument();
     });
   });
 
@@ -214,7 +214,7 @@ describe('ProfileEditRedirect', () => {
 
   it('should clear timeout on unmount', () => {
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-    
+
     const { unmount } = render(
       <MemoryRouter>
         <ProfileEditRedirect />

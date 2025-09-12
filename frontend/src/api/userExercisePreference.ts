@@ -7,7 +7,9 @@ import type { UserExercisePreference } from './types';
  * @param userId The Keycloak identifier of the user
  * @returns Promise containing the user's exercise preferences list
  */
-export const getUserExercisePreferences = async (userId: string): Promise<UserExercisePreference[]> => {
+export const getUserExercisePreferences = async (
+  userId: string
+): Promise<UserExercisePreference[]> => {
   return REQUEST({
     method: 'GET',
     url: `/user_exercise_preference/${encodeURIComponent(userId)}`,
@@ -69,7 +71,10 @@ export const updateUserExercisePreference = async (
  * @param exerciseName The name of the exercise to remove preference for
  * @returns Promise containing the deletion result
  */
-export const removeUserExercisePreference = async (userId: string, exerciseName: string): Promise<void> => {
+export const removeUserExercisePreference = async (
+  userId: string,
+  exerciseName: string
+): Promise<void> => {
   return REQUEST({
     method: 'DELETE',
     url: '/user_exercise_preference/',

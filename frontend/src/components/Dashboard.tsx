@@ -20,10 +20,10 @@ import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { DashboardOverview } from './DashboardOverview';
+import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
 import { ProgramManagement } from './ProgramManagement';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
-import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
 import type { User } from '../api/types';
 
 interface DashboardProps {

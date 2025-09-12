@@ -189,18 +189,19 @@ class ConjugateWorkoutGeneratorController(
                         val availableExercises = userExercisePool.getAvailableExercises()
                         val primaryExercises = availableExercises.filter { !it.isAccessory }
                         val accessoryExercises = availableExercises.filter { it.isAccessory }
-                        
-                        val response = UserExercisePoolResponse(
-                            userId = userId,
-                            totalExercises = userExercisePool.getAllExercises().size,
-                            availableExercises = availableExercises.size,
-                            primaryExercises = primaryExercises,
-                            accessoryExercises = accessoryExercises,
-                            userEquipment = userExercisePool.getUserEquipment(),
-                            userPreferences = userExercisePool.getUserPreferences(),
-                            previouslyUsedExercises = userExercisePool.getPreviouslyUsedExercises()
-                        )
-                        
+
+                        val response =
+                            UserExercisePoolResponse(
+                                userId = userId,
+                                totalExercises = userExercisePool.getAllExercises().size,
+                                availableExercises = availableExercises.size,
+                                primaryExercises = primaryExercises,
+                                accessoryExercises = accessoryExercises,
+                                userEquipment = userExercisePool.getUserEquipment(),
+                                userPreferences = userExercisePool.getUserPreferences(),
+                                previouslyUsedExercises = userExercisePool.getPreviouslyUsedExercises()
+                            )
+
                         ResponseEntity.ok(response)
                     }
                     .doOnError { error ->

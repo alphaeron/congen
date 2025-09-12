@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline, useMediaQuery } from '@mui/material';
 import { SnackbarProvider } from 'notistack';
-import { AuthProvider as OidcAuthProvider, useAuth as useOidcAuth } from 'react-oidc-context';
+import { AuthProvider as OidcAuthProvider } from 'react-oidc-context';
 import { KcPage, type KcContext } from './keycloak-theme/kc.gen';
 import { getTheme } from './theme';
 import { AuthProvider } from './keycloak-theme/account/AuthContext';

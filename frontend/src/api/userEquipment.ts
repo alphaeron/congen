@@ -21,7 +21,10 @@ export const getUserEquipment = async (userId: string): Promise<UserEquipment[]>
  * @param equipmentName The name of the equipment to add
  * @returns Promise containing the created user equipment
  */
-export const addUserEquipment = async (userId: string, equipmentName: string): Promise<UserEquipment> => {
+export const addUserEquipment = async (
+  userId: string,
+  equipmentName: string
+): Promise<UserEquipment> => {
   return REQUEST({
     method: 'POST',
     url: '/user_equipment/',

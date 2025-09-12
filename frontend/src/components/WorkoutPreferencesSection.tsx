@@ -1,11 +1,10 @@
-import { Refresh as RefreshIcon, FitnessCenter as FitnessCenterIcon, SportsGymnastics as SportsGymnasticsIcon } from '@mui/icons-material';
+import { Refresh as RefreshIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
   CardContent,
   Typography,
   Button,
-  Grid,
   List,
   ListItem,
   ListItemText,
@@ -13,7 +12,6 @@ import {
   IconButton,
   Divider,
   Chip,
-  Alert,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -21,12 +19,20 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
+import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getMuscles } from '../api/muscle';
-import { getEquipment } from '../api/equipment';
+import {
+  WeightUnit,
+  type Exercise,
+  type UserWeightUnitPreference,
+  type Muscle,
+  type Equipment,
+  type UserEquipment,
+  type UserWeakMuscle,
+} from '../api/types';
 import { getUserEquipment, addUserEquipment, removeUserEquipment } from '../api/userEquipment';
 import { getUserWeakMuscles, addUserWeakMuscle, removeUserWeakMuscle } from '../api/userWeakMuscle';
-import { WeightUnit, type Exercise, type UserWeightUnitPreference, type Muscle, type Equipment, type UserEquipment, type UserWeakMuscle } from '../api/types';
 import {
   getUserWeightUnitPreferences,
   upsertUserWeightUnitPreference,
@@ -147,15 +153,15 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const scrollToSection = useCallback((sectionId: string) => {
     const refs = {
       'weight-units': weightUnitsRef,
-      'equipment': equipmentRef,
+      equipment: equipmentRef,
       'weak-muscles': weakMusclesRef,
     };
-    
+
     const ref = refs[sectionId as keyof typeof refs];
     if (ref?.current) {
-      ref.current.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
+      ref.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
       });
     }
   }, []);
@@ -163,8 +169,8 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   // Intersection Observer for scroll detection
   useEffect(() => {
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             const sectionId = entry.target.getAttribute('data-section');
             if (sectionId) {
@@ -180,7 +186,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     );
 
     // Observe all section refs
-    [weightUnitsRef, equipmentRef, weakMusclesRef].forEach((ref) => {
+    [weightUnitsRef, equipmentRef, weakMusclesRef].forEach(ref => {
       if (ref.current) {
         observer.observe(ref.current);
       }
@@ -259,18 +265,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     try {
       setSaving(true);
       await addUserEquipment(user.keycloak_id, equipmentName);
-      
+
       // Refresh user equipment
       const userEquipmentResponse = await getUserEquipment(user.keycloak_id);
       setUserEquipment(userEquipmentResponse);
-      
+
       enqueueSnackbar('Equipment added successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(
-        axiosError.response?.data?.message || 'Failed to add equipment',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to add equipment', {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -282,18 +287,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     try {
       setSaving(true);
       await removeUserEquipment(user.keycloak_id, equipmentName);
-      
+
       // Refresh user equipment
       const userEquipmentResponse = await getUserEquipment(user.keycloak_id);
       setUserEquipment(userEquipmentResponse);
-      
+
       enqueueSnackbar('Equipment removed successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(
-        axiosError.response?.data?.message || 'Failed to remove equipment',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to remove equipment', {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -306,18 +310,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     try {
       setSaving(true);
       await addUserWeakMuscle(user.keycloak_id, muscleName);
-      
+
       // Refresh user weak muscles
       const userWeakMusclesResponse = await getUserWeakMuscles(user.keycloak_id);
       setUserWeakMuscles(userWeakMusclesResponse);
-      
+
       enqueueSnackbar('Weak muscle group added successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(
-        axiosError.response?.data?.message || 'Failed to add weak muscle group',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to add weak muscle group', {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -329,18 +332,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     try {
       setSaving(true);
       await removeUserWeakMuscle(user.keycloak_id, muscleName);
-      
+
       // Refresh user weak muscles
       const userWeakMusclesResponse = await getUserWeakMuscles(user.keycloak_id);
       setUserWeakMuscles(userWeakMusclesResponse);
-      
+
       enqueueSnackbar('Weak muscle group removed successfully', { variant: 'success' });
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{ message?: string }>;
-      enqueueSnackbar(
-        axiosError.response?.data?.message || 'Failed to remove weak muscle group',
-        { variant: 'error' }
-      );
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to remove weak muscle group', {
+        variant: 'error',
+      });
     } finally {
       setSaving(false);
     }
@@ -353,9 +355,9 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   return (
     <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       {/* Sticky Sidebar Navigation */}
-      <Box 
-        sx={{ 
-          width: 250, 
+      <Box
+        sx={{
+          width: 250,
           minWidth: 250,
           height: '100vh',
           overflow: 'auto',
@@ -478,12 +480,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                   <Typography variant="h6">Available Equipment</Typography>
-                  <Button variant="outlined" size="small" onClick={() => setEquipmentDialogOpen(true)}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setEquipmentDialogOpen(true)}
+                  >
                     Add Equipment
                   </Button>
                 </Box>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool.
+                  Manage the equipment you have available for workouts. This affects which exercises
+                  are available in your exercise pool.
                 </Typography>
 
                 <Divider sx={{ mb: 2 }} />
@@ -520,12 +527,17 @@ export function WorkoutPreferencesSection(): React.ReactElement {
               <CardContent>
                 <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                   <Typography variant="h6">Weak Muscle Groups</Typography>
-                  <Button variant="outlined" size="small" onClick={() => setWeakMuscleDialogOpen(true)}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setWeakMuscleDialogOpen(true)}
+                  >
                     Add Weak Muscle
                   </Button>
                 </Box>
                 <Typography variant="body2" color="text.secondary" paragraph>
-                  Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas.
+                  Identify muscle groups you want to target for improvement. This helps prioritize
+                  exercises that work these areas.
                 </Typography>
 
                 <Divider sx={{ mb: 2 }} />
@@ -614,7 +626,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       <FormDialog<{ equipmentName: string }>
         open={equipmentDialogOpen}
         onClose={() => setEquipmentDialogOpen(false)}
-        onSubmit={(data) => {
+        onSubmit={data => {
           handleAddEquipment(data.equipmentName);
           setEquipmentDialogOpen(false);
         }}
@@ -654,7 +666,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       <FormDialog<{ muscleName: string }>
         open={weakMuscleDialogOpen}
         onClose={() => setWeakMuscleDialogOpen(false)}
-        onSubmit={(data) => {
+        onSubmit={data => {
           handleAddWeakMuscle(data.muscleName);
           setWeakMuscleDialogOpen(false);
         }}

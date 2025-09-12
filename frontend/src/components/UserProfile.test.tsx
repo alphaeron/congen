@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
@@ -6,7 +6,6 @@ import { MemoryRouter } from 'react-router';
 import { UserProfile } from './UserProfile';
 import { ENDPOINT } from '../api/endpoint';
 import { deleteAllPersonalData } from '../api/gdpr';
-import type { User } from '../api/types';
 
 // Mock react-router
 const mockNavigate = jest.fn();
@@ -34,14 +33,6 @@ const renderWithProviders = (component: React.ReactElement) => {
 describe('UserProfile', () => {
   // Create a new mock adapter for each test to prevent interference
   let mock: MockAdapter;
-
-  const mockUser: User = {
-    keycloak_id: 'test-user-id',
-    name: 'John Doe',
-    created_at: new Date('2024-01-01T00:00:00.000Z'),
-    updated_at: new Date('2024-01-01T00:00:00.000Z'),
-    roles: ['user'],
-  };
 
   beforeEach(() => {
     // Create a fresh mock adapter for each test

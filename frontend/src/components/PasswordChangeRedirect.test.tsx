@@ -1,7 +1,7 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
 import { SnackbarProvider } from 'notistack';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { PasswordChangeRedirect } from './PasswordChangeRedirect';
 
@@ -15,10 +15,10 @@ jest.mock('react-router', () => ({
 describe('PasswordChangeRedirect', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Clear sessionStorage
     sessionStorage.clear();
-    
+
     // Mock setTimeout and clearTimeout
     jest.useFakeTimers();
   });
@@ -171,7 +171,7 @@ describe('PasswordChangeRedirect', () => {
 
   it('should clear timeout on unmount', () => {
     const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-    
+
     const { unmount } = render(
       <MemoryRouter>
         <PasswordChangeRedirect />

@@ -1,7 +1,3 @@
-add tests for all files missing them in the frontend directory
-
-ensure all linting/tests pass everywhere
-
 add strongman exercises and equipment to database
 
 update backend when keycloak theme user data changes too, use first char of first name or 'U', edit email as well, better UI

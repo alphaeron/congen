@@ -1,7 +1,8 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
+import MockAdapter from 'axios-mock-adapter';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock TanStack Virtual to render all items in tests
 jest.mock('@tanstack/react-virtual', () => ({
@@ -15,6 +16,7 @@ jest.mock('@tanstack/react-virtual', () => ({
 }));
 
 import { ConjugateProgression } from './ConjugateProgression';
+import { ENDPOINT } from '../api/endpoint';
 import {
   WeightUnit,
   type User,
@@ -23,8 +25,6 @@ import {
   type UserOneRepMax,
   type UserWeightUnitPreference,
 } from '../api/types';
-import MockAdapter from 'axios-mock-adapter';
-import { ENDPOINT } from '../api/endpoint';
 
 // Mock Nivo charts to avoid rendering issues in tests
 interface LineChartData {
@@ -80,7 +80,7 @@ const renderWithProviders = (component: React.ReactElement) => {
       },
     },
   });
-  
+
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>{component}</MemoryRouter>

@@ -17,25 +17,17 @@ import type {
 // Mock Nivo chart components to prevent rendering issues
 jest.mock('@nivo/stream', () => ({
   ResponsiveStream: (): React.ReactElement => (
-    <div data-testid="stream-chart">
-      Mock Stream Chart
-    </div>
+    <div data-testid="stream-chart">Mock Stream Chart</div>
   ),
 }));
 
 jest.mock('@nivo/radar', () => ({
-  ResponsiveRadar: (): React.ReactElement => (
-    <div data-testid="radar-chart">
-      Mock Radar Chart
-    </div>
-  ),
+  ResponsiveRadar: (): React.ReactElement => <div data-testid="radar-chart">Mock Radar Chart</div>,
 }));
 
 jest.mock('@nivo/sunburst', () => ({
   ResponsiveSunburst: (): React.ReactElement => (
-    <div data-testid="sunburst-chart">
-      Mock Sunburst Chart
-    </div>
+    <div data-testid="sunburst-chart">Mock Sunburst Chart</div>
   ),
 }));
 

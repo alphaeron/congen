@@ -1,8 +1,8 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { MemoryRouter } from 'react-router';
-import { SnackbarProvider } from 'notistack';
 import MockAdapter from 'axios-mock-adapter';
+import { SnackbarProvider } from 'notistack';
 import React from 'react';
+import { MemoryRouter } from 'react-router';
 
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ENDPOINT } from '../api/endpoint';
@@ -17,11 +17,6 @@ jest.mock('../contexts/AuthContext', () => ({
     },
   }),
 }));
-
-const mockUser = {
-  keycloak_id: 'test-user-id',
-  name: 'Test User',
-};
 
 const mockExercisePoolData: UserExercisePoolResponse = {
   user_id: 'test-user-id',
@@ -86,14 +81,20 @@ describe('ExerciseCategoryDetails', () => {
     });
 
     // Wait for loading to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     // Wait for the content to appear
-    await waitFor(() => {
-      expect(screen.getByText('2 primary exercises in your rotation.')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('2 primary exercises in your rotation.')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
     expect(screen.getByText('Squat')).toBeInTheDocument();
@@ -113,13 +114,19 @@ describe('ExerciseCategoryDetails', () => {
     });
 
     // Wait for loading to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('1 accessory exercise in your rotation.')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('1 accessory exercise in your rotation.')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByText('Bicep Curls')).toBeInTheDocument();
   }, 15000);
@@ -138,13 +145,19 @@ describe('ExerciseCategoryDetails', () => {
     });
 
     // Wait for loading to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('2 recent exercises in your rotation.')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('2 recent exercises in your rotation.')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
     expect(screen.getByText('Deadlift')).toBeInTheDocument();
     expect(screen.getByText('Overhead Press')).toBeInTheDocument();
@@ -172,9 +185,12 @@ describe('ExerciseCategoryDetails', () => {
       </MemoryRouter>
     );
 
-    await waitFor(() => {
-      expect(screen.getByText('No primary exercises in your rotation.')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('No primary exercises in your rotation.')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should show error for invalid category', async () => {
@@ -189,7 +205,9 @@ describe('ExerciseCategoryDetails', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid exercise category. Please select a valid category.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Invalid exercise category. Please select a valid category.')
+      ).toBeInTheDocument();
     });
   });
 
@@ -227,13 +245,19 @@ describe('ExerciseCategoryDetails', () => {
     });
 
     // Wait for loading to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Loading exercise category details...')).not.toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText('1 primary exercise in your rotation.')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText('1 primary exercise in your rotation.')).toBeInTheDocument();
+      },
+      { timeout: 10000 }
+    );
   }, 15000);
 
   it('should create proper exercise cards for recent exercises', async () => {

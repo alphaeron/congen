@@ -67,7 +67,9 @@ describe('userEquipment API', () => {
     it('should handle timeout error', async () => {
       mockAdapter.onGet('/user_equipment/test-user-id').timeout();
 
-      await expect(getUserEquipment('test-user-id')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(getUserEquipment('test-user-id')).rejects.toEqual({
+        error: 'timeout of 2500ms exceeded',
+      });
     });
 
     it('should encode user ID in URL', async () => {
@@ -124,13 +126,17 @@ describe('userEquipment API', () => {
     it('should handle network error', async () => {
       mockAdapter.onPost('/user_equipment/').networkError();
 
-      await expect(addUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({ error: 'Network Error' });
+      await expect(addUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({
+        error: 'Network Error',
+      });
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user_equipment/').timeout();
 
-      await expect(addUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(addUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({
+        error: 'timeout of 2500ms exceeded',
+      });
     });
   });
 
@@ -151,33 +157,43 @@ describe('userEquipment API', () => {
       const errorResponse = { error: 'User equipment not found' };
       mockAdapter.onDelete('/user_equipment/').reply(404, errorResponse);
 
-      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual(errorResponse);
+      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual(
+        errorResponse
+      );
     });
 
     it('should handle 401 error', async () => {
       const errorResponse = { error: 'Unauthorized' };
       mockAdapter.onDelete('/user_equipment/').reply(401, errorResponse);
 
-      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual(errorResponse);
+      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual(
+        errorResponse
+      );
     });
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
       mockAdapter.onDelete('/user_equipment/').reply(500, errorResponse);
 
-      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual(errorResponse);
+      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual(
+        errorResponse
+      );
     });
 
     it('should handle network error', async () => {
       mockAdapter.onDelete('/user_equipment/').networkError();
 
-      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({ error: 'Network Error' });
+      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({
+        error: 'Network Error',
+      });
     }, 10000);
 
     it('should handle timeout error', async () => {
       mockAdapter.onDelete('/user_equipment/').timeout();
 
-      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({ error: 'timeout of 2500ms exceeded' });
+      await expect(removeUserEquipment('test-user-id', 'Kettlebell')).rejects.toEqual({
+        error: 'timeout of 2500ms exceeded',
+      });
     });
   });
 });
