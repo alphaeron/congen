@@ -61,8 +61,8 @@ describe('exercise API', () => {
       mockAdapter.onGet('/exercise/').networkError();
 
       await expect(getExercises()).rejects.toEqual({ error: 'Network Error' });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/').timeout();
@@ -110,11 +110,9 @@ describe('exercise API', () => {
     it('should handle network errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press').networkError();
 
-      await expect(getIndividualExercise('Bench Press')).rejects.toEqual({
-        error: 'Network Error',
-      });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      await expect(getIndividualExercise('Bench Press')).rejects.toEqual({ error: 'Network Error' });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press').timeout();
@@ -175,8 +173,8 @@ describe('exercise API', () => {
       mockAdapter.onGet('/exercise/Bench%20Press/muscle').networkError();
 
       await expect(getExerciseMuscles('Bench Press')).rejects.toEqual({ error: 'Network Error' });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press/muscle').timeout();
@@ -237,8 +235,8 @@ describe('exercise API', () => {
       mockAdapter.onGet('/exercise/Bench%20Press/equipment').networkError();
 
       await expect(getExerciseEquipment('Bench Press')).rejects.toEqual({ error: 'Network Error' });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/exercise/Bench%20Press/equipment').timeout();

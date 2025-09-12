@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock TanStack Virtual to render all items in tests
 jest.mock('@tanstack/react-virtual', () => ({
@@ -22,6 +23,8 @@ import {
   type UserOneRepMax,
   type UserWeightUnitPreference,
 } from '../api/types';
+import MockAdapter from 'axios-mock-adapter';
+import { ENDPOINT } from '../api/endpoint';
 
 // Mock Nivo charts to avoid rendering issues in tests
 interface LineChartData {
@@ -70,7 +73,19 @@ jest.mock('@nivo/chord', () => ({
 }));
 
 const renderWithProviders = (component: React.ReactElement) => {
-  return render(<MemoryRouter>{component}</MemoryRouter>);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{component}</MemoryRouter>
+    </QueryClientProvider>
+  );
 };
 
 const mockUser: User = {
@@ -200,6 +215,21 @@ const mockUserDataExport: UserDataExport = {
 };
 
 describe('ConjugateProgression', () => {
+  let mock: MockAdapter;
+
+  beforeEach(() => {
+    mock = new MockAdapter(ENDPOINT);
+    // Mock the exercise API calls that ExerciseName component makes
+    mock.onGet('/exercise/').reply(200, [
+      { id: 1, name: 'Bench Press' },
+      { id: 2, name: 'Squat' },
+    ]);
+  });
+
+  afterEach(() => {
+    mock.restore();
+  });
+
   it('should display empty state when no training programs exist', () => {
     const emptyUserData: UserDataExport = {
       ...mockUserDataExport,

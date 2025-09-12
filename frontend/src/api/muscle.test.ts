@@ -52,8 +52,8 @@ describe('muscle API', () => {
       mockAdapter.onGet('/muscle/').networkError();
 
       await expect(getMuscles()).rejects.toEqual({ error: 'Network Error' });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/muscle/').timeout();
@@ -109,8 +109,8 @@ describe('muscle API', () => {
       await expect(getIndividualMuscle('Pectoralis Major')).rejects.toEqual({
         error: 'Network Error',
       });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/muscle/Pectoralis%20Major').timeout();

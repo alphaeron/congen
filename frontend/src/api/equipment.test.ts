@@ -48,8 +48,8 @@ describe('equipment API', () => {
       mockAdapter.onGet('/equipment/').networkError();
 
       await expect(getEquipment()).rejects.toEqual({ error: 'Network Error' });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/equipment/').timeout();
@@ -94,8 +94,8 @@ describe('equipment API', () => {
       mockAdapter.onGet('/equipment/Barbell').networkError();
 
       await expect(getIndividualEquipment('Barbell')).rejects.toEqual({ error: 'Network Error' });
-      expect(mockAdapter.history.get.length).toBe(1);
-    });
+      expect(mockAdapter.history.get.length).toBe(4); // 1 initial + 3 retries
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mockAdapter.onGet('/equipment/Barbell').timeout();

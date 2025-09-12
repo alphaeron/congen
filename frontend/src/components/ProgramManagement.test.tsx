@@ -91,11 +91,16 @@ describe('ProgramManagement', () => {
       renderWithProviders(<ProgramManagement user={mockUser} />);
     });
 
+    // Wait for loading to complete first
+    await waitFor(() => {
+      expect(screen.queryByText('Loading programs...')).not.toBeInTheDocument();
+    });
+
     await waitFor(() => {
       expect(screen.getByText('Program Management')).toBeInTheDocument();
-      expect(screen.getAllByRole('button', { name: /create program/i })).toHaveLength(2);
-    });
-  });
+      expect(screen.getByRole('button', { name: /create program/i })).toBeInTheDocument();
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('displays programs when data loads successfully', async () => {
     // Mock user-related API calls from AuthContext

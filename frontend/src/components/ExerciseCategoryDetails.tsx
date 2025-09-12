@@ -69,19 +69,19 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
     switch (category) {
       case 'primary':
         return {
-          title: 'Primary Exercises',
+          title: 'Primary Exercise',
           exercises: exercisePoolData.primary_exercises,
           color: 'error' as const,
         };
       case 'accessory':
         return {
-          title: 'Accessory Exercises',
+          title: 'Accessory Exercise',
           exercises: exercisePoolData.accessory_exercises,
           color: 'info' as const,
         };
       case 'recent':
         return {
-          title: 'Recent Exercises',
+          title: 'Recent Exercise',
           exercises: exercisePoolData.previously_used_exercises.map(exerciseName => ({
             name: exerciseName,
             description: `Recently used: ${exerciseName}`,
@@ -118,7 +118,7 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
         <Box sx={{ mb: 3 }}>
           <Alert severity="info" sx={{ mb: 2 }}>
             {categoryData.exercises.length === 0 
-              ? `No ${categoryData.title.toLowerCase()} in your rotation.`
+              ? `No ${categoryData.title.toLowerCase()}s in your rotation.`
               : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()}${categoryData.exercises.length === 1 ? '' : 's'} in your rotation.`
             }
           </Alert>

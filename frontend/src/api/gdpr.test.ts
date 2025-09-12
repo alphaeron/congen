@@ -199,46 +199,26 @@ describe('GDPR API', () => {
     it('should handle network errors for recordConsent', async () => {
       mock.onPost('/gdpr/consent').networkError();
 
-      try {
-        await recordConsent(true);
-      } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toBe('Network Error');
-      }
-    });
+      await expect(recordConsent(true)).rejects.toEqual({ error: 'Network Error' });
+    }, 10000);
 
     it('should handle network errors for getConsentStatus', async () => {
       mock.onGet('/gdpr/consent').networkError();
 
-      try {
-        await getConsentStatus();
-      } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toBe('Network Error');
-      }
-    });
+      await expect(getConsentStatus()).rejects.toEqual({ error: 'Network Error' });
+    }, 10000);
 
     it('should handle network errors for exportUserData', async () => {
       mock.onGet('/gdpr/export').networkError();
 
-      try {
-        await exportUserData();
-      } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toBe('Network Error');
-      }
-    });
+      await expect(exportUserData()).rejects.toEqual({ error: 'Network Error' });
+    }, 10000);
 
     it('should handle network errors for deleteAllPersonalData', async () => {
       mock.onDelete('/gdpr/delete_all_data').networkError();
 
-      try {
-        await deleteAllPersonalData('DELETE_ALL_MY_DATA');
-      } catch (error: unknown) {
-        const axiosError = error as { error: string };
-        expect(axiosError.error).toBe('Network Error');
-      }
-    });
+      await expect(deleteAllPersonalData('DELETE_ALL_MY_DATA')).rejects.toEqual({ error: 'Network Error' });
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mock.onGet('/gdpr/export').timeout();

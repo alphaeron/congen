@@ -114,14 +114,14 @@ describe('GdprComplianceSection', () => {
     await user.click(screen.getByRole('button', { name: 'Delete All Data' }));
 
     // Check dialog opens
-    expect(screen.getByText('Delete All Personal Data')).toBeInTheDocument();
+    expect(screen.getByText('Delete Account and All Data')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('DELETE_ALL_MY_DATA')).toBeInTheDocument();
 
     // Type confirmation
     await user.type(screen.getByPlaceholderText('DELETE_ALL_MY_DATA'), 'DELETE_ALL_MY_DATA');
 
     // Confirm deletion
-    await user.click(screen.getByRole('button', { name: 'Delete All Data' }));
+    await user.click(screen.getByRole('button', { name: 'Delete Account' }));
 
     await waitFor(() => {
       expect(mock.history.delete).toHaveLength(1);
@@ -169,7 +169,7 @@ describe('GdprComplianceSection', () => {
     await user.type(screen.getByPlaceholderText('DELETE_ALL_MY_DATA'), 'WRONG_TEXT');
 
     // Delete button should be disabled
-    expect(screen.getByRole('button', { name: 'Delete All Data' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Delete Account' })).toBeDisabled();
     expect(screen.getByText('Please type exactly "DELETE_ALL_MY_DATA"')).toBeInTheDocument();
   });
 

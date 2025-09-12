@@ -156,7 +156,7 @@ describe('endpoint', () => {
           method: 'GET',
         })
       ).rejects.toEqual({ error: 'Network Error' });
-    });
+    }, 10000);
 
     it('should handle timeout errors', async () => {
       mock.onGet('/test').timeout();

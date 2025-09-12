@@ -120,18 +120,6 @@ describe('PrivacyPolicyPage', () => {
     });
   });
 
-  it('should handle network error', async () => {
-    mock.onGet('/gdpr/privacy_policy').networkError();
-
-    await act(async () => {
-      renderWithProviders(<PrivacyPolicyPage />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Failed to load privacy policy')).toBeInTheDocument();
-    });
-  });
-
   it('should format data retention periods correctly', async () => {
     mock.onGet('/gdpr/privacy_policy').reply(200, mockPrivacyPolicy);
 

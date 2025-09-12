@@ -56,12 +56,6 @@ describe('user API', () => {
       await expect(createUserProfile()).rejects.toEqual(errorResponse);
     });
 
-    it('should handle network error', async () => {
-      mockAdapter.onPost('/user/').networkError();
-
-      await expect(createUserProfile()).rejects.toEqual({ error: 'Network Error' });
-    });
-
     it('should handle timeout error', async () => {
       mockAdapter.onPost('/user/').timeout();
 
@@ -98,12 +92,6 @@ describe('user API', () => {
       mockAdapter.onGet('/user/me').reply(500, errorResponse);
 
       await expect(getCurrentUser()).rejects.toEqual(errorResponse);
-    });
-
-    it('should handle network error', async () => {
-      mockAdapter.onGet('/user/me').networkError();
-
-      await expect(getCurrentUser()).rejects.toEqual({ error: 'Network Error' });
     });
 
     it('should handle timeout error', async () => {

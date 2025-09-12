@@ -50,7 +50,7 @@ describe('UserProfilePage', () => {
     renderWithProviders(<UserProfilePage />);
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
   it('should show deactivate account button when user exists', () => {
@@ -61,9 +61,9 @@ describe('UserProfilePage', () => {
 
     renderWithProviders(<UserProfilePage />);
 
-    // The Deactivate Account button is in the Account Security tab, not visible by default
-    // Instead, check that the Account Security tab is available
-    expect(screen.getByText('Account Security')).toBeInTheDocument();
+    // The current UserProfile component only shows Privacy & Data and Manage Profile
+    // Check that the Manage Profile option is available
+    expect(screen.getByText('Manage Profile')).toBeInTheDocument();
   });
 
   it('should show edit profile button when user exists', () => {
@@ -74,7 +74,8 @@ describe('UserProfilePage', () => {
 
     renderWithProviders(<UserProfilePage />);
 
-    expect(screen.getAllByText('Edit Profile')[0]).toBeInTheDocument();
+    expect(screen.getByText('User Profile')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
   });
 
   it('should show loading message when user is not available', () => {

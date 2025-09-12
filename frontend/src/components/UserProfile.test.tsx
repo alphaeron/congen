@@ -69,39 +69,37 @@ describe('UserProfile', () => {
 
   it('should render user profile information', async () => {
     await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />);
+      renderWithProviders(<UserProfile />);
     });
 
     expect(screen.getByText('User Profile')).toBeInTheDocument();
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Member since December 31, 2023')).toBeInTheDocument();
+    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
+    expect(screen.getByText('Manage Profile')).toBeInTheDocument();
   });
 
   it('should render all tab navigation items', async () => {
     await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />);
+      renderWithProviders(<UserProfile />);
     });
 
-    expect(screen.getAllByText('Profile Overview')).toHaveLength(2); // One in sidebar, one in content
     expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
-    expect(screen.getByText('Account Security')).toBeInTheDocument();
+    expect(screen.getByText('Manage Profile')).toBeInTheDocument();
   });
 
-  it('should show overview content by default', async () => {
+  it('should show privacy content by default', async () => {
     await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />);
+      renderWithProviders(<UserProfile />);
     });
 
-    // Check for the main user information that's actually rendered
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
-    expect(screen.getByText('Member since December 31, 2023')).toBeInTheDocument();
-    expect(screen.getByText('Roles: user')).toBeInTheDocument();
-    expect(screen.getByText('Edit Profile')).toBeInTheDocument();
+    // The default section is 'privacy' which renders GdprComplianceSection
+    await waitFor(() => {
+      expect(screen.getByText('Privacy & Data Protection')).toBeInTheDocument();
+    });
   });
 
   it('should navigate to privacy tab', async () => {
     await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} initialSection="privacy" />);
+      renderWithProviders(<UserProfile initialSection="privacy" />);
     });
 
     // Wait for the privacy content to load
@@ -110,107 +108,13 @@ describe('UserProfile', () => {
     });
   }, 10000);
 
-  it('should navigate to account security tab', async () => {
+  it('should render Manage Profile button', async () => {
     await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
+      renderWithProviders(<UserProfile />);
     });
 
-    await waitFor(() => {
-      expect(screen.getByText('Security Settings')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Change Password')).toBeInTheDocument();
-    expect(screen.getByText('Danger Zone')).toBeInTheDocument();
-  }, 10000);
-
-  it('should show deactivate account button in security tab', async () => {
-    await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
-    });
-  }, 10000);
-
-  it('should show edit profile button in overview', async () => {
-    await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />);
-    });
-
-    // In the new layout, there's only one Edit Profile button in the overview
-    expect(screen.getByText('Edit Profile')).toBeInTheDocument();
-  });
-
-  it('should open delete confirmation dialog when deactivate button is clicked', async () => {
-    await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
-    });
-
-    const deactivateButton = screen.getByText('Deactivate Account');
-    fireEvent.click(deactivateButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Are you sure you want to delete your account/)).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Cancel')).toBeInTheDocument();
-    // Check for the dialog title specifically
-    expect(screen.getByText('Delete Account', { selector: 'h2' })).toBeInTheDocument();
-  }, 10000);
-
-  it('should close dialog when cancel is clicked', async () => {
-    await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} initialSection="security" />);
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Deactivate Account')).toBeInTheDocument();
-    });
-
-    const deactivateButton = screen.getByText('Deactivate Account');
-    fireEvent.click(deactivateButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('Cancel')).toBeInTheDocument();
-    });
-
-    const cancelButton = screen.getByText('Cancel');
-    fireEvent.click(cancelButton);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByText(/Are you sure you want to delete your account/)
-      ).not.toBeInTheDocument();
-    });
-  }, 10000);
-
-  it('should redirect to Keycloak when edit button is clicked', async () => {
-    await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />);
-    });
-
-    const editButton = screen.getByText('Edit Profile');
-    fireEvent.click(editButton);
-
-    // The component should redirect to Keycloak, not navigate to a local route
-    // We can't easily test the window.location.href change in tests, but we can verify
-    // that the ProfileOverview component handles the click correctly
-    expect(editButton).toBeInTheDocument();
-  });
-
-  it('should show quick action buttons in overview', async () => {
-    await act(async () => {
-      renderWithProviders(<UserProfile user={mockUser} />);
-    });
-
-    // Check that the navigation items are available
-    expect(screen.getByText('Privacy & Data')).toBeInTheDocument();
-    expect(screen.getByText('Account Security')).toBeInTheDocument();
+    const manageProfileButton = screen.getByText('Manage Profile');
+    expect(manageProfileButton).toBeInTheDocument();
   });
 
   it('should verify axios mock is working', async () => {
