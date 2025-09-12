@@ -66,8 +66,10 @@ describe('ProfileEditRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward timers
-    jest.advanceTimersByTime(100);
+    // Fast-forward timers within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/profile', { replace: true });
@@ -88,8 +90,10 @@ describe('ProfileEditRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     await waitFor(() => {
       expect(mock.history.patch).toHaveLength(1);
@@ -97,8 +101,10 @@ describe('ProfileEditRedirect', () => {
       expect(mock.history.patch[0].params).toEqual({ name: 'Test User' });
     });
 
-    // Fast-forward success message delay
-    jest.advanceTimersByTime(1500);
+    // Fast-forward success message delay within act
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(redirectPath, { replace: true });
@@ -122,8 +128,10 @@ describe('ProfileEditRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     // Check that the API call was made
     await waitFor(() => {
@@ -152,8 +160,10 @@ describe('ProfileEditRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     // Component should handle error gracefully
     await waitFor(() => {
@@ -181,8 +191,10 @@ describe('ProfileEditRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     await waitFor(() => {
       expect(mock.history.patch).toHaveLength(1);
@@ -190,8 +202,10 @@ describe('ProfileEditRedirect', () => {
       expect(mock.history.patch[0].params).toEqual({ name: 'Test User' });
     });
 
-    // Fast-forward success message delay
-    jest.advanceTimersByTime(1500);
+    // Fast-forward success message delay within act
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(redirectPath, { replace: true });

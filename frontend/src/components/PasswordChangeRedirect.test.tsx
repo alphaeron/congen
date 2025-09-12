@@ -49,8 +49,10 @@ describe('PasswordChangeRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward timers
-    jest.advanceTimersByTime(100);
+    // Fast-forward timers within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/profile', { replace: true });
@@ -69,12 +71,15 @@ describe('PasswordChangeRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
-
-    // Fast-forward success message delay
-    jest.advanceTimersByTime(1500);
+    // Fast-forward success message delay within act
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(redirectPath, { replace: true });
@@ -96,8 +101,10 @@ describe('PasswordChangeRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Password changed successfully!')).toBeInTheDocument();
@@ -116,8 +123,15 @@ describe('PasswordChangeRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
+
+    // Fast-forward success message delay within act
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
 
     // Component should navigate successfully
     await waitFor(() => {
@@ -140,12 +154,15 @@ describe('PasswordChangeRedirect', () => {
       </MemoryRouter>
     );
 
-    // Fast-forward initial timer
-    jest.advanceTimersByTime(100);
+    // Fast-forward initial timer within act
+    await act(async () => {
+      jest.advanceTimersByTime(100);
+    });
 
-
-    // Fast-forward success message delay
-    jest.advanceTimersByTime(1500);
+    // Fast-forward success message delay within act
+    await act(async () => {
+      jest.advanceTimersByTime(1500);
+    });
 
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith(redirectPath, { replace: true });
