@@ -211,6 +211,7 @@ data:
       cursor: pointer !important;
       border-radius: 6px !important;
       transition: all 0.2s ease !important;
+      z-index: 100 !important;
     }
     
     /* Eye icon button hover state */
@@ -223,6 +224,14 @@ data:
     .pf-c-button.pf-m-control:focus {
       outline: 2px solid var(--form-border-focus) !important;
       outline-offset: 2px !important;
+    }
+    
+    /* Eye icon positioning when input is focused - move up to match input field */
+    .pf-c-input-group:focus-within .pf-c-button.pf-m-control,
+    .pf-c-input-group input:focus + .pf-c-button.pf-m-control,
+    .pf-c-input-group input:focus ~ .pf-c-button.pf-m-control {
+      transform: translateY(-50%) translateY(-2px) !important;
+      z-index: 100 !important;
     }
     
     /* Ensure FontAwesome icons display properly */
@@ -412,5 +421,13 @@ data:
       .pf-c-button.pf-m-control:hover {
         background-color: rgba(255, 255, 255, 0.15) !important;
         color: var(--text-color) !important;
+      }
+      
+      /* Dark mode: Eye icon positioning when input is focused - move up to match input field */
+      .pf-c-input-group:focus-within .pf-c-button.pf-m-control,
+      .pf-c-input-group input:focus + .pf-c-button.pf-m-control,
+      .pf-c-input-group input:focus ~ .pf-c-button.pf-m-control {
+        transform: translateY(-50%) translateY(-2px) !important;
+        z-index: 100 !important;
       }
     } 
