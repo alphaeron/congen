@@ -139,18 +139,20 @@ export const ExerciseRotationVisualization: React.FC = () => {
               minWidth: 'auto',
             }}
           >
-            <RotateRightIcon sx={{ mr: 0.5 }} fontSize="small" />
             Exercise Rotation
           </Button>
         ) : (
           <Typography variant="body1" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <RotateRightIcon fontSize="small" />
             Exercise Rotation
           </Typography>
         )}
         {selectedCategory && (
           <Typography variant="body1" color="text.primary">
-            {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Exercises
+            {selectedCategory === 'equipment' ? 'Available Equipment' :
+             selectedCategory === 'primary' ? 'Primary Exercises' :
+             selectedCategory === 'accessory' ? 'Accessory Exercises' :
+             selectedCategory === 'avoided' ? 'Avoided Exercises' :
+             selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) + ' Exercises'}
           </Typography>
         )}
       </Breadcrumbs>

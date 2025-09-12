@@ -70,23 +70,18 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
       case 'primary':
         return {
           title: 'Primary Exercises',
-          icon: <FitnessCenterIcon />,
           exercises: exercisePoolData.primary_exercises,
-          description: 'Main compound movements that form the foundation of your training.',
           color: 'error' as const,
         };
       case 'accessory':
         return {
           title: 'Accessory Exercises',
-          icon: <SpeedIcon />,
           exercises: exercisePoolData.accessory_exercises,
-          description: 'Supporting exercises that target specific muscle groups and movement patterns.',
           color: 'info' as const,
         };
       case 'equipment':
         return {
           title: 'Available Equipment',
-          icon: <FitnessCenterIcon />,
           exercises: exercisePoolData.user_equipment.map(eq => ({
             name: eq.equipment_name,
             description: `Equipment: ${eq.equipment_name}`,
@@ -95,13 +90,11 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
             is_upper: false,
             is_accessory: false,
           })),
-          description: 'Equipment available for your workouts.',
           color: 'success' as const,
         };
       case 'avoided':
         return {
           title: 'Avoided Exercises',
-          icon: <TimelineIcon />,
           exercises: exercisePoolData.user_preferences
             .filter(pref => pref.should_avoid)
             .map(pref => ({
@@ -112,7 +105,6 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
               is_upper: false,
               is_accessory: false,
             })),
-          description: 'Exercises you have marked to avoid in your training.',
           color: 'warning' as const,
         };
       default:
@@ -139,16 +131,14 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
 
         {/* Category Header */}
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            {categoryData.icon}
-            {categoryData.title}
-          </Typography>
           <Alert severity="info" sx={{ mb: 2 }}>
-            {categoryData.exercises.length} {categoryData.title.toLowerCase()} available in your exercise pool.
+            {categoryData.exercises.length === 0 
+              ? `No ${categoryData.title.toLowerCase()} in your rotation.`
+              : category === 'equipment'
+                ? `${categoryData.exercises.length} piece${categoryData.exercises.length === 1 ? '' : 's'} of equipment in your rotation.`
+                : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()} in your rotation.`
+            }
           </Alert>
-          <Typography variant="body1" color="text.secondary">
-            {categoryData.description}
-          </Typography>
         </Box>
 
         {/* Exercise Grid */}
