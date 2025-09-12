@@ -178,14 +178,51 @@ data:
       margin: 0 !important;
     }
     
-    /* Fix eye icon button styling */
+    /* Password input group styling for embedded eye icon */
+    .pf-c-input-group {
+      position: relative !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+    
+    /* Password input with right padding for eye icon */
+    .pf-c-input-group input[type="password"] {
+      padding-right: 50px !important;
+    }
+    
+    /* Eye icon button positioned inside the input field */
     .pf-c-button.pf-m-control {
+      position: absolute !important;
+      right: 8px !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
       background-color: transparent !important;
       border: none !important;
       color: var(--text-secondary) !important;
       margin: 0 !important;
       box-shadow: none !important;
       --pf-c-button--after--BorderColor: transparent !important;
+      padding: 8px !important;
+      width: 32px !important;
+      height: 32px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      border-radius: 6px !important;
+      transition: all 0.2s ease !important;
+    }
+    
+    /* Eye icon button hover state */
+    .pf-c-button.pf-m-control:hover {
+      background-color: rgba(255, 255, 255, 0.1) !important;
+      color: var(--text-color) !important;
+    }
+    
+    /* Eye icon button focus state */
+    .pf-c-button.pf-m-control:focus {
+      outline: 2px solid var(--form-border-focus) !important;
+      outline-offset: 2px !important;
     }
     
     /* Ensure FontAwesome icons display properly */
@@ -304,7 +341,7 @@ data:
     
     .alert-info {
       background-color: rgba(14, 165, 233, 0.1) !important;
-      color: var(--link-color) !important;
+      color: #ffffff !important;
       box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1) !important;
     }
     
@@ -362,11 +399,18 @@ data:
       
       .alert-info {
         background-color: rgba(56, 189, 248, 0.15) !important;
+        color: #ffffff !important;
         box-shadow: 0 2px 8px rgba(56, 189, 248, 0.15) !important;
       }
       
       .alert-success {
         background-color: rgba(74, 222, 128, 0.15) !important;
         box-shadow: 0 2px 8px rgba(74, 222, 128, 0.15) !important;
+      }
+      
+      /* Dark mode eye icon button hover state */
+      .pf-c-button.pf-m-control:hover {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        color: var(--text-color) !important;
       }
     } 
