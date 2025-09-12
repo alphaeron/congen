@@ -249,6 +249,24 @@ data:
       -moz-osx-font-smoothing: grayscale !important;
     }
     
+    /* Fix background image error icon overlap by adding padding */
+    .pf-c-form-control[aria-invalid="true"],
+    input[aria-invalid="true"],
+    .form-control[aria-invalid="true"] {
+      padding-right: 40px !important;
+      background-position: right 10px center !important;
+      background-repeat: no-repeat !important;
+      background-size: 16px 16px !important;
+    }
+    
+    /* Move eye button to the left when input has error to avoid overlap with error icon */
+    .pf-c-form-control[aria-invalid="true"] + .pf-c-button.pf-m-control,
+    input[aria-invalid="true"] + .pf-c-button.pf-m-control,
+    .form-control[aria-invalid="true"] + .pf-c-button.pf-m-control,
+    .pf-c-input-group:has(input[aria-invalid="true"]) .pf-c-button.pf-m-control {
+      right: 30px !important;
+    }
+    
     /* Smooth focus state with gradual transition and rounded outline */
     .form-control:focus,
     input[type="text"]:focus,
@@ -429,5 +447,23 @@ data:
       .pf-c-input-group input:focus ~ .pf-c-button.pf-m-control {
         transform: translateY(-50%) translateY(-2px) !important;
         z-index: 100 !important;
+      }
+      
+      /* Dark mode: Fix background image error icon overlap by adding padding */
+      .pf-c-form-control[aria-invalid="true"],
+      input[aria-invalid="true"],
+      .form-control[aria-invalid="true"] {
+        padding-right: 40px !important;
+        background-position: right 10px center !important;
+        background-repeat: no-repeat !important;
+        background-size: 16px 16px !important;
+      }
+      
+      /* Dark mode: Move eye button to the left when input has error to avoid overlap with error icon */
+      .pf-c-form-control[aria-invalid="true"] + .pf-c-button.pf-m-control,
+      input[aria-invalid="true"] + .pf-c-button.pf-m-control,
+      .form-control[aria-invalid="true"] + .pf-c-button.pf-m-control,
+      .pf-c-input-group:has(input[aria-invalid="true"]) .pf-c-button.pf-m-control {
+        right: 30px !important;
       }
     } 
