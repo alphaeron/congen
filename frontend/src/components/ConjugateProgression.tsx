@@ -10,6 +10,7 @@ import {
 import { useVirtualizer } from '@tanstack/react-virtual';
 import React, { useMemo, useState, useRef } from 'react';
 
+import { ExerciseName } from './ExerciseName';
 import { LineChart } from './LineChart';
 import { PieChart } from './PieChart';
 import type {
@@ -65,7 +66,7 @@ export const ConjugateProgression: React.FC<ConjugateProgressionProps> = ({
   const columns = [
     columnHelper.accessor('exerciseName', {
       header: 'Exercise',
-      cell: info => info.getValue(),
+      cell: info => <ExerciseName exerciseName={info.getValue()} variant="body2" />,
     }),
     columnHelper.accessor('oneRepMax', {
       header: '1RM',

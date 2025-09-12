@@ -89,7 +89,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   ];
 
   const handleSectionChange = (sectionId: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
+    const newSearchParams = new URLSearchParams();
     newSearchParams.set('section', sectionId);
     navigate(`?${newSearchParams.toString()}`);
   };

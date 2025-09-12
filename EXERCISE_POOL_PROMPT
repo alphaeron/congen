@@ -1,9 +1,3 @@
-We need to add some final visualizations for exercise preferences, the conjugate rotation for a user, and equipment, ...
-
-Exercise Pool visualization page. In addition to visualizing the user's current exercise pools, the interface should also show users what exercises are available as they add preferences, equipment, ...
-
-weight unit preferences ui, equipment ui, weak muscles ui
-
-add weak muscles UI to program preferences (name target muscles in the interface)
+add ability to add an exercise preference from the exercise card, the exercise details page, and add a section on the workout preferences for exercise preferences as well.  there are the two statuses we need to be able to set as well, prefer and ignore, corresponding to the boolean property in the exercise preference object.
 
 View current exercise weight preferences in dashboard, dive in from the count displayed

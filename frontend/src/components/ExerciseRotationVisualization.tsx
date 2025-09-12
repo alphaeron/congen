@@ -17,6 +17,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 
 import { LoadingSpinner } from './LoadingSpinner';
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
+import { ExerciseName } from './ExerciseName';
 import { getPrograms } from '../api/program';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type {
@@ -89,19 +90,25 @@ export const ExerciseRotationVisualization: React.FC = () => {
   };
 
   const handleCategoryClick = (category: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
+    const newSearchParams = new URLSearchParams();
     newSearchParams.set('section', 'exercise-rotation');
     newSearchParams.set('category', category);
-    navigate(`/dashboard?${newSearchParams.toString()}`);
+    navigate(`?${newSearchParams.toString()}`);
+  };
+
+  const handlePreferencesClick = () => {
+    const newSearchParams = new URLSearchParams();
+    newSearchParams.set('section', 'workout-preferences');
+    navigate(`?${newSearchParams.toString()}`);
   };
 
   const handleBreadcrumbClick = (target: string) => {
-    const newSearchParams = new URLSearchParams(searchParams);
+    const newSearchParams = new URLSearchParams();
     newSearchParams.set('section', 'exercise-rotation');
     if (target === 'exercise-rotation') {
-      newSearchParams.delete('category');
+      // Don't set category for main exercise rotation view
     }
-    navigate(`/dashboard?${newSearchParams.toString()}`);
+    navigate(`?${newSearchParams.toString()}`);
   };
 
   // Render breadcrumbs
@@ -141,10 +148,9 @@ export const ExerciseRotationVisualization: React.FC = () => {
         )}
         {selectedCategory && (
           <Typography variant="body1" color="text.primary">
-            {selectedCategory === 'equipment' ? 'Available Equipment' :
-             selectedCategory === 'primary' ? 'Primary Exercises' :
+            {selectedCategory === 'primary' ? 'Primary Exercises' :
              selectedCategory === 'accessory' ? 'Accessory Exercises' :
-             selectedCategory === 'avoided' ? 'Avoided Exercises' :
+             selectedCategory === 'recent' ? 'Recent Exercises' :
              selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1) + ' Exercises'}
           </Typography>
         )}
@@ -247,28 +253,43 @@ export const ExerciseRotationVisualization: React.FC = () => {
         {/* Previously Used Exercises */}
         {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
           <Grid size={{ xs: 12 }}>
-            <Card>
+            <Card
+              sx={{
+                cursor: 'pointer',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                  boxShadow: 3,
+                }
+              }}
+              onClick={() => handleCategoryClick('recent')}
+            >
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   Recent Exercises
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Alert severity="info" sx={{ mb: 2 }}>
                   These exercises have been used in recent weeks and are temporarily excluded from selection to promote variety.
-                </Typography>
+                </Alert>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {exercisePoolAnalysis.previouslyUsedExercises.map((exerciseName) => (
+                  {exercisePoolAnalysis.previouslyUsedExercises.slice(0, 10).map((exerciseName) => (
                     <Chip
                       key={exerciseName}
-                      label={exerciseName}
+                      label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
                       variant="outlined"
                       color="warning"
                       size="small"
+                      onClick={(e) => e.stopPropagation()}
                     />
                   ))}
+                  {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
+                    <Chip
+                      label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
+                      size="small"
+                      variant="outlined"
+                    />
+                  )}
                 </Box>
-                <Alert severity="info" sx={{ mt: 2 }}>
-                  {exercisePoolAnalysis.previouslyUsedExercises.length} exercises are currently in the sliding window exclusion period.
-                </Alert>
               </CardContent>
             </Card>
           </Grid>
@@ -305,7 +326,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                         {exercisePoolAnalysis.categorizedExercises.primary.slice(0, 3).map((exercise) => (
                           <Chip
                             key={exercise.name}
-                            label={exercise.name}
+                            label={<ExerciseName exerciseName={exercise.name} variant="caption" />}
                             size="small"
                             variant="outlined"
                             color="error"
@@ -343,7 +364,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                         {exercisePoolAnalysis.categorizedExercises.accessory.slice(0, 3).map((exercise) => (
                           <Chip
                             key={exercise.name}
-                            label={exercise.name}
+                            label={<ExerciseName exerciseName={exercise.name} variant="caption" />}
                             size="small"
                             variant="outlined"
                             color="info"
@@ -371,7 +392,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                           boxShadow: 3,
                         }
                       }}
-                      onClick={() => handleCategoryClick('equipment')}
+                      onClick={handlePreferencesClick}
                     >
                       <Typography variant="h4" color="success.main">
                         {exercisePoolAnalysis.userEquipment.length}
@@ -409,7 +430,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                           boxShadow: 3,
                         }
                       }}
-                      onClick={() => handleCategoryClick('avoided')}
+                      onClick={handlePreferencesClick}
                     >
                       <Typography variant="h4" color="warning.main">
                         {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length}

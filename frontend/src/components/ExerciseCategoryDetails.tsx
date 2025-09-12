@@ -79,32 +79,17 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
           exercises: exercisePoolData.accessory_exercises,
           color: 'info' as const,
         };
-      case 'equipment':
+      case 'recent':
         return {
-          title: 'Available Equipment',
-          exercises: exercisePoolData.user_equipment.map(eq => ({
-            name: eq.equipment_name,
-            description: `Equipment: ${eq.equipment_name}`,
-            movement_type: 'equipment',
+          title: 'Recent Exercises',
+          exercises: exercisePoolData.previously_used_exercises.map(exerciseName => ({
+            name: exerciseName,
+            description: `Recently used: ${exerciseName}`,
+            movement_type: 'recent',
             is_unilateral: false,
             is_upper: false,
             is_accessory: false,
           })),
-          color: 'success' as const,
-        };
-      case 'avoided':
-        return {
-          title: 'Avoided Exercises',
-          exercises: exercisePoolData.user_preferences
-            .filter(pref => pref.should_avoid)
-            .map(pref => ({
-              name: pref.exercise_name,
-              description: `Avoided: ${pref.exercise_name}`,
-              movement_type: 'avoided',
-              is_unilateral: false,
-              is_upper: false,
-              is_accessory: false,
-            })),
           color: 'warning' as const,
         };
       default:
@@ -134,9 +119,7 @@ export const ExerciseCategoryDetails: React.FC<ExerciseCategoryDetailsProps> = (
           <Alert severity="info" sx={{ mb: 2 }}>
             {categoryData.exercises.length === 0 
               ? `No ${categoryData.title.toLowerCase()} in your rotation.`
-              : category === 'equipment'
-                ? `${categoryData.exercises.length} piece${categoryData.exercises.length === 1 ? '' : 's'} of equipment in your rotation.`
-                : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()} in your rotation.`
+              : `${categoryData.exercises.length} ${categoryData.title.toLowerCase()}${categoryData.exercises.length === 1 ? '' : 's'} in your rotation.`
             }
           </Alert>
         </Box>

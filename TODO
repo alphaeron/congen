@@ -1,3 +1,7 @@
+add tests for all files missing them in the frontend directory
+
+ensure all linting/tests pass everywhere
+
 add strongman exercises and equipment to database
 
 update backend when keycloak theme user data changes too, use first char of first name or 'U', edit email as well, better UI
@@ -20,13 +24,9 @@ never have banded exercises for the secondary movement, they should always only 
 
 
 
-tooltip to hover over exercise to get exercise information, relation information, ...
-use this everwhere an exercise name is rendered for consistency
-
-
-
 strength (wilkes score), endurance (vo2 max), nutrition, ..., make a radar chart.
 make levels based on your stats.
+add achievements, quests, titles
 your really level up in real life!!!
 it's a game now!!!
 

@@ -14,6 +14,7 @@ import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 
 import { ChordChart } from './ChordChart';
+import { ExerciseName } from './ExerciseName';
 import { LoadingSpinner } from './LoadingSpinner';
 import { SunburstChart } from './SunburstChart';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
@@ -229,16 +230,15 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
           if (row.original.type === 'exercise') {
             return (
               <Box display="flex" alignItems="center" gap={1}>
-                <Typography
+                <ExerciseName
+                  exerciseName={row.original.exerciseName || ''}
                   variant="body2"
                   sx={{
                     wordWrap: 'break-word',
                     whiteSpace: 'normal',
                     lineHeight: 1.4,
                   }}
-                >
-                  {row.original.exerciseName}
-                </Typography>
+                />
                 {row.original.exerciseNotes && (
                   <Tooltip title={row.original.exerciseNotes} arrow>
                     <IconButton size="small">
