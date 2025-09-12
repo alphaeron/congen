@@ -346,4 +346,32 @@ class UserExercisePool(
                 }
             }
     }
+
+    /**
+     * Gets all exercises in the system (not filtered by preferences or usage).
+     *
+     * @return List of all exercises
+     */
+    fun getAllExercises(): List<Exercise> = allExercises
+
+    /**
+     * Gets the user's equipment.
+     *
+     * @return List of user equipment
+     */
+    fun getUserEquipment(): List<UserEquipment> = userEquipment
+
+    /**
+     * Gets the user's exercise preferences.
+     *
+     * @return List of user exercise preferences
+     */
+    fun getUserPreferences(): List<UserExercisePreference> = preferences
+
+    /**
+     * Gets the list of previously used exercises.
+     *
+     * @return List of previously used exercise names
+     */
+    fun getPreviouslyUsedExercises(): List<String> = previouslyUsedExercises
 }

@@ -1,5 +1,5 @@
 import { REQUEST } from './endpoint';
-import type { Program } from './types';
+import type { Program, UserExercisePoolResponse } from './types';
 
 /**
  * Generates the next week of workouts for an existing conjugate powerlifting program.
@@ -12,5 +12,17 @@ export const generateNextWeek = (programId: number): Promise<Program> => {
     method: 'POST',
     url: `/conjugate_workout_generator/${programId}`,
     timeout: 30000, // 30 seconds timeout for workout generation
+  });
+};
+
+/**
+ * Retrieves the user's exercise pool with available exercises and metadata.
+ *
+ * @returns Promise containing the user's exercise pool data
+ */
+export const getUserExercisePool = (): Promise<UserExercisePoolResponse> => {
+  return REQUEST({
+    method: 'GET',
+    url: '/conjugate_workout_generator/exercise_pool',
   });
 };

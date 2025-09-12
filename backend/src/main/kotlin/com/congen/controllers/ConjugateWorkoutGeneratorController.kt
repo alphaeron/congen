@@ -3,7 +3,9 @@ package com.congen.controllers
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
+import com.congen.generator.ExercisePoolFactory
 import com.congen.model.Program
+import com.congen.model.UserExercisePoolResponse
 import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
 import com.congen.util.KeycloakUtil
@@ -17,6 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -33,6 +36,7 @@ import reactor.core.publisher.Mono
  * ## Endpoints
  *
  * - **POST /{programId}/generate**: Generate the next week of workouts for an existing program
+ * - **GET /exercise_pool**: Get the user's exercise pool based on preferences and equipment
  *
  * ## Features
  *
@@ -43,6 +47,7 @@ import reactor.core.publisher.Mono
  * - **Validation**: Comprehensive validation of program parameters
  *
  * @param conjugateWorkoutGeneratorService Service for generating conjugate workout programs
+ * @param exercisePoolFactory Factory for creating user exercise pools
  * @param programService Service for program operations
  * @param keycloakUtil Utility for Keycloak operations
  * @param gdprComplianceService Service for GDPR compliance operations
@@ -55,6 +60,7 @@ import reactor.core.publisher.Mono
 @Tag(name = "Conjugate Workout Generator", description = "Endpoints for generating conjugate powerlifting workout programs")
 class ConjugateWorkoutGeneratorController(
     private val conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService,
+    private val exercisePoolFactory: ExercisePoolFactory,
     private val programService: ProgramService,
     private val keycloakUtil: KeycloakUtil,
     private val gdprComplianceService: GdprComplianceService
@@ -142,6 +148,65 @@ class ConjugateWorkoutGeneratorController(
                 .doOnError { e ->
                     logger.error("Error generating workout program for program: {}", programId, e)
                 }
+        }
+    }
+
+    /**
+     * Gets the user's exercise pool based on their preferences, equipment, and previous usage.
+     *
+     * This endpoint returns a structured representation of the user's available exercises,
+     * including primary exercises, accessory exercises, and exercises that target weak muscles.
+     * The pool is filtered based on user preferences, available equipment, and sliding window
+     * logic to prevent exercise reuse.
+     *
+     * @return ResponseEntity containing the user's exercise pool
+     */
+    @GetMapping("/exercise_pool")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(
+        summary = "Get user's exercise pool",
+        description = "Returns the user's available exercise pool based on preferences, equipment, and previous usage"
+    )
+    @ApiResponses(
+        value = [
+            ApiResponse(
+                responseCode = "200",
+                description = "Exercise pool retrieved successfully",
+                content = [Content(mediaType = "application/json")]
+            ),
+            ApiResponse(
+                responseCode = "401",
+                description = "Unauthorized"
+            )
+        ]
+    )
+    fun getExercisePool(): Mono<ResponseEntity<UserExercisePoolResponse>> {
+        return keycloakUtil.getCurrentUserId().flatMap { userId ->
+            gdprComplianceService.withUserConsent(userId) {
+                exercisePoolFactory.createPoolForUser(userId)
+                    .map { userExercisePool ->
+                        // Convert UserExercisePool to UserExercisePoolResponse
+                        val availableExercises = userExercisePool.getAvailableExercises()
+                        val primaryExercises = availableExercises.filter { !it.isAccessory }
+                        val accessoryExercises = availableExercises.filter { it.isAccessory }
+                        
+                        val response = UserExercisePoolResponse(
+                            userId = userId,
+                            totalExercises = userExercisePool.getAllExercises().size,
+                            availableExercises = availableExercises.size,
+                            primaryExercises = primaryExercises,
+                            accessoryExercises = accessoryExercises,
+                            userEquipment = userExercisePool.getUserEquipment(),
+                            userPreferences = userExercisePool.getUserPreferences(),
+                            previouslyUsedExercises = userExercisePool.getPreviouslyUsedExercises()
+                        )
+                        
+                        ResponseEntity.ok(response)
+                    }
+                    .doOnError { error ->
+                        logger.error("Error retrieving exercise pool for user: {}", userId, error)
+                    }
+            }
         }
     }
 }

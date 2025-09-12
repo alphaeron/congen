@@ -63,57 +63,57 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({ user }) =>
     }
   };
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
+  const loadDashboardData = async () => {
+    try {
+      setIsLoading(true);
 
-        // Load all dashboard data in parallel
-        const [programsData, , oneRepMaxesData, dataExport, weightUnitData] = await Promise.all([
-          getPrograms(),
-          getProgrammedWorkouts(),
-          getUserOneRepMaxes(user.keycloak_id),
-          getUserDataExport(),
-          getUserWeightUnitPreferences(user.keycloak_id),
-        ]);
+      // Load all dashboard data in parallel
+      const [programsData, , oneRepMaxesData, dataExport, weightUnitData] = await Promise.all([
+        getPrograms(),
+        getProgrammedWorkouts(),
+        getUserOneRepMaxes(user.keycloak_id),
+        getUserDataExport(),
+        getUserWeightUnitPreferences(user.keycloak_id),
+      ]);
 
-        setPrograms(programsData);
-        setOneRepMaxes(oneRepMaxesData);
-        setUserData(dataExport);
-        setWeightUnitPreferences(weightUnitData || []);
+      setPrograms(programsData);
+      setOneRepMaxes(oneRepMaxesData);
+      setUserData(dataExport);
+      setWeightUnitPreferences(weightUnitData || []);
 
-        // Fetch exercise data for all unique exercises
-        const uniqueExercises = new Set<string>();
-        dataExport.training_programs?.forEach((program: ProgramWithWorkouts) => {
-          program.workouts.forEach(workout => {
-            workout.stages.forEach(stage => {
-              stage.exercises.forEach(exercise => {
-                uniqueExercises.add(exercise.exercise.exercise_name);
-              });
+      // Fetch exercise data for all unique exercises
+      const uniqueExercises = new Set<string>();
+      dataExport.training_programs?.forEach((program: ProgramWithWorkouts) => {
+        program.workouts.forEach(workout => {
+          workout.stages.forEach(stage => {
+            stage.exercises.forEach(exercise => {
+              uniqueExercises.add(exercise.exercise.exercise_name);
             });
           });
         });
+      });
 
-        const exerciseMap = new Map<string, Exercise>();
-        for (const exerciseName of Array.from(uniqueExercises)) {
-          try {
-            const exercise = await getIndividualExercise(exerciseName);
-            exerciseMap.set(exerciseName, exercise);
-          } catch {
-            enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
-              variant: 'error',
-            });
-          }
+      const exerciseMap = new Map<string, Exercise>();
+      for (const exerciseName of Array.from(uniqueExercises)) {
+        try {
+          const exercise = await getIndividualExercise(exerciseName);
+          exerciseMap.set(exerciseName, exercise);
+        } catch {
+          enqueueSnackbar(`Error fetching exercise data for ${exerciseName}`, {
+            variant: 'error',
+          });
         }
-
-        setExerciseData(exerciseMap);
-      } catch {
-        enqueueSnackbar('Failed to load dashboard data. Please try again.', { variant: 'error' });
-      } finally {
-        setIsLoading(false);
       }
-    };
 
+      setExerciseData(exerciseMap);
+    } catch {
+      enqueueSnackbar('Failed to load dashboard data. Please try again.', { variant: 'error' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadDashboardData();
   }, [user.keycloak_id]);
 

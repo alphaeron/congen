@@ -3,6 +3,7 @@ import {
   FitnessCenter as FitnessCenterIcon,
   Settings as SettingsIcon,
   Tune as TuneIcon,
+  RotateRight as RotateRightIcon,
 } from '@mui/icons-material';
 import {
   Box,
@@ -22,6 +23,7 @@ import { DashboardOverview } from './DashboardOverview';
 import { ProgramManagement } from './ProgramManagement';
 import { WorkoutPreferencesSection } from './WorkoutPreferencesSection';
 import { Workouts } from './Workouts';
+import { ExerciseRotationVisualization } from './ExerciseRotationVisualization';
 import type { User } from '../api/types';
 
 interface DashboardProps {
@@ -71,6 +73,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
       label: 'Workouts',
       icon: <FitnessCenterIcon />,
       component: <Workouts user={user} selectedWorkout={selectedWorkout} />,
+    },
+    {
+      id: 'exercise-rotation',
+      label: 'Exercise Rotation',
+      icon: <RotateRightIcon />,
+      component: <ExerciseRotationVisualization />,
     },
     {
       id: 'workout-preferences',

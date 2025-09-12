@@ -1,14 +1,10 @@
-Exercise Pool visualization page. In addition to visualizing the user's current exercise pools, the interface should also show users what exercises are available as they add preferences, equipment, …
+add strongman exercises and equipment to database
+
+update backend when keycloak theme user data changes too, use first char of first name or 'U', edit email as well, better UI
 
 support print / export (pdf or xlsx) and add corresponding icon buttons on workout and program to expose this functionality
 
-weight unit preferences ui, equipment ui, weak muscles ui
-
-add weak muscles UI to program preferences (name target muscles in the interface)
-
 "how it works" on root spa with workout generation algorithm flowchart
-
-View current exercise weight preferences in dashboard, dive in from the count displayed
 
 After generation prompted for current 1rm, sets reps can do for accessories and other portions of workout not recorded.  After record all that, then edit the workout to reflect current abilities.  Over time you won’t be prompted anymore, or can decline to answer and the default will be used.  Wizard  interface, show generating while it waits to load, then some screen like to further customize/taylor the workout generation for you can you provide…
 
@@ -26,6 +22,14 @@ never have banded exercises for the secondary movement, they should always only 
 
 tooltip to hover over exercise to get exercise information, relation information, ...
 use this everwhere an exercise name is rendered for consistency
+
+
+
+strength (wilkes score), endurance (vo2 max), nutrition, ..., make a radar chart.
+make levels based on your stats.
+your really level up in real life!!!
+it's a game now!!!
+
 
 
 
@@ -74,4 +78,4 @@ Iterate in this fashion, one by one, until all the integration tests pass.
 Do not run all the integration tests at once because it is too slow.
 Only touch the integration test files, do not modify the source code in any way
 DO NOT MODIFY THE SOURCE FILES!!!
-only fix the integration test filesB
+only fix the integration test files

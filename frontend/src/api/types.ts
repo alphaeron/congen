@@ -300,6 +300,35 @@ export interface UserWeightUnitPreference {
 } // end interface UserWeightUnitPreference
 
 /**
+ * User's equipment preference.
+ */
+export interface UserEquipment {
+  user_id: string;
+  equipment_name: string;
+  created_at: Date;
+} // end interface UserEquipment
+
+/**
+ * User's weak muscle group for targeted accessory selection.
+ */
+export interface UserWeakMuscle {
+  user_id: string;
+  muscle_name: string;
+  created_at: Date;
+} // end interface UserWeakMuscle
+
+/**
+ * User's exercise preference (like/dislike).
+ */
+export interface UserExercisePreference {
+  user_id: string;
+  exercise_name: string;
+  should_avoid: boolean;
+  created_at: Date;
+  updated_at: Date;
+} // end interface UserExercisePreference
+
+/**
  * Dashboard statistics and progress data.
  */
 export interface DashboardStats {
@@ -308,3 +337,17 @@ export interface DashboardStats {
   active_program?: Program;
   recent_one_rep_maxes: UserOneRepMax[];
 } // end interface DashboardStats
+
+/**
+ * User's exercise pool response from the backend.
+ */
+export interface UserExercisePoolResponse {
+  user_id: string;
+  total_exercises: number;
+  available_exercises: number;
+  primary_exercises: Exercise[];
+  accessory_exercises: Exercise[];
+  user_equipment: UserEquipment[];
+  user_preferences: UserExercisePreference[];
+  previously_used_exercises: string[];
+} // end interface UserExercisePoolResponse
