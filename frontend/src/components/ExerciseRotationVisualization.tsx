@@ -1,11 +1,4 @@
 import {
-  Speed as SpeedIcon,
-  SportsGymnastics as SportsGymnasticsIcon,
-  Timeline as TimelineIcon,
-  RotateRight as RotateRightIcon,
-  Lightbulb as LightbulbIcon,
-} from '@mui/icons-material';
-import {
   Box,
   Card,
   CardContent,
@@ -195,19 +188,18 @@ export const ExerciseRotationVisualization: React.FC = () => {
     <React.Fragment>
       {renderBreadcrumbs()}
       
-      {/* Main Exercise Rotation Overview - Slides right when category is selected */}
+      {/* Main Exercise Rotation - Slides right when category is selected */}
       <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
         <Box sx={{ p: 3 }}>
 
       <Grid container spacing={3}>
-        {/* Comprehensive Exercise Rotation Overview */}
+        {/* Comprehensive Exercise Rotation */}
         {exercisePoolAnalysis && (
           <Grid size={{ xs: 12 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <RotateRightIcon />
-                  Exercise Rotation Overview
+                  Exercise Rotation
                 </Typography>
                 <Alert severity="info" sx={{ mb: 2 }}>
                   Your exercise pool is filtered based on your available equipment ({exercisePoolAnalysis.userEquipment.length} items) 
@@ -258,8 +250,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <TimelineIcon />
-                  Recently Used Exercises (Sliding Window)
+                  Recent Exercises
                 </Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                   These exercises have been used in recent weeks and are temporarily excluded from selection to promote variety.
@@ -283,14 +274,13 @@ export const ExerciseRotationVisualization: React.FC = () => {
           </Grid>
         )}
 
-        {/* Available Exercise Categories */}
+        {/* Available Exercise */}
         {exercisePoolAnalysis && (
           <Grid size={{ xs: 12 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <SpeedIcon />
-                  Available Exercise Categories
+                  Available Exercises
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -451,14 +441,13 @@ export const ExerciseRotationVisualization: React.FC = () => {
           </Grid>
         )}
 
-        {/* Exercise Rotation Insights */}
+        {/* Exercise Insights */}
         {exercisePoolAnalysis && (
           <Grid size={{ xs: 12 }}>
             <Card>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LightbulbIcon />
-                  Exercise Rotation Insights
+                  Exercise Insights
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, md: 6 }}>

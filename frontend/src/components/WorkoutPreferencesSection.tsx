@@ -16,7 +16,7 @@ import {
   Alert,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
@@ -67,8 +67,14 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [weakMuscleDialogOpen, setWeakMuscleDialogOpen] = useState(false);
 
+  // Navigation state
+  const [activeSection, setActiveSection] = useState('weight-units');
+  const weightUnitsRef = useRef<HTMLDivElement>(null);
+  const equipmentRef = useRef<HTMLDivElement>(null);
+  const weakMusclesRef = useRef<HTMLDivElement>(null);
+
   // Form data type for TanStack Form
-  interface WeightUnitPreferenceFormData {
+  interface WeightUnitPreferenceFormData extends Record<string, unknown> {
     exerciseName: string;
     preferredUnit: WeightUnit;
   }
@@ -136,6 +142,54 @@ export function WorkoutPreferencesSection(): React.ReactElement {
 
     setLoading(false);
   };
+
+  // Navigation functions
+  const scrollToSection = useCallback((sectionId: string) => {
+    const refs = {
+      'weight-units': weightUnitsRef,
+      'equipment': equipmentRef,
+      'weak-muscles': weakMusclesRef,
+    };
+    
+    const ref = refs[sectionId as keyof typeof refs];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
+  }, []);
+
+  // Intersection Observer for scroll detection
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.getAttribute('data-section');
+            if (sectionId) {
+              setActiveSection(sectionId);
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '-20% 0px -70% 0px', // Trigger when section is 20% from top
+        threshold: 0.1,
+      }
+    );
+
+    // Observe all section refs
+    [weightUnitsRef, equipmentRef, weakMusclesRef].forEach((ref) => {
+      if (ref.current) {
+        observer.observe(ref.current);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [loading]); // Re-run when loading changes (data is loaded)
 
   const handleAddWeightUnitPreference = async (data: WeightUnitPreferenceFormData) => {
     if (!user?.keycloak_id) return;
@@ -297,148 +351,212 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   }
 
   return (
-    <Box>
-      <Grid container spacing={3}>
-        {/* Weight Unit Preferences */}
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Weight Unit Preferences</Typography>
-                <Button variant="outlined" size="small" onClick={() => setUnitDialogOpen(true)}>
-                  Add Preference
-                </Button>
-              </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Set your preferred weight units for specific exercises.
-              </Typography>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+      {/* Sticky Sidebar Navigation */}
+      <Box 
+        sx={{ 
+          width: 250, 
+          minWidth: 250,
+          height: '100vh',
+          overflow: 'auto',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          p: 2,
+          borderRight: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography
+            variant="body1"
+            onClick={() => scrollToSection('weight-units')}
+            sx={{
+              cursor: 'pointer',
+              color: activeSection === 'weight-units' ? 'primary.main' : 'text.primary',
+              textDecoration: activeSection === 'weight-units' ? 'underline' : 'none',
+              fontWeight: activeSection === 'weight-units' ? 'bold' : 'normal',
+              '&:hover': {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Weight Unit Preferences
+          </Typography>
+          <Typography
+            variant="body1"
+            onClick={() => scrollToSection('equipment')}
+            sx={{
+              cursor: 'pointer',
+              color: activeSection === 'equipment' ? 'primary.main' : 'text.primary',
+              textDecoration: activeSection === 'equipment' ? 'underline' : 'none',
+              fontWeight: activeSection === 'equipment' ? 'bold' : 'normal',
+              '&:hover': {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Available Equipment
+          </Typography>
+          <Typography
+            variant="body1"
+            onClick={() => scrollToSection('weak-muscles')}
+            sx={{
+              cursor: 'pointer',
+              color: activeSection === 'weak-muscles' ? 'primary.main' : 'text.primary',
+              textDecoration: activeSection === 'weak-muscles' ? 'underline' : 'none',
+              fontWeight: activeSection === 'weak-muscles' ? 'bold' : 'normal',
+              '&:hover': {
+                color: 'primary.main',
+                textDecoration: 'underline',
+              },
+            }}
+          >
+            Weak Muscle Groups
+          </Typography>
+        </Box>
+      </Box>
 
-              <Divider sx={{ mb: 2 }} />
-
-              {weightUnitPreferences.length === 0 ? (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ textAlign: 'center', py: 2 }}
-                >
-                  No weight unit preferences set yet.
+      {/* Main Content Area */}
+      <Box sx={{ flex: 1, overflow: 'auto', height: '100vh' }}>
+        <Box sx={{ p: 3 }}>
+          {/* Weight Unit Preferences Section */}
+          <div ref={weightUnitsRef} data-section="weight-units">
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">Weight Unit Preferences</Typography>
+                  <Button variant="outlined" size="small" onClick={() => setUnitDialogOpen(true)}>
+                    Add Preference
+                  </Button>
+                </Box>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Set your preferred weight units for specific exercises.
                 </Typography>
-              ) : (
-                <List dense>
-                  {weightUnitPreferences.map(pref => (
-                    <ListItem key={`${pref.user_id}-${pref.exercise_name}`}>
-                      <ListItemText
-                        primary={getExerciseName(pref.exercise_name)}
-                        secondary={`Preferred unit: ${pref.preferred_unit}`}
+
+                <Divider sx={{ mb: 2 }} />
+
+                {weightUnitPreferences.length === 0 ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center', py: 2 }}
+                  >
+                    No weight unit preferences set yet.
+                  </Typography>
+                ) : (
+                  <List dense>
+                    {weightUnitPreferences.map(pref => (
+                      <ListItem key={`${pref.user_id}-${pref.exercise_name}`}>
+                        <ListItemText
+                          primary={getExerciseName(pref.exercise_name)}
+                          secondary={`Preferred unit: ${pref.preferred_unit}`}
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton
+                            edge="end"
+                            aria-label="delete"
+                            onClick={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
+                            disabled={saving}
+                          >
+                            <RefreshIcon />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Available Equipment Section */}
+          <div ref={equipmentRef} data-section="equipment">
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">Available Equipment</Typography>
+                  <Button variant="outlined" size="small" onClick={() => setEquipmentDialogOpen(true)}>
+                    Add Equipment
+                  </Button>
+                </Box>
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool.
+                </Typography>
+
+                <Divider sx={{ mb: 2 }} />
+
+                {userEquipment.length === 0 ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center', py: 2 }}
+                  >
+                    No equipment added yet. Add equipment to expand your exercise pool.
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {userEquipment.map(equipment => (
+                      <Chip
+                        key={equipment.equipment_name}
+                        label={equipment.equipment_name}
+                        onDelete={() => handleRemoveEquipment(equipment.equipment_name)}
+                        disabled={saving}
+                        color="primary"
+                        variant="outlined"
                       />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
-                          disabled={saving}
-                        >
-                          <RefreshIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+                    ))}
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Available Equipment */}
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <FitnessCenterIcon />
-                  Available Equipment
-                </Typography>
-                <Button variant="outlined" size="small" onClick={() => setEquipmentDialogOpen(true)}>
-                  Add Equipment
-                </Button>
-              </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool.
-              </Typography>
-
-              <Divider sx={{ mb: 2 }} />
-
-              {userEquipment.length === 0 ? (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ textAlign: 'center', py: 2 }}
-                >
-                  No equipment added yet. Add equipment to expand your exercise pool.
-                </Typography>
-              ) : (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {userEquipment.map(equipment => (
-                    <Chip
-                      key={equipment.equipment_name}
-                      label={equipment.equipment_name}
-                      onDelete={() => handleRemoveEquipment(equipment.equipment_name)}
-                      disabled={saving}
-                      color="primary"
-                      variant="outlined"
-                    />
-                  ))}
+          {/* Weak Muscle Groups Section */}
+          <div ref={weakMusclesRef} data-section="weak-muscles">
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                  <Typography variant="h6">Weak Muscle Groups</Typography>
+                  <Button variant="outlined" size="small" onClick={() => setWeakMuscleDialogOpen(true)}>
+                    Add Weak Muscle
+                  </Button>
                 </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Weak Muscle Groups */}
-        <Grid size={{ xs: 12 }}>
-          <Card>
-            <CardContent>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <SportsGymnasticsIcon />
-                  Weak Muscle Groups
+                <Typography variant="body2" color="text.secondary" paragraph>
+                  Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas.
                 </Typography>
-                <Button variant="outlined" size="small" onClick={() => setWeakMuscleDialogOpen(true)}>
-                  Add Weak Muscle
-                </Button>
-              </Box>
-              <Typography variant="body2" color="text.secondary" paragraph>
-                Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas.
-              </Typography>
 
-              <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 2 }} />
 
-              {userWeakMuscles.length === 0 ? (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ textAlign: 'center', py: 2 }}
-                >
-                  No weak muscle groups identified yet. Add muscle groups you want to focus on.
-                </Typography>
-              ) : (
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                  {userWeakMuscles.map(weakMuscle => (
-                    <Chip
-                      key={weakMuscle.muscle_name}
-                      label={weakMuscle.muscle_name}
-                      onDelete={() => handleRemoveWeakMuscle(weakMuscle.muscle_name)}
-                      disabled={saving}
-                      color="warning"
-                      variant="outlined"
-                    />
-                  ))}
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                {userWeakMuscles.length === 0 ? (
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ textAlign: 'center', py: 2 }}
+                  >
+                    No weak muscle groups identified yet. Add muscle groups you want to focus on.
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {userWeakMuscles.map(weakMuscle => (
+                      <Chip
+                        key={weakMuscle.muscle_name}
+                        label={weakMuscle.muscle_name}
+                        onDelete={() => handleRemoveWeakMuscle(weakMuscle.muscle_name)}
+                        disabled={saving}
+                        color="warning"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </Box>
+      </Box>
 
       {/* Add Weight Unit Preference Dialog */}
       <FormDialog<WeightUnitPreferenceFormData>
