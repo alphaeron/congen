@@ -33,7 +33,7 @@ export const UserProfileDrawer: React.FC<UserProfileDrawerProps> = ({
       label: 'Privacy & Data',
       icon: <PrivacyIcon />,
       isExternal: true,
-      path: '/user_profile?section=privacy',
+      path: '/profile?section=privacy',
     },
     {
       id: 'personal-info',

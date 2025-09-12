@@ -30,12 +30,6 @@ export interface UpdateUserProfileRequest {
   attributes?: Record<string, string[]>;
 }
 
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-}
-
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
@@ -63,8 +57,3 @@ export interface UseUserProfileResult {
   updateProfile: (data: UpdateUserProfileRequest) => Promise<boolean>;
 }
 
-export interface UsePasswordChangeResult {
-  changePassword: (data: ChangePasswordRequest) => Promise<boolean>;
-  loading: boolean;
-  error: string | null;
-}

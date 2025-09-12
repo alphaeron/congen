@@ -30,5 +30,6 @@ export const handleLogout = (kcContext: KcContext): void => {
  */
 export const navigateToFrontend = (path: string = ''): void => {
   const frontendUrl = getFrontendUrl();
-  window.location.href = `${frontendUrl}${path}`;
+  const fullUrl = `${frontendUrl}${path}`;
+  window.location.href = fullUrl;
 };

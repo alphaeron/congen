@@ -7,7 +7,6 @@ import {
   type ApiResponse,
   type UserProfile,
   type UpdateUserProfileRequest,
-  type ChangePasswordRequest,
 } from './types';
 import { KEYCLOAK_URL } from '../../../globals';
 
@@ -135,47 +134,6 @@ export class KeycloakAccountApiClient {
   }
 
   /**
-   * Change user password using Keycloak's account management REST API
-   * Uses the same JSON approach as updateUserProfile
-   */
-  async changePassword(passwordData: ChangePasswordRequest): Promise<ApiResponse<void>> {
-    try {
-      // Use POST method with JSON data to change password via Keycloak Account Management API
-      const response = await fetch(
-        `${this.baseUrl.replace(/\/$/, '')}/realms/${this.realm}/account/credentials/password/`,
-        {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            currentPassword: passwordData.currentPassword,
-            newPassword: passwordData.newPassword,
-            confirmPassword: passwordData.confirmPassword,
-          }),
-          credentials: 'include', // Include cookies for session-based auth
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return {
-        success: true,
-        data: undefined,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      };
-    }
-  }
-
-  /**
    * Get current user profile
    */
   async getUserProfile(): Promise<ApiResponse<UserProfile>> {
@@ -193,10 +151,10 @@ export function createApiClient(
 ): KeycloakAccountApiClient | null {
   try {
     // Use environment-based configuration like the frontend
-    const baseUrl = kcContext?.authUrl || kcContext?.serverBaseUrl || KEYCLOAK_URL;
+    const baseUrl = (kcContext?.authUrl as string) || (kcContext?.serverBaseUrl as string) || KEYCLOAK_URL;
 
     // Extract realm name from kcContext.realm.name
-    const realm = kcContext?.realm?.name || 'congen';
+    const realm = ((kcContext?.realm as Record<string, unknown>)?.name as string) || 'congen';
 
     // Get access token from the token getter (set up by AuthContext)
     const accessToken = getToken ? getToken() : null;

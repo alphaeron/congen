@@ -16,7 +16,6 @@ import { CongenAppBar } from './CongenAppBar';
 import { useAuth } from './AuthContext';
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 import { FormField } from '../../components/FormField';
-import PasswordChangeDialog from './PasswordChangeDialog';
 import { createApiClient } from './api/client';
 
 // Global type declaration for OIDC user
@@ -49,7 +48,6 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
   const oidcAuth = useOidcAuth();
 
   const [currentPage, setCurrentPage] = useState('personal-info');
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [userLoading, setUserLoading] = useState(false);
   const [userFetchAttempted, setUserFetchAttempted] = useState(false);
@@ -231,6 +229,53 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
     setCurrentPage(page);
   };
 
+  const handlePasswordChange = () => {
+    if (!kcContext) return;
+    
+    // Use Application Initiated Actions (AIA) to redirect to password update flow
+    // Based on: https://github.com/keycloak/keycloak-community/blob/main/design/application-initiated-actions.md
+    const baseUrl = kcContext.serverBaseUrl || kcContext.authUrl;
+    const realm = kcContext.realm?.name || 'congen';
+    
+    // Generate a proper S256 code challenge for PKCE
+    const codeVerifier = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    // Create SHA256 hash of the code verifier and base64url encode it
+    const encoder = new TextEncoder();
+    const data = encoder.encode(codeVerifier);
+    crypto.subtle.digest('SHA-256', data).then(hashBuffer => {
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashBase64 = btoa(String.fromCharCode.apply(null, hashArray));
+      const codeChallenge = hashBase64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+      
+      // Construct the AIA URL for password update
+      const aiaUrl = new URL(`${baseUrl}/realms/${realm}/protocol/openid-connect/auth`);
+      aiaUrl.searchParams.set('client_id', 'account-console');
+      aiaUrl.searchParams.set('redirect_uri', window.location.origin + window.location.pathname);
+      aiaUrl.searchParams.set('response_type', 'code');
+      aiaUrl.searchParams.set('scope', 'openid');
+      aiaUrl.searchParams.set('kc_action', 'UPDATE_PASSWORD');
+      aiaUrl.searchParams.set('code_challenge', codeChallenge);
+      aiaUrl.searchParams.set('code_challenge_method', 'S256');
+      
+      // Redirect to the password update flow
+      window.location.href = aiaUrl.toString();
+    }).catch(() => {
+      // Fallback to plain method if crypto.subtle is not available
+      const codeChallenge = codeVerifier;
+      const aiaUrl = new URL(`${baseUrl}/realms/${realm}/protocol/openid-connect/auth`);
+      aiaUrl.searchParams.set('client_id', 'account-console');
+      aiaUrl.searchParams.set('redirect_uri', window.location.origin + window.location.pathname);
+      aiaUrl.searchParams.set('response_type', 'code');
+      aiaUrl.searchParams.set('scope', 'openid');
+      aiaUrl.searchParams.set('kc_action', 'UPDATE_PASSWORD');
+      aiaUrl.searchParams.set('code_challenge', codeChallenge);
+      aiaUrl.searchParams.set('code_challenge_method', 'plain');
+      
+      window.location.href = aiaUrl.toString();
+    });
+  };
+
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Congen App Bar */}
@@ -371,7 +416,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                     <Button
                       variant="outlined"
                       sx={{ borderRadius: '12px', px: 3 }}
-                      onClick={() => setShowPasswordDialog(true)}
+                      onClick={handlePasswordChange}
                       disabled={authLoading}
                     >
                       Change Password
@@ -383,13 +428,6 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
           </Container>
         </Box>
       </Box>
-
-      {/* Password Change Dialog */}
-      <PasswordChangeDialog
-        open={showPasswordDialog}
-        onClose={() => setShowPasswordDialog(false)}
-        kcContext={kcContext}
-      />
     </Box>
   );
 }
