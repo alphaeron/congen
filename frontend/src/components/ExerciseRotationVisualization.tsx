@@ -14,11 +14,16 @@ import {
   Typography,
   Paper,
   Alert,
+  Breadcrumbs,
+  Button,
+  Slide,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import { LoadingSpinner } from './LoadingSpinner';
+import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { getPrograms } from '../api/program';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type {
@@ -40,15 +45,26 @@ import { useAuth } from '../contexts/AuthContext';
 export const ExerciseRotationVisualization: React.FC = () => {
   const { user } = useAuth();
   const { enqueueSnackbar } = useSnackbar();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [programs, setPrograms] = useState<Program[]>([]);
   const [exercisePoolData, setExercisePoolData] = useState<UserExercisePoolResponse | null>(null);
+  const [showCategoryDetails, setShowCategoryDetails] = useState(false);
+
+  // Check if we're viewing a specific category
+  const selectedCategory = searchParams.get('category');
 
   useEffect(() => {
     if (user?.keycloak_id) {
       loadData();
     }
   }, [user?.keycloak_id]);
+
+  // Update showCategoryDetails when selectedCategory changes
+  useEffect(() => {
+    setShowCategoryDetails(!!selectedCategory);
+  }, [selectedCategory]);
 
   const loadData = async () => {
     try {
@@ -78,6 +94,68 @@ export const ExerciseRotationVisualization: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const handleCategoryClick = (category: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'exercise-rotation');
+    newSearchParams.set('category', category);
+    navigate(`/dashboard?${newSearchParams.toString()}`);
+  };
+
+  const handleBreadcrumbClick = (target: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'exercise-rotation');
+    if (target === 'exercise-rotation') {
+      newSearchParams.delete('category');
+    }
+    navigate(`/dashboard?${newSearchParams.toString()}`);
+  };
+
+  // Render breadcrumbs
+  const renderBreadcrumbs = () => (
+    <Box
+      position="sticky"
+      top={0}
+      zIndex={1001}
+      sx={{
+        backgroundColor: 'background.default',
+        pt: 2,
+        pb: 2,
+        borderBottom: 1,
+        borderColor: 'divider',
+      }}
+    >
+      <Breadcrumbs sx={{ mb: 2 }}>
+        {selectedCategory ? (
+          <Button
+            variant="text"
+            onClick={() => handleBreadcrumbClick('exercise-rotation')}
+            sx={{
+              color: 'text.secondary',
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 'normal',
+              p: 0,
+              minWidth: 'auto',
+            }}
+          >
+            <RotateRightIcon sx={{ mr: 0.5 }} fontSize="small" />
+            Exercise Rotation
+          </Button>
+        ) : (
+          <Typography variant="body1" color="text.primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <RotateRightIcon fontSize="small" />
+            Exercise Rotation
+          </Typography>
+        )}
+        {selectedCategory && (
+          <Typography variant="body1" color="text.primary">
+            {selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Exercises
+          </Typography>
+        )}
+      </Breadcrumbs>
+    </Box>
+  );
 
 
   // Exercise pool analysis
@@ -112,13 +190,12 @@ export const ExerciseRotationVisualization: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom>
-        Exercise Pool & Rotation
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-        Your current exercise pool based on preferences, equipment, and rotation patterns.
-      </Typography>
+    <React.Fragment>
+      {renderBreadcrumbs()}
+      
+      {/* Main Exercise Rotation Overview - Slides right when category is selected */}
+      <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
+        <Box sx={{ p: 3 }}>
 
       <Grid container spacing={3}>
         {/* Comprehensive Exercise Rotation Overview */}
@@ -135,7 +212,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                   and exercise preferences ({exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length} avoided).
                 </Alert>
                 <Grid container spacing={2}>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
                       <Typography variant="h4" color="primary">
                         {exercisePoolAnalysis.totalExercises}
@@ -143,7 +220,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       <Typography variant="body2">Total Exercises</Typography>
                     </Paper>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
                       <Typography variant="h4" color="success.main">
                         {exercisePoolAnalysis.availableExercises}
@@ -151,7 +228,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       <Typography variant="body2">Available to You</Typography>
                     </Paper>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
                       <Typography variant="h4" color="info.main">
                         {exercisePoolAnalysis.categorizedExercises.primary.length}
@@ -159,28 +236,12 @@ export const ExerciseRotationVisualization: React.FC = () => {
                       <Typography variant="body2">Primary Exercises</Typography>
                     </Paper>
                   </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                     <Paper sx={{ p: 2, textAlign: 'center' }}>
                       <Typography variant="h4" color="warning.main">
                         {exercisePoolAnalysis.categorizedExercises.accessory.length}
                       </Typography>
                       <Typography variant="body2">Accessory Exercises</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="error.main">
-                        {exercisePoolAnalysis.previouslyUsedExercises.length}
-                      </Typography>
-                      <Typography variant="body2">Recently Used</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
-                      <Typography variant="h4" color="secondary">
-                        {programs.length}
-                      </Typography>
-                      <Typography variant="body2">Active Programs</Typography>
                     </Paper>
                   </Grid>
                 </Grid>
@@ -231,7 +292,19 @@ export const ExerciseRotationVisualization: React.FC = () => {
                 </Typography>
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 3,
+                        }
+                      }}
+                      onClick={() => handleCategoryClick('primary')}
+                    >
                       <Typography variant="h4" color="error.main">
                         {exercisePoolAnalysis.categorizedExercises.primary.length}
                       </Typography>
@@ -257,7 +330,19 @@ export const ExerciseRotationVisualization: React.FC = () => {
                     </Paper>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 3,
+                        }
+                      }}
+                      onClick={() => handleCategoryClick('accessory')}
+                    >
                       <Typography variant="h4" color="info.main">
                         {exercisePoolAnalysis.categorizedExercises.accessory.length}
                       </Typography>
@@ -283,7 +368,19 @@ export const ExerciseRotationVisualization: React.FC = () => {
                     </Paper>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 3,
+                        }
+                      }}
+                      onClick={() => handleCategoryClick('equipment')}
+                    >
                       <Typography variant="h4" color="success.main">
                         {exercisePoolAnalysis.userEquipment.length}
                       </Typography>
@@ -309,7 +406,19 @@ export const ExerciseRotationVisualization: React.FC = () => {
                     </Paper>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Paper sx={{ p: 2, textAlign: 'center' }}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease-in-out',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 3,
+                        }
+                      }}
+                      onClick={() => handleCategoryClick('avoided')}
+                    >
                       <Typography variant="h4" color="warning.main">
                         {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length}
                       </Typography>
@@ -386,11 +495,11 @@ export const ExerciseRotationVisualization: React.FC = () => {
                   <Grid size={{ xs: 12, md: 6 }}>
                     <Alert severity="info">
                       <Typography variant="subtitle2" gutterBottom>
-                        Program Integration
+                        Exercise Selection
                       </Typography>
                       <Typography variant="body2">
-                        Your exercise pool is integrated with {programs.length} active program{programs.length !== 1 ? 's' : ''}, 
-                        ensuring consistent exercise selection across your training.
+                        Your exercise pool provides a comprehensive selection of exercises for your training programs, 
+                        ensuring variety and proper rotation in your workouts.
                       </Typography>
                     </Alert>
                   </Grid>
@@ -399,7 +508,18 @@ export const ExerciseRotationVisualization: React.FC = () => {
             </Card>
           </Grid>
         )}
-      </Grid>
-    </Box>
+        </Grid>
+        </Box>
+      </Slide>
+
+      {/* Category Details - Slides in from left when category is selected */}
+      {selectedCategory && (
+        <Slide direction="left" in={showCategoryDetails} mountOnEnter unmountOnExit>
+          <Box sx={{ p: 3 }}>
+            <ExerciseCategoryDetails category={selectedCategory} />
+          </Box>
+        </Slide>
+      )}
+    </React.Fragment>
   );
 };
