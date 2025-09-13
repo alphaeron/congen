@@ -192,229 +192,58 @@ export const ExerciseRotationVisualization: React.FC = () => {
       <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
         <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
-            {/* Available Exercises - Moved to top */}
-            {exercisePoolAnalysis && (
+                        {/* Exercise Insights Charts */}
+                        {exercisePoolAnalysis && (
               <Grid size={{ xs: 12 }}>
-                <Card>
-                  <CardContent>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                    >
-                      Available Exercises
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper
-                          sx={{
-                            p: 2,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: 3,
-                            },
-                          }}
-                          onClick={() => handleCategoryClick('primary')}
-                        >
-                          <Typography variant="h4" color="error.main">
-                            {exercisePoolAnalysis.categorizedExercises.primary.length}
-                          </Typography>
-                          <Typography variant="body2">Primary Exercises</Typography>
-                          <Box
-                            sx={{
-                              mt: 1,
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 0.5,
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {exercisePoolAnalysis.categorizedExercises.primary
-                              .slice(0, 3)
-                              .map(exercise => (
-                                <Chip
-                                  key={exercise.name}
-                                  label={
-                                    <ExerciseName exerciseName={exercise.name} variant="caption" />
-                                  }
-                                  size="small"
-                                  variant="outlined"
-                                  color="error"
-                                />
-                              ))}
-                            {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
-                              <Chip
-                                label={`+${exercisePoolAnalysis.categorizedExercises.primary.length - 3}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
-                        </Paper>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper
-                          sx={{
-                            p: 2,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: 3,
-                            },
-                          }}
-                          onClick={() => handleCategoryClick('accessory')}
-                        >
-                          <Typography variant="h4" color="info.main">
-                            {exercisePoolAnalysis.categorizedExercises.accessory.length}
-                          </Typography>
-                          <Typography variant="body2">Accessory Exercises</Typography>
-                          <Box
-                            sx={{
-                              mt: 1,
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 0.5,
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {exercisePoolAnalysis.categorizedExercises.accessory
-                              .slice(0, 3)
-                              .map(exercise => (
-                                <Chip
-                                  key={exercise.name}
-                                  label={
-                                    <ExerciseName exerciseName={exercise.name} variant="caption" />
-                                  }
-                                  size="small"
-                                  variant="outlined"
-                                  color="info"
-                                />
-                              ))}
-                            {exercisePoolAnalysis.categorizedExercises.accessory.length > 3 && (
-                              <Chip
-                                label={`+${exercisePoolAnalysis.categorizedExercises.accessory.length - 3}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
-                        </Paper>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper
-                          sx={{
-                            p: 2,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: 3,
-                            },
-                          }}
-                          onClick={handlePreferencesClick}
-                        >
-                          <Typography variant="h4" color="success.main">
-                            {exercisePoolAnalysis.userEquipment.length}
-                          </Typography>
-                          <Typography variant="body2">Available Equipment</Typography>
-                          <Box
-                            sx={{
-                              mt: 1,
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 0.5,
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {exercisePoolAnalysis.userEquipment.slice(0, 3).map(equipment => (
-                              <Chip
-                                key={equipment.equipment_name}
-                                label={equipment.equipment_name}
-                                size="small"
-                                variant="outlined"
-                                color="success"
-                              />
-                            ))}
-                            {exercisePoolAnalysis.userEquipment.length > 3 && (
-                              <Chip
-                                label={`+${exercisePoolAnalysis.userEquipment.length - 3}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
-                        </Paper>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper
-                          sx={{
-                            p: 2,
-                            textAlign: 'center',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease-in-out',
-                            '&:hover': {
-                              transform: 'translateY(-2px)',
-                              boxShadow: 3,
-                            },
-                          }}
-                          onClick={handlePreferencesClick}
-                        >
-                          <Typography variant="h4" color="warning.main">
-                            {
-                              exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
-                                .length
-                            }
-                          </Typography>
-                          <Typography variant="body2">Avoided Exercises</Typography>
-                          <Box
-                            sx={{
-                              mt: 1,
-                              display: 'flex',
-                              flexWrap: 'wrap',
-                              gap: 0.5,
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {exercisePoolAnalysis.userPreferences
-                              .filter(p => p.should_avoid)
-                              .slice(0, 3)
-                              .map(pref => (
-                                <Chip
-                                  key={pref.exercise_name}
-                                  label={pref.exercise_name}
-                                  size="small"
-                                  variant="outlined"
-                                  color="warning"
-                                />
-                              ))}
-                            {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
-                              .length > 3 && (
-                              <Chip
-                                label={`+${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length - 3}`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
-                        </Paper>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
+                <Grid container spacing={3}>
+                  {/* Pool Availability - Pie Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <ExercisePoolPieChart
+                      exercisePoolData={exercisePoolData}
+                      title="Pool Availability"
+                      description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
+                      height={250}
+                    />
+                  </Grid>
+
+                  {/* Exercise Variety - Radial Bar Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <RadialBarChart
+                      exercisePoolData={exercisePoolData}
+                      title="Exercise Variety"
+                      description="Primary vs accessory distribution"
+                      height={250}
+                    />
+                  </Grid>
+
+                  {/* Rotation Management - Bar Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <BarChart
+                      exercisePoolData={exercisePoolData}
+                      title="Rotation Management"
+                      description="Available vs previously used"
+                      height={250}
+                    />
+                  </Grid>
+
+                  {/* Exercise Selection - Sunburst Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <ExercisePoolSunburstChart
+                      exercisePoolData={exercisePoolData}
+                      title="Exercise Selection"
+                      description="Hierarchical pool structure"
+                      height={250}
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
             )}
 
             {/* Exercise Rotation and Recent Exercises - Side by side */}
             <Grid container spacing={3}>
-              {/* Exercise Rotation - Left side */}
-              {exercisePoolAnalysis && (
-                <Grid size={{ xs: 12, md: 6 }}>
+               {/* Available Exercises - Left side */}
+               {exercisePoolAnalysis && (
+                 <Grid size={exercisePoolAnalysis.previouslyUsedExercises.length > 0 ? { xs: 12, md: 6 } : { xs: 12 }}>
                   <Card>
                     <CardContent>
                       <Typography
@@ -422,47 +251,206 @@ export const ExerciseRotationVisualization: React.FC = () => {
                         gutterBottom
                         sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
                       >
-                        Exercise Rotation
-                        <Tooltip
-                          title={`Your exercise pool is filtered based on your available equipment (${exercisePoolAnalysis.userEquipment.length} items) and exercise preferences (${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length} avoided).`}
-                          arrow
-                        >
-                          <IconButton size="small" sx={{ p: 0.5 }}>
-                            <InfoIcon fontSize="small" color="action" />
-                          </IconButton>
-                        </Tooltip>
+                        Available Exercises
                       </Typography>
                       <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <Paper sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" color="primary">
-                              {exercisePoolAnalysis.totalExercises}
-                            </Typography>
-                            <Typography variant="body2">Total Exercises</Typography>
-                          </Paper>
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <Paper sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" color="success.main">
-                              {exercisePoolAnalysis.availableExercises}
-                            </Typography>
-                            <Typography variant="body2">Available to You</Typography>
-                          </Paper>
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <Paper sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" color="info.main">
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <Paper
+                            sx={{
+                              p: 2,
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: 3,
+                              },
+                            }}
+                            onClick={() => handleCategoryClick('primary')}
+                          >
+                            <Typography variant="h4" color="error.main">
                               {exercisePoolAnalysis.categorizedExercises.primary.length}
                             </Typography>
                             <Typography variant="body2">Primary Exercises</Typography>
+                            <Box
+                              sx={{
+                                mt: 1,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {exercisePoolAnalysis.categorizedExercises.primary
+                                .slice(0, 3)
+                                .map(exercise => (
+                                  <Chip
+                                    key={exercise.name}
+                                    label={
+                                      <ExerciseName exerciseName={exercise.name} variant="caption" />
+                                    }
+                                    size="small"
+                                    variant="outlined"
+                                    color="error"
+                                  />
+                                ))}
+                              {exercisePoolAnalysis.categorizedExercises.primary.length > 3 && (
+                                <Chip
+                                  label={`+${exercisePoolAnalysis.categorizedExercises.primary.length - 3}`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
+                            </Box>
                           </Paper>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <Paper sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" color="warning.main">
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <Paper
+                            sx={{
+                              p: 2,
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: 3,
+                              },
+                            }}
+                            onClick={() => handleCategoryClick('accessory')}
+                          >
+                            <Typography variant="h4" color="info.main">
                               {exercisePoolAnalysis.categorizedExercises.accessory.length}
                             </Typography>
                             <Typography variant="body2">Accessory Exercises</Typography>
+                            <Box
+                              sx={{
+                                mt: 1,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {exercisePoolAnalysis.categorizedExercises.accessory
+                                .slice(0, 3)
+                                .map(exercise => (
+                                  <Chip
+                                    key={exercise.name}
+                                    label={
+                                      <ExerciseName exerciseName={exercise.name} variant="caption" />
+                                    }
+                                    size="small"
+                                    variant="outlined"
+                                    color="info"
+                                  />
+                                ))}
+                              {exercisePoolAnalysis.categorizedExercises.accessory.length > 3 && (
+                                <Chip
+                                  label={`+${exercisePoolAnalysis.categorizedExercises.accessory.length - 3}`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
+                            </Box>
+                          </Paper>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <Paper
+                            sx={{
+                              p: 2,
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: 3,
+                              },
+                            }}
+                            onClick={handlePreferencesClick}
+                          >
+                            <Typography variant="h4" color="success.main">
+                              {exercisePoolAnalysis.userEquipment.length}
+                            </Typography>
+                            <Typography variant="body2">Available Equipment</Typography>
+                            <Box
+                              sx={{
+                                mt: 1,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {exercisePoolAnalysis.userEquipment.slice(0, 3).map(equipment => (
+                                <Chip
+                                  key={equipment.equipment_name}
+                                  label={equipment.equipment_name}
+                                  size="small"
+                                  variant="outlined"
+                                  color="success"
+                                />
+                              ))}
+                              {exercisePoolAnalysis.userEquipment.length > 3 && (
+                                <Chip
+                                  label={`+${exercisePoolAnalysis.userEquipment.length - 3}`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
+                            </Box>
+                          </Paper>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                          <Paper
+                            sx={{
+                              p: 2,
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s ease-in-out',
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: 3,
+                              },
+                            }}
+                            onClick={handlePreferencesClick}
+                          >
+                            <Typography variant="h4" color="warning.main">
+                              {
+                                exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
+                                  .length
+                              }
+                            </Typography>
+                            <Typography variant="body2">Avoided Exercises</Typography>
+                            <Box
+                              sx={{
+                                mt: 1,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {exercisePoolAnalysis.userPreferences
+                                .filter(p => p.should_avoid)
+                                .slice(0, 3)
+                                .map(pref => (
+                                  <Chip
+                                    key={pref.exercise_name}
+                                    label={pref.exercise_name}
+                                    size="small"
+                                    variant="outlined"
+                                    color="warning"
+                                  />
+                                ))}
+                              {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid)
+                                .length > 3 && (
+                                <Chip
+                                  label={`+${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length - 3}`}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              )}
+                            </Box>
                           </Paper>
                         </Grid>
                       </Grid>
@@ -527,60 +515,6 @@ export const ExerciseRotationVisualization: React.FC = () => {
                 </Grid>
               )}
             </Grid>
-
-            {/* Exercise Insights Charts */}
-            {exercisePoolAnalysis && (
-              <Grid size={{ xs: 12 }}>
-                <Typography
-                  variant="h6"
-                  gutterBottom
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}
-                >
-                  Exercise Insights
-                </Typography>
-                <Grid container spacing={3}>
-                  {/* Pool Availability - Pie Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-                    <ExercisePoolPieChart
-                      exercisePoolData={exercisePoolData}
-                      title="Pool Availability"
-                      description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
-                      height={250}
-                    />
-                  </Grid>
-
-                  {/* Exercise Variety - Radial Bar Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-                    <RadialBarChart
-                      exercisePoolData={exercisePoolData}
-                      title="Exercise Variety"
-                      description="Primary vs accessory distribution"
-                      height={250}
-                    />
-                  </Grid>
-
-                  {/* Rotation Management - Bar Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-                    <BarChart
-                      exercisePoolData={exercisePoolData}
-                      title="Rotation Management"
-                      description="Available vs previously used"
-                      height={250}
-                    />
-                  </Grid>
-
-                  {/* Exercise Selection - Sunburst Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-                    <ExercisePoolSunburstChart
-                      exercisePoolData={exercisePoolData}
-                      title="Exercise Selection"
-                      description="Hierarchical pool structure"
-                      height={250}
-                    />
-                  </Grid>
-                </Grid>
-              </Grid>
-            )}
           </Grid>
         </Box>
       </Slide>
