@@ -675,7 +675,7 @@ export const printProgramWorkouts = async (
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
   pdf.text(options.title, 20, currentY);
-  currentY += 10;
+  currentY += 8;
   
   // Group workouts by week
   const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
@@ -703,7 +703,7 @@ export const printProgramWorkouts = async (
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text(`Week ${week}`, 20, currentY);
-    currentY += 16; // More space after week header
+    currentY += 8; // Consistent spacing after week header
     
     // Sort workouts by day number
     const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
