@@ -5,7 +5,6 @@ import type { UserExercisePreference } from './types';
 import {
   getUserExercisePreferences,
   upsertUserExercisePreference,
-  updateUserExercisePreference,
   removeUserExercisePreference,
 } from './userExercisePreference';
 
@@ -97,13 +96,13 @@ describe('userExercisePreference API', () => {
 
   describe('upsertUserExercisePreference', () => {
     it('should upsert user exercise preference successfully', async () => {
-      mockAdapter.onPost('/user_exercise_preference/').reply(200, mockSingleUserExercisePreference);
+      mockAdapter.onPut('/user_exercise_preference/').reply(200, mockSingleUserExercisePreference);
 
       const result = await upsertUserExercisePreference('test-user-id', 'Deadlift', false);
 
       expect(result).toEqual(mockSingleUserExercisePreference);
-      expect(mockAdapter.history.post[0].url).toBe('/user_exercise_preference/');
-      expect(mockAdapter.history.post[0].params).toEqual({
+      expect(mockAdapter.history.put[0].url).toBe('/user_exercise_preference/');
+      expect(mockAdapter.history.put[0].params).toEqual({
         user_id: 'test-user-id',
         exercise_name: 'Deadlift',
         should_avoid: false,
@@ -112,7 +111,7 @@ describe('userExercisePreference API', () => {
 
     it('should handle 400 error', async () => {
       const errorResponse = { error: 'Bad request' };
-      mockAdapter.onPost('/user_exercise_preference/').reply(400, errorResponse);
+      mockAdapter.onPut('/user_exercise_preference/').reply(400, errorResponse);
 
       await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
         errorResponse
@@ -121,7 +120,7 @@ describe('userExercisePreference API', () => {
 
     it('should handle 422 error', async () => {
       const errorResponse = { error: 'Validation error' };
-      mockAdapter.onPost('/user_exercise_preference/').reply(422, errorResponse);
+      mockAdapter.onPut('/user_exercise_preference/').reply(422, errorResponse);
 
       await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
         errorResponse
@@ -130,7 +129,7 @@ describe('userExercisePreference API', () => {
 
     it('should handle 500 error', async () => {
       const errorResponse = { error: 'Internal server error' };
-      mockAdapter.onPost('/user_exercise_preference/').reply(500, errorResponse);
+      mockAdapter.onPut('/user_exercise_preference/').reply(500, errorResponse);
 
       await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
         errorResponse
@@ -138,7 +137,7 @@ describe('userExercisePreference API', () => {
     });
 
     it('should handle network error', async () => {
-      mockAdapter.onPost('/user_exercise_preference/').networkError();
+      mockAdapter.onPut('/user_exercise_preference/').networkError();
 
       await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
         { error: 'Network Error' }
@@ -146,79 +145,9 @@ describe('userExercisePreference API', () => {
     }, 10000);
 
     it('should handle timeout error', async () => {
-      mockAdapter.onPost('/user_exercise_preference/').timeout();
+      mockAdapter.onPut('/user_exercise_preference/').timeout();
 
       await expect(upsertUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        { error: 'timeout of 2500ms exceeded' }
-      );
-    });
-  });
-
-  describe('updateUserExercisePreference', () => {
-    it('should update user exercise preference successfully', async () => {
-      mockAdapter
-        .onPatch('/user_exercise_preference/')
-        .reply(200, mockSingleUserExercisePreference);
-
-      const result = await updateUserExercisePreference('test-user-id', 'Deadlift', false);
-
-      expect(result).toEqual(mockSingleUserExercisePreference);
-      expect(mockAdapter.history.patch[0].url).toBe('/user_exercise_preference/');
-      expect(mockAdapter.history.patch[0].params).toEqual({
-        user_id: 'test-user-id',
-        exercise_name: 'Deadlift',
-        should_avoid: false,
-      });
-    });
-
-    it('should handle 400 error', async () => {
-      const errorResponse = { error: 'Bad request' };
-      mockAdapter.onPatch('/user_exercise_preference/').reply(400, errorResponse);
-
-      await expect(updateUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        errorResponse
-      );
-    });
-
-    it('should handle 404 error', async () => {
-      const errorResponse = { error: 'Exercise preference not found' };
-      mockAdapter.onPatch('/user_exercise_preference/').reply(404, errorResponse);
-
-      await expect(updateUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        errorResponse
-      );
-    });
-
-    it('should handle 422 error', async () => {
-      const errorResponse = { error: 'Validation error' };
-      mockAdapter.onPatch('/user_exercise_preference/').reply(422, errorResponse);
-
-      await expect(updateUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        errorResponse
-      );
-    });
-
-    it('should handle 500 error', async () => {
-      const errorResponse = { error: 'Internal server error' };
-      mockAdapter.onPatch('/user_exercise_preference/').reply(500, errorResponse);
-
-      await expect(updateUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        errorResponse
-      );
-    });
-
-    it('should handle network error', async () => {
-      mockAdapter.onPatch('/user_exercise_preference/').networkError();
-
-      await expect(updateUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
-        { error: 'Network Error' }
-      );
-    }, 10000);
-
-    it('should handle timeout error', async () => {
-      mockAdapter.onPatch('/user_exercise_preference/').timeout();
-
-      await expect(updateUserExercisePreference('test-user-id', 'Deadlift', false)).rejects.toEqual(
         { error: 'timeout of 2500ms exceeded' }
       );
     });

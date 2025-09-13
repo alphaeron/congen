@@ -5,6 +5,7 @@ import com.congen.exceptions.DatabaseException
 import com.congen.exceptions.NoResultsFoundException
 import com.congen.exceptions.ValidationException
 import com.congen.generator.ConjugateWorkoutGeneratorService
+import com.congen.generator.ExercisePoolFactory
 import com.congen.model.Program
 import com.congen.service.GdprComplianceService
 import com.congen.service.ProgramService
@@ -30,6 +31,7 @@ import java.time.Instant
 )
 class ConjugateWorkoutGeneratorControllerTest {
     private lateinit var conjugateWorkoutGeneratorService: ConjugateWorkoutGeneratorService
+    private lateinit var exercisePoolFactory: ExercisePoolFactory
     private lateinit var programService: ProgramService
     private lateinit var keycloakUtil: KeycloakUtil
     private lateinit var gdprComplianceService: GdprComplianceService
@@ -47,12 +49,14 @@ class ConjugateWorkoutGeneratorControllerTest {
     @BeforeEach
     fun setUp() {
         conjugateWorkoutGeneratorService = mock()
+        exercisePoolFactory = mock()
         programService = mock()
         keycloakUtil = mock()
         gdprComplianceService = createGdprComplianceServiceSpy()
         conjugateWorkoutGeneratorController =
             ConjugateWorkoutGeneratorController(
                 conjugateWorkoutGeneratorService,
+                exercisePoolFactory,
                 programService,
                 keycloakUtil,
                 gdprComplianceService

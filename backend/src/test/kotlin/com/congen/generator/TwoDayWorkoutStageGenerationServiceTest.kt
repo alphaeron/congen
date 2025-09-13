@@ -93,6 +93,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
+        whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
 
@@ -138,127 +139,28 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 currentWeekNumber = any()
             )
         ).thenReturn(Mono.just(mock()))
-
-        // Mock Prilepin guidelines service methods
-        whenever(
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                dayType = eq("ME_Upper"),
-                currentWeekNumber = eq(currentWeekNumber),
-                movementRole = eq("primary")
-            )
-        ).thenReturn(Pair(mock(), 0.8))
-        whenever(
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                dayType = eq("DE_Lower"),
-                currentWeekNumber = eq(currentWeekNumber),
-                movementRole = eq("secondary")
-            )
-        ).thenReturn(Pair(mock(), 0.6))
-        whenever(
-            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
-                guidelines = any(),
-                intensity = any(),
-                movementRole = any()
-            )
-        ).thenReturn(Pair(5, 3))
-        whenever(
-            prilepinGuidelinesService.getRestTimeBasedOnIntensity(
-                restRange = any(),
-                intensity = any(),
-                totalReps = any(),
-                totalRepsRange = any()
-            )
-        ).thenReturn(90)
-
-        // Mock weight selection service
-        whenever(
-            weightSelectionService.getTargetWeight(
-                exerciseName = any(),
-                intensity = any(),
-                oneRepMaxes = any(),
-                userId = any(),
-                isDynamicEffort = any(),
-                currentWeekNumber = any()
-            )
-        ).thenReturn(Mono.just(mock()))
-
-        // Mock Prilepin guidelines service methods
-        whenever(
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                dayType = eq("ME_Upper"),
-                currentWeekNumber = eq(currentWeekNumber),
-                movementRole = eq("primary")
-            )
-        ).thenReturn(Pair(mock(), 0.8))
-        whenever(
-            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                dayType = eq("DE_Lower"),
-                currentWeekNumber = eq(currentWeekNumber),
-                movementRole = eq("secondary")
-            )
-        ).thenReturn(Pair(mock(), 0.6))
-        whenever(
-            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
-                guidelines = any(),
-                intensity = any(),
-                movementRole = any()
-            )
-        ).thenReturn(Pair(5, 3))
-        whenever(
-            prilepinGuidelinesService.getRestTimeBasedOnIntensity(
-                restRange = any(),
-                intensity = any(),
-                totalReps = any(),
-                totalRepsRange = any()
-            )
-        ).thenReturn(90)
-
-        // Mock weight selection service
-        whenever(
-            weightSelectionService.getTargetWeight(
-                exerciseName = any(),
-                intensity = any(),
-                oneRepMaxes = any(),
-                userId = any(),
-                isDynamicEffort = any(),
-                currentWeekNumber = any()
-            )
-        ).thenReturn(Mono.just(mock()))
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
-                isAccessory = eq(false),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                userExercisePool = any(),
+                targetMuscles = any(),
+                isAccessory = any(),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
+                userExercisePool = any(),
                 targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
                 workoutType = any(),
-                dayType = eq(dayType),
+                dayType = any(),
                 movementBalanceState = any(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
-        // Mock the selectConditioningExercise call
-        whenever(
-            exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
-                isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
-                movementBalanceState = isNull(),
-                isWarmup = eq(false)
-            )
-        ).thenReturn(Mono.just(secondaryExercise))
-        // Mock the selectConditioningExercise call - this needs to match the exact call from selectConditioningExercise
         whenever(
             exerciseSelectionService.selectExercise(
                 userExercisePool = any(),
@@ -266,8 +168,20 @@ class TwoDayWorkoutStageGenerationServiceTest {
                 isAccessory = eq(true),
                 workoutType = any(),
                 dayType = any(),
+                movementBalanceState = isNull(),
+                isWarmup = any()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        // Mock the selectConditioningExercise call
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = any(),
+                targetMuscles = eq(listOf("triceps")), // Filtered from weakMuscles based on dayType
+                isAccessory = eq(true),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = any(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
@@ -323,6 +237,7 @@ class TwoDayWorkoutStageGenerationServiceTest {
         val secondaryExercise = createSampleExercise("Incline Press", MovementType.HORIZONTAL_PUSH)
 
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
+        whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Lower")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Upper")
 
@@ -369,51 +284,49 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(mock()))
 
-        // Mock the selectConditioningExercise call
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
-                isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                userExercisePool = any(),
+                targetMuscles = any(),
+                isAccessory = any(),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
-            )
-        ).thenReturn(Mono.just(secondaryExercise))
-
-        whenever(
-            exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
-                isAccessory = eq(false),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
-                movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
+                userExercisePool = any(),
                 targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
                 workoutType = any(),
-                dayType = eq(dayType),
+                dayType = any(),
                 movementBalanceState = any(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
-        // Mock the selectConditioningExercise call - this needs to match the exact call from selectConditioningExercise
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                userExercisePool = any(),
+                targetMuscles = any(),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        // Mock the selectConditioningExercise call
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = any(),
+                targetMuscles = eq(listOf("triceps")), // Filtered from weakMuscles based on dayType
+                isAccessory = eq(true),
+                workoutType = any(),
+                dayType = any(),
+                movementBalanceState = any(),
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(
@@ -466,40 +379,85 @@ class TwoDayWorkoutStageGenerationServiceTest {
         val userId = "user123"
 
         whenever(conjugateTemplates.isCombinedMEDay(dayType)).thenReturn(true)
+        whenever(conjugateTemplates.isFullBodyDE(dayType)).thenReturn(false)
         whenever(conjugateTemplates.getPrimaryMovementType(dayType)).thenReturn("ME_Upper")
         whenever(conjugateTemplates.getSecondaryMovementType(dayType)).thenReturn("DE_Lower")
+
+        // Mock Prilepin guidelines service methods
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = eq("ME_Upper"),
+                currentWeekNumber = eq(currentWeekNumber),
+                movementRole = eq("primary")
+            )
+        ).thenReturn(Pair(mock(), 0.8))
+        whenever(
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = eq("DE_Lower"),
+                currentWeekNumber = eq(currentWeekNumber),
+                movementRole = eq("secondary")
+            )
+        ).thenReturn(Pair(mock(), 0.6))
+        whenever(
+            prilepinGuidelinesService.getRepsAndSetsBasedOnIntensity(
+                guidelines = any(),
+                intensity = any(),
+                movementRole = any()
+            )
+        ).thenReturn(Pair(5, 3))
+        whenever(
+            prilepinGuidelinesService.getRestTimeBasedOnIntensity(
+                restRange = any(),
+                intensity = any(),
+                totalReps = any(),
+                totalRepsRange = any()
+            )
+        ).thenReturn(90)
+
+        // Mock weight selection service
+        whenever(
+            weightSelectionService.getTargetWeight(
+                exerciseName = any(),
+                intensity = any(),
+                oneRepMaxes = any(),
+                userId = any(),
+                isDynamicEffort = any(),
+                currentWeekNumber = any()
+            )
+        ).thenReturn(Mono.just(mock()))
+
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
-                isAccessory = eq(false),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                userExercisePool = any(),
+                targetMuscles = any(),
+                isAccessory = any(),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
+                userExercisePool = any(),
+                targetMuscles = any(),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         // Mock the selectConditioningExercise call
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(weakMuscles),
+                userExercisePool = any(),
+                targetMuscles = eq(listOf("triceps")), // Filtered from weakMuscles based on dayType
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
-                movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                workoutType = any(),
+                dayType = any(),
+                movementBalanceState = any(),
+                isWarmup = any()
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
@@ -606,36 +564,55 @@ class TwoDayWorkoutStageGenerationServiceTest {
 
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
-                targetMuscles = eq(emptyList()),
-                isAccessory = eq(false),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                userExercisePool = any(),
+                targetMuscles = any(),
+                isAccessory = any(),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(primaryExercise))
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
+                userExercisePool = any(),
+                targetMuscles = any(),
+                isAccessory = any(),
+                workoutType = any(),
+                dayType = eq("ME_Upper"),
+                movementBalanceState = isNull(),
+                isWarmup = any()
+            )
+        ).thenReturn(Mono.just(primaryExercise))
+        whenever(
+            exerciseSelectionService.selectSimilarSecondaryExercise(
+                primaryExercise = eq(primaryExercise),
+                userExercisePool = any(),
+                workoutType = any(),
+                dayType = any(),
+                movementBalanceState = isNull()
+            )
+        ).thenReturn(Mono.just(secondaryExercise))
+        whenever(
+            exerciseSelectionService.selectExercise(
+                userExercisePool = any(),
                 targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
                 workoutType = any(),
-                dayType = eq(dayType),
+                dayType = any(),
                 movementBalanceState = any(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
-        // Mock the selectConditioningExercise call - this needs to match the exact call from selectConditioningExercise
         whenever(
             exerciseSelectionService.selectExercise(
-                userExercisePool = eq(userExercisePool),
+                userExercisePool = any(),
                 targetMuscles = eq(weakMuscles),
                 isAccessory = eq(true),
-                workoutType = eq("maximal_effort"),
-                dayType = eq(dayType),
+                workoutType = any(),
+                dayType = any(),
                 movementBalanceState = isNull(),
-                isWarmup = eq(false)
+                isWarmup = any()
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(

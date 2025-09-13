@@ -43,12 +43,7 @@ then move hardcoded program templates into database models to add flexability.
 
 then support exerciseAttributes instead of isUnilateral, ... (like tags) for even more flexability.
 
-remove unneeded endpoints
-
 tempo enum
-
-If muscle imbalance, prefer unilateral accessories
-
 
 
 

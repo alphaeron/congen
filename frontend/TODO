@@ -1,8 +1,3 @@
-### Generation Flow
-- Create program in profile
-- When you change days per week preference, ask if you want to start a new program, if not confirm it won't change
-- select equipment -> select weakest muscles (determine which exercises are possible with equipment, then select accessories based on weak muscles and primary movements based on available equipment) -> select training days (2, 3, 4)
-
 ### Core Pages
 - frontend has workout generator page, and exercise database
 - enhance the ui for exercise browsing functionality to allow filtering based on all exercise properties, and to make it streamlined and follow ux best practices
@@ -15,7 +10,6 @@
 - assets for exercises/muscles images
 - custom snackbar format instead of the default
 - fix landing page styling, and add screenshots for landing page
-- auto-refresh token if page is still active?
 
 ### Infrastructure
 - health check

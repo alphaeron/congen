@@ -30,31 +30,7 @@ export const upsertUserExercisePreference = async (
   shouldAvoid: boolean
 ): Promise<UserExercisePreference> => {
   return REQUEST({
-    method: 'POST',
-    url: '/user_exercise_preference/',
-    params: {
-      user_id: userId,
-      exercise_name: exerciseName,
-      should_avoid: shouldAvoid,
-    },
-  });
-};
-
-/**
- * Update an existing exercise preference for a user.
- *
- * @param userId The Keycloak identifier of the user
- * @param exerciseName The name of the exercise
- * @param shouldAvoid Whether the user should avoid this exercise
- * @returns Promise containing the updated user exercise preference
- */
-export const updateUserExercisePreference = async (
-  userId: string,
-  exerciseName: string,
-  shouldAvoid: boolean
-): Promise<UserExercisePreference> => {
-  return REQUEST({
-    method: 'PATCH',
+    method: 'PUT',
     url: '/user_exercise_preference/',
     params: {
       user_id: userId,

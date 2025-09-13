@@ -426,8 +426,8 @@ class UserExercisePoolTest {
         val result = userExercisePool.filterExercisesByMuscles(listOf(exercises[0]), listOf("Chest"), exerciseMuscleDAL)
 
         StepVerifier.create(result)
-            .expectNext(listOf(exercises[0]))
-            .verifyComplete()
+            .expectError(RuntimeException::class.java)
+            .verify()
     }
 
     @Test

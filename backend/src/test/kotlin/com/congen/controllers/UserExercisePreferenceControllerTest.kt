@@ -60,7 +60,7 @@ class UserExercisePreferenceControllerTest {
     }
 
     @Test
-    fun `save should return created user exercise preference`() {
+    fun `upsert should return created or updated user exercise preference`() {
         val now = Instant.now()
         val userExercisePreference =
             mockUserExercisePreference(
@@ -69,13 +69,13 @@ class UserExercisePreferenceControllerTest {
                 shouldAvoid = SHOULD_AVOID,
                 createdAt = now
             )
-        whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
+        whenever(userExercisePreferenceDAL.upsertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
             .thenReturn(Mono.just(userExercisePreference))
-        val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
+        val result = userExercisePreferenceController.upsert(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
         StepVerifier.create(result)
             .expectNext(ResponseEntity.ok(userExercisePreference))
             .verifyComplete()
-        verify(userExercisePreferenceDAL).insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
+        verify(userExercisePreferenceDAL).upsertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
     }
 
     @Test
@@ -127,10 +127,10 @@ class UserExercisePreferenceControllerTest {
     }
 
     @Test
-    fun `should handle DAL error gracefully for save`() {
-        whenever(userExercisePreferenceDAL.insertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
+    fun `should handle DAL error gracefully for upsert`() {
+        whenever(userExercisePreferenceDAL.upsertUserExercisePreference(USER_ID, EXERCISE_NAME, SHOULD_AVOID))
             .thenReturn(Mono.error(DatabaseQueryException("Database error")))
-        val result = userExercisePreferenceController.save(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
+        val result = userExercisePreferenceController.upsert(USER_ID, EXERCISE_NAME, SHOULD_AVOID)
         StepVerifier.create(result)
             .expectError(DatabaseQueryException::class.java)
             .verify()

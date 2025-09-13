@@ -118,7 +118,7 @@ export const FormField: React.FC<FormFieldProps> = props => {
       <FormControl fullWidth={fullWidth} error={fieldError} disabled={disabled} required={required}>
         <InputLabel>{label}</InputLabel>
         <Select
-          value={fieldValue || ''}
+          value={fieldValue !== undefined ? fieldValue : ''}
           label={label}
           onChange={e => handleChange?.(e.target.value)}
           onBlur={handleBlur}

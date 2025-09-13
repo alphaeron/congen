@@ -6,6 +6,7 @@ import com.congen.cache.CacheTTL
 import com.congen.cache.annotation.CacheEvict
 import com.congen.cache.annotation.Cacheable
 import com.congen.client.PostgresClient
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.model.UserExercisePreference
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -101,73 +102,55 @@ class UserExercisePreferenceDAL(
         )
     }
 
-    /**
-     * Creates a new user-exercise preference in the database.
-     *
-     * This method inserts a new preference between the specified user and exercise.
-     * The combination of user ID and exercise name must be unique.
-     *
-     * @param userId The Keycloak identifier of the user
-     * @param exerciseName The name of the exercise
-     * @param shouldAvoid Whether the user should avoid this exercise
-     * @return Mono containing the created user-exercise preference
-     * @throws DatabaseException when the preference already exists or database operation fails
-     */
-    @CacheEvict(
-        invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
-        entityName = "user_exercise_preference"
-    )
-    fun insertUserExercisePreference(
-        userId: String,
-        exerciseName: String,
-        shouldAvoid: Boolean,
-    ): Mono<UserExercisePreference> {
-        logger.debug("Inserting user exercise preference: {} - {}", userId, exerciseName)
-        return postgresClient.update(
-            """
-            INSERT INTO user_exercise_preference
-                (user_id, exercise_name, should_avoid)
-            VALUES
-                ($1, $2, $3)
-            """.trimIndent(),
-            userId,
-            exerciseName,
-            shouldAvoid,
-        )
-    }
 
     /**
-     * Updates an existing user-exercise preference in the database.
+     * Creates or updates a user-exercise preference in the database (upsert operation).
      *
-     * This method modifies the preference for the specified user and exercise.
-     * If no preference exists, a NoResultsFoundException is thrown.
+     * This method performs an upsert operation - if a preference exists for the specified user and exercise,
+     * it will be updated; otherwise, a new preference will be created.
      *
      * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param shouldAvoid Whether the user should avoid this exercise
-     * @return Mono containing the updated user-exercise preference
-     * @throws NoResultsFoundException when the preference doesn't exist
+     * @return Mono containing the created or updated user-exercise preference
      */
     @CacheEvict(
         invalidationStrategy = CacheInvalidationStrategy.RELATIONSHIP,
         entityName = "user_exercise_preference"
     )
-    fun updateUserExercisePreference(
+    fun upsertUserExercisePreference(
         userId: String,
         exerciseName: String,
         shouldAvoid: Boolean,
     ): Mono<UserExercisePreference> {
-        logger.debug("Updating user exercise preference: {} - {}", userId, exerciseName)
-        return postgresClient.update(
+        logger.debug("Upserting user exercise preference: {} - {}", userId, exerciseName)
+        return postgresClient.update<UserExercisePreference>(
             """
             UPDATE user_exercise_preference
-            SET should_avoid=$3
-            WHERE user_id=$1 AND exercise_name=$2
+            SET should_avoid = $3
+            WHERE user_id = $1 AND exercise_name = $2
             """.trimIndent(),
             userId,
             exerciseName,
             shouldAvoid,
-        )
+        ).onErrorResume { error ->
+            if (error is NoResultsFoundException) {
+                // No existing preference found, insert a new one
+                postgresClient.update<UserExercisePreference>(
+                    """
+                    INSERT INTO user_exercise_preference
+                        (user_id, exercise_name, should_avoid)
+                    VALUES
+                        ($1, $2, $3)
+                    """.trimIndent(),
+                    userId,
+                    exerciseName,
+                    shouldAvoid,
+                )
+            } else {
+                Mono.error(error)
+            }
+        }
     }
 
     /**

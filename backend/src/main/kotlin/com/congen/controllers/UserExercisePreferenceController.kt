@@ -16,7 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -38,9 +38,8 @@ import reactor.core.publisher.Mono
  *
  * ## Endpoints
  *
- * - `POST /user_exercise_preference/` - Create a new user exercise preference
+ * - `PUT /user_exercise_preference/` - Create or update a user exercise preference (upsert)
  * - `GET /user_exercise_preference/{userId}` - Retrieve all exercise preferences for a user
- * - `PATCH /user_exercise_preference/` - Update an existing user exercise preference
  * - `DELETE /user_exercise_preference/` - Delete a user exercise preference
  *
  * ## Error Handling
@@ -68,32 +67,32 @@ class UserExercisePreferenceController(
     }
 
     /**
-     * Creates a new user exercise preference.
+     * Creates or updates a user exercise preference (upsert operation).
      *
-     * This endpoint creates a preference relationship between a user and an exercise,
-     * allowing the user to specify whether they like or dislike the exercise.
+     * This endpoint performs an upsert operation - if a preference exists for the specified user and exercise,
+     * it will be updated; otherwise, a new preference will be created.
      *
      * @param userId The Keycloak identifier of the user
      * @param exerciseName The name of the exercise
      * @param shouldAvoid Whether the user should avoid this exercise
-     * @return ResponseEntity containing the created user exercise preference
+     * @return ResponseEntity containing the created or updated user exercise preference
      */
-    @PostMapping("/")
+    @PutMapping("/")
     @PreAuthorize("isAuthenticated()")
     @Operation(
-        summary = "Create user exercise preference",
-        description = "Creates a new user exercise preference relationship.",
+        summary = "Create or update user exercise preference",
+        description = "Creates a new user exercise preference or updates an existing one (upsert operation).",
     )
     @ApiResponses(
         value = [
             ApiResponse(
                 responseCode = "200",
-                description = "User exercise preference created successfully",
+                description = "User exercise preference created or updated successfully",
                 content = [Content(mediaType = "application/json")],
             ),
         ],
     )
-    fun save(
+    fun upsert(
         @Parameter(description = "Keycloak user ID", required = true, example = "123e4567-e89b-12d3-a456-426614174000")
         @RequestParam("user_id") userId: String,
         @Parameter(description = "Exercise name", required = true)
@@ -114,12 +113,12 @@ class UserExercisePreferenceController(
                     }
                 consentUserIdMono.flatMap { ownerId ->
                     gdprComplianceService.withUserConsent(ownerId) {
-                        logger.info("Saving user exercise preference: {} - {}", userId, exerciseName)
-                        userExercisePreferenceDAL.insertUserExercisePreference(userId, exerciseName, shouldAvoid)
+                        logger.info("Upserting user exercise preference: {} - {}", userId, exerciseName)
+                        userExercisePreferenceDAL.upsertUserExercisePreference(userId, exerciseName, shouldAvoid)
                             .map { ResponseEntity.ok(it) }
                             .doOnError { e ->
                                 logger.error(
-                                    "Error saving user exercise preference: userId={}, exerciseName={}, shouldAvoid={}",
+                                    "Error upserting user exercise preference: userId={}, exerciseName={}, shouldAvoid={}",
                                     userId,
                                     exerciseName,
                                     shouldAvoid,
@@ -129,7 +128,7 @@ class UserExercisePreferenceController(
                     }
                 }
             } else {
-                Mono.error(AccessDeniedException("Access denied: User can only create preferences for themselves"))
+                Mono.error(AccessDeniedException("Access denied: User can only create/update preferences for themselves"))
             }
         }
     }

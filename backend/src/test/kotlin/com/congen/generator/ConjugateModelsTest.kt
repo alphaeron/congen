@@ -148,7 +148,7 @@ class ConjugateModelsTest {
 
     @Test
     fun `ConjugateConstants should have correct default values`() {
-        assertEquals(listOf("hamstrings", "glutes", "upper back", "rectus abdominis"), ConjugateConstants.DEFAULT_WEAK_MUSCLES)
+        assertEquals(listOf("hamstrings", "glutes", "upper back", "lats"), ConjugateConstants.DEFAULT_WEAK_MUSCLES)
         assertEquals(60, ConjugateConstants.DEFAULT_SESSION_TIME_MINUTES)
     }
 

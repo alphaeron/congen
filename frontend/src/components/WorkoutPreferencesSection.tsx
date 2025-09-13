@@ -1,17 +1,6 @@
-import { Refresh as RefreshIcon } from '@mui/icons-material';
 import {
   Box,
-  Card,
-  CardContent,
-  Typography,
-  Button,
   List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
-  IconButton,
-  Divider,
-  Chip,
 } from '@mui/material';
 import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -19,6 +8,10 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { FormDialog } from './FormDialog';
 import { FormField } from './FormField';
 import { LoadingSpinner } from './LoadingSpinner';
+import { PreferenceSection } from './PreferenceSection';
+import { DeletableListItem } from './DeletableListItem';
+import { DeletableChip } from './DeletableChip';
+import { NavigationItem } from './NavigationItem';
 import { getEquipment } from '../api/equipment';
 import { getExercises } from '../api/exercise';
 import { getMuscles } from '../api/muscle';
@@ -30,6 +23,7 @@ import {
   type Equipment,
   type UserEquipment,
   type UserWeakMuscle,
+  type UserExercisePreference,
 } from '../api/types';
 import { getUserEquipment, addUserEquipment, removeUserEquipment } from '../api/userEquipment';
 import { getUserWeakMuscles, addUserWeakMuscle, removeUserWeakMuscle } from '../api/userWeakMuscle';
@@ -38,6 +32,11 @@ import {
   upsertUserWeightUnitPreference,
   deleteUserWeightUnitPreference,
 } from '../api/userWeightUnitPreference';
+import {
+  getUserExercisePreferences,
+  upsertUserExercisePreference,
+  removeUserExercisePreference,
+} from '../api/userExercisePreference';
 import { useAuth } from '../contexts/AuthContext';
 
 import type { AxiosError } from 'axios';
@@ -73,16 +72,26 @@ export function WorkoutPreferencesSection(): React.ReactElement {
   const [equipmentDialogOpen, setEquipmentDialogOpen] = useState(false);
   const [weakMuscleDialogOpen, setWeakMuscleDialogOpen] = useState(false);
 
+  // Exercise preferences state
+  const [userExercisePreferences, setUserExercisePreferences] = useState<UserExercisePreference[]>([]);
+  const [exercisePreferenceDialogOpen, setExercisePreferenceDialogOpen] = useState(false);
+
   // Navigation state
   const [activeSection, setActiveSection] = useState('weight-units');
   const weightUnitsRef = useRef<HTMLDivElement>(null);
   const equipmentRef = useRef<HTMLDivElement>(null);
   const weakMusclesRef = useRef<HTMLDivElement>(null);
+  const exercisePreferencesRef = useRef<HTMLDivElement>(null);
 
-  // Form data type for TanStack Form
+  // Form data types for TanStack Form
   interface WeightUnitPreferenceFormData extends Record<string, unknown> {
     exerciseName: string;
     preferredUnit: WeightUnit;
+  }
+
+  interface ExercisePreferenceFormData extends Record<string, unknown> {
+    exerciseName: string;
+    shouldAvoid: boolean;
   }
 
   // Load initial data
@@ -103,6 +112,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       equipmentResponse,
       userEquipmentResponse,
       userWeakMusclesResponse,
+      userExercisePreferencesResponse,
     ] = await Promise.allSettled([
       getUserWeightUnitPreferences(user!.keycloak_id),
       getExercises(),
@@ -110,6 +120,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       getEquipment(),
       getUserEquipment(user!.keycloak_id),
       getUserWeakMuscles(user!.keycloak_id),
+      getUserExercisePreferences(user!.keycloak_id),
     ]);
 
     // Handle weight unit preferences
@@ -146,6 +157,11 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       setUserWeakMuscles(userWeakMusclesResponse.value);
     }
 
+    // Handle exercise preferences
+    if (userExercisePreferencesResponse.status === 'fulfilled') {
+      setUserExercisePreferences(userExercisePreferencesResponse.value);
+    }
+
     setLoading(false);
   };
 
@@ -155,6 +171,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
       'weight-units': weightUnitsRef,
       equipment: equipmentRef,
       'weak-muscles': weakMusclesRef,
+      'exercise-preferences': exercisePreferencesRef,
     };
 
     const ref = refs[sectionId as keyof typeof refs];
@@ -186,7 +203,7 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     );
 
     // Observe all section refs
-    [weightUnitsRef, equipmentRef, weakMusclesRef].forEach(ref => {
+    [weightUnitsRef, equipmentRef, weakMusclesRef, exercisePreferencesRef].forEach(ref => {
       if (ref.current) {
         observer.observe(ref.current);
       }
@@ -348,6 +365,51 @@ export function WorkoutPreferencesSection(): React.ReactElement {
     }
   };
 
+  // Exercise preference handlers
+  const handleAddExercisePreference = async (exerciseName: string, shouldAvoid: boolean) => {
+    if (!user?.keycloak_id) return;
+
+    try {
+      setSaving(true);
+      await upsertUserExercisePreference(user.keycloak_id, exerciseName, shouldAvoid);
+
+      // Refresh exercise preferences
+      const userExercisePreferencesResponse = await getUserExercisePreferences(user.keycloak_id);
+      setUserExercisePreferences(userExercisePreferencesResponse);
+
+      enqueueSnackbar('Exercise preference added successfully', { variant: 'success' });
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to add exercise preference', {
+        variant: 'error',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveExercisePreference = async (exerciseName: string) => {
+    if (!user?.keycloak_id) return;
+
+    try {
+      setSaving(true);
+      await removeUserExercisePreference(user.keycloak_id, exerciseName);
+
+      // Refresh exercise preferences
+      const userExercisePreferencesResponse = await getUserExercisePreferences(user.keycloak_id);
+      setUserExercisePreferences(userExercisePreferencesResponse);
+
+      enqueueSnackbar('Exercise preference removed successfully', { variant: 'success' });
+    } catch (err: unknown) {
+      const axiosError = err as AxiosError<{ message?: string }>;
+      enqueueSnackbar(axiosError.response?.data?.message || 'Failed to remove exercise preference', {
+        variant: 'error',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner message="Loading workout preferences..." fullHeight={false} />;
   }
@@ -370,54 +432,26 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Typography
-            variant="body1"
+          <NavigationItem
+            label="Weight Unit Preferences"
+            isActive={activeSection === 'weight-units'}
             onClick={() => scrollToSection('weight-units')}
-            sx={{
-              cursor: 'pointer',
-              color: activeSection === 'weight-units' ? 'primary.main' : 'text.primary',
-              textDecoration: activeSection === 'weight-units' ? 'underline' : 'none',
-              fontWeight: activeSection === 'weight-units' ? 'bold' : 'normal',
-              '&:hover': {
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Weight Unit Preferences
-          </Typography>
-          <Typography
-            variant="body1"
+          />
+          <NavigationItem
+            label="Available Equipment"
+            isActive={activeSection === 'equipment'}
             onClick={() => scrollToSection('equipment')}
-            sx={{
-              cursor: 'pointer',
-              color: activeSection === 'equipment' ? 'primary.main' : 'text.primary',
-              textDecoration: activeSection === 'equipment' ? 'underline' : 'none',
-              fontWeight: activeSection === 'equipment' ? 'bold' : 'normal',
-              '&:hover': {
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Available Equipment
-          </Typography>
-          <Typography
-            variant="body1"
+          />
+          <NavigationItem
+            label="Weak Muscle Groups"
+            isActive={activeSection === 'weak-muscles'}
             onClick={() => scrollToSection('weak-muscles')}
-            sx={{
-              cursor: 'pointer',
-              color: activeSection === 'weak-muscles' ? 'primary.main' : 'text.primary',
-              textDecoration: activeSection === 'weak-muscles' ? 'underline' : 'none',
-              fontWeight: activeSection === 'weak-muscles' ? 'bold' : 'normal',
-              '&:hover': {
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Weak Muscle Groups
-          </Typography>
+          />
+          <NavigationItem
+            label="Exercise Preferences"
+            isActive={activeSection === 'exercise-preferences'}
+            onClick={() => scrollToSection('exercise-preferences')}
+          />
         </Box>
       </Box>
 
@@ -426,146 +460,104 @@ export function WorkoutPreferencesSection(): React.ReactElement {
         <Box sx={{ p: 3 }}>
           {/* Weight Unit Preferences Section */}
           <div ref={weightUnitsRef} data-section="weight-units">
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">Weight Unit Preferences</Typography>
-                  <Button variant="outlined" size="small" onClick={() => setUnitDialogOpen(true)}>
-                    Add Preference
-                  </Button>
-                </Box>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  Set your preferred weight units for specific exercises.
-                </Typography>
-
-                <Divider sx={{ mb: 2 }} />
-
-                {weightUnitPreferences.length === 0 ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ textAlign: 'center', py: 2 }}
-                  >
-                    No weight unit preferences set yet.
-                  </Typography>
-                ) : (
-                  <List dense>
-                    {weightUnitPreferences.map(pref => (
-                      <ListItem key={`${pref.user_id}-${pref.exercise_name}`}>
-                        <ListItemText
-                          primary={getExerciseName(pref.exercise_name)}
-                          secondary={`Preferred unit: ${pref.preferred_unit}`}
-                        />
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            edge="end"
-                            aria-label="delete"
-                            onClick={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
-                            disabled={saving}
-                          >
-                            <RefreshIcon />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    ))}
-                  </List>
-                )}
-              </CardContent>
-            </Card>
+            <PreferenceSection
+              title="Weight Unit Preferences"
+              description="Set your preferred weight units for specific exercises."
+              addButtonText="Add Preference"
+              onAddClick={() => setUnitDialogOpen(true)}
+              hasItems={weightUnitPreferences.length > 0}
+              emptyMessage="No weight unit preferences set yet."
+            >
+              <List dense>
+                {weightUnitPreferences.map(pref => (
+                  <DeletableListItem
+                    key={`${pref.user_id}-${pref.exercise_name}`}
+                    primary={getExerciseName(pref.exercise_name)}
+                    secondary={`Preferred unit: ${pref.preferred_unit}`}
+                    onDelete={() => handleDeleteWeightUnitPreference(pref.exercise_name)}
+                    deleteTooltip="Remove weight unit preference"
+                    disabled={saving}
+                  />
+                ))}
+              </List>
+            </PreferenceSection>
           </div>
 
           {/* Available Equipment Section */}
           <div ref={equipmentRef} data-section="equipment">
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">Available Equipment</Typography>
-                  <Button
+            <PreferenceSection
+              title="Available Equipment"
+              description="Manage the equipment you have available for workouts. This affects which exercises are available in your exercise pool."
+              addButtonText="Add Equipment"
+              onAddClick={() => setEquipmentDialogOpen(true)}
+              hasItems={userEquipment.length > 0}
+              emptyMessage="No equipment added yet. Add equipment to expand your exercise pool."
+            >
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {userEquipment.map(equipment => (
+                  <DeletableChip
+                    key={equipment.equipment_name}
+                    label={equipment.equipment_name}
+                    onDelete={() => handleRemoveEquipment(equipment.equipment_name)}
+                    deleteTooltip="Remove equipment"
+                    disabled={saving}
+                    color="primary"
                     variant="outlined"
-                    size="small"
-                    onClick={() => setEquipmentDialogOpen(true)}
-                  >
-                    Add Equipment
-                  </Button>
-                </Box>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  Manage the equipment you have available for workouts. This affects which exercises
-                  are available in your exercise pool.
-                </Typography>
-
-                <Divider sx={{ mb: 2 }} />
-
-                {userEquipment.length === 0 ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ textAlign: 'center', py: 2 }}
-                  >
-                    No equipment added yet. Add equipment to expand your exercise pool.
-                  </Typography>
-                ) : (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {userEquipment.map(equipment => (
-                      <Chip
-                        key={equipment.equipment_name}
-                        label={equipment.equipment_name}
-                        onDelete={() => handleRemoveEquipment(equipment.equipment_name)}
-                        disabled={saving}
-                        color="primary"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
+                  />
+                ))}
+              </Box>
+            </PreferenceSection>
           </div>
 
           {/* Weak Muscle Groups Section */}
           <div ref={weakMusclesRef} data-section="weak-muscles">
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                  <Typography variant="h6">Weak Muscle Groups</Typography>
-                  <Button
+            <PreferenceSection
+              title="Weak Muscle Groups"
+              description="Identify muscle groups you want to target for improvement. This helps prioritize exercises that work these areas."
+              addButtonText="Add Weak Muscle"
+              onAddClick={() => setWeakMuscleDialogOpen(true)}
+              hasItems={userWeakMuscles.length > 0}
+              emptyMessage="No weak muscle groups identified yet. Add muscle groups you want to focus on."
+            >
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {userWeakMuscles.map(weakMuscle => (
+                  <DeletableChip
+                    key={weakMuscle.muscle_name}
+                    label={weakMuscle.muscle_name}
+                    onDelete={() => handleRemoveWeakMuscle(weakMuscle.muscle_name)}
+                    deleteTooltip="Remove weak muscle group"
+                    disabled={saving}
+                    color="warning"
                     variant="outlined"
-                    size="small"
-                    onClick={() => setWeakMuscleDialogOpen(true)}
-                  >
-                    Add Weak Muscle
-                  </Button>
-                </Box>
-                <Typography variant="body2" color="text.secondary" paragraph>
-                  Identify muscle groups you want to target for improvement. This helps prioritize
-                  exercises that work these areas.
-                </Typography>
+                  />
+                ))}
+              </Box>
+            </PreferenceSection>
+          </div>
 
-                <Divider sx={{ mb: 2 }} />
-
-                {userWeakMuscles.length === 0 ? (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ textAlign: 'center', py: 2 }}
-                  >
-                    No weak muscle groups identified yet. Add muscle groups you want to focus on.
-                  </Typography>
-                ) : (
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {userWeakMuscles.map(weakMuscle => (
-                      <Chip
-                        key={weakMuscle.muscle_name}
-                        label={weakMuscle.muscle_name}
-                        onDelete={() => handleRemoveWeakMuscle(weakMuscle.muscle_name)}
-                        disabled={saving}
-                        color="warning"
-                        variant="outlined"
-                      />
-                    ))}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
+          {/* Exercise Preferences Section */}
+          <div ref={exercisePreferencesRef} data-section="exercise-preferences">
+            <PreferenceSection
+              title="Exercise Preferences"
+              description="Set your preferences for specific exercises. You can prefer exercises you enjoy or ignore exercises you want to avoid."
+              addButtonText="Add Preference"
+              onAddClick={() => setExercisePreferenceDialogOpen(true)}
+              hasItems={userExercisePreferences.length > 0}
+              emptyMessage="No exercise preferences set yet. Add exercises you prefer or want to avoid."
+            >
+              <List dense>
+                {userExercisePreferences.map(pref => (
+                  <DeletableListItem
+                    key={`${pref.user_id}-${pref.exercise_name}`}
+                    primary={pref.exercise_name}
+                    secondary={pref.should_avoid ? 'Ignored' : 'Preferred'}
+                    onDelete={() => handleRemoveExercisePreference(pref.exercise_name)}
+                    deleteTooltip="Remove exercise preference"
+                    disabled={saving}
+                  />
+                ))}
+              </List>
+            </PreferenceSection>
           </div>
         </Box>
       </Box>
@@ -697,6 +689,60 @@ export function WorkoutPreferencesSection(): React.ReactElement {
                   ? muscles.map(muscle => ({ value: muscle.name, label: muscle.name }))
                   : [{ value: '', label: 'No muscles available' }]
               }
+            />
+          </Box>
+        )}
+      </FormDialog>
+
+      {/* Add Exercise Preference Dialog */}
+      <FormDialog<ExercisePreferenceFormData>
+        open={exercisePreferenceDialogOpen}
+        onClose={() => setExercisePreferenceDialogOpen(false)}
+        onSubmit={data => {
+          handleAddExercisePreference(data.exerciseName, data.shouldAvoid);
+          setExercisePreferenceDialogOpen(false);
+        }}
+        title="Add Exercise Preference"
+        submitText="Add Preference"
+        loading={saving}
+        useTanStackForm={true}
+        defaultValues={{
+          exerciseName: '',
+          shouldAvoid: false,
+        }}
+        validate={values => {
+          const errors: Record<string, string> = {};
+          if (!values.exerciseName) {
+            errors.exerciseName = 'Please select an exercise';
+          }
+          if (values.shouldAvoid === undefined || values.shouldAvoid === null) {
+            errors.shouldAvoid = 'Please select a preference';
+          }
+          return Object.keys(errors).length > 0 ? errors : undefined;
+        }}
+      >
+        {form => (
+          <Box display="flex" flexDirection="column" gap={2} sx={{ mt: 1 }}>
+            <FormField
+              type="select"
+              label="Exercise"
+              name="exerciseName"
+              form={form}
+              options={
+                exercises && exercises.length > 0
+                  ? exercises.map(exercise => ({ value: exercise.name, label: exercise.name }))
+                  : [{ value: '', label: 'No exercises available' }]
+              }
+            />
+            <FormField
+              type="select"
+              label="Preference"
+              name="shouldAvoid"
+              form={form}
+              options={[
+                { value: false, label: 'Prefer this exercise' },
+                { value: true, label: 'Ignore this exercise' },
+              ]}
             />
           </Box>
         )}

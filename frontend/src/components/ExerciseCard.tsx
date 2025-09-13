@@ -10,6 +10,7 @@ import * as React from 'react';
 import { Link } from 'react-router';
 
 import { BinaryTag } from './BinaryTag';
+import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import type { Exercise } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
 
@@ -77,8 +78,8 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
         </Link>
 
         <Stack spacing={2} sx={{ flex: 1 }}>
-          {/* Exercise Type */}
-          <Box>
+          {/* Exercise Type and Preference Controls */}
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
             <Chip
               label={`${capitalizeEachWord(exercise.movement_type)} Exercise`}
               color="primary"
@@ -87,6 +88,11 @@ export function ExerciseCard(props: ExerciseCardProps): React.ReactElement<Exerc
                 fontWeight: 600,
                 borderRadius: 2,
               }}
+            />
+            <ExercisePreferenceControls
+              exerciseName={exercise.name}
+              variant="icon"
+              size="small"
             />
           </Box>
 

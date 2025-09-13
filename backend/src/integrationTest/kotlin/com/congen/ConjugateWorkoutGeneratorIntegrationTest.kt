@@ -196,13 +196,13 @@ class ConjugateWorkoutGeneratorIntegrationTest : BaseIntegrationTest() {
         // Exercises already exist in migrations
 
         // Add exercise preferences (different exercises to avoid duplicate key constraint)
-        webTestClient.post()
+        webTestClient.put()
             .uri("/api/v1/user_exercise_preference/?user_id=$userId&exercise_name=Safety Bar Squat&should_avoid=true")
             .header("Authorization", "Bearer $userToken")
             .exchange()
             .expectStatus().isOk()
 
-        webTestClient.post()
+        webTestClient.put()
             .uri("/api/v1/user_exercise_preference/?user_id=$userId&exercise_name=Deadlift&should_avoid=false")
             .header("Authorization", "Bearer $userToken")
             .exchange()

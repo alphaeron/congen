@@ -73,9 +73,10 @@ class ExerciseSelectionServiceTest {
 
     @Test
     fun `determineWeakMuscles should return default weak muscles`() {
-        val result = exerciseSelectionService.determineWeakMuscles()
+        val dayType = "upper_body"
+        val result = exerciseSelectionService.determineWeakMuscles(dayType)
 
-        assert(result == ConjugateConstants.DEFAULT_WEAK_MUSCLES)
+        assert(result == ConjugateConstants.getWeakMusclesForDayType(dayType))
     }
 
     @Test

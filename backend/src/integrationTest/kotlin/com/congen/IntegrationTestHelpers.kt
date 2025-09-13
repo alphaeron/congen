@@ -332,7 +332,7 @@ object IntegrationTestHelpers {
         token: String? = null
     ) {
         val request =
-            webTestClient.post()
+            webTestClient.put()
                 .uri(
                     "/api/v1/user_exercise_preference/?user_id=$keycloakId" +
                         "&exercise_name=$exerciseName" +

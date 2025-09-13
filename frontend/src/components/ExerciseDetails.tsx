@@ -1,5 +1,6 @@
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
+import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Grid from '@mui/material/Grid';
@@ -12,6 +13,7 @@ import { createEditor } from 'slate';
 import { Slate, Editable, withReact } from 'slate-react';
 
 import { BinaryTag } from './BinaryTag';
+import { ExercisePreferenceControls } from './ExercisePreferenceControls';
 import { LoadingSpinner } from './LoadingSpinner';
 import { getIndividualEquipment } from '../api/equipment';
 import { getIndividualExercise, getExerciseMuscles, getExerciseEquipment } from '../api/exercise';
@@ -42,10 +44,8 @@ export function ExerciseDetails(
     isError: isExerciseError,
   } = useApiGet<Exercise>(
     [`individualExercise${props.exerciseName}`],
-    getIndividualExercise,
+    (exerciseName: unknown) => getIndividualExercise(exerciseName as string),
     {
-      enabled: true,
-      refetchOnWindowFocus: true,
       retry: 1,
     },
     [props.exerciseName]
@@ -58,10 +58,8 @@ export function ExerciseDetails(
     isError: isExerciseMuscleError,
   } = useApiGet<ExerciseMuscle[]>(
     [`exerciseMuscle${props.exerciseName}`],
-    getExerciseMuscles,
+    (exerciseName: unknown) => getExerciseMuscles(exerciseName as string),
     {
-      enabled: true,
-      refetchOnWindowFocus: true,
       retry: 1,
     },
     [props.exerciseName]
@@ -72,13 +70,13 @@ export function ExerciseDetails(
     isLoading: isMusclesLoading,
     isError: isMusclesError,
   } = useApiGet<Muscle[]>(
-    [`muscles${props.exerciseName}`, exerciseMuscles],
-    async (): Promise<Muscle[]> =>
-      Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name))),
+    [`muscles${props.exerciseName}`, exerciseMuscles?.map(m => m.muscle_name).join(',') || ''],
+    async (): Promise<Muscle[]> => {
+      if (!exerciseMuscles || exerciseMuscles.length === 0) return [];
+      return Promise.all(exerciseMuscles.map(element => getIndividualMuscle(element.muscle_name)));
+    },
     {
-      refetchOnWindowFocus: true,
       retry: 1,
-      enabled: exerciseMuscles && exerciseMuscles.length > 0,
     }
   );
 
@@ -89,10 +87,8 @@ export function ExerciseDetails(
     isError: isExerciseEquipmentError,
   } = useApiGet<ExerciseEquipment[]>(
     [`exerciseEquipment${props.exerciseName}`],
-    getExerciseEquipment,
+    (exerciseName: unknown) => getExerciseEquipment(exerciseName as string),
     {
-      enabled: true,
-      refetchOnWindowFocus: true,
       retry: 1,
     },
     [props.exerciseName]
@@ -103,13 +99,13 @@ export function ExerciseDetails(
     isLoading: isEquipmentLoading,
     isError: isEquipmentError,
   } = useApiGet<Equipment[]>(
-    [`equipment${props.exerciseName}`, exerciseEquipment],
-    async (): Promise<Equipment[]> =>
-      Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name))),
+    [`equipment${props.exerciseName}`, exerciseEquipment?.map(e => e.equipment_name).join(',') || ''],
+    async (): Promise<Equipment[]> => {
+      if (!exerciseEquipment || exerciseEquipment.length === 0) return [];
+      return Promise.all(exerciseEquipment.map(element => getIndividualEquipment(element.equipment_name)));
+    },
     {
-      refetchOnWindowFocus: true,
       retry: 1,
-      enabled: exerciseEquipment && exerciseEquipment.length > 0,
     }
   );
 
@@ -178,9 +174,16 @@ export function ExerciseDetails(
   } else {
     return (
       <React.Fragment>
-        <Typography variant="h1" gutterBottom={true}>
-          {exercise.name}
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+          <Typography variant="h1" gutterBottom={true}>
+            {exercise.name}
+          </Typography>
+          <ExercisePreferenceControls
+            exerciseName={exercise.name}
+            variant="segmented"
+            size="medium"
+          />
+        </Box>
         <Grid container={true} spacing={2}>
           <Grid size={{ xs: 12 }}>
             <Stack direction="row" spacing={2}>
@@ -215,7 +218,6 @@ export function ExerciseDetails(
                 editor={editor}
                 initialValue={[
                   {
-                    type: 'paragraph',
                     children: [
                       {
                         text: exercise.description,

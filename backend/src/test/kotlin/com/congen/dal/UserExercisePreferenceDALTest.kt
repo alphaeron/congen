@@ -1,6 +1,7 @@
 package com.congen.dal
 
 import com.congen.client.PostgresClient
+import com.congen.exceptions.NoResultsFoundException
 import com.congen.mockUserExercisePreference
 import com.congen.model.UserExercisePreference
 import org.junit.jupiter.api.BeforeEach
@@ -62,7 +63,52 @@ class UserExercisePreferenceDALTest {
     }
 
     @Test
-    fun `insertUserExercisePreference should return inserted user exercise preference`() {
+    fun `upsertUserExercisePreference should return updated user exercise preference when exists`() {
+        whenever(
+            postgresClient.update<UserExercisePreference>(
+                """
+                UPDATE user_exercise_preference
+                SET should_avoid = $3
+                WHERE user_id = $1 AND exercise_name = $2
+                """.trimIndent(),
+                userExercisePreference.userId,
+                userExercisePreference.exerciseName,
+                userExercisePreference.shouldAvoid,
+            ),
+        ).thenReturn(Mono.just(userExercisePreference))
+        val result =
+            userExercisePreferenceDAL.upsertUserExercisePreference(
+                userExercisePreference.userId,
+                userExercisePreference.exerciseName,
+                userExercisePreference.shouldAvoid
+            )
+        StepVerifier.create(result).expectNext(userExercisePreference).verifyComplete()
+        verify(postgresClient).update<UserExercisePreference>(
+            """
+            UPDATE user_exercise_preference
+            SET should_avoid = $3
+            WHERE user_id = $1 AND exercise_name = $2
+            """.trimIndent(),
+            userExercisePreference.userId,
+            userExercisePreference.exerciseName,
+            userExercisePreference.shouldAvoid,
+        )
+    }
+
+    @Test
+    fun `upsertUserExercisePreference should return inserted user exercise preference when not exists`() {
+        whenever(
+            postgresClient.update<UserExercisePreference>(
+                """
+                UPDATE user_exercise_preference
+                SET should_avoid = $3
+                WHERE user_id = $1 AND exercise_name = $2
+                """.trimIndent(),
+                userExercisePreference.userId,
+                userExercisePreference.exerciseName,
+                userExercisePreference.shouldAvoid,
+            ),
+        ).thenReturn(Mono.error(NoResultsFoundException("No results found")))
         whenever(
             postgresClient.update<UserExercisePreference>(
                 """
@@ -77,12 +123,22 @@ class UserExercisePreferenceDALTest {
             ),
         ).thenReturn(Mono.just(userExercisePreference))
         val result =
-            userExercisePreferenceDAL.insertUserExercisePreference(
+            userExercisePreferenceDAL.upsertUserExercisePreference(
                 userExercisePreference.userId,
                 userExercisePreference.exerciseName,
                 userExercisePreference.shouldAvoid
             )
         StepVerifier.create(result).expectNext(userExercisePreference).verifyComplete()
+        verify(postgresClient).update<UserExercisePreference>(
+            """
+            UPDATE user_exercise_preference
+            SET should_avoid = $3
+            WHERE user_id = $1 AND exercise_name = $2
+            """.trimIndent(),
+            userExercisePreference.userId,
+            userExercisePreference.exerciseName,
+            userExercisePreference.shouldAvoid,
+        )
         verify(postgresClient).update<UserExercisePreference>(
             """
             INSERT INTO user_exercise_preference
@@ -93,40 +149,6 @@ class UserExercisePreferenceDALTest {
             userExercisePreference.userId,
             userExercisePreference.exerciseName,
             userExercisePreference.shouldAvoid,
-        )
-    }
-
-    @Test
-    fun `updateUserExercisePreference should return updated user exercise preference`() {
-        val updatedPreference = mockUserExercisePreference(shouldAvoid = false)
-        whenever(
-            postgresClient.update<UserExercisePreference>(
-                """
-                UPDATE user_exercise_preference
-                SET should_avoid=$3
-                WHERE user_id=$1 AND exercise_name=$2
-                """.trimIndent(),
-                updatedPreference.userId,
-                updatedPreference.exerciseName,
-                updatedPreference.shouldAvoid,
-            ),
-        ).thenReturn(Mono.just(updatedPreference))
-        val result =
-            userExercisePreferenceDAL.updateUserExercisePreference(
-                updatedPreference.userId,
-                updatedPreference.exerciseName,
-                updatedPreference.shouldAvoid
-            )
-        StepVerifier.create(result).expectNext(updatedPreference).verifyComplete()
-        verify(postgresClient).update<UserExercisePreference>(
-            """
-            UPDATE user_exercise_preference
-            SET should_avoid=$3
-            WHERE user_id=$1 AND exercise_name=$2
-            """.trimIndent(),
-            updatedPreference.userId,
-            updatedPreference.exerciseName,
-            updatedPreference.shouldAvoid,
         )
     }
 

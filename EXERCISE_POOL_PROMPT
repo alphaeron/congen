@@ -1,3 +1,0 @@
-add ability to add an exercise preference from the exercise card, the exercise details page, and add a section on the workout preferences for exercise preferences as well.  there are the two statuses we need to be able to set as well, prefer and ignore, corresponding to the boolean property in the exercise preference object.
-
-View current exercise weight preferences in dashboard, dive in from the count displayed
