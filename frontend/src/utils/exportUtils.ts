@@ -73,10 +73,10 @@ const prepareWorkoutTableData = (
   
   workout.stages.forEach((stage) => {
     // Add stage name as a full-width row
-    tableData.push([stage.name, '', '', '', '', '']);
+    tableData.push([stage.stage.name, '', '', '', '', '']);
     
     stage.exercises.forEach((exercise) => {
-      const exerciseName = exercise.exercise_name;
+      const exerciseName = exercise.exercise.exercise_name;
       const totalSets = exercise.set_schemes.length;
       
       // Get the first set scheme for reps, weight, and rest (assuming they're consistent)
@@ -88,8 +88,8 @@ const prepareWorkoutTableData = (
       tableData.push([
         exerciseName,
         totalSets.toString(),
-        firstSetScheme.target_rep_count.toString(),
-        formatWeightWithUnit(firstSetScheme.target_weight, weightUnit as 'KG' | 'LBS'),
+        firstSetScheme.target_rep_count?.toString() || '0',
+        formatWeightWithUnit(firstSetScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
         firstSetScheme.rest_seconds?.toString() || '0',
         firstSetScheme.notes || ''
       ]);
