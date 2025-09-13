@@ -204,7 +204,7 @@ const addPDFTable = (
   
   // Return actual final Y position with proper spacing after table
   const finalY = (pdf as any).lastAutoTable?.finalY || (startY + (tableData.length * 6) + 20);
-  return finalY + 8; // Add spacing after table
+  return finalY + 4; // Reduced spacing after table
 };
 
 /**
@@ -703,17 +703,22 @@ export const printProgramWorkouts = async (
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text(`Week ${week}`, 20, currentY);
-    currentY += 8;
+    currentY += 16; // More space after week header
     
     // Sort workouts by day number
     const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
     
     // Add each day with its table
-    sortedWorkouts.forEach((workout) => {
+    sortedWorkouts.forEach((workout, index) => {
       // Check if we need a new page for this day
       if (currentY > 200) {
         pdf.addPage();
         currentY = 20;
+      }
+      
+      // Add consistent spacing before day title (except for first day)
+      if (index > 0) {
+        currentY += 8; // Consistent spacing between days
       }
       
       // Prepare and add table
