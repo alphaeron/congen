@@ -11,15 +11,20 @@ import type {
 
 // Mock ExcelJS
 jest.mock('exceljs', () => {
+  const mockRow = {
+    font: {},
+    alignment: {},
+    fill: {},
+  };
+  
   const mockWorkbook = {
     addWorksheet: jest.fn(() => ({
-      addRow: jest.fn(),
-      getRow: jest.fn(() => ({
-        font: {},
-      })),
+      addRow: jest.fn(() => mockRow),
+      getRow: jest.fn(() => mockRow),
       getColumn: jest.fn(() => ({
         width: 0,
       })),
+      mergeCells: jest.fn(),
       columns: {
         forEach: jest.fn(),
       },
@@ -43,6 +48,7 @@ jest.mock('jspdf', () => {
       save: jest.fn(),
       setFontSize: jest.fn(),
       setFont: jest.fn(),
+      setTextColor: jest.fn(),
       text: jest.fn(),
       output: jest.fn(() => ({
         blob: jest.fn(() => new Blob(['test'], { type: 'application/pdf' })),

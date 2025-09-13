@@ -23,43 +23,52 @@ const formatWeightWithUnit = (weight: number, unit: 'KG' | 'LBS'): string => {
 };
 
 /**
- * Common PDF styling configuration
+ * Modern Congen PDF styling configuration
  */
 const PDF_STYLES = {
-  fontSize: 8,
-  cellPadding: 2,
+  fontSize: 9,
+  cellPadding: 3,
   headStyles: {
-    fillColor: [41, 128, 185],
+    fillColor: [14, 165, 233], // Congen brand blue #0ea5e9
     textColor: 255,
     fontStyle: 'bold' as const,
+    fontSize: 9,
+    halign: 'center' as const,
+    valign: 'middle' as const,
+    cellPadding: 4, // Match section row padding
   },
-  alternateRowStyles: {
-    fillColor: [245, 245, 245],
+  // Row styling is handled in didParseCell callback
+  // Column styles will be defined in the autoTable call
+  margin: { left: 20, right: 20, top: 20, bottom: 20 },
+  styles: {
+    fontSize: 9,
+    cellPadding: 3,
+    lineColor: [226, 232, 240], // Light gray border
+    lineWidth: 0.5,
+    valign: 'middle' as const,
   },
-  columnStyles: {
-    0: { cellWidth: 50 }, // Exercise
-    1: { cellWidth: 12 }, // Sets
-    2: { cellWidth: 12 }, // Reps
-    3: { cellWidth: 18 }, // Weight
-    4: { cellWidth: 18 }, // Rest
-    5: { cellWidth: 30 }, // Notes
-  },
-  margin: { left: 20, right: 20 },
+  tableLineColor: [226, 232, 240],
+  tableLineWidth: 0.5,
 };
 
 /**
- * Common Excel styling configuration
+ * Modern Congen Excel styling configuration
  */
 const EXCEL_STYLES = {
-  titleFont: { bold: true, size: 16 },
+  titleFont: { bold: true, size: 18, color: { argb: 'FF0EA5E9' } }, // Congen brand blue
+  headerFont: { bold: true, size: 11, color: { argb: 'FFFFFFFF' } },
+  stageFont: { bold: true, size: 10, color: { argb: 'FF0EA5E9' } }, // Bold stage names
+  bodyFont: { size: 10 },
   columnWidths: {
-    1: 30, // Exercise column
-    2: 8,  // Sets column
-    3: 8,  // Reps column
-    4: 12, // Weight column
-    5: 12, // Rest column
-    6: 20, // Notes column
+    1: 35, // Exercise column
+    2: 10, // Sets column
+    3: 10, // Reps column
+    4: 15, // Weight column
+    5: 15, // Rest column
+    6: 25, // Notes column
   },
+  headerFill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF0EA5E9' } },
+  alternateFill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFF0F9FF' } },
 };
 
 /**
@@ -100,7 +109,7 @@ const prepareWorkoutTableData = (
 };
 
 /**
- * Add PDF table with common styling
+ * Add PDF table with modern Congen styling
  */
 const addPDFTable = (
   pdf: jsPDF,
@@ -111,44 +120,134 @@ const addPDFTable = (
   const tableHeaders = ['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
   
   if (title) {
-    pdf.setFontSize(12);
+    pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
-    pdf.text(title, 25, startY);
-    startY += 8;
+    pdf.setTextColor(14, 165, 233); // Congen brand blue
+    pdf.text(title, 20, startY); // Align with table left margin
+    pdf.setTextColor(0, 0, 0); // Reset to black
+    startY += 8; // Consistent spacing after title
   }
   
-  autoTable(pdf, {
+  // Keep original table data for processing
+  const processedTableData = tableData;
+  
+  const result = autoTable(pdf, {
     head: [tableHeaders],
-    body: tableData,
+    body: processedTableData,
     startY,
     ...PDF_STYLES,
+    tableLineColor: [226, 232, 240],
+    tableLineWidth: 0.5,
+    showHead: 'everyPage',
+    showFoot: 'never',
+    // Use full available width
+    tableWidth: '100%',
+    // Use percentage-based column widths that fill the entire available space
+    columnStyles: {
+      0: { cellWidth: '42%', halign: 'left' as const }, // Exercise
+      1: { cellWidth: '12%', halign: 'center' as const }, // Sets
+      2: { cellWidth: '12%', halign: 'center' as const }, // Reps
+      3: { cellWidth: '15%', halign: 'center' as const }, // Weight
+      4: { cellWidth: '15%', halign: 'center' as const }, // Rest
+      5: { cellWidth: '19%', halign: 'left' as const }, // Notes
+    },
+    didParseCell: (data: any) => {
+      // Don't modify header rows - let headStyles handle them
+      if (data.section === 'head') {
+        return;
+      }
+      
+      // Check if this is a stage name row (has empty cells in other columns)
+      const isStageRow = data.row.raw[1] === '' && data.row.raw[2] === '' && 
+                        data.row.raw[3] === '' && data.row.raw[4] === '' && data.row.raw[5] === '';
+      
+      if (isStageRow) {
+        if (data.column.index === 0) {
+          // Style the stage name cell
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fontSize = 10;
+          data.cell.styles.textColor = [14, 165, 233]; // Congen brand blue
+          data.cell.styles.fillColor = [240, 249, 255]; // Light blue background
+          data.cell.styles.cellPadding = 4;
+          data.cell.styles.halign = 'left';
+          data.cell.styles.valign = 'middle';
+        } else {
+          // Hide other cells in stage name rows
+          data.cell.styles.fillColor = [240, 249, 255];
+          data.cell.styles.textColor = [240, 249, 255];
+        }
+      } else {
+        // Exercise rows should have white background
+        data.cell.styles.fillColor = [255, 255, 255]; // White background
+        data.cell.styles.textColor = [0, 0, 0]; // Black text
+      }
+    },
   });
   
-  // Return estimated Y position (fallback for tests)
-  return startY + (tableData.length * 8) + 20;
+  // Return actual final Y position with proper spacing after table
+  const finalY = (pdf as any).lastAutoTable?.finalY || (startY + (tableData.length * 6) + 20);
+  return finalY + 8; // Add spacing after table
 };
 
 /**
- * Add Excel table with common styling
+ * Add Excel table with modern Congen styling
  */
 const addExcelTable = (
   sheet: ExcelJS.Worksheet,
   tableData: string[][],
   title?: string
 ): void => {
+  let headerRowIndex = 1;
+  
   if (title) {
-    sheet.addRow([title]);
-    sheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
-  } else {
-    sheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
+    const titleRow = sheet.addRow([title]);
+    titleRow.font = EXCEL_STYLES.titleFont;
+    titleRow.alignment = { horizontal: 'center', vertical: 'middle' };
+    titleRow.height = 25; // Consistent row height
+    headerRowIndex = 2;
   }
   
-  tableData.forEach(row => sheet.addRow(row));
+  // Add header row
+  const headerRow = sheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
+  headerRow.font = EXCEL_STYLES.headerFont;
+  headerRow.fill = EXCEL_STYLES.headerFill;
+  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
+  headerRow.height = 20; // Consistent row height
   
-  // Style the sheet
-  if (title) {
-    sheet.getRow(1).font = EXCEL_STYLES.titleFont;
-  }
+  // Add data rows with styling
+  tableData.forEach((row, index) => {
+    const dataRow = sheet.addRow(row);
+    dataRow.height = 18; // Consistent row height
+    
+    // Check if this is a stage name row (has empty cells in other columns)
+    const isStageRow = row[1] === '' && row[2] === '' && row[3] === '' && row[4] === '' && row[5] === '';
+    
+    if (isStageRow) {
+      // Style stage name rows - merge cells to span full width
+      dataRow.font = EXCEL_STYLES.stageFont;
+      dataRow.fill = EXCEL_STYLES.alternateFill;
+      dataRow.alignment = { horizontal: 'left', vertical: 'middle' };
+      
+      // Merge cells to span the full width (columns 1-6)
+      sheet.mergeCells(index + (title ? 3 : 2), 1, index + (title ? 3 : 2), 6);
+    } else {
+      // Style regular exercise rows
+      dataRow.font = EXCEL_STYLES.bodyFont;
+      if (index % 2 === 0) {
+        dataRow.fill = EXCEL_STYLES.alternateFill;
+      }
+      dataRow.alignment = { 
+        horizontal: 'left',
+        vertical: 'middle'
+      };
+    }
+  });
+  
+  // Add spacing after table
+  sheet.addRow([]);
+  sheet.addRow([]);
+  
+  // Set column widths
   Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
     sheet.getColumn(parseInt(col)).width = width;
   });
@@ -217,21 +316,23 @@ export const exportWorkoutToPDF = async (
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
   
-  // Add title
-  pdf.setFontSize(18);
+  // Add modern title with Congen styling
+  pdf.setFontSize(20);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(options.title, 20, 20);
+  pdf.setTextColor(14, 165, 233); // Congen brand blue
+  pdf.text(options.title, 20, 25);
   
-  // Add workout info
-  pdf.setFontSize(12);
+  // Add workout info with modern styling
+  pdf.setFontSize(11);
   pdf.setFont('helvetica', 'normal');
-  pdf.text(`Day: ${workoutData.workout.day_number}`, 20, 30);
-  pdf.text(`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`, 20, 35);
-  pdf.text(`Total Stages: ${workoutData.stages.length}`, 20, 40);
+  pdf.setTextColor(64, 64, 64); // Modern gray
+  pdf.text(`Day: ${workoutData.workout.day_number}`, 20, 35);
+  pdf.text(`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`, 20, 40);
+  pdf.text(`Total Stages: ${workoutData.stages.length}`, 20, 45);
   
   // Prepare and add table
   const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
-  addPDFTable(pdf, tableData, 50);
+  addPDFTable(pdf, tableData, 55);
   
   downloadPDFFile(pdf, options.filename);
 };
@@ -247,14 +348,19 @@ export const exportWorkoutToXLSX = async (
   const workbook = new ExcelJS.Workbook();
   const workoutSheet = workbook.addWorksheet('Workout Details');
   
-  // Add title
-  workoutSheet.addRow([options.title]);
+  // Add modern title
+  const titleRow = workoutSheet.addRow([options.title]);
+  titleRow.font = EXCEL_STYLES.titleFont;
+  titleRow.alignment = { horizontal: 'center' };
   workoutSheet.addRow([]); // Empty row for spacing
   
-  // Add workout info
-  workoutSheet.addRow([`Day: ${workoutData.workout.day_number}`]);
-  workoutSheet.addRow([`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`]);
-  workoutSheet.addRow([`Total Stages: ${workoutData.stages.length}`]);
+  // Add workout info with modern styling
+  const infoRow1 = workoutSheet.addRow([`Day: ${workoutData.workout.day_number}`]);
+  infoRow1.font = EXCEL_STYLES.bodyFont;
+  const infoRow2 = workoutSheet.addRow([`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`]);
+  infoRow2.font = EXCEL_STYLES.bodyFont;
+  const infoRow3 = workoutSheet.addRow([`Total Stages: ${workoutData.stages.length}`]);
+  infoRow3.font = EXCEL_STYLES.bodyFont;
   workoutSheet.addRow([]); // Empty row for spacing
   
   // Prepare and add table
@@ -331,23 +437,9 @@ export const exportWeekToXLSX = async (
   const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
   
   sortedWorkouts.forEach((workout) => {
-    // Add day header
-    weekSheet.addRow([`Day ${workout.workout.day_number}`]);
-    weekSheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
-    
-    // Prepare and add table data
+    // Prepare and add table data using the new function
     const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-    tableData.forEach(row => weekSheet.addRow(row));
-    
-    // Add spacing between days
-    weekSheet.addRow([]);
-    weekSheet.addRow([]);
-  });
-  
-  // Style the sheet
-  weekSheet.getRow(1).font = EXCEL_STYLES.titleFont;
-  Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
-    weekSheet.getColumn(parseInt(col)).width = width;
+    addExcelTable(weekSheet, tableData, `Day ${workout.workout.day_number}`);
   });
   
   await downloadExcelFile(workbook, options.filename);
@@ -378,7 +470,7 @@ export const exportProgramToPDF = async (
     workoutsByWeek.get(weekNumber)!.push(workout);
   });
 
-  let currentY = 30;
+  let currentY = 30; // Consistent spacing after title
   
   // Sort weeks
   const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
@@ -397,22 +489,28 @@ export const exportProgramToPDF = async (
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text(`Week ${weekNumber}`, 20, currentY);
-    currentY += 8;
+    currentY += 8; // Consistent spacing after week header
     
     // Sort workouts by day number
     const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
     
     // Create a table for each workout in this week
-    sortedWorkouts.forEach((workout) => {
+    sortedWorkouts.forEach((workout, index) => {
       // Check if we need a new page for this day
       if (currentY > 200) {
         pdf.addPage();
         currentY = 20;
       }
       
+      // Add spacing between days (except for first day)
+      if (index > 0) {
+        currentY += 8; // Consistent spacing between days
+      }
+      
       // Prepare and add table
       const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
       currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
+      currentY += 8; // Add spacing after table to prevent overlap
     });
   });
   
@@ -455,23 +553,9 @@ export const exportProgramToXLSX = async (
     const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
     
     sortedWorkouts.forEach((workout) => {
-      // Add day header
-      weekSheet.addRow([`Day ${workout.workout.day_number}`]);
-      weekSheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
-      
-      // Prepare and add table data
+      // Prepare and add table data using the new function
       const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-      tableData.forEach(row => weekSheet.addRow(row));
-      
-      // Add spacing between days
-      weekSheet.addRow([]);
-      weekSheet.addRow([]);
-    });
-
-    // Style the sheet
-    weekSheet.getRow(1).font = EXCEL_STYLES.titleFont;
-    Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
-      weekSheet.getColumn(parseInt(col)).width = width;
+      addExcelTable(weekSheet, tableData, `Day ${workout.workout.day_number}`);
     });
   });
   
