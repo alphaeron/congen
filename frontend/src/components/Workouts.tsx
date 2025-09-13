@@ -18,6 +18,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { ConfirmationDialog } from './ConfirmationDialog';
+import { ExportButtons } from './ExportButtons';
 import { LoadingBackdrop } from './LoadingBackdrop';
 import { LoadingSpinner } from './LoadingSpinner';
 import { StreamChart } from './StreamChart';
@@ -39,6 +40,7 @@ import type {
 } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
+import { exportProgramToPDF, exportProgramToXLSX } from '../utils/exportUtils';
 
 interface WorkoutsProps {
   user: User;
@@ -259,6 +261,29 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     }
   };
 
+  // Export handlers
+  const handleExportPDF = async () => {
+    if (!activeProgram || !userDataExport) return;
+    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
+    if (!programData) return;
+    
+    await exportProgramToPDF(programData, exerciseData, weightUnitPreferences, {
+      title: activeProgram.program.name,
+      filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
+    });
+  };
+
+  const handleExportXLSX = async () => {
+    if (!activeProgram || !userDataExport) return;
+    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
+    if (!programData) return;
+    
+    await exportProgramToXLSX(programData, exerciseData, weightUnitPreferences, {
+      title: activeProgram.program.name,
+      filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
+    });
+  };
+
   // If a week is selected, show the WorkoutWeekDetails component
   if (selectedWeek) {
     return (
@@ -292,7 +317,20 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
           </CardContent>
         </Card>
       ) : (
-        <Box sx={{ mt: 3, display: 'flex', gap: 3 }}>
+        <Box>
+          {/* Export buttons */}
+          {weeks.length > 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 2 }}>
+              <ExportButtons
+                onExportPDF={handleExportPDF}
+                onExportXLSX={handleExportXLSX}
+                disabled={weeks.length === 0}
+              />
+            </Box>
+          )}
+          
+          <Box id="workouts-overview-content">
+            <Box sx={{ mt: 3, display: 'flex', gap: 3 }}>
           {/* Week List - Slides right when week is selected */}
           <Slide direction="right" in={!selectedWeek} mountOnEnter unmountOnExit>
             <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -364,6 +402,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
               </Grid>
             </Box>
           </Slide>
+            </Box>
+          </Box>
         </Box>
       )}
 

@@ -16,6 +16,7 @@ import { useSnackbar } from 'notistack';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
+import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { RadarChart } from './RadarChart';
 import { SunburstChart } from './SunburstChart';
@@ -33,6 +34,7 @@ import type {
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
+import { exportWeekToPDF, exportWeekToXLSX } from '../utils/exportUtils';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -271,6 +273,23 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     []
   );
 
+  // Export handlers
+  const handleExportPDF = async () => {
+    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+    await exportWeekToPDF(weekWorkoutsData, exerciseData, weightUnitPreferences, {
+      title: `Week ${weekNumber}`,
+      filename: `week-${weekNumber}-workouts`,
+    });
+  };
+
+  const handleExportXLSX = async () => {
+    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+    await exportWeekToXLSX(weekWorkoutsData, exerciseData, weightUnitPreferences, {
+      title: `Week ${weekNumber}`,
+      filename: `week-${weekNumber}-workouts`,
+    });
+  };
+
   // Show loading state while data is being fetched
   if (isLoading) {
     return (
@@ -297,7 +316,20 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           </CardContent>
         </Card>
       ) : (
-        <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
+        <Box>
+          {/* Export buttons - only show when not viewing individual workout */}
+          {!selectedWorkoutId && weekWorkouts.length > 0 && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 2 }}>
+              <ExportButtons
+                onExportPDF={handleExportPDF}
+                onExportXLSX={handleExportXLSX}
+                disabled={weekWorkouts.length === 0}
+              />
+            </Box>
+          )}
+          
+          <Box id="week-details-content">
+            <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
           {/* Workout List and Details - Full width when workout selected, 2/3 when not */}
           <Grid size={{ xs: 12, lg: selectedWorkoutId ? 12 : 8 }}>
             <Slide direction="right" in={!selectedWorkoutId} mountOnEnter unmountOnExit>
@@ -401,7 +433,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
               </Box>
             </Grid>
           )}
-        </Grid>
+            </Grid>
+          </Box>
+        </Box>
       )}
     </React.Fragment>
   );

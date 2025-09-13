@@ -15,6 +15,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 
 import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
+import { ExportButtons } from './ExportButtons';
 import { LoadingSpinner } from './LoadingSpinner';
 import { SunburstChart } from './SunburstChart';
 import { getExerciseMuscle } from '../api/exerciseMuscle';
@@ -23,6 +24,7 @@ import type { UserDataExport, ExerciseMuscle, UserWeightUnitPreference } from '.
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
+import { exportWorkoutToPDF, exportWorkoutToXLSX } from '../utils/exportUtils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -78,6 +80,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const [weightUnitPreferences, setWeightUnitPreferences] = useState<UserWeightUnitPreference[]>(
     []
   );
+  const [exerciseData, setExerciseData] = useState<Map<string, any>>(new Map());
 
   useEffect(() => {
     const loadWorkoutDetails = async () => {
@@ -148,6 +151,25 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
         newSet.add(stageId);
       }
       return newSet;
+    });
+  };
+
+  // Export handlers
+  const handleExportPDF = async () => {
+    if (!workoutData) return;
+    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
+    await exportWorkoutToPDF(workoutData, exerciseData, weightUnitPreferences, {
+      title: workoutName,
+      filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
+    });
+  };
+
+  const handleExportXLSX = async () => {
+    if (!workoutData) return;
+    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
+    await exportWorkoutToXLSX(workoutData, exerciseData, weightUnitPreferences, {
+      title: workoutName,
+      filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
     });
   };
 
@@ -367,7 +389,17 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
-      <Grid container spacing={3} sx={{ height: '100%' }}>
+      {/* Export buttons */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 2 }}>
+        <ExportButtons
+          onExportPDF={handleExportPDF}
+          onExportXLSX={handleExportXLSX}
+          disabled={!workoutData}
+        />
+      </Box>
+      
+      <Box id="workout-detail-content">
+        <Grid container spacing={3} sx={{ height: '100%' }}>
         {/* Table Container - 2/3 width */}
         <Grid size={{ xs: 12, lg: 8 }}>
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
@@ -519,7 +551,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             />
           </Box>
         </Grid>
-      </Grid>
+        </Grid>
+      </Box>
     </Box>
   );
 };
