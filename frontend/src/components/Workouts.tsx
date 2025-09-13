@@ -40,7 +40,7 @@ import type {
 } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
-import { exportProgramToPDF, exportProgramToXLSX } from '../utils/exportUtils';
+import { exportProgramToPDF, exportProgramToXLSX, printProgramWorkouts } from '../utils/exportUtils';
 
 interface WorkoutsProps {
   user: User;
@@ -230,7 +230,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         borderColor: 'divider',
       }}
     >
-      <Breadcrumbs sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Breadcrumbs>
         {/* Show program name instead of "Workouts" */}
         {selectedWeek ? (
           <Link
@@ -251,7 +252,18 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
             Week {selectedWeek}
           </Typography>
         )}
-      </Breadcrumbs>
+        </Breadcrumbs>
+        
+        {/* Export buttons */}
+        {weeks.length > 0 && (
+          <ExportButtons
+            onExportPDF={handleExportPDF}
+            onExportXLSX={handleExportXLSX}
+            onPrint={handlePrint}
+            disabled={weeks.length === 0}
+          />
+        )}
+      </Box>
     </Box>
   );
 
@@ -267,7 +279,7 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
     if (!programData) return;
     
-    await exportProgramToPDF(programData, exerciseData, weightUnitPreferences, {
+    await exportProgramToPDF(programData, weightUnitPreferences, {
       title: activeProgram.program.name,
       filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
     });
@@ -278,7 +290,18 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
     if (!programData) return;
     
-    await exportProgramToXLSX(programData, exerciseData, weightUnitPreferences, {
+    await exportProgramToXLSX(programData, weightUnitPreferences, {
+      title: activeProgram.program.name,
+      filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
+    });
+  };
+
+  const handlePrint = async () => {
+    if (!activeProgram || !userDataExport) return;
+    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
+    if (!programData) return;
+    
+    await printProgramWorkouts(programData, weightUnitPreferences, {
       title: activeProgram.program.name,
       filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
     });
@@ -318,17 +341,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         </Card>
       ) : (
         <Box>
-          {/* Export buttons */}
-          {weeks.length > 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 2 }}>
-              <ExportButtons
-                onExportPDF={handleExportPDF}
-                onExportXLSX={handleExportXLSX}
-                disabled={weeks.length === 0}
-              />
-            </Box>
-          )}
-          
           <Box id="workouts-overview-content">
             <Box sx={{ mt: 3, display: 'flex', gap: 3 }}>
           {/* Week List - Slides right when week is selected */}

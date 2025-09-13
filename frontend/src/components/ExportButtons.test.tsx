@@ -5,16 +5,16 @@ import React from 'react';
 import { ExportButtons } from './ExportButtons';
 
 // Mock the export utilities
-jest.mock('../utils/exportUtils', () => ({
-  printElement: jest.fn(),
-}));
+jest.mock('../utils/exportUtils', () => ({}));
 
 const mockOnExportPDF = jest.fn();
 const mockOnExportXLSX = jest.fn();
+const mockOnPrint = jest.fn();
 
 const defaultProps = {
   onExportPDF: mockOnExportPDF,
   onExportXLSX: mockOnExportXLSX,
+  onPrint: mockOnPrint,
 };
 
 const renderWithSnackbar = (component: React.ReactElement) => {
@@ -80,9 +80,7 @@ describe('ExportButtons', () => {
     });
   });
 
-  it('calls printElement when Print option is selected', () => {
-    const { printElement } = require('../utils/exportUtils');
-    
+  it('calls onPrint when Print option is selected', async () => {
     renderWithSnackbar(<ExportButtons {...defaultProps} />);
     
     const exportButton = screen.getByRole('button', { name: /export options/i });
@@ -91,7 +89,9 @@ describe('ExportButtons', () => {
     const printOption = screen.getByText('Print');
     fireEvent.click(printOption);
     
-    expect(printElement).toHaveBeenCalledWith();
+    await waitFor(() => {
+      expect(mockOnPrint).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('disables button when disabled prop is true', () => {
@@ -167,17 +167,4 @@ describe('ExportButtons', () => {
     });
   });
 
-  it('calls printElement for print', () => {
-    const { printElement } = require('../utils/exportUtils');
-    
-    renderWithSnackbar(<ExportButtons {...defaultProps} />);
-    
-    const exportButton = screen.getByRole('button', { name: /export options/i });
-    fireEvent.click(exportButton);
-    
-    const printOption = screen.getByText('Print');
-    fireEvent.click(printOption);
-    
-    expect(printElement).toHaveBeenCalledWith();
-  });
 });

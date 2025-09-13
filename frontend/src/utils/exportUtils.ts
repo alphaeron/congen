@@ -1,32 +1,217 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import ExcelJS from 'exceljs';
 import type {
-  ProgramWithWorkouts,
   ProgrammedWorkoutWithStages,
-  WorkoutStageWithExercises,
-  ProgrammedExerciseWithSetSchemes,
-  SetScheme,
-  Exercise,
+  ProgramWithWorkouts,
   UserWeightUnitPreference,
 } from '../api/types';
-import { formatWeightWithUnit } from '../common/utils';
 
-/**
- * Export options for different export types
- */
 export interface ExportOptions {
   title: string;
   filename: string;
-  includeCharts?: boolean;
 }
+
+/**
+ * Format weight with unit
+ */
+const formatWeightWithUnit = (weight: number, unit: 'KG' | 'LBS'): string => {
+  if (unit === 'LBS') {
+    return `${(weight * 2.20462).toFixed(1)} lbs`;
+  }
+  return `${weight.toFixed(1)} kg`;
+};
+
+/**
+ * Common PDF styling configuration
+ */
+const PDF_STYLES = {
+  fontSize: 8,
+  cellPadding: 2,
+  headStyles: {
+    fillColor: [41, 128, 185],
+    textColor: 255,
+    fontStyle: 'bold' as const,
+  },
+  alternateRowStyles: {
+    fillColor: [245, 245, 245],
+  },
+  columnStyles: {
+    0: { cellWidth: 50 }, // Exercise
+    1: { cellWidth: 12 }, // Sets
+    2: { cellWidth: 12 }, // Reps
+    3: { cellWidth: 18 }, // Weight
+    4: { cellWidth: 18 }, // Rest
+    5: { cellWidth: 30 }, // Notes
+  },
+  margin: { left: 20, right: 20 },
+};
+
+/**
+ * Common Excel styling configuration
+ */
+const EXCEL_STYLES = {
+  titleFont: { bold: true, size: 16 },
+  columnWidths: {
+    1: 30, // Exercise column
+    2: 8,  // Sets column
+    3: 8,  // Reps column
+    4: 12, // Weight column
+    5: 12, // Rest column
+    6: 20, // Notes column
+  },
+};
+
+/**
+ * Prepare table data for a single workout
+ */
+const prepareWorkoutTableData = (
+  workout: ProgrammedWorkoutWithStages,
+  weightUnitPreferences: UserWeightUnitPreference[]
+): string[][] => {
+  const tableData: string[][] = [];
+  
+  workout.stages.forEach((stage) => {
+    // Add stage name as a full-width row
+    tableData.push([stage.name, '', '', '', '', '']);
+    
+    stage.exercises.forEach((exercise) => {
+      const exerciseName = exercise.exercise_name;
+      const totalSets = exercise.set_schemes.length;
+      
+      // Get the first set scheme for reps, weight, and rest (assuming they're consistent)
+      const firstSetScheme = exercise.set_schemes[0];
+      const weightUnit = weightUnitPreferences.find(
+        pref => pref.user_id === workout.workout.user_id
+      )?.preferred_unit || 'KG';
+      
+      tableData.push([
+        exerciseName,
+        totalSets.toString(),
+        firstSetScheme.target_rep_count.toString(),
+        formatWeightWithUnit(firstSetScheme.target_weight, weightUnit as 'KG' | 'LBS'),
+        firstSetScheme.rest_seconds?.toString() || '0',
+        firstSetScheme.notes || ''
+      ]);
+    });
+  });
+  
+  return tableData;
+};
+
+/**
+ * Add PDF table with common styling
+ */
+const addPDFTable = (
+  pdf: jsPDF,
+  tableData: string[][],
+  startY: number,
+  title?: string
+): number => {
+  const tableHeaders = ['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
+  
+  if (title) {
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(title, 25, startY);
+    startY += 8;
+  }
+  
+  autoTable(pdf, {
+    head: [tableHeaders],
+    body: tableData,
+    startY,
+    ...PDF_STYLES,
+  });
+  
+  // Return estimated Y position (fallback for tests)
+  return startY + (tableData.length * 8) + 20;
+};
+
+/**
+ * Add Excel table with common styling
+ */
+const addExcelTable = (
+  sheet: ExcelJS.Worksheet,
+  tableData: string[][],
+  title?: string
+): void => {
+  if (title) {
+    sheet.addRow([title]);
+    sheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
+  } else {
+    sheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
+  }
+  
+  tableData.forEach(row => sheet.addRow(row));
+  
+  // Style the sheet
+  if (title) {
+    sheet.getRow(1).font = EXCEL_STYLES.titleFont;
+  }
+  Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
+    sheet.getColumn(parseInt(col)).width = width;
+  });
+};
+
+/**
+ * Download Excel file
+ */
+const downloadExcelFile = async (
+  workbook: ExcelJS.Workbook,
+  filename: string
+): Promise<void> => {
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${filename}.xlsx`;
+  link.click();
+  window.URL.revokeObjectURL(url);
+};
+
+/**
+ * Download PDF file
+ */
+const downloadPDFFile = (pdf: jsPDF, filename: string): void => {
+  pdf.save(`${filename}.pdf`);
+};
+
+/**
+ * Open print dialog for PDF
+ */
+const openPrintDialog = async (pdf: jsPDF): Promise<void> => {
+  const pdfBlob = pdf.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  
+  try {
+    const printWindow = window.open(pdfUrl, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+        printWindow.close();
+      };
+    } else {
+      throw new Error('Popup blocked. PDF has been downloaded instead.');
+    }
+  } catch (error) {
+    // Fallback: download the PDF
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = 'workout.pdf';
+    link.click();
+    throw new Error('Popup blocked. PDF has been downloaded instead.');
+  } finally {
+    window.URL.revokeObjectURL(pdfUrl);
+  }
+};
 
 /**
  * Export a single workout to PDF
  */
 export const exportWorkoutToPDF = async (
   workoutData: ProgrammedWorkoutWithStages,
-  exerciseData: Map<string, Exercise>,
   weightUnitPreferences: UserWeightUnitPreference[],
   options: ExportOptions
 ): Promise<void> => {
@@ -44,119 +229,39 @@ export const exportWorkoutToPDF = async (
   pdf.text(`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`, 20, 35);
   pdf.text(`Total Stages: ${workoutData.stages.length}`, 20, 40);
   
-  // Prepare table data
-  const tableData: string[][] = [];
-  const tableHeaders = ['Stage', 'Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
+  // Prepare and add table
+  const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
+  addPDFTable(pdf, tableData, 50);
   
-  workoutData.stages.forEach((stage: WorkoutStageWithExercises, stageIndex: number) => {
-    stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
-      const weightUnit = weightUnitPreferences.find(
-        pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-      )?.preferred_unit || 'lbs';
-
-      exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
-        tableData.push([
-          (stageIndex + 1).toString(),
-          exerciseWithSchemes.exercise.exercise_name,
-          setScheme.set_number.toString(),
-          setScheme.target_rep_count?.toString() || '',
-          formatWeightWithUnit(setScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
-          setScheme.rest_seconds?.toString() || '',
-          ''
-        ]);
-      });
-    });
-  });
-
-  // Add table using autoTable
-  (pdf as any).autoTable({
-    head: [tableHeaders],
-    body: tableData,
-    startY: 50,
-    styles: {
-      fontSize: 10,
-      cellPadding: 3,
-    },
-    headStyles: {
-      fillColor: [66, 139, 202],
-      textColor: 255,
-      fontStyle: 'bold',
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245],
-    },
-    columnStyles: {
-      0: { cellWidth: 15 }, // Stage
-      1: { cellWidth: 50 }, // Exercise
-      2: { cellWidth: 15 }, // Sets
-      3: { cellWidth: 15 }, // Reps
-      4: { cellWidth: 20 }, // Weight
-      5: { cellWidth: 15 }, // Rest
-      6: { cellWidth: 30 }, // Notes
-    },
-    margin: { left: 20, right: 20 },
-  });
-
-  pdf.save(`${options.filename}.pdf`);
+  downloadPDFFile(pdf, options.filename);
 };
 
 /**
- * Export workout data to XLSX format
+ * Export a single workout to XLSX
  */
 export const exportWorkoutToXLSX = async (
   workoutData: ProgrammedWorkoutWithStages,
-  exerciseData: Map<string, Exercise>,
   weightUnitPreferences: UserWeightUnitPreference[],
   options: ExportOptions
 ): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
-  
-  // Create workout summary sheet
-  const summarySheet = workbook.addWorksheet('Summary');
-  summarySheet.addRow(['Workout Name', workoutData.workout.name]);
-  summarySheet.addRow(['Day Number', workoutData.workout.day_number]);
-  summarySheet.addRow(['Created At', new Date(workoutData.workout.created_at).toLocaleDateString()]);
-  summarySheet.addRow(['Total Stages', workoutData.stages.length]);
-
-  // Create detailed workout sheet
   const workoutSheet = workbook.addWorksheet('Workout Details');
-  workoutSheet.addRow(['Stage', 'Exercise', 'Sets', 'Reps', 'Weight', 'Rest (seconds)', 'Notes']);
-
-  workoutData.stages.forEach((stage: WorkoutStageWithExercises, stageIndex: number) => {
-    stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
-      const exercise = exerciseData.get(exerciseWithSchemes.exercise.exercise_name);
-      const weightUnit = weightUnitPreferences.find(
-        pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-      )?.preferred_unit || 'lbs';
-
-      exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
-        workoutSheet.addRow([
-          stageIndex + 1,
-          exerciseWithSchemes.exercise.exercise_name,
-          setScheme.set_number,
-          setScheme.target_rep_count || '',
-          formatWeightWithUnit(setScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
-          setScheme.rest_seconds || '',
-          ''
-        ]);
-      });
-    });
-  });
-
-  // Auto-fit columns
-  workoutSheet.columns.forEach(column => {
-    column.width = 15;
-  });
-
-  // Download the file
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${options.filename}.xlsx`;
-  link.click();
-  window.URL.revokeObjectURL(url);
+  
+  // Add title
+  workoutSheet.addRow([options.title]);
+  workoutSheet.addRow([]); // Empty row for spacing
+  
+  // Add workout info
+  workoutSheet.addRow([`Day: ${workoutData.workout.day_number}`]);
+  workoutSheet.addRow([`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`]);
+  workoutSheet.addRow([`Total Stages: ${workoutData.stages.length}`]);
+  workoutSheet.addRow([]); // Empty row for spacing
+  
+  // Prepare and add table
+  const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
+  addExcelTable(workoutSheet, tableData);
+  
+  await downloadExcelFile(workbook, options.filename);
 };
 
 /**
@@ -164,7 +269,6 @@ export const exportWorkoutToXLSX = async (
  */
 export const exportWeekToPDF = async (
   weekWorkouts: ProgrammedWorkoutWithStages[],
-  exerciseData: Map<string, Exercise>,
   weightUnitPreferences: UserWeightUnitPreference[],
   options: ExportOptions
 ): Promise<void> => {
@@ -196,120 +300,57 @@ export const exportWeekToPDF = async (
     pdf.text(`Workout ${workoutIndex + 1}: ${workout.workout.name}`, 20, currentY);
     currentY += 10;
     
-    // Prepare table data for this workout
-    const tableData: string[][] = [];
-    const tableHeaders = ['Stage', 'Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
-    
-    workout.stages.forEach((stage: WorkoutStageWithExercises, stageIndex: number) => {
-      stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
-        const weightUnit = weightUnitPreferences.find(
-          pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-        )?.preferred_unit || 'lbs';
-
-        exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
-          tableData.push([
-            (stageIndex + 1).toString(),
-            exerciseWithSchemes.exercise.exercise_name,
-            setScheme.set_number.toString(),
-            setScheme.target_rep_count?.toString() || '',
-            formatWeightWithUnit(setScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
-            setScheme.rest_seconds?.toString() || '',
-            ''
-          ]);
-        });
-      });
-    });
-
-    // Add table using autoTable
-    (pdf as any).autoTable({
-      head: [tableHeaders],
-      body: tableData,
-      startY: currentY,
-      styles: {
-        fontSize: 9,
-        cellPadding: 2,
-      },
-      headStyles: {
-        fillColor: [66, 139, 202],
-        textColor: 255,
-        fontStyle: 'bold',
-      },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
-      columnStyles: {
-        0: { cellWidth: 15 }, // Stage
-        1: { cellWidth: 50 }, // Exercise
-        2: { cellWidth: 15 }, // Sets
-        3: { cellWidth: 15 }, // Reps
-        4: { cellWidth: 20 }, // Weight
-        5: { cellWidth: 15 }, // Rest
-        6: { cellWidth: 30 }, // Notes
-      },
-      margin: { left: 20, right: 20 },
-    });
+    // Prepare and add table
+    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+    currentY = addPDFTable(pdf, tableData, currentY);
   });
-
-  pdf.save(`${options.filename}.pdf`);
+  
+  downloadPDFFile(pdf, options.filename);
 };
 
 /**
- * Export week workouts to XLSX format
+ * Export week workouts to XLSX
  */
 export const exportWeekToXLSX = async (
   weekWorkouts: ProgrammedWorkoutWithStages[],
-  exerciseData: Map<string, Exercise>,
   weightUnitPreferences: UserWeightUnitPreference[],
   options: ExportOptions
 ): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
+  const weekSheet = workbook.addWorksheet('Week Workouts');
   
-  // Create week summary sheet
-  const summarySheet = workbook.addWorksheet('Week Summary');
-  summarySheet.addRow(['Week Number', options.title]);
-  summarySheet.addRow(['Total Workouts', weekWorkouts.length]);
-  summarySheet.addRow(['Total Stages', weekWorkouts.reduce((acc, workout) => acc + workout.stages.length, 0)]);
-
-  // Create a sheet for each workout
-  weekWorkouts.forEach((workout, workoutIndex) => {
-    const workoutSheet = workbook.addWorksheet(`Workout ${workoutIndex + 1}`);
-    workoutSheet.addRow(['Stage', 'Exercise', 'Sets', 'Reps', 'Weight', 'Rest (seconds)', 'Notes']);
-
-    workout.stages.forEach((stage: WorkoutStageWithExercises, stageIndex: number) => {
-      stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
-        const weightUnit = weightUnitPreferences.find(
-          pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-        )?.preferred_unit || 'lbs';
-
-        exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
-          workoutSheet.addRow([
-            stageIndex + 1,
-            exerciseWithSchemes.exercise.exercise_name,
-            setScheme.set_number,
-            setScheme.target_rep_count || '',
-            formatWeightWithUnit(setScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
-            setScheme.rest_seconds || '',
-            ''
-          ]);
-        });
-      });
-    });
-
-    // Auto-fit columns
-    workoutSheet.columns.forEach(column => {
-      column.width = 15;
-    });
+  // Add title
+  weekSheet.addRow([options.title]);
+  weekSheet.addRow([]); // Empty row for spacing
+  
+  // Add week info
+  weekSheet.addRow([`Total Workouts: ${weekWorkouts.length}`]);
+  weekSheet.addRow([]); // Empty row for spacing
+  
+  // Sort workouts by day number
+  const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
+  
+  sortedWorkouts.forEach((workout) => {
+    // Add day header
+    weekSheet.addRow([`Day ${workout.workout.day_number}`]);
+    weekSheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
+    
+    // Prepare and add table data
+    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+    tableData.forEach(row => weekSheet.addRow(row));
+    
+    // Add spacing between days
+    weekSheet.addRow([]);
+    weekSheet.addRow([]);
   });
-
-  // Download the file
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${options.filename}.xlsx`;
-  link.click();
-  window.URL.revokeObjectURL(url);
+  
+  // Style the sheet
+  weekSheet.getRow(1).font = EXCEL_STYLES.titleFont;
+  Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
+    weekSheet.getColumn(parseInt(col)).width = width;
+  });
+  
+  await downloadExcelFile(workbook, options.filename);
 };
 
 /**
@@ -317,7 +358,6 @@ export const exportWeekToXLSX = async (
  */
 export const exportProgramToPDF = async (
   programData: ProgramWithWorkouts,
-  exerciseData: Map<string, Exercise>,
   weightUnitPreferences: UserWeightUnitPreference[],
   options: ExportOptions
 ): Promise<void> => {
@@ -328,13 +368,6 @@ export const exportProgramToPDF = async (
   pdf.setFont('helvetica', 'bold');
   pdf.text(options.title, 20, 20);
   
-  // Add program info
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Current Week: ${programData.program.current_week_number}`, 20, 30);
-  pdf.text(`Total Workouts: ${programData.workouts.length}`, 20, 35);
-  pdf.text(`Total Stages: ${programData.workouts.reduce((acc, workout) => acc + workout.stages.length, 0)}`, 20, 40);
-  
   // Group workouts by week
   const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
   programData.workouts.forEach(workout => {
@@ -345,114 +378,57 @@ export const exportProgramToPDF = async (
     workoutsByWeek.get(weekNumber)!.push(workout);
   });
 
-  let currentY = 50;
-  let isFirstWeek = true;
+  let currentY = 30;
+  
+  // Sort weeks
+  const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
   
   // Create a section for each week
-  workoutsByWeek.forEach((weekWorkouts, weekNumber) => {
-    if (!isFirstWeek) {
+  sortedWeeks.forEach((weekNumber) => {
+    const weekWorkouts = workoutsByWeek.get(weekNumber)!;
+    
+    // Check if we need a new page
+    if (currentY > 180) {
       pdf.addPage();
       currentY = 20;
     }
-    isFirstWeek = false;
     
     // Week header
-    pdf.setFontSize(16);
+    pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text(`Week ${weekNumber}`, 20, currentY);
-    currentY += 10;
+    currentY += 8;
+    
+    // Sort workouts by day number
+    const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
     
     // Create a table for each workout in this week
-    weekWorkouts.forEach((workout, workoutIndex) => {
-      if (workoutIndex > 0) {
-        currentY += 10; // Add some space between workouts
+    sortedWorkouts.forEach((workout) => {
+      // Check if we need a new page for this day
+      if (currentY > 200) {
+        pdf.addPage();
+        currentY = 20;
       }
       
-      // Workout header
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(`Workout ${workoutIndex + 1}: ${workout.workout.name}`, 20, currentY);
-      currentY += 8;
-      
-      // Prepare table data for this workout
-      const tableData: string[][] = [];
-      const tableHeaders = ['Stage', 'Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
-      
-      workout.stages.forEach((stage: WorkoutStageWithExercises, stageIndex: number) => {
-        stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
-          const weightUnit = weightUnitPreferences.find(
-            pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-          )?.preferred_unit || 'lbs';
-
-          exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
-            tableData.push([
-              (stageIndex + 1).toString(),
-              exerciseWithSchemes.exercise.exercise_name,
-              setScheme.set_number.toString(),
-              setScheme.target_rep_count?.toString() || '',
-              formatWeightWithUnit(setScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
-              setScheme.rest_seconds?.toString() || '',
-              ''
-            ]);
-          });
-        });
-      });
-
-      // Add table using autoTable
-      (pdf as any).autoTable({
-        head: [tableHeaders],
-        body: tableData,
-        startY: currentY,
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-        },
-        headStyles: {
-          fillColor: [66, 139, 202],
-          textColor: 255,
-          fontStyle: 'bold',
-        },
-        alternateRowStyles: {
-          fillColor: [245, 245, 245],
-        },
-        columnStyles: {
-          0: { cellWidth: 15 }, // Stage
-          1: { cellWidth: 50 }, // Exercise
-          2: { cellWidth: 15 }, // Sets
-          3: { cellWidth: 15 }, // Reps
-          4: { cellWidth: 20 }, // Weight
-          5: { cellWidth: 15 }, // Rest
-          6: { cellWidth: 30 }, // Notes
-        },
-        margin: { left: 20, right: 20 },
-        didDrawPage: (data: any) => {
-          currentY = data.cursor.y + 10;
-        },
-      });
+      // Prepare and add table
+      const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+      currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
     });
   });
-
-  pdf.save(`${options.filename}.pdf`);
+  
+  downloadPDFFile(pdf, options.filename);
 };
 
 /**
- * Export program workouts to XLSX format
+ * Export program workouts to XLSX
  */
 export const exportProgramToXLSX = async (
   programData: ProgramWithWorkouts,
-  exerciseData: Map<string, Exercise>,
   weightUnitPreferences: UserWeightUnitPreference[],
   options: ExportOptions
 ): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   
-  // Create program summary sheet
-  const summarySheet = workbook.addWorksheet('Program Summary');
-  summarySheet.addRow(['Program Name', programData.program.name]);
-  summarySheet.addRow(['Current Week', programData.program.current_week_number]);
-  summarySheet.addRow(['Total Workouts', programData.workouts.length]);
-  summarySheet.addRow(['Total Stages', programData.workouts.reduce((acc, workout) => acc + workout.stages.length, 0)]);
-
   // Group workouts by week
   const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
   programData.workouts.forEach(workout => {
@@ -463,79 +439,186 @@ export const exportProgramToXLSX = async (
     workoutsByWeek.get(weekNumber)!.push(workout);
   });
 
+  // Sort weeks
+  const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
+
   // Create a sheet for each week
-  workoutsByWeek.forEach((weekWorkouts, weekNumber) => {
+  sortedWeeks.forEach((weekNumber) => {
+    const weekWorkouts = workoutsByWeek.get(weekNumber)!;
     const weekSheet = workbook.addWorksheet(`Week ${weekNumber}`);
-    weekSheet.addRow(['Workout', 'Stage', 'Exercise', 'Sets', 'Reps', 'Weight', 'Rest (seconds)', 'Notes']);
-
-    weekWorkouts.forEach((workout, workoutIndex) => {
-      workout.stages.forEach((stage: WorkoutStageWithExercises, stageIndex: number) => {
-        stage.exercises.forEach((exerciseWithSchemes: ProgrammedExerciseWithSetSchemes) => {
-          const weightUnit = weightUnitPreferences.find(
-            pref => pref.exercise_name === exerciseWithSchemes.exercise.exercise_name
-          )?.preferred_unit || 'lbs';
-
-          exerciseWithSchemes.set_schemes.forEach((setScheme: SetScheme) => {
-            weekSheet.addRow([
-              workoutIndex + 1,
-              stageIndex + 1,
-              exerciseWithSchemes.exercise.exercise_name,
-              setScheme.set_number,
-              setScheme.target_rep_count || '',
-              formatWeightWithUnit(setScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
-              setScheme.rest_seconds || '',
-              ''
-            ]);
-          });
-        });
-      });
+    
+    // Add title
+    weekSheet.addRow([options.title]);
+    weekSheet.addRow([]); // Empty row for spacing
+    
+    // Sort workouts by day number
+    const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
+    
+    sortedWorkouts.forEach((workout) => {
+      // Add day header
+      weekSheet.addRow([`Day ${workout.workout.day_number}`]);
+      weekSheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
+      
+      // Prepare and add table data
+      const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+      tableData.forEach(row => weekSheet.addRow(row));
+      
+      // Add spacing between days
+      weekSheet.addRow([]);
+      weekSheet.addRow([]);
     });
 
-    // Auto-fit columns
-    weekSheet.columns.forEach(column => {
-      column.width = 15;
+    // Style the sheet
+    weekSheet.getRow(1).font = EXCEL_STYLES.titleFont;
+    Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
+      weekSheet.getColumn(parseInt(col)).width = width;
     });
   });
-
-  // Download the file
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${options.filename}.xlsx`;
-  link.click();
-  window.URL.revokeObjectURL(url);
+  
+  await downloadExcelFile(workbook, options.filename);
 };
 
 /**
- * Print the current page or element
+ * Print a workout by generating PDF and opening print dialog
  */
-export const printElement = (elementId?: string): void => {
-  if (elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Print</title>
-              <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                @media print { body { margin: 0; } }
-              </style>
-            </head>
-            <body>
-              ${element.innerHTML}
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.print();
-      }
+export const printWorkout = async (
+  workoutData: ProgrammedWorkoutWithStages,
+  weightUnitPreferences: UserWeightUnitPreference[],
+  options: ExportOptions
+): Promise<void> => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  
+  // Add title
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(options.title, 20, 20);
+  
+  // Add workout info
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Day: ${workoutData.workout.day_number}`, 20, 30);
+  pdf.text(`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`, 20, 35);
+  pdf.text(`Total Stages: ${workoutData.stages.length}`, 20, 40);
+  
+  // Prepare and add table
+  const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
+  addPDFTable(pdf, tableData, 50);
+  
+  await openPrintDialog(pdf);
+};
+
+/**
+ * Print week workouts by generating PDF and opening print dialog
+ */
+export const printWeekWorkouts = async (
+  weekWorkouts: ProgrammedWorkoutWithStages[],
+  weightUnitPreferences: UserWeightUnitPreference[],
+  options: ExportOptions
+): Promise<void> => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  let currentY = 20;
+  
+  // Add title
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(options.title, 20, currentY);
+  currentY += 15;
+  
+  // Add week info
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  pdf.text(`Total Workouts: ${weekWorkouts.length}`, 20, currentY);
+  currentY += 10;
+  
+  weekWorkouts.forEach((workout, workoutIndex) => {
+    // Check if we need a new page
+    if (currentY > 250) {
+      pdf.addPage();
+      currentY = 20;
     }
-  } else {
-    window.print();
-  }
+    
+    // Add workout header
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Workout ${workoutIndex + 1} - Day ${workout.workout.day_number}`, 20, currentY);
+    currentY += 10;
+    
+    // Add workout info
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Created: ${new Date(workout.workout.created_at).toLocaleDateString()}`, 20, currentY);
+    pdf.text(`Stages: ${workout.stages.length}`, 100, currentY);
+    currentY += 8;
+    
+    // Prepare and add table
+    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+    currentY = addPDFTable(pdf, tableData, currentY);
+  });
+  
+  await openPrintDialog(pdf);
+};
+
+/**
+ * Print program workouts by generating PDF and opening print dialog
+ */
+export const printProgramWorkouts = async (
+  programData: ProgramWithWorkouts,
+  weightUnitPreferences: UserWeightUnitPreference[],
+  options: ExportOptions
+): Promise<void> => {
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  let currentY = 20;
+  
+  // Add title
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text(options.title, 20, currentY);
+  currentY += 10;
+  
+  // Group workouts by week
+  const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
+  programData.workouts.forEach(workout => {
+    const week = Math.ceil(workout.workout.day_number / 7);
+    if (!workoutsByWeek.has(week)) {
+      workoutsByWeek.set(week, []);
+    }
+    workoutsByWeek.get(week)!.push(workout);
+  });
+  
+  // Sort weeks
+  const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
+  
+  sortedWeeks.forEach(week => {
+    const weekWorkouts = workoutsByWeek.get(week)!;
+    
+    // Check if we need a new page
+    if (currentY > 180) {
+      pdf.addPage();
+      currentY = 20;
+    }
+    
+    // Add week header
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Week ${week}`, 20, currentY);
+    currentY += 8;
+    
+    // Sort workouts by day number
+    const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
+    
+    // Add each day with its table
+    sortedWorkouts.forEach((workout) => {
+      // Check if we need a new page for this day
+      if (currentY > 200) {
+        pdf.addPage();
+        currentY = 20;
+      }
+      
+      // Prepare and add table
+      const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+      currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
+    });
+  });
+  
+  await openPrintDialog(pdf);
 };

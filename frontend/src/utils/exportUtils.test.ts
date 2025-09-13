@@ -14,6 +14,12 @@ jest.mock('exceljs', () => {
   const mockWorkbook = {
     addWorksheet: jest.fn(() => ({
       addRow: jest.fn(),
+      getRow: jest.fn(() => ({
+        font: {},
+      })),
+      getColumn: jest.fn(() => ({
+        width: 0,
+      })),
       columns: {
         forEach: jest.fn(),
       },
@@ -30,19 +36,23 @@ jest.mock('exceljs', () => {
 
 // Mock jsPDF
 jest.mock('jspdf', () => {
-  return jest.fn().mockImplementation(() => ({
-    addImage: jest.fn(),
-    addPage: jest.fn(),
-    save: jest.fn(),
-    setFontSize: jest.fn(),
-    setFont: jest.fn(),
-    text: jest.fn(),
-    autoTable: jest.fn(),
-  }));
+  return {
+    jsPDF: jest.fn().mockImplementation(() => ({
+      addImage: jest.fn(),
+      addPage: jest.fn(),
+      save: jest.fn(),
+      setFontSize: jest.fn(),
+      setFont: jest.fn(),
+      text: jest.fn(),
+      output: jest.fn(() => ({
+        blob: jest.fn(() => new Blob(['test'], { type: 'application/pdf' })),
+      })),
+    })),
+  };
 });
 
 // Mock jspdf-autotable
-jest.mock('jspdf-autotable', () => ({}));
+jest.mock('jspdf-autotable', () => jest.fn());
 
 describe('exportUtils', () => {
   const mockExerciseData = new Map<string, Exercise>([
@@ -120,7 +130,7 @@ describe('exportUtils', () => {
         writable: true,
       });
 
-      await exportWorkoutToXLSX(mockWorkoutData, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportWorkoutToXLSX(mockWorkoutData, mockWeightUnitPreferences, options);
 
       // Verify ExcelJS methods were called
       const ExcelJS = require('exceljs');
@@ -169,7 +179,7 @@ describe('exportUtils', () => {
         writable: true,
       });
 
-      await exportWorkoutToXLSX(multiStageWorkout, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportWorkoutToXLSX(multiStageWorkout, mockWeightUnitPreferences, options);
 
       expect(mockLink.download).toBe('multi-stage-workout.xlsx');
       expect(mockLink.click).toHaveBeenCalled();
@@ -204,7 +214,7 @@ describe('exportUtils', () => {
         writable: true,
       });
 
-      await exportWeekToXLSX(weekWorkouts, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportWeekToXLSX(weekWorkouts, mockWeightUnitPreferences, options);
 
       expect(mockLink.download).toBe('week-1-workouts.xlsx');
       expect(mockLink.click).toHaveBeenCalled();
@@ -243,7 +253,7 @@ describe('exportUtils', () => {
         writable: true,
       });
 
-      await exportWeekToXLSX(weekWorkouts, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportWeekToXLSX(weekWorkouts, mockWeightUnitPreferences, options);
 
       expect(mockLink.download).toBe('week-1-workouts.xlsx');
       expect(mockLink.click).toHaveBeenCalled();
@@ -290,7 +300,7 @@ describe('exportUtils', () => {
         writable: true,
       });
 
-      await exportProgramToXLSX(programData, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportProgramToXLSX(programData, mockWeightUnitPreferences, options);
 
       expect(mockLink.download).toBe('test-program.xlsx');
       expect(mockLink.click).toHaveBeenCalled();
@@ -338,7 +348,7 @@ describe('exportUtils', () => {
         writable: true,
       });
 
-      await exportProgramToXLSX(programData, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportProgramToXLSX(programData, mockWeightUnitPreferences, options);
 
       expect(mockLink.download).toBe('test-program.xlsx');
       expect(mockLink.click).toHaveBeenCalled();
@@ -352,10 +362,10 @@ describe('exportUtils', () => {
         filename: 'test-workout',
       };
 
-      await exportWorkoutToPDF(mockWorkoutData, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportWorkoutToPDF(mockWorkoutData, mockWeightUnitPreferences, options);
 
       // Verify jsPDF methods were called
-      const jsPDF = require('jspdf');
+      const { jsPDF } = require('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });
@@ -368,9 +378,9 @@ describe('exportUtils', () => {
         filename: 'week-1-workouts',
       };
 
-      await exportWeekToPDF(weekWorkouts, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportWeekToPDF(weekWorkouts, mockWeightUnitPreferences, options);
 
-      const jsPDF = require('jspdf');
+      const { jsPDF } = require('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });
@@ -395,9 +405,9 @@ describe('exportUtils', () => {
         filename: 'test-program',
       };
 
-      await exportProgramToPDF(programData, mockExerciseData, mockWeightUnitPreferences, options);
+      await exportProgramToPDF(programData, mockWeightUnitPreferences, options);
 
-      const jsPDF = require('jspdf');
+      const { jsPDF } = require('jspdf');
       expect(jsPDF).toHaveBeenCalled();
     });
   });

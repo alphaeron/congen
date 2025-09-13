@@ -7,11 +7,11 @@ import { Box, IconButton, Tooltip, Menu, MenuItem, ListItemIcon, ListItemText } 
 import { useSnackbar } from 'notistack';
 import React, { useState } from 'react';
 
-import { printElement } from '../utils/exportUtils';
 
 interface ExportButtonsProps {
   onExportPDF: () => Promise<void>;
   onExportXLSX: () => Promise<void>;
+  onPrint: () => Promise<void>;
   disabled?: boolean;
 }
 
@@ -21,6 +21,7 @@ interface ExportButtonsProps {
 export const ExportButtons: React.FC<ExportButtonsProps> = ({
   onExportPDF,
   onExportXLSX,
+  onPrint,
   disabled = false,
 }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -61,14 +62,21 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     try {
-      printElement();
-      enqueueSnackbar('Print dialog opened', { variant: 'info' });
+      setIsExporting(true);
+      await onPrint();
     } catch (error) {
-      enqueueSnackbar('Failed to open print dialog', { variant: 'error' });
+      const errorMessage = error instanceof Error ? error.message : 'Failed to open print dialog';
+      if (errorMessage.includes('Popup blocked')) {
+        enqueueSnackbar('Print dialog blocked. PDF has been downloaded instead.', { variant: 'info' });
+      } else {
+        enqueueSnackbar(errorMessage, { variant: 'error' });
+      }
+    } finally {
+      setIsExporting(false);
+      handleMenuClose();
     }
-    handleMenuClose();
   };
 
   return (

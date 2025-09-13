@@ -34,7 +34,7 @@ import type {
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
-import { exportWeekToPDF, exportWeekToXLSX } from '../utils/exportUtils';
+import { exportWeekToPDF, exportWeekToXLSX, printWeekWorkouts } from '../utils/exportUtils';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -208,7 +208,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         borderColor: 'divider',
       }}
     >
-      <Breadcrumbs sx={{ mb: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <Breadcrumbs>
         <Button
           variant="text"
           onClick={() => handleBreadcrumbClick('workouts')}
@@ -254,7 +255,18 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
             Workout Details
           </Typography>
         )}
-      </Breadcrumbs>
+        </Breadcrumbs>
+        
+        {/* Export buttons - show for week view, individual workout has its own export buttons */}
+        {!selectedWorkoutId && weekWorkouts.length > 0 && (
+          <ExportButtons
+            onExportPDF={handleExportPDF}
+            onExportXLSX={handleExportXLSX}
+            onPrint={handlePrint}
+            disabled={weekWorkouts.length === 0}
+          />
+        )}
+      </Box>
     </Box>
   );
 
@@ -276,7 +288,7 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
   // Export handlers
   const handleExportPDF = async () => {
     const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-    await exportWeekToPDF(weekWorkoutsData, exerciseData, weightUnitPreferences, {
+    await exportWeekToPDF(weekWorkoutsData, weightUnitPreferences, {
       title: `Week ${weekNumber}`,
       filename: `week-${weekNumber}-workouts`,
     });
@@ -284,7 +296,15 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
 
   const handleExportXLSX = async () => {
     const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-    await exportWeekToXLSX(weekWorkoutsData, exerciseData, weightUnitPreferences, {
+    await exportWeekToXLSX(weekWorkoutsData, weightUnitPreferences, {
+      title: `Week ${weekNumber}`,
+      filename: `week-${weekNumber}-workouts`,
+    });
+  };
+
+  const handlePrint = async () => {
+    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+    await printWeekWorkouts(weekWorkoutsData, weightUnitPreferences, {
       title: `Week ${weekNumber}`,
       filename: `week-${weekNumber}-workouts`,
     });
@@ -317,17 +337,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         </Card>
       ) : (
         <Box>
-          {/* Export buttons - only show when not viewing individual workout */}
-          {!selectedWorkoutId && weekWorkouts.length > 0 && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 2 }}>
-              <ExportButtons
-                onExportPDF={handleExportPDF}
-                onExportXLSX={handleExportXLSX}
-                disabled={weekWorkouts.length === 0}
-              />
-            </Box>
-          )}
-          
           <Box id="week-details-content">
             <Grid container spacing={3} sx={{ height: 'calc(100vh - 200px)' }}>
           {/* Workout List and Details - Full width when workout selected, 2/3 when not */}

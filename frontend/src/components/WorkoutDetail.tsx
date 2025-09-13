@@ -3,7 +3,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
-import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid } from '@mui/material';
+import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Breadcrumbs, Button } from '@mui/material';
 import {
   useReactTable,
   getCoreRowModel,
@@ -24,7 +24,7 @@ import type { UserDataExport, ExerciseMuscle, UserWeightUnitPreference } from '.
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
-import { exportWorkoutToPDF, exportWorkoutToXLSX } from '../utils/exportUtils';
+import { exportWorkoutToPDF, exportWorkoutToXLSX, printWorkout } from '../utils/exportUtils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -67,6 +67,7 @@ const columnHelper = createColumnHelper<TableRow>();
  */
 export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   workoutId,
+  onBack,
   onWorkoutDetailsUpdate,
 }) => {
   const theme = useTheme();
@@ -158,7 +159,7 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const handleExportPDF = async () => {
     if (!workoutData) return;
     const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
-    await exportWorkoutToPDF(workoutData, exerciseData, weightUnitPreferences, {
+    await exportWorkoutToPDF(workoutData, weightUnitPreferences, {
       title: workoutName,
       filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
     });
@@ -167,7 +168,16 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const handleExportXLSX = async () => {
     if (!workoutData) return;
     const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
-    await exportWorkoutToXLSX(workoutData, exerciseData, weightUnitPreferences, {
+    await exportWorkoutToXLSX(workoutData, weightUnitPreferences, {
+      title: workoutName,
+      filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
+    });
+  };
+
+  const handlePrint = async () => {
+    if (!workoutData) return;
+    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
+    await printWorkout(workoutData, weightUnitPreferences, {
       title: workoutName,
       filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
     });
@@ -389,13 +399,49 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
-      {/* Export buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, px: 2 }}>
-        <ExportButtons
-          onExportPDF={handleExportPDF}
-          onExportXLSX={handleExportXLSX}
-          disabled={!workoutData}
-        />
+      {/* Breadcrumbs and Export buttons */}
+      <Box
+        position="sticky"
+        top={0}
+        zIndex={1001}
+        sx={{
+          backgroundColor: 'background.default',
+          pt: 2,
+          pb: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Breadcrumbs>
+            <Button
+              variant="text"
+              onClick={onBack}
+              sx={{
+                color: 'text.secondary',
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 'normal',
+                p: 0,
+                minWidth: 'auto',
+              }}
+            >
+              Back
+            </Button>
+            <Typography variant="body1" color="text.primary">
+              {workoutData ? replaceUnderscoresWithSpaces(workoutData.workout.name) : 'Workout Details'}
+            </Typography>
+          </Breadcrumbs>
+          
+          {workoutData && (
+            <ExportButtons
+              onExportPDF={handleExportPDF}
+              onExportXLSX={handleExportXLSX}
+              onPrint={handlePrint}
+              disabled={!workoutData}
+            />
+          )}
+        </Box>
       </Box>
       
       <Box id="workout-detail-content">
