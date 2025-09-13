@@ -10,7 +10,10 @@ import {
   Breadcrumbs,
   Button,
   Slide,
+  Tooltip,
+  IconButton,
 } from '@mui/material';
+import InfoIcon from '@mui/icons-material/Info';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -185,116 +188,7 @@ export const ExerciseRotationVisualization: React.FC = () => {
       <Slide direction="right" in={!showCategoryDetails} mountOnEnter unmountOnExit>
         <Box sx={{ p: 3 }}>
           <Grid container spacing={3}>
-            {/* Comprehensive Exercise Rotation */}
-            {exercisePoolAnalysis && (
-              <Grid size={{ xs: 12 }}>
-                <Card>
-                  <CardContent>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                    >
-                      Exercise Rotation
-                    </Typography>
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      Your exercise pool is filtered based on your available equipment (
-                      {exercisePoolAnalysis.userEquipment.length} items) and exercise preferences (
-                      {exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length}{' '}
-                      avoided).
-                    </Alert>
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper sx={{ p: 2, textAlign: 'center' }}>
-                          <Typography variant="h4" color="primary">
-                            {exercisePoolAnalysis.totalExercises}
-                          </Typography>
-                          <Typography variant="body2">Total Exercises</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper sx={{ p: 2, textAlign: 'center' }}>
-                          <Typography variant="h4" color="success.main">
-                            {exercisePoolAnalysis.availableExercises}
-                          </Typography>
-                          <Typography variant="body2">Available to You</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper sx={{ p: 2, textAlign: 'center' }}>
-                          <Typography variant="h4" color="info.main">
-                            {exercisePoolAnalysis.categorizedExercises.primary.length}
-                          </Typography>
-                          <Typography variant="body2">Primary Exercises</Typography>
-                        </Paper>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <Paper sx={{ p: 2, textAlign: 'center' }}>
-                          <Typography variant="h4" color="warning.main">
-                            {exercisePoolAnalysis.categorizedExercises.accessory.length}
-                          </Typography>
-                          <Typography variant="body2">Accessory Exercises</Typography>
-                        </Paper>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
-              </Grid>
-            )}
-
-            {/* Previously Used Exercises */}
-            {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
-              <Grid size={{ xs: 12 }}>
-                <Card
-                  sx={{
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease-in-out',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: 3,
-                    },
-                  }}
-                  onClick={() => handleCategoryClick('recent')}
-                >
-                  <CardContent>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                    >
-                      Recent Exercises
-                    </Typography>
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      These exercises have been used in recent weeks and are temporarily excluded
-                      from selection to promote variety.
-                    </Alert>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                      {exercisePoolAnalysis.previouslyUsedExercises
-                        .slice(0, 10)
-                        .map(exerciseName => (
-                          <Chip
-                            key={exerciseName}
-                            label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
-                            variant="outlined"
-                            color="warning"
-                            size="small"
-                            onClick={e => e.stopPropagation()}
-                          />
-                        ))}
-                      {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
-                        <Chip
-                          label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      )}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            )}
-
-            {/* Available Exercise */}
+            {/* Available Exercises - Moved to top */}
             {exercisePoolAnalysis && (
               <Grid size={{ xs: 12 }}>
                 <Card>
@@ -511,6 +405,124 @@ export const ExerciseRotationVisualization: React.FC = () => {
                 </Card>
               </Grid>
             )}
+
+            {/* Exercise Rotation and Recent Exercises - Side by side */}
+            <Grid container spacing={3}>
+              {/* Exercise Rotation - Left side */}
+              {exercisePoolAnalysis && (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Card>
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        gutterBottom
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        Exercise Rotation
+                        <Tooltip
+                          title={`Your exercise pool is filtered based on your available equipment (${exercisePoolAnalysis.userEquipment.length} items) and exercise preferences (${exercisePoolAnalysis.userPreferences.filter(p => p.should_avoid).length} avoided).`}
+                          arrow
+                        >
+                          <IconButton size="small" sx={{ p: 0.5 }}>
+                            <InfoIcon fontSize="small" color="action" />
+                          </IconButton>
+                        </Tooltip>
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Paper sx={{ p: 2, textAlign: 'center' }}>
+                            <Typography variant="h4" color="primary">
+                              {exercisePoolAnalysis.totalExercises}
+                            </Typography>
+                            <Typography variant="body2">Total Exercises</Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Paper sx={{ p: 2, textAlign: 'center' }}>
+                            <Typography variant="h4" color="success.main">
+                              {exercisePoolAnalysis.availableExercises}
+                            </Typography>
+                            <Typography variant="body2">Available to You</Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Paper sx={{ p: 2, textAlign: 'center' }}>
+                            <Typography variant="h4" color="info.main">
+                              {exercisePoolAnalysis.categorizedExercises.primary.length}
+                            </Typography>
+                            <Typography variant="body2">Primary Exercises</Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <Paper sx={{ p: 2, textAlign: 'center' }}>
+                            <Typography variant="h4" color="warning.main">
+                              {exercisePoolAnalysis.categorizedExercises.accessory.length}
+                            </Typography>
+                            <Typography variant="body2">Accessory Exercises</Typography>
+                          </Paper>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+
+              {/* Recent Exercises - Right side */}
+              {exercisePoolAnalysis && exercisePoolAnalysis.previouslyUsedExercises.length > 0 && (
+                <Grid size={{ xs: 12, md: 6 }}>
+                  <Card
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: 3,
+                      },
+                    }}
+                    onClick={() => handleCategoryClick('recent')}
+                  >
+                    <CardContent>
+                      <Typography
+                        variant="h6"
+                        gutterBottom
+                        sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      >
+                        Recent Exercises
+                        <Tooltip
+                          title="These exercises have been used in recent weeks and are temporarily excluded from selection to promote variety."
+                          arrow
+                        >
+                          <IconButton size="small" sx={{ p: 0.5 }}>
+                            <InfoIcon fontSize="small" color="action" />
+                          </IconButton>
+                        </Tooltip>
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {exercisePoolAnalysis.previouslyUsedExercises
+                          .slice(0, 10)
+                          .map(exerciseName => (
+                            <Chip
+                              key={exerciseName}
+                              label={<ExerciseName exerciseName={exerciseName} variant="caption" />}
+                              variant="outlined"
+                              color="warning"
+                              size="small"
+                              onClick={e => e.stopPropagation()}
+                            />
+                          ))}
+                        {exercisePoolAnalysis.previouslyUsedExercises.length > 10 && (
+                          <Chip
+                            label={`+${exercisePoolAnalysis.previouslyUsedExercises.length - 10}`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+            </Grid>
 
             {/* Exercise Insights */}
             {exercisePoolAnalysis && (
