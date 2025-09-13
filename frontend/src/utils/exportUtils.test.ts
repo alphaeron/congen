@@ -45,11 +45,15 @@ jest.mock('jspdf', () => {
     jsPDF: jest.fn().mockImplementation(() => ({
       addImage: jest.fn(),
       addPage: jest.fn(),
+      insertPage: jest.fn(),
+      setPage: jest.fn(),
       save: jest.fn(),
       setFontSize: jest.fn(),
       setFont: jest.fn(),
       setTextColor: jest.fn(),
       text: jest.fn(),
+      getTextWidth: jest.fn((text: string) => text.length * 2), // Mock text width calculation
+      link: jest.fn(),
       output: jest.fn(() => ({
         blob: jest.fn(() => new Blob(['test'], { type: 'application/pdf' })),
       })),

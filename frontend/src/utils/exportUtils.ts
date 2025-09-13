@@ -125,6 +125,62 @@ const prepareWorkoutTableData = (
 };
 
 /**
+ * Add table of contents page to PDF
+ */
+const addTableOfContentsPage = (
+  pdf: jsPDF,
+  tocEntries: Array<{ title: string; page: number; level: number }>
+): void => {
+  // Insert TOC page at the beginning
+  pdf.insertPage(1);
+  pdf.setPage(1);
+  
+  // TOC Header
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(14, 165, 233); // Congen brand blue
+  pdf.text('Table of Contents', 20, 30);
+  
+  // TOC Entries
+  pdf.setFontSize(12);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setTextColor(0, 0, 0); // Black text
+  
+  let yPosition = 50;
+  const lineHeight = 8;
+  
+  tocEntries.forEach(entry => {
+    const indent = entry.level * 15; // 15mm indent per level
+    const title = entry.title;
+    const pageNum = entry.page.toString();
+    
+    // Add title
+    pdf.text(title, 20 + indent, yPosition);
+    
+    // Add dots and page number
+    const titleWidth = pdf.getTextWidth(title);
+    const availableWidth = 170 - indent - 20; // Total width minus indent and right margin
+    const dotsWidth = pdf.getTextWidth('.');
+    const pageWidth = pdf.getTextWidth(pageNum);
+    const dotsNeeded = Math.floor((availableWidth - titleWidth - pageWidth) / dotsWidth);
+    const dots = '.'.repeat(Math.max(1, dotsNeeded));
+    
+    pdf.text(dots, 20 + indent + titleWidth, yPosition);
+    pdf.text(pageNum, 20 + indent + titleWidth + pdf.getTextWidth(dots), yPosition);
+    
+    // Add clickable link
+    const textWidth = pdf.getTextWidth(title + dots + pageNum);
+    const textHeight = lineHeight;
+    pdf.link(20 + indent, yPosition - textHeight * 0.7, textWidth, textHeight, { pageNumber: entry.page });
+    
+    yPosition += lineHeight;
+  });
+};
+
+// Note: PDF outline/bookmarks functionality is not available in standard jsPDF
+// The visual table of contents with clickable links provides good navigation
+
+/**
  * Add PDF table with modern Congen styling
  */
 const addPDFTable = (
@@ -472,11 +528,17 @@ export const exportProgramToPDF = async (
   options: ExportOptions
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
+  let currentY = 20;
+  let currentPage = 1;
+  
+  // Collect TOC entries with page numbers and destinations
+  const tocEntries: Array<{ title: string; page: number; level: number }> = [];
   
   // Add title
   pdf.setFontSize(18);
   pdf.setFont('helvetica', 'bold');
-  pdf.text(options.title, 20, 20);
+  pdf.text(options.title, 20, currentY);
+  currentY += 8;
   
   // Group workouts by week
   const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
@@ -487,13 +549,11 @@ export const exportProgramToPDF = async (
     }
     workoutsByWeek.get(weekNumber)!.push(workout);
   });
-
-  let currentY = 30; // Consistent spacing after title
   
   // Sort weeks
   const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
   
-  // Create a section for each week
+  // Generate content and track page numbers
   sortedWeeks.forEach((weekNumber) => {
     const weekWorkouts = workoutsByWeek.get(weekNumber)!;
     
@@ -501,13 +561,16 @@ export const exportProgramToPDF = async (
     if (currentY > 180) {
       pdf.addPage();
       currentY = 20;
+      currentPage++;
     }
     
-    // Week header
+    // Add week header and create named destination
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text(`Week ${weekNumber}`, 20, currentY);
-    currentY += 8; // Consistent spacing after week header
+    
+    tocEntries.push({ title: `Week ${weekNumber}`, page: currentPage, level: 1 });
+    currentY += 8;
     
     // Sort workouts by day number
     const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
@@ -518,19 +581,26 @@ export const exportProgramToPDF = async (
       if (currentY > 200) {
         pdf.addPage();
         currentY = 20;
+        currentPage++;
       }
       
       // Add spacing between days (except for first day)
       if (index > 0) {
-        currentY += 8; // Consistent spacing between days
+        currentY += 8;
       }
+      
+      tocEntries.push({ title: `Day ${workout.workout.day_number}`, page: currentPage, level: 2 });
       
       // Prepare and add table
       const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
       currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
-      currentY += 8; // Add spacing after table to prevent overlap
     });
   });
+  
+  // Add table of contents page at the beginning
+  addTableOfContentsPage(pdf, tocEntries);
+  
+  // Note: PDF outline/bookmarks not available in standard jsPDF
   
   downloadPDFFile(pdf, options.filename);
 };
@@ -670,6 +740,10 @@ export const printProgramWorkouts = async (
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
   let currentY = 20;
+  let currentPage = 1;
+  
+  // Collect TOC entries with page numbers and destinations
+  const tocEntries: Array<{ title: string; page: number; level: number }> = [];
   
   // Add title
   pdf.setFontSize(18);
@@ -690,6 +764,7 @@ export const printProgramWorkouts = async (
   // Sort weeks
   const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
   
+  // Generate content and track page numbers
   sortedWeeks.forEach(week => {
     const weekWorkouts = workoutsByWeek.get(week)!;
     
@@ -697,13 +772,16 @@ export const printProgramWorkouts = async (
     if (currentY > 180) {
       pdf.addPage();
       currentY = 20;
+      currentPage++;
     }
     
-    // Add week header
+    // Add week header and create named destination
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
     pdf.text(`Week ${week}`, 20, currentY);
-    currentY += 8; // Consistent spacing after week header
+    
+    tocEntries.push({ title: `Week ${week}`, page: currentPage, level: 1 });
+    currentY += 8;
     
     // Sort workouts by day number
     const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
@@ -714,18 +792,26 @@ export const printProgramWorkouts = async (
       if (currentY > 200) {
         pdf.addPage();
         currentY = 20;
+        currentPage++;
       }
       
       // Add consistent spacing before day title (except for first day)
       if (index > 0) {
-        currentY += 8; // Consistent spacing between days
+        currentY += 8;
       }
+      
+      tocEntries.push({ title: `Day ${workout.workout.day_number}`, page: currentPage, level: 2 });
       
       // Prepare and add table
       const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
       currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
     });
   });
+  
+  // Add table of contents page at the beginning
+  addTableOfContentsPage(pdf, tocEntries);
+  
+  // Note: PDF outline/bookmarks not available in standard jsPDF
   
   await openPrintDialog(pdf);
 };
