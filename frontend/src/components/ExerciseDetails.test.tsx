@@ -1,7 +1,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import * as React from 'react';
+
+// Mock the auth context
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+    },
+  }),
+}));
 
 import { ExerciseDetails } from './ExerciseDetails';
 import {
@@ -24,107 +34,72 @@ describe('ExerciseDetails component', () => {
 
   const mockAdapter = new AxiosMockAdapter(ENDPOINT);
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mockAdapter.onGet(`/exercise/${EXERCISE.name}`).reply(200, EXERCISE);
     mockAdapter.onGet(`/exercise/${EXERCISE.name}/equipment`).reply(200, [EXERCISE_EQUIPMENT]);
     mockAdapter.onGet(`/exercise/${EXERCISE.name}/muscle`).reply(200, [EXERCISE_MUSCLE]);
     mockAdapter.onGet(`/equipment/${EXERCISE_EQUIPMENT.equipment_name}`).reply(200, EQUIPMENT);
     mockAdapter.onGet(`/muscle/${EXERCISE_MUSCLE.muscle_name}`).reply(200, MUSCLE);
+    mockAdapter.onGet('/user_exercise_preference/test-user-id').reply(200, []);
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <ExerciseDetails exerciseName={EXERCISE.name} />
-      </QueryClientProvider>
-    );
+    await act(async () => {
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ExerciseDetails exerciseName={EXERCISE.name} />
+        </QueryClientProvider>
+      );
+    });
+
+    // Wait for all async operations to complete
+    await waitFor(() => {
+      expect(mockAdapter.history.get.length).toBe(6);
+    }, { timeout: 10000 });
   });
 
   afterEach(() => {
     mockAdapter.reset();
   });
 
-  it('Renders the equipment', async () => {
+  it('Renders the equipment', () => {
     const equipmentRegex = new RegExp(`^${EXERCISE_EQUIPMENT.equipment_name}$`, 'i');
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(equipmentRegex)).toBeInTheDocument();
-    });
+    expect(screen.getByText(equipmentRegex)).toBeInTheDocument();
   });
 
-  it('Renders the muscle', async () => {
+  it('Renders the muscle', () => {
     const muscleRegex = new RegExp(`^${EXERCISE_MUSCLE.muscle_name}$`, 'i');
     expect(screen.getByText(muscleRegex)).toBeInTheDocument();
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(muscleRegex)).toBeInTheDocument();
-    });
   });
 
-  it('Renders the exercise name', async () => {
+  it('Renders the exercise name', () => {
     const regex = new RegExp(`^${EXERCISE.name}$`, 'i');
     expect(screen.getByText(regex)).toBeInTheDocument();
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(regex)).toBeInTheDocument();
-    });
   });
 
-  it('Renders the exercise description', async () => {
+  it('Renders the exercise description', () => {
     const regex = new RegExp(`^${EXERCISE.description}$`, 'i');
     expect(screen.getByText(regex)).toBeInTheDocument();
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(regex)).toBeInTheDocument();
-    });
   });
 
-  it('Renders the exercise movementType', async () => {
+  it('Renders the exercise movementType', () => {
     const regex = new RegExp(`${EXERCISE.movement_type}`, 'i');
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(regex)).toBeInTheDocument();
-    });
+    expect(screen.getByText(regex)).toBeInTheDocument();
   });
 
-  it('Renders the exercise isUnilateral', async () => {
+  it('Renders the exercise isUnilateral', () => {
     const text = EXERCISE.is_unilateral ? 'Unilateral' : 'Bilateral';
     const regex = new RegExp(`${text}`, 'i');
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(regex)).toBeInTheDocument();
-    });
+    expect(screen.getByText(regex)).toBeInTheDocument();
   });
 
-  it('Renders the exercise isUpper', async () => {
+  it('Renders the exercise isUpper', () => {
     const text = EXERCISE.is_upper ? 'Upper Body' : 'Lower Body';
     const regex = new RegExp(`${text}`, 'i');
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(regex)).toBeInTheDocument();
-    });
+    expect(screen.getByText(regex)).toBeInTheDocument();
   });
 
-  it('Renders the exercise isAccessory', async () => {
+  it('Renders the exercise isAccessory', () => {
     const text = EXERCISE.is_accessory ? 'Accessory' : 'Primary Movement';
     const regex = new RegExp(`${text}`, 'i');
-    await waitFor(() => {
-      // All 5 mocks should have been called.
-      expect(mockAdapter.history.get.length).toBe(5);
-
-      expect(screen.getByText(regex)).toBeInTheDocument();
-    });
+    expect(screen.getByText(regex)).toBeInTheDocument();
   });
 });

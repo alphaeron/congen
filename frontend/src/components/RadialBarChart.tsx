@@ -50,8 +50,8 @@ export const RadialBarChart: React.FC<RadialBarChartProps> = ({
     
     // Define all available exercise categories based on workout stages
     const exerciseCategories = [
-      { key: 'primary_exercises', id: 'primary', name: 'primary' },
-      { key: 'accessory_exercises', id: 'accessory', name: 'accessory' },
+      { key: 'primary_exercises', id: 'Primary', name: 'Primary' },
+      { key: 'accessory_exercises', id: 'Accessory', name: 'Accessory' },
       // Note: The current API only provides primary and accessory exercises
       // If more workout stages become available in the future, they can be added here
     ];

@@ -23,7 +23,6 @@ import { ExerciseName } from './ExerciseName';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ExercisePoolPieChart } from './ExercisePoolPieChart';
 import { RadialBarChart } from './RadialBarChart';
-import { BarChart } from './BarChart';
 import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type { UserExercisePoolResponse } from '../api/types';
@@ -197,17 +196,17 @@ export const ExerciseRotationVisualization: React.FC = () => {
               <Grid size={{ xs: 12 }}>
                 <Grid container spacing={3}>
                   {/* Pool Availability - Pie Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <ExercisePoolPieChart
                       exercisePoolData={exercisePoolData}
-                      title="Pool Availability"
+                      title="Exercise Availability"
                       description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
                       height={250}
                     />
                   </Grid>
 
                   {/* Exercise Variety - Radial Bar Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <RadialBarChart
                       exercisePoolData={exercisePoolData}
                       title="Exercise Variety"
@@ -216,18 +215,8 @@ export const ExerciseRotationVisualization: React.FC = () => {
                     />
                   </Grid>
 
-                  {/* Rotation Management - Bar Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
-                    <BarChart
-                      exercisePoolData={exercisePoolData}
-                      title="Rotation Management"
-                      description="Available vs previously used"
-                      height={250}
-                    />
-                  </Grid>
-
                   {/* Exercise Selection - Sunburst Chart */}
-                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                  <Grid size={{ xs: 12, md: 4 }}>
                     <ExercisePoolSunburstChart
                       exercisePoolData={exercisePoolData}
                       title="Exercise Selection"

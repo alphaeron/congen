@@ -5,6 +5,16 @@ import { MemoryRouter } from 'react-router';
 import { ExerciseCard } from './ExerciseCard';
 import { EXERCISE, EXERCISE_MUSCLE, EXERCISE_EQUIPMENT } from '../__mocks__/data';
 
+// Mock the auth context
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+    },
+  }),
+}));
+
 describe('ExerciseCard component', () => {
   beforeEach(() => {
     render(

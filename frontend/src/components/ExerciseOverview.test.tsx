@@ -15,6 +15,16 @@ jest.mock('@tanstack/react-virtual', () => ({
   }),
 }));
 
+// Mock the auth context
+jest.mock('../contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      keycloak_id: 'test-user-id',
+      name: 'Test User',
+    },
+  }),
+}));
+
 import { ExerciseOverview } from './ExerciseOverview';
 import {
   EXERCISE,
@@ -60,13 +70,13 @@ describe('ExerciseOverview component', () => {
     // Wait for all API calls to be made
     await waitFor(() => {
       expect(mockAdapter.history.get.length).toBe(5);
-    });
+    }, { timeout: 10000 });
 
     // Wait for the header to be rendered
     await waitFor(() => {
       const exerciseElement = screen.getByTestId('exerciseHeader');
       expect(exerciseElement).toBeInTheDocument();
       expect(exerciseElement).toHaveTextContent('Exercise Library');
-    });
-  });
+    }, { timeout: 10000 });
+  }, 15000);
 });

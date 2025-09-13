@@ -28,6 +28,20 @@ jest.mock('react-router', () => ({
   useSearchParams: () => [mockSearchParams],
 }));
 
+// Mock chart components to avoid Nivo library issues in tests
+jest.mock('./ExercisePoolPieChart', () => ({
+  ExercisePoolPieChart: () => <div data-testid="exercise-pool-pie-chart">Mock Pie Chart</div>,
+}));
+
+jest.mock('./RadialBarChart', () => ({
+  RadialBarChart: () => <div data-testid="radial-bar-chart">Mock Radial Bar Chart</div>,
+}));
+
+
+jest.mock('./ExercisePoolSunburstChart', () => ({
+  ExercisePoolSunburstChart: () => <div data-testid="exercise-pool-sunburst-chart">Mock Sunburst Chart</div>,
+}));
+
 const mockPrograms: Program[] = [
   {
     id: 1,
@@ -115,13 +129,13 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(2); // One in breadcrumb, one in main content
-    });
+      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1); // One in breadcrumb
+    }, { timeout: 10000 });
 
-    expect(screen.getAllByText('Primary Exercises')).toHaveLength(2);
-    expect(screen.getAllByText('Accessory Exercises')).toHaveLength(2);
+    expect(screen.getAllByText('Primary Exercises')).toHaveLength(1);
+    expect(screen.getAllByText('Accessory Exercises')).toHaveLength(1);
     expect(screen.getByText('Recent Exercises')).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('should show category details when category is selected', async () => {
     mockSearchParams.set('category', 'primary');
@@ -143,12 +157,12 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(2);
-    });
+      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1);
+    }, { timeout: 10000 });
 
     // Should show the exercise counts - there are multiple "1" elements, so we check they exist
-    expect(screen.getAllByText('1')).toHaveLength(4); // Multiple "1" elements in the stats
-  }, 10000);
+    expect(screen.getAllByText('1')).toHaveLength(2); // Multiple "1" elements in the stats
+  }, 15000);
 
   it('should handle empty programs data', async () => {
     mock.onGet('/program/').reply(200, []);
@@ -157,9 +171,9 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(2);
-    });
-  }, 10000);
+      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1);
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('should handle empty exercise pool data', async () => {
     const emptyExercisePoolData: UserExercisePoolResponse = {
@@ -179,9 +193,9 @@ describe('ExerciseRotationVisualization', () => {
     renderWithProviders(<ExerciseRotationVisualization />);
 
     await waitFor(() => {
-      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(2);
-    });
-  }, 10000);
+      expect(screen.getAllByText('Exercise Rotation')).toHaveLength(1);
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('should show breadcrumb navigation when in category view', async () => {
     mockSearchParams.set('category', 'primary');

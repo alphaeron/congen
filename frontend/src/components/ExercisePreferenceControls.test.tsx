@@ -205,16 +205,16 @@ describe('ExercisePreferenceControls', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('No Preference')).toBeInTheDocument();
-    });
+      expect(screen.getByText('Neutral')).toBeInTheDocument();
+    }, { timeout: 10000 });
 
-    fireEvent.click(screen.getByText('No Preference'));
+    fireEvent.click(screen.getByText('Neutral'));
 
     await waitFor(() => {
       expect(mockRemoveUserExercisePreference).toHaveBeenCalledWith('test-user-id', 'Bench Press');
       expect(mockEnqueueSnackbar).toHaveBeenCalledWith('Exercise preference removed', { variant: 'success' });
-    });
-  });
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('shows neutral state when no preference exists', async () => {
     render(

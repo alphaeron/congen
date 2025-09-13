@@ -35,14 +35,27 @@ export const DeletableListItem: React.FC<DeletableListItemProps> = ({
       <ListItemText primary={primary} secondary={secondary} />
       <ListItemSecondaryAction>
         <Tooltip title={deleteTooltip}>
-          <IconButton
-            edge="end"
-            aria-label="delete"
-            onClick={onDelete}
-            disabled={disabled}
-          >
-            <DeleteIcon />
-          </IconButton>
+          {disabled ? (
+            <span>
+              <IconButton
+                edge="end"
+                aria-label="delete"
+                onClick={onDelete}
+                disabled={disabled}
+              >
+                <DeleteIcon />
+              </IconButton>
+            </span>
+          ) : (
+            <IconButton
+              edge="end"
+              aria-label="delete"
+              onClick={onDelete}
+              disabled={disabled}
+            >
+              <DeleteIcon />
+            </IconButton>
+          )}
         </Tooltip>
       </ListItemSecondaryAction>
     </ListItem>

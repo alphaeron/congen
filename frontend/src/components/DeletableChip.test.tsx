@@ -31,8 +31,9 @@ describe('DeletableChip', () => {
       />
     );
 
-    const deleteButton = screen.getByLabelText('delete');
-    fireEvent.click(deleteButton);
+    // Find the delete icon and click it
+    const deleteIcon = screen.getByTestId('DeleteIcon');
+    fireEvent.click(deleteIcon);
     expect(mockOnDelete).toHaveBeenCalledTimes(1);
   });
 
@@ -45,8 +46,9 @@ describe('DeletableChip', () => {
       />
     );
 
-    const deleteButton = screen.getByLabelText('delete');
-    expect(deleteButton).toBeInTheDocument();
+    // The chip has the aria-label for the delete functionality
+    const chip = screen.getByLabelText('Delete chip');
+    expect(chip).toBeInTheDocument();
   });
 
   it('disables delete button when disabled prop is true', () => {
@@ -59,8 +61,10 @@ describe('DeletableChip', () => {
       />
     );
 
-    const deleteButton = screen.getByLabelText('delete');
-    expect(deleteButton).toBeDisabled();
+    // The chip itself is disabled when the disabled prop is true
+    const chip = screen.getByLabelText('Delete chip');
+    // Check if the element has the disabled class or attribute
+    expect(chip).toHaveClass('Mui-disabled');
   });
 
   it('applies color and variant props', () => {

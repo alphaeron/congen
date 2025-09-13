@@ -92,7 +92,7 @@ describe('WorkoutPreferencesSection', () => {
       { timeout: 10000 }
     );
 
-    expect(screen.getByText('Add Preference')).toBeInTheDocument();
+    expect(screen.getAllByText('Add Preference')).toHaveLength(2); // Weight units and exercise preferences sections
   });
 
   it('should open dialog when add preference button is clicked', async () => {
@@ -112,8 +112,9 @@ describe('WorkoutPreferencesSection', () => {
       { timeout: 10000 }
     );
 
-    const addButton = screen.getByText('Add Preference');
-    fireEvent.click(addButton);
+    const addButtons = screen.getAllByText('Add Preference');
+    // Click the first "Add Preference" button (weight units section)
+    fireEvent.click(addButtons[0]);
 
     expect(screen.getByText('Add Weight Unit Preference')).toBeInTheDocument();
     expect(screen.getAllByText('Exercise')[0]).toBeInTheDocument();
