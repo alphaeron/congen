@@ -74,6 +74,7 @@ export const ExercisePoolSunburstChart: React.FC<ExercisePoolSunburstChartProps>
             movementMap.set(movementType, []);
           }
           
+          // Keep all exercises to preserve original distribution
           movementMap.get(movementType)!.push(exercise.name);
         });
       }
@@ -83,9 +84,12 @@ export const ExercisePoolSunburstChart: React.FC<ExercisePoolSunburstChartProps>
     const children = Array.from(categoryMap.entries()).map(([category, movementMap]) => ({
       name: capitalizeEachWord(category),
       children: Array.from(movementMap.entries()).map(([movementType, exercises]) => ({
-        name: capitalizeEachWord(movementType),
+        // Create unique movement type name by combining with category
+        // This prevents duplicate keys when the same movement type appears in multiple categories
+        name: `${capitalizeEachWord(movementType)} (${capitalizeEachWord(category)})`,
         loc: exercises.length,
         children: exercises.map(exerciseName => ({
+          // Keep original exercise names since they're not the problem
           name: capitalizeEachWord(exerciseName),
           loc: 1,
         })),
