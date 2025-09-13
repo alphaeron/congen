@@ -2,7 +2,7 @@ add strongman exercises and equipment to database
 
 update backend when keycloak theme user data changes too, use first char of first name or 'U', edit email as well, better UI
 
-support print / export (pdf or xlsx) and add corresponding icon buttons on workout and program to expose this functionality
+support print / export (pdf or xlsx) and add corresponding icon buttons on workout detail (export a single workout), workout week details (export a single week), and workouts overview components (to export at the program level)
 
 "how it works" on root spa with workout generation algorithm flowchart
 
@@ -17,10 +17,6 @@ Workout generation algorithm should put a description of the stage (for example,
 never have banded exercises for the secondary movement, they should always only be in the primary, and banded exercises should also only be used on DE day types.
 
 
-
-
-
-If muscle imbalance, prefer unilateral accessories
 
 
 
@@ -64,6 +60,8 @@ congen database for congen?  Or maybe aws terraform will handle that.
 Write a gradle task to check for all component updates and apply them
 
 forgot my username and forgot my password reset links / emails.
+
+If muscle imbalance, prefer unilateral accessories
 
 
 

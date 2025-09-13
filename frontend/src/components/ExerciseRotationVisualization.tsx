@@ -21,6 +21,10 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { ExerciseCategoryDetails } from './ExerciseCategoryDetails';
 import { ExerciseName } from './ExerciseName';
 import { LoadingSpinner } from './LoadingSpinner';
+import { ExercisePoolPieChart } from './ExercisePoolPieChart';
+import { RadialBarChart } from './RadialBarChart';
+import { BarChart } from './BarChart';
+import { ExercisePoolSunburstChart } from './ExercisePoolSunburstChart';
 import { getUserExercisePool } from '../api/conjugateWorkoutGenerator';
 import type { UserExercisePoolResponse } from '../api/types';
 import { useAuth } from '../contexts/AuthContext';
@@ -524,77 +528,57 @@ export const ExerciseRotationVisualization: React.FC = () => {
               )}
             </Grid>
 
-            {/* Exercise Insights */}
+            {/* Exercise Insights Charts */}
             {exercisePoolAnalysis && (
               <Grid size={{ xs: 12 }}>
-                <Card>
-                  <CardContent>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                    >
-                      Exercise Insights
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Alert severity="info">
-                          <Typography variant="subtitle2" gutterBottom>
-                            Pool Availability
-                          </Typography>
-                          <Typography variant="body2">
-                            You have access to {exercisePoolAnalysis.availableExercises} out of{' '}
-                            {exercisePoolAnalysis.totalExercises} total exercises (
-                            {(
-                              (exercisePoolAnalysis.availableExercises /
-                                exercisePoolAnalysis.totalExercises) *
-                              100
-                            ).toFixed(1)}
-                            % availability).
-                          </Typography>
-                        </Alert>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Alert severity="success">
-                          <Typography variant="subtitle2" gutterBottom>
-                            Exercise Variety
-                          </Typography>
-                          <Typography variant="body2">
-                            Your pool includes{' '}
-                            {exercisePoolAnalysis.categorizedExercises.primary.length} primary
-                            exercises and{' '}
-                            {exercisePoolAnalysis.categorizedExercises.accessory.length} accessory
-                            exercises, providing good variety for conjugate training.
-                          </Typography>
-                        </Alert>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Alert severity="warning">
-                          <Typography variant="subtitle2" gutterBottom>
-                            Rotation Management
-                          </Typography>
-                          <Typography variant="body2">
-                            {exercisePoolAnalysis.previouslyUsedExercises.length} exercises are
-                            currently in the sliding window exclusion period, ensuring proper
-                            exercise rotation and preventing accommodation.
-                          </Typography>
-                        </Alert>
-                      </Grid>
-                      <Grid size={{ xs: 12, md: 6 }}>
-                        <Alert severity="info">
-                          <Typography variant="subtitle2" gutterBottom>
-                            Exercise Selection
-                          </Typography>
-                          <Typography variant="body2">
-                            Your exercise pool provides a comprehensive selection of exercises for
-                            your training programs, ensuring variety and proper rotation in your
-                            workouts.
-                          </Typography>
-                        </Alert>
-                      </Grid>
-                    </Grid>
-                  </CardContent>
-                </Card>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}
+                >
+                  Exercise Insights
+                </Typography>
+                <Grid container spacing={3}>
+                  {/* Pool Availability - Pie Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <ExercisePoolPieChart
+                      exercisePoolData={exercisePoolData}
+                      title="Pool Availability"
+                      description={`${exercisePoolAnalysis.availableExercises} of ${exercisePoolAnalysis.totalExercises} exercises available`}
+                      height={250}
+                    />
+                  </Grid>
+
+                  {/* Exercise Variety - Radial Bar Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <RadialBarChart
+                      exercisePoolData={exercisePoolData}
+                      title="Exercise Variety"
+                      description="Primary vs accessory distribution"
+                      height={250}
+                    />
+                  </Grid>
+
+                  {/* Rotation Management - Bar Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <BarChart
+                      exercisePoolData={exercisePoolData}
+                      title="Rotation Management"
+                      description="Available vs previously used"
+                      height={250}
+                    />
+                  </Grid>
+
+                  {/* Exercise Selection - Sunburst Chart */}
+                  <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+                    <ExercisePoolSunburstChart
+                      exercisePoolData={exercisePoolData}
+                      title="Exercise Selection"
+                      description="Hierarchical pool structure"
+                      height={250}
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
             )}
           </Grid>
