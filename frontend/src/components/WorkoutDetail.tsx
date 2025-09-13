@@ -399,51 +399,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
 
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
-      {/* Breadcrumbs and Export buttons */}
-      <Box
-        position="sticky"
-        top={0}
-        zIndex={1001}
-        sx={{
-          backgroundColor: 'background.default',
-          pt: 2,
-          pb: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Breadcrumbs>
-            <Button
-              variant="text"
-              onClick={onBack}
-              sx={{
-                color: 'text.secondary',
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 'normal',
-                p: 0,
-                minWidth: 'auto',
-              }}
-            >
-              Back
-            </Button>
-            <Typography variant="body1" color="text.primary">
-              {workoutData ? replaceUnderscoresWithSpaces(workoutData.workout.name) : 'Workout Details'}
-            </Typography>
-          </Breadcrumbs>
-          
-          {workoutData && (
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              onExportXLSX={handleExportXLSX}
-              onPrint={handlePrint}
-              disabled={!workoutData}
-            />
-          )}
-        </Box>
-      </Box>
-      
       <Box id="workout-detail-content">
         <Grid container spacing={3} sx={{ height: '100%' }}>
         {/* Table Container - 2/3 width */}

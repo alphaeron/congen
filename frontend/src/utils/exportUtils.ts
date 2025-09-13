@@ -23,6 +23,22 @@ const formatWeightWithUnit = (weight: number, unit: 'KG' | 'LBS'): string => {
 };
 
 /**
+ * Sanitize text to prevent PDF formatting issues and ensure proper dash rendering
+ */
+const sanitizeText = (text: string): string => {
+  if (!text) return '';
+  // Replace any non-standard dashes with standard ASCII hyphen
+  let sanitized = text
+    .replace(/[–—]/g, '-') // Replace en-dash and em-dash with standard hyphen
+    .replace(/[\u2010-\u2015]/g, '-') // Replace various Unicode dash characters
+    .trim();
+  
+  // Only remove characters that could cause PDF formatting issues
+  // Keep all common exercise name characters: letters, numbers, spaces, hyphens, periods, forward slashes, parentheses
+  return sanitized.replace(/[^\w\s\-\.\/\(\)]/g, '').trim();
+};
+
+/**
  * Modern Congen PDF styling configuration
  */
 const PDF_STYLES = {
@@ -82,10 +98,10 @@ const prepareWorkoutTableData = (
   
   workout.stages.forEach((stage) => {
     // Add stage name as a full-width row
-    tableData.push([stage.stage.name, '', '', '', '', '']);
+    tableData.push([sanitizeText(stage.stage.name), '', '', '', '', '']); // Sanitize to ensure proper dash rendering
     
     stage.exercises.forEach((exercise) => {
-      const exerciseName = exercise.exercise.exercise_name;
+      const exerciseName = sanitizeText(exercise.exercise.exercise_name); // Sanitize to ensure proper dash rendering
       const totalSets = exercise.set_schemes.length;
       
       // Get the first set scheme for reps, weight, and rest (assuming they're consistent)
@@ -100,7 +116,7 @@ const prepareWorkoutTableData = (
         firstSetScheme.target_rep_count?.toString() || '0',
         formatWeightWithUnit(firstSetScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
         firstSetScheme.rest_seconds?.toString() || '0',
-        firstSetScheme.notes || ''
+        sanitizeText(firstSetScheme.notes || '') // Sanitize notes to ensure proper dash rendering
       ]);
     });
   });
@@ -177,9 +193,11 @@ const addPDFTable = (
           data.cell.styles.textColor = [240, 249, 255];
         }
       } else {
-        // Exercise rows should have white background
+        // Exercise rows should have white background and normal font
         data.cell.styles.fillColor = [255, 255, 255]; // White background
         data.cell.styles.textColor = [0, 0, 0]; // Black text
+        data.cell.styles.fontStyle = 'normal'; // Ensure normal font weight
+        data.cell.styles.fontSize = 9; // Ensure consistent font size
       }
     },
   });

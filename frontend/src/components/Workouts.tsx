@@ -230,8 +230,8 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         borderColor: 'divider',
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Breadcrumbs>
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         {/* Show program name instead of "Workouts" */}
         {selectedWeek ? (
           <Link
@@ -248,21 +248,29 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
           </Typography>
         )}
         {selectedWeek && (
-          <Typography variant="body1" color="text.primary">
-            Week {selectedWeek}
-          </Typography>
+          <>
+            <Typography variant="body1" color="text.primary">
+              /
+            </Typography>
+            <Typography variant="body1" color="text.primary">
+              Week {selectedWeek}
+            </Typography>
+          </>
         )}
-        </Breadcrumbs>
         
         {/* Export buttons */}
         {weeks.length > 0 && (
-          <ExportButtons
-            onExportPDF={handleExportPDF}
-            onExportXLSX={handleExportXLSX}
-            onPrint={handlePrint}
-            disabled={weeks.length === 0}
-          />
+          <>
+            <Box sx={{ flexGrow: 1 }} />
+            <ExportButtons
+              onExportPDF={handleExportPDF}
+              onExportXLSX={handleExportXLSX}
+              onPrint={handlePrint}
+              disabled={weeks.length === 0}
+            />
+          </>
         )}
+        </Box>
       </Box>
     </Box>
   );

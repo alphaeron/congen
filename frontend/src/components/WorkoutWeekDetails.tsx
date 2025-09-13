@@ -34,7 +34,7 @@ import type {
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
-import { exportWeekToPDF, exportWeekToXLSX, printWeekWorkouts } from '../utils/exportUtils';
+import { exportWeekToPDF, exportWeekToXLSX, printWeekWorkouts, exportWorkoutToPDF, exportWorkoutToXLSX, printWorkout } from '../utils/exportUtils';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -208,8 +208,8 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         borderColor: 'divider',
       }}
     >
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <Breadcrumbs>
+      <Box sx={{ mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <Button
           variant="text"
           onClick={() => handleBreadcrumbClick('workouts')}
@@ -224,6 +224,9 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         >
           {activeProgram?.program.name || 'Workouts'}
         </Button>
+        <Typography variant="body1" color="text.primary">
+          /
+        </Typography>
         {/* Only show Week as a clickable button if we're viewing workout details */}
         {selectedWorkoutId ? (
           <Button
@@ -246,26 +249,39 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
           </Typography>
         )}
         {selectedWorkoutId && currentWorkoutDetails && (
-          <Typography variant="body1" color="text.primary">
-            {currentWorkoutDetails.name}
-          </Typography>
+          <>
+            <Typography variant="body1" color="text.primary">
+              /
+            </Typography>
+            <Typography variant="body1" color="text.primary">
+              {currentWorkoutDetails.name}
+            </Typography>
+          </>
         )}
         {selectedWorkoutId && !currentWorkoutDetails && (
-          <Typography variant="body1" color="text.primary">
-            Workout Details
-          </Typography>
+          <>
+            <Typography variant="body1" color="text.primary">
+              /
+            </Typography>
+            <Typography variant="body1" color="text.primary">
+              Workout Details
+            </Typography>
+          </>
         )}
-        </Breadcrumbs>
         
-        {/* Export buttons - show for week view, individual workout has its own export buttons */}
-        {!selectedWorkoutId && weekWorkouts.length > 0 && (
-          <ExportButtons
-            onExportPDF={handleExportPDF}
-            onExportXLSX={handleExportXLSX}
-            onPrint={handlePrint}
-            disabled={weekWorkouts.length === 0}
-          />
+        {/* Export buttons - show for both week view and individual workout view */}
+        {weekWorkouts.length > 0 && (
+          <>
+            <Box sx={{ flexGrow: 1 }} />
+            <ExportButtons
+              onExportPDF={handleExportPDF}
+              onExportXLSX={handleExportXLSX}
+              onPrint={handlePrint}
+              disabled={weekWorkouts.length === 0}
+            />
+          </>
         )}
+        </Box>
       </Box>
     </Box>
   );
@@ -287,27 +303,63 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
 
   // Export handlers
   const handleExportPDF = async () => {
-    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-    await exportWeekToPDF(weekWorkoutsData, weightUnitPreferences, {
-      title: `Week ${weekNumber}`,
-      filename: `week-${weekNumber}-workouts`,
-    });
+    if (selectedWorkoutId && currentWorkoutDetails) {
+      // Export individual workout
+      const workoutData = weekWorkouts.find(ww => ww.workout.id === parseInt(selectedWorkoutId));
+      if (workoutData) {
+        await exportWorkoutToPDF(workoutData, weightUnitPreferences, {
+          title: currentWorkoutDetails.name,
+          filename: `workout-${currentWorkoutDetails.name.toLowerCase().replace(/\s+/g, '-')}`,
+        });
+      }
+    } else {
+      // Export entire week
+      const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+      await exportWeekToPDF(weekWorkoutsData, weightUnitPreferences, {
+        title: `Week ${weekNumber}`,
+        filename: `week-${weekNumber}-workouts`,
+      });
+    }
   };
 
   const handleExportXLSX = async () => {
-    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-    await exportWeekToXLSX(weekWorkoutsData, weightUnitPreferences, {
-      title: `Week ${weekNumber}`,
-      filename: `week-${weekNumber}-workouts`,
-    });
+    if (selectedWorkoutId && currentWorkoutDetails) {
+      // Export individual workout
+      const workoutData = weekWorkouts.find(ww => ww.workout.id === parseInt(selectedWorkoutId));
+      if (workoutData) {
+        await exportWorkoutToXLSX(workoutData, weightUnitPreferences, {
+          title: currentWorkoutDetails.name,
+          filename: `workout-${currentWorkoutDetails.name.toLowerCase().replace(/\s+/g, '-')}`,
+        });
+      }
+    } else {
+      // Export entire week
+      const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+      await exportWeekToXLSX(weekWorkoutsData, weightUnitPreferences, {
+        title: `Week ${weekNumber}`,
+        filename: `week-${weekNumber}-workouts`,
+      });
+    }
   };
 
   const handlePrint = async () => {
-    const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-    await printWeekWorkouts(weekWorkoutsData, weightUnitPreferences, {
-      title: `Week ${weekNumber}`,
-      filename: `week-${weekNumber}-workouts`,
-    });
+    if (selectedWorkoutId && currentWorkoutDetails) {
+      // Print individual workout
+      const workoutData = weekWorkouts.find(ww => ww.workout.id === parseInt(selectedWorkoutId));
+      if (workoutData) {
+        await printWorkout(workoutData, weightUnitPreferences, {
+          title: currentWorkoutDetails.name,
+          filename: `workout-${currentWorkoutDetails.name.toLowerCase().replace(/\s+/g, '-')}`,
+        });
+      }
+    } else {
+      // Print entire week
+      const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
+      await printWeekWorkouts(weekWorkoutsData, weightUnitPreferences, {
+        title: `Week ${weekNumber}`,
+        filename: `week-${weekNumber}-workouts`,
+      });
+    }
   };
 
   // Show loading state while data is being fetched
