@@ -51,7 +51,12 @@ jest.mock('jspdf', () => {
       setFontSize: jest.fn(),
       setFont: jest.fn(),
       setTextColor: jest.fn(),
+      setFillColor: jest.fn(),
+      setDrawColor: jest.fn(),
+      setLineWidth: jest.fn(),
       text: jest.fn(),
+      rect: jest.fn(),
+      roundedRect: jest.fn(),
       getTextWidth: jest.fn((text: string) => text.length * 2), // Mock text width calculation
       link: jest.fn(),
       output: jest.fn(() => ({
