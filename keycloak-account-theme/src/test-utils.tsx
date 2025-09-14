@@ -28,6 +28,29 @@ jest.mock('react-oidc-context', () => ({
 // Extended KcContext with user information for testing
 export type KcContextWithUser = KcContext & {
   pageId?: string;
+  url?: {
+    accountUrl?: string;
+    passwordUrl?: string;
+    totpUrl?: string;
+    socialUrl?: string;
+    sessionsUrl?: string;
+    applicationsUrl?: string;
+    logUrl?: string;
+    logoutUrl?: string;
+    resourceUrl?: string;
+    resourcesCommonPath?: string;
+    resourcesPath?: string;
+    getLogoutUrl?: () => string;
+  };
+  realm?: {
+    name?: string;
+    internationalizationEnabled?: boolean;
+    userManagedAccessAllowed?: boolean;
+    registrationEmailAsUsername?: boolean;
+    editUsernameAllowed?: boolean;
+    isInternationalizationEnabled?: boolean;
+    identityFederationEnabled?: boolean;
+  };
   user?: {
     username?: string;
     email?: string;

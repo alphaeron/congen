@@ -8,7 +8,7 @@ data:
   SPRINGDOC_SWAGGER_UI_ENABLED: "false"
   CORS_ALLOWED_ORIGINS: "https://congen.com,https://www.congen.com"
   # JWT Configuration for production environment
-  JWT_ISSUER_URI: "http://congen.com:8080/realms/congen"
+  JWT_ISSUER_URI: "https://congen.com/realms/congen"
   JWT_JWK_SET_URI: "http://keycloak:8080/realms/congen/protocol/openid-connect/certs"
   JWT_AUDIENCES: "congen-backend"
   CONGEN_KEYCLOAK_MANAGEMENT_URL: "http://keycloak:9000"

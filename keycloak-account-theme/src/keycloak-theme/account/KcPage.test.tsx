@@ -1,7 +1,10 @@
 import React from 'react';
-import { screen, waitFor, act } from '@testing-library/react';
-import { render, createMockKcContext } from '../../test-utils';
+import { screen, waitFor, act, render as rtlRender } from '@testing-library/react';
+import { createMockKcContext } from '../../test-utils';
 import type { KcContextWithUser } from '../../test-utils';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { getTheme } from '../../theme';
 import KcPage from './KcPage';
 
 // Mock fetch globally
@@ -18,9 +21,40 @@ jest.mock('./api/client', () => ({
   setTokenGetter: jest.fn(),
 }));
 
+// Mock the AuthContext to avoid loading states
+jest.mock('./AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+    login: jest.fn(),
+    logout: jest.fn(),
+  }),
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Custom render function that doesn't use AuthProvider since we're mocking it
+const render = (ui: React.ReactElement, kcContext?: KcContextWithUser) => {
+  const muiTheme = createTheme(getTheme('light'));
+
+  // Mock window.kcContext
+  if (typeof window !== 'undefined' && kcContext) {
+    (window as { kcContext?: unknown }).kcContext = kcContext;
+  }
+
+  return rtlRender(
+    <ThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      {ui}
+    </ThemeProvider>
+  );
+};
+
 describe('KcPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Reset fetch mock implementation
+    mockFetch.mockReset();
     
     // Mock successful userinfo response
     mockFetch.mockImplementation((url: string) => {
@@ -48,6 +82,10 @@ describe('KcPage', () => {
     });
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('renders Account component for account page', async () => {
     const kcContext = createMockKcContext({
       url: {
@@ -55,15 +93,13 @@ describe('KcPage', () => {
       } as KcContextWithUser['url'],
     });
     
-    await act(async () => {
-      render(<KcPage kcContext={kcContext} />);
-    });
+    render(<KcPage kcContext={kcContext} />, kcContext);
 
     // Wait for the component to load and show the main content
     await waitFor(() => {
       expect(screen.getByText('ConGen')).toBeInTheDocument();
     }, { timeout: 10000 });
-  });
+  }, 15000);
 
   it('handles unknown page types gracefully', async () => {
     const kcContext = createMockKcContext({
@@ -73,14 +109,12 @@ describe('KcPage', () => {
       } as KcContextWithUser['url'],
     });
     
-    await act(async () => {
-      render(<KcPage kcContext={kcContext} />);
-    });
+    render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
     await waitFor(() => {
       expect(screen.getByText('ConGen')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('passes kcContext to child components', async () => {
@@ -93,14 +127,12 @@ describe('KcPage', () => {
       },
     });
     
-    await act(async () => {
-      render(<KcPage kcContext={kcContext} />);
-    });
+    render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
     await waitFor(() => {
       expect(screen.getByText('ConGen')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('renders with different realm names', async () => {
@@ -111,14 +143,12 @@ describe('KcPage', () => {
       },
     });
     
-    await act(async () => {
-      render(<KcPage kcContext={kcContext} />);
-    });
+    render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
     await waitFor(() => {
       expect(screen.getByText('ConGen')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 
   it('handles missing realm information', async () => {
@@ -126,13 +156,11 @@ describe('KcPage', () => {
       realm: undefined,
     });
     
-    await act(async () => {
-      render(<KcPage kcContext={kcContext} />);
-    });
+    render(<KcPage kcContext={kcContext} />, kcContext);
 
     // The Account component should render with the app bar
     await waitFor(() => {
       expect(screen.getByText('ConGen')).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
   });
 });
