@@ -59,6 +59,9 @@ jest.mock('jspdf', () => {
       roundedRect: jest.fn(),
       getTextWidth: jest.fn((text: string) => text.length * 2), // Mock text width calculation
       link: jest.fn(),
+      internal: {
+        getCurrentPageInfo: jest.fn(() => ({ pageNumber: 1 })),
+      },
       output: jest.fn(() => ({
         blob: jest.fn(() => new Blob(['test'], { type: 'application/pdf' })),
       })),

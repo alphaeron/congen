@@ -3,7 +3,7 @@ import {
   ExpandMore as ExpandMoreIcon,
   ExpandLess as ExpandLessIcon,
 } from '@mui/icons-material';
-import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Breadcrumbs, Button } from '@mui/material';
+import { Box, Typography, Alert, IconButton, Tooltip, Paper, useTheme, Grid, Button } from '@mui/material';
 import {
   useReactTable,
   getCoreRowModel,
@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table';
 import { useSnackbar } from 'notistack';
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 
 import { ChordChart } from './ChordChart';
 import { ExerciseName } from './ExerciseName';
@@ -73,6 +74,8 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   const theme = useTheme();
   const { enqueueSnackbar } = useSnackbar();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [userData, setUserData] = useState<UserDataExport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [collapsedStages, setCollapsedStages] = useState<Set<number>>(new Set());
@@ -181,6 +184,129 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
       title: workoutName,
       filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
     });
+  };
+
+  // Breadcrumb navigation functions
+  const handleBreadcrumbClick = (target: string) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.set('section', 'workouts');
+    
+    if (target === 'workouts') {
+      newSearchParams.delete('week');
+      newSearchParams.delete('workout');
+    } else if (target === 'week') {
+      // Calculate week number from workout day number
+      if (workoutData && userData) {
+        const dayNumber = workoutData.workout.day_number;
+        
+        // Find the active program to get workouts per week
+        let weekNumber = 1;
+        if (userData.training_programs?.length) {
+          const activeProgram = userData.training_programs.find(program => 
+            (program.program as any).is_active
+          );
+          if (activeProgram && (activeProgram as any).program_preferences) {
+            const workoutsPerWeek = (activeProgram as any).program_preferences.program_days_per_week;
+            weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
+          }
+        }
+        
+        newSearchParams.set('week', weekNumber.toString());
+        newSearchParams.delete('workout');
+      }
+    }
+    
+    navigate(`/dashboard?${newSearchParams.toString()}`);
+  };
+
+  // Render breadcrumbs
+  const renderBreadcrumbs = () => {
+    if (!workoutData || !userData) return null;
+
+    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
+    const dayNumber = workoutData.workout.day_number;
+    
+    // Find the active program to get workouts per week and program name
+    let weekNumber = 1;
+    let programName = 'Workouts';
+    if (userData.training_programs?.length) {
+      const activeProgram = userData.training_programs.find(program => 
+        (program.program as any).is_active
+      );
+      if (activeProgram) {
+        programName = (activeProgram.program as any).name || 'Workouts';
+        if ((activeProgram as any).program_preferences) {
+          const workoutsPerWeek = (activeProgram as any).program_preferences.program_days_per_week;
+          weekNumber = Math.ceil(dayNumber / workoutsPerWeek);
+        }
+      }
+    }
+
+    return (
+      <Box
+        position="sticky"
+        top={0}
+        zIndex={1001}
+        sx={{
+          backgroundColor: 'background.default',
+          pt: 2,
+          pb: 2,
+          borderBottom: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Button
+              variant="text"
+              onClick={() => handleBreadcrumbClick('workouts')}
+              sx={{
+                color: 'text.secondary',
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 'normal',
+                p: 0,
+                minWidth: 'auto',
+              }}
+            >
+              {programName}
+            </Button>
+            <Typography variant="body1" color="text.primary">
+              /
+            </Typography>
+            <Button
+              variant="text"
+              onClick={() => handleBreadcrumbClick('week')}
+              sx={{
+                color: 'text.secondary',
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 'normal',
+                p: 0,
+                minWidth: 'auto',
+              }}
+            >
+              Week {weekNumber}
+            </Button>
+            <Typography variant="body1" color="text.primary">
+              /
+            </Typography>
+            <Typography variant="body1" color="text.primary">
+              {workoutName}
+            </Typography>
+            
+            {/* Export buttons */}
+            <Box sx={{ flexGrow: 1 }} />
+            <ExportButtons
+              onExportPDF={handleExportPDF}
+              onExportXLSX={handleExportXLSX}
+              onPrint={handlePrint}
+              disabled={!workoutData}
+            />
+          </Box>
+        </Box>
+      </Box>
+    );
   };
 
   // Transform data for table
@@ -400,9 +526,10 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
   return (
     <Box sx={{ height: 'calc(100vh - 48px)', overflow: 'auto' }}>
       <Box id="workout-detail-content">
+        {renderBreadcrumbs()}
         <Grid container spacing={3} sx={{ height: '100%' }}>
         {/* Table Container - 2/3 width */}
-        <Grid size={{ xs: 12, lg: 8 }}>
+        <Grid size={{ xs: 12, lg: 8 }} sx={{ mt: 3 }} >
           <Paper sx={{ width: '100%', overflow: 'hidden', height: '100%' }}>
             <Box
               sx={{

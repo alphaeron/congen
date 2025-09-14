@@ -6,6 +6,7 @@ import type {
   ProgramWithWorkouts,
   UserWeightUnitPreference,
 } from '../api/types';
+import { capitalizeEachWord } from '../common/utils';
 
 export interface ExportOptions {
   title: string;
@@ -252,6 +253,62 @@ const addTableOfContentsPage = (
 // The visual table of contents with clickable links provides good navigation
 
 /**
+ * Helper function to add a week's content (header + workouts) to the PDF.
+ * This function is reused across program, week, and individual workout exports.
+ */
+const addWeekDetailsToPDF = (
+  pdf: jsPDF,
+  weekNumber: number,
+  weekWorkouts: ProgrammedWorkoutWithStages[],
+  startY: number,
+  weightUnitPreferences: UserWeightUnitPreference[],
+  tocEntries?: Array<{ title: string; page: number; level: number }> // Optional for program export
+): number => {
+  let currentY = startY;
+  const currentPage = pdf.internal.getCurrentPageInfo().pageNumber;
+
+  // Add week header
+  pdf.setFontSize(18);
+  pdf.setFont('helvetica', 'bold');
+  pdf.setTextColor(14, 165, 233); // Congen brand blue
+  pdf.text(`Week ${weekNumber}`, 20, currentY);
+  currentY += 8; // Space after week header
+
+  // Add TOC entry for week if provided
+  if (tocEntries) {
+    tocEntries.push({ title: `Week ${weekNumber}`, page: currentPage, level: 1 });
+  }
+
+  // Sort workouts by day number
+  const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
+
+  // Create a table for each workout in this week
+  sortedWorkouts.forEach((workout, index) => {
+    // Check if we need a new page for this day
+    if (currentY > 200) {
+      pdf.addPage();
+      currentY = 20;
+    }
+    
+    // Add spacing between days (except for first day)
+    if (index > 0) {
+      currentY += 8;
+    }
+    
+    // Add TOC entry for day if provided
+    if (tocEntries) {
+      tocEntries.push({ title: capitalizeEachWord(workout.workout.name), page: currentPage, level: 2 });
+    }
+    
+    // Prepare and add table
+    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
+    currentY = addPDFTable(pdf, tableData, currentY, capitalizeEachWord(workout.workout.name));
+  });
+
+  return currentY;
+};
+
+/**
  * Add PDF table with modern Congen styling
  */
 const addPDFTable = (
@@ -461,23 +518,10 @@ export const exportWorkoutToPDF = async (
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
   
-  // Add modern title with Congen styling
-  pdf.setFontSize(20);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setTextColor(14, 165, 233); // Congen brand blue
-  pdf.text(options.title, 20, 25);
-  
-  // Add workout info with modern styling
-  pdf.setFontSize(11);
-  pdf.setFont('helvetica', 'normal');
-  pdf.setTextColor(64, 64, 64); // Modern gray
-  pdf.text(`Day: ${workoutData.workout.day_number}`, 20, 35);
-  pdf.text(`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`, 20, 40);
-  pdf.text(`Total Stages: ${workoutData.stages.length}`, 20, 45);
-  
-  // Prepare and add table
-  const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
-  addPDFTable(pdf, tableData, 55);
+  // Create a single-workout array and use helper function
+  const singleWorkoutArray = [workoutData];
+  const weekNumber = Math.ceil(workoutData.workout.day_number / 7);
+  addWeekDetailsToPDF(pdf, weekNumber, singleWorkoutArray, 20, weightUnitPreferences);
   
   downloadPDFFile(pdf, options.filename);
 };
@@ -492,20 +536,6 @@ export const exportWorkoutToXLSX = async (
 ): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   const workoutSheet = workbook.addWorksheet('Workout Details');
-  
-  // Add modern title
-  const titleRow = workoutSheet.addRow([options.title]);
-  titleRow.font = EXCEL_STYLES.titleFont;
-  titleRow.alignment = { horizontal: 'center' };
-  workoutSheet.addRow([]); // Empty row for spacing
-  
-  // Add workout info with modern styling
-  const infoRow1 = workoutSheet.addRow([`Day: ${workoutData.workout.day_number}`]);
-  infoRow1.font = EXCEL_STYLES.bodyFont;
-  const infoRow2 = workoutSheet.addRow([`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`]);
-  infoRow2.font = EXCEL_STYLES.bodyFont;
-  const infoRow3 = workoutSheet.addRow([`Total Stages: ${workoutData.stages.length}`]);
-  infoRow3.font = EXCEL_STYLES.bodyFont;
   workoutSheet.addRow([]); // Empty row for spacing
   
   // Prepare and add table
@@ -525,36 +555,9 @@ export const exportWeekToPDF = async (
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
   
-  // Add title
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(options.title, 20, 20);
-  
-  // Add week info
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Total Workouts: ${weekWorkouts.length}`, 20, 30);
-  pdf.text(`Total Stages: ${weekWorkouts.reduce((acc, workout) => acc + workout.stages.length, 0)}`, 20, 35);
-  
-  let currentY = 50;
-  
-  // Create a table for each workout
-  weekWorkouts.forEach((workout, workoutIndex) => {
-    if (workoutIndex > 0) {
-      pdf.addPage();
-      currentY = 20;
-    }
-    
-    // Workout header
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Workout ${workoutIndex + 1}: ${workout.workout.name}`, 20, currentY);
-    currentY += 10;
-    
-    // Prepare and add table
-    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-    currentY = addPDFTable(pdf, tableData, currentY);
-  });
+  // Use helper function to add week details (assuming week 1 for single week export)
+  const weekNumber = 1;
+  addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, 20, weightUnitPreferences);
   
   downloadPDFFile(pdf, options.filename);
 };
@@ -584,7 +587,7 @@ export const exportWeekToXLSX = async (
   sortedWorkouts.forEach((workout) => {
     // Prepare and add table data using the new function
     const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-    addExcelTable(weekSheet, tableData, `Day ${workout.workout.day_number}`);
+    addExcelTable(weekSheet, tableData, `${capitalizeEachWord(workout.workout.name)}`);
   });
   
   await downloadExcelFile(workbook, options.filename);
@@ -631,37 +634,8 @@ export const exportProgramToPDF = async (
       currentPage++;
     }
     
-    // Add week header and create named destination
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Week ${weekNumber}`, 20, currentY);
-    
-    tocEntries.push({ title: `Week ${weekNumber}`, page: currentPage, level: 1 });
-    currentY += 8;
-    
-    // Sort workouts by day number
-    const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
-    
-    // Create a table for each workout in this week
-    sortedWorkouts.forEach((workout, index) => {
-      // Check if we need a new page for this day
-      if (currentY > 200) {
-        pdf.addPage();
-        currentY = 20;
-        currentPage++;
-      }
-      
-      // Add spacing between days (except for first day)
-      if (index > 0) {
-        currentY += 8;
-      }
-      
-      tocEntries.push({ title: `Day ${workout.workout.day_number}`, page: currentPage, level: 2 });
-      
-      // Prepare and add table
-      const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-      currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
-    });
+    // Use helper function to add week details
+    currentY = addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, currentY, weightUnitPreferences, tocEntries);
   });
   
   // Add cover page and table of contents
@@ -711,7 +685,7 @@ export const exportProgramToXLSX = async (
     sortedWorkouts.forEach((workout) => {
       // Prepare and add table data using the new function
       const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-      addExcelTable(weekSheet, tableData, `Day ${workout.workout.day_number}`);
+      addExcelTable(weekSheet, tableData, `${capitalizeEachWord(workout.workout.name)}`);
     });
   });
   
@@ -728,21 +702,10 @@ export const printWorkout = async (
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
   
-  // Add title
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(options.title, 20, 20);
-  
-  // Add workout info
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Day: ${workoutData.workout.day_number}`, 20, 30);
-  pdf.text(`Created: ${new Date(workoutData.workout.created_at).toLocaleDateString()}`, 20, 35);
-  pdf.text(`Total Stages: ${workoutData.stages.length}`, 20, 40);
-  
-  // Prepare and add table
-  const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
-  addPDFTable(pdf, tableData, 50);
+  // Create a single-workout array and use helper function
+  const singleWorkoutArray = [workoutData];
+  const weekNumber = Math.ceil(workoutData.workout.day_number / 7);
+  addWeekDetailsToPDF(pdf, weekNumber, singleWorkoutArray, 20, weightUnitPreferences);
   
   await openPrintDialog(pdf);
 };
@@ -756,44 +719,10 @@ export const printWeekWorkouts = async (
   options: ExportOptions
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
-  let currentY = 20;
   
-  // Add title
-  pdf.setFontSize(18);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text(options.title, 20, currentY);
-  currentY += 15;
-  
-  // Add week info
-  pdf.setFontSize(12);
-  pdf.setFont('helvetica', 'normal');
-  pdf.text(`Total Workouts: ${weekWorkouts.length}`, 20, currentY);
-  currentY += 10;
-  
-  weekWorkouts.forEach((workout, workoutIndex) => {
-    // Check if we need a new page
-    if (currentY > 250) {
-      pdf.addPage();
-      currentY = 20;
-    }
-    
-    // Add workout header
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Workout ${workoutIndex + 1} - Day ${workout.workout.day_number}`, 20, currentY);
-    currentY += 10;
-    
-    // Add workout info
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text(`Created: ${new Date(workout.workout.created_at).toLocaleDateString()}`, 20, currentY);
-    pdf.text(`Stages: ${workout.stages.length}`, 100, currentY);
-    currentY += 8;
-    
-    // Prepare and add table
-    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-    currentY = addPDFTable(pdf, tableData, currentY);
-  });
+  // Use helper function to add week details (assuming week 1 for single week export)
+  const weekNumber = 1;
+  addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, 20, weightUnitPreferences);
   
   await openPrintDialog(pdf);
 };
@@ -839,37 +768,8 @@ export const printProgramWorkouts = async (
       currentPage++;
     }
     
-    // Add week header and create named destination
-    pdf.setFontSize(14);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text(`Week ${week}`, 20, currentY);
-    
-    tocEntries.push({ title: `Week ${week}`, page: currentPage, level: 1 });
-    currentY += 8;
-    
-    // Sort workouts by day number
-    const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
-    
-    // Add each day with its table
-    sortedWorkouts.forEach((workout, index) => {
-      // Check if we need a new page for this day
-      if (currentY > 200) {
-        pdf.addPage();
-        currentY = 20;
-        currentPage++;
-      }
-      
-      // Add consistent spacing before day title (except for first day)
-      if (index > 0) {
-        currentY += 8;
-      }
-      
-      tocEntries.push({ title: `Day ${workout.workout.day_number}`, page: currentPage, level: 2 });
-      
-      // Prepare and add table
-      const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-      currentY = addPDFTable(pdf, tableData, currentY, `Day ${workout.workout.day_number}`);
-    });
+    // Use helper function to add week details
+    currentY = addWeekDetailsToPDF(pdf, week, weekWorkouts, currentY, weightUnitPreferences, tocEntries);
   });
   
   // Add cover page and table of contents
