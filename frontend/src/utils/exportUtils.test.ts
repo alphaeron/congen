@@ -31,8 +31,10 @@ jest.mock('jspdf', () => {
       setLineWidth: jest.fn(),
       rect: jest.fn(),
       roundedRect: jest.fn(),
+      setProperties: jest.fn(),
       internal: {
         getCurrentPageInfo: jest.fn(() => ({ pageNumber: 1 })),
+        getNumberOfPages: jest.fn(() => 3),
       },
     })),
   };

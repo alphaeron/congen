@@ -68,6 +68,31 @@ const PDF_STYLES = {
   tableLineWidth: 0.5,
 };
 
+/**
+ * Exercise difficulty color mapping for visual enhancement
+ */
+const EXERCISE_DIFFICULTY_COLORS = {
+  warmup: [240, 249, 255] as [number, number, number], // Light blue
+  primary: [255, 237, 213] as [number, number, number], // Light orange
+  accessory: [240, 253, 244] as [number, number, number], // Light green
+  conditioning: [254, 242, 242] as [number, number, number], // Light red
+  default: [255, 255, 255] as [number, number, number], // White
+};
+
+
+
+
+/**
+ * Determine exercise difficulty/stage type for color coding
+ */
+const getExerciseStageType = (stageName: string): keyof typeof EXERCISE_DIFFICULTY_COLORS => {
+  const name = stageName.toLowerCase();
+  if (name.includes('warmup') || name.includes('warm')) return 'warmup';
+  if (name.includes('primary') || name.includes('main')) return 'primary';
+  if (name.includes('accessory') || name.includes('assistance')) return 'accessory';
+  if (name.includes('conditioning') || name.includes('cardio')) return 'conditioning';
+  return 'default';
+};
 
 /**
  * Prepare table data for a single workout
@@ -361,18 +386,24 @@ const addPDFTable = (
       
       if (isStageRow) {
         if (data.column.index === 0) {
-          // Style the stage name cell
+          // Get stage type for color coding
+          const stageType = getExerciseStageType(data.row.raw[0]);
+          const stageColor = EXERCISE_DIFFICULTY_COLORS[stageType];
+          
+          // Style the stage name cell with difficulty-based colors
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.fontSize = 10;
           data.cell.styles.textColor = [14, 165, 233]; // Congen brand blue
-          data.cell.styles.fillColor = [240, 249, 255]; // Light blue background
+          data.cell.styles.fillColor = stageColor;
           data.cell.styles.cellPadding = 4;
           data.cell.styles.halign = 'left';
           data.cell.styles.valign = 'middle';
         } else {
-          // Hide other cells in stage name rows
-          data.cell.styles.fillColor = [240, 249, 255];
-          data.cell.styles.textColor = [240, 249, 255];
+          // Apply same background color to all cells in stage name rows
+          const stageType = getExerciseStageType(data.row.raw[0]);
+          const stageColor = EXERCISE_DIFFICULTY_COLORS[stageType];
+          data.cell.styles.fillColor = stageColor;
+          data.cell.styles.textColor = stageColor;
         }
       } else {
         // Exercise rows should have white background and normal font
@@ -489,6 +520,16 @@ export const exportProgramToPDF = async (
   options: ExportOptions
 ): Promise<void> => {
   const pdf = new jsPDF('p', 'mm', 'a4');
+  
+  // Set document metadata for professional appearance
+  pdf.setProperties({
+    title: `${programData.program.name} - Training Program`,
+    author: 'Congen Fitness',
+    subject: 'Workout Program',
+    keywords: 'fitness, workout, training, exercise, program',
+    creator: 'Congen App'
+  });
+  
   let currentY = 20;
   let currentPage = 1;
   
@@ -535,6 +576,16 @@ export const exportProgramToPDF = async (
   }));
   
   addTableOfContentsPage(pdf, adjustedTocEntries);
+  
+  // Add page numbers to all pages (except cover page)
+  const totalPages = (pdf as any).internal.getNumberOfPages();
+  for (let i = 2; i <= totalPages; i++) { // Start from page 2 (skip cover page)
+    pdf.setPage(i);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(156, 163, 175); // Gray color
+    pdf.text(`Page ${i - 1} of ${totalPages - 1}`, 190, 290, { align: 'right' }); // -1 to exclude cover page from count
+  }
   
   // Note: PDF outline/bookmarks not available in standard jsPDF
   
