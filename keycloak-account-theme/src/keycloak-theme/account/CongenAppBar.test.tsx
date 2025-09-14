@@ -144,30 +144,37 @@ describe('CongenAppBar', () => {
     expect(avatar).toBeInTheDocument();
   });
 
-  it('handles user with only last name', () => {
-    const userWithOnlyLastName = {
-      username: 'testuser',
+  it('handles user with given_name instead of firstName', () => {
+    const userWithGivenName = {
+      given_name: 'Test',
+      family_name: 'User',
       email: 'test@example.com',
-      lastName: 'User',
     };
 
-    render(<CongenAppBar {...defaultProps} user={userWithOnlyLastName} />);
+    render(<CongenAppBar {...defaultProps} user={userWithGivenName} />);
 
-    // Should show first letter of username since no firstName
+    // Should show 'T' from given_name
     const avatar = screen.getByText('T');
     expect(avatar).toBeInTheDocument();
   });
 
-  it('handles user with no name', () => {
+  it('handles user with no firstName and no given_name', () => {
     const userWithNoName = {
-      username: 'testuser',
       email: 'test@example.com',
     };
 
     render(<CongenAppBar {...defaultProps} user={userWithNoName} />);
 
-    // Should show first letter of username
-    const avatar = screen.getByText('T');
+    // Should show default 'U' since no firstName or given_name
+    const avatar = screen.getByText('U');
+    expect(avatar).toBeInTheDocument();
+  });
+
+  it('shows loading state when userLoading is true', () => {
+    render(<CongenAppBar {...defaultProps} userLoading={true} />);
+
+    // Should show loading dots
+    const avatar = screen.getByText('...');
     expect(avatar).toBeInTheDocument();
   });
 

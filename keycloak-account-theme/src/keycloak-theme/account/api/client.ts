@@ -130,6 +130,44 @@ export class KeycloakAccountApiClient {
   }
 
   /**
+   * Update backend user profile using the application's REST API
+   * Uses PATCH /user/me with name parameter
+   */
+  async updateBackendUserProfile(firstName: string, lastName: string): Promise<ApiResponse<void>> {
+    try {
+      // Combine first and last name for the backend
+      const fullName = `${firstName} ${lastName}`.trim();
+
+      // Get the backend URL - for local environment, use port 8888 with /api/v1 prefix
+      const backendUrl = window.location.origin.replace('8080', '8888');
+      
+      const response = await fetch(`${backendUrl}/api/v1/user/me?name=${encodeURIComponent(fullName)}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      return {
+        success: true,
+        data: undefined,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      };
+    }
+  }
+
+  /**
    * Get current user profile
    */
   async getUserProfile(): Promise<ApiResponse<UserProfile>> {

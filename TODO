@@ -1,7 +1,5 @@
 add strongman exercises and equipment to database
 
-update backend when keycloak theme user data changes too, use first char of first name or 'U', edit email as well, better UI
-
 "how it works" on root spa with workout generation algorithm flowchart
 
 After generation prompted for current 1rm, sets reps can do for accessories and other portions of workout not recorded.  After record all that, then edit the workout to reflect current abilities.  Over time you won’t be prompted anymore, or can decline to answer and the default will be used.  Wizard  interface, show generating while it waits to load, then some screen like to further customize/taylor the workout generation for you can you provide…
