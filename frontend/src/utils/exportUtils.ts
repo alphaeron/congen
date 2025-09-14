@@ -271,16 +271,18 @@ const addWeekDetailsToPDF = (
 
   // Create a table for each workout in this week
   sortedWorkouts.forEach((workout, index) => {
-    // Check if we need a new page for this day
-    if (currentY > 200) {
+    // Start each workout (except the first one) on a new page
+    if (index > 0) {
       pdf.addPage();
       currentY = 20;
       currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
-    }
-    
-    // Add spacing between days (except for first day)
-    if (index > 0) {
-      currentY += 8;
+    } else {
+      // For the first workout, check if we need a new page
+      if (currentY > 200) {
+        pdf.addPage();
+        currentY = 20;
+        currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
+      }
     }
     
     // Add TOC entry for day if provided
