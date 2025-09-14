@@ -22,7 +22,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
     try {
       setIsExporting(true);
       await onExportPDF();
-      enqueueSnackbar('PDF exported successfully', { variant: 'success' });
+      enqueueSnackbar('PDF opened in new tab', { variant: 'success' });
     } catch (error) {
       enqueueSnackbar('Failed to export PDF', { variant: 'error' });
     } finally {
@@ -31,7 +31,7 @@ export const ExportButtons: React.FC<ExportButtonsProps> = ({
   };
 
   return (
-    <Tooltip title="Export as PDF">
+    <Tooltip title="Open PDF in new tab">
       <span>
         <IconButton
           onClick={handleExportPDF}

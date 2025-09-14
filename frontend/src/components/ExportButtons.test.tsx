@@ -89,7 +89,7 @@ describe('ExportButtons', () => {
     fireEvent.click(exportButton);
     
     await waitFor(() => {
-      expect(screen.getByText('PDF exported successfully')).toBeInTheDocument();
+      expect(screen.getByText('PDF opened in new tab')).toBeInTheDocument();
     });
   });
 });

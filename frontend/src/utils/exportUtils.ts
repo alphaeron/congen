@@ -375,10 +375,26 @@ const addPDFTable = (
 
 
 /**
- * Download PDF file
+ * Open PDF file in browser
  */
 const downloadPDFFile = (pdf: jsPDF, filename: string): void => {
-  pdf.save(`${filename}.pdf`);
+  // Create a blob URL and open in new tab instead of downloading
+  const pdfBlob = pdf.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  
+  // Open PDF in new tab
+  const newWindow = window.open(pdfUrl, '_blank');
+  
+  // Clean up the blob URL after a delay to allow the browser to load it
+  if (newWindow) {
+    setTimeout(() => {
+      URL.revokeObjectURL(pdfUrl);
+    }, 1000);
+  } else {
+    // Fallback to download if popup was blocked
+    pdf.save(`${filename}.pdf`);
+    URL.revokeObjectURL(pdfUrl);
+  }
 };
 
 /**

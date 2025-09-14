@@ -18,6 +18,7 @@ jest.mock('jspdf', () => {
       insertPage: jest.fn(),
       setPage: jest.fn(),
       save: jest.fn(),
+      output: jest.fn(() => new ArrayBuffer(8)), // Mock output method
       text: jest.fn(),
       setFontSize: jest.fn(),
       setFont: jest.fn(),
@@ -39,6 +40,26 @@ jest.mock('jspdf', () => {
 // Mock jspdf-autotable
 jest.mock('jspdf-autotable', () => {
   return jest.fn();
+});
+
+// Mock window.open and URL methods
+const mockOpen = jest.fn();
+const mockCreateObjectURL = jest.fn(() => 'mock-url');
+const mockRevokeObjectURL = jest.fn();
+
+Object.defineProperty(window, 'open', {
+  value: mockOpen,
+  writable: true,
+});
+
+Object.defineProperty(URL, 'createObjectURL', {
+  value: mockCreateObjectURL,
+  writable: true,
+});
+
+Object.defineProperty(URL, 'revokeObjectURL', {
+  value: mockRevokeObjectURL,
+  writable: true,
 });
 
 describe('exportUtils', () => {
@@ -91,6 +112,9 @@ describe('exportUtils', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockOpen.mockClear();
+    mockCreateObjectURL.mockClear();
+    mockRevokeObjectURL.mockClear();
   });
 
   describe('exportWorkoutToPDF', () => {
