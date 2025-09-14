@@ -1,12 +1,12 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import ExcelJS from 'exceljs';
 import type {
   ProgrammedWorkoutWithStages,
   ProgramWithWorkouts,
   UserWeightUnitPreference,
 } from '../api/types';
 import { capitalizeEachWord } from '../common/utils';
+
 
 export interface ExportOptions {
   title: string;
@@ -46,7 +46,7 @@ const PDF_STYLES = {
   fontSize: 9,
   cellPadding: 3,
   headStyles: {
-    fillColor: [14, 165, 233], // Congen brand blue #0ea5e9
+    fillColor: [14, 165, 233] as [number, number, number], // Congen brand blue #0ea5e9
     textColor: 255,
     fontStyle: 'bold' as const,
     fontSize: 9,
@@ -60,7 +60,7 @@ const PDF_STYLES = {
   styles: {
     fontSize: 9,
     cellPadding: 3,
-    lineColor: [226, 232, 240], // Light gray border
+    lineColor: [226, 232, 240] as [number, number, number], // Light gray border
     lineWidth: 0.5,
     valign: 'middle' as const,
   },
@@ -68,25 +68,6 @@ const PDF_STYLES = {
   tableLineWidth: 0.5,
 };
 
-/**
- * Modern Congen Excel styling configuration
- */
-const EXCEL_STYLES = {
-  titleFont: { bold: true, size: 18, color: { argb: 'FF0EA5E9' } }, // Congen brand blue
-  headerFont: { bold: true, size: 11, color: { argb: 'FFFFFFFF' } },
-  stageFont: { bold: true, size: 10, color: { argb: 'FF0EA5E9' } }, // Bold stage names
-  bodyFont: { size: 10 },
-  columnWidths: {
-    1: 35, // Exercise column
-    2: 10, // Sets column
-    3: 10, // Reps column
-    4: 15, // Weight column
-    5: 15, // Rest column
-    6: 25, // Notes column
-  },
-  headerFill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FF0EA5E9' } },
-  alternateFill: { type: 'pattern' as const, pattern: 'solid' as const, fgColor: { argb: 'FFF0F9FF' } },
-};
 
 /**
  * Prepare table data for a single workout
@@ -108,7 +89,7 @@ const prepareWorkoutTableData = (
       // Get the first set scheme for reps, weight, and rest (assuming they're consistent)
       const firstSetScheme = exercise.set_schemes[0];
       const weightUnit = weightUnitPreferences.find(
-        pref => pref.user_id === workout.workout.user_id
+        pref => pref.user_id === '1' // Default user ID for weight unit preferences
       )?.preferred_unit || 'KG';
       
       tableData.push([
@@ -117,7 +98,7 @@ const prepareWorkoutTableData = (
         firstSetScheme.target_rep_count?.toString() || '0',
         formatWeightWithUnit(firstSetScheme.target_weight || 0, weightUnit as 'KG' | 'LBS'),
         firstSetScheme.rest_seconds?.toString() || '0',
-        sanitizeText(firstSetScheme.notes || '') // Sanitize notes to ensure proper dash rendering
+        '' // No notes field in SetScheme interface
       ]);
     });
   });
@@ -265,7 +246,7 @@ const addWeekDetailsToPDF = (
   tocEntries?: Array<{ title: string; page: number; level: number }> // Optional for program export
 ): number => {
   let currentY = startY;
-  const currentPage = pdf.internal.getCurrentPageInfo().pageNumber;
+  const currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
 
   // Add week header
   pdf.setFontSize(18);
@@ -336,20 +317,20 @@ const addPDFTable = (
     body: processedTableData,
     startY,
     ...PDF_STYLES,
-    tableLineColor: [226, 232, 240],
+    tableLineColor: [226, 232, 240] as [number, number, number],
     tableLineWidth: 0.5,
     showHead: 'everyPage',
     showFoot: 'never',
     // Use full available width
-    tableWidth: '100%',
+    tableWidth: '100%' as any,
     // Use percentage-based column widths that fill the entire available space
     columnStyles: {
-      0: { cellWidth: '42%', halign: 'left' as const }, // Exercise
-      1: { cellWidth: '12%', halign: 'center' as const }, // Sets
-      2: { cellWidth: '12%', halign: 'center' as const }, // Reps
-      3: { cellWidth: '15%', halign: 'center' as const }, // Weight
-      4: { cellWidth: '15%', halign: 'center' as const }, // Rest
-      5: { cellWidth: '19%', halign: 'left' as const }, // Notes
+      0: { cellWidth: '42%' as any, halign: 'left' as const }, // Exercise
+      1: { cellWidth: '12%' as any, halign: 'center' as const }, // Sets
+      2: { cellWidth: '12%' as any, halign: 'center' as const }, // Reps
+      3: { cellWidth: '15%' as any, halign: 'center' as const }, // Weight
+      4: { cellWidth: '15%' as any, halign: 'center' as const }, // Rest
+      5: { cellWidth: '19%' as any, halign: 'left' as const }, // Notes
     },
     didParseCell: (data: any) => {
       // Don't modify header rows - let headStyles handle them
@@ -391,86 +372,7 @@ const addPDFTable = (
   return finalY + 4; // Reduced spacing after table
 };
 
-/**
- * Add Excel table with modern Congen styling
- */
-const addExcelTable = (
-  sheet: ExcelJS.Worksheet,
-  tableData: string[][],
-  title?: string
-): void => {
-  let headerRowIndex = 1;
-  
-  if (title) {
-    const titleRow = sheet.addRow([title]);
-    titleRow.font = EXCEL_STYLES.titleFont;
-    titleRow.alignment = { horizontal: 'center', vertical: 'middle' };
-    titleRow.height = 25; // Consistent row height
-    headerRowIndex = 2;
-  }
-  
-  // Add header row
-  const headerRow = sheet.addRow(['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes']);
-  headerRow.font = EXCEL_STYLES.headerFont;
-  headerRow.fill = EXCEL_STYLES.headerFill;
-  headerRow.alignment = { horizontal: 'center', vertical: 'middle' };
-  headerRow.height = 20; // Consistent row height
-  
-  // Add data rows with styling
-  tableData.forEach((row, index) => {
-    const dataRow = sheet.addRow(row);
-    dataRow.height = 18; // Consistent row height
-    
-    // Check if this is a stage name row (has empty cells in other columns)
-    const isStageRow = row[1] === '' && row[2] === '' && row[3] === '' && row[4] === '' && row[5] === '';
-    
-    if (isStageRow) {
-      // Style stage name rows - merge cells to span full width
-      dataRow.font = EXCEL_STYLES.stageFont;
-      dataRow.fill = EXCEL_STYLES.alternateFill;
-      dataRow.alignment = { horizontal: 'left', vertical: 'middle' };
-      
-      // Merge cells to span the full width (columns 1-6)
-      sheet.mergeCells(index + (title ? 3 : 2), 1, index + (title ? 3 : 2), 6);
-    } else {
-      // Style regular exercise rows
-      dataRow.font = EXCEL_STYLES.bodyFont;
-      if (index % 2 === 0) {
-        dataRow.fill = EXCEL_STYLES.alternateFill;
-      }
-      dataRow.alignment = { 
-        horizontal: 'left',
-        vertical: 'middle'
-      };
-    }
-  });
-  
-  // Add spacing after table
-  sheet.addRow([]);
-  sheet.addRow([]);
-  
-  // Set column widths
-  Object.entries(EXCEL_STYLES.columnWidths).forEach(([col, width]) => {
-    sheet.getColumn(parseInt(col)).width = width;
-  });
-};
 
-/**
- * Download Excel file
- */
-const downloadExcelFile = async (
-  workbook: ExcelJS.Workbook,
-  filename: string
-): Promise<void> => {
-  const buffer = await workbook.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${filename}.xlsx`;
-  link.click();
-  window.URL.revokeObjectURL(url);
-};
 
 /**
  * Download PDF file
@@ -526,24 +428,6 @@ export const exportWorkoutToPDF = async (
   downloadPDFFile(pdf, options.filename);
 };
 
-/**
- * Export a single workout to XLSX
- */
-export const exportWorkoutToXLSX = async (
-  workoutData: ProgrammedWorkoutWithStages,
-  weightUnitPreferences: UserWeightUnitPreference[],
-  options: ExportOptions
-): Promise<void> => {
-  const workbook = new ExcelJS.Workbook();
-  const workoutSheet = workbook.addWorksheet('Workout Details');
-  workoutSheet.addRow([]); // Empty row for spacing
-  
-  // Prepare and add table
-  const tableData = prepareWorkoutTableData(workoutData, weightUnitPreferences);
-  addExcelTable(workoutSheet, tableData);
-  
-  await downloadExcelFile(workbook, options.filename);
-};
 
 /**
  * Export week workouts to PDF
@@ -562,36 +446,6 @@ export const exportWeekToPDF = async (
   downloadPDFFile(pdf, options.filename);
 };
 
-/**
- * Export week workouts to XLSX
- */
-export const exportWeekToXLSX = async (
-  weekWorkouts: ProgrammedWorkoutWithStages[],
-  weightUnitPreferences: UserWeightUnitPreference[],
-  options: ExportOptions
-): Promise<void> => {
-  const workbook = new ExcelJS.Workbook();
-  const weekSheet = workbook.addWorksheet('Week Workouts');
-  
-  // Add title
-  weekSheet.addRow([options.title]);
-  weekSheet.addRow([]); // Empty row for spacing
-  
-  // Add week info
-  weekSheet.addRow([`Total Workouts: ${weekWorkouts.length}`]);
-  weekSheet.addRow([]); // Empty row for spacing
-  
-  // Sort workouts by day number
-  const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
-  
-  sortedWorkouts.forEach((workout) => {
-    // Prepare and add table data using the new function
-    const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-    addExcelTable(weekSheet, tableData, `${capitalizeEachWord(workout.workout.name)}`);
-  });
-  
-  await downloadExcelFile(workbook, options.filename);
-};
 
 /**
  * Export program workouts to PDF
@@ -647,50 +501,6 @@ export const exportProgramToPDF = async (
   downloadPDFFile(pdf, options.filename);
 };
 
-/**
- * Export program workouts to XLSX
- */
-export const exportProgramToXLSX = async (
-  programData: ProgramWithWorkouts,
-  weightUnitPreferences: UserWeightUnitPreference[],
-  options: ExportOptions
-): Promise<void> => {
-  const workbook = new ExcelJS.Workbook();
-  
-  // Group workouts by week
-  const workoutsByWeek = new Map<number, ProgrammedWorkoutWithStages[]>();
-  programData.workouts.forEach(workout => {
-    const weekNumber = Math.ceil(workout.workout.day_number / 7);
-    if (!workoutsByWeek.has(weekNumber)) {
-      workoutsByWeek.set(weekNumber, []);
-    }
-    workoutsByWeek.get(weekNumber)!.push(workout);
-  });
-
-  // Sort weeks
-  const sortedWeeks = Array.from(workoutsByWeek.keys()).sort((a, b) => a - b);
-
-  // Create a sheet for each week
-  sortedWeeks.forEach((weekNumber) => {
-    const weekWorkouts = workoutsByWeek.get(weekNumber)!;
-    const weekSheet = workbook.addWorksheet(`Week ${weekNumber}`);
-    
-    // Add title
-    weekSheet.addRow([options.title]);
-    weekSheet.addRow([]); // Empty row for spacing
-    
-    // Sort workouts by day number
-    const sortedWorkouts = weekWorkouts.sort((a, b) => a.workout.day_number - b.workout.day_number);
-    
-    sortedWorkouts.forEach((workout) => {
-      // Prepare and add table data using the new function
-      const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-      addExcelTable(weekSheet, tableData, `${capitalizeEachWord(workout.workout.name)}`);
-    });
-  });
-  
-  await downloadExcelFile(workbook, options.filename);
-};
 
 /**
  * Print a workout by generating PDF and opening print dialog

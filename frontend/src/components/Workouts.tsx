@@ -40,7 +40,7 @@ import type {
 } from '../api/types';
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
-import { exportProgramToPDF, exportProgramToXLSX, printProgramWorkouts } from '../utils/exportUtils';
+import { exportProgramToPDF } from '../utils/exportUtils';
 
 interface WorkoutsProps {
   user: User;
@@ -259,17 +259,11 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
         )}
         
         {/* Export buttons */}
-        {weeks.length > 0 && (
-          <>
-            <Box sx={{ flexGrow: 1 }} />
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              onExportXLSX={handleExportXLSX}
-              onPrint={handlePrint}
-              disabled={weeks.length === 0}
-            />
-          </>
-        )}
+        <Box sx={{ flexGrow: 1 }} />
+        <ExportButtons
+          onExportPDF={handleExportPDF}
+          disabled={weeks.length === 0}
+        />
         </Box>
       </Box>
     </Box>
@@ -293,27 +287,6 @@ export const Workouts: React.FC<WorkoutsProps> = ({ user, selectedWorkout }) => 
     });
   };
 
-  const handleExportXLSX = async () => {
-    if (!activeProgram || !userDataExport) return;
-    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
-    if (!programData) return;
-    
-    await exportProgramToXLSX(programData, weightUnitPreferences, {
-      title: activeProgram.program.name,
-      filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
-    });
-  };
-
-  const handlePrint = async () => {
-    if (!activeProgram || !userDataExport) return;
-    const programData = userDataExport.training_programs.find(p => p.program.id === activeProgram.program.id);
-    if (!programData) return;
-    
-    await printProgramWorkouts(programData, weightUnitPreferences, {
-      title: activeProgram.program.name,
-      filename: `program-${activeProgram.program.name.replace(/\s+/g, '-').toLowerCase()}`,
-    });
-  };
 
   // If a week is selected, show the WorkoutWeekDetails component
   if (selectedWeek) {

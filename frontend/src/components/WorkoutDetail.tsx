@@ -25,7 +25,7 @@ import type { UserDataExport, ExerciseMuscle, UserWeightUnitPreference } from '.
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces, formatWeightWithUnit } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
-import { exportWorkoutToPDF, exportWorkoutToXLSX, printWorkout } from '../utils/exportUtils';
+import { exportWorkoutToPDF } from '../utils/exportUtils';
 
 interface WorkoutDetailProps {
   workoutId: number;
@@ -168,23 +168,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
     });
   };
 
-  const handleExportXLSX = async () => {
-    if (!workoutData) return;
-    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
-    await exportWorkoutToXLSX(workoutData, weightUnitPreferences, {
-      title: workoutName,
-      filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
-    });
-  };
-
-  const handlePrint = async () => {
-    if (!workoutData) return;
-    const workoutName = replaceUnderscoresWithSpaces(workoutData.workout.name);
-    await printWorkout(workoutData, weightUnitPreferences, {
-      title: workoutName,
-      filename: `workout-${workoutName.replace(/\s+/g, '-').toLowerCase()}`,
-    });
-  };
 
   // Breadcrumb navigation functions
   const handleBreadcrumbClick = (target: string) => {
@@ -299,8 +282,6 @@ export const WorkoutDetail: React.FC<WorkoutDetailProps> = ({
             <Box sx={{ flexGrow: 1 }} />
             <ExportButtons
               onExportPDF={handleExportPDF}
-              onExportXLSX={handleExportXLSX}
-              onPrint={handlePrint}
               disabled={!workoutData}
             />
           </Box>

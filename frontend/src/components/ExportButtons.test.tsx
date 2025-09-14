@@ -8,13 +8,9 @@ import { ExportButtons } from './ExportButtons';
 jest.mock('../utils/exportUtils', () => ({}));
 
 const mockOnExportPDF = jest.fn();
-const mockOnExportXLSX = jest.fn();
-const mockOnPrint = jest.fn();
 
 const defaultProps = {
   onExportPDF: mockOnExportPDF,
-  onExportXLSX: mockOnExportXLSX,
-  onPrint: mockOnPrint,
 };
 
 const renderWithSnackbar = (component: React.ReactElement) => {
@@ -30,74 +26,30 @@ describe('ExportButtons', () => {
     jest.clearAllMocks();
   });
 
-  it('renders export button', () => {
+  it('renders PDF export button', () => {
     renderWithSnackbar(<ExportButtons {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export options/i });
+    const exportButton = screen.getByRole('button', { name: /export as pdf/i });
     expect(exportButton).toBeInTheDocument();
   });
 
-  it('opens menu when export button is clicked', () => {
-    renderWithSnackbar(<ExportButtons {...defaultProps} />);
-    
-    const exportButton = screen.getByRole('button', { name: /export options/i });
-    fireEvent.click(exportButton);
-    
-    expect(screen.getByText('Export as PDF')).toBeInTheDocument();
-    expect(screen.getByText('Export as Excel')).toBeInTheDocument();
-    expect(screen.getByText('Print')).toBeInTheDocument();
-  });
-
-  it('calls onExportPDF when PDF option is selected', async () => {
+  it('calls onExportPDF when button is clicked', async () => {
     mockOnExportPDF.mockResolvedValue(undefined);
     
     renderWithSnackbar(<ExportButtons {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export options/i });
+    const exportButton = screen.getByRole('button', { name: /export as pdf/i });
     fireEvent.click(exportButton);
-    
-    const pdfOption = screen.getByText('Export as PDF');
-    fireEvent.click(pdfOption);
     
     await waitFor(() => {
       expect(mockOnExportPDF).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('calls onExportXLSX when Excel option is selected', async () => {
-    mockOnExportXLSX.mockResolvedValue(undefined);
-    
-    renderWithSnackbar(<ExportButtons {...defaultProps} />);
-    
-    const exportButton = screen.getByRole('button', { name: /export options/i });
-    fireEvent.click(exportButton);
-    
-    const excelOption = screen.getByText('Export as Excel');
-    fireEvent.click(excelOption);
-    
-    await waitFor(() => {
-      expect(mockOnExportXLSX).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('calls onPrint when Print option is selected', async () => {
-    renderWithSnackbar(<ExportButtons {...defaultProps} />);
-    
-    const exportButton = screen.getByRole('button', { name: /export options/i });
-    fireEvent.click(exportButton);
-    
-    const printOption = screen.getByText('Print');
-    fireEvent.click(printOption);
-    
-    await waitFor(() => {
-      expect(mockOnPrint).toHaveBeenCalledTimes(1);
-    });
-  });
-
   it('disables button when disabled prop is true', () => {
     renderWithSnackbar(<ExportButtons {...defaultProps} disabled={true} />);
     
-    const exportButton = screen.getByRole('button', { name: /export options/i });
+    const exportButton = screen.getByRole('button', { name: /export as pdf/i });
     expect(exportButton).toBeDisabled();
   });
 
@@ -106,11 +58,8 @@ describe('ExportButtons', () => {
     
     renderWithSnackbar(<ExportButtons {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export options/i });
+    const exportButton = screen.getByRole('button', { name: /export as pdf/i });
     fireEvent.click(exportButton);
-    
-    const pdfOption = screen.getByText('Export as PDF');
-    fireEvent.click(pdfOption);
     
     // Button should be disabled during export
     await waitFor(() => {
@@ -123,48 +72,24 @@ describe('ExportButtons', () => {
     
     renderWithSnackbar(<ExportButtons {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export options/i });
+    const exportButton = screen.getByRole('button', { name: /export as pdf/i });
     fireEvent.click(exportButton);
-    
-    const pdfOption = screen.getByText('Export as PDF');
-    fireEvent.click(pdfOption);
     
     await waitFor(() => {
       expect(screen.getByText('Failed to export PDF')).toBeInTheDocument();
     });
   });
 
-  it('handles XLSX export error gracefully', async () => {
-    mockOnExportXLSX.mockRejectedValue(new Error('Export failed'));
+  it('shows success message on successful export', async () => {
+    mockOnExportPDF.mockResolvedValue(undefined);
     
     renderWithSnackbar(<ExportButtons {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export options/i });
+    const exportButton = screen.getByRole('button', { name: /export as pdf/i });
     fireEvent.click(exportButton);
     
-    const excelOption = screen.getByText('Export as Excel');
-    fireEvent.click(excelOption);
-    
     await waitFor(() => {
-      expect(screen.getByText('Failed to export Excel file')).toBeInTheDocument();
+      expect(screen.getByText('PDF exported successfully')).toBeInTheDocument();
     });
   });
-
-  it('closes menu after option selection', async () => {
-    mockOnExportXLSX.mockResolvedValue(undefined);
-    
-    renderWithSnackbar(<ExportButtons {...defaultProps} />);
-    
-    const exportButton = screen.getByRole('button', { name: /export options/i });
-    fireEvent.click(exportButton);
-    
-    const excelOption = screen.getByText('Export as Excel');
-    fireEvent.click(excelOption);
-    
-    // Wait for async operation to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Export as PDF')).not.toBeInTheDocument();
-    });
-  });
-
 });

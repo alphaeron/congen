@@ -33,7 +33,7 @@ import type {
 import { getUserWeightUnitPreferences } from '../api/userWeightUnitPreference';
 import { replaceUnderscoresWithSpaces } from '../common/utils';
 import { useAuth } from '../contexts/AuthContext';
-import { exportWeekToPDF, exportWeekToXLSX, printWeekWorkouts, exportWorkoutToPDF, exportWorkoutToXLSX, printWorkout } from '../utils/exportUtils';
+import { exportWeekToPDF, exportWorkoutToPDF } from '../utils/exportUtils';
 
 interface WorkoutWeekDetailsProps {
   selectedWorkout?: string | null;
@@ -269,17 +269,11 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
         )}
         
         {/* Export buttons - show for both week view and individual workout view */}
-        {weekWorkouts.length > 0 && (
-          <>
-            <Box sx={{ flexGrow: 1 }} />
-            <ExportButtons
-              onExportPDF={handleExportPDF}
-              onExportXLSX={handleExportXLSX}
-              onPrint={handlePrint}
-              disabled={weekWorkouts.length === 0}
-            />
-          </>
-        )}
+        <Box sx={{ flexGrow: 1 }} />
+        <ExportButtons
+          onExportPDF={handleExportPDF}
+          disabled={weekWorkouts.length === 0}
+        />
         </Box>
       </Box>
     </Box>
@@ -322,47 +316,6 @@ export const WorkoutWeekDetails: React.FC<WorkoutWeekDetailsProps> = ({
     }
   };
 
-  const handleExportXLSX = async () => {
-    if (selectedWorkoutId) {
-      // Export individual workout
-      const workoutData = weekWorkouts.find(ww => ww.workout.id === parseInt(selectedWorkoutId));
-      if (workoutData) {
-        const workoutName = currentWorkoutDetails?.name || workoutData.workout.name;
-        await exportWorkoutToXLSX(workoutData, weightUnitPreferences, {
-          title: workoutName,
-          filename: `workout-${workoutName.toLowerCase().replace(/\s+/g, '-')}`,
-        });
-      }
-    } else {
-      // Export entire week
-      const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-      await exportWeekToXLSX(weekWorkoutsData, weightUnitPreferences, {
-        title: `Week ${weekNumber}`,
-        filename: `week-${weekNumber}-workouts`,
-      });
-    }
-  };
-
-  const handlePrint = async () => {
-    if (selectedWorkoutId) {
-      // Print individual workout
-      const workoutData = weekWorkouts.find(ww => ww.workout.id === parseInt(selectedWorkoutId));
-      if (workoutData) {
-        const workoutName = currentWorkoutDetails?.name || workoutData.workout.name;
-        await printWorkout(workoutData, weightUnitPreferences, {
-          title: workoutName,
-          filename: `workout-${workoutName.toLowerCase().replace(/\s+/g, '-')}`,
-        });
-      }
-    } else {
-      // Print entire week
-      const weekWorkoutsData = weekWorkouts.map(ww => ww.workout);
-      await printWeekWorkouts(weekWorkoutsData, weightUnitPreferences, {
-        title: `Week ${weekNumber}`,
-        filename: `week-${weekNumber}-workouts`,
-      });
-    }
-  };
 
   // Show loading state while data is being fetched
   if (isLoading) {

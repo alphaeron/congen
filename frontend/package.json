@@ -22,7 +22,6 @@
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.12",
     "axios": "^1.11.0",
-    "exceljs": "^4.4.0",
     "favicons": "^7.2.0",
     "jspdf": "^3.0.2",
     "jspdf-autotable": "^5.0.2",
