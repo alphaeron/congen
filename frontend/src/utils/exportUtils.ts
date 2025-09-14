@@ -182,7 +182,7 @@ const addCoverPage = (
  */
 const addTableOfContentsPage = (
   pdf: jsPDF,
-  tocEntries: Array<{ title: string; page: number; level: number }>
+  tocEntries: Array<{ title: string; page: number; level: number; anchor?: string }>
 ): void => {
   // Insert TOC page at page 2 (after cover page)
   pdf.insertPage(2);
@@ -205,12 +205,10 @@ const addTableOfContentsPage = (
   tocEntries.forEach(entry => {
     const indent = entry.level * 15; // 15mm indent per level
     const title = entry.title;
-    const pageNum = (entry.page + 1).toString(); // Add 1 for cover page
+    // Page numbers are already correct since we track them during content generation
+    const pageNum = entry.page.toString();
     
-    // Add title
-    pdf.text(title, 20 + indent, yPosition);
-    
-    // Add dots and page number
+    // Add title with link
     const titleWidth = pdf.getTextWidth(title);
     const availableWidth = 170 - indent - 20; // Total width minus indent and right margin
     const dotsWidth = pdf.getTextWidth('.');
@@ -218,13 +216,16 @@ const addTableOfContentsPage = (
     const dotsNeeded = Math.floor((availableWidth - titleWidth - pageWidth) / dotsWidth);
     const dots = '.'.repeat(Math.max(1, dotsNeeded));
     
-    pdf.text(dots, 20 + indent + titleWidth, yPosition);
-    pdf.text(pageNum, 20 + indent + titleWidth + pdf.getTextWidth(dots), yPosition);
+    // Create the full TOC line text
+    const fullText = title + dots + pageNum;
     
-    // Add clickable link
-    const textWidth = pdf.getTextWidth(title + dots + pageNum);
-    const textHeight = lineHeight;
-    pdf.link(20 + indent, yPosition - textHeight * 0.7, textWidth, textHeight, { pageNumber: entry.page + 1 }); // Add 1 for cover page
+    // Add clickable link using textWithLink
+    if (entry.anchor) {
+      const targetY = entry.level === 1 ? 20 : 28;
+      pdf.textWithLink(fullText, 20 + indent, yPosition, { pageNumber: entry.page, top: targetY });
+    } else {
+      pdf.text(fullText, 20 + indent, yPosition);
+    }
     
     yPosition += lineHeight;
   });
@@ -243,10 +244,10 @@ const addWeekDetailsToPDF = (
   weekWorkouts: ProgrammedWorkoutWithStages[],
   startY: number,
   weightUnitPreferences: UserWeightUnitPreference[],
-  tocEntries?: Array<{ title: string; page: number; level: number }> // Optional for program export
+  tocEntries?: Array<{ title: string; page: number; level: number; anchor?: string }> // Optional for program export
 ): number => {
   let currentY = startY;
-  const currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
+  let currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
 
   // Add week header
   pdf.setFontSize(18);
@@ -257,7 +258,12 @@ const addWeekDetailsToPDF = (
 
   // Add TOC entry for week if provided
   if (tocEntries) {
-    tocEntries.push({ title: `Week ${weekNumber}`, page: currentPage, level: 1 });
+    tocEntries.push({ 
+      title: `Week ${weekNumber}`, 
+      page: currentPage, 
+      level: 1,
+      anchor: `week-${weekNumber}`
+    });
   }
 
   // Sort workouts by day number
@@ -269,6 +275,7 @@ const addWeekDetailsToPDF = (
     if (currentY > 200) {
       pdf.addPage();
       currentY = 20;
+      currentPage = (pdf as any).internal.getCurrentPageInfo().pageNumber;
     }
     
     // Add spacing between days (except for first day)
@@ -278,12 +285,19 @@ const addWeekDetailsToPDF = (
     
     // Add TOC entry for day if provided
     if (tocEntries) {
-      tocEntries.push({ title: capitalizeEachWord(workout.workout.name), page: currentPage, level: 2 });
+      const workoutAnchor = `workout-${workout.workout.id}`;
+      tocEntries.push({ 
+        title: capitalizeEachWord(workout.workout.name), 
+        page: currentPage, 
+        level: 2,
+        anchor: workoutAnchor
+      });
     }
     
     // Prepare and add table
     const tableData = prepareWorkoutTableData(workout, weightUnitPreferences);
-    currentY = addPDFTable(pdf, tableData, currentY, capitalizeEachWord(workout.workout.name));
+    const workoutAnchor = `workout-${workout.workout.id}`;
+    currentY = addPDFTable(pdf, tableData, currentY, capitalizeEachWord(workout.workout.name), workoutAnchor);
   });
 
   return currentY;
@@ -296,7 +310,8 @@ const addPDFTable = (
   pdf: jsPDF,
   tableData: string[][],
   startY: number,
-  title?: string
+  title?: string,
+  anchorId?: string
 ): number => {
   const tableHeaders = ['Exercise', 'Sets', 'Reps', 'Weight', 'Rest (s)', 'Notes'];
   
@@ -476,7 +491,7 @@ export const exportProgramToPDF = async (
   let currentPage = 1;
   
   // Collect TOC entries with page numbers and destinations
-  const tocEntries: Array<{ title: string; page: number; level: number }> = [];
+  const tocEntries: Array<{ title: string; page: number; level: number; anchor?: string }> = [];
   
   // Title is now on cover page, no need to add it here
   
@@ -508,9 +523,16 @@ export const exportProgramToPDF = async (
     currentY = addWeekDetailsToPDF(pdf, weekNumber, weekWorkouts, currentY, weightUnitPreferences, tocEntries);
   });
   
-  // Add cover page and table of contents
+  // Add cover page and table of contents at the beginning
   addCoverPage(pdf, programData);
-  addTableOfContentsPage(pdf, tocEntries);
+  
+  // Adjust TOC entry page numbers to account for the 2 inserted pages (cover + TOC)
+  const adjustedTocEntries = tocEntries.map(entry => ({
+    ...entry,
+    page: entry.page + 2 // Add 2 for cover page and TOC page
+  }));
+  
+  addTableOfContentsPage(pdf, adjustedTocEntries);
   
   // Note: PDF outline/bookmarks not available in standard jsPDF
   
@@ -566,7 +588,7 @@ export const printProgramWorkouts = async (
   let currentPage = 1;
   
   // Collect TOC entries with page numbers and destinations
-  const tocEntries: Array<{ title: string; page: number; level: number }> = [];
+  const tocEntries: Array<{ title: string; page: number; level: number; anchor?: string }> = [];
   
   // Title is now on cover page, no need to add it here
   
@@ -598,9 +620,16 @@ export const printProgramWorkouts = async (
     currentY = addWeekDetailsToPDF(pdf, week, weekWorkouts, currentY, weightUnitPreferences, tocEntries);
   });
   
-  // Add cover page and table of contents
+  // Add cover page and table of contents at the beginning
   addCoverPage(pdf, programData);
-  addTableOfContentsPage(pdf, tocEntries);
+  
+  // Adjust TOC entry page numbers to account for the 2 inserted pages (cover + TOC)
+  const adjustedTocEntries = tocEntries.map(entry => ({
+    ...entry,
+    page: entry.page + 2 // Add 2 for cover page and TOC page
+  }));
+  
+  addTableOfContentsPage(pdf, adjustedTocEntries);
   
   // Note: PDF outline/bookmarks not available in standard jsPDF
   
