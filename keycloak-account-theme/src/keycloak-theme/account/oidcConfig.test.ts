@@ -31,10 +31,10 @@ describe('oidcConfig', () => {
       expect(config.silent_redirect_uri).toBe('http://localhost:8080/realms/congen/account/');
       expect(config.scope).toBe('openid profile email');
       expect(config.response_type).toBe('code');
-      expect(config.loadUserInfo).toBe(false);
+      expect(config.loadUserInfo).toBe(true);
       expect(config.monitorSession).toBe(false);
       expect(config.code_challenge_method).toBe('S256');
-      expect(config.automaticSilentRenew).toBe(false);
+      expect(config.automaticSilentRenew).toBe(true);
       expect(config.includeIdTokenInSilentRenew).toBe(false);
       expect(config.checkSessionInterval).toBe(0);
       expect(config.validateSubOnSilentRenew).toBe(false);

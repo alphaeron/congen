@@ -90,7 +90,19 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
           if (backendResult.success) {
             enqueueSnackbar('Profile updated successfully!', { variant: 'success' });
 
-            // User data will be updated automatically via OIDC refresh
+            // Trigger a silent token refresh to get updated user data
+            setTimeout(async () => {
+              try {
+                // Use OIDC silent renew to refresh user data
+                if (oidcAuth && oidcAuth.signinSilent) {
+                  await oidcAuth.signinSilent();
+                }
+              } catch (error) {
+                console.warn('Silent token refresh failed, falling back to page reload:', error);
+                // Fallback to page reload if silent refresh fails
+                window.location.reload();
+              }
+            }, 1000); // Wait 1 second to show the success message
           } else {
             enqueueSnackbar('Profile updated in Keycloak but failed to update backend profile', { variant: 'warning' });
           }

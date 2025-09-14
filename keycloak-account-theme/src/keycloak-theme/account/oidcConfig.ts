@@ -35,10 +35,10 @@ export const getAuthProviderConfig = (): AuthProviderProps => {
     silent_redirect_uri: config.silent_redirect_uri,
     scope: 'openid profile email',
     response_type: 'code',
-    loadUserInfo: false, // Don't load user info since we have it from Keycloak context
+    loadUserInfo: true, // Load user info to get updated profile data
     monitorSession: false, // Don't monitor session since we're in Keycloak
     code_challenge_method: 'S256',
-    automaticSilentRenew: false, // Disable automatic renewal
+    automaticSilentRenew: true, // Enable automatic renewal for token refresh
     includeIdTokenInSilentRenew: false,
     checkSessionInterval: 0, // Disable session checking
     validateSubOnSilentRenew: false,
