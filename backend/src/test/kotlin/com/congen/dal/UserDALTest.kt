@@ -152,8 +152,15 @@ class UserDALTest {
         val newName = "Updated User"
 
         whenever(encryptionUtil.encrypt(any())).thenReturn("encrypted-name")
+        whenever(encryptionUtil.decrypt("encrypted-name")).thenReturn(newName)
+        val mockRow = mapOf(
+            "keycloak_id" to keycloakId,
+            "name" to "encrypted-name",
+            "created_at" to "2025-01-01T00:00:00Z",
+            "updated_at" to "2025-01-01T00:00:00Z"
+        )
         whenever(
-            postgresClient.update<Int>(
+            postgresClient.update<Map<String, Any>>(
                 """
                 UPDATE "user"
                 SET name=$2, updated_at=NOW()
@@ -162,7 +169,7 @@ class UserDALTest {
                 keycloakId,
                 "encrypted-name"
             )
-        ).thenReturn(Mono.just(1))
+        ).thenReturn(Mono.just(mockRow))
         whenever(auditService.logDataOperation(any(), any(), any(), anyOrNull(), anyOrNull()))
             .thenReturn(Mono.just(Unit))
 
@@ -174,7 +181,7 @@ class UserDALTest {
             }
             .verifyComplete()
 
-        verify(postgresClient).update<Int>(
+        verify(postgresClient).update<Map<String, Any>>(
             """
             UPDATE "user"
             SET name=$2, updated_at=NOW()

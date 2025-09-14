@@ -10,7 +10,7 @@ data:
   # JWT Configuration for production environment
   JWT_ISSUER_URI: "https://congen.com/realms/congen"
   JWT_JWK_SET_URI: "http://keycloak:8080/realms/congen/protocol/openid-connect/certs"
-  JWT_AUDIENCES: "congen-backend"
+  JWT_AUDIENCES: "congen-backend,account"
   CONGEN_KEYCLOAK_MANAGEMENT_URL: "http://keycloak:9000"
   # Memcached Configuration for production
   MEMCACHED_HOST: "production-memcached.congen.com"

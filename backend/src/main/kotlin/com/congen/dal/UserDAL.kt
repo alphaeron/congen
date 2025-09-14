@@ -243,7 +243,7 @@ class UserDAL(
         // Encrypt sensitive data
         val encryptedName = encryptionUtil.encrypt(name)
 
-        return postgresClient.update<Int>(
+        return postgresClient.update<Map<String, Any>>(
             """
             UPDATE "user"
             SET name=$2, updated_at=NOW()
@@ -251,7 +251,7 @@ class UserDAL(
             """.trimIndent(),
             keycloakId,
             encryptedName
-        ).flatMap {
+        ).flatMap { row ->
             // Log the data update for GDPR audit
             auditService.logDataOperation(
                 keycloakId = keycloakId,
@@ -260,12 +260,7 @@ class UserDAL(
             ).then(
                 // Return the updated user with decrypted data
                 Mono.fromCallable {
-                    User(
-                        keycloakId = keycloakId,
-                        name = name,
-                        createdAt = Instant.now(),
-                        updatedAt = Instant.now()
-                    )
+                    decryptUserData(row)
                 }
             )
         }

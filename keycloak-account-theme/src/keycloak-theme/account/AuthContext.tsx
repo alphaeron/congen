@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useCallback } from 'react'
 import { useAuth as useOidcAuth } from 'react-oidc-context';
 
 import { setTokenGetter } from './api/client';
+import { sanitizeToken, isTokenExpired } from '../../common/authUtils';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -37,12 +38,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (oidcAuth) {
       setTokenGetter(() => {
         if (oidcAuth.user?.access_token) {
-          return oidcAuth.user.access_token;
+          // Sanitize token to prevent XSS - exactly like the frontend
+          const sanitizedToken = sanitizeToken(oidcAuth.user.access_token);
+          if (!sanitizedToken) {
+            clearAuthState();
+            return null;
+          }
+
+          // Check if token is expired - exactly like the frontend
+          if (isTokenExpired(sanitizedToken)) {
+            // Token is expired, clear state and return null
+            clearAuthState();
+            return null;
+          }
+
+          return sanitizedToken;
         }
         return null;
       });
     }
-  }, [oidcAuth]);
+  }, [oidcAuth.user?.access_token, clearAuthState]);
 
   const login = async (): Promise<void> => {
     try {

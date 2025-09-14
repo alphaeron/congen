@@ -10,7 +10,8 @@ global.fetch = jest.fn();
 describe('KeycloakAccountApiClient', () => {
   const mockBaseUrl = 'http://localhost:8080';
   const mockRealm = 'congen';
-  const mockAccessToken = 'mock-access-token';
+  // Use a valid JWT token format for testing
+  const mockAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTl9.test';
 
   beforeEach(() => {
     (fetch as jest.Mock).mockClear();
@@ -71,6 +72,16 @@ describe('KeycloakAccountApiClient', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Invalid token');
     });
+
+    it('should handle invalid token format', async () => {
+      const client = new KeycloakAccountApiClient(mockBaseUrl, mockRealm, 'invalid-token');
+
+      const result = await client.getUserProfile();
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid token format');
+      expect(fetch).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateUserProfile', () => {
@@ -98,6 +109,58 @@ describe('KeycloakAccountApiClient', () => {
       );
 
       expect(result.success).toBe(true);
+    });
+
+    it('should handle invalid token format', async () => {
+      const client = new KeycloakAccountApiClient(mockBaseUrl, mockRealm, 'invalid-token');
+      const updateData = {
+        email: 'newemail@example.com',
+        firstName: 'NewFirst',
+        lastName: 'NewLast',
+      };
+
+      const result = await client.updateUserProfile(updateData);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid token format');
+      expect(fetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateBackendUserProfile', () => {
+    it('should make PATCH request to backend API', async () => {
+      const client = new KeycloakAccountApiClient(mockBaseUrl, mockRealm, mockAccessToken);
+
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({}),
+      });
+
+      const result = await client.updateBackendUserProfile('John', 'Doe');
+
+      expect(fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/v1/user/me?name=John%20Doe'),
+        expect.objectContaining({
+          method: 'PATCH',
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${mockAccessToken}`,
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+          }),
+        })
+      );
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should handle invalid token format', async () => {
+      const client = new KeycloakAccountApiClient(mockBaseUrl, mockRealm, 'invalid-token');
+
+      const result = await client.updateBackendUserProfile('John', 'Doe');
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid token format');
+      expect(fetch).not.toHaveBeenCalled();
     });
   });
 });

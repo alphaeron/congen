@@ -5,6 +5,7 @@
 
 import { type ApiResponse, type UserProfile, type UpdateUserProfileRequest } from './types';
 import { KEYCLOAK_URL } from '../../../globals';
+import { sanitizeToken, isTokenMalformed, isTokenExpired, handleAuthenticationFailure } from '../../../common/authUtils';
 
 // Token getter registration
 let getToken: (() => string | null) | null = null;
@@ -34,15 +35,37 @@ export class KeycloakAccountApiClient {
     try {
       const url = `${this.baseUrl.replace(/\/$/, '')}${endpoint.replace('{realm}', this.realm)}`;
 
-      // Prepare headers - match the exact format from the Keycloakify example
+      // Prepare headers - match the frontend pattern exactly
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', // Force preflight requests like frontend
         ...(options.headers as Record<string, string>),
       };
 
-      // Add authorization header if we have a token
+      // Add authorization header if we have a token - with validation like frontend
       if (this.accessToken) {
-        headers['Authorization'] = `Bearer ${this.accessToken}`;
+        // Sanitize token to prevent XSS
+        const sanitizedToken = sanitizeToken(this.accessToken);
+        if (!sanitizedToken) {
+          handleAuthenticationFailure('Invalid token format');
+          throw new Error('Invalid token format');
+        }
+
+        // Check if token is malformed first
+        if (isTokenMalformed(sanitizedToken)) {
+          // Token is malformed, clear authentication state and redirect to login
+          handleAuthenticationFailure('Invalid token');
+          throw new Error('Invalid token');
+        }
+
+        // Check if token is expired
+        if (isTokenExpired(sanitizedToken)) {
+          // Token is expired, clear authentication state and redirect to login
+          handleAuthenticationFailure('Token expired');
+          throw new Error('Token expired');
+        }
+
+        headers['Authorization'] = `Bearer ${sanitizedToken}`;
       }
 
       const response = await fetch(url, {
@@ -98,15 +121,28 @@ export class KeycloakAccountApiClient {
         userData.email = profile.email;
       }
 
+      // Validate and sanitize token before making request
+      const sanitizedToken = sanitizeToken(this.accessToken);
+      if (!sanitizedToken) {
+        throw new Error('Invalid token format');
+      }
+      if (isTokenMalformed(sanitizedToken)) {
+        throw new Error('Invalid token');
+      }
+      if (isTokenExpired(sanitizedToken)) {
+        throw new Error('Token expired');
+      }
+
       // Use POST method with JSON data to update user via Keycloak Account Management API
       const response = await fetch(
         `${this.baseUrl.replace(/\/$/, '')}/realms/${this.realm}/account/`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${this.accessToken}`,
+            Authorization: `Bearer ${sanitizedToken}`,
             'Content-Type': 'application/json',
             Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest', // Force preflight requests like frontend
           },
           body: JSON.stringify(userData),
           credentials: 'include', // Include cookies for session-based auth
@@ -138,15 +174,28 @@ export class KeycloakAccountApiClient {
       // Combine first and last name for the backend
       const fullName = `${firstName} ${lastName}`.trim();
 
+      // Validate and sanitize token before making request
+      const sanitizedToken = sanitizeToken(this.accessToken);
+      if (!sanitizedToken) {
+        throw new Error('Invalid token format');
+      }
+      if (isTokenMalformed(sanitizedToken)) {
+        throw new Error('Invalid token');
+      }
+      if (isTokenExpired(sanitizedToken)) {
+        throw new Error('Token expired');
+      }
+
       // Get the backend URL - for local environment, use port 8888 with /api/v1 prefix
       const backendUrl = window.location.origin.replace('8080', '8888');
       
       const response = await fetch(`${backendUrl}/api/v1/user/me?name=${encodeURIComponent(fullName)}`, {
         method: 'PATCH',
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
+          Authorization: `Bearer ${sanitizedToken}`,
           'Content-Type': 'application/json',
           Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest', // Force preflight requests like frontend
         },
         credentials: 'include',
       });

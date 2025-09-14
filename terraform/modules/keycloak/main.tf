@@ -154,23 +154,23 @@ resource "keycloak_user_roles" "admin_user_roles" {
   ]
 }
 
-# Get the account-console client (built-in Keycloak client)
-data "keycloak_openid_client" "account_console" {
+# Get the account client (built-in Keycloak client)
+data "keycloak_openid_client" "account" {
   realm_id  = keycloak_realm.congen.id
-  client_id = "account-console"
+  client_id = "account"
 }
 
-# Get the manage-account role from the account-console client
+# Get the manage-account role from the account client
 data "keycloak_role" "account_manage_account" {
   realm_id  = keycloak_realm.congen.id
-  client_id = data.keycloak_openid_client.account_console.id
+  client_id = data.keycloak_openid_client.account.id
   name      = "manage-account"
 }
 
-# Get the view-profile role from the account-console client
+# Get the view-profile role from the account client
 data "keycloak_role" "account_view_profile" {
   realm_id  = keycloak_realm.congen.id
-  client_id = data.keycloak_openid_client.account_console.id
+  client_id = data.keycloak_openid_client.account.id
   name      = "view-profile"
 }
 
