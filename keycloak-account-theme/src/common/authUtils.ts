@@ -145,8 +145,6 @@ export const sanitizeToken = (token: string | null | undefined): string | null =
  * This function should be called when authentication fails or tokens are invalid.
  */
 export const handleAuthenticationFailure = (reason: string): void => {
-  console.warn(`Authentication failure: ${reason}`);
-  
   // Clear any stored authentication state
   // In the Keycloak theme context, we don't need to redirect since we're already in Keycloak
   // The OIDC context will handle token refresh automatically

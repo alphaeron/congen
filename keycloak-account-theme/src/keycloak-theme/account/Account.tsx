@@ -97,8 +97,7 @@ export default function Account({ kcContext, i18n: _i18n }: AccountProps) {
                 if (oidcAuth && oidcAuth.signinSilent) {
                   await oidcAuth.signinSilent();
                 }
-              } catch (error) {
-                console.warn('Silent token refresh failed, falling back to page reload:', error);
+              } catch {
                 // Fallback to page reload if silent refresh fails
                 window.location.reload();
               }
