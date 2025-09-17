@@ -208,10 +208,13 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             threeDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -222,6 +225,9 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 
@@ -315,10 +321,13 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(secondaryExercise))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             threeDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -329,6 +338,9 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 
@@ -436,10 +448,13 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             threeDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -600,10 +615,13 @@ class ThreeDayWorkoutStageGenerationServiceTest {
         ).thenReturn(Mono.just(secondaryExercise))
 
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             threeDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -614,6 +632,9 @@ class ThreeDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 

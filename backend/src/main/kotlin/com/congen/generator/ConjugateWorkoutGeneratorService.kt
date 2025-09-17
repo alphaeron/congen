@@ -3,18 +3,21 @@ package com.congen.generator
 import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserWeakMuscleDAL
-import com.congen.generator.DayTemplate
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
+import com.congen.model.SetScheme
 import com.congen.model.UserOneRepMax
+import com.congen.model.WeightUnit
 import com.congen.service.ProgramService
+import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.math.BigDecimal
 
 /**
  * Service for generating conjugate powerlifting workout programs.
@@ -62,10 +65,14 @@ class ConjugateWorkoutGeneratorService(
     private val programService: ProgramService,
     private val programmedWorkoutDAL: ProgrammedWorkoutDAL,
     private val programmedExerciseDAL: ProgrammedExerciseDAL,
+    private val setSchemeDAL: SetSchemeDAL,
     private val conjugateTemplates: ConjugateTemplates,
     private val workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator,
+    private val atomicWorkoutWriter: AtomicWorkoutWriter,
     private val userWeakMuscleDAL: UserWeakMuscleDAL,
     private val exercisePoolFactory: ExercisePoolFactory,
+    private val setSchemeService: SetSchemeService,
+    private val userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL,
 ) {
     companion object {
         /** Logger instance for this class. */
@@ -163,30 +170,23 @@ class ConjugateWorkoutGeneratorService(
 
                 logger.debug("Generating workout for day {} of program {}", dayNumber, program.id)
 
-                programmedWorkoutDAL.insertProgrammedWorkout(program.id, dayNumber, dayTemplate.type)
-                    .doOnError { error ->
-                        logger.error("Error inserting programmed workout for day {}: {}", dayNumber, error.message)
-                    }
-                    .flatMap { createdWorkout ->
-                        logger.debug("Created programmed workout {} for day {}", createdWorkout.id, dayNumber)
-
-                        workoutStageGenerationOrchestrator.generateWorkoutStages(
-                            workout = createdWorkout,
-                            dayType = dayTemplate.type,
-                            userExercisePool = userExercisePool,
-                            oneRepMaxes = oneRepMaxes,
-                            programPreferences = programPreferences,
-                            weakMuscles = weakMuscles,
-                            currentWeekNumber = currentWeekNumber,
-                            userId = program.userId
-                        ).doOnError { error ->
-                            logger.error("Error generating workout stages for workout {}: {}",
-                                createdWorkout.id, error.message)
-                        }
-                    }
-                    .doOnError { error ->
-                        logger.error("Error processing programmed workout for day {}: {}", dayNumber, error.message)
-                    }
+                // Generate workout stages and write everything atomically
+                workoutStageGenerationOrchestrator.generateWorkoutStages(
+                    programId = program.id,
+                    dayNumber = dayNumber,
+                    dayType = dayTemplate.type,
+                    userExercisePool = userExercisePool,
+                    oneRepMaxes = oneRepMaxes,
+                    programPreferences = programPreferences,
+                    weakMuscles = weakMuscles,
+                    currentWeekNumber = currentWeekNumber,
+                    userId = program.userId
+                ).flatMap { workoutResult ->
+                    // Write all workout data atomically (including programmed workout creation)
+                    atomicWorkoutWriter.writeWorkoutAtomically(workoutResult)
+                }.doOnError { error ->
+                    logger.error("Error generating workout for day {}: {}", dayNumber, error.message)
+                }
             }
             .doOnError { error ->
                 logger.error("Error generating workouts for week: {}", error.message)
@@ -220,14 +220,164 @@ class ConjugateWorkoutGeneratorService(
                         existingOneRepMaxes.associate { it.exerciseName to it.oneRepMax.toDouble() }
                     }
                     .flatMap { oneRepMaxValues ->
-                        // Update the workout with the 1RM values
-                        // For now, we just return the program since the 1RM values are already stored
-                        // In the future, this could update the programmed exercise weights based on 1RM percentages
-                        Mono.just(program)
+                        // Get all set schemes for this program and update their target weights
+                        updateSetSchemeWeightsForProgram(programId, oneRepMaxValues, program.userId)
+                            .then(Mono.just(program))
                     }
             }
             .doOnError { error ->
                 logger.error("Error updating workout with 1RM data for program {}: {}", programId, error.message)
+            }
+    }
+
+    /**
+     * Updates set scheme target weights for all exercises in a program based on 1RM percentages.
+     *
+     * @param programId The ID of the program
+     * @param oneRepMaxValues Map of exercise names to their 1RM values
+     * @return Mono indicating completion
+     */
+    private fun updateSetSchemeWeightsForProgram(
+        programId: Long,
+        oneRepMaxValues: Map<String, Double>,
+        userId: String
+    ): Mono<Void> {
+        logger.info("Updating set scheme weights for program {} with {} 1RM values", programId, oneRepMaxValues.size)
+
+        return setSchemeDAL.selectSetSchemesByProgramId(programId)
+            .flatMap { setSchemes ->
+                if (setSchemes.isEmpty()) {
+                    logger.info("No set schemes found for program {}", programId)
+                    return@flatMap Mono.empty<Void>()
+                }
+
+                // Process each set scheme individually to update target weights
+
+                // Update each set scheme with new target weight based on 1RM percentage
+                Flux.fromIterable(setSchemes)
+                    .flatMap { setScheme ->
+                        updateSetSchemeWeight(setScheme, oneRepMaxValues, userId)
+                    }
+                    .then()
+            }
+            .doOnError { error ->
+                logger.error("Error updating set scheme weights for program {}: {}", programId, error.message)
+            }
+    }
+
+    /**
+     * Updates a single set scheme's target weight based on 1RM percentage.
+     *
+     * @param setScheme The set scheme to update
+     * @param oneRepMaxValues Map of exercise names to their 1RM values
+     * @return Mono indicating completion
+     */
+    private fun updateSetSchemeWeight(
+        setScheme: SetScheme,
+        oneRepMaxValues: Map<String, Double>,
+        userId: String
+    ): Mono<Void> {
+        // Get the exercise name from the programmed exercise
+        return programmedExerciseDAL.selectProgrammedExerciseById(setScheme.programmedExerciseId)
+            .flatMap { programmedExercise ->
+                val exerciseName = programmedExercise.exerciseName
+                val oneRepMax = oneRepMaxValues[exerciseName]
+
+                if (oneRepMax == null) {
+                    logger.debug("No 1RM found for exercise {}, skipping weight update", exerciseName)
+                    return@flatMap Mono.empty<Void>()
+                }
+
+                // Calculate target weight based on 1RM percentage
+                // For now, we'll use a default percentage based on the set number
+                // In a more sophisticated implementation, this would be based on the workout type and set scheme
+                val percentage = calculateTargetPercentage(setScheme)
+                val newTargetWeight = (oneRepMax * percentage).toBigDecimal()
+
+                logger.debug("Updating set scheme {} for exercise {}: {}% of {}kg = {}kg", 
+                    setScheme.id, exerciseName, (percentage * 100).toInt(), oneRepMax, newTargetWeight)
+
+                // Get the user's exercise unit preference and update the set scheme
+                getWeightUnitForExercise(userId, exerciseName)
+                    .flatMap { weightUnit ->
+                        setSchemeService.updateSetSchemeWithUnit(
+                            id = setScheme.id,
+                            programmedExerciseId = setScheme.programmedExerciseId,
+                            setNumber = setScheme.setNumber,
+                            isAmrap = setScheme.isAmrap,
+                            isEmom = setScheme.isEmom,
+                            useTempo = setScheme.useTempo,
+                            eccentricTempo = setScheme.eccentricTempo,
+                            isometricTempo = setScheme.isometricTempo,
+                            concentricTempo = setScheme.concentricTempo,
+                            targetWeight = newTargetWeight.toString(),
+                            performedWeight = setScheme.performedWeight?.toString(),
+                            targetRepCount = setScheme.targetRepCount,
+                            performedRepCount = setScheme.performedRepCount,
+                            restSeconds = setScheme.restSeconds,
+                            unit = weightUnit.name, // Use user's preferred unit for this exercise
+                            band = setScheme.band
+                        )
+                    }
+                    .then()
+            }
+            .onErrorResume { error ->
+                logger.error("Error updating set scheme {}: {}", setScheme.id, error.message)
+                Mono.empty<Void>()
+            }
+    }
+
+    /**
+     * Calculates the target percentage of 1RM based on set scheme characteristics.
+     *
+     * @param setScheme The set scheme to calculate percentage for
+     * @return The percentage as a decimal (e.g., 0.85 for 85%)
+     */
+    private fun calculateTargetPercentage(setScheme: SetScheme): Double {
+        // This is a simplified implementation
+        // In a more sophisticated system, this would be based on:
+        // - Workout type (ME vs DE vs accessory)
+        // - Set number and rep count
+        // - Exercise type and movement pattern
+        // - Program phase and periodization
+
+        return when {
+            setScheme.isAmrap -> 0.75 // AMRAP sets typically at 75% 1RM
+            setScheme.isEmom -> 0.70 // EMOM sets typically at 70% 1RM
+            setScheme.targetRepCount != null -> {
+                // Base percentage on rep count (simplified Prilepin table)
+                when (setScheme.targetRepCount) {
+                    1 -> 0.95
+                    2 -> 0.90
+                    3 -> 0.85
+                    4, 5 -> 0.80
+                    6, 7 -> 0.75
+                    8, 9 -> 0.70
+                    10, 11 -> 0.65
+                    else -> 0.60
+                }
+            }
+            else -> 0.75 // Default to 75% if no other indicators
+        }
+    }
+
+    /**
+     * Gets the weight unit preference for an exercise.
+     *
+     * @param userId The user ID for weight unit preferences
+     * @param exerciseName The name of the exercise
+     * @return Mono containing the weight unit preference, defaulting to KG if not found
+     */
+    private fun getWeightUnitForExercise(
+        userId: String,
+        exerciseName: String
+    ): Mono<WeightUnit> {
+        return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
+            .map { it.preferredUnit }
+            .switchIfEmpty(Mono.just(WeightUnit.KG))
+            .onErrorResume {
+                logger.debug("No weight unit preference found for user {} and exercise {}, using KG", userId, exerciseName)
+                Mono.just(WeightUnit.KG)
             }
     }
 }

@@ -195,10 +195,13 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             twoDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -209,6 +212,9 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 
@@ -340,10 +346,13 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             twoDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -354,6 +363,9 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 
@@ -461,10 +473,13 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.error(RuntimeException("Exercise selection failed")))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             twoDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -626,10 +641,13 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
         ).thenReturn(Mono.just(emptyList()))
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any())).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             twoDayService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -640,6 +658,9 @@ class TwoDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 

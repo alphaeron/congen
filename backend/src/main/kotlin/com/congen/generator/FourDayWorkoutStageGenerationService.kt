@@ -12,7 +12,9 @@ import com.congen.model.UserOneRepMax
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Service for generating workout stages for 4-day conjugate powerlifting programs.
@@ -84,8 +86,10 @@ class FourDayWorkoutStageGenerationService(
         private val logger = LoggerFactory.getLogger(FourDayWorkoutStageGenerationService::class.java)
     }
 
+    @VisibleForTesting
     override fun generateStagesForDayType(
-        workout: ProgrammedWorkout,
+        programId: Long,
+        dayNumber: Int,
         dayType: String,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
@@ -93,7 +97,7 @@ class FourDayWorkoutStageGenerationService(
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
-    ): Mono<Void> {
+    ): Mono<WorkoutGenerationResult> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
 
@@ -119,7 +123,7 @@ class FourDayWorkoutStageGenerationService(
             primaryExerciseMono.flatMap { primaryExercise ->
                 // Update movement balance state with primary exercise
                 movementBalanceState = updateMovementBalanceState(movementBalanceState, primaryExercise, false)
-                logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
+                logMovementBalanceState(movementBalanceState, "Program $programId Day $dayNumber - $dayType")
 
                 generateSetSchemes(
                     exercise = primaryExercise,
@@ -147,7 +151,7 @@ class FourDayWorkoutStageGenerationService(
                     ).doOnNext { secondaryExercise ->
                         // Update movement balance state with secondary exercise
                         movementBalanceState = updateMovementBalanceState(movementBalanceState, secondaryExercise, false)
-                        logMovementBalanceState(movementBalanceState, "${workout.id} - $dayType")
+                        logMovementBalanceState(movementBalanceState, "Program $programId Day $dayNumber - $dayType")
                     }
                 }
             } else {
@@ -196,74 +200,65 @@ class FourDayWorkoutStageGenerationService(
                             dayType = dayType
                         )
 
-                    // Create stages sequentially with conditional secondary stage
-                    val stageCreators = mutableListOf<() -> Mono<Void>>()
+                    // Create all workout stages
+                    val primaryStageMono = createPrimaryStage(
+                        exercise = primaryExercise,
+                        setSchemes = primarySetSchemes,
+                        userId = userId
+                    )
 
-                    // Always add warmup stage
-                    stageCreators.add {
-                        createWarmupStage(
-                            workout = workout,
-                            userExercisePool = userExercisePool,
-                            oneRepMaxes = oneRepMaxes,
-                            dayType = dayType,
-                            primaryExercise = primaryExercise,
-                            isFourDayTemplate = true,
-                            currentWeekNumber = currentWeekNumber,
+                    val secondaryStageMono = if (hasSecondary && secondaryExercise != null) {
+                        createSecondaryStage(
+                            exercise = secondaryExercise,
+                            setSchemes = secondarySetSchemes,
                             userId = userId
                         )
+                    } else {
+                        Mono.empty()
                     }
 
-                    // Always add primary stage
-                    stageCreators.add {
-                        createPrimaryStage(
-                            workout = workout,
-                            exercise = primaryExercise,
-                            setSchemes = primarySetSchemes,
-                            userId = userId
-                        )
-                    }
+                    val warmupStageMono = createWarmupStage(
+                        userExercisePool = userExercisePool,
+                        oneRepMaxes = oneRepMaxes,
+                        dayType = dayType,
+                        primaryExercise = primaryExercise,
+                        secondaryExercise = secondaryExercise,
+                        isFourDayTemplate = true,
+                        currentWeekNumber = currentWeekNumber,
+                        userId = userId
+                    )
 
-                    // Add secondary stage only if we have a secondary exercise
-                    if (hasSecondary && secondaryExercise != null) {
-                        stageCreators.add {
-                            createSecondaryStage(
-                                workout = workout,
-                                exercise = secondaryExercise,
-                                setSchemes = secondarySetSchemes,
-                                userId = userId
-                            )
+                    val accessoryStageMono = createAccessoryStage(
+                        userExercisePool = userExercisePool,
+                        oneRepMaxes = oneRepMaxes,
+                        dayType = dayType,
+                        weakMuscles = weakMuscles,
+                        numAccessoryExercises = numAccessoryExercises,
+                        userId = userId,
+                        currentWeekNumber = currentWeekNumber,
+                        movementBalanceState = movementBalanceState
+                    )
+
+                    val conditioningStageMono = createConditioningStage(
+                        userExercisePool = userExercisePool,
+                        oneRepMaxes = oneRepMaxes,
+                        dayType = dayType,
+                        weakMuscles = weakMuscles,
+                        userId = userId,
+                        movementBalanceState = movementBalanceState
+                    )
+
+                    // Combine all stages - collect non-empty stages
+                    Flux.merge(
+                        primaryStageMono,
+                        secondaryStageMono,
+                        warmupStageMono,
+                        accessoryStageMono,
+                        conditioningStageMono
+                    ).collectList()
+                        .map { stages ->
+                            WorkoutGenerationResult(programId, dayNumber, dayType, userId, stages)
                         }
-                    }
-
-                    // Always add accessory stage
-                    stageCreators.add {
-                        createAccessoryStage(
-                            workout = workout,
-                            userExercisePool = userExercisePool,
-                            oneRepMaxes = oneRepMaxes,
-                            dayType = dayType,
-                            weakMuscles = weakMuscles,
-                            numAccessoryExercises = numAccessoryExercises,
-                            userId = userId,
-                            currentWeekNumber = currentWeekNumber,
-                            movementBalanceState = movementBalanceState
-                        )
-                    }
-
-                    // Always add conditioning stage (for DE days)
-                    stageCreators.add {
-                        createConditioningStage(
-                            workout = workout,
-                            userExercisePool = userExercisePool,
-                            oneRepMaxes = oneRepMaxes,
-                            dayType = dayType,
-                            weakMuscles = weakMuscles,
-                            userId = userId,
-                            movementBalanceState = movementBalanceState
-                        )
-                    }
-
-                    createStagesSequentially(stageCreators)
                 }
             }
             .doOnError { error ->

@@ -1,6 +1,7 @@
 package com.congen.generator
 
 import com.congen.model.Band
+import com.congen.model.WorkoutStageTypeEnum
 import java.math.BigDecimal
 
 /**
@@ -110,3 +111,34 @@ object ConjugateConstants {
     /** Maximum number of muscles allowed for warmup exercises */
     const val MAX_MUSCLES_FOR_WARMUP = 3
 }
+
+/**
+ * Represents a complete workout generation result with all associated data.
+ */
+data class WorkoutGenerationResult(
+    val programId: Long,
+    val dayNumber: Int,
+    val dayType: String,
+    val userId: String,
+    val stages: List<WorkoutStageData>
+)
+
+/**
+ * Represents workout stage data for atomic writes.
+ */
+data class WorkoutStageData(
+    val stageType: WorkoutStageTypeEnum,
+    val position: Int,
+    val name: String,
+    val exercises: List<ProgrammedExerciseData>
+)
+
+/**
+ * Represents programmed exercise data for atomic writes.
+ */
+data class ProgrammedExerciseData(
+    val exerciseName: String,
+    val position: Int,
+    val notes: String?,
+    val setSchemes: List<SetSchemeParams>
+)

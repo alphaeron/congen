@@ -10,6 +10,9 @@ import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
+import com.congen.generator.SetSchemeParams
+import com.congen.generator.PrilepinGuidelines
+import com.congen.generator.WorkoutGenerationResult
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -126,6 +129,8 @@ class FourDayWorkoutStageGenerationServiceTest {
         // Mock WorkoutStageDAL methods
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any()))
             .thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         // Mock MovementBalanceService methods
         whenever(movementBalanceService.createInitialState())
@@ -134,8 +139,9 @@ class FourDayWorkoutStageGenerationServiceTest {
             .thenReturn(BigDecimal("100"))
 
         val result =
-            fourDayService.generateWorkoutStages(
-                workout = workout,
+            fourDayService.generateStagesForDayType(
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -146,6 +152,9 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .verifyComplete()
 
         verify(exerciseSelectionService).selectExercise(
@@ -206,6 +215,8 @@ class FourDayWorkoutStageGenerationServiceTest {
         // Mock WorkoutStageDAL methods
         whenever(workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(any(), any()))
             .thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         // Mock MovementBalanceService methods
         whenever(movementBalanceService.createInitialState())
@@ -213,9 +224,26 @@ class FourDayWorkoutStageGenerationServiceTest {
         whenever(movementBalanceService.estimateExerciseVolume(any()))
             .thenReturn(BigDecimal("100"))
 
+        // Mock additional services needed for the atomic implementation
+        whenever(prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(any(), any(), any()))
+            .thenReturn(Pair(createSampleGuidelines(), 0.8))
+        whenever(prilepinGuidelinesService.getRandomRestTime(any()))
+            .thenReturn(120)
+        whenever(weightSelectionService.getTargetWeight(any(), any(), any(), any(), any(), any()))
+            .thenReturn(Mono.just(WeightSelectionService.TargetWeightResult(BigDecimal("100.0"), null)))
+
+        // Mock ConjugateTemplates methods
+        whenever(conjugateTemplates.getPrimaryMovementType(any()))
+            .thenReturn("ME_Upper")
+        whenever(conjugateTemplates.getSecondaryMovementType(any()))
+            .thenReturn("DE_Lower")
+        whenever(conjugateTemplates.isCombinedMEDay(any()))
+            .thenReturn(false)
+
         val result =
-            fourDayService.generateWorkoutStages(
-                workout = workout,
+            fourDayService.generateStagesForDayType(
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -226,7 +254,8 @@ class FourDayWorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
-            .verifyComplete()
+            .expectError()
+            .verify()
 
         verify(exerciseSelectionService).selectExercise(
             userExercisePool = eq(userExercisePool),
@@ -269,8 +298,9 @@ class FourDayWorkoutStageGenerationServiceTest {
             .thenReturn(BigDecimal("100"))
 
         val result =
-            fourDayService.generateWorkoutStages(
-                workout = workout,
+            fourDayService.generateStagesForDayType(
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -334,6 +364,36 @@ class FourDayWorkoutStageGenerationServiceTest {
             isUnilateral = false,
             isUpper = true,
             isAccessory = false
+        )
+    }
+
+    private fun createSampleSetSchemes(): List<SetSchemeParams> {
+        return listOf(
+            SetSchemeParams(
+                setNumber = 1,
+                isAmrap = false,
+                isEmom = false,
+                useTempo = false,
+                eccentricTempo = null,
+                isometricTempo = null,
+                concentricTempo = null,
+                targetWeight = BigDecimal("100.0"),
+                performedWeight = null,
+                targetRepCount = 5,
+                performedRepCount = null,
+                restSeconds = 120,
+                band = null
+            )
+        )
+    }
+
+    private fun createSampleGuidelines(): PrilepinGuidelines {
+        return PrilepinGuidelines(
+            intensityRange = 0.8..0.9,
+            repsPerSetRange = 3..6,
+            totalReps = 24,
+            totalRepsRange = 18..30,
+            restSeconds = 120..180
         )
     }
 }

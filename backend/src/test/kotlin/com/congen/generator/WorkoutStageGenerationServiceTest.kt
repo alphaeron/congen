@@ -10,6 +10,7 @@ import com.congen.model.MovementType
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
+import com.congen.model.WorkoutStageTypeEnum
 import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -119,10 +120,13 @@ class WorkoutStageGenerationServiceTest {
                 any()
             )
         ).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             baseService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -133,6 +137,9 @@ class WorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 
@@ -171,7 +178,8 @@ class WorkoutStageGenerationServiceTest {
 
         val result =
             baseService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -231,10 +239,13 @@ class WorkoutStageGenerationServiceTest {
                 any()
             )
         ).thenReturn(Mono.empty())
+        whenever(userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(any(), any()))
+            .thenReturn(Mono.empty())
 
         val result =
             baseService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -245,6 +256,9 @@ class WorkoutStageGenerationServiceTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.stages.isNotEmpty()
+            }
             .expectComplete()
             .verify()
 
@@ -287,7 +301,8 @@ class WorkoutStageGenerationServiceTest {
             sessionTimeCalculator
         ) {
         override fun generateStagesForDayType(
-            workout: ProgrammedWorkout,
+            programId: Long,
+            dayNumber: Int,
             dayType: String,
             userExercisePool: UserExercisePool,
             oneRepMaxes: List<UserOneRepMax>,
@@ -295,7 +310,7 @@ class WorkoutStageGenerationServiceTest {
             weakMuscles: List<String>,
             currentWeekNumber: Int,
             userId: String,
-        ): Mono<Void> {
+        ): Mono<WorkoutGenerationResult> {
             // Simple test implementation that selects exercises and returns success
             return exerciseSelectionService.selectExercise(
                 userExercisePool = userExercisePool,
@@ -304,7 +319,23 @@ class WorkoutStageGenerationServiceTest {
                 workoutType = dayType,
                 dayType = dayType,
                 movementBalanceState = null
-            ).then(Mono.empty())
+            ).map { exercise ->
+                // Create a mock stage with the selected exercise
+                val mockStage = WorkoutStageData(
+                    stageType = WorkoutStageTypeEnum.PRIMARY,
+                    position = 1,
+                    name = "Primary",
+                    exercises = listOf(
+                        ProgrammedExerciseData(
+                            exerciseName = exercise.name,
+                            position = 1,
+                            notes = null,
+                            setSchemes = emptyList()
+                        )
+                    )
+                )
+                WorkoutGenerationResult(programId, dayNumber, dayType, userId, listOf(mockStage))
+            }
         }
     }
 

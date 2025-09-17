@@ -3,14 +3,17 @@ package com.congen.generator
 import com.congen.dal.ProgramPreferencesDAL
 import com.congen.dal.ProgrammedExerciseDAL
 import com.congen.dal.ProgrammedWorkoutDAL
+import com.congen.dal.SetSchemeDAL
 import com.congen.dal.UserOneRepMaxDAL
 import com.congen.dal.UserWeakMuscleDAL
+import com.congen.dal.UserWeightUnitPreferenceDAL
 import com.congen.model.Program
 import com.congen.model.ProgramPreferences
 import com.congen.model.ProgrammedWorkout
 import com.congen.model.UserOneRepMax
 import com.congen.model.UserWeakMuscle
 import com.congen.service.ProgramService
+import com.congen.service.SetSchemeService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
@@ -39,6 +42,10 @@ class ConjugateWorkoutGeneratorServiceTest {
     private lateinit var workoutStageGenerationOrchestrator: WorkoutStageGenerationOrchestrator
     private lateinit var userWeakMuscleDAL: UserWeakMuscleDAL
     private lateinit var exercisePoolFactory: ExercisePoolFactory
+    private lateinit var atomicWorkoutWriter: AtomicWorkoutWriter
+    private lateinit var setSchemeDAL: SetSchemeDAL
+    private lateinit var setSchemeService: SetSchemeService
+    private lateinit var userWeightUnitPreferenceDAL: UserWeightUnitPreferenceDAL
 
     companion object {
         private const val USER_ID = "test-user-123"
@@ -56,6 +63,10 @@ class ConjugateWorkoutGeneratorServiceTest {
         workoutStageGenerationOrchestrator = mock()
         userWeakMuscleDAL = mock()
         exercisePoolFactory = mock()
+        atomicWorkoutWriter = mock()
+        setSchemeDAL = mock()
+        setSchemeService = mock()
+        userWeightUnitPreferenceDAL = mock()
 
         conjugateWorkoutGeneratorService =
             ConjugateWorkoutGeneratorService(
@@ -66,8 +77,12 @@ class ConjugateWorkoutGeneratorServiceTest {
                 programmedExerciseDAL = programmedExerciseDAL,
                 conjugateTemplates = conjugateTemplates,
                 workoutStageGenerationOrchestrator = workoutStageGenerationOrchestrator,
+                atomicWorkoutWriter = atomicWorkoutWriter,
                 userWeakMuscleDAL = userWeakMuscleDAL,
-                exercisePoolFactory = exercisePoolFactory
+                exercisePoolFactory = exercisePoolFactory,
+                setSchemeDAL = setSchemeDAL,
+                setSchemeService = setSchemeService,
+                userWeightUnitPreferenceDAL = userWeightUnitPreferenceDAL
             )
     }
 
@@ -89,8 +104,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         // Mock the DAL methods for atomic workout generation
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(ProgrammedWorkout(1L, PROGRAM_ID, 1, "max_effort", Instant.now(), Instant.now())))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty<Void>())
+        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList())))
+        whenever(atomicWorkoutWriter.writeWorkoutAtomically(any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -124,8 +139,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(4)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         // Mock the DAL methods for atomic workout generation
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(ProgrammedWorkout(1L, PROGRAM_ID, 1, "max_effort", Instant.now(), Instant.now())))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty<Void>())
+        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList())))
+        whenever(atomicWorkoutWriter.writeWorkoutAtomically(any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -233,7 +248,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         whenever(
             workoutStageGenerationOrchestrator.generateWorkoutStages(
-                workout = any(),
+                programId = any(),
+                dayNumber = any(),
                 dayType = any(),
                 userExercisePool = any(),
                 oneRepMaxes = any(),
@@ -268,7 +284,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         whenever(
             workoutStageGenerationOrchestrator.generateWorkoutStages(
-                workout = any(),
+                programId = any(),
+                dayNumber = any(),
                 dayType = any(),
                 userExercisePool = any(),
                 oneRepMaxes = any(),
@@ -277,7 +294,7 @@ class ConjugateWorkoutGeneratorServiceTest {
                 currentWeekNumber = any(),
                 userId = any()
             )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList())))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.error(RuntimeException("Update error")))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)
@@ -304,8 +321,8 @@ class ConjugateWorkoutGeneratorServiceTest {
         whenever(conjugateTemplates.selectTemplate(3)).thenReturn(template)
         whenever(exercisePoolFactory.createPoolForUser(USER_ID)).thenReturn(Mono.just(userExercisePool))
         // Mock the DAL methods for atomic workout generation
-        whenever(programmedWorkoutDAL.insertProgrammedWorkout(any(), any(), any())).thenReturn(Mono.just(ProgrammedWorkout(1L, PROGRAM_ID, 1, "max_effort", Instant.now(), Instant.now())))
-        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Mono.empty<Void>())
+        whenever(workoutStageGenerationOrchestrator.generateWorkoutStages(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(Mono.just(WorkoutGenerationResult(PROGRAM_ID, 1, "max_effort", USER_ID, emptyList())))
+        whenever(atomicWorkoutWriter.writeWorkoutAtomically(any())).thenReturn(Mono.just(createSampleProgrammedWorkout()))
         whenever(programService.updateProgram(any(), any(), any(), any())).thenReturn(Mono.just(updatedProgram))
 
         val result = conjugateWorkoutGeneratorService.generateNextWeek(PROGRAM_ID)

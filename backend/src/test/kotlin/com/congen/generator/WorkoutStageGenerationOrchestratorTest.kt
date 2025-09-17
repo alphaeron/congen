@@ -80,7 +80,8 @@ class WorkoutStageGenerationOrchestratorTest {
             .thenReturn(mockWorkoutStageGenerationService)
         whenever(
             mockWorkoutStageGenerationService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -89,11 +90,12 @@ class WorkoutStageGenerationOrchestratorTest {
                 currentWeekNumber = currentWeekNumber,
                 userId = userId
             )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(WorkoutGenerationResult(workout.programId, workout.dayNumber, dayType, userId, emptyList())))
 
         val result =
             orchestrator.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -104,12 +106,16 @@ class WorkoutStageGenerationOrchestratorTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.dayType == dayType
+            }
             .expectComplete()
             .verify()
 
         verify(workoutStageGenerationServiceFactory).getWorkoutStageGenerationService(4)
         verify(mockWorkoutStageGenerationService).generateWorkoutStages(
-            workout = workout,
+            programId = workout.programId,
+            dayNumber = workout.dayNumber,
             dayType = dayType,
             userExercisePool = userExercisePool,
             oneRepMaxes = oneRepMaxes,
@@ -135,7 +141,8 @@ class WorkoutStageGenerationOrchestratorTest {
             .thenReturn(mockWorkoutStageGenerationService)
         whenever(
             mockWorkoutStageGenerationService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -148,7 +155,8 @@ class WorkoutStageGenerationOrchestratorTest {
 
         val result =
             orchestrator.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -178,7 +186,8 @@ class WorkoutStageGenerationOrchestratorTest {
             .thenReturn(mockWorkoutStageGenerationService)
         whenever(
             mockWorkoutStageGenerationService.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -187,11 +196,12 @@ class WorkoutStageGenerationOrchestratorTest {
                 currentWeekNumber = currentWeekNumber,
                 userId = userId
             )
-        ).thenReturn(Mono.empty())
+        ).thenReturn(Mono.just(WorkoutGenerationResult(workout.programId, workout.dayNumber, dayType, userId, emptyList())))
 
         val result =
             orchestrator.generateWorkoutStages(
-                workout = workout,
+                programId = workout.programId,
+                dayNumber = workout.dayNumber,
                 dayType = dayType,
                 userExercisePool = userExercisePool,
                 oneRepMaxes = oneRepMaxes,
@@ -202,6 +212,9 @@ class WorkoutStageGenerationOrchestratorTest {
             )
 
         StepVerifier.create(result)
+            .expectNextMatches { workoutResult ->
+                workoutResult.programId == workout.programId && workoutResult.dayNumber == workout.dayNumber && workoutResult.dayType == dayType
+            }
             .expectComplete()
             .verify()
 

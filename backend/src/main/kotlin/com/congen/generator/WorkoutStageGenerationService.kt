@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import kotlin.random.Random
+import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Base service for generating workout stages for conjugate powerlifting programs.
@@ -90,10 +91,11 @@ abstract class WorkoutStageGenerationService(
      * @param weakMuscles Target weak muscles
      * @param currentWeekNumber Current week number
      * @param userId User ID
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout generation result
      */
     fun generateWorkoutStages(
-        workout: ProgrammedWorkout,
+        programId: Long,
+        dayNumber: Int,
         dayType: String,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
@@ -101,9 +103,10 @@ abstract class WorkoutStageGenerationService(
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
-    ): Mono<Void> {
+    ): Mono<WorkoutGenerationResult> {
         return generateStagesForDayType(
-            workout = workout,
+            programId = programId,
+            dayNumber = dayNumber,
             dayType = dayType,
             userExercisePool = userExercisePool,
             oneRepMaxes = oneRepMaxes,
@@ -112,7 +115,7 @@ abstract class WorkoutStageGenerationService(
             currentWeekNumber = currentWeekNumber,
             userId = userId
         ).doOnError { error ->
-            logger.error("Error generating workout stages for workout '{}': {}", workout.id, error.message)
+            logger.error("Error generating workout stages for program {} day {}: {}", programId, dayNumber, error.message)
         }
     }
 
@@ -130,10 +133,12 @@ abstract class WorkoutStageGenerationService(
      * @param weakMuscles Target weak muscles
      * @param currentWeekNumber Current week number
      * @param userId User ID
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout generation result
      */
-    protected abstract fun generateStagesForDayType(
-        workout: ProgrammedWorkout,
+    @VisibleForTesting
+    abstract fun generateStagesForDayType(
+        programId: Long,
+        dayNumber: Int,
         dayType: String,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
@@ -141,160 +146,147 @@ abstract class WorkoutStageGenerationService(
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
-    ): Mono<Void>
+    ): Mono<WorkoutGenerationResult>
 
     /**
      * Creates a primary stage with the given exercise.
      *
-     * @param workout The programmed workout
      * @param exercise The primary exercise
      * @param setSchemes The set schemes for the exercise
      * @param userId The user ID for weight unit preferences
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout stage data
      */
     protected fun createPrimaryStage(
-        workout: ProgrammedWorkout,
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>,
         userId: String,
-    ): Mono<Void> {
-        return createWorkoutStage(
-            workout.id,
-            WorkoutStageTypeEnum.PRIMARY,
-            WorkoutStageTypeEnum.PRIMARY.position
+    ): Mono<WorkoutStageData> {
+        val exerciseData = ProgrammedExerciseData(
+            exerciseName = exercise.name,
+            position = 1,
+            notes = null,
+            setSchemes = setSchemes
+        )
+        
+        return Mono.just(
+            WorkoutStageData(
+                stageType = WorkoutStageTypeEnum.PRIMARY,
+                position = WorkoutStageTypeEnum.PRIMARY.position,
+                name = WorkoutStageTypeEnum.PRIMARY.displayName,
+                exercises = listOf(exerciseData)
+            )
         )
             .doOnError { error ->
                 logger.error("Error creating primary stage: {}", error.message)
             }
-            .flatMap { primaryStage ->
-                createProgrammedExercise(primaryStage.id, exercise.name)
-                    .flatMap { primaryProgrammedExercise ->
-                        getWeightUnitForExercise(userId, exercise.name)
-                            .flatMap { weightUnit ->
-                                createSetSchemes(
-                                    primaryProgrammedExercise.id,
-                                    setSchemes,
-                                    weightUnit
-                                )
-                            }
-                    }
-            }
-            .then()
     }
 
     /**
      * Creates a secondary stage with the given exercise.
      *
-     * @param workout The programmed workout
      * @param exercise The secondary exercise
      * @param setSchemes The set schemes for the exercise
      * @param userId The user ID for weight unit preferences
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout stage data
      */
     protected fun createSecondaryStage(
-        workout: ProgrammedWorkout,
         exercise: Exercise,
         setSchemes: List<SetSchemeParams>,
         userId: String,
-    ): Mono<Void> {
-        return createWorkoutStage(
-            workout.id,
-            WorkoutStageTypeEnum.SECONDARY,
-            WorkoutStageTypeEnum.SECONDARY.position
+    ): Mono<WorkoutStageData> {
+        val exerciseData = ProgrammedExerciseData(
+            exerciseName = exercise.name,
+            position = 1,
+            notes = null,
+            setSchemes = setSchemes
         )
-            .flatMap { secondaryStage ->
-                createProgrammedExercise(secondaryStage.id, exercise.name)
-                    .flatMap { secondaryProgrammedExercise ->
-                        getWeightUnitForExercise(userId, exercise.name)
-                            .flatMap { weightUnit ->
-                                createSetSchemes(
-                                    secondaryProgrammedExercise.id,
-                                    setSchemes,
-                                    weightUnit
-                                )
-                            }
-                    }
+        
+        return Mono.just(
+            WorkoutStageData(
+                stageType = WorkoutStageTypeEnum.SECONDARY,
+                position = WorkoutStageTypeEnum.SECONDARY.position,
+                name = WorkoutStageTypeEnum.SECONDARY.displayName,
+                exercises = listOf(exerciseData)
+            )
+        )
+            .doOnError { error ->
+                logger.error("Error creating secondary stage: {}", error.message)
             }
-            .then()
     }
 
     /**
      * Creates a primary stage with multiple exercises (for combined ME+DE days).
      *
-     * @param workout The programmed workout
      * @param primaryExercise The primary exercise (can be null)
      * @param secondaryExercise The secondary exercise (can be null)
      * @param primarySetSchemes The set schemes for the primary exercise
      * @param secondarySetSchemes The set schemes for the secondary exercise
      * @param userId The user ID for weight unit preferences
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout stage data
      */
     protected fun createCombinedPrimaryStage(
-        workout: ProgrammedWorkout,
         primaryExercise: Exercise?,
         secondaryExercise: Exercise?,
         primarySetSchemes: List<SetSchemeParams>,
         secondarySetSchemes: List<SetSchemeParams>,
         userId: String,
-    ): Mono<Void> {
+    ): Mono<WorkoutStageData> {
         if (primaryExercise == null && secondaryExercise == null) {
-            return Mono.empty<Void>()
+            return Mono.empty()
         }
 
-        return createWorkoutStage(
-            workout.id,
-            WorkoutStageTypeEnum.PRIMARY,
-            WorkoutStageTypeEnum.PRIMARY.position
-        )
+        val primaryExerciseMono = if (primaryExercise != null) {
+            Mono.just(
+                ProgrammedExerciseData(
+                    exerciseName = primaryExercise.name,
+                    position = 1,
+                    notes = null,
+                    setSchemes = primarySetSchemes
+                )
+            )
+        } else {
+            Mono.empty()
+        }
+
+        val secondaryExerciseMono = if (secondaryExercise != null) {
+            Mono.just(
+                ProgrammedExerciseData(
+                    exerciseName = secondaryExercise.name,
+                    position = 2,
+                    notes = null,
+                    setSchemes = secondarySetSchemes
+                )
+            )
+        } else {
+            Mono.empty()
+        }
+
+        return Mono.zip(primaryExerciseMono, secondaryExerciseMono)
+            .map { tuple ->
+                val exercises = listOfNotNull(tuple.t1, tuple.t2)
+                WorkoutStageData(
+                    stageType = WorkoutStageTypeEnum.PRIMARY,
+                    position = WorkoutStageTypeEnum.PRIMARY.position,
+                    name = WorkoutStageTypeEnum.PRIMARY.displayName,
+                    exercises = exercises
+                )
+            }
+            .switchIfEmpty(
+                Mono.just(WorkoutStageData(
+                    stageType = WorkoutStageTypeEnum.PRIMARY,
+                    position = WorkoutStageTypeEnum.PRIMARY.position,
+                    name = WorkoutStageTypeEnum.PRIMARY.displayName,
+                    exercises = emptyList()
+                ))
+            )
             .doOnError { error ->
                 logger.error("Error creating combined primary stage: {}", error.message)
             }
-            .flatMap { primaryStage ->
-                var exerciseMono: Mono<Void> = Mono.empty()
-
-                if (primaryExercise != null) {
-                    exerciseMono =
-                        exerciseMono.then(
-                            createProgrammedExercise(primaryStage.id, primaryExercise.name)
-                                .flatMap { primaryProgrammedExercise ->
-                                    getWeightUnitForExercise(userId, primaryExercise.name)
-                                        .flatMap { weightUnit ->
-                                            createSetSchemes(
-                                                primaryProgrammedExercise.id,
-                                                primarySetSchemes,
-                                                weightUnit
-                                            )
-                                        }
-                                }
-                        )
-                }
-
-                if (secondaryExercise != null) {
-                    exerciseMono =
-                        exerciseMono.then(
-                            createProgrammedExercise(primaryStage.id, secondaryExercise.name)
-                                .flatMap { secondaryProgrammedExercise ->
-                                    getWeightUnitForExercise(userId, secondaryExercise.name)
-                                        .flatMap { weightUnit ->
-                                            createSetSchemes(
-                                                secondaryProgrammedExercise.id,
-                                                secondarySetSchemes,
-                                                weightUnit
-                                            )
-                                        }
-                                }
-                        )
-                }
-
-                exerciseMono
-            }
-            .then()
     }
 
     /**
      * Creates an accessory stage with multiple exercises.
      *
-     * @param workout The programmed workout
      * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param dayType The type of workout day
@@ -303,10 +295,9 @@ abstract class WorkoutStageGenerationService(
      * @param userId User ID
      * @param currentWeekNumber Current week number
      * @param movementBalanceState Current movement balance state
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout stage data
      */
     protected fun createAccessoryStage(
-        workout: ProgrammedWorkout,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         dayType: String,
@@ -315,147 +306,130 @@ abstract class WorkoutStageGenerationService(
         userId: String,
         currentWeekNumber: Int,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Void> {
+    ): Mono<WorkoutStageData> {
         val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         if (numAccessoryExercises <= 0) {
-            return Mono.empty<Void>()
+            return Mono.empty()
         }
 
-        return createWorkoutStage(
-            workout.id,
-            WorkoutStageTypeEnum.ACCESSORY,
-            WorkoutStageTypeEnum.ACCESSORY.position
-        )
-            .flatMap { accessoryStage ->
-                // Generate a consistent rest time for all accessory exercises
-                val guidelines =
-                    prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
-                        dayType = dayType,
-                        currentWeekNumber = currentWeekNumber,
-                        movementRole = "accessory"
-                    ).first
-                val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
+        // Generate a consistent rest time for all accessory exercises
+        val guidelines =
+            prilepinGuidelinesService.getUndulatingPeriodizationGuidelines(
+                dayType = dayType,
+                currentWeekNumber = currentWeekNumber,
+                movementRole = "accessory"
+            ).first
+        val consistentRestSeconds = prilepinGuidelinesService.getRandomRestTime(guidelines.restSeconds)
 
-                Flux.range(1, numAccessoryExercises)
-                    .concatMap {
-                        selectAccessoryExercise(
-                            userExercisePool = userExercisePool,
-                            weakMuscles = weakMuscles,
-                            workoutType = workoutType,
-                            dayType = dayType,
-                            movementBalanceState = movementBalanceState
-                        ).flatMap { accessoryExercise ->
-                            createProgrammedExercise(
-                                accessoryStage.id,
-                                accessoryExercise.name
-                            )
-                                .flatMap { accessoryProgrammedExercise ->
-                                    generateAccessorySchemeWithConsistentRest(
-                                        exercise = accessoryExercise,
-                                        dayType = dayType,
-                                        oneRepMaxes = oneRepMaxes,
-                                        currentWeekNumber = currentWeekNumber,
-                                        userId = userId,
-                                        consistentRestSeconds = consistentRestSeconds
-                                    ).flatMap { accessoryScheme ->
-                                        getWeightUnitForExercise(userId, accessoryExercise.name)
-                                            .flatMap { weightUnit ->
-                                                createSetSchemes(
-                                                    accessoryProgrammedExercise.id,
-                                                    accessoryScheme,
-                                                    weightUnit
-                                                )
-                                            }
-                                    }
-                                }
-                        }.onErrorResume { error ->
-                            logger.error("Failed to create accessory exercise for stage. Error: {}", error.message)
-                            Mono.empty()
-                        }.switchIfEmpty(
-                            // Handle case where no accessory exercise was found (graceful degradation)
-                            Mono.fromRunnable {
-                                logger.info(
-                                    "No accessory exercise available for this iteration, skipping and continuing workout generation"
+        return Flux.range(1, numAccessoryExercises)
+            .concatMap {
+                selectAccessoryExercise(
+                    userExercisePool = userExercisePool,
+                    weakMuscles = weakMuscles,
+                    workoutType = workoutType,
+                    dayType = dayType,
+                    movementBalanceState = movementBalanceState
+                ).flatMap { accessoryExercise ->
+                    generateAccessorySchemeWithConsistentRest(
+                        exercise = accessoryExercise,
+                        dayType = dayType,
+                        oneRepMaxes = oneRepMaxes,
+                        currentWeekNumber = currentWeekNumber,
+                        userId = userId,
+                        consistentRestSeconds = consistentRestSeconds
+                    ).flatMap { accessoryScheme ->
+                        getWeightUnitForExercise(userId, accessoryExercise.name)
+                            .map { weightUnit ->
+                                val setSchemeData = accessoryScheme
+                                
+                                ProgrammedExerciseData(
+                                    exerciseName = accessoryExercise.name,
+                                    position = it,
+                                    notes = null,
+                                    setSchemes = setSchemeData
                                 )
                             }
-                        )
                     }
-                    .then()
+                }.onErrorResume { error ->
+                    logger.error("Failed to create accessory exercise for stage. Error: {}", error.message)
+                    Mono.empty<ProgrammedExerciseData>()
+                }
             }
-            .then()
+            .collectList()
+            .map { exercises ->
+                WorkoutStageData(
+                    stageType = WorkoutStageTypeEnum.ACCESSORY,
+                    position = WorkoutStageTypeEnum.ACCESSORY.position,
+                    name = WorkoutStageTypeEnum.ACCESSORY.displayName,
+                    exercises = exercises
+                )
+            }
     }
 
     /**
      * Creates a conditioning stage if applicable.
      *
-     * @param workout The programmed workout
      * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param dayType The type of workout day
      * @param weakMuscles Target weak muscles
      * @param userId User ID
      * @param movementBalanceState Current movement balance state
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout stage data
      */
     protected fun createConditioningStage(
-        workout: ProgrammedWorkout,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         dayType: String,
         weakMuscles: List<String>,
         userId: String,
         movementBalanceState: MovementBalanceService.MovementBalanceState? = null
-    ): Mono<Void> {
+    ): Mono<WorkoutStageData> {
         val workoutType = if (dayType.startsWith("DE_")) "dynamic_effort" else "maximal_effort"
         if (!hasConditioning(dayType)) {
             return Mono.empty()
         }
 
-        return createWorkoutStage(
-            workout.id,
-            WorkoutStageTypeEnum.CONDITIONING,
-            WorkoutStageTypeEnum.CONDITIONING.position
-        )
-            .flatMap { conditioningStage ->
-                selectConditioningExercise(
-                    userExercisePool = userExercisePool,
-                    weakMuscles = weakMuscles,
-                    workoutType = workoutType,
-                    dayType = dayType,
-                    movementBalanceState = movementBalanceState
-                ).flatMap { conditioningExercise ->
-                    createProgrammedExercise(
-                        conditioningStage.id,
-                        conditioningExercise.name
-                    )
-                        .flatMap { conditioningProgrammedExercise ->
-                            generateAmrapOrEmomScheme(
-                                exercise = conditioningExercise,
-                                oneRepMaxes = oneRepMaxes,
-                                userId = userId
-                            ).flatMap { conditioningScheme ->
-                                getWeightUnitForExercise(userId, conditioningExercise.name)
-                                    .flatMap { weightUnit ->
-                                        createSetSchemes(
-                                            conditioningProgrammedExercise.id,
-                                            conditioningScheme,
-                                            weightUnit
-                                        )
-                                    }
-                            }
-                        }
-                }.onErrorResume { error ->
-                    logger.error("Failed to create conditioning exercise for stage. Error: {}", error.message)
-                    Mono.empty()
-                }
+        return selectConditioningExercise(
+            userExercisePool = userExercisePool,
+            weakMuscles = weakMuscles,
+            workoutType = workoutType,
+            dayType = dayType,
+            movementBalanceState = movementBalanceState
+        ).flatMap { conditioningExercise ->
+            generateAmrapOrEmomScheme(
+                exercise = conditioningExercise,
+                oneRepMaxes = oneRepMaxes,
+                userId = userId
+            ).flatMap { conditioningScheme ->
+                getWeightUnitForExercise(userId, conditioningExercise.name)
+                    .map { weightUnit ->
+                        val setSchemeData = conditioningScheme
+                        
+                        val exerciseData = ProgrammedExerciseData(
+                            exerciseName = conditioningExercise.name,
+                            position = 1,
+                            notes = null,
+                            setSchemes = setSchemeData
+                        )
+                        
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.CONDITIONING,
+                            position = WorkoutStageTypeEnum.CONDITIONING.position,
+                            name = WorkoutStageTypeEnum.CONDITIONING.displayName,
+                            exercises = listOf(exerciseData)
+                        )
+                    }
             }
-            .then()
+        }.onErrorResume { error ->
+            logger.error("Failed to create conditioning exercise for stage. Error: {}", error.message)
+            Mono.empty()
+        }
     }
 
     /**
      * Creates a warmup stage with multiple exercises.
      *
-     * @param workout The programmed workout
      * @param userExercisePool Pool of available exercises for the user
      * @param oneRepMaxes User's one rep max values
      * @param dayType The type of workout day
@@ -464,10 +438,9 @@ abstract class WorkoutStageGenerationService(
      * @param isFourDayTemplate Whether this is a 4-day template
      * @param currentWeekNumber Current week number
      * @param userId User ID
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the workout stage data
      */
     protected fun createWarmupStage(
-        workout: ProgrammedWorkout,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
         dayType: String,
@@ -476,7 +449,7 @@ abstract class WorkoutStageGenerationService(
         isFourDayTemplate: Boolean,
         currentWeekNumber: Int,
         userId: String,
-    ): Mono<Void> {
+    ): Mono<WorkoutStageData> {
         // Determine workout type based on day template
         val workoutType =
             when {
@@ -499,47 +472,44 @@ abstract class WorkoutStageGenerationService(
                     return@flatMap Mono.empty()
                 }
 
-                createWorkoutStage(
-                    workout.id,
-                    WorkoutStageTypeEnum.WARMUP,
-                    WorkoutStageTypeEnum.WARMUP.position
-                )
-                    .flatMap { warmupStage ->
-                        Flux.fromIterable(warmupExercises)
-                            .concatMap { warmupExercise ->
-                                createProgrammedExercise(
-                                    warmupStage.id,
-                                    warmupExercise.name
-                                )
-                                    .flatMap { warmupProgrammedExercise ->
-                                        // Generate simple warmup set schemes (light weight, higher reps)
-                                        generateWarmupSetSchemes(
-                                            exercise = warmupExercise,
-                                            dayType = dayType,
-                                            oneRepMaxes = oneRepMaxes,
-                                            userId = userId,
-                                            currentWeekNumber = currentWeekNumber
-                                        ).flatMap { warmupScheme ->
-                                            getWeightUnitForExercise(userId, warmupExercise.name)
-                                                .flatMap { weightUnit ->
-                                                    createSetSchemes(
-                                                        warmupProgrammedExercise.id,
-                                                        warmupScheme,
-                                                        weightUnit
-                                                    )
-                                                }
-                                        }
-                                    }
-                            }
-                            .then()
+                Flux.fromIterable(warmupExercises)
+                    .concatMap { warmupExercise ->
+                        // Generate simple warmup set schemes (light weight, higher reps)
+                        generateWarmupSetSchemes(
+                            exercise = warmupExercise,
+                            dayType = dayType,
+                            oneRepMaxes = oneRepMaxes,
+                            userId = userId,
+                            currentWeekNumber = currentWeekNumber
+                        ).flatMap { warmupScheme ->
+                            getWeightUnitForExercise(userId, warmupExercise.name)
+                                .map { weightUnit ->
+                                    val setSchemeData = warmupScheme
+                                    
+                                    ProgrammedExerciseData(
+                                        exerciseName = warmupExercise.name,
+                                        position = warmupExercises.indexOf(warmupExercise) + 1,
+                                        notes = null,
+                                        setSchemes = setSchemeData
+                                    )
+                                }
+                        }
+                    }
+                    .collectList()
+                    .map { exercises ->
+                        WorkoutStageData(
+                            stageType = WorkoutStageTypeEnum.WARMUP,
+                            position = WorkoutStageTypeEnum.WARMUP.position,
+                            name = WorkoutStageTypeEnum.WARMUP.displayName,
+                            exercises = exercises
+                        )
                     }
             }
             .onErrorResume { error ->
-                logger.error("Failed to create warmup stage for workout '{}', dayType '{}'. Error: {}", workout.id, dayType, error.message)
+                logger.error("Failed to create warmup stage for dayType '{}'. Error: {}", dayType, error.message)
                 // Return empty Mono to continue with other stages instead of failing the entire workout generation
                 Mono.empty()
             }
-            .then()
     }
 
     /**
@@ -1048,97 +1018,17 @@ abstract class WorkoutStageGenerationService(
     }
 
     /**
-     * Creates a workout stage using the infrastructure layer.
-     *
-     * @param workoutId The workout ID
-     * @param stageType The stage type
-     * @param position The stage position
-     * @return Mono containing the created workout stage
-     */
-    protected fun createWorkoutStage(
-        workoutId: Long,
-        stageType: WorkoutStageTypeEnum,
-        position: Int
-    ): Mono<WorkoutStage> {
-        return workoutStageDAL.selectWorkoutStageByWorkoutIdAndPosition(workoutId, position)
-            .onErrorResume(NoResultsFoundException::class.java) {
-                // Stage doesn't exist, create it
-                workoutStageTypeDAL.selectWorkoutStageTypeByEnum(stageType)
-                    .flatMap { workoutStageType ->
-                        workoutStageDAL.insertWorkoutStage(workoutId, workoutStageType.id, position, stageType.displayName)
-                    }
-            }
-    }
-
-    /**
-     * Creates a programmed exercise.
-     *
-     * @param stageId The stage ID
-     * @param exerciseName The exercise name
-     * @return Mono containing the created programmed exercise
-     */
-    protected fun createProgrammedExercise(
-        stageId: Long,
-        exerciseName: String
-    ): Mono<ProgrammedExercise> {
-        return programmedExerciseDAL.insertProgrammedExercise(
-            workoutStageId = stageId,
-            exerciseName = exerciseName,
-            position = 1,
-            notes = null
-        )
-    }
-
-    /**
-     * Creates set schemes for a programmed exercise.
-     *
-     * @param programmedExerciseId The programmed exercise ID
-     * @param setSchemes The set schemes to create
-     * @param weightUnit The weight unit
-     * @return Mono<Void> indicating completion
-     */
-    protected fun createSetSchemes(
-        programmedExerciseId: Long,
-        setSchemes: List<SetSchemeParams>,
-        weightUnit: WeightUnit
-    ): Mono<Void> {
-        return Flux.fromIterable(setSchemes)
-            .concatMap { scheme ->
-                setSchemeService.insertSetScheme(
-                    programmedExerciseId = programmedExerciseId,
-                    setNumber = scheme.setNumber,
-                    isAmrap = scheme.isAmrap,
-                    isEmom = scheme.isEmom,
-                    useTempo = scheme.useTempo,
-                    eccentricTempo = scheme.eccentricTempo,
-                    isometricTempo = scheme.isometricTempo,
-                    concentricTempo = scheme.concentricTempo,
-                    targetWeight = scheme.targetWeight?.toString(),
-                    performedWeight = scheme.performedWeight?.toString(),
-                    targetRepCount = scheme.targetRepCount,
-                    performedRepCount = scheme.performedRepCount,
-                    restSeconds = scheme.restSeconds,
-                    unit = weightUnit.name,
-                    band = scheme.band
-                )
-            }
-            .then()
-    }
-
-    /**
      * Creates workout stages sequentially using the provided stage creation functions.
      *
      * @param stageCreators List of stage creation functions to execute sequentially
-     * @return Mono<Void> indicating completion
+     * @return Mono containing the list of workout stage data
      */
-    protected fun createStagesSequentially(stageCreators: List<() -> Mono<Void>>): Mono<Void> {
-        var currentMono: Mono<Void> = Mono.empty()
-
-        for (stageCreator in stageCreators) {
-            currentMono = currentMono.then(stageCreator())
-        }
-
-        return currentMono
+    protected fun createStagesSequentially(stageCreators: List<() -> Mono<WorkoutStageData>>): Mono<List<WorkoutStageData>> {
+        return reactor.core.publisher.Flux.fromIterable(stageCreators)
+            .concatMap { stageCreator ->
+                stageCreator()
+            }
+            .collectList()
     }
 
     /**
@@ -1193,6 +1083,7 @@ abstract class WorkoutStageGenerationService(
     ): Mono<WeightUnit> {
         return userWeightUnitPreferenceDAL.selectUserWeightUnitPreference(userId, exerciseName)
             .map { it.preferredUnit }
+            .switchIfEmpty(Mono.just(WeightUnit.KG))
             .onErrorResume { error ->
                 logger.debug("No weight unit preference found for user {} and exercise {}, using KG", userId, exerciseName)
                 Mono.just(WeightUnit.KG)

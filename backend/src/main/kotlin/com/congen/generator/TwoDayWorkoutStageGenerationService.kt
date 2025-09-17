@@ -11,7 +11,9 @@ import com.congen.model.UserOneRepMax
 import com.congen.service.SetSchemeService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import org.jetbrains.annotations.VisibleForTesting
 
 /**
  * Service for generating workout stages for 2-day conjugate powerlifting programs.
@@ -80,8 +82,10 @@ class TwoDayWorkoutStageGenerationService(
         private val logger = LoggerFactory.getLogger(TwoDayWorkoutStageGenerationService::class.java)
     }
 
+    @VisibleForTesting
     override fun generateStagesForDayType(
-        workout: ProgrammedWorkout,
+        programId: Long,
+        dayNumber: Int,
         dayType: String,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
@@ -89,14 +93,14 @@ class TwoDayWorkoutStageGenerationService(
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
-    ): Mono<Void> {
+    ): Mono<WorkoutGenerationResult> {
         // Initialize movement balance state for this workout
         var movementBalanceState = createInitialMovementBalanceState()
 
         // Only handle combined ME+DE days for 2-day programs
         if (!conjugateTemplates.isCombinedMEDay(dayType)) {
             logger.warn("TwoDayWorkoutStageGenerationService received non-combined ME day: {}", dayType)
-            return Mono.empty()
+            return Mono.just(WorkoutGenerationResult(programId, dayNumber, dayType, userId, emptyList()))
         }
 
         val primaryMovementType = conjugateTemplates.getPrimaryMovementType(dayType)
@@ -171,74 +175,59 @@ class TwoDayWorkoutStageGenerationService(
                         dayType = dayType
                     )
 
-                // Create stages sequentially using the common pattern
-                createStagesSequentially(
-                    stageCreators =
-                        listOf(
-                            // Warmup stage
-                            {
-                                createWarmupStage(
-                                    workout = workout,
-                                    userExercisePool = userExercisePool,
-                                    oneRepMaxes = oneRepMaxes,
-                                    dayType = dayType,
-                                    primaryExercise = primaryExercise,
-                                    secondaryExercise = secondaryExercise,
-                                    isFourDayTemplate = false,
-                                    currentWeekNumber = currentWeekNumber,
-                                    userId = userId
-                                )
-                            },
-                            // Primary stage with both ME and DE exercises
-                            {
-                                createCombinedPrimaryStage(
-                                    workout = workout,
-                                    primaryExercise = primaryExercise,
-                                    secondaryExercise = secondaryExercise,
-                                    primarySetSchemes = primarySetSchemes,
-                                    secondarySetSchemes = secondarySetSchemes,
-                                    userId = userId
-                                )
-                            },
-                            // Accessory stage if needed
-                            {
-                                if (numAccessoryExercises > 0) {
-                                    createAccessoryStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        weakMuscles = weakMuscles,
-                                        numAccessoryExercises = numAccessoryExercises,
-                                        currentWeekNumber = currentWeekNumber,
-                                        userId = userId,
-                                        movementBalanceState = movementBalanceState
-                                    )
-                                } else {
-                                    Mono.empty()
-                                }
-                            },
-                            // Conditioning stage if needed
-                            {
-                                if (hasConditioning(dayType)) {
-                                    createConditioningStage(
-                                        workout = workout,
-                                        userExercisePool = userExercisePool,
-                                        oneRepMaxes = oneRepMaxes,
-                                        dayType = dayType,
-                                        weakMuscles = weakMuscles,
-                                        userId = userId,
-                                        movementBalanceState = movementBalanceState
-                                    )
-                                } else {
-                                    Mono.empty()
-                                }
-                            }
-                        )
+                // Create all workout stages
+                val primaryStageMono = createCombinedPrimaryStage(
+                    primaryExercise = primaryExercise,
+                    secondaryExercise = secondaryExercise,
+                    primarySetSchemes = primarySetSchemes,
+                    secondarySetSchemes = secondarySetSchemes,
+                    userId = userId
                 )
+
+                val warmupStageMono = createWarmupStage(
+                    userExercisePool = userExercisePool,
+                    oneRepMaxes = oneRepMaxes,
+                    dayType = dayType,
+                    primaryExercise = primaryExercise,
+                    secondaryExercise = secondaryExercise,
+                    isFourDayTemplate = false,
+                    currentWeekNumber = currentWeekNumber,
+                    userId = userId
+                )
+
+                val accessoryStageMono = createAccessoryStage(
+                    userExercisePool = userExercisePool,
+                    oneRepMaxes = oneRepMaxes,
+                    dayType = dayType,
+                    weakMuscles = weakMuscles,
+                    numAccessoryExercises = numAccessoryExercises,
+                    userId = userId,
+                    currentWeekNumber = currentWeekNumber,
+                    movementBalanceState = movementBalanceState
+                )
+
+                val conditioningStageMono = createConditioningStage(
+                    userExercisePool = userExercisePool,
+                    oneRepMaxes = oneRepMaxes,
+                    dayType = dayType,
+                    weakMuscles = weakMuscles,
+                    userId = userId,
+                    movementBalanceState = movementBalanceState
+                )
+
+                // Combine all stages - collect non-empty stages
+                Flux.merge(
+                    primaryStageMono,
+                    warmupStageMono,
+                    accessoryStageMono,
+                    conditioningStageMono
+                ).collectList()
+                    .map { stages ->
+                        WorkoutGenerationResult(programId, dayNumber, dayType, userId, stages)
+                    }
             }
             .doOnError { error ->
-                logger.error("Error creating combined ME+DE workout stages for workout '{}': {}", workout.id, error.message)
+                logger.error("Error creating combined ME+DE workout stages for program {} day {}: {}", programId, dayNumber, error.message)
             }
     }
 }

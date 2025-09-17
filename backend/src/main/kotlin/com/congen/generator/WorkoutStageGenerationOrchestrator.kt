@@ -68,7 +68,8 @@ class WorkoutStageGenerationOrchestrator(
      * @return Mono indicating completion
      */
     fun generateWorkoutStages(
-        workout: ProgrammedWorkout,
+        programId: Long,
+        dayNumber: Int,
         dayType: String,
         userExercisePool: UserExercisePool,
         oneRepMaxes: List<UserOneRepMax>,
@@ -76,7 +77,7 @@ class WorkoutStageGenerationOrchestrator(
         weakMuscles: List<String>,
         currentWeekNumber: Int,
         userId: String,
-    ): Mono<Void> {
+    ): Mono<WorkoutGenerationResult> {
         // Get the appropriate business logic service based on program days
         val service =
             workoutStageGenerationServiceFactory.getWorkoutStageGenerationService(
@@ -85,7 +86,8 @@ class WorkoutStageGenerationOrchestrator(
 
         // Delegate to the service for business logic (exercise selection, stage planning)
         return service.generateWorkoutStages(
-            workout = workout,
+            programId = programId,
+            dayNumber = dayNumber,
             dayType = dayType,
             userExercisePool = userExercisePool,
             oneRepMaxes = oneRepMaxes,

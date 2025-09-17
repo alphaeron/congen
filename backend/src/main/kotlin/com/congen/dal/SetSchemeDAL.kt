@@ -179,6 +179,36 @@ class SetSchemeDAL(
     }
 
     /**
+     * Retrieves all set schemes for a specific program.
+     *
+     * This method queries the database for all set schemes that belong to a
+     * specific program, ordered by their set number within each exercise.
+     *
+     * @param programId The unique identifier of the program
+     * @return Mono containing a list of set schemes for the program
+     */
+    @Cacheable(
+        ttl = CacheTTL.SHORT_TERM,
+        keyStrategy = CacheKeyStrategy.STANDARD,
+        entityName = "set_scheme"
+    )
+    fun selectSetSchemesByProgramId(programId: Long): Mono<List<SetScheme>> {
+        logger.debug("Selecting set schemes by program id: {}", programId)
+        return postgresClient.select(
+            """
+            SELECT ss.*
+            FROM set_scheme ss
+            JOIN programmed_exercise pe ON ss.programmed_exercise_id = pe.id
+            JOIN workout_stage ws ON pe.workout_stage_id = ws.id
+            JOIN programmed_workout pw ON ws.programmed_workout_id = pw.id
+            WHERE pw.program_id = $1
+            ORDER BY ss.programmed_exercise_id, ss.set_number
+            """.trimIndent(),
+            programId
+        )
+    }
+
+    /**
      * Inserts a new set scheme into the database.
      *
      * This method validates the set scheme data and inserts a new set scheme
